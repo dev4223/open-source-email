@@ -51,6 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
@@ -71,6 +72,7 @@ public class FragmentSetup extends FragmentBase {
 
     private ImageButton ibManual;
     private TextView tvManual;
+    private CardView cardManual;
 
     private Button btnAccount;
 
@@ -86,6 +88,7 @@ public class FragmentSetup extends FragmentBase {
     private TextView tvDozeDone;
     private Button btnDoze;
 
+    private Button btnInexactAlarms;
     private Button btnBackgroundRestricted;
     private Button btnDataSaver;
 
@@ -94,7 +97,7 @@ public class FragmentSetup extends FragmentBase {
 
     private Button btnInbox;
 
-    private Group grpManual;
+    private Group grpInexactAlarms;
     private Group grpBackgroundRestricted;
     private Group grpDataSaver;
 
@@ -129,6 +132,7 @@ public class FragmentSetup extends FragmentBase {
 
         ibManual = view.findViewById(R.id.ibManual);
         tvManual = view.findViewById(R.id.tvManual);
+        cardManual = view.findViewById(R.id.cardManual);
 
         btnAccount = view.findViewById(R.id.btnAccount);
 
@@ -144,6 +148,7 @@ public class FragmentSetup extends FragmentBase {
         tvDozeDone = view.findViewById(R.id.tvDozeDone);
         btnDoze = view.findViewById(R.id.btnDoze);
 
+        btnInexactAlarms = view.findViewById(R.id.btnInexactAlarms);
         btnBackgroundRestricted = view.findViewById(R.id.btnBackgroundRestricted);
         btnDataSaver = view.findViewById(R.id.btnDataSaver);
 
@@ -152,7 +157,7 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox = view.findViewById(R.id.btnInbox);
 
-        grpManual = view.findViewById(R.id.grpManual);
+        grpInexactAlarms = view.findViewById(R.id.grpInexactAlarms);
         grpBackgroundRestricted = view.findViewById(R.id.grpBackgroundRestricted);
         grpDataSaver = view.findViewById(R.id.grpDataSaver);
 
@@ -162,7 +167,7 @@ public class FragmentSetup extends FragmentBase {
         tvPrivacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(Helper.PRIVACY_URI), false);
+                Helper.view(v.getContext(), Helper.getPrivacyUri(v.getContext()), false);
             }
         });
 
@@ -395,6 +400,20 @@ public class FragmentSetup extends FragmentBase {
 
         PackageManager pm = getContext().getPackageManager();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            final Intent settings = new Intent(
+                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+
+            btnInexactAlarms.setEnabled(settings.resolveActivity(pm) != null); // system whitelisted
+            btnInexactAlarms.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(settings);
+                }
+            });
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             final Intent settings = new Intent(
                     Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -446,6 +465,7 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox.setEnabled(false);
 
+        grpInexactAlarms.setVisibility(View.GONE);
         grpBackgroundRestricted.setVisibility(View.GONE);
         grpDataSaver.setVisibility(View.GONE);
 
@@ -548,6 +568,10 @@ public class FragmentSetup extends FragmentBase {
         tvDozeDone.setTypeface(null, ignoring == null || ignoring ? Typeface.NORMAL : Typeface.BOLD);
         tvDozeDone.setCompoundDrawablesWithIntrinsicBounds(ignoring == null || ignoring ? check : null, null, null, null);
 
+        grpInexactAlarms.setVisibility(
+                !AlarmManagerCompatEx.canScheduleExactAlarms(getContext())
+                        ? View.VISIBLE : View.GONE);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ActivityManager am =
                     (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
@@ -581,7 +605,7 @@ public class FragmentSetup extends FragmentBase {
         }
 
         ibManual.setImageLevel(manual ? 0 /* less */ : 1 /* more */);
-        grpManual.setVisibility(manual ? View.VISIBLE : View.GONE);
+        cardManual.setVisibility(manual ? View.VISIBLE : View.GONE);
     }
 
     @Override

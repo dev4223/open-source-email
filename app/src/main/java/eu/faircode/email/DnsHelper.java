@@ -35,6 +35,7 @@ import org.xbill.DNS.Message;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.SimpleResolver;
+import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
@@ -66,7 +67,6 @@ public class DnsHelper {
             if (domain == null)
                 continue;
 
-            boolean found = true;
             try {
                 SimpleResolver resolver = new SimpleResolver(getDnsServer(context));
                 resolver.setTimeout(CHECK_TIMEOUT);
@@ -75,17 +75,18 @@ public class DnsHelper {
                 lookup.run();
                 Log.i("Check name=" + domain + " @" + resolver.getAddress() + " result=" + lookup.getResult());
 
+                if (lookup.getResult() == Lookup.SUCCESSFUL)
+                    continue;
+
+                String error = "Error " + lookup.getResult() + ": " + lookup.getErrorString();
                 if (lookup.getResult() == Lookup.HOST_NOT_FOUND ||
                         lookup.getResult() == Lookup.TYPE_NOT_FOUND)
-                    found = false;
-                else if (lookup.getResult() != Lookup.SUCCESSFUL)
-                    throw new UnknownHostException("DNS error=" + lookup.getErrorString());
+                    throw new UnknownHostException(context.getString(R.string.title_no_server, domain));
+            } catch (UnknownHostException ex) {
+                throw ex;
             } catch (Throwable ex) {
                 Log.e(ex);
             }
-
-            if (!found)
-                throw new UnknownHostException(context.getString(R.string.title_no_server, domain));
         }
     }
 
@@ -110,6 +111,9 @@ public class DnsHelper {
                 break;
             case "srv":
                 rtype = Type.SRV;
+                break;
+            case "txt":
+                rtype = Type.TXT;
                 break;
             default:
                 throw new IllegalArgumentException(type);
@@ -199,7 +203,7 @@ public class DnsHelper {
                     lookup.getResult() == Lookup.TYPE_NOT_FOUND)
                 throw new UnknownHostException(name);
             else if (lookup.getResult() != Lookup.SUCCESSFUL)
-                Log.e("DNS error=" + lookup.getErrorString());
+                Log.i("DNS error=" + lookup.getErrorString());
 
             List<DnsRecord> result = new ArrayList<>();
 
@@ -212,6 +216,10 @@ public class DnsHelper {
                     } else if (record instanceof SRVRecord) {
                         SRVRecord srv = (SRVRecord) record;
                         result.add(new DnsRecord(srv.getTarget().toString(true), srv.getPort()));
+                    } else if (record instanceof TXTRecord) {
+                        TXTRecord txt = (TXTRecord) record;
+                        for (Object content : txt.getStrings())
+                            result.add(new DnsRecord(content.toString(), 0));
                     } else
                         throw new IllegalArgumentException(record.getClass().getName());
                 }

@@ -102,8 +102,10 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
         private TextView tvBackoff;
         private TextView tvQuota;
         private TextView tvMaxSize;
+        private TextView tvId;
         private TextView tvIdentity;
         private TextView tvDrafts;
+        private TextView tvSent;
         private TextView tvWarning;
         private TextView tvError;
         private Button btnHelp;
@@ -131,8 +133,10 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             tvBackoff = itemView.findViewById(R.id.tvBackoff);
             tvQuota = itemView.findViewById(R.id.tvQuota);
             tvMaxSize = itemView.findViewById(R.id.tvMaxSize);
+            tvId = itemView.findViewById(R.id.tvId);
             tvIdentity = itemView.findViewById(R.id.tvIdentity);
             tvDrafts = itemView.findViewById(R.id.tvDrafts);
+            tvSent = itemView.findViewById(R.id.tvSent);
             tvWarning = itemView.findViewById(R.id.tvWarning);
             tvError = itemView.findViewById(R.id.tvError);
             btnHelp = itemView.findViewById(R.id.btnHelp);
@@ -231,8 +235,13 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             if (tvMaxSize.getVisibility() == View.VISIBLE)
                 tvQuota.setVisibility(View.VISIBLE);
 
+            tvId.setText(account.id + "/" + account.uuid);
+            tvId.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+
             tvIdentity.setVisibility(account.identities > 0 || !settings ? View.GONE : View.VISIBLE);
             tvDrafts.setVisibility(account.drafts != null || !settings ? View.GONE : View.VISIBLE);
+            tvSent.setVisibility(account.protocol != EntityAccount.TYPE_IMAP ||
+                    account.sent != null || !settings ? View.GONE : View.VISIBLE);
 
             tvWarning.setText(account.warning);
             tvWarning.setVisibility(account.warning == null || !settings ? View.GONE : View.VISIBLE);

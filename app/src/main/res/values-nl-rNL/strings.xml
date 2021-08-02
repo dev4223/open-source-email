@@ -83,7 +83,7 @@
     <string name="title_notification_waiting">Wachten op een geschikte verbinding</string>
     <string name="title_notification_idle">Inactief</string>
     <string name="title_notification_failed">\'%1$s\' is mislukt</string>
-    <string name="title_notification_alert">\'%1$s\' servermelding</string>
+    <string name="title_notification_alert">Serverwaarschuwing: \'%1$s\'</string>
     <string name="title_notification_sending_left">Resterende pogingen: %1$d</string>
     <string name="title_notification_sending_retry">Verzenden zal opnieuw worden geprobeerd bij wijzigingen in de internetverbinding of het naar beneden trekken van de outbox</string>
     <string name="title_notification_sending_failed">Verzenden naar %1$s mislukt</string>
@@ -123,12 +123,15 @@
     <string name="title_setup_quick_accounts">Accounts toevoegen of wijzigen</string>
     <string name="title_setup_quick_support">Sommige providers maken het moeilijk om een account toe te voegen. Geef a.u.b. FairEmail hiervoor niet de schuld, maar vraag om ondersteuning.</string>
     <string name="title_setup_quick_hint">De snelle instelling zal configuratie-informatie ophalen van autoconfig.thunderbird.net</string>
+    <string name="title_setup_quick_patience">Even geduld a.u.b. &#8230;</string>
     <string name="title_setup_quick_imap">IMAP-server om berichten te ontvangen</string>
     <string name="title_setup_quick_smtp">SMTP-server om berichten te verzenden</string>
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_multiple">De wizard kan meerdere keren gebruikt worden om meerdere accounts in te stellen</string>
     <string name="title_setup_wizard_new">Ik heb een nieuw e-mailadres nodig</string>
     <string name="title_setup_manual">Handmatig instellen en account opties</string>
+    <string name="title_setup_classic">Klassieke configuratie</string>
+    <string name="title_setup_documentation">Raadpleeg a.u.b. de documentatie van uw e-mailprovider voor de juiste mailserverconfiguratie</string>
     <string name="title_setup_account_remark">E-mail ontvangen</string>
     <string name="title_setup_identity_remark">E-mail verzenden</string>
     <string name="title_setup_account_identity_hint">U kunt de naam, kleur en veegacties configureren in de accountinstellingen en een handtekening configureren in de identiteitsinstellingen</string>
@@ -156,6 +159,7 @@
     <string name="title_setup_no_inbox">Postvak in niet gevonden</string>
     <string name="title_setup_advanced_protection">Wanneer u bent ingeschreven voor het geavanceerde beveiligingsprogramma, is het niet mogelijk om een e-mailapp van derden te gebruiken. Dit is een door Google opgelegde beperking.</string>
     <string name="title_setup_quick_success">Een account is succesvol toegevoegd</string>
+    <string name="title_setup_quick_no_sent">Er is geen map voor verzonden berichten geselecteerd. Verzonden berichten worden mogelijk niet opgeslagen.</string>
     <string name="title_setup_quick_configure">Om de naam, kleur, veeg acties, etc te bewerken</string>
     <string name="title_setup_manage">Beheer</string>
     <string name="title_setup_grant">Verlenen</string>
@@ -175,6 +179,7 @@
     <string name="title_setup_doze_stopped">Sync gestopt?</string>
     <string name="title_setup_doze_device">Dit is waarschijnlijk nodig voor dit apparaat</string>
     <string name="title_setup_doze_android">Dit is vereist voor deze Android-versie</string>
+    <string name="title_setup_inexact">Alarmen &amp; herinneringen zijn uitgeschakeld</string>
     <string name="title_setup_background">Achtergrondbeperkingen zijn ingeschakeld</string>
     <string name="title_setup_data">Gegevensbesparing is ingeschakeld</string>
     <string name="title_setup_advanced_options">Toon geavanceerde opties</string>
@@ -188,14 +193,25 @@
     <string name="title_setup_close">Sluit instellingen</string>
     <string name="title_setup_export">Exporteer instellingen</string>
     <string name="title_setup_import">Importeer instellingen</string>
-    <string name="title_setup_export_do">Het wachtwoord wordt gebruikt om de instellingen te versleutelen en is vereist om de instellingen opnieuw te importeren</string>
+    <string name="title_setup_export_remark">        Omdat het instellingenbestand alle instellingen en accountinformatie bevat, is het versleuteld met een wachtwoord.
+        Het wachtwoord is vereist om de instellingen opnieuw te importeren, dus vergeet het niet!
+    </string>
+    <string name="title_setup_export_do">Het exportbestand zal alle instellingen en gegevens bevatten, maar geen berichten en geen afbeeldingen waarnaar verwezen wordt in handtekeningen</string>
     <string name="title_setup_import_do">Geïmporteerde accounts worden toegevoegd zonder de bestaande te overschrijven</string>
+    <string name="title_setup_import_gmail">        Sinds Android 8. Oreo, kunnen Gmail accounts niet meer worden geïmporteerd, omdat elk account moet worden geselecteerd om toegang tot het account te verlenen.
+        U kunt Gmail-accounts eenvoudig opnieuw configureren met de snelle configuratie wizard.
+    </string>
     <string name="title_setup_password">Wachtwoord</string>
     <string name="title_setup_password_chars">Wachtwoord bevat controle of witruimte tekens</string>
     <string name="title_setup_password_repeat">Herhaal wachtwoord</string>
     <string name="title_setup_password_missing">Wachtwoord ontbreekt</string>
     <string name="title_setup_password_different">De wachtwoorden komen niet overeen</string>
     <string name="title_setup_password_invalid">Wachtwoord ongeldig</string>
+    <string name="title_setup_import_accounts">Importeer accounts en identiteiten</string>
+    <string name="title_setup_import_rules">Importeer filterregels</string>
+    <string name="title_setup_import_contacts">Importeer lokale contacten</string>
+    <string name="title_setup_import_answers">Importeer antwoordsjablonen</string>
+    <string name="title_setup_import_settings">Importeer opties</string>
     <string name="title_setup_exported">Instellingen geëxporteerd</string>
     <string name="title_setup_imported">Instellingen geïmporteerd</string>
     <string name="title_setup_import_invalid">Ongeldig instellingenbestand</string>
@@ -259,6 +275,7 @@
     <string name="title_advanced_check_reply_domain">Controleer het antwoordadres bij het synchroniseren van berichten</string>
     <string name="title_advanced_check_mx">Controleer e-mailadressen van de afzenders bij het synchroniseren van berichten</string>
     <string name="title_advanced_check_blocklist">Controleer of de domeinnaam van de afzender op een spamblokkeerlijst staat</string>
+    <string name="title_advanced_use_blocklist">Verplaats berichten van domeinen op een blokkeerlijst naar de spammap</string>
     <string name="title_advanced_tune_keep_alive">De keep-alive interval automatisch aanpassen</string>
     <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
     <string name="title_advanced_keyboard_no_fullscreen">Toetsenbord in volledige scherm voorkomen</string>
@@ -267,6 +284,7 @@
     <string name="title_advanced_suggest_sent">Suggereer adressen gevonden in verzonden berichten</string>
     <string name="title_advanced_suggest_received">Suggereer adressen gevonden in ontvangen berichten</string>
     <string name="title_advanced_suggest_frequently">Sorteer voorgestelde adressen op gebruiksfrequentie</string>
+    <string name="title_advanced_alt_re_fwd">Alternatief antwoord/doorsturen voorvoegsel</string>
     <string name="title_advanced_send_reminders">Toon herinneringen</string>
     <string name="title_advanced_send_delayed">Verzenden van berichten uitstellen</string>
     <string name="title_advanced_send_pending">Toon niet-opdringerig pictogram voor vertraagd verzenden</string>
@@ -302,6 +320,7 @@
     <string name="title_advanced_ssl_harden">Verhard SSL-verbindingen</string>
     <string name="title_advanced_manage_connectivity">Beheer connectiviteit</string>
     <string name="title_advanced_caption_general">Algemeen</string>
+    <string name="title_advanced_caption_checks">Controles</string>
     <string name="title_advanced_caption_list">Lijst</string>
     <string name="title_advanced_caption_conversation">Gesprek</string>
     <string name="title_advanced_caption_message">Bericht</string>
@@ -310,6 +329,7 @@
     <string name="title_advanced_portrait2">Gebruik twee rijen in portretmodus</string>
     <string name="title_advanced_landscape">Twee kolommen gebruiken in liggende modus</string>
     <string name="title_advanced_landscape3">Navigatiemenu standaard in liggende modus weergeven</string>
+    <string name="title_advanced_nav_message_count">Toon aantal lokaal opgeslagen berichten in het navigatiemenu</string>
     <string name="title_advanced_startup">Toon op het startscherm</string>
     <string name="title_advanced_cards">Gebruik kaart-stijl in plaats van tabulaire stijl</string>
     <string name="title_advanced_cards_beige">Gebruik een beige achtergrond bij het gebruik van de kaartstijl (alleen lichte thema\'s)</string>
@@ -325,6 +345,8 @@
     <string name="title_advanced_color_stripe">Toon kleurenstreep</string>
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
     <string name="title_advanced_gravatars">Gravatars weergeven</string>
+    <string name="title_advanced_bimi_unverified">Niet-geverifieerde afzender</string>
+    <string name="title_advanced_bimi_verified">Geverifieerde afzender</string>
     <string name="title_advanced_favicons">Toon favicons</string>
     <string name="title_advanced_generated_icons">Toon gegenereerde iconen</string>
     <string name="title_advanced_identicons">Toon identicons</string>
@@ -358,8 +380,8 @@
     <string name="title_advanced_contrast">Gebruik hoge contrast voor berichttekst</string>
     <string name="title_advanced_monospaced">Gebruik standaard vaste breedte lettertype voor berichttekst</string>
     <string name="title_advanced_monospaced_pre">Gebruik vaste breedte lettertype voor vooraf opgemaakte tekst</string>
-    <string name="title_advanced_text_color">Gebruik tekstkleuren</string>
     <string name="title_advanced_background_color">Gebruik achtergrond kleuren</string>
+    <string name="title_advanced_text_color">Gebruik tekstkleuren</string>
     <string name="title_advanced_text_size">Gebruik tekstgrootte</string>
     <string name="title_advanced_text_font">Gebruik lettertypen</string>
     <string name="title_advanced_text_align">Gebruik tekst uitlijning</string>
@@ -373,7 +395,12 @@
     <string name="title_advanced_actionbar_color">Gebruik de accountkleur als achtergrond voor de gespreksactiebalk</string>
     <string name="title_advanced_navbar_colorize">Kleur de Android-navigatiebalk in</string>
     <string name="title_advanced_parse_classes">Stijlbladen parsen</string>
-    <string name="title_advanced_authentication">Toon een waarschuwing wanneer de ontvangende server het bericht niet kon verifiëren</string>
+    <string name="title_advanced_authentication">Toon authenticatiewaarschuwingen</string>
+    <string name="title_advanced_authentication_hint">De onderliggende controles kunnen worden geconfigureerd in de ontvangstinstellingen</string>
+    <string name="title_advanced_authentication_indicator">Toon authenticatie statusindicator</string>
+    <string name="title_advanced_authentication_none">Geen authenticatie</string>
+    <string name="title_advanced_authentication_some">Gedeeltelijke authenticatie</string>
+    <string name="title_advanced_authentication_all">Volledige authenticatie</string>
     <string name="title_advanced_sync_on_launch">Synchroniseren bij start</string>
     <string name="title_advanced_double_back">Dubbel \'terug\' om te sluiten</string>
     <string name="title_advanced_conversation_actions">Acties voorstellen (Android 10+)</string>
@@ -394,6 +421,7 @@
     <string name="title_advanced_collapse_multiple">Vouw berichten in een gesprek met meerdere berichten bij \'terug\' samen</string>
     <string name="title_advanced_autoclose">Gesprekken automatisch sluiten</string>
     <string name="title_advanced_onclose">Bij het sluiten van een gesprek</string>
+    <string name="title_advanced_autoclose_unread">Sluit gesprekken bij het markeren van berichten als ongelezen</string>
     <string name="title_advanced_undo">Herstel time-out</string>
     <string name="title_advanced_quick_filter">Toon niet-opdringerige snelle filterpictogrammen</string>
     <string name="title_advanced_quick_scroll">Toon niet-opdringerige snelle scroll omhoog/omlaag pictogrammen</string>
@@ -546,6 +574,7 @@
     <string name="title_advanced_sender_hint">De meeste providers staan gemodificeerde verzendadressen niet toe</string>
     <string name="title_advanced_bcc_hint">Het adres wordt niet weergegeven, maar wordt bij het verzenden toegevoegd</string>
     <string name="title_advanced_internal_hint">Er wordt een waarschuwing gegeven bij het versturen naar een ander domein</string>
+    <string name="title_advanced_e2e_encryption" comment="title_advanced_e2e_encryption&#10;Heading for default sign/encrypt in the advanced identity settings">Opties voor end-to-end encryptie</string>
     <string name="title_advanced_display_harmful_hint">Het uitschakelen van deze optie kan schadelijk zijn voor uw privacy</string>
     <string name="title_advanced_display_hidden_hint">Dit kan leiden tot vreemd uitziende en dubbele teksten</string>
     <string name="title_advanced_display_pin_hint">Een PIN code gaat voor biometrische authenticatie</string>
@@ -575,6 +604,7 @@
     <string name="title_advanced_edit_name">Naam wijzigen</string>
     <string name="title_advanced_swipe_actions">Stel veegacties in</string>
     <string name="title_advanced_swipe_actions_hint">Dit stelt de veeg naar links en rechts actie voor alle IMAP accounts in</string>
+    <string name="title_advanced_swipe_sensitivity">Links/rechts veeggevoeligheid</string>
     <string name="title_select">Selecteer &#8230;</string>
     <string name="title_identity_name">Uw naam</string>
     <string name="title_identity_email">Uw e-mailadres</string>
@@ -598,6 +628,7 @@
     <string name="title_account_interval_hint">Frequentie van het verversen van de verbinding voor push berichten of frequentie van het controleren op nieuwe berichten</string>
     <string name="title_account_partial_fetch_hint">Schakel dit alleen uit in het geval van lege berichten of corrupte bijlagen</string>
     <string name="title_color">Kleur</string>
+    <string name="title_background">Achtergrond</string>
     <string name="title_transparent">Doorzichtig</string>
     <string name="title_account_ondemand">Handmatig synchroniseren</string>
     <string name="title_account_notify">Afzonderlijke meldingen</string>
@@ -632,7 +663,8 @@
     <string name="title_leave_deleted">Laat verwijderde berichten achter op de server</string>
     <string name="title_leave_on_device">Laat berichten achter op apparaat</string>
     <string name="title_max_messages">Maximum aantal berichten om te downloaden (leeg voor allen)</string>
-    <string name="title_keep_alive_interval">Keep-alive/periodieke controle interval (minuten)</string>
+    <string name="title_keep_poll_interval">Poll interval (minuten)</string>
+    <string name="title_keep_alive_interval">Keep-alive interval (minuten)</string>
     <string name="title_server_time">Gebruik ontvangsttijd (server)</string>
     <string name="title_received_header">Gebruik de kop \'Received\'</string>
     <string name="title_date_header">Gebruik de kop \'Date\' (verzonden tijd)</string>
@@ -689,6 +721,8 @@
     <string name="title_synchronize_enabled">Synchroniseren</string>
     <string name="title_synchronize_batch_enable">Synchronisatie inschakelen</string>
     <string name="title_synchronize_batch_disable">Synchronisatie uitschakelen</string>
+    <string name="title_notify_batch_enable">Schakel meldingen voor nieuwe berichten in</string>
+    <string name="title_notify_batch_disable">Schakel meldingen voor nieuwe berichten uit</string>
     <string name="title_delete_local">Verwijder lokale berichten</string>
     <string name="title_delete_browsed">Verwijder gebladerde/gezochte berichten</string>
     <string name="title_empty_trash">Prullenbak leegmaken</string>
@@ -958,6 +992,7 @@
     <string name="title_style_font">Lettertype</string>
     <string name="title_style_font_default">Standaard</string>
     <string name="title_style_blockquote">Blokcitaat</string>
+    <string name="title_style_indentation">Inspringing</string>
     <string name="title_style_strikethrough">Doorhalen</string>
     <string name="title_style_clear">Opmaak wissen</string>
     <string name="title_style_link">Koppeling invoegen</string>
@@ -1111,6 +1146,7 @@ Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
     <string name="title_select_found">Selecteer gevonden</string>
     <string name="title_mark_all_read">Markeer alle gelezen</string>
     <string name="title_force_sync">Forceer verversen</string>
+    <string name="title_force_reload" comment="title_force_reload&#10;Title for menu item in operations view to restart the sync service">Forceer herstart</string>
     <string name="title_force_send">Forceer verzenden</string>
     <string name="title_language_all">Alle</string>
     <string name="title_previous">Vorige</string>
@@ -1334,6 +1370,7 @@ Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
     <string name="title_check_owner">Controleer eigenaar</string>
     <string name="title_remark_owner">Informatie wordt opgehaald van <a href="https://ipinfo.io/">ipinfo.io</a></string>
     <string name="title_ip_owner">Eigenaar IP-adres</string>
+    <string name="title_reset_open">Standaardapps instellen of wissen</string>
     <string name="title_select_app">Selecteer app</string>
     <string name="title_updated">Er is een update naar versie %1$s beschikbaar</string>
     <string name="title_issue">Heeft u een vraag of probleem?</string>

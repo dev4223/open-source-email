@@ -19,6 +19,10 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
+import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_OPEN;
+import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.NotificationManager;
@@ -81,10 +85,6 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
-import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_OPEN;
-import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED;
-
 public class ActivityView extends ActivityBilling implements FragmentManager.OnBackStackChangedListener {
     private String startup;
 
@@ -121,13 +121,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     static final int PI_UNIFIED = 1;
     static final int PI_WHY = 2;
-    static final int PI_ALERT = 3;
-    static final int PI_THREAD = 4;
-    static final int PI_OUTBOX = 5;
-    static final int PI_ERROR = 6;
-    static final int PI_UPDATE = 7;
-    static final int PI_WIDGET = 8;
-    static final int PI_POWER = 9;
+    static final int PI_THREAD = 3;
+    static final int PI_OUTBOX = 4;
+    static final int PI_UPDATE = 5;
+    static final int PI_WIDGET = 6;
+    static final int PI_POWER = 7;
 
     static final String ACTION_VIEW_FOLDERS = BuildConfig.APPLICATION_ID + ".VIEW_FOLDERS";
     static final String ACTION_VIEW_MESSAGES = BuildConfig.APPLICATION_ID + ".VIEW_MESSAGES";
@@ -612,7 +610,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     drawerLayout.closeDrawer(drawerContainer);
                 startActivity(new Intent(ActivityView.this, ActivityBilling.class));
             }
-        }));
+        }).setExtraIcon(ActivityBilling.isPro(this) ? R.drawable.twotone_check_24 : 0));
 
         if ((Helper.isPlayStoreInstall() || BuildConfig.DEBUG))
             extra.add(new NavMenuItem(R.drawable.twotone_star_24, R.string.menu_rate, new Runnable() {
@@ -1081,8 +1079,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
 
                 try {
-                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    nm.notify(Helper.NOTIFICATION_UPDATE, builder.build());
+                    NotificationManager nm =
+                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    nm.notify(NotificationHelper.NOTIFICATION_UPDATE,
+                            builder.build());
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
@@ -1164,12 +1164,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     Helper.viewFAQ(this, 2);
                 }
 
-            } else if ("alert".equals(action) || "error".equals(action)) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                    getSupportFragmentManager().popBackStack("unified", 0);
-
-                Helper.viewFAQ(this, "alert".equals(action) ? 23 : 22);
-
             } else if ("outbox".equals(action)) {
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
@@ -1177,7 +1171,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 onMenuOutbox();
 
             } else if (action.startsWith("thread")) {
-                intent.putExtra("id", Long.parseLong(action.split(":", 2)[1]));
+                long id = Long.parseLong(action.split(":", 2)[1]);
+                boolean ignore = intent.getBooleanExtra("ignore", false);
+                if (ignore)
+                    ServiceUI.ignore(this, id);
+                intent.putExtra("id", id);
                 onViewThread(intent);
 
             } else if (action.equals("widget")) {
@@ -1326,7 +1324,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuPrivacy() {
-        Helper.view(this, Uri.parse(Helper.PRIVACY_URI), false);
+        Helper.view(this, Helper.getPrivacyUri(this), false);
     }
 
     private void onMenuAbout() {
@@ -1492,6 +1490,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         args.putLong("folder", intent.getLongExtra("folder", -1));
         args.putString("thread", intent.getStringExtra("thread"));
         args.putLong("id", intent.getLongExtra("id", -1));
+        args.putInt("lpos", intent.getIntExtra("lpos", -1));
         args.putBoolean("filter_archive", intent.getBooleanExtra("filter_archive", true));
         args.putBoolean("found", found);
         args.putBoolean("pinned", intent.getBooleanExtra("pinned", false));

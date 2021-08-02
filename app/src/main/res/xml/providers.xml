@@ -23,7 +23,8 @@
         domain="outlook\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         order="2"
-        partial="false">
+        partial="false"
+        useip="false">
         <imap
             host="outlook.office365.com"
             port="993"
@@ -38,7 +39,8 @@
         domain="live\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         order="3"
-        partial="false">
+        partial="false"
+        useip="false">
         <imap
             host="outlook.office365.com"
             port="993"
@@ -53,7 +55,8 @@
         domain="hotmail\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         order="4"
-        partial="false">
+        partial="false"
+        useip="false">
         <imap
             host="outlook.office365.com"
             port="993"
@@ -82,7 +85,8 @@
         id="office365"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         order="5"
-        partial="false">
+        partial="false"
+        useip="false">
         <imap
             host="outlook.office365.com"
             port="993"
@@ -161,6 +165,7 @@
     </provider>
     <provider
         name="Posteo.de"
+        documentation="Please check if &lt;a href=&quot;https://posteo.de/en/help/activating-additional-email-account-protection&quot;&gt;additional email account protection&lt;/a&gt; isn't enabled"
         domain="posteo\\..*"
         link="https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp">
         <imap
@@ -175,6 +180,7 @@
     <provider
         name="free.fr"
         appPassword="true"
+        documentation="SMTP est désactivé par défaut, veuillez &lt;a href=&quot;http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/configurer-smtp-free-fr&quot;&gt;voir ici&lt;/a&gt; pour un guide détaillé"
         domain="free\\.fr"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq157">
         <imap
@@ -636,7 +642,7 @@
         name="Bluewin.ch"
         appPassword="true"
         domain="bluewin\\.ch"
-        link="https://emailsetup.swisscom.ch/guide/?accountType=imap&amp;customer=residential&amp;device=mobile&amp;lang=en&amp;manual=setup&amp;step=emailSettingsMobileAppSelection">
+        link="https://emailsetup.swisscom.ch/guide/#step=emailSettingsMobileAppSelection">
         <imap
             host="imaps.bluewin.ch"
             port="993"
@@ -645,6 +651,19 @@
             host="smtpauths.bluewin.ch"
             port="465"
             starttls="false" />
+    </provider>
+    <provider
+        name="Bluewin.ch/own domain"
+        appPassword="true"
+        link="https://emailsetup.swisscom.ch/guide/#step=emailSettingsMobileAppSelection">
+        <imap
+            host="mail.hostcenter.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.hostcenter.com"
+            port="587"
+            starttls="true" />
     </provider>
     <provider
         name="DomainFactory"
@@ -710,7 +729,8 @@
     </provider>
     <provider
         name="Strato.de"
-        link="https://www.strato.com/faq/en_us/product/the-strato-email-server/">
+        link="https://www.strato.com/faq/en_us/product/the-strato-email-server/"
+        mx=".*rzone\\.de">
         <imap
             host="imap.strato.de"
             port="993"
@@ -1080,7 +1100,8 @@
         <smtp
             host="mobile.charter.net"
             port="587"
-            starttls="true" />
+            starttls="false" />
+        <!-- Unusual, but no STARTTLS at port 587 -->
     </provider>
     <provider
         name="Tin.it"
@@ -1157,5 +1178,44 @@
             host="smtp.ewe.net"
             port="587"
             starttls="true" />
+    </provider>
+    <provider
+        name="Xfinity/Comcast"
+        domain="comcast\\.net"
+        link="https://www.xfinity.com/support/articles/email-client-programs-with-xfinity-email">
+        <imap
+            host="imap.comcast.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.comcast.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="TalkTalk"
+        domain="dial\\.pipex\\.co\\.uk,pipex\\.com,dial\\.pipex\\.com,screaming\\.net,dial\\.pipex\\.net,solo\\.pipex\\.com,dsl\\.pipex\\.co\\.uk,talktalk\\.net,dsl\\.pipex\\.com,telco4u\\.net,homecall\\.co\\.uk,tinyonline\\.co\\.uk,homechoice\\.co\\.uk,tinyworld\\.co\\.uk,lineone\\.net,tiscali\\.co\\.uk,onetel\\.com,toucansurf\\.com,onetel\\.net,ukgateway\\.net,onetel\\.net\\.uk,worldonline\\.co\\.uk,oneteldsl\\.net"
+        link="https://community.talktalk.co.uk/t5/Articles/Email-settings-IMAP-amp-POP3/ta-p/2204399">
+        <imap
+            host="mail.talktalk.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.talktalk.net"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Mail.com"
+        link="https://support.mail.com/premium/imap/server.html#indexlink_help_premium_imap"
+        mx=".*\\.mail\\.com">
+        <imap
+            host="imap.mail.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mail.com"
+            port="465"
+            starttls="false" />
     </provider>
 </providers>

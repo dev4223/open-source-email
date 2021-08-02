@@ -83,7 +83,7 @@
     <string name="title_notification_waiting">Αναμονή για κατάλληλη σύνδεση</string>
     <string name="title_notification_idle">Σε αδράνεια</string>
     <string name="title_notification_failed">\'%1$s\' απέτυχε</string>
-    <string name="title_notification_alert">\'%1$s\' ειδοποίηση διακομιστή</string>
+    <string name="title_notification_alert">Ειδοποίηση διακομιστή: \'%1$s\'</string>
     <string name="title_notification_sending_left">Προσπάθειες που απομένουν: %1$d</string>
     <string name="title_notification_sending_retry">Η αποστολή θα επιχειρηθεί εκ νέου όταν μεταβληθεί η σύνδεση στο διαδίκτυο ή όταν τραβήξετε προς τα κάτω στα εξερχόμενα</string>
     <string name="title_notification_sending_failed">Η αποστολή σε %1$s απέτυχε</string>
@@ -123,12 +123,15 @@
     <string name="title_setup_quick_accounts">Προσθήκη ή αλλαγή λογαριασμών</string>
     <string name="title_setup_quick_support">Ορισμένοι πάροχοι δυσχεραίνουν την προσθήκη ενός λογαριασμού. Παρακαλούμε, μην κατηγορείτε το FairEmail για αυτό, αλλά δοκιμάστε να λάβετε υποστήριξη.</string>
     <string name="title_setup_quick_hint">Η γρήγορη ρύθμιση θα ανακτήσει πληροφορίες εγκατάστασης από το autoconfig.thunderbird.net</string>
+    <string name="title_setup_quick_patience">Παρακαλούμε, περιμένετε &#8230;</string>
     <string name="title_setup_quick_imap">Διακομιστής IMAP για λήψη μηνυμάτων</string>
     <string name="title_setup_quick_smtp">Διακομιστής SMTP για αποστολή μηνυμάτων</string>
     <string name="title_setup_wizard">Οδηγός</string>
     <string name="title_setup_wizard_multiple">Ο οδηγός μπορεί να χρησιμοποιηθεί πολλές φορές για τη ρύθμιση πολλαπλών λογαριασμών</string>
     <string name="title_setup_wizard_new">Χρειάζομαι μια νέα διεύθυνση ηλ. ταχυδρομείου</string>
     <string name="title_setup_manual">Χειροκίνητη ρύθμιση και επιλογές λογαριασμού</string>
+    <string name="title_setup_classic">Κλασική διαρρύθμιση</string>
+    <string name="title_setup_documentation">Παρακαλούμε, συμβουλευτείτε τις οδηγίες του παρόχου του ηλ. ταχυδρομείου σας για τη σωστή ρύθμιση του διακομιστή μέιλ</string>
     <string name="title_setup_account_remark">Λήψη μηνυμάτων</string>
     <string name="title_setup_identity_remark">Αποστολή μηνυμάτων</string>
     <string name="title_setup_account_identity_hint">Μπορείτε να ρυθμίσετε το όνομα, το χρώμα και τις ενέργειες σάρωσης στις ρυθμίσεις του λογαριασμού, και να ρυθμίσετε μία υπογραφή στις ρυθμίσεις ταυτότητας</string>
@@ -156,6 +159,7 @@
     <string name="title_setup_no_inbox">Δεν βρέθηκαν εισερχόμενα</string>
     <string name="title_setup_advanced_protection">Δεν επιτρέπεται η χρήση ανεξάρτητων εφαρμογών ηλεκτρονικού ταχυδρομείου σε χρήστες εγγεγραμμένους/-ες σε πρόγραμμα αυξημένης ασφάλειας. Ο περιορισμός αυτός έχει επιβληθεί από την Google.</string>
     <string name="title_setup_quick_success">Ένας λογαριασμός έχει προστεθεί με επιτυχία</string>
+    <string name="title_setup_quick_no_sent">Δεν έχει επιλεγεί φάκελος απεσταλμένων μηνυμάτων. Τα απεσταλμένα μήνυμα ενδέχεται να μην αποθηκεύονται.</string>
     <string name="title_setup_quick_configure">Για να επεξεργαστείτε το όνομα, το χρώμα, τις ενέργειες σάρωσης κλπ</string>
     <string name="title_setup_manage">Διαχείριση</string>
     <string name="title_setup_grant">Παραχώρηση δικαιώματος</string>
@@ -175,6 +179,7 @@
     <string name="title_setup_doze_stopped">Σταμάτησε ο συγχρονισμός;</string>
     <string name="title_setup_doze_device">Αυτό πιθανόν απαιτείται για αυτήν τη συσκευή</string>
     <string name="title_setup_doze_android">Αυτό απαιτείται για αυτήν την έκδοση Android</string>
+    <string name="title_setup_inexact">Ειδοποιήσεις &amp; υπενθυμίσεις απενεργοποιημένες</string>
     <string name="title_setup_background">Οι περιορισμοί παρασκηνίου είναι ενεργοποιημένοι</string>
     <string name="title_setup_data">Η εξοικονόμηση δεδομένων είναι ενεργή</string>
     <string name="title_setup_advanced_options">Εμφάνιση προηγμένων επιλογών</string>
@@ -188,14 +193,25 @@
     <string name="title_setup_close">Κλείσιμο ρυθμίσεων</string>
     <string name="title_setup_export">Εξαγωγή ρυθμίσεων</string>
     <string name="title_setup_import">Εισαγωγή ρυθμίσεων</string>
-    <string name="title_setup_export_do">Ο κωδικός πρόσβασης χρησιμοποιείται για την κρυπτογράφηση των ρυθμίσεων και απαιτείται για την εκ νέου εισαγωγή των ρυθμίσεων</string>
+    <string name="title_setup_export_remark">        Δεδομένου ότι το αρχείο ρυθμίσεων περιέχει όλες τις ρυθμίσεις και πληροφορίες λογαριασμού, είναι κρυπτογραφημένο με κωδικό πρόσβασης.
+        Ο κωδικός πρόσβασης απαιτείται για να εισαγάγετε ξανά τις ρυθμίσεις, οπότε, παρακαλούμε, μην τον ξεχάσετε!
+    </string>
+    <string name="title_setup_export_do">Το αρχείο εξαγωγής θα περιέχει όλες τις ρυθμίσεις και τα δεδομένα, αλλά όχι μηνύματα, ούτε και εικόνες ενσωματωμένες σε υπογραφές</string>
     <string name="title_setup_import_do">Οι εισαγόμενοι λογαριασμοί θα προστεθούν χωρίς να αντικατασταθεί κάποιος από τους ήδη υπάρχοντες</string>
+    <string name="title_setup_import_gmail">        Από το Android 8.0 Oreo και εξής, οι λογαριασμοί Gmail δεν μπορούν πλέον να εισαχθούν, καθώς κάθε λογαριασμός πρέπει να επιλεγεί, για να χορηγηθεί πρόσβαση στον λογαριασμό.
+        Μπορείτε εύκολα να επαναρρυθμίσετε τους λογαριασμούς Gmail με τον οδηγό γρήγορης ρύθμισης.
+    </string>
     <string name="title_setup_password">Κωδικός πρόσβασης</string>
     <string name="title_setup_password_chars">Ο κωδικός πρόσβασης περιέχει χαρακτήρες ελέγχου ή διαστήματα</string>
     <string name="title_setup_password_repeat">Επανάληψη κωδικού πρόσβασης</string>
     <string name="title_setup_password_missing">Λείπει ο κωδικός πρόσβασης</string>
     <string name="title_setup_password_different">Οι κωδικοί πρόσβασης δεν ταιριάζουν</string>
     <string name="title_setup_password_invalid">Μη έγκυρος κωδικός πρόσβασης</string>
+    <string name="title_setup_import_accounts">Εισαγωγή λογαριασμών και ταυτοτήτων</string>
+    <string name="title_setup_import_rules">Εισαγωγή κανόνων φίλτρων</string>
+    <string name="title_setup_import_contacts">Εισαγωγή τοπικών επαφών</string>
+    <string name="title_setup_import_answers">Εισαγωγή προτύπων απάντησης</string>
+    <string name="title_setup_import_settings">Εισαγωγή επιλογών</string>
     <string name="title_setup_exported">Επιτυχής εξαγωγή ρυθμίσεων</string>
     <string name="title_setup_imported">Επιτυχής εισαγωγή ρυθμίσεων</string>
     <string name="title_setup_import_invalid">Λάθος αρχείο ρυθμίσεων</string>
@@ -259,6 +275,7 @@
     <string name="title_advanced_check_reply_domain">Να ελέγχεται η διεύθυνση απάντησης κατά τον συγχρονισμό των μηνυμάτων</string>
     <string name="title_advanced_check_mx">Έλεγχος διευθύνσεων των αποστολέων κατά τον συγχρονισμό μηνυμάτων</string>
     <string name="title_advanced_check_blocklist">Έλεγχος αν το όνομα τομέα του αποστολέα περιλαμβάνεται σε λίστα αποκλεισμού σπαμ</string>
+    <string name="title_advanced_use_blocklist">Μετακίνηση μηνυμάτων από τομείς σε μια λίστα αποκλεισμού, προς τον φάκελο σπαμ</string>
     <string name="title_advanced_tune_keep_alive">Αυτόματη ρύθμιση του χρονικού διαστήματος για διατήρηση ενεργής σύνδεσης</string>
     <string name="title_advanced_keyboard">Εμφάνιση του πληκτρολογίου από προεπιλογή</string>
     <string name="title_advanced_keyboard_no_fullscreen">Να μην προβάλλεται το πληκτρολόγιο σε πλήρη οθόνη</string>
@@ -267,6 +284,7 @@
     <string name="title_advanced_suggest_sent">Προτείνονται διευθύνσεις που βρέθηκαν σε απεσταλμένα μηνύματα</string>
     <string name="title_advanced_suggest_received">Προτείνονται διευθύνσεις που βρέθηκαν σε μηνύματα που έχουν ληφθεί</string>
     <string name="title_advanced_suggest_frequently">Ταξινόμηση των προτεινόμενων διευθύνσεων με βάση τη συχνότητα που χρησιμοποιούνται</string>
+    <string name="title_advanced_alt_re_fwd">Εναλλακτικό πρόθεμα απάντησης/προώθησης</string>
     <string name="title_advanced_send_reminders">Εμφάνιση υπενθυμίσεων</string>
     <string name="title_advanced_send_delayed">Καθυστέρηση στην αποστολή μηνυμάτων</string>
     <string name="title_advanced_send_pending">Προβολή διακριτικού εικονιδίου για απεσταλμένα με χρονοκαθυστέρηση</string>
@@ -302,6 +320,7 @@
     <string name="title_advanced_ssl_harden">Θωράκιση συνδέσεων SSL</string>
     <string name="title_advanced_manage_connectivity">Διαχείριση συνδεσιμότητας</string>
     <string name="title_advanced_caption_general">Γενικά</string>
+    <string name="title_advanced_caption_checks">Έλεγχοι</string>
     <string name="title_advanced_caption_list">Λίστα</string>
     <string name="title_advanced_caption_conversation">Συζήτηση</string>
     <string name="title_advanced_caption_message">Μήνυμα</string>
@@ -310,6 +329,7 @@
     <string name="title_advanced_portrait2">Χρήση δύο σειρών στον κάθετο προσανατολισμό</string>
     <string name="title_advanced_landscape">Χρήση δύο στηλών στον οριζόντιο προσανατολισμό</string>
     <string name="title_advanced_landscape3">Προβολή μενού πλοήγησης κατά τον οριζόντιο προσανατολισμό από προεπιλογή</string>
+    <string name="title_advanced_nav_message_count">Να εμφανίζεται ο αριθμός των τοπικά αποθηκευμένων μηνυμάτων στο μενού πλοήγησης</string>
     <string name="title_advanced_startup">Εμφάνιση στην οθόνη έναρξης</string>
     <string name="title_advanced_cards">Προβολή σε στιλ κάρτας αντί σε στιλ πίνακα</string>
     <string name="title_advanced_cards_beige">Μπεζ φόντο κατά τη χρήση του στιλ κάρτας (ανοιχτόχρωμα θέματα μόνο)</string>
@@ -325,6 +345,8 @@
     <string name="title_advanced_color_stripe">Προβολή χρωματιστής λωρίδας</string>
     <string name="title_advanced_avatars">Προβολή φωτογραφιών επαφών</string>
     <string name="title_advanced_gravatars">Προβολή Gravatar</string>
+    <string name="title_advanced_bimi_unverified">Μη επαληθευμένος αποστολέας</string>
+    <string name="title_advanced_bimi_verified">Επαληθευμένος αποστολέας</string>
     <string name="title_advanced_favicons">Προβολή favicon</string>
     <string name="title_advanced_generated_icons">Να προβάλλονται εικονίδια που δημιουργούνται αυτόματα</string>
     <string name="title_advanced_identicons">Προβολή identicon</string>
@@ -358,8 +380,8 @@
     <string name="title_advanced_contrast">Χρήση υψηλής αντίθεσης για το κείμενο του μηνύματος</string>
     <string name="title_advanced_monospaced">Χρήση γραμματοσειράς σταθερού πλάτους από προεπιλογή</string>
     <string name="title_advanced_monospaced_pre">Χρήση γραμματοσειράς σταθερού πλάτους για προ-μορφοποιημένο κείμενο</string>
-    <string name="title_advanced_text_color">Χρήση των χρωμάτων του κειμένου</string>
     <string name="title_advanced_background_color">Χρήση χρωμάτων φόντου</string>
+    <string name="title_advanced_text_color">Χρήση των χρωμάτων του κειμένου</string>
     <string name="title_advanced_text_size">Χρήση των μεγεθών του κειμένου</string>
     <string name="title_advanced_text_font">Χρήση των γραμματοσειρών</string>
     <string name="title_advanced_text_align">Χρήση της στοίχισης του κειμένου</string>
@@ -373,7 +395,12 @@
     <string name="title_advanced_actionbar_color">Χρήση του χρώματος του λογαριασμού ως χρωματικό υπόβαθρο για τη γραμμή ενεργειών της συζήτησης</string>
     <string name="title_advanced_navbar_colorize">Να χρωματίζεται η γραμμή πλοήγησης του Android</string>
     <string name="title_advanced_parse_classes">Χρήση φύλλων στιλ</string>
-    <string name="title_advanced_authentication">Προβολή ειδοποίησης αν ο διακομιστής λήψης δεν μπόρεσε να πιστοποιήσει το μήνυμα</string>
+    <string name="title_advanced_authentication">Να προβάλλονται προειδοποιήσεις ταυτοποίησης</string>
+    <string name="title_advanced_authentication_hint">Οι υποκείμενοι έλεγχοι μπορούν να ρυθμιστούν στις ρυθμίσεις λήψης</string>
+    <string name="title_advanced_authentication_indicator">Να προβάλλεται ένδειξη για την κατάσταση του ελέγχου ταυτοποίησης</string>
+    <string name="title_advanced_authentication_none">Χωρίς ταυτοποίηση</string>
+    <string name="title_advanced_authentication_some">Μερική ταυτοποίηση</string>
+    <string name="title_advanced_authentication_all">Πλήρης ταυτοποίηση</string>
     <string name="title_advanced_sync_on_launch">Συγχρονισμός κατά την εκκίνηση της εφαρμογής</string>
     <string name="title_advanced_double_back">Δύο φορές \"πίσω\" για έξοδο</string>
     <string name="title_advanced_conversation_actions">Να προτείνονται ενέργειες (Android 10+)</string>
@@ -394,6 +421,7 @@
     <string name="title_advanced_collapse_multiple">Σύμπτυξη των μηνυμάτων σε μια συζήτηση με πολλαπλά μηνύματα, πατώντας \"πίσω\"</string>
     <string name="title_advanced_autoclose">Αυτόματη κλείσιμο των συζητήσεων</string>
     <string name="title_advanced_onclose">Κατά το κλείσιμο μιας συζήτησης</string>
+    <string name="title_advanced_autoclose_unread">Να κλείνουν οι συζητήσεις όταν τα μηνύματα επισημαίνονται ως μη αναγνωσμένα</string>
     <string name="title_advanced_undo">Χρονικό περιθώριο για αναίρεση</string>
     <string name="title_advanced_quick_filter">Διακριτικά εικονίδια για γρήγορο φιλτράρισμα</string>
     <string name="title_advanced_quick_scroll">Διακριτικά εικονίδια για ταχεία κύλιση προς τα πάνω/κάτω</string>
@@ -449,6 +477,7 @@
     <string name="title_advanced_secure">Απόκρυψη του FairEmail από τη λίστα των πρόσφατων εφαρμογών και παρεμπόδιση λήψης στιγμιοτύπου οθόνης</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Χρονικό περιθώριο για τη βιομετρική ταυτοποίηση</string>
+    <string name="title_advanced_generic_user_agent">Χρήση του γενικού πράκτορα χρήστη του περιηγητή</string>
     <string name="title_advanced_disconnect_auto_update">Αυτόματη εβδομαδιαία ενημέρωση των λιστών</string>
     <string name="title_advanced_disconnect_links">Χρήση προειδοποιητικών λιστών για συνδέσμους ιχνηλάτησης</string>
     <string name="title_advanced_disconnect_images">Χρήση λιστών για ταυτοποίηση των εικόνων ιχνηλάτησης</string>
@@ -543,6 +572,7 @@
     <string name="title_advanced_sender_hint">Οι περισσότεροι πάροχοι δεν επιτρέπουν τροποποιημένες διευθύνσεις αποστολέων</string>
     <string name="title_advanced_bcc_hint">Η διεύθυνση δεν θα προβληθεί αλλά θα προστεθεί κατά την αποστολή</string>
     <string name="title_advanced_internal_hint">Θα υπάρξει μια προειδοποίηση κατά την αποστολή προς άλλον τομέα</string>
+    <string name="title_advanced_e2e_encryption" comment="title_advanced_e2e_encryption&#10;Heading for default sign/encrypt in the advanced identity settings">Επιλογές για από άκρο σε άκρο κρυπτογράφηση</string>
     <string name="title_advanced_display_harmful_hint">Η απενεργοποίηση αυτής της επιλογής μπορεί να θέσει σε κίνδυνο τα προσωπικά σας δεδομένα</string>
     <string name="title_advanced_display_hidden_hint">Ενδέχεται να προκαλέσει προβλήματα προβολής ή διπλά κείμενα</string>
     <string name="title_advanced_display_pin_hint">Ένα PIN έχει προτεραιότητα έναντι της βιομετρικής ταυτοποίησης</string>
@@ -572,6 +602,7 @@
     <string name="title_advanced_edit_name">Επεξεργασία ονόματος</string>
     <string name="title_advanced_swipe_actions">Ορίστε τις ενέργειες σάρωσης</string>
     <string name="title_advanced_swipe_actions_hint">Θα ορίσει τις ενέργειες σάρωσης αριστερά και δεξιά για όλους τους λογαριασμούς IMAP</string>
+    <string name="title_advanced_swipe_sensitivity">Ευαισθησία σάρωσης προς αριστερά/δεξιά</string>
     <string name="title_select">Επιλέξτε &#8230;</string>
     <string name="title_identity_name">Το όνομα σας</string>
     <string name="title_identity_email">Η διεύθυνση ηλεκτρονικού ταχυδρομείου σας</string>
@@ -595,6 +626,7 @@
     <string name="title_account_interval_hint">Συχνότητα ανανέωσης της σύνδεσης για μηνύματα push ή συχνότητα ελέγχου για νέα μηνύματα</string>
     <string name="title_account_partial_fetch_hint">Απενεργοποιήστε το μόνο σε περιπτώσεις κενών μηνυμάτων ή χαλασμένων συνημμένων</string>
     <string name="title_color">Χρώμα</string>
+    <string name="title_background">Φόντο</string>
     <string name="title_transparent">Διαφανές</string>
     <string name="title_account_ondemand">Χειροκίνητος συγχρονισμός</string>
     <string name="title_account_notify">Χωριστές ειδοποιήσεις</string>
@@ -629,7 +661,8 @@
     <string name="title_leave_deleted">Να παραμένουν τα διεγραμμένα μηνύματα στον εξυπηρετητή</string>
     <string name="title_leave_on_device">Να παραμένουν τα μηνύματα στη συσκευή</string>
     <string name="title_max_messages">Μέγιστος αριθμός μηνυμάτων για κατέβασμα (κενό για όλα)</string>
-    <string name="title_keep_alive_interval">Μεσοδιάστημα διατήρησης της σύνδεσης (λεπτά)</string>
+    <string name="title_keep_poll_interval">Χρονικό διάστημα μεταξύ συγχρονισμών (λεπτά)</string>
+    <string name="title_keep_alive_interval">Μεσοδιάστημα διατήρησης ενεργούς σύνδεσης (λεπτά)</string>
     <string name="title_server_time">Χρήση της ώρας λήψης (διακομιστής)</string>
     <string name="title_received_header">Χρήση της κεφαλίδας \"Λήφθηκε\"</string>
     <string name="title_date_header">Χρήση κεφαλίδας \"Ημερομηνία\" (ώρα αποστολής)</string>
@@ -686,6 +719,8 @@
     <string name="title_synchronize_enabled">Συγχρονισμός</string>
     <string name="title_synchronize_batch_enable">Ενεργοποίηση συγχρονισμού</string>
     <string name="title_synchronize_batch_disable">Απενεργοποίηση συγχρονισμού</string>
+    <string name="title_notify_batch_enable">Ενεργοποίηση ειδοποιήσεων για νέα μηνύματα</string>
+    <string name="title_notify_batch_disable">Απενεργοποίηση ειδοποιήσεων για νέα μηνύματα</string>
     <string name="title_delete_local">Διαγραφή τοπικών μηνυμάτων</string>
     <string name="title_delete_browsed">Διαγραφή των φυλλομετρημένων/αναζητημένων μηνυμάτων</string>
     <string name="title_empty_trash">Άδειασμα κάδου απορριμμάτων</string>
@@ -955,6 +990,7 @@
     <string name="title_style_font">Γραμματοσειρά</string>
     <string name="title_style_font_default">Προεπιλογή</string>
     <string name="title_style_blockquote">Παράθεμα με εσοχή</string>
+    <string name="title_style_indentation">Εσοχή</string>
     <string name="title_style_strikethrough">Διακριτή διαγραφή</string>
     <string name="title_style_clear">Εκκαθάριση μορφοποίησης</string>
     <string name="title_style_link">Εισαγωγή συνδέσμου</string>
@@ -1110,6 +1146,7 @@
     <string name="title_select_found">Επιλογή αποτελεσμάτων αναζήτησης</string>
     <string name="title_mark_all_read">Επισήμανση όλων ως αναγνωσμένων</string>
     <string name="title_force_sync">Αναγκαστικός συγχρονισμός</string>
+    <string name="title_force_reload" comment="title_force_reload&#10;Title for menu item in operations view to restart the sync service">Αναγκαστική επανεκκίνηση</string>
     <string name="title_force_send">Αναγκαστική αποστολή</string>
     <string name="title_language_all">Όλα</string>
     <string name="title_previous">Προηγούμενο</string>
@@ -1333,6 +1370,7 @@
     <string name="title_check_owner">Επαλήθευση κατόχου</string>
     <string name="title_remark_owner">Θα ανακτηθούν πληροφορίες από <a href="https://ipinfo.io/">ipinfo.io</a></string>
     <string name="title_ip_owner">Διεύθυνση IP κατόχου</string>
+    <string name="title_reset_open">Ορισμός ή εκκαθάριση προεπιλεγμένων εφαρμογών</string>
     <string name="title_select_app">Επιλογή εφαρμογής</string>
     <string name="title_updated">Υπάρχει διαθέσιμη μια ενημέρωση για την έκδοση %1$s</string>
     <string name="title_issue">Έχετε μία ερώτηση ή κάποιο πρόβλημα;</string>

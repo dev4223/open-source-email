@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -46,6 +47,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.DeadSystemException;
 import android.os.Debug;
+import android.os.OperationCanceledException;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
@@ -205,10 +207,13 @@ public class Log {
     public static int w(Throwable ex) {
         if (BuildConfig.BETA_RELEASE)
             try {
+                final StackTraceElement[] ste = new Throwable().getStackTrace();
                 Bugsnag.notify(ex, new OnErrorCallback() {
                     @Override
                     public boolean onError(@NonNull Event event) {
                         event.setSeverity(Severity.INFO);
+                        if (ste.length > 1)
+                            event.addMetadata("extra", "caller", ste[1].toString());
                         return true;
                     }
                 });
@@ -221,10 +226,13 @@ public class Log {
     public static int e(Throwable ex) {
         if (BuildConfig.BETA_RELEASE)
             try {
+                final StackTraceElement[] ste = new Throwable().getStackTrace();
                 Bugsnag.notify(ex, new OnErrorCallback() {
                     @Override
                     public boolean onError(@NonNull Event event) {
                         event.setSeverity(Severity.WARNING);
+                        if (ste.length > 1)
+                            event.addMetadata("extra", "caller", ste[1].toString());
                         return true;
                     }
                 });
@@ -279,17 +287,24 @@ public class Log {
         }
     }
 
-    static void breadcrumb(String name, String key, String value) {
+    public static void breadcrumb(String name, String key, String value) {
         Map<String, String> crumb = new HashMap<>();
         crumb.put(key, value);
         breadcrumb(name, crumb);
     }
 
-    static void breadcrumb(String name, Map<String, String> crumb) {
+    public static void breadcrumb(String name, Map<String, String> crumb) {
         try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Breadcrumb ").append(name);
             Map<String, Object> ocrumb = new HashMap<>();
-            for (String key : crumb.keySet())
-                ocrumb.put(key, crumb.get(key));
+            for (String key : crumb.keySet()) {
+                String val = crumb.get(key);
+                sb.append(' ').append(key).append('=').append(val);
+                ocrumb.put(key, val);
+            }
+            if (BuildConfig.DEBUG)
+                Log.i(sb.toString());
             Bugsnag.leaveBreadcrumb(name, ocrumb, BreadcrumbType.LOG);
         } catch (Throwable ex) {
             ex.printStackTrace();
@@ -1456,7 +1471,9 @@ public class Log {
                 return null;
 
             if (ex instanceof StoreClosedException ||
-                    ex instanceof FolderClosedException || ex instanceof FolderClosedIOException)
+                    ex instanceof FolderClosedException ||
+                    ex instanceof FolderClosedIOException ||
+                    ex instanceof OperationCanceledException)
                 return null;
 
             if (ex instanceof IllegalStateException &&
@@ -1630,8 +1647,18 @@ public class Log {
     private static StringBuilder getAppInfo(Context context) {
         StringBuilder sb = new StringBuilder();
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        PackageManager pm = context.getPackageManager();
+        String installer = pm.getInstallerPackageName(BuildConfig.APPLICATION_ID);
+        int targetSdk = -1;
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(BuildConfig.APPLICATION_ID, 0);
+            targetSdk = ai.targetSdkVersion;
+        } catch (PackageManager.NameNotFoundException ignore) {
+        }
+
         // Get version info
-        String installer = context.getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
         sb.append(String.format("%s: %s/%s %s/%s%s%s%s%s\r\n",
                 context.getString(R.string.app_name),
                 BuildConfig.APPLICATION_ID,
@@ -1642,7 +1669,8 @@ public class Log {
                 Helper.hasPlayStore(context) ? "s" : "",
                 BuildConfig.DEBUG ? "d" : "",
                 ActivityBilling.isPro(context) ? "+" : ""));
-        sb.append(String.format("Android: %s (SDK %d)\r\n", Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
+        sb.append(String.format("Android: %s (SDK %d/%d)\r\n",
+                Build.VERSION.RELEASE, Build.VERSION.SDK_INT, targetSdk));
         sb.append("\r\n");
 
         // Get device info
@@ -1658,7 +1686,9 @@ public class Log {
         sb.append("\r\n");
 
         Locale slocale = Resources.getSystem().getConfiguration().locale;
-        sb.append(String.format("Locale: %s/%s\r\n", Locale.getDefault(), slocale));
+        String language = prefs.getString("language", null);
+        sb.append(String.format("Locale: def=%s sys=%s lang=%s\r\n",
+                Locale.getDefault(), slocale, language));
 
         sb.append(String.format("Processors: %d\r\n", Runtime.getRuntime().availableProcessors()));
 
@@ -1695,9 +1725,11 @@ public class Log {
         int uiMode = context.getResources().getConfiguration().uiMode;
         sb.append(String.format("UI mode: 0x"))
                 .append(Integer.toHexString(uiMode))
-                .append(" night")
-                .append(" no=").append((uiMode & Configuration.UI_MODE_NIGHT_NO) != 0)
-                .append(" yes=").append((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+                .append(" night=").append(Helper.isNight(context))
+                .append("\r\n");
+
+        sb.append("canScheduleExactAlarms=")
+                .append(AlarmManagerCompatEx.canScheduleExactAlarms(context))
                 .append("\r\n");
 
         sb.append("Transliterate: ")
@@ -1711,10 +1743,10 @@ public class Log {
             sb.append(ex.toString()).append("\r\n");
         }
 
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         boolean ignoring = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            ignoring = pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
+            ignoring = power.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
         sb.append(String.format("Battery optimizations: %b\r\n", !ignoring));
         sb.append(String.format("Charging: %b\r\n", Helper.isCharging(context)));
 
@@ -1733,7 +1765,6 @@ public class Log {
         String charset = MimeUtility.getDefaultJavaCharset();
         sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean reporting = prefs.getBoolean("crash_reports", false);
         if (reporting) {
             String uuid = prefs.getString("uuid", null);
@@ -1898,7 +1929,6 @@ public class Log {
                     jaccount.put("keep_alive_failed", account.keep_alive_failed);
                     jaccount.put("keep_alive_succeeded", account.keep_alive_succeeded);
 
-                    jaccount.remove("user");
                     jaccount.remove("password");
 
                     size += write(os, "==========\r\n");
@@ -1915,12 +1945,15 @@ public class Log {
                         jfolder.put("subscribed", folder.subscribed);
                         jfolder.put("state", folder.state == null ? "null" : folder.state);
                         jfolder.put("sync_state", folder.sync_state == null ? "null" : folder.sync_state);
+                        jfolder.put("poll_count", folder.poll_count);
                         jfolder.put("read_only", folder.read_only);
                         jfolder.put("selectable", folder.selectable);
                         jfolder.put("inferiors", folder.inferiors);
                         jfolder.put("error", folder.error);
                         if (folder.last_sync != null)
                             jfolder.put("last_sync", new Date(folder.last_sync).toString());
+                        if (folder.last_sync_count != null)
+                            jfolder.put("last_sync_count", folder.last_sync_count);
                         size += write(os, jfolder.toString(2) + "\r\n");
                     }
 
@@ -1928,7 +1961,6 @@ public class Log {
                     for (EntityIdentity identity : identities)
                         try {
                             JSONObject jidentity = identity.toJSON();
-                            jidentity.remove("user");
                             jidentity.remove("password");
                             jidentity.remove("signature");
                             size += write(os, "----------\r\n");

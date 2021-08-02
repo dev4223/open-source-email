@@ -392,7 +392,7 @@ public class EntityRule {
             case TYPE_IMPORTANCE:
                 return;
             case TYPE_KEYWORD:
-                String keyword = jargs.getString("keyword");
+                String keyword = jargs.optString("keyword");
                 if (TextUtils.isEmpty(keyword))
                     throw new IllegalArgumentException(context.getString(R.string.title_rule_keyword_missing));
                 return;
@@ -637,7 +637,7 @@ public class EntityRule {
 
         reply.id = db.message().insertMessage(reply);
 
-        String body = answer.getText(message.from);
+        String body = answer.getHtml(message.from);
         Document msg = JsoupEx.parse(body);
 
         Element div = msg.createElement("div");
@@ -646,7 +646,14 @@ public class EntityRule {
         div.appendChild(p);
 
         Document answering = JsoupEx.parse(message.getFile(context));
-        div.appendChild(answering.body().tagName(quote ? "blockquote" : "p"));
+        Element e = answering.body();
+        if (quote) {
+            String style = e.attr("style");
+            style = HtmlHelper.mergeStyles(style, HtmlHelper.getQuoteStyle(e));
+            e.tagName("blockquote").attr("style", style);
+        } else
+            e.tagName("p");
+        div.appendChild(e);
 
         msg.body().appendChild(div);
 
@@ -860,7 +867,7 @@ public class EntityRule {
             int at = sender.indexOf('@');
             if (at > 0) {
                 boolean whitelisted = false;
-                String domain = UriHelper.getParentDomain(sender.substring(at + 1));
+                String domain = UriHelper.getParentDomain(context, sender.substring(at + 1));
                 for (String d : whitelist)
                     if (domain.matches(d)) {
                         whitelisted = true;

@@ -67,7 +67,6 @@
     <string name="title_notification_waiting">درحال انتظار برای اتصال مناسب</string>
     <string name="title_notification_idle">بیکار</string>
     <string name="title_notification_failed">\'%1$s\' انجام نشد</string>
-    <string name="title_notification_alert">\'%1$s\' هشدار سرور</string>
     <string name="title_notification_sending_left">تلاش‌های باقی‌مانده: %1$d</string>
     <string name="title_notification_sending_failed">ارسال به %1$s ناموفق بود</string>
     <string name="title_factor_minutes">%1$d دقیقه</string>
@@ -409,7 +408,6 @@
     <string name="title_leave_on_server">رها کردن پیام‌ها روی سرور</string>
     <string name="title_leave_deleted">رهاکردن پیام‌های حذف شده روی سرور</string>
     <string name="title_leave_on_device">رها کردن پیام‌ها روی دستگاه</string>
-    <string name="title_keep_alive_interval">فعال ماندن/فاصله اخذ (دقایق)</string>
     <string name="title_check">بررسی</string>
     <string name="title_no_name">نام وجود ندارد</string>
     <string name="title_no_email">ایمیل آدرس وجود ندارد</string>

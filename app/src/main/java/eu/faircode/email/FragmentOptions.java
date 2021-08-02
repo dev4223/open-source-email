@@ -21,17 +21,14 @@ package eu.faircode.email;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
-import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -43,8 +40,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +47,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
-import androidx.constraintlayout.widget.Group;
 import androidx.cursoradapter.widget.CursorAdapter;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
@@ -111,14 +105,16 @@ public class FragmentOptions extends FragmentBase {
 
     static String[] OPTIONS_RESTART = new String[]{
             "first", "app_support", "notify_archive", "message_swipe", "message_select", "folder_actions", "folder_sync",
-            "subscriptions", "check_authentication", "check_reply_domain",
+            "subscriptions",
+            "check_authentication", "check_reply_domain", "check_mx", "check_blocklist",
             "send_pending",
-            "portrait2", "landscape", "landscape3", "startup",
+            "portrait2", "landscape", "landscape3", "nav_count", "startup",
             "cards", "beige", "tabular_card_bg", "shadow_unread",
             "indentation", "date", "date_bold", "threading", "threading_unread",
             "highlight_unread", "highlight_color", "color_stripe",
-            "avatars", "gravatars", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
-            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients", "authentication",
+            "avatars", "bimi", "gravatars", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
+            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients",
+            "authentication", "authentication_indicator",
             "subject_top", "font_size_sender", "font_size_subject", "subject_italic", "highlight_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines",
             "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt", "thumbnails",
@@ -126,7 +122,7 @@ public class FragmentOptions extends FragmentBase {
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_color", "navbar_colorize",
-            "autoscroll", "swipenav", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
+            "autoscroll", "swipenav", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
             "language_detection",
             "quick_filter", "quick_scroll",
             "experiments", "debug",
@@ -260,8 +256,31 @@ public class FragmentOptions extends FragmentBase {
 
                     pager.setCurrentItem(tab);
                     FragmentBase fragment = (FragmentBase) adapter.instantiateItem(pager, tab);
-                    fragment.scrollTo(resid);
+                    fragment.scrollTo(resid, -48);
                     menuSearch.collapseActionView();
+
+                    // Blink found text
+                    View view = fragment.getView();
+                    if (view != null) {
+                        View child = view.findViewById(resid);
+                        if (child != null) {
+                            int c = Helper.resolveColor(view.getContext(), R.attr.colorHighlight);
+                            Drawable b = child.getBackground();
+                            child.post(new Runnable() {
+                                private int count = 0;
+
+                                @Override
+                                public void run() {
+                                    if (count % 2 == 1)
+                                        child.setBackground(b);
+                                    else
+                                        child.setBackgroundColor(c);
+                                    if (++count <= 7)
+                                        child.postDelayed(this, 250);
+                                }
+                            });
+                        }
+                    }
                 }
 
                 return true;
@@ -407,62 +426,6 @@ public class FragmentOptions extends FragmentBase {
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
-    }
-
-    public static class FragmentDialogStill extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Context context = getContext();
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_setup, null);
-            TextView tvDozeDevice = dview.findViewById(R.id.tvDozeDevice);
-            TextView tvDozeAndroid = dview.findViewById(R.id.tvDozeAndroid);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-            Group grp2 = dview.findViewById(R.id.grp2);
-            Group grp3 = dview.findViewById(R.id.grp3);
-
-            tvDozeDevice.setPaintFlags(tvDozeDevice.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            tvDozeDevice.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.view(context, Uri.parse(Helper.DONTKILL_URI), true);
-                }
-            });
-
-            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    prefs.edit().putBoolean("setup_reminder", !isChecked).apply();
-                }
-            });
-
-            boolean hasPermissions = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
-            Boolean isIgnoring = Helper.isIgnoringOptimizations(context);
-            boolean isKilling = Helper.isKilling() && !(isIgnoring == null || isIgnoring);
-            boolean isRequired = Helper.isDozeRequired() && !(isIgnoring == null || isIgnoring);
-
-            tvDozeDevice.setVisibility(isKilling && !isRequired ? View.VISIBLE : View.GONE);
-            tvDozeAndroid.setVisibility(isRequired ? View.VISIBLE : View.GONE);
-            cbNotAgain.setVisibility(isRequired ? View.GONE : View.VISIBLE);
-
-            grp2.setVisibility(hasPermissions ? View.GONE : View.VISIBLE);
-            grp3.setVisibility(isIgnoring == null || isIgnoring ? View.GONE : View.VISIBLE);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    });
-
-            if (!isRequired)
-                builder.setNegativeButton(android.R.string.cancel, null);
-
-            return builder.create();
-        }
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {

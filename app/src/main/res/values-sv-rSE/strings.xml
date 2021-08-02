@@ -82,7 +82,6 @@
     <string name="title_notification_waiting">Väntar på lämplig anslutning</string>
     <string name="title_notification_idle">Inaktiv</string>
     <string name="title_notification_failed">\"%1$s\" misslyckades</string>
-    <string name="title_notification_alert">\"%1$s\" servermeddelande</string>
     <string name="title_notification_sending_left">Försök kvar: %1$d</string>
     <string name="title_notification_sending_failed">Det gick inte att skicka till %1$s</string>
     <string name="title_notification_redacted">Redigering: biometrisk autentisering eller PIN-kod aktiverad</string>
@@ -178,7 +177,6 @@
     <string name="title_setup_configuring">Konfigurerar konto &#8230;</string>
     <string name="title_setup_export">Exportera inställningar</string>
     <string name="title_setup_import">Importera inställningar</string>
-    <string name="title_setup_export_do">Lösenordet används för att kryptera inställningarna och krävs för att importera inställningarna igen</string>
     <string name="title_setup_import_do">Importerade konton kommer att läggas till utan att skriva över några befintliga</string>
     <string name="title_setup_password">Lösenord</string>
     <string name="title_setup_password_chars">Lösenordet innehåller CTRL- eller blanksteg</string>
@@ -356,7 +354,6 @@
     <string name="title_advanced_actionbar_color">Använd kontofärg som bakgrundsfärg för konversationsfältet</string>
     <string name="title_advanced_navbar_colorize">Färglägg navigeringsfältet för Android</string>
     <string name="title_advanced_parse_classes">Tolka stilmallar</string>
-    <string name="title_advanced_authentication">Visa en varning när den mottagande servern inte kunde autentisera meddelandet</string>
     <string name="title_advanced_sync_on_launch">Synkronisera vid start</string>
     <string name="title_advanced_double_back">Dubbel \"tillbaka\" för att avsluta</string>
     <string name="title_advanced_conversation_actions">Föreslå åtgärder (Android 10+)</string>
@@ -603,7 +600,7 @@
     <string name="title_leave_deleted">Lämna raderade meddelanden på servern</string>
     <string name="title_leave_on_device">Spara meddelanden på enheten</string>
     <string name="title_max_messages">Maximalt antal meddelanden att ladda ner (lämna tomt för alla)</string>
-    <string name="title_keep_alive_interval">Keep-alive/frågeintervall (minuter)</string>
+    <string name="title_keep_poll_interval">Avsökningsintervall (minuter)</string>
     <string name="title_server_time">Använd mottagen tid (server)</string>
     <string name="title_received_header">Använd \'Mottagen\' i header</string>
     <string name="title_date_header">Använd \'Datum\' i header (skickad tid)</string>

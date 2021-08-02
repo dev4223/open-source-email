@@ -38,10 +38,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
+import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -70,6 +73,8 @@ import org.bouncycastle.util.io.pem.PemReader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -113,6 +118,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
     private boolean hasAccount;
     private String password;
+    private boolean import_accounts;
+    private boolean import_rules;
+    private boolean import_contacts;
+    private boolean import_answers;
+    private boolean import_settings;
 
     private static final int KEY_ITERATIONS = 65536;
     private static final int KEY_LENGTH = 256;
@@ -189,13 +199,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
         final List<NavMenuItem> menus = new ArrayList<>();
 
+        int colorWarning = Helper.resolveColor(this, R.attr.colorWarning);
         menus.add(new NavMenuItem(R.drawable.twotone_close_24, R.string.title_setup_close, new Runnable() {
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer, false);
                 onBackPressed();
             }
-        }).setSeparated());
+        }).setColor(colorWarning).setSeparated());
 
         menus.add(new NavMenuItem(R.drawable.twotone_archive_24, R.string.title_setup_export, new Runnable() {
             @Override
@@ -304,10 +315,19 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
         }
 
-        if (savedInstanceState != null)
+        if (savedInstanceState != null) {
             drawerToggle.setDrawerIndicatorEnabled(savedInstanceState.getBoolean("fair:toggle"));
+            password = savedInstanceState.getString("fair:password");
+            import_accounts = savedInstanceState.getBoolean("fair:import_accounts");
+            import_rules = savedInstanceState.getBoolean("fair:import_rules");
+            import_contacts = savedInstanceState.getBoolean("fair:import_contacts");
+            import_answers = savedInstanceState.getBoolean("fair:import_answers");
+            import_settings = savedInstanceState.getBoolean("fair:import_settings");
+        }
 
-        DB.getInstance(this).account().liveSynchronizingAccounts().observe(this, new Observer<List<EntityAccount>>() {
+        DB db = DB.getInstance(this);
+
+        db.account().liveSynchronizingAccounts().observe(this, new Observer<List<EntityAccount>>() {
             @Override
             public void onChanged(List<EntityAccount> accounts) {
                 hasAccount = (accounts != null && accounts.size() > 0);
@@ -318,6 +338,12 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("fair:toggle", drawerToggle.isDrawerIndicatorEnabled());
+        outState.putString("fair:password", password);
+        outState.putBoolean("fair:import_accounts", import_accounts);
+        outState.putBoolean("fair:import_rules", import_rules);
+        outState.putBoolean("fair:import_contacts", import_contacts);
+        outState.putBoolean("fair:import_answers", import_answers);
+        outState.putBoolean("fair:import_settings", import_settings);
         super.onSaveInstanceState(outState);
     }
 
@@ -408,11 +434,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             switch (requestCode) {
                 case REQUEST_EXPORT:
                     if (resultCode == RESULT_OK && data != null)
-                        handleExport(data, this.password);
+                        handleExport(data);
                     break;
                 case REQUEST_IMPORT:
                     if (resultCode == RESULT_OK && data != null)
-                        handleImport(data, this.password);
+                        handleImport(data);
                     break;
                 case REQUEST_IMPORT_CERTIFICATE:
                     if (resultCode == RESULT_OK && data != null)
@@ -443,11 +469,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         }
 
         try {
-            Bundle args = new Bundle();
-            args.putBoolean("export", export);
-
-            FragmentDialogPassword fragment = new FragmentDialogPassword();
-            fragment.setArguments(args);
+            FragmentDialogBase fragment =
+                    (export ? new FragmentDialogExport() : new FragmentDialogImport());
             fragment.show(getSupportFragmentManager(), "password");
         } catch (Throwable ex) {
             Log.unexpectedError(getSupportFragmentManager(), ex);
@@ -522,7 +545,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuPrivacy() {
-        Helper.view(this, Uri.parse(Helper.PRIVACY_URI), false);
+        Helper.view(this, Helper.getPrivacyUri(this), false);
     }
 
     private void onMenuAbout() {
@@ -534,10 +557,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         fragmentTransaction.commit();
     }
 
-    private void handleExport(Intent data, String password) {
+    private void handleExport(Intent data) {
         Bundle args = new Bundle();
         args.putParcelable("uri", data.getData());
-        args.putString("password", password);
+        args.putString("password", this.password);
 
         new SimpleTask<Void>() {
             @Override
@@ -549,6 +572,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             protected Void onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
                 String password = args.getString("password");
+                EntityLog.log(context, "Exporting " + uri);
 
                 if (!"content".equals(uri.getScheme())) {
                     Log.w("Export uri=" + uri);
@@ -726,10 +750,32 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         }.execute(this, args, "setup:export");
     }
 
-    private void handleImport(Intent data, String password) {
+    private void handleImport(Intent data) {
+        Uri uri = data.getData();
+
+        if (uri != null)
+            try {
+                DocumentFile df = DocumentFile.fromSingleUri(this, uri);
+                if (df != null) {
+                    String name = df.getName();
+                    String ext = Helper.getExtension(name);
+                    if ("k9s".equals(ext)) {
+                        handleK9Import(uri);
+                        return;
+                    }
+                }
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
+
         Bundle args = new Bundle();
-        args.putParcelable("uri", data.getData());
-        args.putString("password", password);
+        args.putParcelable("uri", uri);
+        args.putString("password", this.password);
+        args.putBoolean("import_accounts", this.import_accounts);
+        args.putBoolean("import_rules", this.import_rules);
+        args.putBoolean("import_contacts", this.import_contacts);
+        args.putBoolean("import_answers", this.import_answers);
+        args.putBoolean("import_settings", this.import_settings);
 
         new SimpleTask<Void>() {
             @Override
@@ -741,6 +787,17 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             protected Void onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
                 String password = args.getString("password");
+                boolean import_accounts = args.getBoolean("import_accounts");
+                boolean import_rules = args.getBoolean("import_rules");
+                boolean import_contacts = args.getBoolean("import_contacts");
+                boolean import_answers = args.getBoolean("import_answers");
+                boolean import_settings = args.getBoolean("import_settings");
+                EntityLog.log(context, "Importing " + uri +
+                        " accounts=" + import_accounts +
+                        " rules=" + import_rules +
+                        " contacts=" + import_contacts +
+                        " answers=" + import_answers +
+                        " settings=" + import_settings);
 
                 if (!"content".equals(uri.getScheme()) &&
                         !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -797,286 +854,306 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     Map<Long, Long> xFolder = new HashMap<>();
                     List<EntityRule> rules = new ArrayList<>();
 
-                    // Answers
-                    JSONArray janswers = jimport.getJSONArray("answers");
-                    for (int a = 0; a < janswers.length(); a++) {
-                        JSONObject janswer = (JSONObject) janswers.get(a);
-                        EntityAnswer answer = EntityAnswer.fromJSON(janswer);
-                        long id = answer.id;
-                        answer.id = null;
+                    if (import_answers) {
+                        // Answers
+                        JSONArray janswers = jimport.getJSONArray("answers");
+                        for (int a = 0; a < janswers.length(); a++) {
+                            JSONObject janswer = (JSONObject) janswers.get(a);
+                            EntityAnswer answer = EntityAnswer.fromJSON(janswer);
+                            long id = answer.id;
+                            answer.id = null;
 
-                        answer.id = db.answer().insertAnswer(answer);
-                        xAnswer.put(id, answer.id);
+                            answer.id = db.answer().insertAnswer(answer);
+                            xAnswer.put(id, answer.id);
 
-                        Log.i("Imported answer=" + answer.name + " id=" + answer.id + " (" + id + ")");
+                            Log.i("Imported answer=" + answer.name + " id=" + answer.id + " (" + id + ")");
+                        }
                     }
 
-                    EntityAccount primary = db.account().getPrimaryAccount();
+                    if (import_accounts) {
+                        EntityAccount primary = db.account().getPrimaryAccount();
 
-                    // Accounts
-                    JSONArray jaccounts = jimport.getJSONArray("accounts");
-                    for (int a = 0; a < jaccounts.length(); a++) {
-                        JSONObject jaccount = (JSONObject) jaccounts.get(a);
-                        EntityAccount account = EntityAccount.fromJSON(jaccount);
+                        // Accounts
+                        JSONArray jaccounts = jimport.getJSONArray("accounts");
+                        for (int a = 0; a < jaccounts.length(); a++) {
+                            JSONObject jaccount = (JSONObject) jaccounts.get(a);
+                            EntityAccount account = EntityAccount.fromJSON(jaccount);
 
-                        if (account.auth_type == AUTH_TYPE_GMAIL) {
-                            if (GmailState.getAccount(context, account.user) == null) {
-                                Log.i("Google account not found user=" + account.user);
+                            EntityAccount existing = db.account().getAccountByUUID(account.uuid);
+                            if (existing != null) {
+                                EntityLog.log(context, "Existing account=" + account.name +
+                                        "id=" + account.id);
                                 continue;
                             }
-                        }
 
-                        Long aid = account.id;
-                        account.id = null;
+                            if (account.auth_type == AUTH_TYPE_GMAIL) {
+                                if (GmailState.getAccount(context, account.user) == null) {
+                                    Log.i("Google account not found user=" + account.user);
+                                    continue;
+                                }
+                            }
 
-                        if (primary != null)
-                            account.primary = false;
+                            Long aid = account.id;
+                            account.id = null;
 
-                        // Forward referenced
-                        Long swipe_left = account.swipe_left;
-                        Long swipe_right = account.swipe_right;
-                        Long move_to = account.move_to;
-                        if (account.swipe_left != null && account.swipe_left > 0)
-                            account.swipe_left = null;
-                        if (account.swipe_right != null && account.swipe_right > 0)
-                            account.swipe_right = null;
-                        account.move_to = null;
+                            if (primary != null)
+                                account.primary = false;
 
-                        account.created = new Date().getTime();
-                        account.id = db.account().insertAccount(account);
-                        Log.i("Imported account=" + account.name + " id=" + account.id + " (" + aid + ")");
+                            // Forward referenced
+                            Long swipe_left = account.swipe_left;
+                            Long swipe_right = account.swipe_right;
+                            Long move_to = account.move_to;
+                            if (account.swipe_left != null && account.swipe_left > 0)
+                                account.swipe_left = null;
+                            if (account.swipe_right != null && account.swipe_right > 0)
+                                account.swipe_right = null;
+                            account.move_to = null;
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            account.deleteNotificationChannel(context);
-
-                            if (account.notify)
-                                if (jaccount.has("channel")) {
-                                    NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
-                                    nm.createNotificationChannelGroup(group);
-
-                                    JSONObject jchannel = (JSONObject) jaccount.get("channel");
-                                    jchannel.put("id", EntityAccount.getNotificationChannelId(account.id));
-                                    jchannel.put("group", group.getId());
-                                    nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
-
-                                    Log.i("Imported account channel=" + jchannel);
-                                } else
-                                    account.createNotificationChannel(context);
-                        }
-
-                        JSONArray jidentities = (JSONArray) jaccount.get("identities");
-                        for (int i = 0; i < jidentities.length(); i++) {
-                            JSONObject jidentity = (JSONObject) jidentities.get(i);
-                            EntityIdentity identity = EntityIdentity.fromJSON(jidentity);
-                            long id = identity.id;
-                            identity.id = null;
-
-                            identity.account = account.id;
-                            identity.id = db.identity().insertIdentity(identity);
-                            xIdentity.put(id, identity.id);
-
-                            Log.i("Imported identity=" + identity.email + " id=" + identity + id + " (" + id + ")");
-                        }
-
-                        JSONArray jfolders = (JSONArray) jaccount.get("folders");
-                        for (int f = 0; f < jfolders.length(); f++) {
-                            JSONObject jfolder = (JSONObject) jfolders.get(f);
-                            EntityFolder folder = EntityFolder.fromJSON(jfolder);
-                            long id = folder.id;
-                            folder.id = null;
-
-                            folder.account = account.id;
-                            folder.id = db.folder().insertFolder(folder);
-                            xFolder.put(id, folder.id);
-
-                            if (Objects.equals(swipe_left, id))
-                                account.swipe_left = folder.id;
-                            if (Objects.equals(swipe_right, id))
-                                account.swipe_right = folder.id;
-                            if (Objects.equals(move_to, id))
-                                account.move_to = folder.id;
+                            account.created = new Date().getTime();
+                            account.id = db.account().insertAccount(account);
+                            EntityLog.log(context, "Imported account=" + account.name +
+                                    " id=" + account.id + " (" + aid + ")");
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                String channelId = EntityFolder.getNotificationChannelId(folder.id);
-                                nm.deleteNotificationChannel(channelId);
+                                account.deleteNotificationChannel(context);
 
-                                if (jfolder.has("channel")) {
-                                    NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
-                                    nm.createNotificationChannelGroup(group);
+                                if (account.notify)
+                                    if (jaccount.has("channel")) {
+                                        NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
+                                        nm.createNotificationChannelGroup(group);
 
-                                    JSONObject jchannel = (JSONObject) jfolder.get("channel");
-                                    jchannel.put("id", channelId);
-                                    jchannel.put("group", group.getId());
+                                        JSONObject jchannel = (JSONObject) jaccount.get("channel");
+                                        jchannel.put("id", EntityAccount.getNotificationChannelId(account.id));
+                                        jchannel.put("group", group.getId());
+                                        nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
+
+                                        Log.i("Imported account channel=" + jchannel);
+                                    } else
+                                        account.createNotificationChannel(context);
+                            }
+
+                            JSONArray jidentities = (JSONArray) jaccount.get("identities");
+                            for (int i = 0; i < jidentities.length(); i++) {
+                                JSONObject jidentity = (JSONObject) jidentities.get(i);
+                                EntityIdentity identity = EntityIdentity.fromJSON(jidentity);
+                                long id = identity.id;
+                                identity.id = null;
+
+                                identity.account = account.id;
+                                identity.id = db.identity().insertIdentity(identity);
+                                xIdentity.put(id, identity.id);
+
+                                Log.i("Imported identity=" + identity.email + " id=" + identity + id + " (" + id + ")");
+                            }
+
+                            JSONArray jfolders = (JSONArray) jaccount.get("folders");
+                            for (int f = 0; f < jfolders.length(); f++) {
+                                JSONObject jfolder = (JSONObject) jfolders.get(f);
+                                EntityFolder folder = EntityFolder.fromJSON(jfolder);
+                                long id = folder.id;
+                                folder.id = null;
+
+                                folder.account = account.id;
+                                folder.id = db.folder().insertFolder(folder);
+                                xFolder.put(id, folder.id);
+
+                                if (Objects.equals(swipe_left, id))
+                                    account.swipe_left = folder.id;
+                                if (Objects.equals(swipe_right, id))
+                                    account.swipe_right = folder.id;
+                                if (Objects.equals(move_to, id))
+                                    account.move_to = folder.id;
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    String channelId = EntityFolder.getNotificationChannelId(folder.id);
+                                    nm.deleteNotificationChannel(channelId);
+
+                                    if (jfolder.has("channel")) {
+                                        NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
+                                        nm.createNotificationChannelGroup(group);
+
+                                        JSONObject jchannel = (JSONObject) jfolder.get("channel");
+                                        jchannel.put("id", channelId);
+                                        jchannel.put("group", group.getId());
+                                        nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
+
+                                        Log.i("Imported folder channel=" + jchannel);
+                                    }
+                                }
+
+                                if (jfolder.has("rules")) {
+                                    JSONArray jrules = jfolder.getJSONArray("rules");
+                                    for (int r = 0; r < jrules.length(); r++) {
+                                        JSONObject jrule = (JSONObject) jrules.get(r);
+                                        EntityRule rule = EntityRule.fromJSON(jrule);
+                                        rule.folder = folder.id;
+                                        rules.add(rule);
+                                    }
+                                }
+                                Log.i("Imported folder=" + folder.name + " id=" + folder.id + " (" + id + ")");
+                            }
+
+                            if (import_contacts) {
+                                // Contacts
+                                if (jaccount.has("contacts")) {
+                                    JSONArray jcontacts = jaccount.getJSONArray("contacts");
+                                    for (int c = 0; c < jcontacts.length(); c++) {
+                                        JSONObject jcontact = (JSONObject) jcontacts.get(c);
+                                        EntityContact contact = EntityContact.fromJSON(jcontact);
+                                        contact.account = account.id;
+                                        if (db.contact().getContact(contact.account, contact.type, contact.email) == null)
+                                            contact.id = db.contact().insertContact(contact);
+                                    }
+                                    Log.i("Imported contacts=" + jcontacts.length());
+                                }
+                            }
+
+                            // Update swipe left/right
+                            db.account().updateAccount(account);
+                        }
+
+                        if (import_rules)
+                            for (EntityRule rule : rules) {
+                                try {
+                                    JSONObject jaction = new JSONObject(rule.action);
+
+                                    int type = jaction.getInt("type");
+                                    switch (type) {
+                                        case EntityRule.TYPE_MOVE:
+                                        case EntityRule.TYPE_COPY:
+                                            long target = jaction.getLong("target");
+                                            Log.i("XLAT target " + target + " > " + xFolder.get(target));
+                                            jaction.put("target", xFolder.get(target));
+                                            break;
+                                        case EntityRule.TYPE_ANSWER:
+                                            long identity = jaction.getLong("identity");
+                                            long answer = jaction.getLong("answer");
+                                            Log.i("XLAT identity " + identity + " > " + xIdentity.get(identity));
+                                            Log.i("XLAT answer " + answer + " > " + xAnswer.get(answer));
+                                            jaction.put("identity", xIdentity.get(identity));
+                                            jaction.put("answer", xAnswer.get(answer));
+                                            break;
+                                    }
+
+                                    rule.action = jaction.toString();
+                                } catch (JSONException ex) {
+                                    Log.e(ex);
+                                }
+
+                                db.rule().insertRule(rule);
+                            }
+                    }
+
+                    if (import_settings) {
+                        // Certificates
+                        if (jimport.has("certificates")) {
+                            JSONArray jcertificates = jimport.getJSONArray("certificates");
+                            for (int c = 0; c < jcertificates.length(); c++) {
+                                JSONObject jcertificate = (JSONObject) jcertificates.get(c);
+                                EntityCertificate certificate = EntityCertificate.fromJSON(jcertificate);
+                                EntityCertificate record = db.certificate().getCertificate(certificate.fingerprint, certificate.email);
+                                if (record == null) {
+                                    db.certificate().insertCertificate(certificate);
+                                    Log.i("Imported certificate=" + certificate.email);
+                                }
+                            }
+                        }
+
+                        // Settings
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        JSONArray jsettings = jimport.getJSONArray("settings");
+                        for (int s = 0; s < jsettings.length(); s++) {
+                            JSONObject jsetting = (JSONObject) jsettings.get(s);
+                            String key = jsetting.getString("key");
+
+                            if ("pro".equals(key) && !BuildConfig.DEBUG)
+                                continue;
+
+                            if ("biometrics".equals(key) || "pin".equals(key))
+                                continue;
+
+                            if ("alert_once".equals(key) && !Helper.isXiaomi())
+                                continue;
+
+                            if ("background_service".equals(key) &&
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                continue;
+
+                            // Prevent restart
+                            if ("secure".equals(key) ||
+                                    "shortcuts".equals(key) ||
+                                    "language".equals(key) ||
+                                    "query_threads".equals(key) ||
+                                    "wal".equals(key))
+                                continue;
+
+                            if (key != null && key.startsWith("widget."))
+                                continue;
+
+                            if ("external_search".equals(key)) {
+                                boolean external_search = jsetting.getBoolean("value");
+                                Helper.enableComponent(context, ActivitySearch.class, external_search);
+                                continue;
+                            }
+
+                            Object value = jsetting.get("value");
+                            String type = jsetting.optString("type");
+                            Log.i("Setting name=" + key + " value=" + value + " type=" + type);
+                            switch (type) {
+                                case "bool":
+                                    editor.putBoolean(key, (Boolean) value);
+                                    break;
+                                case "int":
+                                    editor.putInt(key, (Integer) value);
+                                    break;
+                                case "long":
+                                    if (value instanceof Integer)
+                                        editor.putLong(key, Long.valueOf((Integer) value));
+                                    else
+                                        editor.putLong(key, (Long) value);
+                                    break;
+                                case "string":
+                                    editor.putString(key, (String) value);
+                                    break;
+                                default:
+                                    Log.w("Inferring type of value=" + value);
+                                    if (value instanceof Boolean)
+                                        editor.putBoolean(key, (Boolean) value);
+                                    else if (value instanceof Integer) {
+                                        Integer i = (Integer) value;
+                                        if (key.endsWith(".account"))
+                                            editor.putLong(key, Long.valueOf(i));
+                                        else
+                                            editor.putInt(key, i);
+                                    } else if (value instanceof Long)
+                                        editor.putLong(key, (Long) value);
+                                    else if (value instanceof String)
+                                        editor.putString(key, (String) value);
+                                    else
+                                        throw new IllegalArgumentException("Unknown settings type key=" + key);
+                            }
+
+                            Log.i("Imported setting=" + key);
+                        }
+                        editor.apply();
+                        ApplicationEx.upgrade(context);
+                    }
+
+                    if (import_accounts) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (jimport.has("channels")) {
+                                JSONArray jchannels = jimport.getJSONArray("channels");
+                                for (int i = 0; i < jchannels.length(); i++) {
+                                    JSONObject jchannel = (JSONObject) jchannels.get(i);
+
+                                    String channelId = jchannel.getString("id");
+                                    nm.deleteNotificationChannel(channelId);
+
                                     nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
 
-                                    Log.i("Imported folder channel=" + jchannel);
+                                    Log.i("Imported contact channel=" + jchannel);
                                 }
-                            }
-
-                            if (jfolder.has("rules")) {
-                                JSONArray jrules = jfolder.getJSONArray("rules");
-                                for (int r = 0; r < jrules.length(); r++) {
-                                    JSONObject jrule = (JSONObject) jrules.get(r);
-                                    EntityRule rule = EntityRule.fromJSON(jrule);
-                                    rule.folder = folder.id;
-                                    rules.add(rule);
-                                }
-                            }
-                            Log.i("Imported folder=" + folder.name + " id=" + folder.id + " (" + id + ")");
-                        }
-
-                        // Contacts
-                        if (jaccount.has("contacts")) {
-                            JSONArray jcontacts = jaccount.getJSONArray("contacts");
-                            for (int c = 0; c < jcontacts.length(); c++) {
-                                JSONObject jcontact = (JSONObject) jcontacts.get(c);
-                                EntityContact contact = EntityContact.fromJSON(jcontact);
-                                contact.account = account.id;
-                                if (db.contact().getContact(contact.account, contact.type, contact.email) == null)
-                                    contact.id = db.contact().insertContact(contact);
-                            }
-                            Log.i("Imported contacts=" + jcontacts.length());
-                        }
-
-                        // Update swipe left/right
-                        db.account().updateAccount(account);
-                    }
-
-                    for (EntityRule rule : rules) {
-                        try {
-                            JSONObject jaction = new JSONObject(rule.action);
-
-                            int type = jaction.getInt("type");
-                            switch (type) {
-                                case EntityRule.TYPE_MOVE:
-                                case EntityRule.TYPE_COPY:
-                                    long target = jaction.getLong("target");
-                                    Log.i("XLAT target " + target + " > " + xFolder.get(target));
-                                    jaction.put("target", xFolder.get(target));
-                                    break;
-                                case EntityRule.TYPE_ANSWER:
-                                    long identity = jaction.getLong("identity");
-                                    long answer = jaction.getLong("answer");
-                                    Log.i("XLAT identity " + identity + " > " + xIdentity.get(identity));
-                                    Log.i("XLAT answer " + answer + " > " + xAnswer.get(answer));
-                                    jaction.put("identity", xIdentity.get(identity));
-                                    jaction.put("answer", xAnswer.get(answer));
-                                    break;
-                            }
-
-                            rule.action = jaction.toString();
-                        } catch (JSONException ex) {
-                            Log.e(ex);
-                        }
-
-                        db.rule().insertRule(rule);
-                    }
-
-                    if (jimport.has("certificates")) {
-                        JSONArray jcertificates = jimport.getJSONArray("certificates");
-                        for (int c = 0; c < jcertificates.length(); c++) {
-                            JSONObject jcertificate = (JSONObject) jcertificates.get(c);
-                            EntityCertificate certificate = EntityCertificate.fromJSON(jcertificate);
-                            EntityCertificate record = db.certificate().getCertificate(certificate.fingerprint, certificate.email);
-                            if (record == null) {
-                                db.certificate().insertCertificate(certificate);
-                                Log.i("Imported certificate=" + certificate.email);
-                            }
-                        }
-                    }
-
-                    // Settings
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    JSONArray jsettings = jimport.getJSONArray("settings");
-                    for (int s = 0; s < jsettings.length(); s++) {
-                        JSONObject jsetting = (JSONObject) jsettings.get(s);
-                        String key = jsetting.getString("key");
-
-                        if ("pro".equals(key) && !BuildConfig.DEBUG)
-                            continue;
-
-                        if ("biometrics".equals(key) || "pin".equals(key))
-                            continue;
-
-                        if ("alert_once".equals(key) && !Helper.isXiaomi())
-                            continue;
-
-                        if ("background_service".equals(key) &&
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                            continue;
-
-                        // Prevent restart
-                        if ("secure".equals(key) ||
-                                "shortcuts".equals(key) ||
-                                "language".equals(key) ||
-                                "query_threads".equals(key) ||
-                                "wal".equals(key))
-                            continue;
-
-                        if (key != null && key.startsWith("widget."))
-                            continue;
-
-                        if ("external_search".equals(key)) {
-                            boolean external_search = jsetting.getBoolean("value");
-                            Helper.enableComponent(context, ActivitySearch.class, external_search);
-                            continue;
-                        }
-
-                        Object value = jsetting.get("value");
-                        String type = jsetting.optString("type");
-                        Log.i("Setting name=" + key + " value=" + value + " type=" + type);
-                        switch (type) {
-                            case "bool":
-                                editor.putBoolean(key, (Boolean) value);
-                                break;
-                            case "int":
-                                editor.putInt(key, (Integer) value);
-                                break;
-                            case "long":
-                                if (value instanceof Integer)
-                                    editor.putLong(key, Long.valueOf((Integer) value));
-                                else
-                                    editor.putLong(key, (Long) value);
-                                break;
-                            case "string":
-                                editor.putString(key, (String) value);
-                                break;
-                            default:
-                                Log.w("Inferring type of value=" + value);
-                                if (value instanceof Boolean)
-                                    editor.putBoolean(key, (Boolean) value);
-                                else if (value instanceof Integer) {
-                                    Integer i = (Integer) value;
-                                    if (key.endsWith(".account"))
-                                        editor.putLong(key, Long.valueOf(i));
-                                    else
-                                        editor.putInt(key, i);
-                                } else if (value instanceof Long)
-                                    editor.putLong(key, (Long) value);
-                                else if (value instanceof String)
-                                    editor.putString(key, (String) value);
-                                else
-                                    throw new IllegalArgumentException("Unknown settings type key=" + key);
-                        }
-
-                        Log.i("Imported setting=" + key);
-                    }
-                    editor.apply();
-                    ApplicationEx.upgrade(context);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        if (jimport.has("channels")) {
-                            JSONArray jchannels = jimport.getJSONArray("channels");
-                            for (int i = 0; i < jchannels.length(); i++) {
-                                JSONObject jchannel = (JSONObject) jchannels.get(i);
-
-                                String channelId = jchannel.getString("id");
-                                nm.deleteNotificationChannel(channelId);
-
-                                nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
-
-                                Log.i("Imported contact channel=" + jchannel);
                             }
                         }
                     }
@@ -1114,6 +1191,204 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 }
             }
         }.execute(this, args, "setup:import");
+    }
+
+    private void handleK9Import(Uri uri) {
+        Bundle args = new Bundle();
+        args.putParcelable("uri", uri);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                Uri uri = args.getParcelable("uri");
+
+                DB db = DB.getInstance(context);
+                ContentResolver resolver = context.getContentResolver();
+                try (InputStream is = new BufferedInputStream(resolver.openInputStream(uri))) {
+                    XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                    XmlPullParser xml = factory.newPullParser();
+                    xml.setInput(new InputStreamReader(is));
+
+                    EntityAccount account = null;
+                    EntityIdentity identity = null;
+                    boolean inIdentity = false;
+                    String iname = null;
+                    String iemail = null;
+                    List<Pair<String, String>> identities = new ArrayList<>();
+
+                    int eventType = xml.getEventType();
+                    while (eventType != XmlPullParser.END_DOCUMENT) {
+                        if (eventType == XmlPullParser.START_TAG) {
+                            String name = xml.getName();
+                            switch (name) {
+                                case "account":
+                                    account = new EntityAccount();
+                                    account.auth_type = ServiceAuthenticator.AUTH_TYPE_PASSWORD;
+                                    account.password = "";
+                                    account.synchronize = false;
+                                    account.primary = false;
+                                    break;
+                                case "incoming-server":
+                                    if (account != null) {
+                                        String itype = xml.getAttributeValue(null, "type");
+                                        if ("IMAP".equals(itype))
+                                            account.protocol = EntityAccount.TYPE_IMAP;
+                                        else if ("POP3".equals(itype))
+                                            account.protocol = EntityAccount.TYPE_POP;
+                                        else
+                                            account = null;
+                                    }
+                                    break;
+                                case "outgoing-server":
+                                    String otype = xml.getAttributeValue(null, "type");
+                                    if ("SMTP".equals(otype)) {
+                                        identity = new EntityIdentity();
+                                        identity.auth_type = ServiceAuthenticator.AUTH_TYPE_PASSWORD;
+                                        identity.password = "";
+                                        identity.synchronize = false;
+                                        identity.primary = false;
+                                    }
+                                    break;
+                                case "host":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        String host = xml.getText();
+                                        if (identity != null)
+                                            identity.host = host;
+                                        else if (account != null)
+                                            account.host = host;
+                                    }
+                                    break;
+                                case "port":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        int port = Integer.parseInt(xml.getText());
+                                        if (identity != null)
+                                            identity.port = port;
+                                        else if (account != null)
+                                            account.port = port;
+                                    }
+                                    break;
+                                case "connection-security":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        String etype = xml.getText();
+
+                                        int encryption;
+                                        if ("STARTTLS_REQUIRED".equals(etype))
+                                            encryption = EmailService.ENCRYPTION_STARTTLS;
+                                        else if ("SSL_TLS_REQUIRED".equals(etype))
+                                            encryption = EmailService.ENCRYPTION_SSL;
+                                        else
+                                            encryption = EmailService.ENCRYPTION_NONE;
+
+                                        if (identity != null)
+                                            identity.encryption = encryption;
+                                        else if (account != null)
+                                            account.encryption = encryption;
+                                    }
+                                    break;
+                                case "authentication-type":
+                                    eventType = xml.next();
+                                    if (eventType != XmlPullParser.TEXT || !"PLAIN".equals(xml.getText())) {
+                                        account = null;
+                                        identity = null;
+                                    }
+                                    break;
+                                case "username":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        String user = xml.getText();
+                                        if (identity != null)
+                                            identity.user = user;
+                                        else if (account != null)
+                                            account.user = user;
+                                    }
+                                    break;
+                                case "name":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        if (inIdentity)
+                                            iname = xml.getText();
+                                        else {
+                                            if (account != null)
+                                                account.name = xml.getText();
+                                        }
+                                    }
+                                    break;
+                                case "email":
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.TEXT) {
+                                        if (inIdentity)
+                                            iemail = xml.getText();
+                                    }
+                                    break;
+                                case "identity":
+                                    inIdentity = true;
+                                    break;
+                            }
+
+                        } else if (eventType == XmlPullParser.END_TAG) {
+                            String name = xml.getName();
+                            switch (name) {
+                                case "account":
+                                    if (account != null && identity != null) {
+                                        if (TextUtils.isEmpty(account.name))
+                                            account.name = account.user;
+                                        if (BuildConfig.DEBUG)
+                                            account.name = "K9/" + account.name;
+
+                                        try {
+                                            db.beginTransaction();
+
+                                            account.id = db.account().insertAccount(account);
+                                            identity.account = account.id;
+                                            for (Pair<String, String> i : identities) {
+                                                identity.id = null;
+                                                identity.name = i.first;
+                                                identity.email = i.second;
+                                                if (TextUtils.isEmpty(identity.name))
+                                                    identity.name = identity.user;
+                                                if (TextUtils.isEmpty(identity.email))
+                                                    identity.email = identity.user;
+                                                identity.id = db.identity().insertIdentity(identity);
+                                            }
+
+                                            db.setTransactionSuccessful();
+                                        } finally {
+                                            account = null;
+                                            identity = null;
+                                            identities.clear();
+                                            db.endTransaction();
+                                        }
+                                    }
+                                    break;
+                                case "identity":
+                                    identities.add(new Pair<>(iname, iemail));
+                                    iname = null;
+                                    iemail = null;
+                                    inIdentity = false;
+                                    break;
+                            }
+                        }
+
+                        eventType = xml.next();
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ToastEx.makeText(ActivitySetup.this, R.string.title_setup_imported, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getSupportFragmentManager(), ex);
+            }
+        }.execute(this, args, "setup:k9");
     }
 
     private void handleImportCertificate(Intent data) {
@@ -1308,7 +1583,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         return intent;
     }
 
-    public static class FragmentDialogPassword extends FragmentDialogBase {
+    public static class FragmentDialogExport extends FragmentDialogBase {
         private TextInputLayout etPassword1;
         private TextInputLayout etPassword2;
 
@@ -1322,27 +1597,17 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final boolean export = getArguments().getBoolean("export");
-
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_password, null);
-            TextView tvCaption = dview.findViewById(R.id.tvCaption);
+            Context context = getContext();
+            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_export, null);
             etPassword1 = dview.findViewById(R.id.tilPassword1);
             etPassword2 = dview.findViewById(R.id.tilPassword2);
-            TextView tvExportHint = dview.findViewById(R.id.tvExportHint);
-            TextView tvImportHint = dview.findViewById(R.id.tvImportHint);
-
-            tvCaption.setText(export ? R.string.title_setup_export : R.string.title_setup_import);
 
             if (savedInstanceState != null) {
                 etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
                 etPassword2.getEditText().setText(savedInstanceState.getString("fair:password2"));
             }
 
-            etPassword2.setVisibility(export ? View.VISIBLE : View.GONE);
-            tvExportHint.setVisibility(export ? View.VISIBLE : View.GONE);
-            tvImportHint.setVisibility(export ? View.GONE : View.VISIBLE);
-
-            return new AlertDialog.Builder(getContext())
+            Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -1350,22 +1615,87 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                             String password1 = etPassword1.getEditText().getText().toString();
                             String password2 = etPassword2.getEditText().getText().toString();
 
-                            if (!BuildConfig.DEBUG && TextUtils.isEmpty(password1))
-                                ToastEx.makeText(getContext(), R.string.title_setup_password_missing, Toast.LENGTH_LONG).show();
+                            if (TextUtils.isEmpty(password1) && !BuildConfig.DEBUG)
+                                ToastEx.makeText(context, R.string.title_setup_password_missing, Toast.LENGTH_LONG).show();
                             else {
-                                if (!export || password1.equals(password2)) {
+                                if (password1.equals(password2)) {
                                     ((ActivitySetup) getActivity()).password = password1;
                                     getActivity().startActivityForResult(
-                                            Helper.getChooser(getContext(),
-                                                    export ? getIntentExport() : getIntentImport()),
-                                            export ? REQUEST_EXPORT : REQUEST_IMPORT);
+                                            Helper.getChooser(context, getIntentExport()), REQUEST_EXPORT);
                                 } else
-                                    ToastEx.makeText(getContext(), R.string.title_setup_password_different, Toast.LENGTH_LONG).show();
+                                    ToastEx.makeText(context, R.string.title_setup_password_different, Toast.LENGTH_LONG).show();
                             }
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
+
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+            return dialog;
+        }
+    }
+
+    public static class FragmentDialogImport extends FragmentDialogBase {
+        private TextInputLayout etPassword1;
+
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            outState.putString("fair:password1", etPassword1.getEditText().getText().toString());
+            super.onSaveInstanceState(outState);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            Context context = getContext();
+            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_import, null);
+            etPassword1 = dview.findViewById(R.id.tilPassword1);
+            CheckBox cbAccounts = dview.findViewById(R.id.cbAccounts);
+            CheckBox cbRules = dview.findViewById(R.id.cbRules);
+            CheckBox cbContacts = dview.findViewById(R.id.cbContacts);
+            CheckBox cbAnswers = dview.findViewById(R.id.cbAnswers);
+            CheckBox cbSettings = dview.findViewById(R.id.cbSettings);
+
+            cbAccounts.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                    cbRules.setEnabled(checked);
+                    cbContacts.setEnabled(checked);
+                }
+            });
+
+            if (savedInstanceState != null)
+                etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
+
+            Dialog dialog = new AlertDialog.Builder(context)
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String password1 = etPassword1.getEditText().getText().toString();
+
+                            if (TextUtils.isEmpty(password1) && !BuildConfig.DEBUG)
+                                ToastEx.makeText(context, R.string.title_setup_password_missing, Toast.LENGTH_LONG).show();
+                            else {
+                                ActivitySetup activity = (ActivitySetup) getActivity();
+                                activity.password = password1;
+                                activity.import_accounts = cbAccounts.isChecked();
+                                activity.import_rules = cbRules.isChecked();
+                                activity.import_contacts = cbContacts.isChecked();
+                                activity.import_answers = cbAnswers.isChecked();
+                                activity.import_settings = cbSettings.isChecked();
+                                getActivity().startActivityForResult(
+                                        Helper.getChooser(context, getIntentImport()), REQUEST_IMPORT);
+                            }
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+            return dialog;
         }
     }
 

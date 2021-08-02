@@ -40,6 +40,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,6 +68,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swQuickFilter;
     private SwitchCompat swQuickScroll;
     private Button btnSwipes;
+    private SeekBar sbSwipeSensitivity;
     private SwitchCompat swDoubleTap;
     private SwitchCompat swSwipeNav;
     private SwitchCompat swVolumeNav;
@@ -81,6 +83,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private TextView tvAutoSeenHint;
     private TextView tvOnClose;
     private Spinner spOnClose;
+    private SwitchCompat swAutoCloseUnseen;
     private Spinner spUndoTimeout;
     private SwitchCompat swCollapseMultiple;
     private SwitchCompat swAutoRead;
@@ -89,13 +92,17 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swAutoImportant;
     private SwitchCompat swResetImportance;
 
+    final static int MAX_SWIPE_SENSITIVITY = 10;
+    final static int DEFAULT_SWIPE_SENSITIVITY = 7;
+
     private final static String[] RESET_OPTIONS = new String[]{
             "sync_on_launch", "double_back", "conversation_actions", "conversation_actions_replies", "language_detection",
             "default_snooze",
-            "pull", "autoscroll", "quick_filter", "quick_scroll",
+            "pull", "autoscroll", "quick_filter", "quick_scroll", "swipe_sensitivity",
             "doubletap", "swipenav", "volumenav", "reversed", "swipe_close", "swipe_move",
             "autoexpand", "expand_first", "expand_all", "expand_one", "collapse_multiple",
-            "autoclose", "onclose", "undo_timeout",
+            "autoclose", "onclose", "autoclose_unseen",
+            "undo_timeout",
             "autoread", "flag_snoozed", "autounflag", "auto_important", "reset_importance"
     };
 
@@ -120,6 +127,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swQuickFilter = view.findViewById(R.id.swQuickFilter);
         swQuickScroll = view.findViewById(R.id.swQuickScroll);
         btnSwipes = view.findViewById(R.id.btnSwipes);
+        sbSwipeSensitivity = view.findViewById(R.id.sbSwipeSensitivity);
         swDoubleTap = view.findViewById(R.id.swDoubleTap);
         swSwipeNav = view.findViewById(R.id.swSwipeNav);
         swVolumeNav = view.findViewById(R.id.swVolumeNav);
@@ -135,6 +143,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swAutoClose = view.findViewById(R.id.swAutoClose);
         tvOnClose = view.findViewById(R.id.tvOnClose);
         spOnClose = view.findViewById(R.id.spOnClose);
+        swAutoCloseUnseen = view.findViewById(R.id.swAutoCloseUnseen);
         spUndoTimeout = view.findViewById(R.id.spUndoTimeout);
         swAutoRead = view.findViewById(R.id.swAutoRead);
         swFlagSnoozed = view.findViewById(R.id.swFlagSnoozed);
@@ -243,6 +252,25 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             @Override
             public void onClick(View v) {
                 new FragmentDialogSwipes().show(getParentFragmentManager(), "setup:swipe");
+            }
+        });
+
+        sbSwipeSensitivity.setMax(MAX_SWIPE_SENSITIVITY);
+
+        sbSwipeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                prefs.edit().putInt("swipe_sensitivity", progress).apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
             }
         });
 
@@ -361,6 +389,13 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
+        swAutoCloseUnseen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autoclose_unseen", checked).apply();
+            }
+        });
+
         spUndoTimeout.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -467,6 +502,9 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swQuickFilter.setChecked(prefs.getBoolean("quick_filter", false));
         swQuickScroll.setChecked(prefs.getBoolean("quick_scroll", true));
 
+        int swipe_sensitivity = prefs.getInt("swipe_sensitivity", DEFAULT_SWIPE_SENSITIVITY);
+        sbSwipeSensitivity.setProgress(swipe_sensitivity);
+
         swDoubleTap.setChecked(prefs.getBoolean("doubletap", true));
         swSwipeNav.setChecked(prefs.getBoolean("swipenav", true));
         swVolumeNav.setChecked(prefs.getBoolean("volumenav", false));
@@ -495,6 +533,8 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
 
         tvOnClose.setEnabled(!swAutoClose.isChecked());
         spOnClose.setEnabled(!swAutoClose.isChecked());
+
+        swAutoCloseUnseen.setChecked(prefs.getBoolean("autoclose_unseen", false));
 
         int undo_timeout = prefs.getInt("undo_timeout", 5000);
         int[] undoValues = getResources().getIntArray(R.array.undoValues);

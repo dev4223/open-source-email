@@ -140,6 +140,7 @@ public class EntityMessage implements Serializable {
     public Integer dsn;
     public Boolean receipt_request;
     public Address[] receipt_to;
+    public String bimi_selector;
     public Boolean dkim;
     public Boolean spf;
     public Boolean dmarc;
@@ -315,14 +316,14 @@ public class EntityMessage implements Serializable {
             int rat = (r == null ? -1 : r.indexOf('@'));
             if (rat < 0)
                 continue;
-            String rdomain = UriHelper.getParentDomain(r.substring(rat + 1));
+            String rdomain = UriHelper.getParentDomain(context, r.substring(rat + 1));
 
             for (Address _from : from) {
                 String f = ((InternetAddress) _from).getAddress();
                 int fat = (f == null ? -1 : f.indexOf('@'));
                 if (fat < 0)
                     continue;
-                String fdomain = UriHelper.getParentDomain(f.substring(fat + 1));
+                String fdomain = UriHelper.getParentDomain(context, f.substring(fat + 1));
 
                 if (!rdomain.equalsIgnoreCase(fdomain))
                     return context.getString(R.string.title_reply_domain, fdomain, rdomain);
@@ -415,13 +416,12 @@ public class EntityMessage implements Serializable {
         } else
             p.text(DF.format(new Date(received)) + " " + MessageHelper.formatAddresses(from) + ":");
 
-        if (separate) {
-            Element div = document.createElement("div");
+        Element div = document.createElement("div")
+                .attr("fairemail", "reply");
+        if (separate)
             div.appendElement("hr");
-            div.appendChild(p);
-            return div;
-        } else
-            return p;
+        div.appendChild(p);
+        return div;
     }
 
     String getNotificationChannelId() {
@@ -526,6 +526,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.dsn, other.dsn) &&
                     Objects.equals(this.receipt_request, other.receipt_request) &&
                     MessageHelper.equal(this.receipt_to, other.receipt_to) &&
+                    Objects.equals(this.bimi_selector, other.bimi_selector) &&
                     Objects.equals(this.dkim, other.dkim) &&
                     Objects.equals(this.spf, other.spf) &&
                     Objects.equals(this.dmarc, other.dmarc) &&

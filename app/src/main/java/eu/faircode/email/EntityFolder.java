@@ -136,6 +136,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
     public Boolean inferiors = true;
     public String error;
     public Long last_sync;
+    public Integer last_sync_count; // POP3
 
     static final String INBOX = "Inbox";
     static final String OUTBOX = "Outbox";
@@ -321,6 +322,11 @@ public class EntityFolder extends EntityOrder implements Serializable {
         jargs.put(force);
 
         return jargs;
+    }
+
+    static boolean isSyncForced(String args) throws JSONException {
+        JSONArray jargs = new JSONArray(args);
+        return jargs.optBoolean(5, false);
     }
 
     static int getIcon(String type) {

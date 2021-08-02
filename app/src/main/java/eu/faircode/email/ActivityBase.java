@@ -35,6 +35,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -49,6 +50,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -89,6 +92,8 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             EntityLog.log(this, intent +
                     " extras=" + TextUtils.join(", ", Log.getExtras(intent.getExtras())));
 
+        getSupportFragmentManager().registerFragmentLifecycleCallbacks(lifecycleCallbacks, true);
+
         this.contacts = hasPermission(Manifest.permission.READ_CONTACTS);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -98,163 +103,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
         if (!this.getClass().equals(ActivityMain.class)) {
-            String theme = prefs.getString("theme", "blue_orange_system");
-
-            boolean night = Helper.isNight(this);
-            EntityLog.log(this, "Activity theme=" + theme + " night=" + night);
-
-            switch (theme) {
-                // Light
-                case "light":
-                case "blue_orange_light":
-                    setTheme(R.style.AppThemeBlueOrangeLight);
-                    break;
-                case "orange_blue_light":
-                    setTheme(R.style.AppThemeOrangeBlueLight);
-                    break;
-
-                case "yellow_purple_light":
-                    setTheme(R.style.AppThemeYellowPurpleLight);
-                    break;
-                case "purple_yellow_light":
-                    setTheme(R.style.AppThemePurpleYellowLight);
-                    break;
-
-                case "red_green_light":
-                    setTheme(R.style.AppThemeRedGreenLight);
-                    break;
-                case "green_red_light":
-                    setTheme(R.style.AppThemeGreenRedLight);
-                    break;
-
-                // Dark
-                case "dark":
-                case "blue_orange_dark":
-                    setTheme(R.style.AppThemeBlueOrangeDark);
-                    break;
-                case "orange_blue_dark":
-                    setTheme(R.style.AppThemeOrangeBlueDark);
-                    break;
-
-                case "yellow_purple_dark":
-                    setTheme(R.style.AppThemeYellowPurpleDark);
-                    break;
-                case "purple_yellow_dark":
-                    setTheme(R.style.AppThemePurpleYellowDark);
-                    break;
-
-                case "red_green_dark":
-                    setTheme(R.style.AppThemeRedGreenDark);
-                    break;
-                case "green_red_dark":
-                    setTheme(R.style.AppThemeGreenRedDark);
-                    break;
-
-                // Black
-                case "blue_orange_black":
-                    setTheme(R.style.AppThemeBlueOrangeBlack);
-                    break;
-                case "orange_blue_black":
-                    setTheme(R.style.AppThemeOrangeBlueBlack);
-                    break;
-                case "yellow_purple_black":
-                    setTheme(R.style.AppThemeYellowPurpleBlack);
-                    break;
-                case "purple_yellow_black":
-                    setTheme(R.style.AppThemePurpleYellowBlack);
-                    break;
-                case "red_green_black":
-                    setTheme(R.style.AppThemeRedGreenBlack);
-                    break;
-                case "green_red_black":
-                    setTheme(R.style.AppThemeGreenRedBlack);
-                    break;
-
-                // Grey
-                case "grey_light":
-                    setTheme(R.style.AppThemeGreySteelBlueLight);
-                    break;
-                case "grey_dark":
-                    setTheme(R.style.AppThemeGreySteelBlueDark);
-                    break;
-
-                // Solarized
-                case "solarized_light":
-                    setTheme(R.style.AppThemeSolarizedLight);
-                    break;
-                case "solarized":
-                case "solarized_dark":
-                    setTheme(R.style.AppThemeSolarizedDark);
-                    break;
-
-                // Black
-                case "black":
-                    setTheme(R.style.AppThemeBlack);
-                    break;
-
-                case "black_and_white":
-                    setTheme(R.style.AppThemeBlackAndWhite);
-                    break;
-
-                // System
-                case "system":
-                case "blue_orange_system":
-                    setTheme(night
-                            ? R.style.AppThemeBlueOrangeDark : R.style.AppThemeBlueOrangeLight);
-                    break;
-                case "blue_orange_system_black":
-                    setTheme(night
-                            ? R.style.AppThemeBlueOrangeBlack : R.style.AppThemeBlueOrangeLight);
-                    break;
-                case "orange_blue_system":
-                    setTheme(night
-                            ? R.style.AppThemeOrangeBlueDark : R.style.AppThemeOrangeBlueLight);
-                    break;
-                case "orange_blue_system_black":
-                    setTheme(night
-                            ? R.style.AppThemeOrangeBlueBlack : R.style.AppThemeOrangeBlueLight);
-                    break;
-                case "yellow_purple_system":
-                    setTheme(night
-                            ? R.style.AppThemeYellowPurpleDark : R.style.AppThemeYellowPurpleLight);
-                    break;
-                case "yellow_purple_system_black":
-                    setTheme(night
-                            ? R.style.AppThemeYellowPurpleBlack : R.style.AppThemeYellowPurpleLight);
-                    break;
-                case "purple_yellow_system":
-                    setTheme(night
-                            ? R.style.AppThemePurpleYellowDark : R.style.AppThemePurpleYellowLight);
-                    break;
-                case "purple_yellow_system_black":
-                    setTheme(night
-                            ? R.style.AppThemePurpleYellowBlack : R.style.AppThemePurpleYellowLight);
-                    break;
-                case "red_green_system":
-                    setTheme(night
-                            ? R.style.AppThemeRedGreenDark : R.style.AppThemeRedGreenLight);
-                    break;
-                case "red_green_system_black":
-                    setTheme(night
-                            ? R.style.AppThemeRedGreenBlack : R.style.AppThemeRedGreenLight);
-                    break;
-                case "green_red_system":
-                    setTheme(night
-                            ? R.style.AppThemeGreenRedDark : R.style.AppThemeGreenRedLight);
-                    break;
-                case "green_red_system_black":
-                    setTheme(night
-                            ? R.style.AppThemeGreenRedBlack : R.style.AppThemeGreenRedLight);
-                    break;
-                case "grey_system":
-                    setTheme(night
-                            ? R.style.AppThemeGreySteelBlueDark : R.style.AppThemeGreySteelBlueLight);
-                    break;
-                case "solarized_system":
-                    setTheme(night
-                            ? R.style.AppThemeSolarizedDark : R.style.AppThemeSolarizedLight);
-                    break;
-            }
+            setTheme(FragmentDialogTheme.getTheme(this));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 boolean dark = Helper.isDarkTheme(this);
@@ -290,6 +139,51 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             Window window = getWindow();
             if (window != null)
                 window.setNavigationBarColor(colorPrimaryDark);
+        }
+
+        Fragment bfragment = getSupportFragmentManager()
+                .findFragmentByTag("androidx.biometric.BiometricFragment");
+        if (bfragment != null) {
+            Log.e("Orphan BiometricFragment");
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .remove(bfragment)
+                    .commitNowAllowingStateLoss();
+            /*
+                java.lang.RuntimeException: Unable to start activity ComponentInfo{eu.faircode.email/eu.faircode.email.ActivitySetup}: androidx.fragment.app.Fragment$InstantiationException: Unable to instantiate fragment androidx.biometric.FingerprintDialogFragment: could not find Fragment constructor
+                  at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2957)
+                  at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3032)
+                  at android.app.ActivityThread.handleRelaunchActivity(ActivityThread.java:4921)
+                  at android.app.ActivityThread.-wrap19(Unknown Source:0)
+                  at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1702)
+                  at android.os.Handler.dispatchMessage(Handler.java:105)
+                  at android.os.Looper.loop(Looper.java:164)
+                  at android.app.ActivityThread.main(ActivityThread.java:6944)
+                  at java.lang.reflect.Method.invoke(Native Method)
+                  at com.android.internal.os.Zygote$MethodAndArgsCaller.run(Zygote.java:327)
+                  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1374)
+                Caused by: androidx.fragment.app.Fragment$InstantiationException: Unable to instantiate fragment androidx.biometric.FingerprintDialogFragment: could not find Fragment constructor
+                  at androidx.fragment.app.Fragment.instantiate(SourceFile:8)
+                  at androidx.fragment.app.FragmentContainer.instantiate(SourceFile:1)
+                  at androidx.fragment.app.FragmentManager$3.instantiate(SourceFile:1)
+                  at androidx.fragment.app.FragmentStateManager.<init>(SourceFile:12)
+                  at androidx.fragment.app.FragmentManager.restoreSaveState(SourceFile:11)
+                  at androidx.fragment.app.FragmentController.restoreSaveState(SourceFile:2)
+                  at androidx.fragment.app.FragmentActivity$2.onContextAvailable(SourceFile:5)
+                  at androidx.activity.contextaware.ContextAwareHelper.dispatchOnContextAvailable(SourceFile:3)
+                  at androidx.activity.ComponentActivity.onCreate(SourceFile:2)
+                  at androidx.fragment.app.FragmentActivity.onCreate(SourceFile:1)
+                  at eu.faircode.email.ActivityBase.onCreate(SourceFile:37)
+                  at eu.faircode.email.ActivitySetup.onCreate(SourceFile:1)
+                  at android.app.Activity.performCreate(Activity.java:7183)
+                  at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1220)
+                  at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2910)
+                  ... 10 more
+                Caused by: java.lang.NoSuchMethodException: <init> []
+                  at java.lang.Class.getConstructor0(Class.java:2320)
+                  at java.lang.Class.getConstructor(Class.java:1725)
+                  at androidx.fragment.app.Fragment.instantiate(SourceFile:4)
+             */
         }
 
         checkAuthentication();
@@ -794,6 +688,87 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     Handler getMainHandler() {
         return ApplicationEx.getMainHandler();
     }
+
+    private final FragmentManager.FragmentLifecycleCallbacks lifecycleCallbacks = new FragmentManager.FragmentLifecycleCallbacks() {
+        private long last = 0;
+
+        @Override
+        public void onFragmentPreAttached(@NonNull FragmentManager fm, @NonNull Fragment f, @NonNull Context context) {
+            log(fm, f, "onFragmentPreAttached");
+        }
+
+        @Override
+        public void onFragmentAttached(@NonNull FragmentManager fm, @NonNull Fragment f, @NonNull Context context) {
+            log(fm, f, "onFragmentAttached");
+        }
+
+        @Override
+        public void onFragmentPreCreated(@NonNull FragmentManager fm, @NonNull Fragment f, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+            log(fm, f, "onFragmentPreCreated");
+        }
+
+        @Override
+        public void onFragmentCreated(@NonNull FragmentManager fm, @NonNull Fragment f, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+            log(fm, f, "onFragmentCreated");
+        }
+
+        @Override
+        public void onFragmentActivityCreated(@NonNull FragmentManager fm, @NonNull Fragment f, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+            log(fm, f, "onFragmentActivityCreated");
+        }
+
+        @Override
+        public void onFragmentViewCreated(@NonNull FragmentManager fm, @NonNull Fragment f, @NonNull View v, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+            log(fm, f, "onFragmentViewCreated");
+        }
+
+        @Override
+        public void onFragmentStarted(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentStarted");
+        }
+
+        @Override
+        public void onFragmentResumed(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentResumed");
+        }
+
+        @Override
+        public void onFragmentPaused(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentPaused");
+        }
+
+        @Override
+        public void onFragmentStopped(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentStopped");
+        }
+
+        @Override
+        public void onFragmentSaveInstanceState(@NonNull FragmentManager fm, @NonNull Fragment f, @NonNull Bundle outState) {
+            log(fm, f, "onFragmentSaveInstanceState");
+        }
+
+        @Override
+        public void onFragmentViewDestroyed(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentViewDestroyed");
+        }
+
+        @Override
+        public void onFragmentDestroyed(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentDestroyed");
+        }
+
+        @Override
+        public void onFragmentDetached(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            log(fm, f, "onFragmentDetached");
+        }
+
+        private void log(@NonNull FragmentManager fm, @NonNull Fragment f, @NonNull String what) {
+            long start = last;
+            last = SystemClock.elapsedRealtime();
+            long elapsed = (start == 0 ? 0 : last - start);
+            Log.i(f.getClass().getSimpleName() + " " + what + " " + elapsed + " ms");
+        }
+    };
 
     public interface IKeyPressedListener {
         boolean onKeyPressed(KeyEvent event);

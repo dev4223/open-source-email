@@ -19,6 +19,9 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.ParcelFileDescriptor;
@@ -92,9 +95,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-
-import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
-import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
 
 // IMAP standards: https://imapwiki.org/Specs
 
@@ -309,11 +309,11 @@ public class EmailService implements AutoCloseable {
     public void connect(EntityAccount account) throws MessagingException {
         connect(
                 account.host, account.port,
-                account.auth_type, account.provider,
+                account.auth_type, account.provider, account.poll_interval,
                 account.user, account.password,
                 new ServiceAuthenticator.IAuthenticated() {
                     @Override
-                    public void onPasswordChanged(String newPassword) {
+                    public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
                         int accounts = db.account().setAccountPassword(account.id, newPassword);
                         int identities = db.identity().setIdentityPassword(account.id, account.user, newPassword, account.auth_type);
@@ -326,11 +326,11 @@ public class EmailService implements AutoCloseable {
     public void connect(EntityIdentity identity) throws MessagingException {
         connect(
                 identity.host, identity.port,
-                identity.auth_type, identity.provider,
+                identity.auth_type, identity.provider, 0,
                 identity.user, identity.password,
                 new ServiceAuthenticator.IAuthenticated() {
                     @Override
-                    public void onPasswordChanged(String newPassword) {
+                    public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
                         int count = db.identity().setIdentityPassword(identity.id, newPassword);
                         EntityLog.log(context, identity.email + " token refreshed=" + count);
@@ -342,14 +342,16 @@ public class EmailService implements AutoCloseable {
 
     public void connect(
             String host, int port,
-            int auth, String provider, String user, String password,
+            int auth, String provider,
+            String user, String password,
             String certificate, String fingerprint) throws MessagingException {
-        connect(host, port, auth, provider, user, password, null, certificate, fingerprint);
+        connect(host, port, auth, provider, 0, user, password, null, certificate, fingerprint);
     }
 
     private void connect(
             String host, int port,
-            int auth, String provider, String user, String password,
+            int auth, String provider, int keep_alive,
+            String user, String password,
             ServiceAuthenticator.IAuthenticated intf,
             String certificate, String fingerprint) throws MessagingException {
         SSLSocketFactoryService factory = null;
@@ -378,7 +380,8 @@ public class EmailService implements AutoCloseable {
         }
 
         properties.put("mail." + protocol + ".forcepasswordrefresh", "true");
-        ServiceAuthenticator authenticator = new ServiceAuthenticator(context, auth, provider, user, password, intf);
+        ServiceAuthenticator authenticator = new ServiceAuthenticator(context,
+                auth, provider, keep_alive, user, password, intf);
 
         try {
             if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OAUTH) {
@@ -832,7 +835,7 @@ public class EmailService implements AutoCloseable {
                             }
 
                             // Check host name
-                            List<String> names = ConnectionHelper.getDnsNames(certificate);
+                            List<String> names = EntityCertificate.getDnsNames(certificate);
                             if (ConnectionHelper.matches(server, names))
                                 return;
 

@@ -42,6 +42,7 @@ For authorizing:
 * Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
 * Apple iCloud, see [question 148](#user-content-faq148)
 * Free.fr, see [question 157](#user-content-faq157)
+* Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) isn't enabled
 
 Please see [here](#user-content-faq22) for common error messages and solutions.
 
@@ -67,6 +68,7 @@ Related questions:
 * Delete an account/identity: Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, trash icon top right
 * Delete a folder: long press the folder in the folder list, Edit properties, trash icon top right
 * Undo send: Outbox, swipe the message in the list left or right
+* Delete a contact: please [see this FAQ](#user-content-faq171)
 * Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
 * Change system folders: Settings, tap Manual setup, tap Accounts, tap account, at the bottom
 * Export/import settings: Settings, navigation (left side) menu
@@ -303,8 +305,10 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(167) How can I use DeepL?](#user-content-faq167)
 * [(168) What is a spam block list?](#user-content-faq168)
 * [(169) Why does the app not start automatically?](#user-content-faq169)
+* [(170) Why can't folders be created with POP3?](#user-content-faq170)
+* [(171) How can I delete a contact?](#user-content-faq171)
 
-[I have another question.](#user-content-support)
+[I have another question.](#user-content-get-support)
 
 <a name="faq1"></a>
 **(1) Which permissions are needed and why?**
@@ -346,6 +350,7 @@ The following permissions are needed to show the count of unread messages as a b
 * *com.oppo.launcher.permission.WRITE_SETTINGS*
 * *me.everything.badger.permission.BADGE_COUNT_READ*
 * *me.everything.badger.permission.BADGE_COUNT_WRITE*
+* *com.vivo.notification.permission.BADGE_ICON*
 
 FairEmail will keep a list of addresses you receive messages from and send messages to
 and will use this list for contact suggestions when no contacts permissions is granted to FairEmail.
@@ -771,7 +776,7 @@ Common errors:
 * *No key*: there is no PGP key available for one of the listed email addresses
 * *Missing key for encryption*: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.
 * *Key for signature verification is missing*: the public key for the sender is not available in the OpenKeychain app. This can also be caused by Autocrypt being disabled in the encryption settings or by the Autocrypt header not being sent.
-* *OpenPgp error 0: null*: please check the key in the OpenKeychain app and make sure there are no conflicting identities for the key and make sure all email addresses are lowercase.
+* *OpenPgp error 0: null* / *OpenPgp error 0: General error*: please check the key in the OpenKeychain app and make sure there are no conflicting identities for the key and make sure the email address exactly matches the key, including lower/upper case. Also, make sure the key can be used to sign/encrypt and isn't for encrypting/signing only.
 
 <br />
 
@@ -868,6 +873,7 @@ searching in the folder list will search in the associated account only
 and searching in a folder will search in that folder only.
 
 Messages will be searched for on the device first.
+You can download more messages on the device via the three-dots overflow menu in the start screen.
 There will be an action button with a search again icon at the bottom to continue searching on the server.
 You can select in which folder to continue the search.
 
@@ -1089,6 +1095,12 @@ Sometimes it is necessary to enable external access (IMAP/SMTP) on the website o
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
 for example by allowing to login from certain networks / IP addresses only.
 
+* **Free.fr**: please see [this FAQ](#user-content-faq157)
+* **Gmail / G suite**: please see [this FAQ](#user-content-faq6)
+* **iCloud**: please see [this FAQ](#user-content-faq148)
+* **Posteo**: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) isn't enabled.
+* **Yahoo, AOL and Sky**: please see [this FAQ](#user-content-faq88)
+
 If needed, you can update a password in the account settings:
 navigation menu (left side menu), tap *Settings*, tap *Manual setup*, tap *Accounts* and tap on the account.
 Changing the account password will in most cases automatically change the password of related identities too.
@@ -1230,7 +1242,7 @@ see [here](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=92
 
 The error *... 334 ... OAUTH2 asked for more ...* probably means that the account needs to be authorized again, which you can do with the quick setup wizard in the settings.
 
-When in doubt, you can ask for [support](#user-content-support).
+When in doubt, you can ask for [support](#user-content-get-support).
 
 <br />
 
@@ -2570,6 +2582,8 @@ If the app is not listed, you might need to ask the developer of the app to add 
 Android Q will make it harder and maybe even impossible to directly access files,
 see [here](https://developer.android.com/preview/privacy/scoped-storage) and [here](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) for more details.
 
+If you use MIUI, please make sure [MIUI optimization](https://android.stackexchange.com/questions/191228/what-is-miui-optimization) is enabled in the developer settings.
+
 <br />
 
 <a name="faq96"></a>
@@ -3774,6 +3788,40 @@ Some Android versions, such as EMUI, have settings to enable or disable auto sta
 So, if the app isn't started automatically, please check the Android settings.
 
 For example for Huawei/EMUI, please [see here](https://dontkillmyapp.com/huawei) for a guide.
+
+<br>
+
+<a name="faq170"></a>
+**(170) Why can't folders be created with POP3?**
+
+The POP3 protocol has commands to download and delete messages from the inbox only.
+There are no commands to access any other folder.
+
+Creating a local folder only and storing messages on your device only is a bad idea
+because losing or breaking your device would mean losing your messages.
+Therefore this isn't supportable.
+
+Please note that FairEmail doesn't store a copy of your messages in the cloud for privacy reasons.
+
+If you want to store messages in folders, please use IMAP,
+so that there is always a copy of the messages on the email server.
+
+<br />
+
+<a name="faq171"></a>
+**(171) How can I delete a contact?**
+
+A contact can be stored in the Android address book or in the local contact database.
+
+When a contact is stored in the Android address book, you can use the Android contacts app to delete the contact.
+
+When a contact is store in the local contact database, you can delete it like this:
+
+* Go to the settings via the navigation menu (left side menu)
+* Go to the send settings tab page
+* Tap on the *Manage* button under *Suggest locally stored contacts*
+* Locate the contact (you can use the magnifier glass in the top action bar)
+* Long press the contact and select to delete it
 
 <br />
 

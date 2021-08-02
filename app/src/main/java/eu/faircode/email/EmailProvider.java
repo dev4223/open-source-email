@@ -19,6 +19,8 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import static android.system.OsConstants.ECONNREFUSED;
+
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Parcel;
@@ -28,10 +30,13 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.sun.mail.util.LineInputStream;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,6 +44,8 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.cert.Certificate;
@@ -55,10 +62,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-
-import static android.system.OsConstants.ECONNREFUSED;
 
 public class EmailProvider implements Parcelable {
     public String id;
@@ -66,6 +72,7 @@ public class EmailProvider implements Parcelable {
     public String description;
     public boolean enabled;
     public List<String> domain;
+    public List<String> mx;
     public int order;
     public String type;
     public int keepalive;
@@ -142,20 +149,33 @@ public class EmailProvider implements Parcelable {
                         provider = new EmailProvider();
                         provider.id = xml.getAttributeValue(null, "id");
                         provider.name = xml.getAttributeValue(null, "name");
+
                         provider.description = xml.getAttributeValue(null, "description");
                         if (provider.description == null)
                             provider.description = provider.name;
                         provider.enabled = xml.getAttributeBooleanValue(null, "enabled", true);
+
                         String domain = xml.getAttributeValue(null, "domain");
                         if (domain != null)
                             provider.domain = Arrays.asList(domain.split(","));
+
+                        String mx = xml.getAttributeValue(null, "mx");
+                        if (mx != null)
+                            provider.mx = Arrays.asList(mx.split(","));
+
                         provider.order = xml.getAttributeIntValue(null, "order", Integer.MAX_VALUE);
                         provider.keepalive = xml.getAttributeIntValue(null, "keepalive", 0);
                         provider.partial = xml.getAttributeBooleanValue(null, "partial", true);
                         provider.useip = xml.getAttributeBooleanValue(null, "useip", true);
                         provider.appPassword = xml.getAttributeBooleanValue(null, "appPassword", false);
                         provider.link = xml.getAttributeValue(null, "link");
+
+                        String documentation = xml.getAttributeValue(null, "documentation");
+                        if (documentation != null)
+                            provider.documentation = new StringBuilder(documentation);
+
                         provider.type = xml.getAttributeValue(null, "type");
+
                         String user = xml.getAttributeValue(null, "user");
                         if ("local".equals(user))
                             provider.user = UserType.LOCAL;
@@ -238,12 +258,22 @@ public class EmailProvider implements Parcelable {
         if (PROPRIETARY.contains(domain))
             throw new IllegalArgumentException(context.getString(R.string.title_no_standard));
 
+        if (BuildConfig.DEBUG && false)
+            try {
+                // Scan ports
+                EntityLog.log(context, "Provider from template domain=" + domain);
+                return fromTemplate(context, domain, discover);
+            } catch (Throwable ex) {
+                Log.w(ex);
+                throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
+            }
+
         List<EmailProvider> providers = loadProfiles(context);
         for (EmailProvider provider : providers)
             if (provider.domain != null)
                 for (String d : provider.domain)
                     if (domain.toLowerCase(Locale.ROOT).matches(d)) {
-                        Log.i("Provider from domain=" + domain + " (" + d + ")");
+                        EntityLog.log(context, "Provider from domain=" + domain + " (" + d + ")");
                         provider.log(context);
                         return provider;
                     }
@@ -257,6 +287,18 @@ public class EmailProvider implements Parcelable {
             try {
                 // Retry at MX server addresses
                 DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, domain, "mx");
+
+                for (DnsHelper.DnsRecord record : records)
+                    if (!TextUtils.isEmpty(record.name))
+                        for (EmailProvider provider : providers)
+                            if (provider.mx != null)
+                                for (String mx : provider.mx)
+                                    if (record.name.toLowerCase(Locale.ROOT).matches(mx)) {
+                                        EntityLog.log(context, "Provider from mx=" + mx + " domain=" + domain);
+                                        provider.log(context);
+                                        return provider;
+                                    }
+
                 for (DnsHelper.DnsRecord record : records) {
                     String target = record.name;
                     while (autoconfig == null && target != null && target.indexOf('.') > 0) {
@@ -285,7 +327,7 @@ public class EmailProvider implements Parcelable {
         for (EmailProvider provider : providers)
             if (provider.imap.host.equals(autoconfig.imap.host) ||
                     provider.smtp.host.equals(autoconfig.smtp.host)) {
-                Log.i("Replacing auto config by profile=" + provider.name);
+                EntityLog.log(context, "Replacing auto config by profile=" + provider.name);
                 provider.log(context);
                 return provider;
             }
@@ -372,7 +414,7 @@ public class EmailProvider implements Parcelable {
 
             int status = request.getResponseCode();
             if (status != HttpURLConnection.HTTP_OK)
-                throw new FileNotFoundException("Error " + status + ":" + request.getResponseMessage());
+                throw new FileNotFoundException("Error " + status + ": " + request.getResponseMessage());
 
             // https://developer.android.com/reference/org/xmlpull/v1/XmlPullParser
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -764,7 +806,7 @@ public class EmailProvider implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return name;
+        return TextUtils.isEmpty(description) ? name : description;
     }
 
     public static class Server {
@@ -794,32 +836,51 @@ public class EmailProvider implements Parcelable {
                         for (InetAddress iaddr : InetAddress.getAllByName(host)) {
                             InetSocketAddress address = new InetSocketAddress(iaddr, Server.this.port);
 
-                            SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-                            try (SSLSocket socket = (SSLSocket) factory.createSocket()) {
+                            SocketFactory factory = (starttls
+                                    ? SocketFactory.getDefault()
+                                    : SSLSocketFactory.getDefault());
+                            try (Socket socket = factory.createSocket()) {
                                 EntityLog.log(context, "Connecting to " + address);
                                 socket.connect(address, SCAN_TIMEOUT);
                                 EntityLog.log(context, "Connected " + address);
 
-                                if (!starttls)
-                                    try {
-                                        socket.setSoTimeout(SCAN_TIMEOUT);
-                                        socket.startHandshake();
-                                        Certificate[] certs = socket.getSession().getPeerCertificates();
-                                        for (Certificate cert : certs)
-                                            if (cert instanceof X509Certificate) {
-                                                List<String> names = ConnectionHelper.getDnsNames((X509Certificate) cert);
-                                                if (ConnectionHelper.matches(host, names)) {
-                                                    EntityLog.log(context, "Trusted " + address);
-                                                    return true;
-                                                }
+                                socket.setSoTimeout(SCAN_TIMEOUT);
+
+                                SSLSocket sslSocket = null;
+                                try {
+                                    if (starttls)
+                                        sslSocket = starttls(socket, context);
+                                    else
+                                        sslSocket = (SSLSocket) socket;
+
+                                    sslSocket.startHandshake();
+
+                                    Certificate[] certs = sslSocket.getSession().getPeerCertificates();
+                                    for (Certificate cert : certs)
+                                        if (cert instanceof X509Certificate) {
+                                            List<String> names = EntityCertificate.getDnsNames((X509Certificate) cert);
+                                            EntityLog.log(context, "Certificate " + address +
+                                                    " " + TextUtils.join(",", names));
+                                            if (ConnectionHelper.matches(host, names)) {
+                                                EntityLog.log(context, "Trusted " + address);
+                                                return true;
                                             }
-                                        EntityLog.log(context, "Untrusted " + address);
-                                        return null;
+                                        }
+
+                                    EntityLog.log(context, "Untrusted " + address);
+                                    return null;
+                                } catch (Throwable ex) {
+                                    // Typical:
+                                    //   javax.net.ssl.SSLException: Unable to parse TLS packet header
+                                    EntityLog.log(context, "Handshake " + address + ": " + Log.formatThrowable(ex));
+                                } finally {
+                                    try {
+                                        if (sslSocket != null)
+                                            sslSocket.close();
                                     } catch (Throwable ex) {
-                                        // Typical:
-                                        //   javax.net.ssl.SSLException: Unable to parse TLS packet header
-                                        EntityLog.log(context, "Handshake " + address + ": " + Log.formatThrowable(ex));
+                                        Log.e(ex);
                                     }
+                                }
 
                                 EntityLog.log(context, "Reachable " + address);
                                 return true;
@@ -846,6 +907,74 @@ public class EmailProvider implements Parcelable {
                     }
                 }
             });
+        }
+
+        private SSLSocket starttls(Socket socket, Context context) throws IOException {
+            String response;
+            String command;
+            boolean has = false;
+
+            LineInputStream lis =
+                    new LineInputStream(
+                            new BufferedInputStream(
+                                    socket.getInputStream()));
+
+            if (port == 587) {
+                do {
+                    response = lis.readLine();
+                    if (response != null)
+                        EntityLog.log(context, socket.getRemoteSocketAddress() + " <" + response);
+                } while (response != null && !response.startsWith("220 "));
+
+                command = "EHLO " + EmailService.getDefaultEhlo() + "\n";
+                EntityLog.log(context, socket.getRemoteSocketAddress() + " >" + command);
+                socket.getOutputStream().write(command.getBytes());
+
+                do {
+                    response = lis.readLine();
+                    if (response != null) {
+                        EntityLog.log(context, socket.getRemoteSocketAddress() + " <" + response);
+                        if (response.contains("STARTTLS"))
+                            has = true;
+                    }
+                } while (response != null &&
+                        response.length() >= 4 && response.charAt(3) == '-');
+
+                if (has) {
+                    command = "STARTTLS\n";
+                    EntityLog.log(context, socket.getRemoteSocketAddress() + " >" + command);
+                    socket.getOutputStream().write(command.getBytes());
+                }
+            } else if (port == 143) {
+                do {
+                    response = lis.readLine();
+                    if (response != null) {
+                        EntityLog.log(context, socket.getRemoteSocketAddress() + " <" + response);
+                        if (response.contains("STARTTLS"))
+                            has = true;
+                    }
+                } while (response != null &&
+                        !response.startsWith("* OK"));
+
+                if (has) {
+                    command = "A001 STARTTLS\n";
+                    EntityLog.log(context, socket.getRemoteSocketAddress() + " >" + command);
+                    socket.getOutputStream().write(command.getBytes());
+                }
+            }
+
+            if (has) {
+                do {
+                    response = lis.readLine();
+                    if (response != null)
+                        EntityLog.log(context, socket.getRemoteSocketAddress() + " <" + response);
+                } while (response != null &&
+                        !(response.startsWith("A001 OK") || response.startsWith("220 ")));
+
+                SSLSocketFactory sslFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                return (SSLSocket) sslFactory.createSocket(socket, host, port, false);
+            } else
+                throw new SocketException("No STARTTLS");
         }
 
         @NonNull

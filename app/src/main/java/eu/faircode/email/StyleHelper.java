@@ -169,8 +169,14 @@ public class StyleHelper {
                         level = ((NumberSpan) span).getLevel();
                     else if (span instanceof BulletSpanEx)
                         level = ((BulletSpanEx) span).getLevel();
+
                 popupMenu.getMenu().findItem(R.id.menu_style_list_increase).setVisible(level >= 0);
                 popupMenu.getMenu().findItem(R.id.menu_style_list_decrease).setVisible(level > 0);
+
+                IndentSpan[] indents = edit.getSpans(start, end, IndentSpan.class);
+                popupMenu.getMenu().findItem(R.id.menu_style_indentation_decrease).setEnabled(indents.length > 0);
+
+                popupMenu.getMenu().findItem(R.id.menu_style_code).setEnabled(BuildConfig.DEBUG);
 
                 popupMenu.insertIcons(context);
 
@@ -198,8 +204,12 @@ public class StyleHelper {
                                     return setList(item);
                             } else if (groupId == R.id.group_style_blockquote) {
                                 return setBlockQuote(item);
+                            } else if (groupId == R.id.group_style_indentation) {
+                                return setIndentation(item);
                             } else if (groupId == R.id.group_style_strikethrough) {
                                 return setStrikeThrough(item);
+                            } else if (groupId == R.id.group_style_code) {
+                                return setCode(item);
                             } else if (groupId == R.id.group_style_clear) {
                                 return clear(item);
                             }
@@ -215,12 +225,16 @@ public class StyleHelper {
 
                         Float size;
                         if (item.getItemId() == R.id.menu_style_size_small)
-                            size = 0.8f;
+                            size = HtmlHelper.FONT_SMALL;
                         else if (item.getItemId() == R.id.menu_style_size_large)
-                            size = 1.25f;
+                            size = HtmlHelper.FONT_LARGE;
                         else
                             size = null;
 
+                        return _setSize(size);
+                    }
+
+                    private boolean _setSize(Float size) {
                         RelativeSizeSpan[] spans = edit.getSpans(start, end, RelativeSizeSpan.class);
                         for (RelativeSizeSpan span : spans) {
                             int s = edit.getSpanStart(span);
@@ -267,6 +281,10 @@ public class StyleHelper {
                                         _setBackground(null);
                                     }
                                 });
+
+                        BackgroundColorSpan[] spans = edit.getSpans(start, end, BackgroundColorSpan.class);
+                        if (spans != null && spans.length == 1)
+                            builder.initialColor(spans[0].getBackgroundColor());
 
                         builder.build().show();
 
@@ -320,6 +338,10 @@ public class StyleHelper {
                                         _setColor(null);
                                     }
                                 });
+
+                        ForegroundColorSpan[] spans = edit.getSpans(start, end, ForegroundColorSpan.class);
+                        if (spans != null && spans.length == 1)
+                            builder.initialColor(spans[0].getForegroundColor());
 
                         builder.build().show();
 
@@ -469,6 +491,10 @@ public class StyleHelper {
                         String[] names = anchor.getResources().getStringArray(R.array.fontNameValues);
                         String face = (id < names.length ? names[id] : null);
 
+                        return _setFont(face);
+                    }
+
+                    private boolean _setFont(String face) {
                         TypefaceSpan[] spans = edit.getSpans(start, end, TypefaceSpan.class);
                         for (TypefaceSpan span : spans) {
                             int s = edit.getSpanStart(span);
@@ -503,12 +529,62 @@ public class StyleHelper {
                         if (paragraph == null)
                             return false;
 
+                        QuoteSpan[] quotes = edit.getSpans(paragraph.first, paragraph.second, QuoteSpan.class);
+                        for (QuoteSpan quote : quotes)
+                            edit.removeSpan(quote);
+
+                        if (quotes.length == 1)
+                            return true;
+
+                        IndentSpan[] indents = edit.getSpans(start, end, IndentSpan.class);
+                        for (IndentSpan indent : indents)
+                            edit.removeSpan(indent);
+
                         QuoteSpan q;
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
                             q = new QuoteSpan(colorBlockquote);
                         else
                             q = new QuoteSpan(colorBlockquote, quoteStripe, quoteGap);
                         edit.setSpan(q, paragraph.first, paragraph.second, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+
+                        etBody.setText(edit);
+                        etBody.setSelection(paragraph.first, paragraph.second);
+
+                        return true;
+                    }
+
+                    private boolean setIndentation(MenuItem item) {
+                        Log.breadcrumb("style", "action", "indent");
+
+                        Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        if (paragraph == null)
+                            return false;
+
+                        Context context = etBody.getContext();
+                        int intentSize = context.getResources().getDimensionPixelSize(R.dimen.indent_size);
+
+                        QuoteSpan[] quotes = edit.getSpans(start, end, QuoteSpan.class);
+                        for (QuoteSpan quote : quotes)
+                            edit.removeSpan(quote);
+
+                        int prev = paragraph.first;
+                        int next = paragraph.first;
+                        while (next < paragraph.second) {
+                            while (next < paragraph.second && edit.charAt(next) != '\n')
+                                next++;
+
+                            if (item.getItemId() == R.id.menu_style_indentation_decrease) {
+                                IndentSpan[] indents = edit.getSpans(prev, prev, IndentSpan.class);
+                                if (indents.length > 0)
+                                    edit.removeSpan(indents[0]);
+                            } else {
+                                IndentSpan is = new IndentSpan(intentSize);
+                                edit.setSpan(is, prev, next, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                            }
+
+                            next++;
+                            prev = next;
+                        }
 
                         etBody.setText(edit);
                         etBody.setSelection(paragraph.first, paragraph.second);
@@ -537,6 +613,12 @@ public class StyleHelper {
                         etBody.setText(edit);
                         etBody.setSelection(start, end);
 
+                        return true;
+                    }
+
+                    private boolean setCode(MenuItem item) {
+                        _setSize(HtmlHelper.FONT_SMALL);
+                        _setFont("monospace");
                         return true;
                     }
 

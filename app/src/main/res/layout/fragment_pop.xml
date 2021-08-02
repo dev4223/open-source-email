@@ -208,16 +208,6 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <eu.faircode.email.FixedTextView
-            android:id="@+id/tvCharacters"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_setup_password_chars"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textColor="?attr/colorWarning"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
-
-        <eu.faircode.email.FixedTextView
             android:id="@+id/tvCaseSensitive"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -226,7 +216,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textStyle="italic"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvCharacters" />
+            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
 
         <eu.faircode.email.FixedTextView
             android:id="@+id/tvPasswordStorage"
@@ -430,7 +420,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="@string/title_keep_alive_interval"
+            android:text="@string/title_keep_poll_interval"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/etMax" />
