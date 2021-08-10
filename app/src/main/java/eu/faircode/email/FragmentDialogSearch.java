@@ -102,6 +102,7 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         final CheckBox cbSubject = dview.findViewById(R.id.cbSubject);
         final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
         final CheckBox cbMessage = dview.findViewById(R.id.cbMessage);
+        final TextView tvSearchTextUnsupported = dview.findViewById(R.id.tvSearchTextUnsupported);
         final CheckBox cbNotes = dview.findViewById(R.id.cbNotes);
         final CheckBox cbHeaders = dview.findViewById(R.id.cbHeaders);
         final CheckBox cbHtml = dview.findViewById(R.id.cbHtml);
@@ -166,7 +167,8 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         adapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
             @Override
             public CharSequence convertToString(Cursor cursor) {
-                return cursor.getString(cursor.getColumnIndex("suggestion"));
+                int colSuggestion = cursor.getColumnIndex("suggestion");
+                return cursor.getString(colSuggestion);
             }
         });
 
@@ -353,6 +355,8 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         cbSubject.setChecked(last_search_subject);
         cbKeywords.setChecked(last_search_keywords);
         cbMessage.setChecked(last_search_message);
+        tvSearchTextUnsupported.setText(getString(R.string.title_search_text_unsupported,
+                        "full text search not supported"));
         cbNotes.setChecked(last_search_notes);
         tvAfter.setText(null);
         tvBefore.setText(null);
@@ -519,7 +523,8 @@ public class FragmentDialogSearch extends FragmentDialogBase {
 
         etQuery.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_GO) {
+                if (actionId == EditorInfo.IME_ACTION_GO ||
+                        event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                     dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
                     return true;
                 }

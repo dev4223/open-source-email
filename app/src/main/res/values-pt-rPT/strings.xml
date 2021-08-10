@@ -230,6 +230,7 @@
     <string name="title_advanced_always">Receber sempre mensagens para estas contas</string>
     <string name="title_advanced_schedule">Agendar</string>
     <string name="title_advanced_advanced">Avançado</string>
+    <string name="title_advanced_quick_sync">Sincronização rápida</string>
     <string name="title_advanced_no_date">Mensagens sem data</string>
     <string name="title_advanced_unseen">Todas as mensagens não lidas</string>
     <string name="title_advanced_flagged">Todas as mensagens favoritas</string>
@@ -329,7 +330,6 @@
     <string name="title_advanced_addresses">Mostrar detalhes do endereço por pré-definição</string>
     <string name="title_advanced_attachments_alt">Mostrar anexos após o texto da mensagem</string>
     <string name="title_advanced_thumbnails">Mostrar miniaturas das imagens após o texto da mensagem</string>
-    <string name="title_advanced_message_text_zoom">Zoom padrão do texto da mensagem</string>
     <string name="title_advanced_overview_mode">Ampliar as mensagens originais para caber na tela</string>
     <string name="title_advanced_contrast">Usar alto contraste para o texto da mensagem</string>
     <string name="title_advanced_text_color">Usar cores de texto</string>
@@ -432,6 +432,7 @@
     <string name="title_advanced_debug">Modo de Depuração</string>
     <string name="title_advanced_query_threads">Limitar acesso paralelo à base de dados</string>
     <string name="title_advanced_schedule_hint">Toque num horário para o definir</string>
+    <string name="title_advanced_quick_sync_hint">Isto reduz o uso de dados, mas as novas mensagens podem ser perdidas se o servidor de e-mail não seguir os padrões</string>
     <string name="title_advanced_no_date_hint">Alguns provedores armazenam mensagens com data desconhecida, inválida ou futura como mensagens sem data</string>
     <string name="title_advanced_unseen_hint">Alguns provedores não têm o suporte correto, o que pode causar a sincronização de nenhuma ou de todas as mensagens</string>
     <string name="title_advanced_never_favorite">Nunca favoritar</string>
@@ -470,6 +471,7 @@
     <string name="title_attachment_audio">Gravar áudio</string>
     <string name="title_signature_mismatch">O endereço de correio eletrónico do remetente e assinatura não corresponde</string>
     <string name="title_search">Pesquisar</string>
+    <string name="title_search_text_unsupported">\'%s\' significa que o servidor de email não suporta pesquisa através de textos de mensagens</string>
     <string name="title_search_more">Mais opções</string>
     <string name="title_filter_seen">Lida</string>
     <string name="title_filter_duplicates">Duplicados</string>
@@ -487,6 +489,8 @@
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_thread">Conversa</string>
     <string name="title_legend_audio">Gravar áudio</string>
+    <string name="title_legend_hide_images">Ocultar imagens</string>
+    <string name="title_legend_show_reformatted">Mostrar mensagem reformatada</string>
     <string name="title_legend_delete">Eliminar</string>
     <string name="title_legend_a">Arquivar</string>
     <string name="title_legend_c">Compor</string>
@@ -529,6 +533,7 @@
     </string-array>
     <!-- https://en.wikipedia.org/wiki/Display_resolution -->
     <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
+    <string name="title_size_tiny">Muito pequeno</string>
     <string-array name="sizeNames">
         <item>0 B</item>
         <item>256 KB</item>

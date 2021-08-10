@@ -121,6 +121,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final int OPTIMIZE_POLL_INTERVAL = 15; // minutes
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 8; // seconds (totally 8+2x20=48 seconds)
+    private static final int CONNECT_BACKOFF_INTERMEDIATE = 5; // minutes
     private static final int CONNECT_BACKOFF_ALARM_START = 15; // minutes
     private static final int CONNECT_BACKOFF_ALARM_MAX = 60; // minutes
     private static final long CONNECT_BACKOFF_GRACE = 2 * 60 * 1000L; // milliseconds
@@ -128,6 +129,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
     private static final int ACCOUNT_ERROR_AFTER_POLL = 4; // times
     private static final int FAST_FAIL_THRESHOLD = 75; // percent
+    private static final int FAST_FAIL_COUNT = 3;
     private static final int FETCH_YIELD_DURATION = 50; // milliseconds
     private static final long WATCHDOG_INTERVAL = 60 * 60 * 1000L; // milliseconds
 
@@ -1332,14 +1334,18 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     final boolean capUtf8 =
                             iservice.hasCapability("UTF8=ACCEPT") ||
                                     iservice.hasCapability("UTF8=ONLY");
+                    final boolean capNotify = iservice.hasCapability("NOTIFY");
+
+                    String capabilities = TextUtils.join(" ", iservice.getCapabilities());
+                    if (capabilities.length() > 500)
+                        capabilities = capabilities.substring(0, 500) + "...";
+
                     Log.i(account.name + " idle=" + capIdle);
                     if (!capIdle || account.poll_interval < OPTIMIZE_KEEP_ALIVE_INTERVAL)
                         optimizeAccount(account, "IDLE");
 
-                    final boolean capNotify = iservice.hasCapability("NOTIFY");
-
                     db.account().setAccountState(account.id, "connected");
-                    db.account().setAccountCapabilities(account.id, capIdle, capUtf8);
+                    db.account().setAccountCapabilities(account.id, capabilities, capIdle, capUtf8);
                     db.account().setAccountError(account.id, null);
                     db.account().setAccountWarning(account.id, null);
 
@@ -2107,14 +2113,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             fast_fails++;
                             if (fast_fails == 1)
                                 first_fail = now;
-                            else {
+                            else if (fast_fails >= FAST_FAIL_COUNT) {
                                 long avg_fail = (now - first_fail) / fast_fails;
                                 if (avg_fail < fail_threshold) {
                                     long missing = (fail_threshold - avg_fail) * fast_fails;
                                     int compensate = (int) (missing / (CONNECT_BACKOFF_ALARM_START * 60 * 1000L));
                                     if (compensate > 0) {
-                                        if (account.last_connected != null &&
-                                                now - account.last_connected < CONNECT_BACKOFF_GRACE)
+                                        if (was_connected != 0 && was_connected < CONNECT_BACKOFF_GRACE)
                                             compensate = 1;
 
                                         int backoff = compensate * CONNECT_BACKOFF_ALARM_START;
@@ -2153,9 +2158,18 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     if (backoff < CONNECT_BACKOFF_MAX)
                         state.setBackoff(backoff * 2);
                     else if (backoff == CONNECT_BACKOFF_MAX)
+                        if (AlarmManagerCompatEx.hasExactAlarms(this))
+                            state.setBackoff(CONNECT_BACKOFF_INTERMEDIATE * 60);
+                        else
+                            state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
+                    else if (backoff == CONNECT_BACKOFF_INTERMEDIATE * 60)
                         state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
-                    else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60)
-                        state.setBackoff(backoff * 2);
+                    else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60) {
+                        int b = backoff * 2;
+                        if (b > CONNECT_BACKOFF_ALARM_MAX * 60)
+                            b = CONNECT_BACKOFF_ALARM_MAX * 60;
+                        state.setBackoff(b);
+                    }
 
                     if (backoff <= CONNECT_BACKOFF_MAX) {
                         // Short back-off period, keep device awake

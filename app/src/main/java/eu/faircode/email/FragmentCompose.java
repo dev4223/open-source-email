@@ -1480,7 +1480,7 @@ public class FragmentCompose extends FragmentBase {
         });
 
         menu.findItem(R.id.menu_translate).setActionView(R.layout.action_button);
-        ImageButton ibTranslate = (ImageButton)menu.findItem(R.id.menu_translate).getActionView();
+        ImageButton ibTranslate = (ImageButton) menu.findItem(R.id.menu_translate).getActionView();
         ibTranslate.setImageResource(R.drawable.twotone_translate_24);
         ibTranslate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1490,7 +1490,7 @@ public class FragmentCompose extends FragmentBase {
         });
 
         menu.findItem(R.id.menu_zoom).setActionView(R.layout.action_button);
-        ImageButton ibZoom = (ImageButton)menu.findItem(R.id.menu_zoom).getActionView();
+        ImageButton ibZoom = (ImageButton) menu.findItem(R.id.menu_zoom).getActionView();
         ibZoom.setImageResource(R.drawable.twotone_format_size_24);
         ibZoom.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -2503,6 +2503,9 @@ public class FragmentCompose extends FragmentBase {
                 int requestCode = args.getInt("requestCode");
                 Uri uri = args.getParcelable("uri");
 
+                if (uri == null)
+                    throw new FileNotFoundException();
+
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean suggest_names = prefs.getBoolean("suggest_names", true);
 
@@ -2524,42 +2527,44 @@ public class FragmentCompose extends FragmentBase {
                     if (cursor != null && cursor.moveToFirst()) {
                         int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
                         int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-                        String email = MessageHelper.sanitizeEmail(cursor.getString(colEmail));
-                        String name = cursor.getString(colName);
+                        if (colEmail >= 0 && colName >= 0) {
+                            String email = MessageHelper.sanitizeEmail(cursor.getString(colEmail));
+                            String name = cursor.getString(colName);
 
-                        try {
-                            db.beginTransaction();
+                            try {
+                                db.beginTransaction();
 
-                            draft = db.message().getMessage(id);
-                            if (draft == null)
-                                return null;
+                                draft = db.message().getMessage(id);
+                                if (draft == null)
+                                    return null;
 
-                            Address[] address = null;
-                            if (requestCode == REQUEST_CONTACT_TO)
-                                address = draft.to;
-                            else if (requestCode == REQUEST_CONTACT_CC)
-                                address = draft.cc;
-                            else if (requestCode == REQUEST_CONTACT_BCC)
-                                address = draft.bcc;
+                                Address[] address = null;
+                                if (requestCode == REQUEST_CONTACT_TO)
+                                    address = draft.to;
+                                else if (requestCode == REQUEST_CONTACT_CC)
+                                    address = draft.cc;
+                                else if (requestCode == REQUEST_CONTACT_BCC)
+                                    address = draft.bcc;
 
-                            List<Address> list = new ArrayList<>();
-                            if (address != null)
-                                list.addAll(Arrays.asList(address));
+                                List<Address> list = new ArrayList<>();
+                                if (address != null)
+                                    list.addAll(Arrays.asList(address));
 
-                            list.add(new InternetAddress(email, suggest_names ? name : null, StandardCharsets.UTF_8.name()));
+                                list.add(new InternetAddress(email, suggest_names ? name : null, StandardCharsets.UTF_8.name()));
 
-                            if (requestCode == REQUEST_CONTACT_TO)
-                                draft.to = list.toArray(new Address[0]);
-                            else if (requestCode == REQUEST_CONTACT_CC)
-                                draft.cc = list.toArray(new Address[0]);
-                            else if (requestCode == REQUEST_CONTACT_BCC)
-                                draft.bcc = list.toArray(new Address[0]);
+                                if (requestCode == REQUEST_CONTACT_TO)
+                                    draft.to = list.toArray(new Address[0]);
+                                else if (requestCode == REQUEST_CONTACT_CC)
+                                    draft.cc = list.toArray(new Address[0]);
+                                else if (requestCode == REQUEST_CONTACT_BCC)
+                                    draft.bcc = list.toArray(new Address[0]);
 
-                            db.message().updateMessage(draft);
+                                db.message().updateMessage(draft);
 
-                            db.setTransactionSuccessful();
-                        } finally {
-                            db.endTransaction();
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
                         }
                     }
                 }
@@ -2750,7 +2755,21 @@ public class FragmentCompose extends FragmentBase {
                             ex.getCause() instanceof ErrnoException &&
                             ((ErrnoException) ex.getCause()).errno == ENOSPC)
                         ex = new IOException(getContext().getString(R.string.app_cake), ex);
-                    Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
+                    Log.unexpectedError(getParentFragmentManager(), ex,
+                            !(ex instanceof IOException || ex.getCause() instanceof IOException));
+                    /*
+                        java.lang.IllegalStateException: java.io.IOException: Failed to redact /storage/emulated/0/Download/97203830-piston-vecteur-icône-simple-symbole-plat-sur-fond-blanc.jpg
+                          at android.os.Parcel.createExceptionOrNull(Parcel.java:2381)
+                          at android.os.Parcel.createException(Parcel.java:2357)
+                          at android.os.Parcel.readException(Parcel.java:2340)
+                          at android.database.DatabaseUtils.readExceptionFromParcel(DatabaseUtils.java:190)
+                          at android.database.DatabaseUtils.readExceptionWithFileNotFoundExceptionFromParcel(DatabaseUtils.java:153)
+                          at android.content.ContentProviderProxy.openTypedAssetFile(ContentProviderNative.java:804)
+                          at android.content.ContentResolver.openTypedAssetFileDescriptor(ContentResolver.java:2002)
+                          at android.content.ContentResolver.openAssetFileDescriptor(ContentResolver.java:1817)
+                          at android.content.ContentResolver.openInputStream(ContentResolver.java:1494)
+                          at eu.faircode.email.FragmentCompose.addAttachment(SourceFile:27)
+                     */
                 }
             }
         }.execute(this, args, "compose:attachment:add");

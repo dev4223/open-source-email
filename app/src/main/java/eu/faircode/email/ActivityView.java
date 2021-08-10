@@ -175,15 +175,19 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         startup = prefs.getString("startup", "unified");
 
         Configuration config = getResources().getConfiguration();
-        final boolean normal = config.isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
         final boolean portrait2 = prefs.getBoolean("portrait2", false);
+        final boolean portrait2c = prefs.getBoolean("portrait2c", false);
+        final boolean portrait3 = prefs.getBoolean("portrait3", false);
         final boolean landscape = prefs.getBoolean("landscape", true);
         final boolean landscape3 = prefs.getBoolean("landscape3", true);
-        Log.i("Orientation=" + config.orientation + " normal=" + normal +
-                " landscape=" + landscape + "/" + landscape3);
+        Log.i("Orientation=" + config.orientation +
+                " portrait 2=" + portrait2 + " 2c=" + portrait2c + " nav=" + portrait3 +
+                " landscape 2=" + landscape + " nav=" + landscape3);
 
         int viewId;
-        if (config.orientation == ORIENTATION_PORTRAIT || !normal || !landscape)
+        if (config.orientation == ORIENTATION_PORTRAIT && portrait2c)
+            viewId = R.layout.activity_view_landscape_split;
+        else if (config.orientation == ORIENTATION_PORTRAIT || !landscape)
             viewId = (portrait2 ? R.layout.activity_view_portrait_split : R.layout.activity_view_portrait);
         else
             viewId = R.layout.activity_view_landscape_split;
@@ -230,8 +234,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 Log.i("Drawer opened");
                 owner.start();
 
-                if (normal && landscape3 &&
-                        config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                if (((portrait3 && config.orientation == Configuration.ORIENTATION_PORTRAIT) ||
+                        (landscape3 && config.orientation == Configuration.ORIENTATION_LANDSCAPE))) {
                     drawerLayout.setDrawerLockMode(LOCK_MODE_LOCKED_OPEN);
                     childContent.setPaddingRelative(childDrawer.getLayoutParams().width, 0, 0, 0);
                 }
@@ -246,8 +250,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     owner.stop();
 
-                if (normal && landscape3 &&
-                        config.orientation == Configuration.ORIENTATION_LANDSCAPE)
+                if (((portrait3 && config.orientation == Configuration.ORIENTATION_PORTRAIT) ||
+                        (landscape3 && config.orientation == Configuration.ORIENTATION_LANDSCAPE)))
                     childContent.setPaddingRelative(
                             Math.round(slideOffset * childDrawer.getLayoutParams().width), 0, 0, 0);
             }
@@ -258,7 +262,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         int drawerWidth;
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        if (viewId != R.layout.activity_view_landscape_split || !landscape3) {
+        if (viewId == R.layout.activity_view_landscape_split && landscape3)
+            drawerWidth = Helper.dp2pixels(this, 300);
+        else if (viewId != R.layout.activity_view_landscape_split && portrait3)
+            drawerWidth = Math.min(Helper.dp2pixels(this, 300), dm.widthPixels / 2);
+        else {
             int actionBarHeight;
             TypedValue tv = new TypedValue();
             if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
@@ -269,8 +277,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             int screenWidth = Math.min(dm.widthPixels, dm.heightPixels);
             int dp320 = Helper.dp2pixels(this, 320);
             drawerWidth = Math.min(screenWidth - actionBarHeight, dp320);
-        } else
-            drawerWidth = Helper.dp2pixels(this, 300);
+        }
 
         ViewGroup.LayoutParams lparam = drawerContainer.getLayoutParams();
         lparam.width = drawerWidth;

@@ -245,6 +245,7 @@
     <string name="title_advanced_hint_message">        Stai navigando alle opzioni più avanzate.
         Tutte le opzioni hanno comunemente usato valori standard, che non devi cambiare a meno che non abbia una preferenza differente.
     </string>
+    <string name="title_advanced_hint_setup">È possibile configurare un account toccando il pulsante della procedura guidata nella schermata di configurazione principale.</string>
     <string name="title_advanced_section_main">Principale</string>
     <string name="title_advanced_section_synchronize">Ricevi</string>
     <string name="title_advanced_section_send">Invia</string>
@@ -262,6 +263,7 @@
     <string name="title_advanced_always">Ricevi sempre i messaggi per questi profili</string>
     <string name="title_advanced_schedule">Pianificazione</string>
     <string name="title_advanced_advanced">Avanzate</string>
+    <string name="title_advanced_quick_sync">Sincronizzazione rapida</string>
     <string name="title_advanced_no_date">Messaggi senza data</string>
     <string name="title_advanced_unseen">Tutti i messaggi non letti</string>
     <string name="title_advanced_flagged">Tutti i messaggi stellati</string>
@@ -327,6 +329,8 @@
     <string name="title_advanced_caption_message_header">Intestazione del messaggio</string>
     <string name="title_advanced_caption_message_body">Corpo del messaggio</string>
     <string name="title_advanced_portrait2">Usa due righe in modalità verticale</string>
+    <string name="title_advanced_portrait2c">Usa due colonne in modalità verticale</string>
+    <string name="title_advanced_portrait3">Mostra il menu di navigazione in modalità verticale per impostazione predefinita</string>
     <string name="title_advanced_landscape">Usa due colonne in modalità orizzontale</string>
     <string name="title_advanced_landscape3">Mostra il menu di navigazione in modalità orizzontale di default</string>
     <string name="title_advanced_nav_message_count">Mostra il numero di messaggi memorizzati localmente nel menu di navigazione</string>
@@ -375,7 +379,7 @@
     <string name="title_advanced_addresses">Espandi i dettagli dell\'indirizzo di default</string>
     <string name="title_advanced_attachments_alt">Mostra allegati dopo il testo del messaggio</string>
     <string name="title_advanced_thumbnails">Mostra miniature delle immagini dopo il testo del messaggio</string>
-    <string name="title_advanced_message_text_zoom">Zoom di default del testo del messaggio</string>
+    <string name="title_advanced_message_text_zoom2">Zoom di default del testo del messaggio %1$s%%</string>
     <string name="title_advanced_overview_mode">Ingrandisci i messaggi originali per adattarsi allo schermo</string>
     <string name="title_advanced_contrast">Usa il contrasto elevato per il testo del messaggio</string>
     <string name="title_advanced_monospaced">Usa di default caratteri monospaziati per il testo del messaggio</string>
@@ -466,6 +470,7 @@
     <string name="title_advanced_sound">Seleziona il suono di notifica</string>
     <string name="title_advanced_notify_screen_on">Accendi brevemente lo schermo per le notifiche dei nuovi messaggi</string>
     <string name="title_advanced_confirm_links">Conferma l\'apertura dei link</string>
+    <string name="title_advanced_check_links_dbl">Controlla le liste di blocco dei domini per i link sospetti</string>
     <string name="title_advanced_browse_links">Delega l\'apertura dei link ad Android</string>
     <string name="title_advanced_confirm_images">Conferma la visualizzazione dei messaggi</string>
     <string name="title_advanced_confirm_html">Mostra di default i messaggi riformattati</string>
@@ -526,6 +531,7 @@
     <string name="title_advanced_poll_hint">Cercare periodicamente i nuovi messaggi confronterà i messaggi locali e remoti ogni volta, che è un\'operazione costosa che potrebbe risultare in un uso extra della batteria, specialmente se ci sono molti messaggi. Ricevere sempre lo impedirà seguendo continuamento le modifiche.</string>
     <string name="title_advanced_optimize_hint">Questo potrebbe cambiare la frequenza di sincronizzazione per risparmiare sull\'uso della batteria in base alle capacità e il comportamento dei server email</string>
     <string name="title_advanced_schedule_hint">Tocca sull\'orario per impostarlo</string>
+    <string name="title_advanced_quick_sync_hint">Riduce l\'utilizzo dei dati, ma i nuovi messaggi potrebbero essere persi se il server di posta elettronica non segue gli standard</string>
     <string name="title_advanced_no_date_hint">Alcuni provider memorizzano i messaggi con una data sconosciuta, non valida o futura come messaggi senza data</string>
     <string name="title_advanced_unseen_hint">Alcuni provider non lo supportano propriamente, il che potrebbe causare la sincronizzazione di tutti o nessun messaggio</string>
     <string name="title_advanced_deleted_unseen">Quando disabilitato, i messaggi non letti sono mantenuti per sempre sul dispositivo</string>
@@ -574,7 +580,7 @@
     <string name="title_advanced_sender_hint">Gran parte dei provider non consentono gli indirizzi modificati del mittente</string>
     <string name="title_advanced_bcc_hint">L\'indirizzo non sarà mostrato, ma aggiunto all\'invio</string>
     <string name="title_advanced_internal_hint">Ci sarà un avviso inviando a un altro dominio</string>
-    <string name="title_advanced_e2e_encryption" comment="title_advanced_e2e_encryption&#10;Heading for default sign/encrypt in the advanced identity settings">Opzioni per la crittografia end-to-end</string>
+    <string name="title_advanced_e2e_encryption">Opzioni per la crittografia end-to-end</string>
     <string name="title_advanced_display_harmful_hint">Disabilitare quest\'opzione potrebbe esser dannoso per la tua privacy</string>
     <string name="title_advanced_display_hidden_hint">Questo può risultare in testi strani e doppi</string>
     <string name="title_advanced_display_pin_hint">Un PIN ha la precedenza sull\'autenticazione biometrica</string>
@@ -861,6 +867,7 @@
     <string name="title_subscribe">Iscriviti</string>
     <string name="title_delete">Elimina</string>
     <string name="title_more">Altro</string>
+    <string name="title_less">Meno</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Sposta</string>
     <string name="title_copy_btn">Copia</string>
@@ -1093,6 +1100,7 @@
         Le opzioni seguenti servono a continuare la ricerca nel server email.
     </string>
     <string name="title_search_text_hint">La ricerca del testo nei messaggi, quando ci sono molti messaggi, potrebbe non funzionare su alcuni server</string>
+    <string name="title_search_text_unsupported">\'%s\' significa che il server di posta non supporta la ricerca nei testi dei messaggi</string>
     <string name="title_search_size_hint">La ricerca dei messaggi per dimensione, quando ci sono molti messaggi, potrebbe non funzionare su alcuni server</string>
     <string name="title_search_more">Altre opzioni</string>
     <string name="title_search_use_index">Usa l\'indice di ricerca</string>
@@ -1148,7 +1156,7 @@
     <string name="title_select_found">Seleziona trovati</string>
     <string name="title_mark_all_read">Segna tutto come letto</string>
     <string name="title_force_sync">Forza sincronizzazione</string>
-    <string name="title_force_reload" comment="title_force_reload&#10;Title for menu item in operations view to restart the sync service">Forza il riavvio</string>
+    <string name="title_force_reload">Forza il riavvio</string>
     <string name="title_force_send">Forza invio</string>
     <string name="title_language_all">Tutte</string>
     <string name="title_previous">Precedente</string>
@@ -1325,7 +1333,9 @@
     <string name="title_legend_create_rule">Crea regola</string>
     <string name="title_legend_show_unsubscribe">Disiscriviti dall\'elenco</string>
     <string name="title_legend_show_images">Mostra immagini</string>
+    <string name="title_legend_hide_images">Nascondi immagini</string>
     <string name="title_legend_show_full">Mostra il messaggio originale</string>
+    <string name="title_legend_show_reformatted">Visualizza messaggio riformattato</string>
     <string name="title_legend_edit">Modifica</string>
     <string name="title_legend_default_color">Colore predefinito</string>
     <string name="title_legend_close_hint">Chiudi suggerimento</string>
@@ -1598,6 +1608,7 @@
         <item>Medio</item>
         <item>Grande</item>
     </string-array>
+    <string name="title_size_tiny">Molto piccolo</string>
     <string-array name="receiptNames">
         <item>Solo conferma di lettura</item>
         <item>Solo conferma di consegna</item>

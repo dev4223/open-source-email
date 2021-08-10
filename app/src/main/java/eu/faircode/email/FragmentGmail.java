@@ -39,6 +39,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -84,6 +85,7 @@ public class FragmentGmail extends FragmentBase {
 
     private Group grpError;
 
+    private static final long GET_TOKEN_TIMEOUT = 10 * 1000L;
     private static final String PRIVACY_URI = "https://policies.google.com/privacy";
 
     @Override
@@ -154,6 +156,9 @@ public class FragmentGmail extends FragmentBase {
                     String name = etName.getText().toString().trim();
                     if (TextUtils.isEmpty(name))
                         throw new IllegalArgumentException(getString(R.string.title_no_name));
+
+                    etName.clearFocus();
+                    Helper.hideKeyboard(view);
 
                     Intent intent = newChooseAccountIntent(
                             null,
@@ -272,17 +277,31 @@ public class FragmentGmail extends FragmentBase {
     private void onNoAccountSelected(int resultCode, Intent data) {
         AccountManager am = AccountManager.get(getContext());
         Account[] accounts = am.getAccountsByType(TYPE_GOOGLE);
-        if (accounts.length == 0) {
+        if (accounts.length == 0)
             Log.e("newChooseAccountIntent without result=" + resultCode + " data=" + data);
-            ToastEx.makeText(getContext(), R.string.title_no_account, Toast.LENGTH_LONG).show();
-        }
+
+        if (resultCode == RESULT_OK) {
+            tvError.setText(getString(R.string.title_no_account) + " (" + accounts.length + ")");
+            grpError.setVisibility(View.VISIBLE);
+        } else
+            ToastEx.makeText(getContext(), android.R.string.cancel, Toast.LENGTH_SHORT).show();
     }
 
     private void onAccountSelected(Intent data) {
         String name = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
         String type = data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
 
+        final Handler handler = getMainHandler();
         final String disabled = getString(R.string.title_setup_advanced_protection);
+
+        final Runnable timeout = new Runnable() {
+            @Override
+            public void run() {
+                tvError.setText("Android failed to return a token");
+                grpError.setVisibility(View.VISIBLE);
+            }
+        };
+        handler.postDelayed(timeout, GET_TOKEN_TIMEOUT);
 
         boolean found = false;
         AccountManager am = AccountManager.get(getContext());
@@ -300,6 +319,8 @@ public class FragmentGmail extends FragmentBase {
                             @Override
                             public void run(AccountManagerFuture<Bundle> future) {
                                 try {
+                                    handler.removeCallbacks(timeout);
+
                                     Bundle bundle = future.getResult();
                                     String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
                                     if (token == null)
@@ -326,7 +347,7 @@ public class FragmentGmail extends FragmentBase {
                                 }
                             }
                         },
-                        null);
+                        handler);
                 break;
             }
 

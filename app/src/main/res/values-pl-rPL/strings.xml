@@ -264,6 +264,7 @@
     <string name="title_advanced_hint_message">        Przechodzisz do bardziej zaawansowanych opcji.
          Wszystkie opcje mają powszechnie używane wartości standardowe, których nie trzeba zmieniać, chyba że masz inne preferencje.
     </string>
+    <string name="title_advanced_hint_setup">Konto możesz skonfigurować, dotykając przycisku kreatora na głównym ekranie konfiguracji.</string>
     <string name="title_advanced_section_main">Główne</string>
     <string name="title_advanced_section_synchronize">Odbieranie</string>
     <string name="title_advanced_section_send">Wysyłanie</string>
@@ -281,6 +282,7 @@
     <string name="title_advanced_always">Zawsze odbieraj wiadomości z tych kont</string>
     <string name="title_advanced_schedule">Harmonogram</string>
     <string name="title_advanced_advanced">Zaawansowane</string>
+    <string name="title_advanced_quick_sync">Szybka synchronizacja</string>
     <string name="title_advanced_no_date">Wiadomości bez daty</string>
     <string name="title_advanced_unseen">Wszystkie nieprzeczytane wiadomości</string>
     <string name="title_advanced_flagged">Wszystkie oznaczone wiadomości</string>
@@ -346,6 +348,8 @@
     <string name="title_advanced_caption_message_header">Nagłówek wiadomości</string>
     <string name="title_advanced_caption_message_body">Treść wiadomości</string>
     <string name="title_advanced_portrait2">Użyj dwóch rzędów w trybie pionowym</string>
+    <string name="title_advanced_portrait2c">Użyj dwóch kolumn w trybie pionowym</string>
+    <string name="title_advanced_portrait3">Domyślnie pokazuj menu nawigacji w trybie pionowym</string>
     <string name="title_advanced_landscape">Użyj dwóch kolumn w trybie poziomym</string>
     <string name="title_advanced_landscape3">Domyślnie pokaż menu nawigacji w trybie poziomym</string>
     <string name="title_advanced_nav_message_count">Pokaż liczbę lokalnie przechowywanych wiadomości w menu nawigacji</string>
@@ -394,7 +398,7 @@
     <string name="title_advanced_addresses">Domyślnie pokazuj szczegóły adresu</string>
     <string name="title_advanced_attachments_alt">Pokaż załączniki za treścią wiadomości</string>
     <string name="title_advanced_thumbnails">Pokaż miniatury obrazów po tekście wiadomości</string>
-    <string name="title_advanced_message_text_zoom">Domyślne powiększenie tekstu wiadomości</string>
+    <string name="title_advanced_message_text_zoom2">Domyślne powiększenie tekstu wiadomości: %1$s %%</string>
     <string name="title_advanced_overview_mode">Powiększ oryginalne wiadomości, aby dopasować je do ekranu</string>
     <string name="title_advanced_contrast">Użyj wysokiego kontrastu dla tekstu wiadomości</string>
     <string name="title_advanced_monospaced">Użyj czcionki o stałej szerokości dla tekstu wiadomości</string>
@@ -485,6 +489,7 @@
     <string name="title_advanced_sound">Wybierz dźwięk powiadomienia</string>
     <string name="title_advanced_notify_screen_on">Włącz ekran na chwilę, aby uzyskać powiadomienia o nowych wiadomościach</string>
     <string name="title_advanced_confirm_links">Potwierdź otwieranie linków</string>
+    <string name="title_advanced_check_links_dbl">Sprawdź listy blokowanych domen pod kątem podejrzanych linków</string>
     <string name="title_advanced_browse_links">Deleguj otwieranie linków do Androida</string>
     <string name="title_advanced_confirm_images">Potwierdź wyświetlanie obrazów</string>
     <string name="title_advanced_confirm_html">Domyślnie pokaż ponownie sformatowane wiadomości</string>
@@ -545,6 +550,7 @@
     <string name="title_advanced_poll_hint">Synchronizacja okresowa porównuje wiadomości lokalne i zdalne za każdym razem, co jest kosztowną operacją, która może prowadzić do dodatkowego zużycia baterii, zwłaszcza gdy jest dużo wiadomości do synchronizacji. Synchronizacja stała pozwoli uniknąć ciągłego sprawdzania zmian.</string>
     <string name="title_advanced_optimize_hint">Może to zmienić częstotliwość synchronizacji, aby zaoszczędzić zużycie baterii w zależności od możliwości i zachowania serwerów e-mail</string>
     <string name="title_advanced_schedule_hint">Dotknij zegara, aby ustawić czas</string>
+    <string name="title_advanced_quick_sync_hint">Zmniejsza to zużycie danych, ale nowe wiadomości mogą zostać pominięte, jeśli serwer poczty e-mail nie spełnia standardów</string>
     <string name="title_advanced_no_date_hint">Niektórzy dostawcy przechowują wiadomości z nieznaną, niepoprawną lub przyszłą datą jako wiadomości bez daty</string>
     <string name="title_advanced_unseen_hint">Niektórzy dostawcy nie obsługują tego poprawnie, co może powodować brak synchronizacji lub synchronizację wszystkich wiadomości</string>
     <string name="title_advanced_deleted_unseen">Kiedy wyłączone, nieprzeczytane wiadomości są zawsze przechowywane w urządzeniu</string>
@@ -593,7 +599,7 @@
     <string name="title_advanced_sender_hint">Większość dostawców nie zezwala na modyfikowane adresy nadawcy</string>
     <string name="title_advanced_bcc_hint">Adres nie zostanie wyświetlony, ale zostanie dodany podczas wysyłania</string>
     <string name="title_advanced_internal_hint">Będzie ostrzeżenie podczas wysyłania do innej domeny</string>
-    <string name="title_advanced_e2e_encryption" comment="title_advanced_e2e_encryption&#10;Heading for default sign/encrypt in the advanced identity settings">Opcje szyfrowania end-to-end</string>
+    <string name="title_advanced_e2e_encryption">Opcje szyfrowania end-to-end</string>
     <string name="title_advanced_display_harmful_hint">Wyłączenie tej opcji może być szkodliwe dla prywatności</string>
     <string name="title_advanced_display_hidden_hint">Może to powodować dziwne i podwójne teksty</string>
     <string name="title_advanced_display_pin_hint">PIN ma pierwszeństwo przed uwierzytelnianiem biometrycznym</string>
@@ -880,6 +886,7 @@
     <string name="title_subscribe">Subskrybuj</string>
     <string name="title_delete">Usuń</string>
     <string name="title_more">Więcej</string>
+    <string name="title_less">Mniej</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Przenieś</string>
     <string name="title_copy_btn">Kopiuj</string>
@@ -1112,6 +1119,7 @@
         Poniższe opcje pozwalają kontynuować wyszukiwanie serwera e-mail.
     </string>
     <string name="title_search_text_hint">Wyszukiwanie tekstu w wiadomościach może nie działać na niektórych serwerach, gdy istnieje duża liczba wiadomości</string>
+    <string name="title_search_text_unsupported">\'%s\' oznacza, że serwer pocztowy nie obsługuje wyszukiwania w tekstach wiadomości</string>
     <string name="title_search_size_hint">Wyszukiwanie wiadomości według rozmiaru może nie działać na niektórych serwerach, gdy istnieje duża liczba wiadomości</string>
     <string name="title_search_more">Więcej opcji</string>
     <string name="title_search_use_index">Użyj indeksu wyszukiwania</string>
@@ -1167,7 +1175,7 @@
     <string name="title_select_found">Wybierz znalezione</string>
     <string name="title_mark_all_read">Oznacz wszystko jako przeczytane</string>
     <string name="title_force_sync">Wymuś synchronizację</string>
-    <string name="title_force_reload" comment="title_force_reload&#10;Title for menu item in operations view to restart the sync service">Wymuś restart</string>
+    <string name="title_force_reload">Wymuś restart</string>
     <string name="title_force_send">Wymuś wysłanie</string>
     <string name="title_language_all">Wszystkie</string>
     <string name="title_previous">Poprzedni</string>
@@ -1344,7 +1352,9 @@
     <string name="title_legend_create_rule">Utwórz regułę</string>
     <string name="title_legend_show_unsubscribe">Wypisz się z listy</string>
     <string name="title_legend_show_images">Pokaż obrazy</string>
+    <string name="title_legend_hide_images">Ukryj obrazy</string>
     <string name="title_legend_show_full">Pokaż oryginalną wiadomość</string>
+    <string name="title_legend_show_reformatted">Pokaż sformatowaną wiadomość</string>
     <string name="title_legend_edit">Edycja</string>
     <string name="title_legend_default_color">Kolor domyślny</string>
     <string name="title_legend_close_hint">Zamknij podpowiedź</string>
@@ -1618,6 +1628,7 @@
         <item>Średnia</item>
         <item>Duża</item>
     </string-array>
+    <string name="title_size_tiny">Drobna</string>
     <string-array name="receiptNames">
         <item>Potwierdzenie odczytu</item>
         <item>Potwierdzenie dostarczenia</item>

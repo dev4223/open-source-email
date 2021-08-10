@@ -19,6 +19,11 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import static android.app.Activity.RESULT_OK;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static androidx.webkit.WebSettingsCompat.FORCE_DARK_OFF;
+import static androidx.webkit.WebSettingsCompat.FORCE_DARK_ON;
+
 import android.Manifest;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
@@ -62,6 +67,7 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.LinkMovementMethod;
+import android.text.method.MovementMethod;
 import android.text.style.DynamicDrawableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
@@ -71,6 +77,7 @@ import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -85,7 +92,6 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.textclassifier.ConversationAction;
@@ -187,11 +193,6 @@ import biweekly.property.Method;
 import biweekly.property.Organizer;
 import biweekly.property.RawProperty;
 import biweekly.util.ICalDate;
-
-import static android.app.Activity.RESULT_OK;
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static androidx.webkit.WebSettingsCompat.FORCE_DARK_OFF;
-import static androidx.webkit.WebSettingsCompat.FORCE_DARK_ON;
 
 public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHolder> {
     private Fragment parentFragment;
@@ -316,7 +317,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder implements
             View.OnClickListener,
             View.OnLongClickListener,
-            View.OnTouchListener,
             View.OnLayoutChangeListener {
         private ViewCardOptional card;
         private View view;
@@ -489,7 +489,136 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TwoStateOwner cowner = new TwoStateOwner(owner, "MessageAttachments");
         private TwoStateOwner powner = new TwoStateOwner(owner, "MessagePopup");
 
-        private ScaleGestureDetector gestureDetector;
+        private View.OnTouchListener touchListener = new View.OnTouchListener() {
+            private ScaleGestureDetector gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                private Toast toast = null;
+
+                @Override
+                public boolean onScale(ScaleGestureDetector detector) {
+                    TupleMessageEx message = getMessage();
+                    if (message != null) {
+                        // Scale factor
+                        float factor = detector.getScaleFactor();
+                        float size = tvBody.getTextSize() * factor;
+                        float scale = (textSize == 0 ? 1.0f : size / (textSize * message_zoom / 100f));
+                        if (scale > 10)
+                            return true;
+
+                        // Text size
+                        properties.setSize(message.id, size);
+                        tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+
+                        // Image size
+                        Spanned spanned = (Spanned) tvBody.getText();
+                        for (ImageSpan img : spanned.getSpans(0, spanned.length(), ImageSpan.class)) {
+                            Drawable d = img.getDrawable();
+                            ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(img.getSource());
+                            ImageHelper.fitDrawable(d, a, scale, tvBody);
+                        }
+
+                        // Feedback
+                        String perc = Math.round(scale * 100) + " %";
+                        if (toast != null)
+                            toast.cancel();
+                        toast = ToastEx.makeText(context, perc, Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+
+                    return true;
+                }
+            });
+
+            @Override
+            public boolean onTouch(View view, MotionEvent ev) {
+                if (ev.getPointerCount() > 1) {
+                    view.getParent().requestDisallowInterceptTouchEvent(true);
+                    if (view.getId() == R.id.tvBody) {
+                        gestureDetector.onTouchEvent(ev);
+                        return true;
+                    } else
+                        return false;
+                } else {
+                    //view.getParent().requestDisallowInterceptTouchEvent(false);
+                    //return (view.getId() == R.id.wvBody && ev.getAction() == MotionEvent.ACTION_MOVE);
+                    boolean intercept = (view.getId() == R.id.wvBody && ((WebViewEx) wvBody).isZoomedY());
+                    view.getParent().requestDisallowInterceptTouchEvent(intercept);
+                    return false;
+                }
+            }
+        };
+
+        private MovementMethod movementMethod = new ArrowKeyMovementMethod() {
+            private GestureDetector gestureDetector = new GestureDetector(context,
+                    new GestureDetector.SimpleOnGestureListener() {
+                        @Override
+                        public boolean onSingleTapUp(MotionEvent event) {
+                            return onClick(event);
+                        }
+
+                        private boolean onClick(MotionEvent event) {
+                            TextView widget = tvBody;
+                            Spannable buffer = (Spannable) tvBody.getText();
+                            int off = Helper.getOffset(widget, buffer, event);
+
+                            TupleMessageEx message = getMessage();
+                            if (message == null)
+                                return false;
+
+                            boolean show_images = properties.getValue("images", message.id);
+                            if (!show_images) {
+                                ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
+                                if (image.length > 0 && image[0].getSource() != null) {
+                                    ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
+                                    Uri uri = Uri.parse(a.getSource());
+                                    if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                                        if (onOpenLink(uri, null, false))
+                                            return true;
+                                }
+                            }
+
+                            URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
+                            if (link.length > 0) {
+                                String url = link[0].getURL();
+                                Uri uri = Uri.parse(url);
+
+                                int start = buffer.getSpanStart(link[0]);
+                                int end = buffer.getSpanEnd(link[0]);
+                                String title = (start < 0 || end < 0 || end <= start
+                                        ? null : buffer.subSequence(start, end).toString());
+                                if (url.equals(title))
+                                    title = null;
+
+                                if (onOpenLink(uri, title, false))
+                                    return true;
+                            }
+
+                            ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
+                            if (image.length > 0) {
+                                ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
+                                String source = a.getSource();
+                                if (!TextUtils.isEmpty(source)) {
+                                    if (!a.isTracking())
+                                        onOpenImage(message.id, source);
+                                    return true;
+                                }
+                            }
+
+                            DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
+                            if (ddss.length > 0) {
+                                properties.setValue("quotes", message.id, true);
+                                bindBody(message, false);
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    });
+
+            @Override
+            public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        };
 
         private SimpleTask taskContactInfo;
 
@@ -808,7 +937,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibMoveBottom.setOnClickListener(this);
                 ibSeenBottom.setOnClickListener(this);
 
-                tvBody.setOnTouchListener(this);
+                tvBody.setOnTouchListener(touchListener);
+                tvBody.setMovementMethod(movementMethod);
                 tvBody.addOnLayoutChangeListener(this);
 
                 ibCalendar.setOnClickListener(this);
@@ -819,44 +949,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarAccept.setOnLongClickListener(this);
                 btnCalendarDecline.setOnLongClickListener(this);
                 btnCalendarMaybe.setOnLongClickListener(this);
-
-                gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                    private Toast toast = null;
-
-                    @Override
-                    public boolean onScale(ScaleGestureDetector detector) {
-                        TupleMessageEx message = getMessage();
-                        if (message != null) {
-                            // Scale factor
-                            float factor = detector.getScaleFactor();
-                            float size = tvBody.getTextSize() * factor;
-                            float scale = (textSize == 0 ? 1.0f : size / (textSize * message_zoom / 100f));
-                            if (scale > 10)
-                                return true;
-
-                            // Text size
-                            properties.setSize(message.id, size);
-                            tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-
-                            // Image size
-                            Spanned spanned = (Spanned) tvBody.getText();
-                            for (ImageSpan img : spanned.getSpans(0, spanned.length(), ImageSpan.class)) {
-                                Drawable d = img.getDrawable();
-                                ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(img.getSource());
-                                ImageHelper.fitDrawable(d, a, scale, tvBody);
-                            }
-
-                            // Feedback
-                            String perc = Math.round(scale * 100) + " %";
-                            if (toast != null)
-                                toast.cancel();
-                            toast = ToastEx.makeText(context, perc, Toast.LENGTH_SHORT);
-                            toast.show();
-                        }
-
-                        return true;
-                    }
-                });
             }
 
             if (accessibility) {
@@ -935,6 +1027,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSeenBottom.setOnClickListener(null);
 
                 tvBody.setOnTouchListener(null);
+                tvBody.setMovementMethod(null);
                 tvBody.removeOnLayoutChangeListener(this);
 
                 btnCalendarAccept.setOnClickListener(null);
@@ -1976,6 +2069,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibInbox.setVisibility(tools && inbox ? View.VISIBLE : View.GONE);
                     ibMore.setVisibility(tools && !outbox ? View.VISIBLE : View.GONE);
                     ibTools.setImageLevel(tools ? 0 : 1);
+                    ibTools.setContentDescription(context.getString(tools ? R.string.title_less : R.string.title_more));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        ibTools.setTooltipText(ibTools.getContentDescription());
                     ibTools.setVisibility(outbox ? View.GONE : View.VISIBLE);
 
                     ibTrashBottom.setVisibility(button_extra && button_trash && trash ? View.VISIBLE : View.GONE);
@@ -2312,7 +2408,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibFull.setEnabled(hasWebView);
             ibFull.setImageResource(show_full ? R.drawable.twotone_fullscreen_exit_24 : R.drawable.twotone_fullscreen_24);
+            ibFull.setContentDescription(context.getString(show_full
+                    ? R.string.title_legend_show_reformatted
+                    : R.string.title_legend_show_full));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ibFull.setTooltipText(ibFull.getContentDescription());
+
             ibImages.setImageResource(show_images ? R.drawable.twotone_article_24 : R.drawable.twotone_image_24);
+            ibImages.setContentDescription(context.getString(show_images
+                    ? R.string.title_legend_hide_images
+                    : R.string.title_legend_show_images));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ibImages.setTooltipText(ibImages.getContentDescription());
 
             if (show_full) {
                 // Create web view
@@ -2391,7 +2498,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             }
                         });
                 webView.setImages(show_images, inline);
-                webView.setOnTouchListener(ViewHolder.this);
+                webView.setOnTouchListener(touchListener);
 
                 tvBody.setVisibility(View.GONE);
                 wvBody.setVisibility(View.VISIBLE);
@@ -2697,9 +2804,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             public void run() {
                                 try {
                                     tvBody.setText((Spanned) result);
-                                    tvBody.setTextIsSelectable(false);
-                                    tvBody.setTextIsSelectable(true);
-                                    tvBody.setMovementMethod(new TouchHandler(message));
 
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                                         bindConversationActions(message, args.getParcelable("actions"));
@@ -3289,24 +3393,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 return null;
 
             return differ.getItem(pos);
-        }
-
-        @Override
-        public boolean onTouch(View view, MotionEvent ev) {
-            if (ev.getPointerCount() > 1) {
-                view.getParent().requestDisallowInterceptTouchEvent(true);
-                if (view.getId() == R.id.tvBody) {
-                    gestureDetector.onTouchEvent(ev);
-                    return true;
-                } else
-                    return false;
-            } else {
-                //view.getParent().requestDisallowInterceptTouchEvent(false);
-                //return (view.getId() == R.id.wvBody && ev.getAction() == MotionEvent.ACTION_MOVE);
-                boolean intercept = (view.getId() == R.id.wvBody && ((WebViewEx) wvBody).isZoomedY());
-                view.getParent().requestDisallowInterceptTouchEvent(intercept);
-                return false;
-            }
         }
 
         @Override
@@ -4505,7 +4591,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean delete_asked = prefs.getBoolean("delete_asked", false);
-            if (delete_asked) {
+            if (delete_asked ||
+                    (message.accountProtocol == EntityAccount.TYPE_POP &&
+                            message.accountLeaveDeleted)) {
                 Intent data = new Intent();
                 data.putExtra("args", aargs);
                 parentFragment.onActivityResult(FragmentMessages.REQUEST_MESSAGE_DELETE, RESULT_OK, data);
@@ -4708,70 +4796,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
             popupMenu.show();
-        }
-
-        private class TouchHandler extends ArrowKeyMovementMethod {
-            private TupleMessageEx message;
-
-            TouchHandler(TupleMessageEx message) {
-                this.message = message;
-            }
-
-            @Override
-            public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    int off = Helper.getOffset(widget, buffer, event);
-
-                    boolean show_images = properties.getValue("images", message.id);
-                    if (!show_images) {
-                        ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
-                        if (image.length > 0 && image[0].getSource() != null) {
-                            ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
-                            Uri uri = Uri.parse(a.getSource());
-                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                                if (onOpenLink(uri, null, false))
-                                    return true;
-                        }
-                    }
-
-                    URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
-                    if (link.length > 0) {
-                        String url = link[0].getURL();
-                        Uri uri = Uri.parse(url);
-                        if (uri.getScheme() == null)
-                            uri = Uri.parse("https://" + url);
-
-                        int start = buffer.getSpanStart(link[0]);
-                        int end = buffer.getSpanEnd(link[0]);
-                        String title = (start < 0 || end < 0 || end <= start
-                                ? null : buffer.subSequence(start, end).toString());
-                        if (url.equals(title))
-                            title = null;
-
-                        if (onOpenLink(uri, title, false))
-                            return true;
-                    }
-
-                    ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
-                    if (image.length > 0) {
-                        ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
-                        String source = a.getSource();
-                        if (!TextUtils.isEmpty(source)) {
-                            if (!a.isTracking())
-                                onOpenImage(message.id, source);
-                            return true;
-                        }
-                    }
-
-                    DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
-                    if (ddss.length > 0) {
-                        properties.setValue("quotes", message.id, true);
-                        bindBody(message, false);
-                    }
-                }
-
-                return super.onTouchEvent(widget, buffer, event);
-            }
         }
 
         private boolean onOpenLink(Uri uri, String title, boolean always_confirm) {
@@ -5781,8 +5805,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.dp12 = Helper.dp2pixels(context, 12);
         this.dp60 = Helper.dp2pixels(context, 60);
 
-        AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-        this.accessibility = (am != null && am.isEnabled());
+        this.accessibility = Helper.isAccessibilityEnabled(context);
 
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
         this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);

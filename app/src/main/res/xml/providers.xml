@@ -121,6 +121,20 @@
             port="465"
             starttls="false" />
     </provider>
+    <!-- First match Yahoo.jp -->
+    <provider
+        name="Yahoo.jp"
+        domain="yahoo\\.jp"
+        user="local">
+        <imap
+            host="imap.mail.yahoo.co.jp"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mail.yahoo.co.jp"
+            port="465"
+            starttls="false" />
+    </provider>
     <!-- no IMAP IDLE -->
     <provider
         name="Yahoo/AT&amp;T"
@@ -165,7 +179,7 @@
     </provider>
     <provider
         name="Posteo.de"
-        documentation="Please check if &lt;a href=&quot;https://posteo.de/en/help/activating-additional-email-account-protection&quot;&gt;additional email account protection&lt;/a&gt; isn't enabled"
+        documentation="Please check if &lt;a href=&quot;https://posteo.de/en/help/activating-additional-email-account-protection&quot;&gt;additional email account protection&lt;/a&gt; isn't enabled."
         domain="posteo\\..*"
         link="https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp">
         <imap
@@ -180,7 +194,7 @@
     <provider
         name="free.fr"
         appPassword="true"
-        documentation="SMTP est désactivé par défaut, veuillez &lt;a href=&quot;http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/configurer-smtp-free-fr&quot;&gt;voir ici&lt;/a&gt; pour un guide détaillé"
+        documentation="SMTP est désactivé par défaut, veuillez &lt;a href=&quot;http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/configurer-smtp-free-fr&quot;&gt;voir ici&lt;/a&gt; pour un guide détaillé."
         domain="free\\.fr"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq157">
         <imap
@@ -691,6 +705,7 @@
     </provider>
     <provider
         name="AOL"
+        documentation="For AOL you need to use an app password instead of your normal account password, please  &lt;a href=&quot;https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88&quot;&gt;see here&lt;/a&gt;."
         domain="aol\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88">
         <imap
@@ -1131,7 +1146,8 @@
     </provider>
     <provider
         name="GoDaddy Workspace"
-        link="https://www.godaddy.com/help/server-and-port-settings-for-workspace-email-6949">
+        link="https://www.godaddy.com/help/server-and-port-settings-for-workspace-email-6949"
+        mx=".*\\.secureserver\\.net">
         <imap
             host="imap.secureserver.net"
             port="993"
