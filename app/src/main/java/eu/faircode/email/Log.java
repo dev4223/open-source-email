@@ -25,6 +25,7 @@ import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.usage.UsageStatsManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -50,6 +51,7 @@ import android.os.Debug;
 import android.os.OperationCanceledException;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.InflateException;
@@ -1520,7 +1522,7 @@ public class Log {
             sb.append(ex.toString()).append("\n").append(android.util.Log.getStackTraceString(ex));
         if (log != null)
             sb.append(log);
-        String body = "<pre>" + TextUtils.htmlEncode(sb.toString()) + "</pre>";
+        String body = "<pre class=\"fairemail_debug_info\">" + TextUtils.htmlEncode(sb.toString()) + "</pre>";
 
         EntityMessage draft;
 
@@ -1647,6 +1649,7 @@ public class Log {
     private static StringBuilder getAppInfo(Context context) {
         StringBuilder sb = new StringBuilder();
 
+        ContentResolver resolver = context.getContentResolver();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         PackageManager pm = context.getPackageManager();
@@ -1732,6 +1735,14 @@ public class Log {
         sb.append(String.format("Density %f resolution: %.2f x %.2f dp %s\r\n",
                 density, dim.x / density, dim.y / density, size));
 
+        try {
+            float animation_scale = Settings.Global.getFloat(resolver,
+                    Settings.Global.WINDOW_ANIMATION_SCALE, 0f);
+            sb.append(String.format("Animation scale: %f\r\n", animation_scale));
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
+
         int uiMode = context.getResources().getConfiguration().uiMode;
         sb.append(String.format("UI mode: 0x"))
                 .append(Integer.toHexString(uiMode))
@@ -1760,12 +1771,15 @@ public class Log {
         sb.append(String.format("Battery optimizations: %s\r\n",
                 ignoring == null ? null : Boolean.toString(!ignoring)));
 
-        sb.append(String.format("Charging: %b\r\n", Helper.isCharging(context)));
+        sb.append(String.format("Charging: %b; level: %d\r\n",
+                Helper.isCharging(context), Helper.getBatteryLevel(context)));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
             int bucket = usm.getAppStandbyBucket();
-            sb.append(String.format("Standby bucket: %d\r\n", bucket));
+            boolean inactive = usm.isAppInactive(BuildConfig.APPLICATION_ID);
+            sb.append(String.format("Standby bucket: %d-%s;p inactive: %b\r\n",
+                    bucket, Helper.getStandbyBucketName(bucket), inactive));
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
@@ -1773,6 +1787,14 @@ public class Log {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             sb.append(String.format("Data saving: %b\r\n", ConnectionHelper.isDataSaving(context)));
+
+        try {
+            int finish_activities = Settings.Global.getInt(resolver,
+                    Settings.Global.ALWAYS_FINISH_ACTIVITIES, 0);
+            sb.append(String.format("Always finish: %d\r\n", finish_activities));
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
 
         String charset = MimeUtility.getDefaultJavaCharset();
         sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
@@ -1820,8 +1842,8 @@ public class Log {
             sb.append("\r\n");
         }
 
-        sb.append(new Date(Helper.getInstallTime(context))).append("\r\n");
-        sb.append(new Date()).append("\r\n");
+        sb.append(String.format("Installed: %s\r\n", new Date(Helper.getInstallTime(context))));
+        sb.append(String.format("Now: %s\r\n", new Date()));
 
         sb.append("\r\n");
 
@@ -1878,12 +1900,14 @@ public class Log {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean enabled = prefs.getBoolean("enabled", true);
             int pollInterval = ServiceSynchronize.getPollInterval(context);
+            boolean metered = prefs.getBoolean("metered", true);
             Boolean ignoring = Helper.isIgnoringOptimizations(context);
             boolean schedule = prefs.getBoolean("schedule", false);
 
             size += write(os, "accounts=" + accounts.size() +
                     " enabled=" + enabled +
                     " interval=" + pollInterval +
+                    " metered=" + metered +
                     " optimizing=" + (ignoring == null ? null : !ignoring) +
                     "\r\n\r\n");
 
@@ -2096,8 +2120,14 @@ public class Log {
             long from = new Date().getTime() - 24 * 3600 * 1000L;
             DateFormat TF = Helper.getTimeInstance(context);
 
-            for (EntityLog entry : db.log().getLogs(from))
-                size += write(os, String.format("%s %s\r\n", TF.format(entry.time), entry.data));
+            for (EntityLog entry : db.log().getLogs(from, null))
+                size += write(os, String.format("%s [%d:%d:%d:%d] %s\r\n",
+                        TF.format(entry.time),
+                        entry.type.ordinal(),
+                        (entry.account == null ? 0 : entry.account),
+                        (entry.folder == null ? 0 : entry.folder),
+                        (entry.message == null ? 0 : entry.message),
+                        entry.data));
         }
 
         db.attachment().setDownloaded(attachment.id, size);

@@ -122,8 +122,11 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.view.MenuCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -938,6 +941,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSeenBottom.setOnClickListener(this);
 
                 tvBody.setOnTouchListener(touchListener);
+                tvBody.setTextIsSelectable(false);
+                tvBody.setTextIsSelectable(true);
                 tvBody.setMovementMethod(movementMethod);
                 tvBody.addOnLayoutChangeListener(this);
 
@@ -1487,11 +1492,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (properties.getValue("raw_save", message.id)) {
                 properties.setValue("raw_save", message.id, false);
                 onMenuRawSave(message);
-            }
-
-            if (properties.getValue("raw_send", message.id)) {
-                properties.setValue("raw_send", message.id, false);
-                onMenuRawSend(message);
             }
         }
 
@@ -4215,7 +4215,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             boolean current = properties.getValue(full ? "full" : "images", message.id);
             boolean asked = properties.getValue(full ? "full_asked" : "images_asked", message.id);
-            if (current || asked) {
+            boolean confirm = prefs.getBoolean(full ? "confirm_html" : "confirm_images", true);
+            if (current || asked || !confirm) {
                 if (current && message.from != null) {
                     SharedPreferences.Editor editor = prefs.edit();
                     for (Address sender : message.from) {
@@ -4232,7 +4233,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 properties.setValue(full ? "full" : "images", message.id, !current);
                 onShowConfirmed(message, full, !current);
-
                 return;
             }
 
@@ -4344,11 +4344,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .setNeutralButton(R.string.title_setup, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Intent privacy = new Intent(context, ActivitySetup.class)
-                                    .setAction("privacy")
-                                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    .putExtra("tab", "privacy");
-                            context.startActivity(privacy);
+                            context.startActivity(new Intent(context, ActivitySetup.class)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    .putExtra("tab", "privacy"));
                         }
                     })
                     .create();
@@ -4678,17 +4676,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .setEnabled(message.uid == null || !message.folderReadOnly)
                     .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_resync)
-                    .setEnabled(message.uid != null)
-                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
-
-            popupMenu.getMenu().findItem(R.id.menu_search_in_text).setEnabled(message.content && !full);
-
             popupMenu.getMenu().findItem(R.id.menu_create_rule).setVisible(!message.folderReadOnly);
 
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords)
                     .setEnabled(message.uid != null && !message.folderReadOnly)
                     .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+
+            popupMenu.getMenu().findItem(R.id.menu_search_in_text).setEnabled(message.content && !full);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_pin).setVisible(pin);
@@ -4703,12 +4697,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_share_as_html).setVisible(message.content && BuildConfig.DEBUG);
 
             popupMenu.getMenu().findItem(R.id.menu_raw_save).setEnabled(message.uid != null);
-            popupMenu.getMenu().findItem(R.id.menu_raw_send).setEnabled(message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_raw_send_message).setEnabled(message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_raw_send_thread).setEnabled(message.uid != null);
 
             popupMenu.getMenu().findItem(R.id.menu_raw_save).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
             popupMenu.getMenu().findItem(R.id.menu_raw_send).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
+            popupMenu.getMenu().findItem(R.id.menu_resync)
+                    .setEnabled(message.uid != null)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+
             popupMenu.insertIcons(context);
+
+            MenuCompat.setGroupDividerEnabled(popupMenu.getMenu(), true);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -4749,20 +4750,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else if (itemId == R.id.menu_delete) {
                         onActionDelete(message);
                         return true;
-                    } else if (itemId == R.id.menu_resync) {
-                        onMenuResync(message);
-                        return true;
                     } else if (itemId == R.id.menu_edit_notes) {
                         onMenuNotes(message);
-                        return true;
-                    } else if (itemId == R.id.menu_search_in_text) {
-                        onSearchText(message);
                         return true;
                     } else if (itemId == R.id.menu_create_rule) {
                         onMenuCreateRule(message);
                         return true;
                     } else if (itemId == R.id.menu_manage_keywords) {
                         onMenuManageKeywords(message);
+                        return true;
+                    } else if (itemId == R.id.menu_search_in_text) {
+                        onSearchText(message);
                         return true;
                     } else if (itemId == R.id.menu_event) {
                         if (ActivityBilling.isPro(context))
@@ -4788,8 +4786,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else if (itemId == R.id.menu_raw_save) {
                         onMenuRawSave(message);
                         return true;
-                    } else if (itemId == R.id.menu_raw_send) {
-                        onMenuRawSend(message);
+                    } else if (itemId == R.id.menu_raw_send_message) {
+                        onMenuRawSend(message, false);
+                        return true;
+                    } else if (itemId == R.id.menu_raw_send_thread) {
+                        onMenuRawSend(message, true);
+                        return true;
+                    } else if (itemId == R.id.menu_resync) {
+                        onMenuResync(message);
+                        return true;
+                    } else if (itemId == R.id.menu_log) {
+                        onMenuLog(message);
                         return true;
                     }
                     return false;
@@ -5444,26 +5451,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onMenuRawSend(TupleMessageEx message) {
-            if (message.raw == null || !message.raw) {
-                properties.setValue("raw_send", message.id, true);
-                rawDownload(message);
-            } else
-                try {
-                    File file = message.getRawFile(context);
-                    Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+        private void onMenuRawSend(TupleMessageEx message, boolean threads) {
+            Bundle args = new Bundle();
+            args.putLongArray("ids", new long[]{message.id});
+            args.putBoolean("threads", threads);
 
-                    Intent send = new Intent(Intent.ACTION_SEND);
-                    //send.setPackage(BuildConfig.APPLICATION_ID);
-                    send.putExtra(Intent.EXTRA_STREAM, uri);
-                    send.setType("message/rfc822");
-                    send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-                    context.startActivity(send);
-                } catch (Throwable ex) {
-                    // java.lang.IllegalArgumentException: Failed to resolve canonical path for ...
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                }
+            FragmentDialogForwardRaw ask = new FragmentDialogForwardRaw();
+            ask.setArguments(args);
+            ask.show(parentFragment.getParentFragmentManager(), "message:raw");
         }
 
         private void rawDownload(TupleMessageEx message) {
@@ -5507,6 +5502,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:raw");
+        }
+
+        private void onMenuLog(TupleMessageEx message) {
+            if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                parentFragment.getParentFragmentManager().popBackStack("logs", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+            Bundle args = new Bundle();
+            args.putLong("message", message.id);
+
+            Fragment fragment = new FragmentLogs();
+            fragment.setArguments(args);
+
+            FragmentTransaction fragmentTransaction = parentFragment.getParentFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("logs");
+            fragmentTransaction.commit();
         }
 
         private SpannableStringBuilder getKeywords(TupleMessageEx message) {
@@ -6116,8 +6126,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("labels changed", next.id);
                 }
-                // notifying
                 // fts
+                if (!prev.auto_classified.equals(next.auto_classified)) {
+                    same = false;
+                    log("auto_classified changed " + prev.auto_classified + "/" + next.auto_classified, next.id);
+                }
+                // notifying
                 if (!prev.ui_seen.equals(next.ui_seen)) {
                     same = false;
                     log("ui_seen changed " + prev.ui_seen + "/" + next.ui_seen, next.id);
@@ -6868,7 +6882,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final TextView tvText = view.findViewById(R.id.tvText);
             final ContentLoadingProgressBar pbWait = view.findViewById(R.id.pbWait);
 
-            List<DeepL.Language> languages = DeepL.getTargetLanguages(context);
+            List<DeepL.Language> languages = DeepL.getTargetLanguages(context, false);
             ArrayAdapter<DeepL.Language> adapter = new ArrayAdapter<DeepL.Language>(context, android.R.layout.simple_spinner_item, android.R.id.text1, languages) {
                 @NonNull
                 @Override
@@ -7373,15 +7387,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
             final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_buttons, null);
+            final CheckBox cbSeen = dview.findViewById(R.id.cbSeen);
+            final CheckBox cbHide = dview.findViewById(R.id.cbHide);
             final CheckBox cbJunk = dview.findViewById(R.id.cbJunk);
             final CheckBox cbTrash = dview.findViewById(R.id.cbTrash);
             final CheckBox cbArchive = dview.findViewById(R.id.cbArchive);
             final CheckBox cbMove = dview.findViewById(R.id.cbMove);
             final CheckBox cbCopy = dview.findViewById(R.id.cbCopy);
-            final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
             final CheckBox cbNotes = dview.findViewById(R.id.cbNotes);
-            final CheckBox cbSeen = dview.findViewById(R.id.cbSeen);
-            final CheckBox cbHide = dview.findViewById(R.id.cbHide);
+            final CheckBox cbRule = dview.findViewById(R.id.cbRule);
+            final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
             final CheckBox cbSearch = dview.findViewById(R.id.cbSearch);
             final CheckBox cbSearchText = dview.findViewById(R.id.cbSearchText);
             final CheckBox cbTranslate = dview.findViewById(R.id.cbTranslate);
@@ -7391,20 +7406,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final CheckBox cbPrint = dview.findViewById(R.id.cbPrint);
             final CheckBox cbHeaders = dview.findViewById(R.id.cbHeaders);
             final CheckBox cbUnsubscribe = dview.findViewById(R.id.cbUnsubscribe);
-            final CheckBox cbRule = dview.findViewById(R.id.cbRule);
 
             cbTranslate.setVisibility(DeepL.isAvailable(context) ? View.VISIBLE : View.GONE);
             cbPin.setVisibility(Shortcuts.can(context) ? View.VISIBLE : View.GONE);
 
+            cbSeen.setChecked(prefs.getBoolean("button_seen", false));
+            cbHide.setChecked(prefs.getBoolean("button_hide", false));
             cbJunk.setChecked(prefs.getBoolean("button_junk", true));
             cbTrash.setChecked(prefs.getBoolean("button_trash", true));
             cbArchive.setChecked(prefs.getBoolean("button_archive", true));
             cbMove.setChecked(prefs.getBoolean("button_move", true));
             cbCopy.setChecked(prefs.getBoolean("button_copy", false));
-            cbKeywords.setChecked(prefs.getBoolean("button_keywords", false));
             cbNotes.setChecked(prefs.getBoolean("button_notes", false));
-            cbSeen.setChecked(prefs.getBoolean("button_seen", false));
-            cbHide.setChecked(prefs.getBoolean("button_hide", false));
+            cbRule.setChecked(prefs.getBoolean("button_rule", false));
+            cbKeywords.setChecked(prefs.getBoolean("button_keywords", false));
             cbSearch.setChecked(prefs.getBoolean("button_search", false));
             cbSearchText.setChecked(prefs.getBoolean("button_search_text", false));
             cbTranslate.setChecked(prefs.getBoolean("button_translate", false));
@@ -7414,7 +7429,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cbPrint.setChecked(prefs.getBoolean("button_print", false));
             cbHeaders.setChecked(prefs.getBoolean("button_headers", false));
             cbUnsubscribe.setChecked(prefs.getBoolean("button_unsubscribe", true));
-            cbRule.setChecked(prefs.getBoolean("button_rule", false));
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
@@ -7422,15 +7436,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             SharedPreferences.Editor editor = prefs.edit();
+                            editor.putBoolean("button_seen", cbSeen.isChecked());
+                            editor.putBoolean("button_hide", cbHide.isChecked());
                             editor.putBoolean("button_junk", cbJunk.isChecked());
                             editor.putBoolean("button_trash", cbTrash.isChecked());
                             editor.putBoolean("button_archive", cbArchive.isChecked());
                             editor.putBoolean("button_move", cbMove.isChecked());
                             editor.putBoolean("button_copy", cbCopy.isChecked());
-                            editor.putBoolean("button_keywords", cbKeywords.isChecked());
                             editor.putBoolean("button_notes", cbNotes.isChecked());
-                            editor.putBoolean("button_seen", cbSeen.isChecked());
-                            editor.putBoolean("button_hide", cbHide.isChecked());
+                            editor.putBoolean("button_rule", cbRule.isChecked());
+                            editor.putBoolean("button_keywords", cbKeywords.isChecked());
                             editor.putBoolean("button_search", cbSearch.isChecked());
                             editor.putBoolean("button_search_text", cbSearchText.isChecked());
                             editor.putBoolean("button_translate", cbTranslate.isChecked());
@@ -7440,7 +7455,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             editor.putBoolean("button_print", cbPrint.isChecked());
                             editor.putBoolean("button_headers", cbHeaders.isChecked());
                             editor.putBoolean("button_unsubscribe", cbUnsubscribe.isChecked());
-                            editor.putBoolean("button_rule", cbRule.isChecked());
                             editor.apply();
                             sendResult(Activity.RESULT_OK);
                         }

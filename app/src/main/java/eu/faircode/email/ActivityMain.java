@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,6 +36,7 @@ import java.util.List;
 
 public class ActivityMain extends ActivityBase implements FragmentManager.OnBackStackChangedListener, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final long SPLASH_DELAY = 1500L; // milliseconds
+    private static final long RESTORE_STATE_INTERVAL = 3 * 60 * 1000L; // milliseconds
     private static final long SERVICE_START_DELAY = 5 * 1000L; // milliseconds
 
     @Override
@@ -151,13 +153,31 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
 
                 @Override
                 protected void onExecuted(Bundle args, Boolean hasAccounts) {
+                    Bundle options = null;
+                    try {
+                        if (BuildConfig.DEBUG)
+                            options = ActivityOptions.makeCustomAnimation(ActivityMain.this,
+                                    R.anim.activity_open_enter, 0).toBundle();
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+
                     if (hasAccounts) {
-                        Intent view = new Intent(ActivityMain.this, ActivityView.class);
-                        view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Intent view = new Intent(ActivityMain.this, ActivityView.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                        // VX-N3
+                        // https://developer.android.com/docs/quality-guidelines/core-app-quality
+                        long now = new Date().getTime();
+                        long last = prefs.getLong("last_launched", 0L);
+                        if (!BuildConfig.PLAY_STORE_RELEASE &&
+                                now - last > RESTORE_STATE_INTERVAL)
+                            view.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
                         Intent saved = args.getParcelable("intent");
                         if (saved == null) {
-                            startActivity(view);
+                            prefs.edit().putLong("last_launched", now).apply();
+                            startActivity(view, options);
                             if (sync_on_launch)
                                 ServiceUI.sync(ActivityMain.this, null);
                         } else
@@ -175,8 +195,11 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                                 ServiceSend.watchdog(ActivityMain.this);
                             }
                         }, SERVICE_START_DELAY);
-                    } else
-                        startActivity(new Intent(ActivityMain.this, ActivitySetup.class));
+                    } else {
+                        Intent setup = new Intent(ActivityMain.this, ActivitySetup.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(setup, options);
+                    }
 
                     long end = new Date().getTime();
                     Log.i("Main booted " + (end - start) + " ms");

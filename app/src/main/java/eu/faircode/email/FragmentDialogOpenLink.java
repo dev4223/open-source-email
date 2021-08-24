@@ -141,14 +141,22 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
 
         final Uri uri;
         if (_uri.getScheme() == null) {
-            Uri g = Uri.parse(URLUtil.guessUrl(_uri.toString()));
-            String scheme = g.getScheme();
-            if (scheme != null) {
-                if ("http".equals(scheme))
-                    scheme = "https";
-                uri = Uri.parse(scheme + "://" + _uri.toString());
-            } else
-                uri = _uri;
+            String url = _uri.toString();
+            if (Helper.EMAIL_ADDRESS.matcher(url).matches())
+                uri = Uri.parse("mailto:" + _uri.toString());
+            else if (android.util.Patterns.PHONE.matcher(url).matches())
+                // Alternative: PhoneNumberUtils.isGlobalPhoneNumber()
+                uri = Uri.parse("tel:" + _uri.toString());
+            else {
+                Uri g = Uri.parse(URLUtil.guessUrl(url));
+                String scheme = g.getScheme();
+                if (scheme != null) {
+                    if ("http".equals(scheme))
+                        scheme = "https";
+                    uri = Uri.parse(scheme + "://" + _uri.toString());
+                } else
+                    uri = _uri;
+            }
         } else
             uri = _uri;
 
@@ -163,9 +171,12 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
 
         // Process title
         final Uri uriTitle;
-        if (title != null && PatternsCompat.WEB_URL.matcher(title).matches())
-            uriTitle = Uri.parse(title.contains("://") ? title : "http://" + title);
-        else
+        if (title != null && PatternsCompat.WEB_URL.matcher(title).matches()) {
+            String t = title.replaceAll("\\s+", "");
+            Uri u = Uri.parse(title.contains("://") ? t : "http://" + t);
+            String host = u.getHost(); // Capture1.PNG
+            uriTitle = (UriHelper.hasParentDomain(context, host) ? u : null);
+        } else
             uriTitle = null;
 
         // Get views
@@ -405,11 +416,9 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent privacy = new Intent(v.getContext(), ActivitySetup.class)
-                        .setAction("privacy")
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        .putExtra("tab", "privacy");
-                v.getContext().startActivity(privacy);
+                v.getContext().startActivity(new Intent(v.getContext(), ActivitySetup.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra("tab", "privacy"));
             }
         });
 

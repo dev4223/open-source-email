@@ -66,6 +66,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -315,8 +316,9 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (TextUtils.isEmpty(s))
-                    tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
+                // https://github.com/material-components/material-components-android/issues/503
+                //if (TextUtils.isEmpty(s))
+                //    tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
             }
 
             @Override
@@ -510,7 +512,7 @@ public class FragmentIdentity extends FragmentBase {
         btnAutoConfig.setEnabled(false);
         pbAutoConfig.setVisibility(View.GONE);
         cbInsecure.setVisibility(View.GONE);
-        tilPassword.setEndIconMode(Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
+        tilPassword.setEndIconMode(id < 0 || Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
 
         btnAdvanced.setVisibility(View.GONE);
 
@@ -538,7 +540,7 @@ public class FragmentIdentity extends FragmentBase {
         etEmail.setText(account.user);
         etUser.setText(account.user);
         tilPassword.getEditText().setText(account.password);
-        tilPassword.setEndIconMode(Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
+        //tilPassword.setEndIconMode(Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
         certificate = account.certificate_alias;
         tvCertificate.setText(certificate == null ? getString(R.string.title_optional) : certificate);
         etRealm.setText(account.realm);
@@ -582,7 +584,9 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected EmailProvider onExecute(Context context, Bundle args) throws Throwable {
                 String domain = args.getString("domain");
-                return EmailProvider.fromDomain(context, domain, EmailProvider.Discover.SMTP);
+                return EmailProvider
+                        .fromDomain(context, domain, EmailProvider.Discover.SMTP)
+                        .get(0);
             }
 
             @Override
@@ -1044,9 +1048,10 @@ public class FragmentIdentity extends FragmentBase {
         grpError.setVisibility(View.VISIBLE);
 
         if (ex instanceof EmailService.UntrustedException) {
-            EmailService.UntrustedException e = (EmailService.UntrustedException) ex;
-            cbTrust.setTag(e.getFingerprint());
-            cbTrust.setText(getString(R.string.title_trust, e.getFingerprint()));
+            X509Certificate certificate = ((EmailService.UntrustedException) ex).getCertificate();
+            String fingerprint = EntityCertificate.getKeyFingerprint(certificate);
+            cbTrust.setTag(fingerprint);
+            cbTrust.setText(getString(R.string.title_trust, fingerprint));
             cbTrust.setVisibility(View.VISIBLE);
         }
 

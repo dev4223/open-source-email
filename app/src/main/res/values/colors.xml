@@ -170,6 +170,7 @@
     <color name="darkSolarizedAccent">#268bd2</color>
     <color name="darkSolarizedActionBackground">#444</color><!-- Base01 is too light -->
     <color name="lightSolarizedPaper">#fdf6e3</color><!-- Base3 -->
+    <color name="lightSolarizedBackground">#eee8d5</color><!-- Base2 -->
     <color name="lightSolarizedActionBackground">#93a1a1</color><!-- Base1 -->
 
     <!-- default: #323232 -->
@@ -178,6 +179,7 @@
     <color name="white">#ffffffff</color>
     <color name="black">#ff000000</color>
     <color name="grey">#ff7f7f7f</color>
+    <color name="red">#ffff0000</color>
     <color name="transparent">#00000000</color>
 
     <!-- color picker -->
@@ -201,4 +203,12 @@
     <color name="brown">#7A5547</color>
     <color name="blue_grey">#5E7C8B</color>
     <color name="dark_grey">#696969</color>
+    <color name="solarizedYellow">#b58900</color>
+    <color name="solarizedOrange">#cb4b16</color>
+    <color name="solarizedMagenta">#d33682</color>
+    <color name="solarizedRed">#dc322f</color>
+    <color name="solarizedViolet">#6c71c4</color>
+    <color name="solarizedBlue">#268bd2</color>
+    <color name="solarizedCyan">#2aa198</color>
+    <color name="solarizedGreen">#859900</color>
 </resources>

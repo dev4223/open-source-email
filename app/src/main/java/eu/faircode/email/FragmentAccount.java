@@ -69,6 +69,7 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -336,8 +337,9 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (TextUtils.isEmpty(s))
-                    tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
+                // https://github.com/material-components/material-components-android/issues/503
+                //if (TextUtils.isEmpty(s))
+                //   tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
             }
 
             @Override
@@ -589,7 +591,9 @@ public class FragmentAccount extends FragmentBase {
             @Override
             protected EmailProvider onExecute(Context context, Bundle args) throws Throwable {
                 String domain = args.getString("domain");
-                return EmailProvider.fromDomain(context, domain, EmailProvider.Discover.IMAP);
+                return EmailProvider
+                        .fromDomain(context, domain, EmailProvider.Discover.IMAP)
+                        .get(0);
             }
 
             @Override
@@ -1331,9 +1335,10 @@ public class FragmentAccount extends FragmentBase {
         grpError.setVisibility(View.VISIBLE);
 
         if (ex instanceof EmailService.UntrustedException) {
-            EmailService.UntrustedException e = (EmailService.UntrustedException) ex;
-            cbTrust.setTag(e.getFingerprint());
-            cbTrust.setText(getString(R.string.title_trust, e.getFingerprint()));
+            X509Certificate certificate = ((EmailService.UntrustedException) ex).getCertificate();
+            String fingerprint = EntityCertificate.getKeyFingerprint(certificate);
+            cbTrust.setTag(fingerprint);
+            cbTrust.setText(getString(R.string.title_trust, fingerprint));
             cbTrust.setVisibility(View.VISIBLE);
         }
 

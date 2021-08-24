@@ -419,8 +419,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPassword"
-            app:passwordToggleEnabled="true">
+            app:layout_constraintTop_toBottomOf="@id/tvPassword">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
@@ -836,7 +835,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:drawableEnd="@drawable/twotone_save_24"
+            android:drawableEnd="@drawable/twotone_save_alt_24"
             android:drawablePadding="6dp"
             android:tag="disable"
             android:text="@string/title_save"
