@@ -179,12 +179,12 @@
     <color name="white">#ffffffff</color>
     <color name="black">#ff000000</color>
     <color name="grey">#ff7f7f7f</color>
-    <color name="red">#ffff0000</color>
+    <!-- red ORIG 1: #F6402C -->
+    <!-- red ORIG 2: #ffff0000 -->
+    <color name="red">#FFD21C00</color>
     <color name="transparent">#00000000</color>
 
     <!-- color picker -->
-    <!-- red ORIG: #F6402C -->
-    <color name="red">#D21C00</color>
     <color name="pink">#EB1460</color>
     <color name="purple">#9C1AB1</color>
     <color name="deep_purple">#6633B9</color>

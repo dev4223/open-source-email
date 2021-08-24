@@ -20,7 +20,7 @@ android {
         targetSdkVersion 30
         versionCode getVersionCode()
         versionName "1." + getVersionCode()
-        archivesBaseName = "FairEmail-v$versionName"
+        archivesBaseName = "FairEmail-v$versionName.1"
 
         buildConfigField "String", "RELEASE_NAME", getReleaseName()
 
