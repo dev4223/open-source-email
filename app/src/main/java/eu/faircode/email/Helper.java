@@ -26,6 +26,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
+import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -52,6 +53,7 @@ import android.provider.Settings;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
+import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.TextUtils;
@@ -120,7 +122,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -155,7 +156,7 @@ public class Helper {
 
     static final String PRIVACY_URI = "https://email.faircode.eu/privacy/";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
-    static final String SUPPORT_URI = "https://contact.faircode.eu/?product=fairemailsupport&version=" + BuildConfig.VERSION_NAME;
+    static final String SUPPORT_URI = "https://contact.faircode.eu/";
     static final String TEST_URI = "https://play.google.com/apps/testing/" + BuildConfig.APPLICATION_ID;
     static final String BIMI_PRIVACY_URI = "https://datatracker.ietf.org/doc/html/draft-brotman-ietf-bimi-guidance-03#section-7.4";
     static final String FAVICON_PRIVACY_URI = "https://en.wikipedia.org/wiki/Favicon";
@@ -173,21 +174,6 @@ public class Helper {
                     "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
                     ")+"
     );
-
-    // https://developer.android.com/guide/topics/media/media-formats#image-formats
-    static final List<String> IMAGE_TYPES = Collections.unmodifiableList(Arrays.asList(
-            "image/bmp",
-            "image/gif",
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp"
-    ));
-
-    static final List<String> IMAGE_TYPES8 = Collections.unmodifiableList(Arrays.asList(
-            "image/heic",
-            "image/heif"
-    ));
 
     private static final ExecutorService executor = getBackgroundExecutor(1, "helper");
 
@@ -561,6 +547,23 @@ public class Helper {
         }
     }
 
+    static String getStandbyBucketName(int bucket) {
+        switch (bucket) {
+            case UsageStatsManager.STANDBY_BUCKET_ACTIVE:
+                return "active";
+            case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
+                return "workingset";
+            case UsageStatsManager.STANDBY_BUCKET_FREQUENT:
+                return "frequent";
+            case UsageStatsManager.STANDBY_BUCKET_RARE:
+                return "rare";
+            case UsageStatsManager.STANDBY_BUCKET_RESTRICTED:
+                return "restricted";
+            default:
+                return Integer.toString(bucket);
+        }
+    }
+
     // View
 
     static Intent getChooser(Context context, Intent intent) {
@@ -800,8 +803,16 @@ public class Helper {
     }
 
     static Uri getSupportUri(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String language = prefs.getString("language", null);
+        Locale slocale = Resources.getSystem().getConfiguration().locale;
+
         return Uri.parse(SUPPORT_URI)
                 .buildUpon()
+                .appendQueryParameter("product", "fairemailsupport")
+                .appendQueryParameter("version", BuildConfig.VERSION_NAME)
+                .appendQueryParameter("locale", slocale.toString())
+                .appendQueryParameter("language", language == null ? "" : language)
                 .appendQueryParameter("installed", Helper.hasValidFingerprint(context) ? "" : "Other")
                 .build();
     }
@@ -816,12 +827,33 @@ public class Helper {
             Intent intent = new Intent(Intent.ACTION_SEND);
             //intent.setPackage(BuildConfig.APPLICATION_ID);
             intent.setType("text/plain");
+
             try {
                 intent.putExtra(Intent.EXTRA_EMAIL, new String[]{Log.myAddress().getAddress()});
             } catch (UnsupportedEncodingException ex) {
                 Log.w(ex);
             }
+
             intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.title_issue_subject, version));
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String language = prefs.getString("language", null);
+            String uuid = prefs.getString("uuid", null);
+            Locale slocale = Resources.getSystem().getConfiguration().locale;
+
+            String html = "<br><br>";
+
+            html += "<p style=\"font-size:small;\">";
+            html += "Locale: " + Html.escapeHtml(slocale.toString()) + "<br>";
+            if (language != null)
+                html += "Language: " + Html.escapeHtml(language) + "<br>";
+            if (uuid != null)
+                html += "UUID: " + Html.escapeHtml(uuid) + "<br>";
+            html += "</p>";
+
+            intent.putExtra(Intent.EXTRA_TEXT, HtmlHelper.getText(context, html));
+            intent.putExtra(Intent.EXTRA_HTML_TEXT, html);
+
             return intent;
         } else {
             if (Helper.hasValidFingerprint(context))
@@ -1107,22 +1139,26 @@ public class Helper {
         return (tv.string != null && !"light".contentEquals(tv.string));
     }
 
-    static void hideKeyboard(final View view) {
+    static void showKeyboard(final View view) {
+        final Context context = view.getContext();
         InputMethodManager imm =
-                (InputMethodManager) view.getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
+                (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
         if (imm == null)
             return;
 
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        Log.i("showKeyboard view=" + view);
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
     }
 
-    static void hideKeyboard(Activity activity){
-        if (activity == null)
+    static void hideKeyboard(final View view) {
+        final Context context = view.getContext();
+        InputMethodManager imm =
+                (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        if (imm == null)
             return;
-        View focused = activity.getCurrentFocus();
-        if (focused == null)
-            return;
-        hideKeyboard(focused);
+
+        Log.i("hideKeyboard view=" + view);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     // Formatting
@@ -1557,14 +1593,6 @@ public class Helper {
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.fromFile(initial));
     }
 
-    static boolean isImage(String mimeType) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            if (IMAGE_TYPES8.contains(mimeType))
-                return true;
-
-        return IMAGE_TYPES.contains(mimeType);
-    }
-
     // Cryptography
 
     static String sha256(String data) throws NoSuchAlgorithmException {
@@ -1669,10 +1697,13 @@ public class Helper {
     static void authenticate(final FragmentActivity activity, final LifecycleOwner owner,
                              Boolean enabled, final
                              Runnable authenticated, final Runnable cancelled) {
+        Log.i("Authenticate " + activity);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         String pin = prefs.getString("pin", null);
 
         if (enabled != null || TextUtils.isEmpty(pin)) {
+            Log.i("Authenticate biometric enabled=" + enabled);
             BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
                     .setTitle(activity.getString(enabled == null ? R.string.app_name : R.string.title_setup_biometrics));
 
@@ -1693,7 +1724,7 @@ public class Helper {
                     new BiometricPrompt.AuthenticationCallback() {
                         @Override
                         public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-                            Log.w("Biometric error " + errorCode + ": " + errString);
+                            Log.w("Authenticate biometric error " + errorCode + ": " + errString);
 
                             if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
                                     errorCode != BiometricPrompt.ERROR_CANCELED &&
@@ -1712,14 +1743,14 @@ public class Helper {
 
                         @Override
                         public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                            Log.i("Biometric succeeded");
+                            Log.i("Authenticate biometric succeeded");
                             setAuthenticated(activity);
                             ApplicationEx.getMainHandler().post(authenticated);
                         }
 
                         @Override
                         public void onAuthenticationFailed() {
-                            Log.w("Biometric failed");
+                            Log.w("Authenticate biometric failed");
                             ApplicationEx.getMainHandler().post(cancelled);
                         }
                     });
@@ -1742,11 +1773,13 @@ public class Helper {
             owner.getLifecycle().addObserver(new LifecycleObserver() {
                 @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
                 public void onDestroy() {
+                    Log.i("Authenticate destroyed");
                     ApplicationEx.getMainHandler().post(cancelPrompt);
                 }
             });
 
         } else {
+            Log.i("Authenticate PIN");
             final View dview = LayoutInflater.from(activity).inflate(R.layout.dialog_pin_ask, null);
             final EditText etPin = dview.findViewById(R.id.etPin);
 
@@ -1759,23 +1792,28 @@ public class Helper {
                             String pin = prefs.getString("pin", "");
                             String entered = etPin.getText().toString();
 
+                            Log.i("Authenticate PIN ok=" + pin.equals(entered));
                             if (pin.equals(entered)) {
                                 setAuthenticated(activity);
                                 ApplicationEx.getMainHandler().post(authenticated);
-                            } else
+                            } else {
                                 ApplicationEx.getMainHandler().post(cancelled);
+                            }
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            Log.i("Authenticate PIN cancelled");
                             ApplicationEx.getMainHandler().post(cancelled);
                         }
                     })
                     .setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
                         public void onDismiss(DialogInterface dialog) {
-                            ApplicationEx.getMainHandler().post(cancelled);
+                            Log.i("Authenticate PIN dismissed");
+                            if (shouldAuthenticate(activity)) // Some Android versions call dismiss on OK
+                                ApplicationEx.getMainHandler().post(cancelled);
                         }
                     })
                     .create();
@@ -1841,11 +1879,14 @@ public class Helper {
     }
 
     static void setAuthenticated(Context context) {
+        Date now = new Date();
+        Log.i("Authenticated now=" + now);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        prefs.edit().putLong("last_authentication", new Date().getTime()).apply();
+        prefs.edit().putLong("last_authentication", now.getTime()).apply();
     }
 
     static void clearAuthentication(Context context) {
+        Log.i("Authenticate clear");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().remove("last_authentication").apply();
     }

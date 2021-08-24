@@ -109,12 +109,14 @@
     <string name="title_setup_quick">快速设置</string>
     <string name="title_setup_intro">设置一个帐户只需三步，之后您就可以发送和接收电子邮件了</string>
     <string name="title_setup_simple">无需更改任何其他选项</string>
+    <string name="title_setup_issue">FairEmail 是为了帮助您保护隐私而开发的，毫不夸张地说，我在它身上花了数千小时。如果有任何问题，请在留下差评前先联系我获取支持。我很乐意帮忙！</string>
     <string name="title_setup_quick_accounts">添加或更改账户</string>
     <string name="title_setup_quick_support">有些邮件服务提供商很难添加账户，对此请不要责怪 FairEmail，而应向提供商寻求支持。</string>
     <string name="title_setup_quick_hint">快速设置将从 autoconfig.thunderbird.net 获取配置信息</string>
     <string name="title_setup_quick_patience">请耐心等待 &#8230;</string>
     <string name="title_setup_quick_imap">接收邮件的IMAP服务器</string>
     <string name="title_setup_quick_smtp">发送邮件的SMTP服务器</string>
+    <string name="title_setup_quick_certificates">服务器证书</string>
     <string name="title_setup_wizard">向导</string>
     <string name="title_setup_wizard_multiple">该向导可多次使用以设置多个帐户</string>
     <string name="title_setup_wizard_new">我需要一个新的邮件地址</string>
@@ -159,6 +161,7 @@
     <string name="title_setup_permissions">授予权限</string>
     <string name="title_setup_permissions_remark">获取联系人信息(可选)</string>
     <string name="title_setup_permissions_explanation">需要联系人权限来查找联系人信息和推荐联系人</string>
+    <string name="title_setup_permission_import_contacts">如何导入联系人？</string>
     <string name="title_setup_doze">禁用电池优化</string>
     <string name="title_setup_doze_remark">可靠地发送和接收电子邮件</string>
     <string name="title_setup_doze_explanation">应禁用针对本应用的电池优化，以确保后台消息的可靠发送和接收。</string>
@@ -278,16 +281,19 @@
     <string name="title_advanced_alt_re_fwd">替代回复/转发前缀</string>
     <string name="title_advanced_send_reminders">显示提醒</string>
     <string name="title_advanced_send_delayed">延迟发送消息</string>
+    <string name="title_advanced_reply_all">长按答复按钮回复所有</string>
     <string name="title_advanced_send_pending">显示不显眼的 \"延迟发送\" 图标 (页面左下角)</string>
     <string name="title_advanced_compose_font">默认字体</string>
     <string name="title_advanced_prefix_once">答复或抄送邮件时, 主题前的Re或CC只出现一次</string>
     <string name="title_advanced_separate_reply">在回复/转发标题之前插入一条水平线</string>
     <string name="title_advanced_extended_reply">使用扩展的回复/转发头</string>
+    <string name="title_advanced_write_above">写在发件人正文的上方</string>
     <string name="title_advanced_write_below">写在发件人正文的下方</string>
     <string name="title_advanced_quote_reply">引用回复文本</string>
     <string name="title_advanced_limit_reply">限制嵌套引用层级</string>
     <string name="title_advanced_resize_reply">调整回复文本中图像的大小</string>
     <string name="title_advanced_signature_location">签名位置</string>
+    <string name="title_advanced_signature_new">为新消息使用签名</string>
     <string name="title_advanced_signature_reply">回复时使用签名</string>
     <string name="title_advanced_signature_forward">转发时使用签名</string>
     <string name="title_advanced_discard_delete">舍弃草稿时将其永久删除</string>
@@ -317,9 +323,14 @@
     <string name="title_advanced_caption_message">消息</string>
     <string name="title_advanced_caption_message_header">邮件标头</string>
     <string name="title_advanced_caption_message_body">消息正文</string>
-    <string name="title_advanced_portrait2">点击会话时分屏显示消息列表</string>
-    <string name="title_advanced_landscape">在横屏模式下使用两列</string>
-    <string name="title_advanced_landscape3">默认在横屏模式下显示导航菜单</string>
+    <string name="title_advanced_portrait">竖屏模式</string>
+    <string name="title_advanced_landscape">横屏模式</string>
+    <string name="title_advanced_two_row">使用两行</string>
+    <string name="title_advanced_two_col">使用两列</string>
+    <string name="title_advanced_nav_options">显示导航菜单选项</string>
+    <string name="title_advanced_nav_pin">固定导航菜单</string>
+    <string name="title_advanced_nav_hide_title">隐藏导航菜单选项？</string>
+    <string name="title_advanced_nav_hide_message">您可以在显示设置中再次启用选项</string>
     <string name="title_advanced_nav_message_count">在导航菜单中显示本地存储消息的数量</string>
     <string name="title_advanced_startup">在启动屏幕上显示</string>
     <string name="title_advanced_cards">使用卡片样式而非表单样式 (即主页会话间有间隔)</string>
@@ -533,6 +544,7 @@
     <string name="title_advanced_suggest_local_hint">除了Android提供的联系人，只有在设置中允许，应用才会储存新接收或发送消息的联系人数据。</string>
     <string name="title_advanced_usenet_hint">在文本和签名之间插入 \'-- \'</string>
     <string name="title_advanced_send_reminders_hint">当消息文本或主题为空或缺失某个附件时显示警告</string>
+    <string name="title_advanced_reply_all_hint">如禁用，长按答复按钮将答复发送者</string>
     <string name="title_advanced_reply_move_hint">邮件服务器仍然可以将消息添加到“已发送消息”文件夹</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
@@ -578,6 +590,7 @@
     <string name="title_advanced_notify_manage_hint">点击频道名称来设置频道属性</string>
     <string name="title_advanced_notify_manage_default_hint">设置默认声音等</string>
     <string name="title_advanced_notify_manage_service_hint">禁用 “监视” 通知</string>
+    <string name="title_advanced_notify_separate_hint">如何配置帐户、文件夹和发送者的通知？</string>
     <string name="title_advanced_notify_preview_all_hint">为可穿戴设备显示完整文本(最多5,000个字符)</string>
     <string name="title_advanced_notify_preview_only_hint">这会延迟通知的显示直到消息文本下载完成</string>
     <string name="title_advanced_wearable_hint">通知仅在消息文本下载后发送到可穿戴设备</string>
@@ -833,6 +846,8 @@
     <string name="title_share_as_html">以HTML格式分享</string>
     <string name="title_raw_save">保存原始消息</string>
     <string name="title_raw_send">作为附件发送</string>
+    <string name="title_raw_send_message">消息</string>
+    <string name="title_raw_send_thread">对话</string>
     <string name="title_manage_keywords">关键字管理</string>
     <string name="title_manage_labels">管理 Gmail 标签</string>
     <string name="title_add_keyword">添加关键字</string>
@@ -840,8 +855,9 @@
     <string name="title_download_all">全部下载</string>
     <string name="title_save_all">全部保存</string>
     <string name="title_save_eml">保存原始消息文件</string>
-    <string name="title_raw_remaining">要下载的原始消息: %1$d</string>
-    <string name="title_ask_raw">转发消息需要从服务器下载原始消息，这需要网络连接。</string>
+    <string name="title_eml_remark">转发消息需要从服务器下载原始消息，这需要网络连接。</string>
+    <string name="title_eml_option">可通过在连接设置中启用“始终下载原始消息文件”防止发生这种情况</string>
+    <string name="title_eml_downloaded">已下载原始消息： %1$s</string>
     <string name="title_buttons">选择按钮</string>
     <string name="title_buttons_hint">实际操作可行性取决于账户类型和配置</string>
     <string name="title_button_search">搜索消息</string>
@@ -892,7 +908,6 @@
     <string name="title_no_connection">正在连接到一个或多个账户 &#8230;</string>
     <string name="title_no_folder">文件夹不存在</string>
     <string name="title_no_format">将包含最初收到的消息</string>
-    <string name="title_no_image">无法解码图像</string>
     <string name="title_no_search">在服务器上搜索对该账户不可用</string>
     <string name="title_too_large">消息内容太多，不能完全重新格式化</string>
     <string name="title_truncated">消息内容太多，无法完全显示</string>
@@ -1141,8 +1156,8 @@
     <string name="title_select_all">全选</string>
     <string name="title_select_found">选中找到的</string>
     <string name="title_mark_all_read">全部标为已读</string>
+    <string name="title_view_thread">查看对话</string>
     <string name="title_force_sync">强制同步</string>
-    <string name="title_force_reload">强制重启</string>
     <string name="title_force_send">强制发送</string>
     <string name="title_language_all">全部</string>
     <string name="title_previous">上一封</string>
@@ -1368,9 +1383,10 @@
     <string name="title_check_owner">检查所有者</string>
     <string name="title_remark_owner">将从 <a href="https://ipinfo.io/">ipinfo.io</a> 获取信息</string>
     <string name="title_ip_owner">所有者 IP 地址</string>
+    <string name="title_default_apps">默认应用程序</string>
     <string name="title_reset_open">设置或清除默认应用</string>
     <string name="title_select_app">选择应用</string>
-    <string name="title_updated">有新的版本%1$s可用</string>
+    <string name="title_updated">可更新到版本 %1$s</string>
     <string name="title_issue">您要提问或有疑问吗？</string>
     <string name="title_yes">是</string>
     <string name="title_no">否</string>
@@ -1422,15 +1438,15 @@
     <string name="title_pro_purchase">购买</string>
     <string name="title_pro_one_time">%1$s (一次性购买)</string>
     <string name="title_pro_no_play">未找到 Play Store</string>
-    <string name="title_pro_info">        毫不夸张地说，我花了数千个小时来开发 FairEmail，尽管如此，大多数功能都可以免费使用
-        FairEmail 非常重视您的隐私，不会显示广告，更不会偷偷使用跟踪或分析来牟利
-        为了长期维护和支持 FairEmail，一些便利及高级功能需要付费使用
-        FairEmail 会显示一条小消息来提醒您这一点，如果您购买了专业功能，该消息将会移除</string>
+    <string name="title_pro_info">        毫不夸张地说，我花了数千个小时来开发 FairEmail，尽管如此，大多数功能都可以免费使用。
+        FairEmail 非常重视您的隐私，不会显示广告，更不会偷偷使用跟踪或分析来牟利。
+        为了长期维护和支持 FairEmail，一些便利及高级功能需要付费使用。
+        FairEmail 会显示一条小消息来提醒您这一点，该消息将在您购买了专业版功能后被移除。</string>
     <string name="title_pro_hide">隐藏升级提示消息 %1$d 周</string>
     <string name="title_pro_hint">购买专业版将获得现在以及未来更新中全部专业版功能，并将支持开发者维护这个应用</string>
     <string name="title_pro_price">为什么专业功能如此昂贵？</string>
     <string name="title_pro_family">我可以使用 Google Play 家人共享内容库吗？</string>
-    <string name="title_pro_restore">如何恢复购买？</string>
+    <string name="title_pro_restore">我如何恢复购买？(在另一部设备上)</string>
     <string name="title_pro_pending">购买待处理</string>
     <string name="title_pro_activated">全部专业版功能已激活</string>
     <string name="title_pro_valid">全部专业版功能已激活</string>

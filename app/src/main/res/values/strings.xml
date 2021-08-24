@@ -165,8 +165,9 @@
     <string name="title_setup_quick_support">Some providers make it difficult to add an account. Please do not blame FairEmail for this, but ask for support instead.</string>
     <string name="title_setup_quick_hint">The quick setup will fetch configuration information from autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_patience">Please be patient &#8230;</string>
-    <string name="title_setup_quick_imap">IMAP server to receive messages</string>0
-    <string name="title_setup_quick_smtp">SMTP server to send messages</string>0
+    <string name="title_setup_quick_imap">IMAP server to receive messages</string>
+    <string name="title_setup_quick_smtp">SMTP server to send messages</string>
+    <string name="title_setup_quick_certificates">Server certificates</string>
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_multiple">The wizard can be used multiple times to set up multiple accounts</string>
     <string name="title_setup_wizard_new">I need a new email address</string>
@@ -213,6 +214,7 @@
     <string name="title_setup_permissions">Grant permissions</string>
     <string name="title_setup_permissions_remark">To access contact information (optional)</string>
     <string name="title_setup_permissions_explanation">Contact permissions are required to look up contact info and to suggest contacts</string>
+    <string name="title_setup_permission_import_contacts">How can I import contacts?</string>
     <string name="title_setup_doze">Disable battery optimizations</string>
     <string name="title_setup_doze_remark">To reliably send and receive email</string>
     <string name="title_setup_doze_explanation">Battery optimizations should be disabled for the app to ensure reliable sending and receiving of messages in the background</string>
@@ -349,17 +351,21 @@
     <string name="title_advanced_alt_re_fwd">Alternative reply/forward prefix</string>
     <string name="title_advanced_send_reminders">Show reminders</string>
     <string name="title_advanced_send_delayed">Delay sending messages</string>
+    <string name="title_advanced_attach_new">Add shared files to a new draft</string>
+    <string name="title_advanced_reply_all">Long press answer button to reply to all</string>
     <string name="title_advanced_send_pending">Show non-obtrusive send delayed icon</string>
 
     <string name="title_advanced_compose_font">Default font</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_separate_reply">Insert a horizontal line before a reply/forward header</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
+    <string name="title_advanced_write_above">Write above the sender\'s text</string>
     <string name="title_advanced_write_below">Write below the sender\'s text</string>
     <string name="title_advanced_quote_reply">Quote replied text</string>
     <string name="title_advanced_limit_reply">Limit the number of nested quotes</string>
     <string name="title_advanced_resize_reply">Resize images in replied text</string>
     <string name="title_advanced_signature_location">Signature position</string>
+    <string name="title_advanced_signature_new">Use signature for new messages</string>
     <string name="title_advanced_signature_reply">Use signature when replying</string>
     <string name="title_advanced_signature_forward">Use signature when forwarding</string>
     <string name="title_advanced_discard_delete">On discard draft permanently delete draft</string>
@@ -400,7 +406,10 @@
     <string name="title_advanced_landscape">Landscape mode</string>
     <string name="title_advanced_two_row">Use two rows</string>
     <string name="title_advanced_two_col">Use two columns</string>
-    <string name="title_advanced_default_nav">Show navigation menu by default</string>
+    <string name="title_advanced_nav_options">Show navigation menu options</string>
+    <string name="title_advanced_nav_pin">Pin navigation menu</string>
+    <string name="title_advanced_nav_hide_title">Hide navigation menu options?</string>
+    <string name="title_advanced_nav_hide_message">You can enable the options again in the display settings</string>
     <string name="title_advanced_nav_message_count">Show number of locally stored messages in the navigation menu</string>
     <string name="title_advanced_startup">Show on start screen</string>
     <string name="title_advanced_cards">Use card style instead of tabular style</string>
@@ -650,6 +659,7 @@
     <string name="title_advanced_suggest_local_hint">In addition to contacts provided by Android. Contact data will be stored for newly sent or received messages only when enabled.</string>
     <string name="title_advanced_usenet_hint">Insert \'-- \' between the text and the signature</string>
     <string name="title_advanced_send_reminders_hint">Show a warning when the message text or the subject is empty or when an attachment might be missing</string>
+    <string name="title_advanced_reply_all_hint">If disabled, long pressing the answer button will answer the sender</string>
     <string name="title_advanced_reply_move_hint">The email server could still add the messages to the sent message folder</string>
 
     <string name="title_advanced_metered_hint">Metered connections are generally mobile connections or paid Wi-Fi hotspots</string>
@@ -701,6 +711,7 @@
     <string name="title_advanced_notify_manage_hint">Tap on the channel name to set the channel properties</string>
     <string name="title_advanced_notify_manage_default_hint">To set the default sound, etc</string>
     <string name="title_advanced_notify_manage_service_hint">To disable the \'monitoring\' notification</string>
+    <string name="title_advanced_notify_separate_hint">How do I configure notifications for accounts, folders and senders?</string>
     <string name="title_advanced_notify_preview_all_hint">For wearables that can show the full text (up to 5,000 characters)</string>
     <string name="title_advanced_notify_preview_only_hint">This delays showing of notifications until the message text has been downloaded</string>
     <string name="title_advanced_wearable_hint">Notifications are only sent to a wearable after the message text has been downloaded</string>
@@ -978,6 +989,8 @@
     <string name="title_share_as_html">Share as HTML</string>
     <string name="title_raw_save">Save raw message</string>
     <string name="title_raw_send">Send as attachment</string>
+    <string name="title_raw_send_message">Message</string>
+    <string name="title_raw_send_thread">Conversation</string>
     <string name="title_manage_keywords">Manage keywords</string>
     <string name="title_manage_labels">Manage Gmail labels</string>
     <string name="title_add_keyword">Add keyword</string>
@@ -985,8 +998,10 @@
     <string name="title_download_all">Download all</string>
     <string name="title_save_all">Save all</string>
     <string name="title_save_eml">Save raw message file</string>
-    <string name="title_raw_remaining">Raw messages to download: %1$d</string>
-    <string name="title_ask_raw">To forward messages, the raw (original) messages need to be downloaded from the server. This requires an internet connection.</string>
+
+    <string name="title_eml_remark">To forward messages, the raw (original) messages need to be downloaded from the server. This requires an internet connection.</string>
+    <string name="title_eml_option">This can be prevented by enabling always downloading raw message files in the connection settings</string>
+    <string name="title_eml_downloaded">Raw messages downloaded: %1$s</string>
 
     <string name="title_buttons">Select buttons</string>
     <string name="title_buttons_hint">The actual actions available depend on the account type and configuration</string>
@@ -1044,7 +1059,6 @@
     <string name="title_no_connection">Connecting to one or more accounts &#8230;</string>
     <string name="title_no_folder">Folder does not exist</string>
     <string name="title_no_format">The originally received message will be included</string>
-    <string name="title_no_image">Image could not be decoded</string>
     <string name="title_no_search">Search on server is not available for this account</string>
     <string name="title_too_large">Message too large to completely reformat</string>
     <string name="title_truncated">Message too large to display completely</string>
@@ -1317,8 +1331,8 @@
     <string name="title_select_all">Select all</string>
     <string name="title_select_found">Select found</string>
     <string name="title_mark_all_read">Mark all read</string>
+    <string name="title_view_thread">View conversation</string>
     <string name="title_force_sync">Force sync</string>
-    <string name="title_force_reload">Force restart</string>
     <string name="title_force_send">Force send</string>
 
     <string name="title_language_all">All</string>
@@ -1568,7 +1582,7 @@
     <string name="title_default_apps">Default apps</string>
     <string name="title_reset_open">Set or clear default apps</string>
     <string name="title_select_app">Select app</string>
-    <string name="title_updated">There is an update to version %1$s available</string>
+    <string name="title_updated">Update to version %1$s available</string>
     <string name="title_issue">Do you have a question or problem?</string>
     <string name="title_yes">Yes</string>
     <string name="title_no">No</string>
@@ -1633,7 +1647,7 @@
     <string name="title_pro_hint">Buying pro features will allow you to use all current and future pro features, will keep this app maintained, and supported.</string>
     <string name="title_pro_price">Why are the pro features so expensive?</string>
     <string name="title_pro_family">Can I use the Google Play Family Library?</string>
-    <string name="title_pro_restore">How can I restore a purchase?</string>
+    <string name="title_pro_restore">How can I restore a purchase (on another device) ?</string>
     <string name="title_pro_pending">Purchase pending</string>
     <string name="title_pro_response" translatable="false">Response</string>
     <string name="title_pro_activated">All pro features are activated</string>

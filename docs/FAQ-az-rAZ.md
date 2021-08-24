@@ -24,59 +24,58 @@ Cəld quraşdırma sehrbazı uğursuz olsa, əllə bir hesab (e-poçt almaq üç
 
 *IMAP* və təchizatçının adını axtarmaq düzgün sənədləri tapmaq üçün adətən kifayət edir.
 
-Bəzi hallarda hesabınıza xarici girişi təmin etməli və / və ya xüsusi (tətbiqetmə) parol istifadə etməlisiniz, məsələn, iki faktorlu identifikasiya effektiv olduqda.
+Bəzi hallarda, məsələn iki mərhələli kimlik təsdiqləmə fəal olanda, hesabınıza xarici müraciəti fəallaşdırmalı və/və ya xüsusi (tətbiq) şifrə istifadə etməli olacaqsınız.
 
 Səlahiyyət vermək üçün:
 
-* Gmail / G dəsti, bax [ sual 6 ](#user-content-faq6)
-* Outlook / Live / Hotmail, sual 14-ə baxın
-* Office 365, bax [ sual 14 ](#user-content-faq156)
-* Microsoft Exchange, bax [ sual 8 ](#user-content-faq8)
-* Yahoo, AOL və Sky, [88. suala](#user-content-faq88) baxın
-* Apple iCloud, bax [ sual 148 ](#user-content-faq148)
-* Free.fr, bax [ sual 157 ](#user-content-faq157)
+* Gmail / G suite, [6-cı suala](#user-content-faq6) baxın
+* Outlook / Live / Hotmail, [14-cü suala](#user-content-faq14) baxın
+* Office 365, [14-cü suala](#user-content-faq156) baxın
+* Microsoft Exchange, [8-ci suala](#user-content-faq8) baxın
+* Yahoo, AOL və Sky,[88-ci suala](#user-content-faq88) baxın
+* Apple iCloud, [148-ci suala](#user-content-faq148) baxın
+* Free.fr, [157-ci suala](#user-content-faq157) baxın
 
-Zəhmət olmasa ümumi səhv mesajları və həlləri üçün [ buraya ](#user-content-faq22) baxın.
+Ən geniş yayılmış xəta mesajları və həlləri üçün zəhmət olmasa [bura](#user-content-faq22) baxın.
 
 Əlaqəli suallar:
 
-* [OAuth dəstəklənirmi?](#user-content-faq111)
+* [OAuth dəstəklənir?](#user-content-faq111)
 * [ActiveSync niyə dəstəklənmir?](#user-content-faq133)
 
 <a name="howto">
 
 ## Necə ...?
 
-* Hesab adını dəyişdirin: Parametrlər, Əl ilə quraşdırma vurun, Hesablar vurun, Hesabı vurun
-* Çalmak üçün sola / sağa hədəfi dəyişdirin: Parametrlər, sekmə səhifəsi Davranış, Çalmak hərəkətlərini qurun
-* Şifrəni dəyişdirin: Parametrlər, Manuel quraşdırma vurun, Hesablar vurun, Hesabı vurun, parolu dəyişdirin
-* İmza seçin: Parametrlər, Manuel quraşdırma vurun, Kimliklər vurun, Şəxsiyyət vurun, İmzanı redaktə edin.
-* CC və BCC ünvanlarını əlavə edin: mövzunun sonunda insanların simgesinə vurun
-* Arxivdəki / silinən növbəti / əvvəlki mesaja gedin: davranış parametrlərində * Söhbətləri avtomatik bağla * funksiyasını söndürün və * Söhbəti bağladıqda * Növbəti / əvvəlki söhbətə get * seçin. *
-* Birləşdirilmiş gələnlər qutusuna bir qovluq əlavə edin: qovluq siyahısındakı qovluğu uzun müddət basın və * Birləşdirilmiş gələnlər qutusunda göstər * işarəsini işarələyin.
-* Naviqasiya menyusuna bir qovluq əlavə edin: qovluq siyahısındakı qovluğu uzun müddət basın və * Naviqasiya menyusunda göstər * işarəsini vurun.
-* Daha çox mesaj yükləyin: qovluq siyahısında bir qovluğu uzun müddət basın, * Daha çox mesaj gətir <0> seçin</li>
-* Zibil qutusunu atlayaraq bir mesajı silin: zibil simgesini uzun müddət basın
-* Bir hesabı / şəxsiyyəti silin: Parametrlər, Əl ilə quraşdırma vurun, Hesablar / Şəxsiyyətlər vurun, hesaba / şəxsiyyətə vurun, zibil işarəsi yuxarı sağda
-* Qovluğu silin: qovluq siyahısındakı qovluğu uzun müddət basın, Xüsusiyyətləri redaktə edin, zibil işarəsi yuxarı sağda
-* Göndərməni geri qaytarın: Gələnlər qutusundakı mesajı sola və ya sağa sürüşdürün
-* Göndərilən mesajları gələnlər qutusunda saxlayın: xahiş edirəm [ bu suala baxın ](#user-content-faq142)
-* Sistem qovluqlarını dəyişdirin: Parametrlər, Əl ilə qurma vurun, Hesablar vurun, altındakı hesaba vurun
-* İxrac / idxal parametrləri: Ayarlar, naviqasiya (sol tərəf) menyusu</ul>
+* Hesab adını dəyişdirmə: Tənzimləmələr > Əllə quraşdır > Hesablar > "Hesab"a toxunun
+* Sola/sağa sürüşdürmə hədəfini dəyişdirmə: Tənzimləmələr > Davranış > "Sürüşdürmə əməliyyatlarını tənzimlə"yə toxunun
+* Şifrəni dəyişdirmə: Tənzimləmələr > Əllə quraşdır > Hesablar > "Hesab"a toxunun
+* Bir imza tənzimləmə: Tənzimləmələr > Əllə quraşdır > Kimliklər > Kimlik > İmzaya düzəliş et.
+* CC və BCC ünvanlarını əlavə etmə: mövzunun sonunda insanların nişanına toxunun
+* Arxivləmə/silmə ilə əlaqəli sonrakı/əvvəlki mesaja getmə: Davranış tənzimləmələrində sıradan çıxardın *Danışıqları avtomatik bağlayın və *Bir danışığı bağlayanda* üçün *"Növbəti/əvvəlki danışığa gedin"i* seçin</li>
+* Birləşmiş gələn qutusuna bir qovluq əlavə etmə: qovluq siyahısındakı qovluğa uzun basın və *"Birləşmiş gələn qutusunda göstər"i* işarələyin
+* Naviqasiya menyusuna bir qovluq əlavə etmə: qovluq siyahısındakı qovluğa uzun basın və *"Naviqasiya menyusunda göstər"i* işarələyin
+* Daha çox mesaj yükləmə: qovluq siyahısındakı bir qovluğa uzun basın, *"Daha çox mesaj gətir"i* seçin
+* Bir mesajı silin, tullantı qutusunu ötürün: tullantı nişanına uzun basın
+* Bir hesabı/kimliyi silmə: Tənzimləmələr > Əllə quraşdırma > Hesablar/Kimliklər > hesab/kimlik > sağ üstdəki tullantı nişanı
+* Bir qovluğu silmə: qovluq siyahısındakı bir qovluğa uzun basın > Xüsusiyyətlərə düzəliş et > sağ üstdəki tullantı nişanı
+* Göndərişi geri alma: Gedən qutusu, siyahıdakı mesajı sola və ya sağa sürüşdürün
+* Göndərilən mesajları gələn qutusunda saxlama: zəhmət olmasa [bu TSS-a baxın](#user-content-faq142)
+* Sistem qovluqlarını dəyişdirmə: Tənzimləmələr > Əllə quraşdırma > Hesablar > hesab > ən altda
+* İxrac/idxal tənzimləmələri: Tənzimləmələr > naviqasiya menyusu (sol tərəf)</ul>
 
-<h2><a name="known-problems"></a>Məlum problem</h2>
+<h2><a name="known-problems"></a>Bilinən problem</h2>
 
-* ~~Android 5.1 və 6 </a> bir
-
- səhv, tətbiqlərin bəzən səhv bir zaman formatı göstərməsinə səbəb olur. Android ayarı * 24 saatlıq format istifadə edin * problemi müvəqqəti həll edə bilər. Keçid yolu əlavə edildi.~~</li> 
-  
-  * ~~ Google Diskdəki bir [ səhv ](https://issuetracker.google.com/issues/126362828), Google Drive-a ixrac olunan faylların boş olmasına səbəb olur. Google bunu düzəltdi. ~~
-* ~~ AndroidX-də bir [ səhv ](https://issuetracker.google.com/issues/78495471) FairEmail-in bəzən uzun müddət basarkən və ya sürüşdürərkən qəzaya səbəb olur. Google bunu düzəltdi. ~~
-* ~~ AndroidX ROOM'dakı bir [ səhv ](https://issuetracker.google.com/issues/138441698) bəzən "* ... ilə qəzaya səbəb olur ... Verilənlər bazası canlı məlumatların hesablanması zamanı istisna ... Sıra oxunmadı ... * ". Keçid yolu əlavə edildi. ~~
+* ~~[Android 5.1 və 6 versiyalarındakı bir xəta](https://issuetracker.google.com/issues/37054851), tətbiqlərin bəzən yanlış vaxt formatını göstərməsinə səbəb olur. *24 saatlıq format istifadə et* Android tənzimləməsini dəyişdirmək, problemi müvəqqəti həll edəcək. Bir müvəqqəti həll yolu əlavə edildi.~~
+* ~~[Google Drive-dakı bir xətaya](https://issuetracker.google.com/issues/126362828) görə, Google Drive-a ixrac edilən fayllar boş olur. Google bunu düzəltdi.~~
+* ~~[AndroidX-dəki bir xətaya](https://issuetracker.google.com/issues/78495471) görə, uzun basanda və ya sürüşdürəndə FairEmail, arada çökür. Google bunu düzəltdi.~~
+* ~~[AndroidX ROOM-dakı bir xətaya görə](https://issuetracker.google.com/issues/138441698) bəzən bu çökməyə səbəb olur: "*... Verilənlər bazasının canlı verilənləri hesablaması istisna ... Sətir oxuna bilmədi ... * ". Bir müvəqqəti həll yolu əlavə edildi.~~
 * Android-də bir [ səhv ](https://issuetracker.google.com/issues/119872129) FairEmail-in "* ... ilə qəzaya uğramasına səbəb olur ... Səhv bildiriş göndərildi ... * "FairEmail-i yenilədikdən və bildiriş vurduqdan sonra bəzi cihazlarda".
 * Android-də bir [ səhv ](https://issuetracker.google.com/issues/62427912) bəzən "* ... ilə qəzaya səbəb olur ... FairEmail yeniləndikdən sonra ... * "üçün ActivityRecord tapılmadı. Yenidən quraşdırmaq ([ mənbə ](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) problemi həll edə bilər.
 * Android-də bir [ səhv ](https://issuetracker.google.com/issues/37018931) bəzən * ilə qəzaya səbəb olur ... InputChannel başlatılmamış ... * bəzi cihazlarda.
-* ~~ LineageOS-dakı bir  səhv, bəzən * ... java.lang.ArrayIndexOutOfBoundsException: length = ...; indeks = ... ... *. ~~</li> 
+* ~~ LineageOS-dakı bir
+
+ səhv, bəzən * ... java.lang.ArrayIndexOutOfBoundsException: length = ...; indeks = ... ... *. ~~</li> 
   
   * Android 5.x-də Nova Launcher-da bir səhv Nova Launcher-in əlçatanlıq xidmətinə çıxışı olduqda FairEmail-in * java.lang.StackOverflowError * ilə qəzaya uğramasına səbəb olur.
 * ~~ Qovluq seçicisi bəzən hələ bilinməyən səbəblərdən qovluq göstərmir. Bu düzəldilmişdir. ~~
@@ -90,7 +89,7 @@ Zəhmət olmasa ümumi səhv mesajları və həlləri üçün [ buraya ](#user-c
 * Bu düzəldilə bilməyən və ya ətrafında işlənməyən bir Android məhdudiyyətidir. Android 11
 * OpenKeychain-dəki bir [ səhv ](https://github.com/open-keychain/open-keychain/issues/2688) bir donanma işarəsi istifadə edərkən etibarsız PGP imzalarına səbəb olur.</ul>
 
-<h2><a name="planned-features"></a>Planlaşdırılan xüsusiyyətlər</h2>
+<h2><a name="planned-features"></a>Planlaşdırılan özəlliklər</h2>
 
 * ~~ Tələbə görə sinxronizasiya edin (əl ilə) ~~
 * ~~ Yarı avtomatik şifrələmə ~~
@@ -125,7 +124,7 @@ Zəhmət olmasa ümumi səhv mesajları və həlləri üçün [ buraya ](#user-c
 
 Bu siyahıda hər hansı bir şey təsadüfi sıradadır və yaxın gələcəkdə * ola bilər *.
 
-<h2><a name="frequently-requested-features"></a>Tez-tez tələb olunan xüsusiyyətlər</h2>
+<h2><a name="frequently-requested-features"></a>Tez-tez tələb olunan özəlliklər</h2>
 
 Dizayn bir çox müzakirələrə əsaslanır və istəsəniz bu barədə [ bu forumda da ](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) müzakirə edə bilərsiniz. Dizaynın məqsədi minimalist (lazımsız menyu, düymə və s.) Və diqqəti yayındırmayan (qəşəng rənglər, animasiyalar və s.) Olmaqdır. Göstərilən bütün şeylər bu və ya digər şəkildə faydalı olmalıdır və asan istifadə üçün diqqətlə yerləşdirilməlidir. Şriftlər, ölçülər, rənglər və s. Mümkün olduqda material dizaynı olmalıdır.
 
@@ -173,9 +172,9 @@ Dizayn bir çox müzakirələrə əsaslanır və istəsəniz bu barədə [ bu fo
 * [(41) 'Handshake uğursuz oldu' səhvini necə düzəldə bilərəm?](#user-content-faq41)
 * [(42) Provayderlər siyahısına yeni bir provayder əlavə edə bilərsinizmi?](#user-content-faq42)
 * [(43) Orijinalı göstərə bilərsiniz ...?](#user-content-faq43)
-* [(44) Göndərilən qovluqda əlaqə şəkillərini / şəxsiyyət sənədlərini göstərə bilərsinizmi?](#user-content-faq44)
-* [(45) Necə düzəldə bilərəm 'Bu düymə mövcud deyil. Onu istifadə etmək üçün özünüz kimi idxal etməlisiniz! ' ?](#user-content-faq45)
-* [(46) Niyə mesajlar siyahısı təravətləndirir?](#user-content-faq46)
+* [(44) Göndərilən qovluqda əlaqə fotolarını / kimlik sənədlərini göstərə bilərsiniz?](#user-content-faq44)
+* [(45) Bu problemi necə düzəldə bilərəm: 'Bu açar mövcud deyil. Onu istifadə etmək üçün, onu özünüzünkü kimi idxal etməlisiniz!' ?](#user-content-faq45)
+* [(46) Niyə mesaj siyahısı təzələnir?](#user-content-faq46)
 * [(47) 'Əsas hesab yoxdur və ya qaralama qovluğu yoxdur' səhvini necə həll edirəm?](#user-content-faq47)
 * [~~ (48) 'Əsas hesab yoxdur və ya arxiv qovluğu yoxdur' səhvini necə həll edirəm? ~~](#user-content-faq48)
 * [(49) 'Köhnəlmiş bir tətbiq bir fayl axını yerinə bir fayl yolu göndərdi' necə düzəldə bilərəm?](#user-content-faq49)
@@ -196,26 +195,26 @@ Dizayn bir çox müzakirələrə əsaslanır və istəsəniz bu barədə [ bu fo
 * [~~ (64) Sola / sağa çəkmək üçün xüsusi tədbirlər əlavə edə bilərsinizmi? ~~](#user-content-faq64)
 * [(65) Nə üçün bəzi əlavələr solğun görünür?](#user-content-faq65)
 * [(66) FairEmail Google Play Ailə Kitabxanasında mövcuddur?](#user-content-faq66)
-* [(67) Söhbəti necə təxirə salmaq olar?](#user-content-faq67)
-* [~~ (68) Niyə Adobe Acrobat oxucu PDF əlavələrini aça bilməz / Microsoft tətbiqetmələri əlavə sənədləri aça bilmir? ~~](#user-content-faq68)
-* [(69) Yeni mesaja avtomatik sürüşdürmə əlavə edə bilərsinizmi?](#user-content-faq69)
+* [(67) Danışıqları necə ertələyə bilərəm?](#user-content-faq67)
+* [~~ (68) Niyə Adobe Acrobat oxuyucu PDF qoşmalarını aça bilmir / Microsoft tətbiqləri qoşmalı sənədləri aça bilmir? ~~](#user-content-faq68)
+* [(69) Yeni mesaja avtomatik yuxarı sürüşdürmə əlavə edə bilərsiniz?](#user-content-faq69)
 * [(70) Mesajlar nə vaxt avtomatik genişləndiriləcək?](#user-content-faq70)
-* [(71) Süzgəc qaydalarını necə istifadə edirəm?](#user-content-faq71)
-* [(72) Əsas hesablar / şəxsiyyətlər hansılardır?](#user-content-faq72)
-* [(73) Mesajların hesablar arasında köçürülməsi təhlükəsiz / səmərəlidirmi?](#user-content-faq73)
+* [(71) Filtr qaydalarını necə istifadə edə bilərəm?](#user-content-faq71)
+* [(72) Əsas hesablar/kimliklər nədir?](#user-content-faq72)
+* [(73) Mesajların hesablar arasında köçürülməsi güvənlidir/səmərəlidir?](#user-content-faq73)
 * [(74) Niyə təkrarlanan mesajları görürəm?](#user-content-faq74)
-* [(75) Bir iOS, Windows, Linux və s. Bir versiya edə bilərsinizmi?](#user-content-faq75)
-* [(76) 'Yerli mesajları sil' nə edir?](#user-content-faq76)
-* [(77) Niyə bəzən mesajlar kiçik bir gecikmə ilə göstərilir?](#user-content-faq77)
+* [(75) Bir iOS, Windows, Linux və sair versiya hazırlaya bilərsiniz?](#user-content-faq75)
+* [(76) 'Yerli mesajları təmizlə' nə işə yarayır?](#user-content-faq76)
+* [(77) Mesajlar niyə bəzən kiçik bir gecikmə ilə göstərilir?](#user-content-faq77)
 * [(78) Cədvəlləri necə istifadə edirəm?](#user-content-faq78)
-* [(79) Tələbə görə sinxronizasiya necə istifadə olunur (dərslik)?](#user-content-faq79)
-* [~~ (80) 'BODYSTRUCTURE yüklənə bilmir' səhvini necə düzəldə bilərəm? ~~](#user-content-faq80)
-* [~~ (81) Orijinal mesajın arxa planını qaranlıq mövzuda qaranlıq edə bilərsinizmi? ~~](#user-content-faq81)
-* [(82) İzləmə şəkli nədir?](#user-content-faq82)
+* [(79) İstəkdən asılı (əllə) olan eyniləşdirməni necə istifadə edə bilərəm?](#user-content-faq79)
+* [~~(80) 'BODYSTRUCTURE yüklənilə bilmir' xətasını necə düzəldə bilərəm?~~](#user-content-faq80)
+* [~~(81) Tünd temada orijinal mesajın arxaplanını tünd edə bilərsiniz?~~](#user-content-faq81)
+* [(82) İzləmə təsviri nədir?](#user-content-faq82)
 * [(84) Yerli əlaqələr nə üçündür?](#user-content-faq84)
-* [(85) Niyə şəxsiyyət mövcud deyil?](#user-content-faq85)
-* [~~ (86) 'Əlavə gizlilik xüsusiyyətləri' nədir? ~~](#user-content-faq86)
-* [(87) 'etibarsız etimadnamə' nə deməkdir?](#user-content-faq87)
+* [(85) Niyə bir kimlik mövcud deyil?](#user-content-faq85)
+* [~~(86) 'Əlavə gizlilik özəlikləri' nələrdir?~~](#user-content-faq86)
+* [(87) 'Etibarsız kimlik' nə məna verir?](#user-content-faq87)
 * [(88) Yahoo, AOL və ya Sky hesabımı necə istifadə edə bilərəm?](#user-content-faq88)
 * [(89) Yalnız düz mətn mesajları necə göndərə bilərəm?](#user-content-faq89)
 * [(90) Niyə bəzi mətnlər bir əlaqə olmadığı halda bir-birinə bağlanır?](#user-content-faq90)
@@ -2094,98 +2093,98 @@ Note that original messages are shown exactly as they are, which means also that
 <br />
 
 <a name="faq91"></a>
-**~~(91) Can you add periodical synchronization to save battery power?~~**
+**~~(91) Batereyaya qənaət etmək üçün mütəmadi eyniləşdirməni əlavə edə bilərsiniz?~~**
 
-~~Synchronizing messages is an expensive proces because the local and remote messages need to be compared,~~ ~~so periodically synchronizing messages will not result in saving battery power, more likely the contrary.~~
+~~Yerli və uzaq mesajların müqayisəsinə ehtiyac olduğu üçün, mesajların eyniləşdirilməsi, bahalı bir prosesdir.~~ ~~Buna görə də mesajların eyniləşdirilməsi batereyaya qənaət etmir, əksinə daha çox batereya enerjisi istifadə edir.~~
 
-~~See [this FAQ](#user-content-faq39) about optimizing battery usage.~~
+~~Batereya istifadəsinin optimallaşdırılması haqqında [bu TSS-a](#user-content-faq39) baxın.~~
 
 <br />
 
 <a name="faq92"></a>
-**(92) Can you add spam filtering, verification of the DKIM signature and SPF authorization?**
+**(92) Spam filtrləmə, DKIM imza təsdiqləmə və SPF səlahiyyətləndirmə əlavə edə bilərsiniz?**
 
-Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client. Servers generally have more memory and computing power, so they are much better suited to this task than battery-powered devices. Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client. Moreover, email servers have access to information, like the IP address, etc of the connecting server, which an email client has no access to.
+Spam filtrləmə, [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) imza təsdiqləmə və [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) səlahiyyətləndirmə, e-poçt müştərisinin (client) yox, e-poçt serverlərinin tapşırıqlarıdır. Adətən serverlər, daha çox yaddaşa və məlumat hesablama gücünə sahib olurlar, ona görə də bu tapşırıq üçün batereya ilə işləyən cihazlara görə daha uyğundur. Həmçinin, yalnız bir e-poçt müştərisi (client) üçün yox, böyük ehtimal veb e-poçt daxil olmaqla, bütün e-poçt müştəriləriniz üçün spam filtrləməsi istəyəcəksiniz. Bundan əlavə, e-poçt serverlərinin, bir e-poçt müştərisinin müraciət olmayan, bağlantı qurulan serverin IP ünvanı kimi məlumatlara müraciəti var.
 
-Spam filtering based on message headers might have been feasible, but unfortunately this technique is [patented by Microsoft](https://patents.google.com/patent/US7543076).
+Mesaj başlıqları əsasında spam filtrləmə mümkün ola bilərdi, ancaq təəssüf ki, bu texnika [Microsoft tərəfindən patentləşdirilib](https://patents.google.com/patent/US7543076).
 
-Recent versions of FairEmail can filter spam to a certain extend using a message classifier. Please see [this FAQ](#user-content-faq163) for more information about this.
+FairEmail-in son versiyaları, mesaj sinifləşdirici istifadə edilərək spam poçtlarını müəyyən ölçüdə filtrləyə bilər. Bu haqda daha çox məlumat üçün zəhmət olmasa [bu TSS-a](#user-content-faq163) baxın.
 
-Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too. Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
+Təbii ki, FairEmail ilə mesajları spam olaraq bildirə bilərsiniz. Bu da, bildirilən mesajları spam qovluğuna köçürəcək və təchizatçının spam filtrini necə işləməsi barədə öyrədəcək. Bu, [filtr qaydaları](#user-content-faq71) ilə də avtomatik edilə bilər. Göndərəni əngəlləmək, həmin göndərənin gələcəkdəki mesajlarını avtomatik olaraq spam qovluğuna köçürmək üçün bir filtr qaydası yaradacaq.
 
-Note that the POP3 protocol gives access to the inbox only. So, it is won't be possible to report spam for POP3 accounts.
+Unutmayın ki, POP3 protokolu yalnız gələn qutusuna müraciəti təmin edir. Buna görə də, POP3 hesabları üçün spam bildirmək mümkün olmayacaq.
 
-Note that you should not delete spam messages, also not from the spam folder, because the email server uses the messages in the spam folder to "learn" what spam messages are.
+Unutmayın ki, spam mesajlarını spam qovluğundan da silməməlisiniz, çünki e-poçt serverləri, spam mesajları "öyrənmək" üçün spam qovluğundakı mesajları istifadə edir.
 
-If you receive a lot of spam messages in your inbox, the best you can do is to contact the email provider to ask if spam filtering can be improved.
+Gələn qutusunda həddən çox spam mesaj alsanız, edəcəyiniz ən yaxşı şey, spam filtrləmənin təkmilləşdiyini soruşmaq üçün e-poçt təchizatçısı ilə əlaqə saxlamaqdır.
 
-Also, FairEmail can show a small red warning flag when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server. You can enable/disable [authentication verification](https://en.wikipedia.org/wiki/Email_authentication) in the display settings.
+Həmçinin FairEmail, alınan serverdə DKIM, SPF və ya [DMARC](https://en.wikipedia.org/wiki/DMARC) kimlik təsdiqləməsi uğursuz olanda, kiçik bir qırmızı xəbərdarlıq bayrağı göstərə bilər. [Kimlik təsdiqləməsini](https://en.wikipedia.org/wiki/Email_authentication) görüntü tənzimləmələrində fəallaşdıra/sıradan çıxarda bilərsiniz.
 
-FairEmail can show a warning flag too if the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server. This can be enabled in the receive settings. Be aware that this will slow down synchronization of messages significantly.
+Göndərənin (cavab) e-poçt ünvanının domen adı, bir e-poçt serverinə işarə edən MX qeydini müəyyən etmirsə, FairEmail, bir xəbərdarlıq bayrağı da göstərə bilər. Bu, alan tənzimləmələrində fəallaşdırıla bilər. Unutmayın ki, bu, mesajların eyniləşdirilməsini əhəmiyyətli dərəcədə yavaşlandıracaq.
 
-If the domain name of the sender and the domain name of the reply address differ, the warning flag will be shown too because this is most often the case with phishing messages. If desired, this can be disabled in the receive settings (from version 1.1506).
+Göndərənin domen adı ilə cavab ünvanının domen adı fərqlidirsə, xəbərdarlıq bayrağı göstərilə bilər, çünki bu əksər hallarda kimlik ovu mesajlarında görünür. İstəsəniz, bunu alma tənzimləmələrində sıradan çıxarda bilərsiniz (1.1506 versiyasından etibarən).
 
-If legitimate messages are failing authentication, you should notify the sender because this will result in a high risk of messages ending up in the spam folder. Moreover, without proper authentication there is a risk the sender will be impersonated. The sender might use [this tool](https://www.mail-tester.com/) to check authentication and other things.
+Qanuni mesajlar, kimlik təsdiqləməsində uğursuz olsa, göndərənə bunu bildirməlisiniz, çünki bu, mesajların spam qovluğuna düşmə riskinin yüksək olması ilə nəticələnir. Həmçinin, uyğun kimlik təsdiqləmə olmadan göndərənin kimliyini təqlid etmə riski də var. Göndərən, kimlik təsdiqləməsini və digər şeyləri yoxlamaq üçün [bu aləti](https://www.mail-tester.com/) istifadə edə bilər.
 
 <br />
 
 <a name="faq93"></a>
-**(93) Can you allow installation/data storage on external storage media (sdcard)?**
+**(93) Xarici anbarda (SD kart) quraşdırma faylının və ya verilənlərin saxlanılmasına icazə verirsiniz?**
 
-FairEmail uses services and alarms, provides widgets and listens for the boot completed event to be started on device start, so it is not possible to store the app on external storage media, like an sdcard. See also [here](https://developer.android.com/guide/topics/data/install-location).
+FairEmail, xidmətləri və zəngli saatları istifadə edir, vicetləri təmin edir və cihaz açılanda başladılmalı ön yükləmə tamamlandı tədbirlərini dinləyir, ona görə də, tətbiqi SD kart kimi xarici anbarlarda saxlamaq mümkün deyil. Həmçinin [bura](https://developer.android.com/guide/topics/data/install-location) baxın.
 
-Messages, attachments, etc stored on external storage media, like an sdcard, can be accessed by other apps and is therefore not safe. See [here](https://developer.android.com/training/data-storage) for the details.
+Digər tətbiqlər, SD kart kimi xarici anbarlarda saxlanılan mesajlara, qoşmalara və s. müraciət edə bilər və bu güvənli deyil. Təfsilatlar üçün [bura](https://developer.android.com/training/data-storage) baxın.
 
-When needed you can save (raw) messages via the three-dots menu just above the message text and save attachments by tapping on the floppy icon.
+Lazım gəlsə mesaj mətninin üstündəki üç nöqtə menyusu vasitəsilə (xam) mesajları saxlaya və disket nişanına toxunaraq qoşmaları saxlaya bilərsiniz.
 
-If you need to save on storage space, you can limit the number of days messages are being synchronized and kept for. You can change these settings by long pressing a folder in the folder list and selecting *Edit properties*.
+Anbar sahəsinə qənaət etməlisinizsə, mesajların eyniləşdirildiyi və saxlanıldığı gün sayına limit qoya bilərsiniz. Qovluq siyahısında bir qovluğa uzun basıb *"Xüsusiyyətlərə düzəliş et"i* seçərək bu tənzimləmələri dəyişdirə bilərsiniz.
 
 <br />
 
 <a name="faq94"></a>
-**(94) What does the red/orange stripe at the end of the header mean?**
+**(94) Başlığın sonundakı qırmızı/narıncı zolaq nə məna verir?**
 
-The red/orange stripe at the left side of the header means that the DKIM, SPF or DMARC authentication failed. See also [this FAQ](#user-content-faq92).
+Başlığın sol hissəsindəki qırmızı/narıncı zolaq, DKIM, SPF və ya DMARC kimlik təsdiqləməsinin uğursuz olduğunu bildirir. Həmçinin [bu TSS-a](#user-content-faq92) baxın.
 
 <br />
 
 <a name="faq95"></a>
-**(95) Why are not all apps shown when selecting an attachment or image?**
+**(95) Bir qoşma və ya təsvir seçərkən nəyə görə bütün tətbiqlər görünmür?**
 
-For privacy and security reasons FairEmail does not have permissions to directly access files, instead the Storage Access Framework, available and recommended since Android 4.4 KitKat (released in 2013), is used to select files.
+Gizlilik və güvənlik səbəblərinə görə, FairEmail-in fayllara birbaşa müraciət icazəsi yoxdur, bunun əvəzinə faylları seçmək üçün Android 4.4 KitKat (2013-cü ildə buraxılıb) mövcud və məsləhət görülən Storage Access Framework istifadə edilir.
 
-If an app is listed depends on if the app implements a [document provider](https://developer.android.com/guide/topics/providers/document-provider). If the app is not listed, you might need to ask the developer of the app to add support for the Storage Access Framework.
+Bir tətbiqin siyahılanması, tətbiqin [sənəd təchizatçısını](https://developer.android.com/guide/topics/providers/document-provider) tətbiq etməsindən asılıdır. Tətbiq siyahılanmayıbsa, tətbiqin tərtibatçısından Storage Access Framework üçün dəstək əlavə etməsini xahiş edə bilərsiniz.
 
-Android Q will make it harder and maybe even impossible to directly access files, see [here](https://developer.android.com/preview/privacy/scoped-storage) and [here](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) for more details.
+Android Q, fayllara birbaşa müraciət etməyi çətinləşdirəcək və hətta mümkünsüz edəcək, daha çox məlumat üçün [bura](https://developer.android.com/preview/privacy/scoped-storage) və [bura](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) baxın.
 
 <br />
 
 <a name="faq96"></a>
-**(96) Where can I find the IMAP and SMTP settings?**
+**(96) IMAP və SMTP tənzimləmələrini harada tapa bilərəm?**
 
-The IMAP settings are part of the (custom) account settings and the SMTP settings are part of the identity settings.
+IMAP tənzimləmələri (özəl) hesab tənzimləmələrinin bir hissəsidir və SMTP tənzimləmələri isə kimlik tənzimləmələrinin bir hissəsidir.
 
 <br />
 
 <a name="faq97"></a>
-**(97) What is 'cleanup' ?**
+**(97) "Təmizləmə" nədir?**
 
-About each four hours FairEmail runs a cleanup job that:
+FairEmail təxminən hər dörd saatdan bir aşağıdakıları icra edən bir təmizlik prosesi həyata keçirir:
 
-* Removes old message texts
-* Removes old attachment files
-* Removes old image files
-* Removes old local contacts
-* Removes old log entries
+* Köhnə mesaj mətnlərini çıxarır
+* Köhnə qoşma fayllarını çıxarır
+* Köhnə təsvir fayllarını çıxarır
+* Köhnə yerli əlaqələri çıxarır
+* Köhnə jurnal girişlərini çıxarır
 
-Note that the cleanup job will only run when the synchronize service is active.
+Unutmayın: Təmizlik işi, yalnız eyniləşdirmə xidməti aktiv olanda icra edilir.
 
 <br />
 
 <a name="faq98"></a>
-**(98) Why can I still pick contacts after revoking contacts permissions?**
+**(98) Əlaqə icazələrini ləğv etdikdən sonra nəyə görə hələ də, əlaqələri seçə bilirəm?**
 
-After revoking contacts permissions Android does not allow FairEmail access to your contacts anymore. However, picking contacts is delegated to and done by Android and not by FairEmail, so this will still be possible without contacts permissions.
+Əlaqə icazələrini ləğv etdikdən sonra, Android, FairEmail-in əlaqələrinizə müraciət etməsinə icazə vermir. Buna görə də, əlaqələri seçmə əməliyyatına, Android tərəfindən imtiyaz verilir və bunu Android icra edir, FairEmail yox. Ona görə də, əlaqə icazələri olmadan bu proses mümkündür.
 
 <br />
 
@@ -2299,37 +2298,37 @@ Yeni, oxunmamış mesajların sayı, "*count*" parametrində bir tam ədəd olac
 <a name="faq107"></a>
 **(107) Rəngli ulduzları necə istifadə edə bilərəm?**
 
-You can set a colored star via the *more* message menu, via multiple selection (started by long pressing a message), by long pressing a star in a conversation or automatically by using [rules](#user-content-faq71).
+Rəngli ulduzları bu yollarla tənzimləyə bilərsiniz: *daha çox* mesaj menyusu ilə, çoxlu seçim (bir mesaja uzun basaraq başladılır), bir danışıqda bir ulduza uzun basaraq və ya [qaydalar](#user-content-faq71)ı istifadə edərək avtomatik formada.
 
-You need to know that colored stars are not supported by the IMAP protocol and can therefore not be synchronized to an email server. This means that colored stars will not be visible in other email clients and will be lost on downloading messages again. However, the stars (without color) will be synchronized and will be visible in other email clients, when supported.
+Bunu bilməsiniz: rəngli ulduzlar, IMAP protokolu tərəfindən dəstəklənmir və ona görə də, bir e-poçt serveri ilə eyniləşdirilə bilmir. Bu da o deməkdir ki, rəngli ulduzlar, digər e-poçt müştərilərində (client) görünmür və mesajlar təkrar endiriləndə itəcək. Ancaq, ulduzlar (rəngsiz) eyniləşdiriləcək və dəstəklənəndə digər e-poçt müştərilərində görünəcək.
 
-Some email clients use IMAP keywords for colors. However, not all servers support IMAP keywords and besides that there are no standard keywords for colors.
+Bəzi e-poçt müştəriləri, rənglər üçün IMAP açar sözləri istifadə edir. Ancaq, bütün serverlər IMAP açar sözlərini dəstəkləmir və həmçinin, rənglər üçün standart açar sözləri yoxdur.
 
 <br />
 
 <a name="faq108"></a>
-**~~(108) Can you add permanently delete messages from any folder?~~**
+**~~(108) Hər hansısa bir qovluqdan birdəfəlik silinən mesajları əlavə edə bilərsiniz?~~**
 
-~~When you delete messages from a folder the messages will be moved to the trash folder, so you have a chance to restore the messages.~~ ~~You can permanently delete messages from the trash folder.~~ ~~Permanently delete messages from other folders would defeat the purpose of the trash folder, so this will not be added.~~
+~~Bir qovluqdan mesajları siləndə mesajlar tullantı qovluğuna köçürülür, beləcə, həmin mesajları geri yükləmək şansınız olur.~~ ~~Mesajları tullantı qovluğundan birdəfəlik silə bilərsiniz.~~ ~~Digər qovluqlardan mesajları birdəfəlik silmək, tullantı qovluğunun məqsədini dəyişdirir, ona görə də, bu, əlavə edilməyəcək.~~
 
 <br />
 
 <a name="faq109"></a>
-**~~(109) Why is 'select account' available in official versions only?~~**
+**~~(109) "Hesab seç" nə üçün yalnız rəsmi versiyalarda əlçatandır?~~**
 
-~~Using *select account* to select and authorize Google accounts require special permission from Google for security and privacy reasons.~~ ~~This special permission can only be acquired for apps a developer manages and is responsible for.~~ ~~Third party builds, like the F-Droid builds, are managed by third parties and are the responsibility of these third parties.~~ ~~So, only these third parties can acquire the required permission from Google.~~ ~~Since these third parties do not actually support FairEmail, they are most likely not going to request the required permission.~~
+~~Google hesablarını seçmək və ya səlahiyyətləndirmək üçün *hesab seç*i istifadə etmək, təhlükəsizlik və gizlilik səbəblərinə görə Google-dan xüsusi icazə tələb edir.~~ ~~Bu xüsusi icazə, yalnız tərtibatçının idarə etdiyi və məsuliyyət daşıdığı tətbiqlər üçün əldə edilə bilər.~~ ~~F-Droid quruluşları kimi üçüncü tərəf quruluşlar, üçüncü tərəflər tərəfindən idarə edilir və üçüncü tərəflərin məsuliyyətindədir.~~ ~~Ona görə də, yalnız bu üçüncü tərəflər, Google-dan tələb olunan icazəni ala bilər.~~ ~~Bu üçüncü tərəflər, əslində FairEmail-i dəstəkləmədiyi üçün, böyük ehtimalla lazımi icazəni tələb etməyəcəklər.~~
 
-~~You can solve this in two ways:~~
+~~Bunu iki yolla həll edə bilərsiniz:~~
 
-* ~~Switch to the official version of FairEmail, see [here](https://github.com/M66B/FairEmail/blob/master/README.md#downloads) for the options~~
-* ~~Use app specific passwords, see [this FAQ](#user-content-faq6)~~
+* ~~FairEmail-in rəsmi versiyasına keçin, seçimlər üçün [bura](https://github.com/M66B/FairEmail/blob/master/README.md#downloads) baxın~~
+* ~~Tətbiqə özəl şifrələr istifadə edin, [bu TSS](#user-content-faq6)-a baxın~~
 
-~~Using *select account* in third party builds is not possible in recent versions anymore.~~ ~~In older versions this was possible, but it will now result in the error *UNREGISTERED_ON_API_CONSOLE*.~~
+~~Üçüncü tərəf quruluşlarında *hesab seç*i istifadə etmək, artıq son versiyalarda mümkün deyil.~~ ~~Köhnə versiyalarda bu mümkündür, ancaq *UNREGISTERED_ON_API_CONSOLE* xətası ilə nəticələnəcək.~~
 
 <br />
 
 <a name="faq110"></a>
-**(110) Why are (some) messages empty and/or attachments corrupt?**
+**(110) Nəyə görə (bəzi) mesajlar boşdur və/və ya qoşmaları zədəlidir?**
 
 Boş mesajlar və/və ya zədəli qoşmalar, böyük ehtimalla serverin proqram təminatındakı xətaya görə yaranır. Daha köhnə Microsoft Exchange proqram təminatının bu problemə səbəb olduğu bilinir. Əksər hallarda bunun müvəqqəti həll yolu üçün qabaqcıl hesab tənzimləmələrində *Qismən gətir* seçimini sıradan çıxarda bilərsiniz:
 
