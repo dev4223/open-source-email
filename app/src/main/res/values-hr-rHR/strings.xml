@@ -484,7 +484,6 @@
     <string name="title_folder_name">Naziv mape</string>
     <string name="title_display_name">Prikaži ime</string>
     <string name="title_show_folders">Prikaži skrivene mape</string>
-    <string name="title_apply_to_all">Primijeni na sve &#8230;</string>
     <string name="title_hide_folder">Sakrij mapu</string>
     <string name="title_unified_folder">Prikaži u objedinjenoj ulaznom spremniku</string>
     <string name="title_navigation_folder">Prikaži u navigacijskom izborniku</string>
@@ -580,7 +579,6 @@
     <string name="title_receipt_subject">Potvrda o čitanju: %1$s</string>
     <string name="title_receipt_text">Ova potvrda o čitanju samo potvrđuje da je poruka prikazana. Nema jamstva da je primatelj pročitao sadržaj poruke.</string>
     <string name="title_no_answers">Nema definiranih predložaka odgovora</string>
-    <string name="title_no_viewer">Nije dostupna aplikacija za pregledavanje %1$s</string>
     <string name="title_no_recorder">Nije dostupna odgovarajuća aplikacija audio snimača</string>
     <string name="title_no_camera">Nije dostupna odgovarajuća aplikacija za kameru</string>
     <string name="title_no_saf">Storage access framework nije dostupan</string>
@@ -1143,4 +1141,5 @@
         <item>10 s</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

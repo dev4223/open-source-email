@@ -458,7 +458,6 @@
     <string name="title_show_folders">نمایش پوشه‌های پنهان</string>
     <string name="title_show_flagged">نمایش شمار پیام‌های ستاره‌دار</string>
     <string name="title_subscribed_only">تنها مشترک شده</string>
-    <string name="title_apply_to_all">اعمال به همه &#8230;</string>
     <string name="title_hide_folder">پنهان‌سازی پوشه</string>
     <string name="title_unified_folder">نمایش در صندوق دریافت یکپارچه</string>
     <string name="title_navigation_folder">نمایش در منوی ناوبری</string>
@@ -563,7 +562,6 @@
     <string name="title_receipt_subject">رسید خواندن: %1$s</string>
     <string name="title_receipt_text">این رسید خواندن تنها نشان می‌دهد که پیام نمایش داده شده. هیچ ضمانتی وجود ندارد که گیرنده محتویات پیام را خوانده باشد.</string>
     <string name="title_no_answers">هیچ الگوی پاسخی تعریف نشده است</string>
-    <string name="title_no_viewer">هیچ برنامه نمایش دهنده‌ای در دسترس نیست برای %1$s</string>
     <string name="title_no_recorder">برنامه ضبط صدا سازگاری در دسترس نیست</string>
     <string name="title_no_camera">برنامه دوربین سازگاری در دسترس نیست</string>
     <string name="title_no_saf">چارچوب دسترسی ذخیره سازی موجود نیست</string>
@@ -1172,4 +1170,5 @@
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

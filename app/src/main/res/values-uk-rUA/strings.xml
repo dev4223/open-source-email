@@ -795,7 +795,8 @@
     <string name="title_show_folders">Відображати приховані теки</string>
     <string name="title_show_flagged">Відображати кількість позначених повідомлень</string>
     <string name="title_subscribed_only">Тільки підписані</string>
-    <string name="title_apply_to_all">Застосувати до всіх &#8230;</string>
+    <string name="title_search_folder">Знайти теку</string>
+    <string name="title_apply_to_all">Застосувати до всіх</string>
     <string name="title_hide_folder">Сховати теку</string>
     <string name="title_unified_folder">Показати в об\'єднаній вхідній теці</string>
     <string name="title_navigation_folder">Показати в меню навігації</string>
@@ -886,7 +887,7 @@
     <string name="title_download_all">Звантажити все</string>
     <string name="title_save_all">Зберегти все</string>
     <string name="title_save_eml">Зберігти файл raw повідомлення</string>
-    <string name="title_eml_remark">Для пересилання повідомлень необхідно завантажити їх з серверу. Для цього потрібне підключення до інтернету.</string>
+    <string name="title_eml_remark">Для пересилання повідомлень необхідно завантажити необроблені (оригінальні) повідомлення з сервера електронної пошти. Для цього потрібно підключення до Інтернету і повідомлення все ще повинні зберігатися на сервері електронної пошти.</string>
     <string name="title_eml_option">Увімкнувши в налаштуваннях підключення, це може запобігти, завжди завантажувати файли необроблених повідомлень</string>
     <string name="title_eml_downloaded">Необроблених повідомлень завантаженно: %1$s</string>
     <string name="title_buttons">Виберіть кнопки</string>
@@ -930,7 +931,10 @@
     <string name="title_receipt_subject">Повідомлення про перегляд: %1$s</string>
     <string name="title_receipt_text">Це повідомлення буде показано лише з інформацією про прочитання. Немає гарантії, що отримувач прочитав повідомлення вмісту.</string>
     <string name="title_no_answers">Шаблони відповідей не визначені</string>
-    <string name="title_no_viewer">Немає додатку для перегляду %1$s</string>
+    <string name="title_no_viewer_caption">Немає доступних програм для перегляду</string>
+    <string name="title_no_viewer_name">Назва вмісту</string>
+    <string name="title_no_viewer_type">Тип вмісту</string>
+    <string name="title_no_viewer_search">Пошук програм</string>
     <string name="title_no_recorder">Немає відповідного додатку для запису аудіо</string>
     <string name="title_no_camera">Немає відповідного додатку для камери</string>
     <string name="title_no_saf">Компонент для доступу до сховища недоступний</string>
@@ -1516,6 +1520,8 @@
     <string name="title_widget_font_size">Розмір тексту</string>
     <string name="title_widget_padding">Розмір відступів</string>
     <string name="title_widget_semi_transparent">Напівпрозорий фон</string>
+    <string name="title_widget_refresh">Показувати кнопку оновлення повідомлень</string>
+    <string name="title_widget_compose">Показати кнопку створення нового повідомлення</string>
     <string name="title_widget_background">Колір тла</string>
     <string name="title_accessibility_collapsed">Згорнуто</string>
     <string name="title_accessibility_expanded">Розгорнуто</string>
@@ -1692,4 +1698,5 @@
         <item>Тільки електронна адреса</item>
         <item>Ім\'я та електронна адреса</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

@@ -499,6 +499,11 @@
     <string name="title_advanced_autocrypt">Benyt Autocrypt</string>
     <string name="title_advanced_autocrypt_mutual">Autokrypt gensidig tilstand</string>
     <string name="title_advanced_encrypt_subject">Kryptér emne</string>
+    <string name="title_advanced_sign_algo">Signaturalgoritme</string>
+    <string name="title_advanced_encrypt_algo">Krypteringsalgoritme</string>
+    <string name="title_advanced_remark_algo">        Bemærk, at ikke alle e -mailklienter understøtter alle algoritmer.
+        Standardalgoritmerne SHA256 og AES128 understøttes almindeligvis.
+    </string>
     <string name="title_advanced_check_certificate">Tjek offentlig nøgle ved afsendelse</string>
     <string name="title_advanced_manage_certificates">Håndtér offentlige nøgler</string>
     <string name="title_advanced_import_key">Importér privat nøgle</string>
@@ -769,7 +774,8 @@
     <string name="title_show_folders">Vis skjulte mapper</string>
     <string name="title_show_flagged">Vis stjernemarkerede beskedantal</string>
     <string name="title_subscribed_only">Abonnér på</string>
-    <string name="title_apply_to_all">Anvend for alle &#8230;</string>
+    <string name="title_search_folder">Søg efter mappe</string>
+    <string name="title_apply_to_all">Anvend på alle</string>
     <string name="title_hide_folder">Skjul mappe</string>
     <string name="title_unified_folder">Vis i samlet indbakke</string>
     <string name="title_navigation_folder">Vis i navigationsmenu</string>
@@ -859,7 +865,7 @@
     <string name="title_download_all">Download alle</string>
     <string name="title_save_all">Gem alt</string>
     <string name="title_save_eml">Gem besked i råformatsfil</string>
-    <string name="title_eml_remark">Beskedvideresendelse kræver download af de rå (originale) beskeder fra serveren, hvilket kræver Internetforbindelse.</string>
+    <string name="title_eml_remark">Beskedvideresendelse kræver download af de rå (originale) beskeder fra e-mailserveren. Dette kræver Internetforbindelse, og beskederne skal stadig lagres på e-mailserveren.</string>
     <string name="title_eml_option">Dette kan forhindres ved i forbindelsesindstillingerne at aktivere Download altid rå beskedfiler</string>
     <string name="title_eml_downloaded">Rå beskeder downloadet: %1$s</string>
     <string name="title_buttons">Vælg knapper</string>
@@ -903,7 +909,10 @@
     <string name="title_receipt_subject">Læsningskvittering: %1$s</string>
     <string name="title_receipt_text">Denne læsekvittering bekræfter kun, at beskeden er blevet vist. Der er ingen garanti for, at modtageren også har læst beskedindholdet.</string>
     <string name="title_no_answers">Ingen svarskabeloner defineret</string>
-    <string name="title_no_viewer">Ingen fremviser-app tilgængelig for %1$s</string>
+    <string name="title_no_viewer_caption">Ingen fremviser-app tilgængelig</string>
+    <string name="title_no_viewer_name">Indholdsnavn</string>
+    <string name="title_no_viewer_type">Indholdstype</string>
+    <string name="title_no_viewer_search">Søg efter app</string>
     <string name="title_no_recorder">Ingen passende lydoptager-app tilgængelig</string>
     <string name="title_no_camera">Ingen passende kamera-app tilgængelig</string>
     <string name="title_no_saf">Storage access framework ikke tilgængelig</string>
@@ -1092,6 +1101,7 @@
     <string name="title_signature_sender">Afsenderadresse</string>
     <string name="title_signature_email">Signaturadresse</string>
     <string name="title_signature_mismatch">Afsenders e-mailadresse og signatur matcher ikke</string>
+    <string name="title_signature_algorithm">Algoritme</string>
     <string name="title_signature_subject">Emne</string>
     <string name="title_signature_validity">Gyldighed</string>
     <string name="title_signature_outdated">Den offentlige nøgle er pt, ikke gyldig</string>
@@ -1489,6 +1499,8 @@
     <string name="title_widget_font_size">Tekststørrelse</string>
     <string name="title_widget_padding">Polstringsstørrelse</string>
     <string name="title_widget_semi_transparent">Halvgennemsigtig baggrund</string>
+    <string name="title_widget_refresh">Vis Opfrisk beskeder-knap</string>
+    <string name="title_widget_compose">Vis Skriv ny besked-knap</string>
     <string name="title_widget_background">Baggrundsfarve</string>
     <string name="title_accessibility_collapsed">Sammenfoldet</string>
     <string name="title_accessibility_expanded">Udfoldet</string>
@@ -1663,4 +1675,5 @@
         <item>Kun e-mail</item>
         <item>Navn eller e-mail</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

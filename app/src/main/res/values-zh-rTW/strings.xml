@@ -2,7 +2,7 @@
 <resources>
     <string name="app_search">FairEmail 搜尋</string>
     <string name="app_changelog">變更紀錄</string>
-    <string name="app_welcome">FairEmail 是一款專注於隱私和安全的開源電子郵件應用程式。因此，有些功能的工作方式可能與您所熟悉的不同。</string>
+    <string name="app_welcome">FairEmail 是一款專注於隱私和安全的開源電子郵件應用程式。因此，其中一些功能的工作方式可能與您所熟悉的不同。</string>
     <string name="app_limitations">例如，預設重排訊息以移除不安全的元件並改善可讀性，並且為了安全，連結的開啟還需要獲得確認。如有需要，兩者皆可停用。</string>
     <string name="app_crash">此裝置不支援 FairEmail 的執行，因為 Android 系統中存在會導致本程式崩潰的 bugs</string>
     <string name="app_exit">再一次執行‘返回’操作以退出</string>
@@ -494,6 +494,11 @@
     <string name="title_advanced_autocrypt">使用 Autocrypt</string>
     <string name="title_advanced_autocrypt_mutual">Autocrypt 相互模式</string>
     <string name="title_advanced_encrypt_subject">加密主旨</string>
+    <string name="title_advanced_sign_algo">簽名算法</string>
+    <string name="title_advanced_encrypt_algo">加密算法</string>
+    <string name="title_advanced_remark_algo">        請知悉，並非所有的電子郵件用戶端都支援全部演算法。
+        預設演算法 SHA256 和 AES128 一般皆受支援。
+    </string>
     <string name="title_advanced_check_certificate">傳送時檢查公鑰</string>
     <string name="title_advanced_manage_certificates">管理公鑰</string>
     <string name="title_advanced_import_key">匯入私鑰</string>
@@ -766,7 +771,8 @@
     <string name="title_show_folders">顯示隱藏的資料夾</string>
     <string name="title_show_flagged">顯示已加星號訊息的計數</string>
     <string name="title_subscribed_only">僅顯示已訂閱的資料夾</string>
-    <string name="title_apply_to_all">套用至全部 &#8230;</string>
+    <string name="title_search_folder">搜尋資料夾</string>
+    <string name="title_apply_to_all">套用至全部</string>
     <string name="title_hide_folder">隱藏資料夾</string>
     <string name="title_unified_folder">顯示於全域收件匣中</string>
     <string name="title_navigation_folder">顯示於導航功能表中</string>
@@ -857,8 +863,8 @@
     <string name="title_download_all">全部下載</string>
     <string name="title_save_all">全部保存</string>
     <string name="title_save_eml">保存元訊息檔</string>
-    <string name="title_eml_remark">欲轉寄訊息，需從伺服器下載未經處理的 (原始) 訊息，需要網際網路連線。</string>
-    <string name="title_eml_option">透過於連線設定中啟用總是下載元訊息檔，可以阻止此情況的發生</string>
+    <string name="title_eml_remark">欲轉寄訊息，首先需要自電子郵件伺服器下載元 (原始) 訊息。需有互聯網連線，元訊息必須仍存在於電子郵件伺服器上。</string>
+    <string name="title_eml_option">透過於連線設定中啟用總是下載元訊息檔，可以防止此情況的發生</string>
     <string name="title_eml_downloaded">已下載元訊息: %1$s</string>
     <string name="title_buttons">選擇欲新增的按鈕</string>
     <string name="title_buttons_hint">實際可用動作取決於帳戶類型和配置</string>
@@ -901,7 +907,10 @@
     <string name="title_receipt_subject">已讀回條: %1$s</string>
     <string name="title_receipt_text">此已讀回條僅能確認訊息被顯示，不能保證收件者已閱讀訊息內容。</string>
     <string name="title_no_answers">無已定義回覆模板</string>
-    <string name="title_no_viewer">未有可用於 %1$s 的檢視器程式</string>
+    <string name="title_no_viewer_caption">無可用檢視器程式</string>
+    <string name="title_no_viewer_name">內容名稱</string>
+    <string name="title_no_viewer_type">內容類型</string>
+    <string name="title_no_viewer_search">搜尋適用程式</string>
     <string name="title_no_recorder">無適用的音頻錄製程式</string>
     <string name="title_no_camera">無適用的相機程式</string>
     <string name="title_no_saf">儲存空間存取架構不可用</string>
@@ -1090,6 +1099,7 @@
     <string name="title_signature_sender">寄件者地址</string>
     <string name="title_signature_email">簽名地址</string>
     <string name="title_signature_mismatch">寄件者的電郵地址不匹配簽名的電郵地址</string>
+    <string name="title_signature_algorithm">演算法</string>
     <string name="title_signature_subject">主旨</string>
     <string name="title_signature_validity">有效</string>
     <string name="title_signature_outdated">該公鑰當前無效</string>
@@ -1488,6 +1498,8 @@
     <string name="title_widget_font_size">文字大小</string>
     <string name="title_widget_padding">填充大小</string>
     <string name="title_widget_semi_transparent">半透明背景</string>
+    <string name="title_widget_refresh">顯示重整訊息按鈕</string>
+    <string name="title_widget_compose">顯示撰寫新訊息按鈕</string>
     <string name="title_widget_background">背景顏色</string>
     <string name="title_accessibility_collapsed">已摺疊</string>
     <string name="title_accessibility_expanded">已展開</string>
@@ -1661,4 +1673,5 @@
         <item>僅郵件地址</item>
         <item>姓名及郵件地址</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

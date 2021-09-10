@@ -119,6 +119,7 @@
     <string name="title_setup_quick_hint">A gyors beállítás alkalmazza az autoconfig.thunderbird.net-en található konfigurációs információkat</string>
     <string name="title_setup_quick_imap">Az üzenetek fogadásához használt IMAP szerver</string>
     <string name="title_setup_quick_smtp">Az üzenetek küldéséhez használt SMTP szerver</string>
+    <string name="title_setup_quick_certificates">Szerver tanúsítványok</string>
     <string name="title_setup_wizard">Varázsló</string>
     <string name="title_setup_wizard_multiple">A varázsló többször is használható több fiók hozzáadásához</string>
     <string name="title_setup_wizard_new">Új e-mail cím megadása</string>
@@ -173,6 +174,7 @@
     <string name="title_setup_still">Még meg kell csinálni</string>
     <string name="title_setup_error">Hiba</string>
     <string name="title_setup_configuring">Felhasználói fiók beállítása &#8230;</string>
+    <string name="title_setup_close">Beállítások bezárása</string>
     <string name="title_setup_export">Beállítások exportálása</string>
     <string name="title_setup_import">Beállítások importálása</string>
     <string name="title_setup_import_do">Az importált kapcsolatok hozzáadása során nem módosulnak a meglévőek</string>
@@ -671,7 +673,6 @@
     <string name="title_show_folders">Rejtett mappák megjelenításe</string>
     <string name="title_show_flagged">Csillagozott üzenet számláló mutatása</string>
     <string name="title_subscribed_only">Csak feliratkozott</string>
-    <string name="title_apply_to_all">Alkalmazás az összesre &#8230;</string>
     <string name="title_hide_folder">Mappa elrejtése</string>
     <string name="title_unified_folder">Megjelenítés az összesített bejövő mappában</string>
     <string name="title_navigation_folder">Megjelenítés a navigációs menüben</string>
@@ -794,7 +795,6 @@
     <string name="title_receipt_subject">Olvasási visszajelzés: %1$s</string>
     <string name="title_receipt_text">Az olvasási visszaigazolás csak az üzenet megjelenítését igazolja. Nem jelent garanciát arra, hogy a címzett valóban el is olvasta az üzenet tartalmát.</string>
     <string name="title_no_answers">Nincs elmentett válaszsablon</string>
-    <string name="title_no_viewer">Nincs elérhető megjenítő alkalmazás ehhez: %1$s</string>
     <string name="title_no_recorder">Nem elérhető használható hang felvevő alkalmazás</string>
     <string name="title_no_camera">Nem elérhető használható kamera alkalmazás</string>
     <string name="title_no_saf">Tárhely hozzáférés keretrendszer nem elérhető</string>
@@ -1497,4 +1497,5 @@
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

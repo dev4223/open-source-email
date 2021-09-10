@@ -397,7 +397,6 @@
     <string name="title_folder_name">Име фасцикле</string>
     <string name="title_display_name">Име за приказ</string>
     <string name="title_show_folders">Прикажи скривене фасцикле</string>
-    <string name="title_apply_to_all">Примени на све&#8230;</string>
     <string name="title_hide_folder">Сакриј фасциклу</string>
     <string name="title_unified_folder">Прикажи међу свим примљеним</string>
     <string name="title_navigation_folder">Прикажи у навигационом менију</string>
@@ -493,7 +492,6 @@
     <string name="title_receipt_subject">Потврда о пријему: %1$s</string>
     <string name="title_receipt_text">Ова потврда о пријему само потврђује да је порука приказана. Нема гаранција да ли је прималац прочитао садржај поруке.</string>
     <string name="title_no_answers">Нема дефинисаних шаблона одговора</string>
-    <string name="title_no_viewer">Нема апликације за преглед %1$s</string>
     <string name="title_no_saf">Радни оквир приступа складишту није доступан</string>
     <string name="title_no_stream">Застарела апликација је послала путању до фајла уместо фајл</string>
     <string name="title_no_internet">Нема везе или нема прикладне везе</string>
@@ -1030,4 +1028,5 @@
         <item>50 MB</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

@@ -500,7 +500,6 @@
     <string name="title_display_name">Prikazano ime</string>
     <string name="title_show_folders">Prikaži skrite mape</string>
     <string name="title_subscribed_only">Samo naročene</string>
-    <string name="title_apply_to_all">Uporabi za vse &#8230;</string>
     <string name="title_hide_folder">Skrij mapo</string>
     <string name="title_unified_folder">Prikaži v poenoteni mapi \'Prejeto\'</string>
     <string name="title_navigation_folder">Prikaži v meniju za krmarjenje</string>
@@ -599,7 +598,6 @@
     <string name="title_receipt_subject">Potrdilo o branju: %1$s</string>
     <string name="title_receipt_text">To potrdilo o branju potrjuje samo, da je bilo sporočilo prikazano.  Ni nobenega zagotovila, da je prejemnik prebral vsebino sporočila.</string>
     <string name="title_no_answers">Nobena predloga za odgovor ni določena.</string>
-    <string name="title_no_viewer">Za %1$s pregledovalnik ni na voljo.</string>
     <string name="title_no_recorder">Primerni program za snemanje zvoka ni na voljo.</string>
     <string name="title_no_camera">Primerni program za fotoaparat ni na voljo.</string>
     <string name="title_no_saf">Ogrodje za dostop do pomnilniške naprave ni na voljo.</string>
@@ -1200,4 +1198,5 @@
         <item>10 s</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

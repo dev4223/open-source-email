@@ -504,6 +504,11 @@
     <string name="title_advanced_autocrypt">Χρήση Autocrypt</string>
     <string name="title_advanced_autocrypt_mutual">Αμοιβαία λειτουργία Autocrypt</string>
     <string name="title_advanced_encrypt_subject">Κρυπτογράφηση θέματος</string>
+    <string name="title_advanced_sign_algo">Αλγόριθμος υπογραφής</string>
+    <string name="title_advanced_encrypt_algo">Αλγόριθμος κρυπτογράφησης</string>
+    <string name="title_advanced_remark_algo">        Παρακαλούμε, λάβετε υπόψη ότι δεν υποστηρίζουν όλοι οι πελάτες ηλεκτρονικού ταχυδρομείου όλους τους αλγορίθμους.
+        Οι προεπιλεγμένοι αλγόριθμοι SHA256  και AES128 συνήθως υποστηρίζονται.
+    </string>
     <string name="title_advanced_check_certificate">Επαλήθευση δημόσιου κλειδιού κατά την αποστολή</string>
     <string name="title_advanced_manage_certificates">Διαχείριση δημόσιων κλειδιών</string>
     <string name="title_advanced_import_key">Εισαγωγή ιδιωτικού κλειδιού</string>
@@ -775,7 +780,8 @@
     <string name="title_show_folders">Εμφάνιση κρυμμένων φακέλων</string>
     <string name="title_show_flagged">Εμφάνιση του αριθμού μηνυμάτων με αστέρι</string>
     <string name="title_subscribed_only">Μόνο με συνδρομή</string>
-    <string name="title_apply_to_all">Εφαρμογή σε όλα &#8230;</string>
+    <string name="title_search_folder">Αναζήτηση φακέλου</string>
+    <string name="title_apply_to_all">Εφαρμογή σε όλα</string>
     <string name="title_hide_folder">Απόκρυψη φακέλου</string>
     <string name="title_unified_folder">Προβολή στα ενοποιημένα εισερχόμενα</string>
     <string name="title_navigation_folder">Προβολή στο μενού πλοήγησης</string>
@@ -866,7 +872,7 @@
     <string name="title_download_all">Κατέβασμα όλων</string>
     <string name="title_save_all">Αποθήκευση όλων</string>
     <string name="title_save_eml">Αποθήκευση αρχείου αρχικού μηνύματος</string>
-    <string name="title_eml_remark">Για να προωθήσετε μηνύματα, τα ακατέργαστα (αρχικά) μηνύματα πρέπει να ληφθούν από τον διακομιστή. Απαιτείται σύνδεση στο διαδίκτυο για αυτό.</string>
+    <string name="title_eml_remark">Για να προωθήσετε μηνύματα, τα ακατέργαστα (αρχικά) μηνύματα πρέπει να κατέβουν από τον διακομιστή ηλεκτρονικού ταχυδρομείου. Απαιτείται σύνδεση στο διαδίκτυο για αυτό και τα μηνύματα πρέπει να εξακολουθούν να είναι αποθηκευμένα στον διακομιστή ηλ. ταχυδρομείου.</string>
     <string name="title_eml_option">Αυτό μπορεί να αποφευχθεί, ενεργοποιώντας να γίνεται πάντα λήψη των αρχείων αρχικών μηνυμάτων στις ρυθμίσεις σύνδεσης</string>
     <string name="title_eml_downloaded">Αρχικά μηνύματα που κατέβηκαν: %1$s</string>
     <string name="title_buttons">Επιλέξτε κουμπιά</string>
@@ -910,7 +916,10 @@
     <string name="title_receipt_subject">Αποδεικτικό ανάγνωσης: %1$s</string>
     <string name="title_receipt_text">Αυτό το αποδεικτικό ανάγνωσης πιστοποιεί μόνον ότι το μήνυμα έχει προβληθεί. Δεν υπάρχει εγγύηση ότι ο αποδέκτης έχει διαβάσει το περιεχόμενο του μηνύματος.</string>
     <string name="title_no_answers">Δεν έχουν οριστεί πρότυπα</string>
-    <string name="title_no_viewer">Καμία εφαρμογή διαθέσιμη για προβολή του %1$s</string>
+    <string name="title_no_viewer_caption">Δεν υπάρχει διαθέσιμη εφαρμογή προβολής</string>
+    <string name="title_no_viewer_name">Όνομα περιεχομένου</string>
+    <string name="title_no_viewer_type">Τύπος περιεχομένου</string>
+    <string name="title_no_viewer_search">Αναζήτηση εφαρμογής</string>
     <string name="title_no_recorder">Δεν βρέθηκε καμία κατάλληλη εφαρμογή ηχογράφησης</string>
     <string name="title_no_camera">Καμία κατάλληλη εφαρμογή κάμερας δεν είναι διαθέσιμη</string>
     <string name="title_no_saf">Πλαίσιο πρόσβασης αποθήκευσης δεν είναι διαθέσιμο</string>
@@ -1099,6 +1108,7 @@
     <string name="title_signature_sender">Διεύθυνση αποστολέα</string>
     <string name="title_signature_email">Διεύθυνση της υπογραφής</string>
     <string name="title_signature_mismatch">Η διεύθυνση ηλ. ταχυδρομείου του αποστολέα δεν ταιριάζει με την υπογραφή</string>
+    <string name="title_signature_algorithm">Αλγόριθμος</string>
     <string name="title_signature_subject">Θέμα</string>
     <string name="title_signature_validity">Εγκυρότητα</string>
     <string name="title_signature_outdated">Το δημόσιο κλειδί δεν είναι έγκυρο αυτή τη στιγμή</string>
@@ -1497,6 +1507,8 @@
     <string name="title_widget_font_size">Μέγεθος κειμένου</string>
     <string name="title_widget_padding">Μέγεθος διαστήματος μεταξύ μηνυμάτων</string>
     <string name="title_widget_semi_transparent">Ημιδιαφανές φόντο</string>
+    <string name="title_widget_refresh">Προβολή κουμπιού ανανέωσης μηνυμάτων</string>
+    <string name="title_widget_compose">Να εμφανίζεται το κουμπί σύνταξης νέου μηνύματος</string>
     <string name="title_widget_background">Χρώμα φόντου</string>
     <string name="title_accessibility_collapsed">Συνεπτυγμένο</string>
     <string name="title_accessibility_expanded">Ανεπτυγμένο</string>
@@ -1671,4 +1683,5 @@
         <item>Μέιλ μόνο</item>
         <item>Όνομα και μέιλ</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

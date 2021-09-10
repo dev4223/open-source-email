@@ -514,6 +514,11 @@
     <string name="title_advanced_autocrypt">Folosește Autocrypt</string>
     <string name="title_advanced_autocrypt_mutual">Modul mutual Autocrypt</string>
     <string name="title_advanced_encrypt_subject">Criptează subiectul</string>
+    <string name="title_advanced_sign_algo">Algoritm de semnătură</string>
+    <string name="title_advanced_encrypt_algo">Algoritm de criptare</string>
+    <string name="title_advanced_remark_algo">        Vă rugăm să rețineți că nu toți clienții de e-mail acceptă toți algoritmii.
+        Algoritmii impliciți SHA256 și AES128 sunt suportați în mod obișnuit.
+    </string>
     <string name="title_advanced_check_certificate">Verifică cheia publică la trimitere</string>
     <string name="title_advanced_manage_certificates">Gestionare chei publice</string>
     <string name="title_advanced_import_key">Importare cheie privată</string>
@@ -787,7 +792,8 @@
     <string name="title_show_folders">Arată dosarele ascunse</string>
     <string name="title_show_flagged">Arată numărul de mesaje cu stea</string>
     <string name="title_subscribed_only">Doar abonat</string>
-    <string name="title_apply_to_all">Aplicare la toate &#8230;</string>
+    <string name="title_search_folder">Căutare folder</string>
+    <string name="title_apply_to_all">Aplică la toate</string>
     <string name="title_hide_folder">Ascunde dosar</string>
     <string name="title_unified_folder">Arată în căsuța poștală comună</string>
     <string name="title_navigation_folder">Arată în meniul de navigație</string>
@@ -878,7 +884,7 @@
     <string name="title_download_all">Descarcă tot</string>
     <string name="title_save_all">Salvează tot</string>
     <string name="title_save_eml">Salvează mesaj original în fișier</string>
-    <string name="title_eml_remark">Pentru a redirecționa mesaje, mesajele brute (originale) trebuie descărcate de pe server. Acest lucru necesită o conexiune la internet.</string>
+    <string name="title_eml_remark">Pentru a redirecționa mesajele, mesajele brute (originale) trebuie să fie descărcate de pe serverul de e-mail. Acest lucru necesită o conexiune la internet, iar mesajele trebuie să fie stocate în continuare pe serverul de e-mail.</string>
     <string name="title_eml_option">Acest lucru poate fi prevenit prin activarea funcției de descărcare permanentă a fișierelor de mesaje brute în setările de conectare</string>
     <string name="title_eml_downloaded">Mesaje brute descărcate: %1$s</string>
     <string name="title_buttons">Selectare butoane</string>
@@ -922,7 +928,10 @@
     <string name="title_receipt_subject">Confirmare de citire: %1$s</string>
     <string name="title_receipt_text">Confirmarea de citire doar arată că mesajul a fost afișat. Nu există garanția că destinatarul a citit conținutul mesajului.</string>
     <string name="title_no_answers">Nici un șablon de răspuns definit</string>
-    <string name="title_no_viewer">Nici o aplicație nu poate deschide %1$s</string>
+    <string name="title_no_viewer_caption">Nici o aplicație nu poate deschide</string>
+    <string name="title_no_viewer_name">Denumire conținut</string>
+    <string name="title_no_viewer_type">Tip de conținut</string>
+    <string name="title_no_viewer_search">Căutați aplicația</string>
     <string name="title_no_recorder">Nu este disponibilă o aplicație de înregistrat audio</string>
     <string name="title_no_camera">Nu este disponibilă o aplicație de fotografiat</string>
     <string name="title_no_saf">Nu se poate accesa stocarea locală</string>
@@ -1111,6 +1120,7 @@
     <string name="title_signature_sender">Adresa expeditorului</string>
     <string name="title_signature_email">Adresa semnăturii</string>
     <string name="title_signature_mismatch">Adresa email a expeditorului și semnătura nu corespund</string>
+    <string name="title_signature_algorithm">Algoritm</string>
     <string name="title_signature_subject">Subiect</string>
     <string name="title_signature_validity">Valabilitate</string>
     <string name="title_signature_outdated">Această cheie publică nu este validă în acest moment</string>
@@ -1509,6 +1519,8 @@
     <string name="title_widget_font_size">Mărime text</string>
     <string name="title_widget_padding">Mărime spațiu liber</string>
     <string name="title_widget_semi_transparent">Fundal semi transparent</string>
+    <string name="title_widget_refresh">Buton de afișare a mesajelor de reîmprospătare</string>
+    <string name="title_widget_compose">Afișați butonul de redactare a unui mesaj nou</string>
     <string name="title_widget_background">Culoare fundal</string>
     <string name="title_accessibility_collapsed">Restrâns</string>
     <string name="title_accessibility_expanded">Extins</string>
@@ -1684,4 +1696,5 @@
         <item>Doar e-mail</item>
         <item>Nume și e-mail</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

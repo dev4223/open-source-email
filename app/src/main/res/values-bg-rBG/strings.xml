@@ -552,7 +552,6 @@
     <string name="title_show_folders">Показвана не скрити папки</string>
     <string name="title_show_flagged">Показване на броя на съобщенията със звезда</string>
     <string name="title_subscribed_only">Само абонирани</string>
-    <string name="title_apply_to_all">Приложи на всички &#8230;</string>
     <string name="title_hide_folder">Скриване на папката</string>
     <string name="title_unified_folder">Показване в обединената входяща поща</string>
     <string name="title_navigation_folder">Покажи в менюто за навигация</string>
@@ -664,7 +663,6 @@
     <string name="title_receipt_subject">Разписка за прочетено: %1$s</string>
     <string name="title_receipt_text">Тази разписка за прочетено само потвърждава, че съобщението е било показано. Няма гаранция, че получателят е прочел съдържанието на съобщението.</string>
     <string name="title_no_answers">Няма определен шаблон за отговор</string>
-    <string name="title_no_viewer">Няма програма за отваряне на %1$s</string>
     <string name="title_no_recorder">Няма налично подходящо приложение за аудио рекордер</string>
     <string name="title_no_camera">Няма налично подходящо приложение за камера</string>
     <string name="title_no_saf">Достъпът до софтуерната рамка не е наличен</string>
@@ -1351,4 +1349,5 @@
         <item>Само имейл</item>
         <item>Име и имейл</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

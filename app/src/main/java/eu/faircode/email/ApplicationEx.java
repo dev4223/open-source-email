@@ -43,6 +43,10 @@ import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.Provider;
+import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -51,6 +55,23 @@ import java.util.Map;
 public class ApplicationEx extends Application
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private Thread.UncaughtExceptionHandler prev = null;
+
+    static {
+        if (BuildConfig.DEBUG)
+            try {
+                Provider[] providers = Security.getProviders();
+                for (int p = 0; p < providers.length; p++)
+                    if (BouncyCastleProvider.PROVIDER_NAME.equals(providers[p].getName())) {
+                        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
+                        Provider bc = new BouncyCastleProvider();
+                        Security.insertProviderAt(bc, p + 1);
+                        Log.i("Replacing provider " + providers[p] + " at " + p + " by " + bc);
+                        break;
+                    }
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+    }
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -129,6 +150,8 @@ public class ApplicationEx extends Application
                             StackTraceElement[] stack = v.getStackTrace();
                             for (StackTraceElement ste : stack) {
                                 String clazz = ste.getClassName();
+                                if ("com.sun.mail.util.WriteTimeoutSocket".equals(clazz))
+                                    return;
                                 if (clazz != null &&
                                         (clazz.startsWith("org.chromium") ||
                                                 clazz.startsWith("com.android.webview.chromium") ||
@@ -244,7 +267,7 @@ public class ApplicationEx extends Application
             case "query_threads": // misc
             case "wal": // misc
                 // Should be excluded for import
-                restart();
+                restart(this);
                 break;
             case "debug":
             case "log_level":
@@ -253,10 +276,10 @@ public class ApplicationEx extends Application
         }
     }
 
-    void restart() {
-        Intent intent = new Intent(this, ActivityMain.class);
+    static void restart(Context context) {
+        Intent intent = new Intent(context, ActivityMain.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        context.startActivity(intent);
         Runtime.getRuntime().exit(0);
     }
 
@@ -515,6 +538,9 @@ public class ApplicationEx extends Application
                 if (!prefs.contains("landscape3"))
                     editor.putBoolean("landscape3", false);
             }
+        } else if (version < 17150) {
+            editor.remove("sign_algo_smime");
+            editor.remove("encrypt_algo_smime");
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

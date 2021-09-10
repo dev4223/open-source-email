@@ -1327,6 +1327,19 @@ public class HtmlHelper {
         }, document);
     }
 
+    static void guessSchemes(Document document) {
+        for (Element a : document.select("a"))
+            try {
+                String href = a.attr("href");
+                if (TextUtils.isEmpty(href))
+                    continue;
+                Uri uri = UriHelper.guessScheme(Uri.parse(href));
+                a.attr("href", uri.toString());
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+    }
+
     static void normalizeNamespaces(Document parsed, boolean display_hidden) {
         // <html xmlns:v="urn:schemas-microsoft-com:vml"
         //   xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -2247,7 +2260,7 @@ public class HtmlHelper {
     }
 
     static Spanned highlightHeaders(Context context, String headers, boolean blocklist) {
-        SpannableStringBuilder ssb = new SpannableStringBuilder(headers);
+        SpannableStringBuilder ssb = new SpannableStringBuilderEx(headers);
         int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
 
         int index = 0;
@@ -2523,7 +2536,7 @@ public class HtmlHelper {
                 while (block.size() > 0) {
                     tnode = block.get(block.size() - 1);
                     text = tnode.getWholeText();
-                    if (endsWithSpace(text)) {
+                    if (endsWithSpace(text) && !"-- ".equals(text)) {
                         text = text.substring(0, text.length() - 1);
                         tnode.text(text);
                     }
@@ -2571,7 +2584,7 @@ public class HtmlHelper {
         }, document.body());
 
         // https://developer.android.com/guide/topics/text/spans
-        SpannableStringBuilder ssb = new SpannableStringBuilder();
+        SpannableStringBuilder ssb = new SpannableStringBuilderEx();
 
         NodeTraversor.traverse(new NodeVisitor() {
             private Element element;
@@ -2747,6 +2760,26 @@ public class HtmlHelper {
                                 break;
                             case "br":
                                 ssb.append('\n');
+
+                                int l = ssb.length() - 1;
+                                List<Object> spans = new ArrayList<>();
+                                spans.addAll(Arrays.asList(ssb.getSpans(l, l, AbsoluteSizeSpan.class)));
+                                spans.addAll(Arrays.asList(ssb.getSpans(l, l, RelativeSizeSpan.class)));
+                                for (Object span : spans) {
+                                    int s = ssb.getSpanStart(span);
+                                    int e = ssb.getSpanEnd(span);
+                                    int f = ssb.getSpanFlags(span);
+                                    if (e == l) {
+                                        ssb.removeSpan(span);
+                                        if (span instanceof AbsoluteSizeSpan) {
+                                            int size = ((AbsoluteSizeSpan) span).getSize();
+                                            setSpan(ssb, new AbsoluteSizeSpan(size), s, e + 1, f);
+                                        } else if (span instanceof RelativeSizeSpan) {
+                                            float size = ((RelativeSizeSpan) span).getSizeChange();
+                                            setSpan(ssb, new RelativeSizeSpan(size), s, e + 1, f);
+                                        }
+                                    }
+                                }
                                 break;
                             case "body":
                                 // Do nothing

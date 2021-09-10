@@ -64,6 +64,7 @@ import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.print.PrintAttributes;
@@ -148,6 +149,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.CMSAttributes;
@@ -169,6 +171,7 @@ import org.bouncycastle.cms.SignerInformationVerifier;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
 import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.util.Store;
 import org.json.JSONException;
 import org.jsoup.nodes.Document;
@@ -261,6 +264,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private ImageButton ibSeen;
     private ImageButton ibUnflagged;
     private ImageButton ibSnoozed;
+    private TextView tvDebug;
     private TextViewAutoCompleteAction etSearch;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
@@ -491,6 +495,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         ibUp = view.findViewById(R.id.ibUp);
         ibOutbox = view.findViewById(R.id.ibOutbox);
         tvOutboxCount = view.findViewById(R.id.tvOutboxCount);
+        tvDebug = view.findViewById(R.id.tvDebug);
         ibSeen = view.findViewById(R.id.ibSeen);
         ibUnflagged = view.findViewById(R.id.ibUnflagged);
         ibSnoozed = view.findViewById(R.id.ibSnoozed);
@@ -820,6 +825,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
         });
 
+        tvDebug.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i("Manual GC");
+                Runtime.getRuntime().runFinalization();
+                Runtime.getRuntime().gc();
+                updateDebugInfo();
+            }
+        });
+
         ibSeen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -846,7 +861,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 onMenuFilter(name, !filter);
             }
         });
-
 
         etSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -1210,6 +1224,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         sbThread.setVisibility(View.GONE);
         ibDown.setVisibility(View.GONE);
         ibUp.setVisibility(View.GONE);
+        tvDebug.setText(null);
+        tvDebug.setVisibility(
+                BuildConfig.DEBUG && viewType != AdapterMessage.ViewType.THREAD
+                        ? View.VISIBLE : View.GONE);
         ibSeen.setVisibility(View.GONE);
         ibUnflagged.setVisibility(View.GONE);
         ibSnoozed.setVisibility(View.GONE);
@@ -2118,7 +2136,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (EntityMessage.SWIPE_ACTION_ASK.equals(action))
                 icon = R.drawable.twotone_help_24;
             else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
-                icon = (message.ui_seen ? R.drawable.twotone_visibility_off_24 : R.drawable.twotone_visibility_24);
+                icon = (message.ui_seen ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24);
             else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
                 icon = (message.ui_flagged ? R.drawable.twotone_star_border_24 : R.drawable.baseline_star_24);
             else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
@@ -2130,7 +2148,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action))
                 icon = R.drawable.twotone_folder_24;
             else if (EntityMessage.SWIPE_ACTION_JUNK.equals(action))
-                icon = R.drawable.twotone_report_problem_24;
+                icon = R.drawable.twotone_report_24;
             else if (EntityMessage.SWIPE_ACTION_DELETE.equals(action) ||
                     (action.equals(message.folder) && EntityFolder.TRASH.equals(message.folderType)) ||
                     (EntityFolder.TRASH.equals(actionType) && EntityFolder.JUNK.equals(message.folderType)))
@@ -3022,7 +3040,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, order++, R.string.title_snooze)
                         .setIcon(R.drawable.twotone_timelapse_24);
 
-                if (result.visible)
+                if (result.visible && !result.isDrafts)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, order++, R.string.title_hide)
                             .setIcon(R.drawable.twotone_visibility_off_24);
                 if (result.hidden)
@@ -3052,7 +3070,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         .setIcon(R.drawable.baseline_arrow_downward_24)
                         .setEnabled(!EntityMessage.PRIORITIY_LOW.equals(result.importance));
 
-                if (result.accounts.size() > 0 /* IMAP */ && ids.length < MAX_SEND_RAW)
+                if (ids.length < MAX_SEND_RAW)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_raw_send, order++, R.string.title_raw_send)
                             .setIcon(R.drawable.twotone_attachment_24);
 
@@ -3066,7 +3084,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 if (result.hasJunk && !result.isJunk && !result.isDrafts) // has junk and not junk/drafts
                     popupMenu.getMenu().add(Menu.FIRST, R.string.title_spam, order++, R.string.title_spam)
-                            .setIcon(R.drawable.twotone_report_problem_24);
+                            .setIcon(R.drawable.twotone_report_24);
 
                 if (!result.isTrash && result.hasTrash && !result.isJunk) // not trash and has trash and not is junk
                     popupMenu.getMenu().add(Menu.FIRST, R.string.title_trash, order++, R.string.title_trash)
@@ -4252,8 +4270,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_messages, menu);
 
-        menu.findItem(R.id.menu_folders).setActionView(R.layout.action_button);
-        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
+        LayoutInflater infl = LayoutInflater.from(getContext());
+        ImageButton ib = (ImageButton) infl.inflate(R.layout.action_button, null);
+        ib.setId(View.generateViewId());
         ib.setImageResource(R.drawable.twotone_folder_24);
         ib.setContentDescription(getString(R.string.title_legend_section_folders));
         ib.setOnClickListener(new View.OnClickListener() {
@@ -4272,6 +4291,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return true;
             }
         });
+        menu.findItem(R.id.menu_folders).setActionView(ib);
 
         MenuCompat.setGroupDividerEnabled(menu, true);
 
@@ -4621,7 +4641,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), vwAnchor);
 
-                SpannableStringBuilder all = new SpannableStringBuilder(getString(R.string.title_language_all));
+                SpannableStringBuilder all = new SpannableStringBuilderEx(getString(R.string.title_language_all));
                 if (current == null) {
                     all.setSpan(new StyleSpan(Typeface.BOLD), 0, all.length(), 0);
                     all.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_LARGE), 0, all.length(), 0);
@@ -4632,7 +4652,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 for (int i = 0; i < locales.size(); i++) {
                     Locale locale = locales.get(i);
                     String language = locale.getLanguage();
-                    SpannableStringBuilder title = new SpannableStringBuilder(locale.getDisplayLanguage());
+                    SpannableStringBuilder title = new SpannableStringBuilderEx(locale.getDisplayLanguage());
                     if (language.equals(current)) {
                         title.setSpan(new StyleSpan(Typeface.BOLD), 0, title.length(), 0);
                         title.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_LARGE), 0, title.length(), 0);
@@ -5115,11 +5135,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         tvNoEmail.setVisibility(none ? View.VISIBLE : View.GONE);
         tvNoEmailHint.setVisibility(none && filtered ? View.VISIBLE : View.GONE);
 
+        if (BuildConfig.DEBUG)
+            updateDebugInfo();
+
         Log.i("List state reason=" + reason +
                 " tasks=" + tasks + " loading=" + loading +
                 " items=" + items + " initialized=" + initialized +
                 " wait=" + (pbWait.getVisibility() == View.VISIBLE) +
                 " no=" + (tvNoEmail.getVisibility() == View.VISIBLE));
+    }
+
+    private void updateDebugInfo() {
+        Runtime rt = Runtime.getRuntime();
+        long hused = rt.totalMemory() - rt.freeMemory();
+        long hmax = rt.maxMemory();
+        long nheap = Debug.getNativeHeapAllocatedSize();
+        int perc = Math.round(hused * 100f / hmax);
+        tvDebug.setText(perc + "% " + (nheap / (1024 * 1024)) + "M");
     }
 
     private boolean handleThreadActions(
@@ -5932,7 +5964,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             Helper.writeText(file, null);
             db.message().setMessageContent(message.id, true, null, null, null, null);
             //db.message().setMessageSubject(id, subject);
-            db.attachment().deleteAttachments(message.id);
+            db.attachment().deleteAttachments(message.id, new int[]{
+                    EntityAttachment.PGP_MESSAGE,
+                    EntityAttachment.SMIME_MESSAGE,
+                    EntityAttachment.SMIME_SIGNED_DATA
+            });
             db.message().setMessageEncrypt(message.id, message.ui_encrypt);
             db.message().setMessageStored(message.id, new Date().getTime());
 
@@ -6798,14 +6834,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                                 message.warning);
 
                                         // Remove existing attachments
-                                        db.attachment().deleteAttachments(message.id);
+                                        db.attachment().deleteAttachments(message.id, new int[]{EntityAttachment.PGP_MESSAGE});
 
                                         // Add decrypted attachments
                                         List<EntityAttachment> remotes = parts.getAttachments();
                                         for (int index = 0; index < remotes.size(); index++) {
                                             EntityAttachment remote = remotes.get(index);
-                                            if (remote.encryption != null)
-                                                continue;
                                             remote.message = message.id;
                                             remote.sequence = index + 1;
                                             remote.id = db.attachment().insertAttachment(remote);
@@ -7066,6 +7100,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     args.putString("sender", sender);
                                     args.putBoolean("known", known);
 
+                                    String algo;
+                                    try {
+                                        DefaultAlgorithmNameFinder af = new DefaultAlgorithmNameFinder();
+                                        algo = af.getAlgorithmName(new ASN1ObjectIdentifier(s.getEncryptionAlgOID()));
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                        algo = s.getEncryptionAlgOID();
+                                    }
+                                    args.putString("algo", algo);
+
                                     List<X509Certificate> certs = new ArrayList<>();
                                     try {
                                         for (Object m : store.getMatches(null)) {
@@ -7181,7 +7225,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 ? "Signature could not be verified"
                                 : "Certificates and signatures do not match");
 
-
                     if (is != null)
                         decodeMessage(context, is, message, args);
                 } else {
@@ -7235,6 +7278,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             InputStream is = recipientInfo.getContentStream(recipient).getContentStream();
                                             decodeMessage(context, is, message, args);
                                             decoded = true;
+
+                                            String algo;
+                                            try {
+                                                DefaultAlgorithmNameFinder af = new DefaultAlgorithmNameFinder();
+                                                algo = af.getAlgorithmName(envelopedData.getContentEncryptionAlgorithm());
+                                            } catch (Throwable ex) {
+                                                Log.e(ex);
+                                                algo = envelopedData.getEncryptionAlgOID();
+                                            }
+                                            Log.i("Encryption algo=" + algo);
+                                            args.putString("algo", algo);
                                         } catch (CMSException ex) {
                                             Log.w(ex);
                                         }
@@ -7290,6 +7344,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             boolean known = args.getBoolean("known");
                             boolean valid = args.getBoolean("valid");
                             String reason = args.getString("reason");
+                            String algo = args.getString("algo");
                             final ArrayList<String> trace = args.getStringArrayList("trace");
                             EntityCertificate record = EntityCertificate.from(cert, null);
 
@@ -7320,6 +7375,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 TextView tvAfter = dview.findViewById(R.id.tvAfter);
                                 TextView tvBefore = dview.findViewById(R.id.tvBefore);
                                 TextView tvExpired = dview.findViewById(R.id.tvExpired);
+                                TextView tvAlgorithm = dview.findViewById(R.id.tvAlgorithm);
 
                                 tvCertificateInvalid.setVisibility(valid ? View.GONE : View.VISIBLE);
                                 tvCertificateReason.setText(reason);
@@ -7333,6 +7389,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 tvAfter.setText(record.after == null ? null : TF.format(record.after));
                                 tvBefore.setText(record.before == null ? null : TF.format(record.before));
                                 tvExpired.setVisibility(record.isExpired(time) ? View.VISIBLE : View.GONE);
+
+                                if (!TextUtils.isEmpty(algo))
+                                    algo = algo.replace("WITH", "/");
+                                tvAlgorithm.setText(algo);
 
                                 ibInfo.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -7414,6 +7474,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             Snackbar.make(view, Log.formatThrowable(ex), Snackbar.LENGTH_LONG)
                                     .setGestureInsetBottomIgnored(true).show();
                         }
+                } else if (EntityMessage.SMIME_SIGNENCRYPT.equals(type)) {
+                    String algo = args.getString("algo");
+                    if (!TextUtils.isEmpty(algo))
+                        Snackbar.make(view, algo, Snackbar.LENGTH_LONG)
+                                .setGestureInsetBottomIgnored(true).show();
                 }
             }
 
@@ -7459,7 +7524,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             message.warning);
 
                     // Remove existing attachments
-                    db.attachment().deleteAttachments(message.id);
+                    db.attachment().deleteAttachments(message.id, new int[]{
+                            EntityAttachment.SMIME_MESSAGE,
+                            EntityAttachment.SMIME_SIGNED_DATA
+                    });
 
                     // Add decrypted attachments
                     List<EntityAttachment> remotes = parts.getAttachments();
@@ -8098,22 +8166,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     URL url = new URL(src);
                                     Log.i("Caching url=" + url);
 
-                                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                                    connection.setRequestMethod("GET");
-                                    connection.setReadTimeout(timeout);
-                                    connection.setConnectTimeout(timeout);
-                                    connection.setInstanceFollowRedirects(true);
-                                    connection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
-                                    connection.connect();
-
+                                    HttpURLConnection connection = null;
                                     try {
-                                        int status = connection.getResponseCode();
-                                        if (status != HttpURLConnection.HTTP_OK)
-                                            throw new FileNotFoundException("Error " + status + ": " + connection.getResponseMessage());
-
+                                        connection = Helper.openUrlRedirect(context, src, timeout);
                                         Helper.copy(connection.getInputStream(), os);
                                     } finally {
-                                        connection.disconnect();
+                                        if (connection != null)
+                                            connection.disconnect();
                                     }
                                 } catch (Throwable ex) {
                                     Log.w(ex);

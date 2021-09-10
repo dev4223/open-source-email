@@ -738,7 +738,6 @@
     <string name="title_show_folders">Mostrar cartafoles ocultos</string>
     <string name="title_show_flagged">Mostrar número de mensaxes con estrela</string>
     <string name="title_subscribed_only">Só subscritos</string>
-    <string name="title_apply_to_all">Asignar a todos &#8230;</string>
     <string name="title_hide_folder">Agochar cartafol</string>
     <string name="title_unified_folder">Mostrar na caixa unificada</string>
     <string name="title_navigation_folder">Mostrar en menú de navegación</string>
@@ -829,7 +828,6 @@
     <string name="title_download_all">Descargar todo</string>
     <string name="title_save_all">Gardar todo</string>
     <string name="title_save_eml">Gardar ficheiro de mensaxe en cru (raw)</string>
-    <string name="title_eml_remark">Para reenviar mensaxes, precísase baixar do servidor as mensaxes sen procesar (orixinais). Isto require unha conexión a internet.</string>
     <string name="title_buttons">Botóns de selección</string>
     <string name="title_buttons_hint">As accións dispoñibles na realidade dependen do tipo de conta e da configuración</string>
     <string name="title_button_search">Buscar en mensaxes</string>
@@ -870,7 +868,6 @@
     <string name="title_receipt_subject">Acuse de recibo: %1$s</string>
     <string name="title_receipt_text">Este acuse de recibo só indica que a mensaxe foi mostrada. Non hai garantías de que o destinatario lise o contido da mensaxe.</string>
     <string name="title_no_answers">Non hai patróns de resposta definidos</string>
-    <string name="title_no_viewer">Non hai aplicación para ver %1$s</string>
     <string name="title_no_recorder">Non hai unha aplicación de gravación de son</string>
     <string name="title_no_camera">Non hai unha aplicación de cámara axeitada</string>
     <string name="title_no_saf">Non está dispoñible o sistema de acceso á almacenaxe</string>
@@ -1594,4 +1591,5 @@
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

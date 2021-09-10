@@ -551,7 +551,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_show_folders">Mostra les carpetes ocultes</string>
     <string name="title_show_flagged">Mostra el recompte de missatges destacats</string>
     <string name="title_subscribed_only">Només subscrits</string>
-    <string name="title_apply_to_all">Aplicar a tots &#8230;</string>
     <string name="title_hide_folder">Amagar carpeta</string>
     <string name="title_unified_folder">Mostra en la safata d\'entrada unificada</string>
     <string name="title_navigation_folder">Mostra en el menú de navegació</string>
@@ -661,7 +660,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_receipt_subject">Avisos de recepció: %1$s</string>
     <string name="title_receipt_text">Aquest rebut de lectura només reconeix que el missatge es va mostrar. No hi ha garantia que el destinatari hagi llegit el contingut del missatge.</string>
     <string name="title_no_answers">No s\'han definit plantilles de resposta</string>
-    <string name="title_no_viewer">No hi ha cap visor disponible per a %1$s</string>
     <string name="title_no_recorder">No hi ha disponible cap aplicació de gravadora d’àudio adequada</string>
     <string name="title_no_camera">No hi ha disponible cap aplicació de càmera adequada</string>
     <string name="title_no_saf">Marc d\'accés d\'emmagatzematge no disponible</string>
@@ -1273,4 +1271,5 @@ La creació i l\'ús de regles és una característica professional.    </string
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

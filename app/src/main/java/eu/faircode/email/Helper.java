@@ -103,6 +103,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import org.jsoup.helper.HttpConnection;
 import org.openintents.openpgp.util.OpenPgpApi;
 
 import java.io.ByteArrayOutputStream;
@@ -113,6 +114,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -150,6 +154,7 @@ public class Helper {
 
     static final int BUFFER_SIZE = 8192; // Same as in Files class
     static final long MIN_REQUIRED_SPACE = 250 * 1024L * 1024L;
+    static final int MAX_REDIRECTS = 5; // https://www.freesoft.org/CIE/RFC/1945/46.htm
 
     static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
@@ -163,6 +168,9 @@ public class Helper {
     static final String GRAVATAR_PRIVACY_URI = "https://en.wikipedia.org/wiki/Gravatar";
     static final String LICENSE_URI = "https://www.gnu.org/licenses/gpl-3.0.html";
     static final String DONTKILL_URI = "https://dontkillmyapp.com/";
+
+    // https://developer.android.com/distribute/marketing-tools/linking-to-google-play#PerformingSearch
+    private static final String PLAY_STORE_SEARCH = "https://play.google.com/store/search";
 
     static final Pattern EMAIL_ADDRESS
             = Pattern.compile(
@@ -665,10 +673,14 @@ public class Helper {
     }
 
     static void view(Context context, Uri uri, boolean browse) {
-        view(context, uri, browse, false);
+        view(context, uri, null, browse, false);
     }
 
     static void view(Context context, Uri uri, boolean browse, boolean task) {
+        view(context, uri, null, browse, task);
+    }
+
+    static void view(Context context, Uri uri, String mimeType, boolean browse, boolean task) {
         if (context == null) {
             Log.e(new Throwable("view"));
             return;
@@ -679,7 +691,11 @@ public class Helper {
 
         if (browse || !has) {
             try {
-                Intent view = new Intent(Intent.ACTION_VIEW, uri);
+                Intent view = new Intent(Intent.ACTION_VIEW);
+                if (mimeType == null)
+                    view.setData(uri);
+                else
+                    view.setDataAndType(uri, mimeType);
                 if (task)
                     view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(view);
@@ -783,9 +799,9 @@ public class Helper {
             base = "https://email.faircode.eu/docs/FAQ-" + locale + ".md";
 
         if (question == 0)
-            view(context, Uri.parse(base + "#top"), false);
+            view(context, Uri.parse(base + "#top"), "text/html", false, false);
         else
-            view(context, Uri.parse(base + "#user-content-faq" + question), false);
+            view(context, Uri.parse(base + "#user-content-faq" + question), "text/html", false, false);
     }
 
     static String getOpenKeychainPackage(Context context) {
@@ -999,24 +1015,47 @@ public class Helper {
     }
 
     static void reportNoViewer(Context context, Intent intent) {
-        StringBuilder sb = new StringBuilder();
+        View dview = LayoutInflater.from(context).inflate(R.layout.dialog_no_viewer, null);
+        TextView tvName = dview.findViewById(R.id.tvName);
+        TextView tvFullName = dview.findViewById(R.id.tvFullName);
+        TextView tvType = dview.findViewById(R.id.tvType);
 
         String title = intent.getStringExtra(Intent.EXTRA_TITLE);
-        if (TextUtils.isEmpty(title)) {
-            Uri data = intent.getData();
-            if (data == null)
-                sb.append(intent.toString());
-            else
-                sb.append(data.toString());
-        } else
-            sb.append(title);
-
+        Uri data = intent.getData();
         String type = intent.getType();
-        if (!TextUtils.isEmpty(type))
-            sb.append(' ').append(type);
+        String fullName = (data == null ? intent.toString() : data.toString());
+        String extension = (data == null ? null : getExtension(data.getLastPathSegment()));
 
-        String message = context.getString(R.string.title_no_viewer, sb.toString());
-        ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
+        tvName.setText(title == null ? fullName : title);
+        tvFullName.setText(fullName);
+        tvFullName.setVisibility(title == null ? View.GONE : View.VISIBLE);
+
+        tvType.setText(type);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                .setView(dview)
+                .setNegativeButton(android.R.string.cancel, null);
+
+        if (hasPlayStore(context) && !TextUtils.isEmpty(extension)) {
+            builder.setNeutralButton(R.string.title_no_viewer_search, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    try {
+                        Uri search = Uri.parse(PLAY_STORE_SEARCH)
+                                .buildUpon()
+                                .appendQueryParameter("q", extension)
+                                .build();
+                        Intent intent = new Intent(Intent.ACTION_VIEW, search);
+                        context.startActivity(intent);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                        ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        }
+
+        builder.show();
     }
 
     static void excludeFromRecents(Context context) {
@@ -1169,12 +1208,17 @@ public class Helper {
         return humanReadableByteCount(bytes, true);
     }
 
-    private static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
+    static String humanReadableByteCount(long bytes, boolean si) {
+        int sign = (int) Math.signum(bytes);
+        bytes = Math.abs(bytes);
+
+        int unit = (si ? 1000 : 1024);
+        if (bytes < unit)
+            return sign * bytes + " B";
+
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return df.format(bytes / Math.pow(unit, exp)) + " " + pre + "B";
+        return df.format(sign * bytes / Math.pow(unit, exp)) + " " + pre + "B";
     }
 
     static boolean isPrintableChar(char c) {
@@ -1591,6 +1635,53 @@ public class Helper {
         intent.putExtra("android.provider.extra.SHOW_ADVANCED", true);
         //File initial = Environment.getExternalStorageDirectory();
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.fromFile(initial));
+    }
+
+    static HttpURLConnection openUrlRedirect(Context context, String source, int timeout) throws IOException {
+        int redirects = 0;
+        URL url = new URL(source);
+        while (true) {
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setDoOutput(false);
+            urlConnection.setReadTimeout(timeout);
+            urlConnection.setConnectTimeout(timeout);
+            urlConnection.setInstanceFollowRedirects(true);
+            urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+            urlConnection.connect();
+
+            try {
+                int status = urlConnection.getResponseCode();
+
+                if (status == HttpURLConnection.HTTP_MOVED_PERM ||
+                        status == HttpURLConnection.HTTP_MOVED_TEMP ||
+                        status == HttpURLConnection.HTTP_SEE_OTHER ||
+                        status == 307 /* Temporary redirect */ ||
+                        status == 308 /* Permanent redirect */) {
+                    if (++redirects > MAX_REDIRECTS)
+                        throw new IOException("Too many redirects");
+
+                    String header = urlConnection.getHeaderField("Location");
+                    if (header == null)
+                        throw new IOException("Location header missing");
+
+                    String location = URLDecoder.decode(header, StandardCharsets.UTF_8.name());
+                    url = new URL(url, location);
+                    Log.i("Redirect #" + redirects + " to " + url);
+
+                    urlConnection.disconnect();
+                    continue;
+                }
+
+                if (status != HttpURLConnection.HTTP_OK)
+                    throw new IOException("Error " + status + ": " + urlConnection.getResponseMessage());
+
+                return urlConnection;
+            } catch (IOException ex) {
+                urlConnection.disconnect();
+                throw ex;
+            }
+        }
     }
 
     // Cryptography

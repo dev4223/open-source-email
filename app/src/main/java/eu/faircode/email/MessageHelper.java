@@ -1824,12 +1824,13 @@ public class MessageHelper {
     }
 
     static byte[] decodeWord(String word, String encoding, String charset) throws IOException {
+        String e = encoding.trim();
         ByteArrayInputStream bis = new ByteArrayInputStream(ASCIIUtility.getBytes(word));
 
         InputStream is;
-        if (encoding.equalsIgnoreCase("B"))
+        if (e.equalsIgnoreCase("B"))
             is = new BASE64DecoderStream(bis);
-        else if (encoding.equalsIgnoreCase("Q"))
+        else if (e.equalsIgnoreCase("Q"))
             is = new QDecoderStreamEx(bis);
         else {
             Log.e(new UnsupportedEncodingException("Encoding=" + encoding));
@@ -1935,6 +1936,18 @@ public class MessageHelper {
                     return true;
 
             return false;
+        }
+
+        void normalize() {
+            Boolean plain = isPlainOnly();
+            if (plain == null || plain)
+                for (AttachmentPart apart : attachments)
+                    if (!TextUtils.isEmpty(apart.attachment.cid) ||
+                            !Part.ATTACHMENT.equals(apart.attachment.disposition)) {
+                        Log.i("Normalizing " + apart.attachment);
+                        apart.attachment.cid = null;
+                        apart.attachment.disposition = Part.ATTACHMENT;
+                    }
         }
 
         Long getBodySize() throws MessagingException {
@@ -2541,6 +2554,10 @@ public class MessageHelper {
     }
 
     MessageParts getMessageParts() throws IOException, MessagingException {
+        return getMessageParts(true);
+    }
+
+    MessageParts getMessageParts(boolean normalize) throws IOException, MessagingException {
         MessageParts parts = new MessageParts();
 
         try {
@@ -2676,6 +2693,9 @@ public class MessageHelper {
                         at eu.faircode.email.MessageHelper.getMessageParts(MessageHelper:2368)
              */
         }
+
+        if (normalize)
+            parts.normalize();
 
         return parts;
     }

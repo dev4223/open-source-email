@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.fragment.app.FragmentManager;
@@ -125,15 +126,25 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
             long start = new Date().getTime();
             Log.i("Main boot");
 
+            final Runnable splash = new Runnable() {
+                @Override
+                public void run() {
+                    getWindow().setBackgroundDrawableResource(R.drawable.splash);
+                }
+            };
+
             final SimpleTask<Boolean> boot = new SimpleTask<Boolean>() {
                 @Override
                 protected void onPreExecute(Bundle args) {
-                    getMainHandler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            getWindow().setBackgroundDrawableResource(R.drawable.splash);
-                        }
-                    }, SPLASH_DELAY);
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                        getMainHandler().postDelayed(splash, SPLASH_DELAY);
+                }
+
+                @Override
+                protected void onPostExecute(Bundle args) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                        getMainHandler().removeCallbacks(splash);
+                    getWindow().setBackgroundDrawable(null);
                 }
 
                 @Override

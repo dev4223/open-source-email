@@ -688,7 +688,6 @@
     <string name="title_show_folders">Tampilkan folder tersembunyi</string>
     <string name="title_show_flagged">Tampilkan jumlah pesan berbintang</string>
     <string name="title_subscribed_only">Hanya berlangganan</string>
-    <string name="title_apply_to_all">Terapkan ke semua &#8230;</string>
     <string name="title_hide_folder">Sembunyikan folder</string>
     <string name="title_unified_folder">Tampilkan di kotak masuk terpadu</string>
     <string name="title_navigation_folder">Tampilkan di menu navigasi</string>
@@ -779,7 +778,6 @@
     <string name="title_download_all">Unduh semua</string>
     <string name="title_save_all">Simpan semua</string>
     <string name="title_save_eml">Simpan file pesan sebagai bahan</string>
-    <string name="title_eml_remark">Untuk meneruskan pesan, pesan asli perlu diunduh dari server. Ini membutuhkan koneksi internet.</string>
     <string name="title_buttons">Klik tombol</string>
     <string name="title_buttons_hint">Tindakan benar yang tersedia bergantung pada jenis dan konfigurasi akun</string>
     <string name="title_button_search">Cari di dalam pesan</string>
@@ -819,7 +817,6 @@
     <string name="title_receipt_subject">Bukti telah dibaca: %1$s</string>
     <string name="title_receipt_text">Bukti telah dibaca ini hanya menyatakan bahwa pesan itu ditampilkan. Tidak ada jaminan bahwa penerima telah membaca isi pesan.</string>
     <string name="title_no_answers">Tidak ada template balasan yang ditentukan</string>
-    <string name="title_no_viewer">Tidak ada aplikasi penampil yang tersedia untuk %1$s</string>
     <string name="title_no_recorder">Tidak ada aplikasi perekam suara yang sesuai</string>
     <string name="title_no_camera">Aplikasi kamera tidak sesuai</string>
     <string name="title_no_saf">Akses penyimpanan tidak tersedia</string>
@@ -1427,4 +1424,5 @@
         <item>Hanya surel</item>
         <item>Nama dan surel</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

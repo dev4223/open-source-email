@@ -613,7 +613,6 @@
     <string name="title_show_folders">Vis skjulte mapper</string>
     <string name="title_show_flagged">Vi antall stjernemerkede meldinger</string>
     <string name="title_subscribed_only">Kun abonnementer</string>
-    <string name="title_apply_to_all">Gjelder for alle &#8230;</string>
     <string name="title_hide_folder">Skjul mappe</string>
     <string name="title_unified_folder">Vis i Felles innboks</string>
     <string name="title_navigation_folder">Vis i navigasjonsmenyen</string>
@@ -727,7 +726,6 @@
     <string name="title_receipt_subject">Lesebekreftelse: %1$s</string>
     <string name="title_receipt_text">Denne lesekvitteringen bekrefter bare at meldingen ble vist. Det er ingen garanti for at mottakeren har lest meldings innholdet.</string>
     <string name="title_no_answers">Ingen svarmaler definert</string>
-    <string name="title_no_viewer">Ingen visningsprogram tilgjengelig for %1$s</string>
     <string name="title_no_recorder">Ingen passende lydopptaker app tilgjengelig</string>
     <string name="title_no_camera">Ingen passende kamera app tilgjengelig</string>
     <string name="title_no_saf">Storage access framework ikke tilgjengelig</string>
@@ -1414,4 +1412,5 @@
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

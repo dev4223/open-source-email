@@ -294,7 +294,7 @@
     <string name="title_advanced_alt_re_fwd">Alternative Präfixe für „Antworten” bzw. „Weiterleiten”</string>
     <string name="title_advanced_send_reminders">Erinnerungen anzeigen</string>
     <string name="title_advanced_send_delayed">Senden von Nachrichten verzögern</string>
-    <string name="title_advanced_attach_new">Dateien zu einem neuen Mail-Entwurf hinzufügen</string>
+    <string name="title_advanced_attach_new">Freigegebene Dateien zu einem neuen Entwurf hinzufügen</string>
     <string name="title_advanced_reply_all">Schaltfläche „Antworten” länger gedrückt halten, um allen zu antworten</string>
     <string name="title_advanced_send_pending">Nicht aufdringliches Symbol für verzögertes Senden anzeigen</string>
     <string name="title_advanced_compose_font">Standardschriftart</string>
@@ -506,6 +506,11 @@
     <string name="title_advanced_autocrypt">Autocrypt verwenden</string>
     <string name="title_advanced_autocrypt_mutual">Gegenseitiger Autocrypt-Modus</string>
     <string name="title_advanced_encrypt_subject">Betreff verschlüsseln</string>
+    <string name="title_advanced_sign_algo">Signaturalgorithmus</string>
+    <string name="title_advanced_encrypt_algo">Verschlüsselungsalgorithmus</string>
+    <string name="title_advanced_remark_algo">        Bitte beachten Sie, dass nicht alle E-Mail-Programme alle Algorithmen unterstützen.
+        Die Standardalgorithmen SHA256 und AES128 werden üblicherweise unterstützt.
+    </string>
     <string name="title_advanced_check_certificate">Öffentlichen Schlüssel beim Senden überprüfen</string>
     <string name="title_advanced_manage_certificates">Öffentliche Schlüssel verwalten</string>
     <string name="title_advanced_import_key">Privaten Schlüssel importieren</string>
@@ -779,7 +784,8 @@
     <string name="title_show_folders">Ausgeblendete Ordner anzeigen</string>
     <string name="title_show_flagged">Anzahl markierter Nachrichten anzeigen</string>
     <string name="title_subscribed_only">Nur abonnierte</string>
-    <string name="title_apply_to_all">Auf alle anwenden &#8230;</string>
+    <string name="title_search_folder">Nach Ordnern suchen</string>
+    <string name="title_apply_to_all">Für alle übernehmen</string>
     <string name="title_hide_folder">Ordner ausblenden</string>
     <string name="title_unified_folder">Im Sammeleingang anzeigen</string>
     <string name="title_navigation_folder">Im Navigationsmenü anzeigen</string>
@@ -869,7 +875,7 @@
     <string name="title_download_all">Alle herunterladen</string>
     <string name="title_save_all">Alles speichern</string>
     <string name="title_save_eml">Rohdaten speichern</string>
-    <string name="title_eml_remark">Um Nachrichten weiterzuleiten, müssen die Originalnachrichten vom Server heruntergeladen werden. Dies erfordert eine Internetverbindung.</string>
+    <string name="title_eml_remark">Um Nachrichten weiterzuleiten, müssen die ursprünglichen Nachrichten vom E-Mail-Server heruntergeladen werden. Dazu ist eine Internetverbindung erforderlich und die Nachrichten müssen noch auf dem E-Mail-Server verfügbar sein.</string>
     <string name="title_eml_option">Dies kann verhindert werden, indem in den Verbindungseinstellungen \'Rohnachrichtendateien herunterladen\' eingeschaltet wird</string>
     <string name="title_eml_downloaded">Rohnachrichten heruntergeladen: %1$s</string>
     <string name="title_buttons">Schaltflächen auswählen</string>
@@ -913,7 +919,10 @@
     <string name="title_receipt_subject">Lesebestätigung: %1$s</string>
     <string name="title_receipt_text">Diese Lesebestätigung bestätigt nur, dass die Nachricht angezeigt wurde. Es gibt keine Garantie, dass der Empfänger den Nachrichteninhalt gelesen hat.</string>
     <string name="title_no_answers">Keine Antwortvorlagen definiert</string>
-    <string name="title_no_viewer">Keine App zum Betrachten von %1$s</string>
+    <string name="title_no_viewer_caption">Keine App zum Anzeigen verfügbar</string>
+    <string name="title_no_viewer_name">Inhaltsname</string>
+    <string name="title_no_viewer_type">Inhaltstyp</string>
+    <string name="title_no_viewer_search">App suchen</string>
     <string name="title_no_recorder">Keine geeignete App zur Audioaufnahme verfügbar</string>
     <string name="title_no_camera">Keine passende Kamera-App verfügbar</string>
     <string name="title_no_saf">Storage Access Framework nicht verfügbar</string>
@@ -1102,6 +1111,7 @@
     <string name="title_signature_sender">E-Mail-Adresse des Absenders</string>
     <string name="title_signature_email">E-Mail-Adresse der Unterschrift</string>
     <string name="title_signature_mismatch">Die E-Mail-Adresse des Absenders und der Signatur stimmen nicht überein</string>
+    <string name="title_signature_algorithm">Algorithmus</string>
     <string name="title_signature_subject">Betreff</string>
     <string name="title_signature_validity">Gültigkeit</string>
     <string name="title_signature_outdated">Dieser öffentliche Schlüssel ist derzeit nicht gültig</string>
@@ -1501,6 +1511,8 @@ Zur Erinnerung daran zeigt FairEmail einen kleinen Hinweis an, dieser verschwind
     <string name="title_widget_font_size">Schriftgröße</string>
     <string name="title_widget_padding">Abstand zwischen den Texten</string>
     <string name="title_widget_semi_transparent">Halbtransparenter Hintergrund</string>
+    <string name="title_widget_refresh">Schaltfläche „Nachrichten aktualisieren“ anzeigen</string>
+    <string name="title_widget_compose">Schaltfläche „Neue Nachricht verfassen” anzeigen</string>
     <string name="title_widget_background">Hintergrundfarbe</string>
     <string name="title_accessibility_collapsed">Eingeklappt</string>
     <string name="title_accessibility_expanded">Erweitert</string>
@@ -1675,4 +1687,5 @@ Zur Erinnerung daran zeigt FairEmail einen kleinen Hinweis an, dieser verschwind
         <item>Nur E-Mail-Adresse</item>
         <item>Name und E-Mail-Adresse</item>
     </string-array>
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

@@ -48,6 +48,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.DeadSystemException;
 import android.os.Debug;
+import android.os.IBinder;
 import android.os.OperationCanceledException;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
@@ -98,6 +99,8 @@ import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.CertPathValidatorException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
@@ -420,6 +423,8 @@ public class Log {
                         event.addMetadata("extra", "thread", Thread.currentThread().getName() + ":" + Thread.currentThread().getId());
                         event.addMetadata("extra", "memory_free", getFreeMemMb());
                         event.addMetadata("extra", "memory_available", getAvailableMb());
+                        event.addMetadata("extra", "native_allocated", Debug.getNativeHeapAllocatedSize() / 1024L / 1024L);
+                        event.addMetadata("extra", "native_size", Debug.getNativeHeapSize() / 1024L / 1024L);
 
                         Boolean ignoringOptimizations = Helper.isIgnoringOptimizations(context);
                         event.addMetadata("extra", "optimizing", (ignoringOptimizations != null && !ignoringOptimizations));
@@ -1710,10 +1715,16 @@ public class Log {
                 Helper.humanReadableByteCount(storage_used)));
 
         Runtime rt = Runtime.getRuntime();
-        long hused = (rt.totalMemory() - rt.freeMemory()) / 1024L;
-        long hmax = rt.maxMemory() / 1024L;
-        long nheap = Debug.getNativeHeapAllocatedSize() / 1024L;
-        sb.append(String.format("Heap usage: %s/%s KiB native: %s KiB\r\n", hused, hmax, nheap));
+        long hused = (rt.totalMemory() - rt.freeMemory()) / 1024L / 1024L;
+        long hmax = rt.maxMemory() / 1024L / 1024L;
+        long nheap = Debug.getNativeHeapAllocatedSize() / 1024L / 1024L;
+        long nsize = Debug.getNativeHeapSize() / 1024 / 1024L;
+        sb.append(String.format("Heap usage: %d/%d MiB native: %d/%d MiB\r\n", hused, hmax, nheap, nsize));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            int ipc = IBinder.getSuggestedMaxIpcSizeBytes();
+            sb.append(String.format("IPC max: %s\r\n", Helper.humanReadableByteCount(ipc)));
+        }
 
         Configuration config = context.getResources().getConfiguration();
         String size;
@@ -1762,7 +1773,8 @@ public class Log {
 
         try {
             int maxKeySize = javax.crypto.Cipher.getMaxAllowedKeyLength("AES");
-            sb.append(context.getString(R.string.title_advanced_aes_key_size, maxKeySize)).append("\r\n");
+            sb.append(context.getString(R.string.title_advanced_aes_key_size,
+                    Helper.humanReadableByteCount(maxKeySize, false))).append("\r\n");
         } catch (Throwable ex) {
             sb.append(ex.toString()).append("\r\n");
         }
@@ -1808,6 +1820,9 @@ public class Log {
         sb.append(String.format("Configuration: %s\r\n", config.toString()));
 
         sb.append("\r\n");
+        for (Provider p : Security.getProviders())
+            sb.append(p).append("\r\n");
+        sb.append("\r\n");
 
         try {
             PackageInfo pi = context.getPackageManager()
@@ -1841,6 +1856,16 @@ public class Log {
             }
             sb.append("\r\n");
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            try {
+                Map<String, String> stats = Debug.getRuntimeStats();
+                for (String key : stats.keySet())
+                    sb.append(key).append('=').append(stats.get(key)).append("\r\n");
+                sb.append("\r\n");
+            } catch (Throwable ex) {
+                sb.append(ex.toString()).append("\r\n");
+            }
 
         sb.append(String.format("Installed: %s\r\n", new Date(Helper.getInstallTime(context))));
         sb.append(String.format("Now: %s\r\n", new Date()));
@@ -1902,13 +1927,15 @@ public class Log {
             int pollInterval = ServiceSynchronize.getPollInterval(context);
             boolean metered = prefs.getBoolean("metered", true);
             Boolean ignoring = Helper.isIgnoringOptimizations(context);
+            boolean auto_optimize = prefs.getBoolean("auto_optimize", false);
             boolean schedule = prefs.getBoolean("schedule", false);
 
             size += write(os, "accounts=" + accounts.size() +
                     " enabled=" + enabled +
                     " interval=" + pollInterval +
-                    " metered=" + metered +
+                    "\r\nmetered=" + metered +
                     " optimizing=" + (ignoring == null ? null : !ignoring) +
+                    " auto_optimize=" + auto_optimize +
                     "\r\n\r\n");
 
             if (schedule) {

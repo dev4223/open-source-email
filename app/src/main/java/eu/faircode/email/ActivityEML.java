@@ -265,7 +265,7 @@ public class ActivityEML extends ActivityBase {
                     result.sent = helper.getSent();
                     result.received = helper.getReceived();
                     result.subject = helper.getSubject();
-                    result.parts = helper.getMessageParts();
+                    result.parts = helper.getMessageParts(false);
 
                     String html = result.parts.getHtml(context);
                     if (html != null) {
@@ -275,7 +275,7 @@ public class ActivityEML extends ActivityBase {
                     }
 
                     int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
-                    SpannableStringBuilder ssb = new SpannableStringBuilder();
+                    SpannableStringBuilder ssb = new SpannableStringBuilderEx();
                     getStructure(imessage, ssb, 0, textColorLink);
                     result.structure = ssb;
 

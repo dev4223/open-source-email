@@ -535,7 +535,6 @@
     <string name="title_show_folders">Erakutsi karpeta ezkutuak</string>
     <string name="title_show_flagged">Erakutsi izardun mezuen kopurua</string>
     <string name="title_subscribed_only">Harpidetuta bakarrik</string>
-    <string name="title_apply_to_all">Aplikatu guztiei &#8230;</string>
     <string name="title_hide_folder">Ezkutatu karpeta</string>
     <string name="title_unified_folder">Erakutsi sarrera ontzi bateratuan</string>
     <string name="title_navigation_folder">Erakutsi nabigazio menuan</string>
@@ -642,7 +641,6 @@
     <string name="title_receipt_subject">Irakurragiria: %1$s</string>
     <string name="title_receipt_text">Irakurragiri honek mezua bistaratu dela adierazten du, besterik ez. Ez dago jasotzaileak mezuaren edukia irakurri duela bermatzerik.</string>
     <string name="title_no_answers">Ez da erantzun txantiloirik zehaztu</string>
-    <string name="title_no_viewer">Ez dago %1$s ikusteko aplikaziorik erabilgarri</string>
     <string name="title_no_recorder">Ez dago audio grabagailu aplikazio egokirik eskuragarri</string>
     <string name="title_no_camera">Ez dago kamera aplikazio egokirik eskuragarri</string>
     <string name="title_no_saf">Biltegiratzea atzitzeko tresneria ez dago eskuragarri</string>
@@ -1309,4 +1307,5 @@
         <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <!-- https://www.bouncycastle.org/specifications.html -->
 </resources>

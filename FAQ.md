@@ -56,7 +56,7 @@ Related questions:
 ## How to ...?
 
 * Change the account name: Settings, tap Manual setup, tap Accounts, tap account
-* Change the swipe left/right target: Settings, tab page Behavior, Set swipe actions
+* Change the swipe left/right target: Settings, tab page Behavior, Set swipe actions (*)
 * Change password: Settings, tap Manual setup, tap Accounts, tap account, change password
 * Set a signature: Settings, tap Manual setup, tap Identities, tap identity, Edit signature.
 * Add CC and BCC addresses: tap the people's icon at the end of the subject
@@ -72,6 +72,8 @@ Related questions:
 * Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
 * Change system folders: Settings, tap Manual setup, tap Accounts, tap account, at the bottom
 * Export/import settings: Settings, navigation (left side) menu
+
+(*) Swipe actions for individual and POP3 accounts can be configured in the account setting: Settings, tap Manual setup, tap Accounts, tap account
 
 <h2><a name="known-problems"></a>Known problem</h2>
 
@@ -778,6 +780,7 @@ Signed-only messages are supported, encrypted-only messages are not supported.
 Common errors:
 
 * *No key*: there is no PGP key available for one of the listed email addresses
+* *No key found!*: the PGP key stored in the identity probably doesn't exist anymore. Resetting the key (see above) will probably fix this problem.
 * *Missing key for encryption*: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.
 * *Key for signature verification is missing*: the public key for the sender is not available in the OpenKeychain app. This can also be caused by Autocrypt being disabled in the encryption settings or by the Autocrypt header not being sent.
 * *OpenPgp error 0: null* / *OpenPgp error 0: General error*: please check the key in the OpenKeychain app and make sure there are no conflicting identities for the key and make sure the email address exactly matches the key, including lower/upper case. Also, make sure the key can be used to sign/encrypt and isn't for encrypting/signing only.
@@ -789,13 +792,16 @@ Common errors:
 Encrypting a message requires the public key(s) of the recipient(s). Signing a message requires your private key.
 
 Private keys are stored by Android and can be imported via the Android advanced security settings.
-There is a shortcut (button) for this in the encryption settings.
+There is a shortcut (button) for this in the encryption settings for Android version 10 and before.
 Android will ask you to set a PIN, pattern, or password if you didn't before.
 If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing.
 Android only imports the first key, so to import all the keys, the certificate must first be split.
 This is not very trivial and you are advised to ask the certificate supplier for support.
+
+If you renewed a certificate, you should import the renewed certificate and reset the key.
+This can be done by long pressing an identity in the list of identities (Settings, tap Manual setup, tap Identities).
 
 Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this.
 S/MIME encryption is possible with asymmetric algorithms only, which means in practice using RSA.
@@ -818,6 +824,7 @@ Common errors:
 * *unable to find valid certification path to requested target*: basically this means one or more intermediate or root certificates were not found
 * *Private key does not match any encryption keys*: the selected key cannot be used to decrypt the message, probably because it is the incorrect key
 * *No private key*: no certificate was selected or no certificate was available in the Android keystore
+* *Memory allocation failed*: Android fails to sign with RSA-8192 private keys
 
 In case the certificate chain is incorrect, you can tap on the little info button to show the all certificates.
 After the certificate details the issuer or "selfSign" is shown.
@@ -1942,6 +1949,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the send action to show the send dialog, even if it was disabled?
 * Did you know that you can long press the full screen icon to show the original message text only?
 * Did you know that you can long press the answer button to reply to the sender? (since version 1.1562)
+* Did you know that you can long press the message move button to move across accounts? (since version 1.1702)
 
 <br />
 
@@ -2589,6 +2597,7 @@ Android Q will make it harder and maybe even impossible to directly access files
 see [here](https://developer.android.com/preview/privacy/scoped-storage) and [here](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) for more details.
 
 If you use MIUI, please make sure [MIUI optimization](https://android.stackexchange.com/questions/191228/what-is-miui-optimization) is enabled in the developer settings.
+You can enable the developer options by tapping a few times on the MIUI version number in the settings, About phone.
 
 <br />
 
@@ -2988,7 +2997,7 @@ because this could result in grouping unrelated messages and would be at the exp
 If FairEmail cannot connect to an email server to synchronize messages,
 for example if the internet connection is bad or a firewall or a VPN is blocking the connection,
 FairEmail will retry one time after waiting 8 seconds while keeping the device awake (=use battery power).
-If this fails, FairEmail will schedule an alarm to retry after 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
+If this fails, FairEmail will schedule an alarm to retry after 5, 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby)
 does not allow to wake the device earlier than after 15 minutes.
@@ -3252,7 +3261,9 @@ you@example.com\shared@example.com
 
 Note that it should be a backslash and not a forward slash.
 
-When using a shared mailbox, you'll likely want to enable the option *Synchronize shared folder lists* in the receive settings.
+The Outlook/Office 365 quick setup wizard supports setting up shared mailboxes.
+
+When using a shared mailbox, you might want to enable the option *Synchronize shared folder lists* in the receive settings.
 
 <br />
 
@@ -3391,10 +3402,9 @@ the F-Droid build, but **only if** the version number of the F-Droid build is th
 F-Droid builds irregularly, which can be problematic when there is an important update.
 Therefore you are advised to switch to the GitHub release.
 
-The F-Droid version is built from the same source code, but signed differently.
-This means that all features are available in the F-Droid version too,
-except for using the Gmail quick setup wizard because Google approved (and allows) one app signature only.
-For all other email providers, OAuth access is only available in Play Store versions and Github releases, as the email providers only permit the use of OAuth for official builds.
+OAuth access is available only for Play Store and Github releases
+because email providers permitted the use of OAuth for these releases only.
+The responsible for a release, for the F-Droid build this is F-Droid, needs to ask for OAuth permissions.
 
 Note that you'll need to uninstall the F-Droid build first before you can install a GitHub release
 because Android refuses to install the same app with a different signature for security reasons.
@@ -3868,8 +3878,9 @@ Related questions:
 * The Play store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
 * The Play store version does not support [Gravatars](https://gravatar.com/), see [here](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-85226179) for the reason
 * The Play store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
-* The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases)
+* The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently
 * The GitHub version has some different links and some options have a different default values (more geared to advanced users)
+* The F-Droid build does not support OAuth, see [this FAQ](#user-content-faq147) about why not
 * The F-Droid build does not include [Google Play Billing](https://developer.android.com/google/play/billing/integrate), so Play store purchases cannot be reused
 * The F-Droid build is supported only if the version number is the same as the the version number of the latest GitHub version, see also [this FAQ](#user-content-faq147)
 
