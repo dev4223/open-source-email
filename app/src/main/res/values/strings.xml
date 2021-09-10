@@ -2034,6 +2034,7 @@
         <item>secondary</item>
         <item>en_GB</item>
         <item>en_US</item>
+    </string-array>
 
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
