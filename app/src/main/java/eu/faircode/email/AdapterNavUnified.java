@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.ViewHolder> {
     private Context context;
@@ -89,11 +90,22 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
         private void bindTo(TupleFolderUnified folder) {
             if (EntityFolder.INBOX.equals(folder.type))
                 ivItem.setImageResource(R.drawable.twotone_all_inbox_24);
-            else
+            else if (EntityFolder.OUTBOX.equals(folder.type)) {
+                if ("syncing".equals(folder.sync_state))
+                    ivItem.setImageResource(R.drawable.twotone_compare_arrows_24);
+                else
+                    ivItem.setImageResource(EntityFolder.getIcon(folder.type));
+            } else
                 ivItem.setImageResource(EntityFolder.getIcon(folder.type));
 
+            if (folder.color != null && folder.colorCount == 1)
+                ivItem.setColorFilter(folder.color);
+            else
+                ivItem.clearColorFilter();
+
             long count;
-            if (EntityFolder.DRAFTS.equals(folder.type))
+            if (EntityFolder.DRAFTS.equals(folder.type) ||
+                    EntityFolder.OUTBOX.equals(folder.type))
                 count = folder.messages;
             else
                 count = folder.unseen;
@@ -128,9 +140,12 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
                 return;
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(
-                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                            .putExtra("type", folder.type));
+            if (EntityFolder.OUTBOX.equals(folder.type))
+                lbm.sendBroadcast(new Intent(ActivityView.ACTION_VIEW_OUTBOX));
+            else
+                lbm.sendBroadcast(
+                        new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                .putExtra("type", folder.type));
         }
     }
 
@@ -223,7 +238,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
             TupleFolderUnified f1 = prev.get(oldItemPosition);
             TupleFolderUnified f2 = next.get(newItemPosition);
-            return (f1.messages == f2.messages && f1.unseen == f2.unseen);
+            return f1.equals(f2);
         }
     }
 

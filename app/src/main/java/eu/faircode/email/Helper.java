@@ -34,6 +34,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -432,6 +433,14 @@ public class Helper {
         return pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
     }
 
+    static boolean isOptimizing12(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || true)
+            return false;
+
+        Boolean ignoring = Helper.isIgnoringOptimizations(context);
+        return (ignoring != null && !ignoring);
+    }
+
     static Integer getBatteryLevel(Context context) {
         try {
             BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
@@ -653,7 +662,7 @@ public class Helper {
             return true;
 
         if ("application/octet-stream".equals(type) &&
-                "winmail.dat".equals(name))
+                "winmail.dat".equalsIgnoreCase(name))
             return true;
 
         return false;
@@ -985,6 +994,27 @@ public class Helper {
         return "Blackview".equalsIgnoreCase(Build.MANUFACTURER);
     }
 
+    static boolean isSony() {
+        return "sony".equalsIgnoreCase(Build.MANUFACTURER);
+    }
+
+    static boolean isStaminaEnabled(Context context) {
+        // https://dontkillmyapp.com/sony
+        if (BuildConfig.DEBUG)
+            return true;
+
+        if (!isSony())
+            return false;
+
+        try {
+            ContentResolver resolver = context.getContentResolver();
+            return (Settings.Secure.getInt(resolver, "somc.stamina_mode", 0) > 0);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return false;
+        }
+    }
+
     static boolean isSurfaceDuo() {
         return ("Microsoft".equalsIgnoreCase(Build.MANUFACTURER) && "Surface Duo".equals(Build.MODEL));
     }
@@ -1003,6 +1033,7 @@ public class Helper {
                 // Vivo
                 isRealme() ||
                 isBlackview() ||
+                isSony() ||
                 BuildConfig.DEBUG);
     }
 
@@ -1761,8 +1792,26 @@ public class Helper {
         if (!TextUtils.isEmpty(pin))
             return true;
 
-        BiometricManager bm = BiometricManager.from(context);
-        return (bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS);
+        try {
+            BiometricManager bm = BiometricManager.from(context);
+            return (bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS);
+        } catch (Throwable ex) {
+            /*
+                java.lang.SecurityException: eu.faircode.email from uid 10377 not allowed to perform USE_FINGERPRINT
+                  at android.os.Parcel.createException(Parcel.java:1953)
+                  at android.os.Parcel.readException(Parcel.java:1921)
+                  at android.os.Parcel.readException(Parcel.java:1871)
+                  at android.hardware.fingerprint.IFingerprintService$Stub$Proxy.isHardwareDetected(IFingerprintService.java:460)
+                  at android.hardware.fingerprint.FingerprintManager.isHardwareDetected(FingerprintManager.java:792)
+                  at androidx.core.hardware.fingerprint.FingerprintManagerCompat.isHardwareDetected(SourceFile:3)
+                  at androidx.biometric.BiometricManager.canAuthenticateWithFingerprint(SourceFile:3)
+                  at androidx.biometric.BiometricManager.canAuthenticateWithFingerprintOrUnknownBiometric(SourceFile:2)
+                  at androidx.biometric.BiometricManager.canAuthenticateCompat(SourceFile:10)
+                  at androidx.biometric.BiometricManager.canAuthenticate(SourceFile:5)
+             */
+            Log.e(ex);
+            return false;
+        }
     }
 
     static boolean shouldAuthenticate(Context context) {

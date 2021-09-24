@@ -67,6 +67,7 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FLAGS;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.Namespaces;
 import com.sun.mail.imap.protocol.UID;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
@@ -178,7 +179,7 @@ class Core {
             Context context,
             EntityAccount account, EntityFolder folder, List<TupleOperationEx> ops,
             Store istore, Folder ifolder,
-            State state, int priority, long sequence)
+            State state, long serial)
             throws JSONException {
         try {
             Log.i(folder.name + " start process");
@@ -190,10 +191,10 @@ class Core {
 
             int retry = 0;
             boolean group = true;
-            Log.i(folder.name + " executing operations=" + ops.size());
+            Log.i(folder.name + " executing serial=" + serial + " operations=" + ops.size());
             while (retry < LOCAL_RETRY_MAX && ops.size() > 0 &&
                     state.isRunning() &&
-                    state.batchCanRun(folder.id, priority, sequence)) {
+                    state.getSerial() == serial) {
                 TupleOperationEx op = ops.get(0);
 
                 try {
@@ -648,7 +649,7 @@ class Core {
                             retry++;
                             if (retry < LOCAL_RETRY_MAX &&
                                     state.isRunning() &&
-                                    state.batchCanRun(folder.id, priority, sequence))
+                                    state.getSerial() == serial)
                                 try {
                                     Thread.sleep(LOCAL_RETRY_DELAY);
                                 } catch (InterruptedException ex1) {
@@ -674,12 +675,8 @@ class Core {
                 }
             }
 
-            if (ops.size() == 0)
-                state.batchCompleted(folder.id, priority, sequence);
-            else {
-                if (state.batchCanRun(folder.id, priority, sequence))
-                    state.error(new OperationCanceledException("Processing"));
-            }
+            if (ops.size() != 0 && state.getSerial() == serial)
+                state.error(new OperationCanceledException("Processing"));
         } finally {
             Log.i(folder.name + " end process state=" + state + " pending=" + ops.size());
         }
@@ -1285,38 +1282,42 @@ class Core {
             Log.i(folder.name + " " + (duplicate ? "copy" : "move") +
                     " from " + folder.type + " to " + target.type);
 
-            List<Message> icopies = new ArrayList<>();
-            for (Message imessage : map.keySet()) {
-                EntityMessage message = map.get(imessage);
+            if (!duplicate && account.isSeznam())
+                ifolder.copyMessages(map.keySet().toArray(new Message[0]), itarget);
+            else {
+                List<Message> icopies = new ArrayList<>();
+                for (Message imessage : map.keySet()) {
+                    EntityMessage message = map.get(imessage);
 
-                File file = File.createTempFile("draft", "." + message.id, context.getCacheDir());
-                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                    imessage.writeTo(os);
+                    File file = File.createTempFile("draft", "." + message.id, context.getCacheDir());
+                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                        imessage.writeTo(os);
+                    }
+
+                    Properties props = MessageHelper.getSessionProperties();
+                    Session isession = Session.getInstance(props, null);
+
+                    Message icopy;
+                    try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                        if (duplicate) {
+                            String msgid = EntityMessage.generateMessageId();
+                            msgids.put(message, msgid);
+                            icopy = new MimeMessageEx(isession, is, msgid);
+                            icopy.saveChanges();
+                        } else
+                            icopy = new MimeMessage(isession, is);
+                    }
+
+                    file.delete();
+
+                    for (Flags.Flag flag : imessage.getFlags().getSystemFlags())
+                        icopy.setFlag(flag, true);
+
+                    icopies.add(icopy);
                 }
 
-                Properties props = MessageHelper.getSessionProperties();
-                Session isession = Session.getInstance(props, null);
-
-                Message icopy;
-                try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                    if (duplicate) {
-                        String msgid = EntityMessage.generateMessageId();
-                        msgids.put(message, msgid);
-                        icopy = new MimeMessageEx(isession, is, msgid);
-                        icopy.saveChanges();
-                    } else
-                        icopy = new MimeMessage(isession, is);
-                }
-
-                file.delete();
-
-                for (Flags.Flag flag : imessage.getFlags().getSystemFlags())
-                    icopy.setFlag(flag, true);
-
-                icopies.add(icopy);
+                itarget.appendMessages(icopies.toArray(new Message[0]));
             }
-
-            itarget.appendMessages(icopies.toArray(new Message[0]));
         } else {
             for (Message imessage : map.keySet()) {
                 Log.i((copy ? "Copy" : "Move") + " seen=" + seen + " unflag=" + unflag + " flags=" + imessage.getFlags() + " can=" + canMove);
@@ -1330,41 +1331,20 @@ class Core {
                     imessage.setFlag(Flags.Flag.FLAGGED, false);
 
                 // Mark not spam
-                if (EntityFolder.JUNK.equals(folder.type) &&
-                        ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
+                if (!copy && ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
+                    Flags junk = new Flags(MessageHelper.FLAG_JUNK);
                     Flags notJunk = new Flags(MessageHelper.FLAG_NOT_JUNK);
-                    imessage.setFlags(notJunk, true);
-                }
-
-                EntityMessage message = map.get(imessage);
-                if (message != null && message.from != null) {
-                    for (Address from : message.from) {
-                        String email = ((InternetAddress) from).getAddress();
-                        if (TextUtils.isEmpty(email))
-                            continue;
-                        if (EntityFolder.JUNK.equals(folder.type)) {
-                            // From junk
-                            long now = new Date().getTime();
-                            EntityContact contact = db.contact().getContact(message.account, EntityContact.TYPE_NO_JUNK, email);
-                            if (contact == null) {
-                                contact = new EntityContact();
-                                contact.account = message.account;
-                                contact.name = ((InternetAddress) from).getPersonal();
-                                contact.email = email;
-                                contact.type = EntityContact.TYPE_NO_JUNK;
-                                contact.first_contacted = now;
-                                contact.last_contacted = now;
-                                contact.times_contacted = 1;
-                                db.contact().insertContact(contact);
-                            } else {
-                                contact.times_contacted++;
-                                contact.last_contacted = now;
-                                db.contact().updateContact(contact);
-                            }
-                        } else if (EntityFolder.JUNK.equals(target.type)) {
-                            // To junk
-                            int count = db.contact().deleteContact(message.account, EntityContact.TYPE_NO_JUNK, email);
-                        }
+                    List<String> userFlags = Arrays.asList(imessage.getFlags().getUserFlags());
+                    if (EntityFolder.JUNK.equals(target.type)) {
+                        // To junk
+                        if (userFlags.contains(MessageHelper.FLAG_NOT_JUNK))
+                            imessage.setFlags(notJunk, false);
+                        imessage.setFlags(junk, true);
+                    } else if (EntityFolder.JUNK.equals(folder.type)) {
+                        // From junk
+                        if (userFlags.contains(MessageHelper.FLAG_JUNK))
+                            imessage.setFlags(junk, false);
+                        imessage.setFlags(notJunk, true);
                     }
                 }
             }
@@ -1940,6 +1920,8 @@ class Core {
 
         if (force)
             sync_folders = true;
+        if (!sync_folders)
+            sync_shared_folders = false;
 
         // Get folder names
         boolean drafts = false;
@@ -2043,67 +2025,82 @@ class Core {
 
         // Get default folder
         Folder defaultFolder = istore.getDefaultFolder();
-        char separator = defaultFolder.getSeparator();
-        EntityLog.log(context, account.name + " folder separator=" + separator);
-        db.account().setFolderSeparator(account.id, separator);
 
         // Get remote folders
         long start = new Date().getTime();
-        List<Folder> ifolders = new ArrayList<>();
-        ifolders.addAll(Arrays.asList(defaultFolder.list("*")));
-
+        List<Pair<Folder, Folder>> ifolders = new ArrayList<>();
         List<String> subscription = new ArrayList<>();
+
+        Folder[] personal;
         try {
-            Folder[] isubscribed = defaultFolder.listSubscribed("*");
-            for (Folder ifolder : isubscribed) {
-                String fullName = ifolder.getFullName();
-                if (TextUtils.isEmpty(fullName)) {
-                    Log.w("Subscribed folder name empty namespace=" + defaultFolder.getFullName());
-                    continue;
+            personal = istore.getPersonalNamespaces();
+            if (personal.length == 0)
+                throw new MessagingException("Empty personal namespaces");
+        } catch (MessagingException ex) {
+            Log.e(ex);
+            personal = new Folder[]{istore.getDefaultFolder()};
+        }
+
+        for (Folder namespace : personal) {
+            EntityLog.log(context, "Personal namespace=" + namespace.getFullName());
+
+            String pattern = namespace.getFullName() + "*";
+            for (Folder ifolder : defaultFolder.list(pattern))
+                ifolders.add(new Pair<>(namespace, ifolder));
+
+            try {
+                Folder[] isubscribed = defaultFolder.listSubscribed(pattern);
+                for (Folder ifolder : isubscribed) {
+                    String fullName = ifolder.getFullName();
+                    if (TextUtils.isEmpty(fullName)) {
+                        Log.w("Subscribed folder name empty namespace=" + defaultFolder.getFullName());
+                        continue;
+                    }
+                    subscription.add(fullName);
+                    Log.i("Subscribed " + defaultFolder.getFullName() + ":" + fullName);
                 }
-                subscription.add(fullName);
-                Log.i("Subscribed " + defaultFolder.getFullName() + ":" + fullName);
+            } catch (Throwable ex) {
+                    /*
+                        06-21 10:02:38.035  9927 10024 E fairemail: java.lang.NullPointerException: Folder name is null
+                        06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:372)
+                        06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:411)
+                        06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPStore.newIMAPFolder(SourceFile:1809)
+                        06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.DefaultFolder.listSubscribed(SourceFile:89)
+                     */
+                Log.e(account.name, ex);
             }
-        } catch (Throwable ex) {
-            /*
-                06-21 10:02:38.035  9927 10024 E fairemail: java.lang.NullPointerException: Folder name is null
-                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:372)
-                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:411)
-                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPStore.newIMAPFolder(SourceFile:1809)
-                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.DefaultFolder.listSubscribed(SourceFile:89)
-             */
-            Log.e(account.name, ex);
         }
 
         if (sync_shared_folders) {
             // https://tools.ietf.org/html/rfc2342
-            Folder[] namespaces = istore.getSharedNamespaces();
-            EntityLog.log(context, "Namespaces=" + namespaces.length);
-            for (Folder namespace : namespaces) {
-                EntityLog.log(context, "Namespace=" + namespace.getFullName());
-                if (namespace.getSeparator() == separator) {
-                    try {
-                        ifolders.addAll(Arrays.asList(namespace.list("*")));
-                    } catch (FolderNotFoundException ex) {
-                        Log.w(ex);
-                    }
+            Folder[] shared = istore.getSharedNamespaces();
+            EntityLog.log(context, "Shared namespaces=" + shared.length);
 
-                    try {
-                        Folder[] isubscribed = namespace.listSubscribed("*");
-                        for (Folder ifolder : isubscribed) {
-                            String fullName = ifolder.getFullName();
-                            if (TextUtils.isEmpty(fullName)) {
-                                Log.e("Subscribed folder name empty namespace=" + namespace.getFullName());
-                                continue;
-                            }
-                            subscription.add(fullName);
-                            Log.i("Subscribed " + namespace.getFullName() + ":" + fullName);
+            for (Folder namespace : shared) {
+                EntityLog.log(context, "Shared namespace=" + namespace.getFullName());
+
+                String pattern = namespace.getFullName() + "*";
+                try {
+                    for (Folder ifolder : defaultFolder.list(pattern))
+                        ifolders.add(new Pair<>(namespace, ifolder));
+                } catch (FolderNotFoundException ex) {
+                    Log.w(ex);
+                }
+
+                try {
+                    Folder[] isubscribed = namespace.listSubscribed(pattern);
+                    for (Folder ifolder : isubscribed) {
+                        String fullName = ifolder.getFullName();
+                        if (TextUtils.isEmpty(fullName)) {
+                            Log.e("Subscribed folder name empty namespace=" + namespace.getFullName());
+                            continue;
                         }
-                    } catch (Throwable ex) {
-                        Log.e(account.name, ex);
+                        subscription.add(fullName);
+                        Log.i("Subscribed " + namespace.getFullName() + ":" + fullName);
                     }
-                } else
-                    Log.e("Namespace separator=" + namespace.getSeparator() + " default=" + separator);
+                } catch (Throwable ex) {
+                    Log.e(account.name, ex);
+                }
             }
         }
 
@@ -2111,17 +2108,16 @@ class Core {
 
         Log.i("Remote folder count=" + ifolders.size() +
                 " subscriptions=" + subscription.size() +
-                " separator=" + separator +
                 " fetched in " + duration + " ms");
 
         // Check if system folders were renamed
         try {
-            for (Folder ifolder : ifolders) {
-                String fullName = ifolder.getFullName();
+            for (Pair<Folder, Folder> ifolder : ifolders) {
+                String fullName = ifolder.second.getFullName();
                 if (TextUtils.isEmpty(fullName))
                     continue;
 
-                String[] attrs = ((IMAPFolder) ifolder).getAttributes();
+                String[] attrs = ((IMAPFolder) ifolder.second).getAttributes();
                 String type = EntityFolder.getType(attrs, fullName, false);
                 if (type != null &&
                         !EntityFolder.USER.equals(type) &&
@@ -2164,14 +2160,14 @@ class Core {
 
         Map<String, EntityFolder> nameFolder = new HashMap<>();
         Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
-        for (Folder ifolder : ifolders) {
-            String fullName = ifolder.getFullName();
+        for (Pair<Folder, Folder> ifolder : ifolders) {
+            String fullName = ifolder.second.getFullName();
             if (TextUtils.isEmpty(fullName)) {
                 Log.e("Folder name empty");
                 continue;
             }
 
-            String[] attrs = ((IMAPFolder) ifolder).getAttributes();
+            String[] attrs = ((IMAPFolder) ifolder.second).getAttributes();
             String type = EntityFolder.getType(attrs, fullName, false);
             boolean subscribed = subscription.contains(fullName);
 
@@ -2183,8 +2179,8 @@ class Core {
                 if (attr.equalsIgnoreCase("\\NoInferiors"))
                     inferiors = false;
             }
-            selectable = selectable && ((ifolder.getType() & IMAPFolder.HOLDS_MESSAGES) != 0);
-            inferiors = inferiors && ((ifolder.getType() & IMAPFolder.HOLDS_FOLDERS) != 0);
+            selectable = selectable && ((ifolder.second.getType() & IMAPFolder.HOLDS_MESSAGES) != 0);
+            inferiors = inferiors && ((ifolder.second.getType() & IMAPFolder.HOLDS_FOLDERS) != 0);
 
             if (EntityFolder.INBOX.equals(type))
                 selectable = true;
@@ -2205,12 +2201,15 @@ class Core {
                     folder = db.folder().getFolderByName(account.id, fullName);
                     if (folder == null) {
                         EntityFolder parent = null;
+                        char separator = ifolder.first.getSeparator();
                         int sep = fullName.lastIndexOf(separator);
                         if (sep > 0)
                             parent = db.folder().getFolderByName(account.id, fullName.substring(0, sep));
 
                         folder = new EntityFolder();
                         folder.account = account.id;
+                        folder.namespace = ifolder.first.getFullName();
+                        folder.separator = separator;
                         folder.name = fullName;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.subscribed = subscribed;
@@ -2237,6 +2236,10 @@ class Core {
                             EntityOperation.sync(context, folder.id, false);
                     } else {
                         Log.i(folder.name + " exists type=" + folder.type);
+
+                        folder.namespace = ifolder.first.getFullName();
+                        folder.separator = ifolder.first.getSeparator();
+                        db.folder().setFolderNamespace(folder.id, folder.namespace, folder.separator);
 
                         if (folder.subscribed == null || !folder.subscribed.equals(subscribed))
                             db.folder().setFolderSubscribed(folder.id, subscribed);
@@ -2265,7 +2268,7 @@ class Core {
                 }
 
                 nameFolder.put(folder.name, folder);
-                String parentName = folder.getParentName(separator);
+                String parentName = folder.getParentName();
                 if (!parentFolders.containsKey(parentName))
                     parentFolders.put(parentName, new ArrayList<EntityFolder>());
                 parentFolders.get(parentName).add(folder);
@@ -2746,7 +2749,7 @@ class Core {
                                     Log.w(ex);
                                 }
 
-                            EntityContact.update(context, account, folder, message);
+                            EntityContact.received(context, account, folder, message);
                         } catch (Throwable ex) {
                             db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
                         }
@@ -3753,7 +3756,7 @@ class Core {
             }
 
             try {
-                EntityContact.update(context, account, folder, message);
+                EntityContact.received(context, account, folder, message);
 
                 // Download small messages inline
                 if (download && !message.ui_hide) {
@@ -3928,7 +3931,7 @@ class Core {
                 }
 
             if (process) {
-                EntityContact.update(context, account, folder, message);
+                EntityContact.received(context, account, folder, message);
                 MessageClassifier.classify(message, folder, null, context);
             } else
                 Log.d(folder.name + " unchanged uid=" + uid);
@@ -4040,6 +4043,26 @@ class Core {
                     if (rule.stop)
                         break;
                 }
+
+            if (EntityFolder.INBOX.equals(folder.type))
+                if (message.from != null)
+                    for (Address from : message.from) {
+                        String email = ((InternetAddress) from).getAddress();
+                        if (TextUtils.isEmpty(email))
+                            continue;
+
+                        EntityContact badboy = db.contact().getContact(message.account, EntityContact.TYPE_JUNK, email);
+                        if (badboy != null) {
+                            EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
+                            if (junk != null) {
+                                EntityOperation.queue(context, message, EntityOperation.MOVE, junk.id);
+                                message.ui_hide = true;
+                                executed = true;
+                            }
+                            break;
+                        }
+                    }
+
             if (executed &&
                     !message.hasKeyword(MessageHelper.FLAG_FILTERED))
                 EntityOperation.queue(context, message, EntityOperation.KEYWORD, MessageHelper.FLAG_FILTERED, true);
@@ -4632,6 +4655,9 @@ class Core {
                             .setSummaryText(title));
                 }
 
+            //builder.extend(new NotificationCompat.WearableExtender()
+            //        .setDismissalId(BuildConfig.APPLICATION_ID));
+
             notifications.add(builder);
         }
 
@@ -5034,7 +5060,7 @@ class Core {
                             .setDismissalId(BuildConfig.APPLICATION_ID + ":" + id)
                     /* .setBridgeTag(id < 0 ? "header" : "body") */);
 
-            // https://developer.android.com/reference/androidx/car/app/notification/CarAppExtender
+            // https://developer.android.com/reference/androidx/core/app/NotificationCompat.CarExtender
             mbuilder.extend(new NotificationCompat.CarExtender());
 
             notifications.add(mbuilder);
@@ -5130,9 +5156,7 @@ class Core {
         private Throwable unrecoverable = null;
         private Long lastActivity = null;
 
-        private boolean process = false;
-        private Map<FolderPriority, Long> sequence = new HashMap<>();
-        private Map<FolderPriority, Long> batch = new HashMap<>();
+        private long serial = 0;
 
         State(ConnectionHelper.NetworkState networkState) {
             this.networkState = networkState;
@@ -5216,19 +5240,10 @@ class Core {
         void reset() {
             recoverable = true;
             lastActivity = null;
-            resetBatches();
-            process = true;
         }
 
-        void resetBatches() {
-            process = false;
-            synchronized (this) {
-                for (FolderPriority key : sequence.keySet()) {
-                    batch.put(key, sequence.get(key));
-                    if (BuildConfig.DEBUG)
-                        Log.i("=== Reset " + key.folder + ":" + key.priority + " batch=" + batch.get(key));
-                }
-            }
+        void nextSerial() {
+            serial++;
         }
 
         private void yield() {
@@ -5312,44 +5327,8 @@ class Core {
             return (last == null ? 0 : SystemClock.elapsedRealtime() - last);
         }
 
-        long getSequence(long folder, int priority) {
-            synchronized (this) {
-                FolderPriority key = new FolderPriority(folder, priority);
-                if (!sequence.containsKey(key)) {
-                    sequence.put(key, 0L);
-                    batch.put(key, 0L);
-                }
-                long result = sequence.get(key);
-                sequence.put(key, result + 1);
-                if (BuildConfig.DEBUG)
-                    Log.i("=== Get " + folder + ":" + priority + " sequence=" + result);
-                return result;
-            }
-        }
-
-        boolean batchCanRun(long folder, int priority, long current) {
-            if (!process) {
-                Log.i("=== Can " + folder + ":" + priority + " process=" + process);
-                return false;
-            }
-
-            synchronized (this) {
-                FolderPriority key = new FolderPriority(folder, priority);
-                boolean can = batch.get(key).equals(current);
-                if (BuildConfig.DEBUG)
-                    Log.i("=== Can " + folder + ":" + priority + " can=" + can);
-                return can;
-            }
-        }
-
-        void batchCompleted(long folder, int priority, long current) {
-            synchronized (this) {
-                FolderPriority key = new FolderPriority(folder, priority);
-                if (batch.get(key).equals(current))
-                    batch.put(key, batch.get(key) + 1);
-                if (BuildConfig.DEBUG)
-                    Log.i("=== Completed " + folder + ":" + priority + " next=" + batch.get(key));
-            }
+        long getSerial() {
+            return serial;
         }
 
         @NonNull
@@ -5357,7 +5336,8 @@ class Core {
         public String toString() {
             return "[running=" + running +
                     ",recoverable=" + recoverable +
-                    ",idle=" + getIdleTime() + "]";
+                    ",idle=" + getIdleTime() + "" +
+                    ",serial=" + serial + "]";
         }
 
         private static class FolderPriority {

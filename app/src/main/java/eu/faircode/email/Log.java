@@ -307,8 +307,7 @@ public class Log {
                 sb.append(' ').append(key).append('=').append(val);
                 ocrumb.put(key, val);
             }
-            if (BuildConfig.DEBUG)
-                Log.i(sb.toString());
+            Log.i(sb.toString());
             Bugsnag.leaveBreadcrumb(name, ocrumb, BreadcrumbType.LOG);
         } catch (Throwable ex) {
             ex.printStackTrace();
@@ -2213,9 +2212,11 @@ public class Log {
         long size = 0;
         File file = attachment.getFile(context);
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-            for (SimpleTask task : SimpleTask.getList()) {
+            for (SimpleTask task : SimpleTask.getList())
                 size += write(os, String.format("%s\r\n", task.toString()));
-            }
+            size += write(os, "\r\n");
+            for (TwoStateOwner owner : TwoStateOwner.getList())
+                size += write(os, String.format("%s\r\n", owner.toString()));
         }
 
         db.attachment().setDownloaded(attachment.id, size);

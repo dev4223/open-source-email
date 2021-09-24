@@ -24,9 +24,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -1855,13 +1853,23 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                         });
 
                                         for (TupleOperationEx.PartitionKey key : keys) {
+                                            int ops;
                                             synchronized (partitions) {
+                                                ops = partitions.get(key).size();
                                                 Log.i(folder.name +
                                                         " queuing partition=" + key +
-                                                        " operations=" + partitions.get(key).size());
+                                                        " operations=" + ops);
                                             }
 
-                                            final long sequence = state.getSequence(folder.id, key.getPriority());
+                                            final long serial = state.getSerial();
+
+                                            Map<String, String> crumb = new HashMap<>();
+                                            crumb.put("account", folder.account == null ? null : Long.toString(folder.account));
+                                            crumb.put("folder", folder.name + "/" + folder.type + ":" + folder.id);
+                                            crumb.put("partition", key.toString());
+                                            crumb.put("operations", Integer.toString(ops));
+                                            crumb.put("serial", Long.toString(serial));
+                                            Log.breadcrumb("Queuing", crumb);
 
                                             executor.submit(new Helper.PriorityRunnable(key.getPriority(), key.getOrder()) {
                                                 @Override
@@ -1878,7 +1886,16 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                                                         Log.i(folder.name +
                                                                 " executing partition=" + key +
+                                                                " serial=" + serial +
                                                                 " operations=" + partition.size());
+
+                                                        Map<String, String> crumb = new HashMap<>();
+                                                        crumb.put("account", folder.account == null ? null : Long.toString(folder.account));
+                                                        crumb.put("folder", folder.name + "/" + folder.type + ":" + folder.id);
+                                                        crumb.put("partition", key.toString());
+                                                        crumb.put("operations", Integer.toString(partition.size()));
+                                                        crumb.put("serial", Long.toString(serial));
+                                                        Log.breadcrumb("Executing", crumb);
 
                                                         // Get folder
                                                         Folder ifolder = mapFolders.get(folder); // null when polling
@@ -1899,9 +1916,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                 try {
                                                                     ifolder = iservice.getStore().getFolder(folder.name);
                                                                 } catch (IllegalStateException ex) {
-                                                                    if ("Not connected".equals(ex.getMessage()))
+                                                                    if ("Not connected".equals(ex.getMessage())) {
+                                                                        Log.w(ex);
                                                                         return; // Store closed
-                                                                    else
+                                                                    } else
                                                                         throw ex;
                                                                 }
 
@@ -1928,7 +1946,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                     account, folder,
                                                                     partition,
                                                                     iservice.getStore(), ifolder,
-                                                                    state, key.getPriority(), sequence);
+                                                                    state, serial);
 
                                                         } catch (Throwable ex) {
                                                             Log.e(folder.name, ex);
@@ -1950,6 +1968,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                 db.folder().setFolderState(folder.id, null);
                                                             }
                                                         }
+                                                    } catch (Throwable ex) {
+                                                        Log.e(ex);
                                                     } finally {
                                                         wlOperations.release();
                                                     }
@@ -2125,7 +2145,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         int pollInterval = getPollInterval(this);
                         long now = new Date().getTime();
                         long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
-                        long maxDelayed = (pollInterval > 0 && !account.poll_exempted
+                        long maxDelayed = (pollInterval > 0 && !account.isExempted(this)
                                 ? pollInterval * ACCOUNT_ERROR_AFTER_POLL : ACCOUNT_ERROR_AFTER) * 60 * 1000L;
                         if (delayed > maxDelayed &&
                                 state.getBackoff() >= CONNECT_BACKOFF_ALARM_START * 60) {
@@ -2152,21 +2172,22 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                     // Stop watching operations
                     Log.i(account.name + " stop watching operations");
-                    getMainHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                if (cowner.value != null)
-                                    cowner.value.destroy();
-                            } catch (Throwable ex) {
-                                Log.e(ex);
+                    final TwoStateOwner _owner = cowner.value;
+                    if (_owner != null)
+                        getMainHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    _owner.destroy();
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                }
                             }
-                        }
-                    });
+                        });
 
                     // Stop executing operations
                     Log.i(account.name + " stop executing operations");
-                    state.resetBatches();
+                    state.nextSerial();
                     ((ThreadPoolExecutor) executor).getQueue().clear();
 
                     // Close store
@@ -2387,7 +2408,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 db.endTransaction();
             }
             prefs.edit().putInt("poll_interval", OPTIMIZE_POLL_INTERVAL).apply();
-        } else if (pollInterval <= 60 && account.poll_exempted) {
+        } else if (pollInterval <= 60 && account.isExempted(this)) {
             db.account().setAccountPollExempted(account.id, false);
             eval(this, "Optimize=" + reason);
         }
@@ -2588,7 +2609,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             List<TupleAccountNetworkState> result = new ArrayList<>();
             for (TupleAccountState accountState : accountStates)
                 result.add(new TupleAccountNetworkState(
-                        enabled && (pollInterval == 0 || accountState.poll_exempted) && scheduled,
+                        enabled && (pollInterval == 0 || accountState.isExempted(ServiceSynchronize.this)) && scheduled,
                         command,
                         networkState,
                         accountState));
@@ -2700,14 +2721,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     static int getPollInterval(Context context) {
+        if (Helper.isOptimizing12(context))
+            return (BuildConfig.DEBUG ? 2 : 15);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        int poll_interval = prefs.getInt("poll_interval", 0); // minutes
-        //if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
-        //    Boolean ignoring = Helper.isIgnoringOptimizations(context);
-        //    if (ignoring != null && !ignoring)
-        //        poll_interval = 15;
-        //}
-        return poll_interval;
+        return prefs.getInt("poll_interval", 0); // minutes
     }
 
     static long[] getSchedule(Context context) {

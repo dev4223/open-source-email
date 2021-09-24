@@ -43,10 +43,6 @@ import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Provider;
-import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -55,23 +51,6 @@ import java.util.Map;
 public class ApplicationEx extends Application
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private Thread.UncaughtExceptionHandler prev = null;
-
-    static {
-        if (BuildConfig.DEBUG)
-            try {
-                Provider[] providers = Security.getProviders();
-                for (int p = 0; p < providers.length; p++)
-                    if (BouncyCastleProvider.PROVIDER_NAME.equals(providers[p].getName())) {
-                        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
-                        Provider bc = new BouncyCastleProvider();
-                        Security.insertProviderAt(bc, p + 1);
-                        Log.i("Replacing provider " + providers[p] + " at " + p + " by " + bc);
-                        break;
-                    }
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-    }
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -211,14 +190,17 @@ public class ApplicationEx extends Application
         if (Helper.hasWebView(this))
             CookieManager.getInstance().setAcceptCookie(false);
 
+        EncryptionHelper.init(this);
         MessageHelper.setSystemProperties(this);
 
         ContactInfo.init(this);
 
         DisconnectBlacklist.init(this);
 
-        ServiceSynchronize.watchdog(this);
-        ServiceSend.watchdog(this);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            ServiceSynchronize.watchdog(this);
+            ServiceSend.watchdog(this);
+        }
 
         ServiceSynchronize.scheduleWatchdog(this);
         WorkManager.getInstance(this).cancelUniqueWork("WorkerWatchdog");
@@ -264,7 +246,6 @@ public class ApplicationEx extends Application
             case "secure": // privacy
             case "shortcuts": // misc
             case "language": // misc
-            case "query_threads": // misc
             case "wal": // misc
                 // Should be excluded for import
                 restart(this);
@@ -538,9 +519,9 @@ public class ApplicationEx extends Application
                 if (!prefs.contains("landscape3"))
                     editor.putBoolean("landscape3", false);
             }
-        } else if (version < 17150) {
-            editor.remove("sign_algo_smime");
-            editor.remove("encrypt_algo_smime");
+        } else if (version < 1721) {
+            if (!prefs.contains("discard_delete"))
+                editor.putBoolean("discard_delete", false);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

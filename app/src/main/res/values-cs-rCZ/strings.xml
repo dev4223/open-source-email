@@ -93,12 +93,10 @@
     <string name="title_block">Blokovat %1$s</string>
     <string name="title_block_sender">Blokovat odesílatele</string>
     <string name="title_block_domain">Blokovat doménu odesílatele</string>
-    <string name="title_block_sender_hint">        Blokování odesílatele vytvoří pravidlo pro automatický přesun budoucích zpráv do složky nevyžádané pošty.
-        Vytváření a používání pravidel je Pro funkcí.
-    </string>
     <string name="title_junk_filter">Použít lokální filtr nevyžádané pošty</string>
     <string name="title_junk_filter_hint">Může zvýšit využití baterie a nesprávně označovat zprávy jako nevyžádané</string>
     <string name="title_junk_blocklist">Použít seznam blokovaných adres</string>
+    <string name="title_junk_clear">Vymazat</string>
     <string name="title_notification_sending">Odesílání zpráv</string>
     <string name="title_notification_waiting">Čekám na vhodné připojení</string>
     <string name="title_notification_idle">Nečinný</string>
@@ -201,7 +199,6 @@
     <string name="title_setup_doze_battery">Rychlé vybíjení baterie?</string>
     <string name="title_setup_doze_stopped">Synchronizace se zastavila?</string>
     <string name="title_setup_doze_device">Pravděpodobně vyžadováno pro toto zařízení</string>
-    <string name="title_setup_doze_android">Vyžadováno pro tuto verzi Androidu</string>
     <string name="title_setup_inexact">Budíky &amp; připomenutí jsou zakázány</string>
     <string name="title_setup_background">Omezení na pozadí jsou povolena</string>
     <string name="title_setup_data">Spořič dat je zapnutý</string>
@@ -370,7 +367,6 @@
     <string name="title_advanced_threading_unread">Zobrazit počet nepřečtených zpráv v konverzacích</string>
     <string name="title_advanced_indentation">Levé/pravé odsazení přijatých/odeslaných zpráv v konverzacích</string>
     <string name="title_advanced_highlight_unread">Zvýraznit nepřečtené zprávy</string>
-    <string name="title_advanced_highlight_subject">Zvýraznit předmět</string>
     <string name="title_advanced_color_stripe">Zobrazit barevný pruh</string>
     <string name="title_advanced_avatars">Zobrazit fotografie kontaktů</string>
     <string name="title_advanced_gravatars">Zobrazit Gravatary</string>
@@ -389,10 +385,10 @@
     <string name="title_advanced_distinguish_contacts">Podtrhnout odesílatele, je-li známý jako lokální „komu“ kontakt</string>
     <string name="title_advanced_show_recipients">Zobrazit příjemce v hlavičce zprávy</string>
     <string name="title_advanced_font_size_sender">Velikost textu odesílatele</string>
-    <string name="title_advanced_font_size_subject">Velikost textu předmětu</string>
     <string name="title_advanced_subject_top">Zobrazit předmět nad odesílatelem</string>
     <string name="title_advanced_subject_italic">Zobrazit předmět kurzívou</string>
-    <string name="title_advanced_subject_elipsed">Zestručnit předmět v případě potřeby</string>
+    <string name="title_advanced_highlight_subject">Zvýraznit předmět</string>
+    <string name="title_advanced_font_size_subject">Velikost textu předmětu</string>
     <string name="title_advanced_highlight_color">Barva zvýraznění</string>
     <string name="title_advanced_keywords">Zobrazit klíčová slova v hlavičce zprávy</string>
     <string name="title_advanced_labels">Zobrazit Gmail štítky v hlavičce zprávy</string>
@@ -550,7 +546,6 @@
     <string name="title_advanced_protocol">Protokolovat protokoly</string>
     <string name="title_advanced_log_info">Protokolování při ladění</string>
     <string name="title_advanced_debug">Režim ladění</string>
-    <string name="title_advanced_query_threads">Omezit paralelní přístup k databázi</string>
     <string name="title_advanced_manual_hint">Je-li příjem zpráv zakázán, stále je možno zprávy přijímat ručně tažením dolů v seznamu zpráv</string>
     <string name="title_advanced_poll_hint">Pravidelná kontrola nových zpráv pokaždé porovnává místní a vzdálené zprávy, což je zdlouhavá operace, potencionálně vedoucí ke zvýšené spotřebě baterie, zvláště při velkém množství zpráv. Neustálý příjem tomuto předchází průběžným sledováním změn.</string>
     <string name="title_advanced_optimize_hint">Může změnit synchronizační interval pro úsporu spotřeby baterie, v závislosti na možnostech a chování e-mailových serverů</string>
@@ -620,7 +615,6 @@
     <string name="title_advanced_move_hint">Cílovou složku lze změnit v nastavení účtu</string>
     <string name="title_advanced_notify_no_grouping">Tato verze Androidu nepodporuje seskupování oznámení</string>
     <string name="title_advanced_notify_no_channels">Tato verze Androidu nepodporuje kanály oznámení</string>
-    <string name="title_advanced_queries_hint">Povolením se sníží výkonnost, avšak na některých zařízeních je povolení nezbytné</string>
     <string name="title_advanced_fts_hint">Povolením se zlepší výkon vyhledávání, ale také se zvýší využití baterie a místa v úložišti</string>
     <string name="title_advanced_english_hint">Restartuje aplikaci</string>
     <string name="title_advanced_experiments_hint">Seznam aktuálních experimentálních funkcí</string>
@@ -946,7 +940,6 @@
     <string name="title_ask_delete_rule">Trvale smazat pravidlo?</string>
     <string name="title_ask_discard">Zahodit koncept?</string>
     <string name="title_ask_show_html">Zobrazením původní zprávy může dojít k úniku citlivých informací</string>
-    <string name="title_ask_show_html_dark">Použít tmavý motiv</string>
     <string name="title_ask_show_html_remark">Zobrazení původní zprávy na tmavém pozadí není možné, neboť může způsobit zneviditelnění tmavých textů a obrázků</string>
     <string name="title_ask_show_html_images">Vždy zobrazit obrázky při zobrazení původních zpráv</string>
     <string name="title_ask_show_image">Zobrazením obrázků může dojít k úniku citlivých informací</string>
@@ -1473,9 +1466,7 @@
     <string name="title_rules_export">Exportovat pravidla</string>
     <string name="title_rules_import">Importovat pravidla</string>
     <string name="title_rules_delete_all">Smazat všechna pravidla</string>
-    <string name="title_rules_delete_junk">Smazat pravidla nevyžádané pošty</string>
     <string name="title_rules_delete_all_confirm">Smazat všechna pravidla?</string>
-    <string name="title_rules_delete_junk_confirm">Smazat všechna pravidla, která přesouvají zprávy do složky nevyžádané pošty?</string>
     <string name="title_debug_info">Ladící informace</string>
     <string name="title_debug_info_remark">Prosím, popište problém a uveďte čas, kdy k němu došlo:</string>
     <string name="title_crash_info_remark">Popište prosím, co jste dělali, když došlo k pádu aplikace:</string>
@@ -1672,4 +1663,6 @@
         <item>Jméno a e-mail</item>
     </string-array>
     <!-- https://www.bouncycastle.org/specifications.html -->
+    <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
+    <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
 </resources>

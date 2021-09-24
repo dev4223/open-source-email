@@ -521,6 +521,28 @@ public class FragmentCompose extends FragmentBase {
         ibCcAdd.setOnClickListener(onPick);
         ibBccAdd.setOnClickListener(onPick);
 
+        View.OnLongClickListener onGroup = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                int id = view.getId();
+                if (id == R.id.ibToAdd) {
+                    onMenuContactGroup(etTo);
+                    return true;
+                } else if (id == R.id.ibCcAdd) {
+                    onMenuContactGroup(etCc);
+                    return true;
+                } else if (id == R.id.ibBccAdd) {
+                    onMenuContactGroup(etBcc);
+                    return true;
+                } else
+                    return true;
+            }
+        };
+
+        ibToAdd.setOnLongClickListener(onGroup);
+        ibCcAdd.setOnLongClickListener(onGroup);
+        ibBccAdd.setOnLongClickListener(onGroup);
+
         tvPlainTextOnly.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1810,11 +1832,11 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuContactGroup() {
-        Bundle args = new Bundle();
-        args.putLong("working", working);
+        onMenuContactGroup(view.findFocus());
+    }
 
+    private void onMenuContactGroup(View v) {
         int focussed = 0;
-        View v = view.findFocus();
         if (v != null) {
             if (v.getId() == R.id.etCc)
                 focussed = 1;
@@ -1822,6 +1844,8 @@ public class FragmentCompose extends FragmentBase {
                 focussed = 2;
         }
 
+        Bundle args = new Bundle();
+        args.putLong("working", working);
         args.putInt("focussed", focussed);
 
         Helper.hideKeyboard(view);
@@ -5227,7 +5251,7 @@ public class FragmentCompose extends FragmentBase {
             EntityMessage draft;
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean discard_delete = prefs.getBoolean("discard_delete", false);
+            boolean discard_delete = prefs.getBoolean("discard_delete", true);
             boolean write_below = prefs.getBoolean("write_below", false);
             boolean save_drafts = prefs.getBoolean("save_drafts", true);
             int send_delayed = prefs.getInt("send_delayed", 0);
@@ -6485,7 +6509,7 @@ public class FragmentCompose extends FragmentBase {
                     } else if (view.getId() == R.id.tvAccount && BuildConfig.DEBUG) {
                         String account = cursor.getString(3);
                         String type = cursor.getString(4);
-                        ((TextView) view).setText(account + ":" + type);
+                        ((TextView) view).setText(account + (BuildConfig.DEBUG ? "/" + type : ""));
                         return true;
                     } else
                         return false;

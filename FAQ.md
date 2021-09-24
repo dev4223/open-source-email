@@ -313,6 +313,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(172) How can I import contacts?](#user-content-faq172)
 * [(173) What is the difference between Play store / GitHub / F-Droid version?](#user-content-faq173)
 * [(174) Is auto discovery supported?](#user-content-faq174)
+* [(175) Why should battery optimizations be disabled?](#user-content-faq175)
 
 [I have another question.](#user-content-get-support)
 
@@ -623,7 +624,8 @@ Note that this will result in extra internet traffic.
 <a name="faq8"></a>
 **(8) Can I use a Microsoft Exchange account?**
 
-The Microsoft Exchange Web Services protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
+The Microsoft Exchange Web Services (EWS) protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
+Microsoft stopped updating the EWS libraries [in 2018](https://github.com/OfficeDev/ews-java-api).
 So, it makes little sense to add this protocol anymore.
 
 You can use a Microsoft Exchange account if it is accessible via IMAP, which is mostly the case.
@@ -824,7 +826,7 @@ Common errors:
 * *unable to find valid certification path to requested target*: basically this means one or more intermediate or root certificates were not found
 * *Private key does not match any encryption keys*: the selected key cannot be used to decrypt the message, probably because it is the incorrect key
 * *No private key*: no certificate was selected or no certificate was available in the Android keystore
-* *Memory allocation failed*: Android fails to sign with RSA-8192 private keys
+* *Memory allocation failed*: Android supports keys up to 4096 bits only (Android [issue 199605614](https://issuetracker.google.com/issues/199605614))
 
 In case the certificate chain is incorrect, you can tap on the little info button to show the all certificates.
 After the certificate details the issuer or "selfSign" is shown.
@@ -1950,6 +1952,8 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the full screen icon to show the original message text only?
 * Did you know that you can long press the answer button to reply to the sender? (since version 1.1562)
 * Did you know that you can long press the message move button to move across accounts? (since version 1.1702)
+* Did you know that you can long press the folder name in the message header when viewing a conversation to navigate to the folder? (since version 1.1720)
+* Did you know that you can long press the add contact button in the message composer to insert a contact group? (since version 1.1721)
 
 <br />
 
@@ -2838,8 +2842,11 @@ Note that this is clearly mentioned in the app description.
 
 There are plenty of email providers to choose from.
 Which email provider is best for you depends on your wishes/requirements.
-Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/)
-for a list of privacy oriented email providers with advantages and disadvantages.
+Please see these websites for lists of privacy oriented email providers with advantages and disadvantages:
+
+* [Restore privacy](https://restoreprivacy.com/secure-email/)
+* [Privacy Guides](https://privacyguides.org/providers/email/)
+* [Privacy Tools](https://www.privacytools.io/providers/email/)
 
 Some providers, like ProtonMail, Tutanota, use proprietary email protocols, which make it impossible to use third party email apps.
 Please see [this FAQ](#user-content-faq129) for more information.
@@ -3074,6 +3081,10 @@ Note that some wearables are known to crash with this option enabled.
 
 If you use a Samsung wearable with the Galaxy Wearable (Samsung Gear) app, you might need to enable notifications for FairEmail
 when the setting *Notifications*, *Apps installed in the future* is turned off in this app.
+
+Some companion apps ignore [local only](https://developer.android.com/training/wearables/notifications/bridger#non-bridged) notifications,
+causing the summary notification (*nnn new messages*) to be bridged.
+Unfortunately, it is not possible to workaround this problem.
 
 <br />
 
@@ -3692,6 +3703,8 @@ Considering the default option values:
 Classification is optimized to use as little resources as possible, but will inevitably use some extra battery power.
 
 You can delete all classification data by turning classification in the miscellaneous settings three times off.
+This will be necessary when classification for a folder is enabled or disabled (or when a folder is deleted)
+because classification is based on comparision.
 
 [Filter rules](#user-content-faq71) will be executed before classification.
 
@@ -3910,6 +3923,16 @@ There is no auto discovery for POP3.
 
 <br />
 
+<a name="faq175"></a>
+**(175) Why should battery optimizations be disabled?**
+
+If battery optimizations are enabled ([Doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby)),
+Android might stop the app, which will result in not sending and receiving messages anymore.
+
+It shouldn't be necessary to disable battery optimizations,
+but unfortunately modifications by manufacturers often [require it anyway](https://dontkillmyapp.com/).
+
+<br />
 
 <h2><a name="get-support"></a>Get support</h2>
 

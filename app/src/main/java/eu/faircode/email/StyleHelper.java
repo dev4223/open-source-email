@@ -40,6 +40,7 @@ import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
+import android.text.style.SuggestionSpan;
 import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
@@ -59,12 +60,28 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 public class StyleHelper {
+    private static final List<Class> CLEAR_STYLES = Collections.unmodifiableList(Arrays.asList(
+            StyleSpan.class,
+            UnderlineSpan.class,
+            RelativeSizeSpan.class,
+            BackgroundColorSpan.class,
+            ForegroundColorSpan.class,
+            AlignmentSpan.class,
+            BulletSpan.class,
+            QuoteSpan.class, IndentSpan.class,
+            StrikethroughSpan.class,
+            URLSpan.class,
+            TypefaceSpan.class
+    ));
+
     static boolean apply(int action, LifecycleOwner owner, View anchor, EditText etBody, Object... args) {
         Log.i("Style action=" + action);
 
@@ -631,18 +648,21 @@ public class StyleHelper {
                         if (e + 1 < edit.length() && edit.charAt(e) == '\n')
                             e++;
 
-                        for (Object span : edit.getSpans(start, e, Object.class))
-                            if (!(span instanceof ImageSpan)) {
-                                int sstart = edit.getSpanStart(span);
-                                int send = edit.getSpanEnd(span);
-                                int flags = edit.getSpanFlags(span);
-                                if (sstart < start && send > start)
-                                    setSpan(edit, span, sstart, start, flags, etBody.getContext());
-                                if (sstart < end && send > end)
-                                    setSpan(edit, span, e, send, flags, etBody.getContext());
+                        for (Object span : edit.getSpans(start, e, Object.class)) {
+                            if (!CLEAR_STYLES.contains(span.getClass()))
+                                continue;
 
-                                edit.removeSpan(span);
-                            }
+                            int sstart = edit.getSpanStart(span);
+                            int send = edit.getSpanEnd(span);
+                            int flags = edit.getSpanFlags(span);
+
+                            if (sstart < start && send > start)
+                                setSpan(edit, span, sstart, start, flags, etBody.getContext());
+                            if (sstart < end && send > end)
+                                setSpan(edit, span, e, send, flags, etBody.getContext());
+
+                            edit.removeSpan(span);
+                        }
 
                         etBody.setText(edit);
                         etBody.setSelection(start, e);
@@ -695,9 +715,11 @@ public class StyleHelper {
             } else if (action == R.id.menu_clear) {
                 Log.breadcrumb("style", "action", "clear/all");
 
-                for (Object span : edit.getSpans(0, etBody.length(), Object.class))
-                    if (!(span instanceof ImageSpan))
-                        edit.removeSpan(span);
+                for (Object span : edit.getSpans(0, etBody.length(), Object.class)) {
+                    if (!CLEAR_STYLES.contains(span.getClass()))
+                        continue;
+                    edit.removeSpan(span);
+                }
 
                 etBody.setText(edit);
                 etBody.setSelection(start, end);
