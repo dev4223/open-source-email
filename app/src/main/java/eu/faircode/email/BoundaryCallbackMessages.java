@@ -728,6 +728,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     static class SearchCriteria implements Serializable {
+        long id = -1;
         String query;
         boolean fts = false;
         boolean in_senders = true;
@@ -923,8 +924,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             if (with_size != null)
                 flags.add(context.getString(R.string.title_search_flag_size,
                         Helper.humanReadableByteCount(with_size)));
-            return (query == null ? "" : query)
-                    + (flags.size() > 0 ? " +" : "")
+            return (query == null ? "" : query + " ")
+                    + (flags.size() > 0 ? "+" : "")
                     + TextUtils.join(",", flags);
         }
 

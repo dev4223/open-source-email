@@ -26,6 +26,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
+import android.app.UiModeManager;
 import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -790,7 +791,7 @@ public class Helper {
     }
 
     static void viewFAQ(Context context, int question) {
-        viewFAQ(context, question, false);
+        viewFAQ(context, question, true /* Google translate */);
     }
 
     static void viewFAQ(Context context, int question, boolean english) {
@@ -835,7 +836,7 @@ public class Helper {
         return Uri.parse(SUPPORT_URI)
                 .buildUpon()
                 .appendQueryParameter("product", "fairemailsupport")
-                .appendQueryParameter("version", BuildConfig.VERSION_NAME)
+                .appendQueryParameter("version", BuildConfig.VERSION_NAME + BuildConfig.REVISION)
                 .appendQueryParameter("locale", slocale.toString())
                 .appendQueryParameter("language", language == null ? "" : language)
                 .appendQueryParameter("installed", Helper.hasValidFingerprint(context) ? "" : "Other")
@@ -844,7 +845,7 @@ public class Helper {
 
     static Intent getIntentIssue(Context context) {
         if (ActivityBilling.isPro(context)) {
-            String version = BuildConfig.VERSION_NAME + "/" +
+            String version = BuildConfig.VERSION_NAME + BuildConfig.REVISION + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
                     (BuildConfig.DEBUG ? "d" : "") +
@@ -863,6 +864,7 @@ public class Helper {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String language = prefs.getString("language", null);
+            boolean reporting = prefs.getBoolean("crash_reports", false);
             String uuid = prefs.getString("uuid", null);
             Locale slocale = Resources.getSystem().getConfiguration().locale;
 
@@ -872,7 +874,7 @@ public class Helper {
             html += "Locale: " + Html.escapeHtml(slocale.toString()) + "<br>";
             if (language != null)
                 html += "Language: " + Html.escapeHtml(language) + "<br>";
-            if (uuid != null)
+            if (reporting && uuid != null)
                 html += "UUID: " + Html.escapeHtml(uuid) + "<br>";
             html += "</p>";
 
@@ -1039,6 +1041,37 @@ public class Helper {
 
     static boolean isDozeRequired() {
         return (Build.VERSION.SDK_INT > Build.VERSION_CODES.R && false);
+    }
+
+    static String getUiModeType(Context context) {
+        try {
+            UiModeManager uimm =
+                    (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+            int uiModeType = uimm.getCurrentModeType();
+            switch (uiModeType) {
+                case Configuration.UI_MODE_TYPE_UNDEFINED:
+                    return "undefined";
+                case Configuration.UI_MODE_TYPE_NORMAL:
+                    return "normal";
+                case Configuration.UI_MODE_TYPE_DESK:
+                    return "desk";
+                case Configuration.UI_MODE_TYPE_CAR:
+                    return "car";
+                case Configuration.UI_MODE_TYPE_TELEVISION:
+                    return "television";
+                case Configuration.UI_MODE_TYPE_APPLIANCE:
+                    return "applicance";
+                case Configuration.UI_MODE_TYPE_WATCH:
+                    return "watch";
+                case Configuration.UI_MODE_TYPE_VR_HEADSET:
+                    return "vr headset";
+                default:
+                    return Integer.toString(uiModeType);
+            }
+        } catch (Throwable ex) {
+            Log.w(ex);
+            return null;
+        }
     }
 
     static void reportNoViewer(Context context, Uri uri) {
@@ -1915,6 +1948,7 @@ public class Helper {
                 public void onDestroy() {
                     Log.i("Authenticate destroyed");
                     ApplicationEx.getMainHandler().post(cancelPrompt);
+                    owner.getLifecycle().removeObserver(this);
                 }
             });
 
@@ -2082,6 +2116,11 @@ public class Helper {
                                         intf.onNothingSelected();
                                     else
                                         intf.onSelected(selected);
+                                }
+
+                                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                                public void onDestroy() {
+                                    owner.getLifecycle().removeObserver(this);
                                 }
                             });
                         }

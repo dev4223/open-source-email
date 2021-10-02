@@ -51,7 +51,7 @@ public class AdapterNavSearch extends RecyclerView.Adapter<AdapterNavSearch.View
     private boolean expanded = true;
     private List<EntitySearch> items = new ArrayList<>();
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private View view;
         private ImageView ivItem;
         private ImageView ivBadge;
@@ -74,19 +74,21 @@ public class AdapterNavSearch extends RecyclerView.Adapter<AdapterNavSearch.View
 
         private void wire() {
             view.setOnClickListener(this);
-            view.setOnLongClickListener(this);
         }
 
         private void unwire() {
             view.setOnClickListener(null);
-            view.setOnLongClickListener(null);
         }
 
         private void bindTo(EntitySearch search) {
             ivItem.setImageResource(R.drawable.twotone_search_24);
+            if (search.color == null)
+                ivItem.clearColorFilter();
+            else
+                ivItem.setColorFilter(search.color);
+
             ivBadge.setVisibility(View.GONE);
             tvItem.setText(search.name);
-
 
             tvItemExtra.setVisibility(View.GONE);
             ivExtra.setVisibility(View.GONE);
@@ -107,45 +109,13 @@ public class AdapterNavSearch extends RecyclerView.Adapter<AdapterNavSearch.View
                 JSONObject json = new JSONObject(search.data);
                 BoundaryCallbackMessages.SearchCriteria criteria =
                         BoundaryCallbackMessages.SearchCriteria.fromJSON(json);
+                criteria.id = search.id;
                 FragmentMessages.search(
                         context, owner, manager,
                         -1L, -1L, false, criteria);
             } catch (Throwable ex) {
                 Log.e(ex);
             }
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            int pos = getAdapterPosition();
-            if (pos == RecyclerView.NO_POSITION)
-                return false;
-
-            EntitySearch search = items.get(pos);
-            if (search == null)
-                return false;
-
-            Bundle args = new Bundle();
-            args.putLong("id", search.id);
-
-            new SimpleTask<Void>() {
-                @Override
-                protected Void onExecute(Context context, Bundle args) throws Throwable {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    db.search().deleteSearch(id);
-
-                    return null;
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(manager, ex);
-                }
-            }.execute(context, owner, args, "search:delete");
-
-            return true;
         }
     }
 
@@ -162,6 +132,7 @@ public class AdapterNavSearch extends RecyclerView.Adapter<AdapterNavSearch.View
             public void onDestroyed() {
                 Log.d(AdapterNavSearch.this + " parent destroyed");
                 AdapterNavSearch.this.manager = null;
+                owner.getLifecycle().removeObserver(this);
             }
         });
     }

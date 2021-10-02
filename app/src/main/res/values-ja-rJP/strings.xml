@@ -174,6 +174,8 @@
     <string name="title_setup_doze_battery">電池消費量が多いですか？</string>
     <string name="title_setup_doze_stopped">同期が停止しましたか？</string>
     <string name="title_setup_doze_device">これはおそらくこのデバイスに必要です</string>
+    <string name="title_setup_doze_12">プッシュメッセージは無効です</string>
+    <string name="title_setup_alarm_12">このアプリは動作しません</string>
     <string name="title_setup_inexact">アラーム &amp; リマインダーは無効です</string>
     <string name="title_setup_background">バックグラウンドの制限は有効です</string>
     <string name="title_setup_data">データセーバーが有効になっています</string>
@@ -185,6 +187,7 @@
     <string name="title_setup_still">実行中です</string>
     <string name="title_setup_error">エラー</string>
     <string name="title_setup_configuring">アカウントを設定しています &#8230;</string>
+    <string name="title_setup_app_password">アプリのパスワードを使用する必要があるかもしれません</string>
     <string name="title_setup_close">設定を閉じる</string>
     <string name="title_setup_export">設定をエクスポート</string>
     <string name="title_setup_import">設定をインポート</string>
@@ -231,6 +234,7 @@
     <string name="title_setup_theme_system">システム設定に従う</string>
     <string name="title_setup_theme_black_background">ブラック背景</string>
     <string name="title_setup_theme_html_light">元のメッセージを表示するときは背景色を明るくする</string>
+    <string name="title_setup_theme_composer_light">メッセージエディタの背景色を明るくする</string>
     <string name="title_setup_theme_system_hint">Androidでサポートされている場合、システムテーマは昼/夜に自動的に切り替わります</string>
     <string name="title_setup_theme_more_colors">もっと色が欲しい場合</string>
     <string name="title_setup_advanced">詳細</string>
@@ -1114,9 +1118,6 @@
     <string name="title_search_for_hint">テキストを入力</string>
     <string name="title_search_hint">        はじめに、お使いのデバイスに保存されているメッセージを検索します。
         サーバーも検索するには「もう一度検索」ボタンをタップします
-    </string>
-    <string name="title_search_index_hint">        検索インデックスを介した検索は高速ですが、単語全体しか検索されません。
-        以下のオプションはメールサーバーの検索を続行します。
     </string>
     <string name="title_search_text_hint">メッセージ内のテキストを検索しています。多数のメッセージがある場合、一部のサーバーで動作しない可能性があります。</string>
     <string name="title_search_text_unsupported">\'%s\' は、メールサーバーがメッセージテキスト内の検索をサポートしていないことを意味します</string>

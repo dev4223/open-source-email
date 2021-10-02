@@ -289,6 +289,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean authentication_indicator;
 
     private boolean autoclose_unseen;
+    private boolean collapse_marked;
 
     private boolean language_detection;
     private List<String> languages;
@@ -1237,6 +1238,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         (Boolean.TRUE.equals(message.dkim) ? 1 : 0) +
                                 (Boolean.TRUE.equals(message.spf) ? 1 : 0) +
                                 (Boolean.TRUE.equals(message.dmarc) ? 1 : 0);
+
+                // https://en.wikipedia.org/wiki/DMARC#Alignment
+                if (Boolean.TRUE.equals(message.dkim) &&
+                        !Boolean.FALSE.equals(message.spf) &&
+                        !Boolean.FALSE.equals(message.dmarc))
+                    auths = 3;
+
                 ibAuth.setImageLevel(auths + 1);
                 ibAuth.setImageTintList(ColorStateList.valueOf(
                         auths < 3 ? colorControlNormal : colorVerified));
@@ -2411,8 +2419,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 properties.setValue("full_asked", message.id, true);
             }
 
-            boolean default_light = prefs.getBoolean("default_light", false);
-            properties.setValue("force_light", message.id, default_light);
+            if (!properties.getValue("force_light_default", message.id)) {
+                boolean default_light = prefs.getBoolean("default_light", false);
+                properties.setValue("force_light", message.id, default_light);
+                properties.setValue("force_light_default", message.id, true);
+            }
         }
 
         private void bindBody(TupleMessageEx message, final boolean scroll) {
@@ -4406,7 +4417,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             context.startActivity(new Intent(context, ActivitySetup.class)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                     .putExtra("tab", "privacy"));
                         }
                     })
@@ -4723,7 +4734,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean canBlock = false;
             if (message.from != null && message.from.length > 0) {
                 String email = ((InternetAddress) message.from[0]).getAddress();
-                canBlock = !TextUtils.isEmpty(email) && Helper.EMAIL_ADDRESS.matcher(email).matches();
+                canBlock = !TextUtils.isEmpty(email);
             }
 
             Bundle aargs = new Bundle();
@@ -5121,10 +5132,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     message.ui_seen = args.getBoolean("seen");
                     message.unseen = (message.ui_seen ? 0 : message.count);
-                    if (!message.ui_seen &&
-                            (autoclose_unseen || getItemCount() == 1))
+
+                    if (!message.ui_seen && autoclose_unseen)
                         properties.finish();
-                    else
+                    else if (collapse_marked)
                         properties.setExpanded(message, false, true);
                 }
 
@@ -6059,6 +6070,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.authentication_indicator = prefs.getBoolean("authentication_indicator", false);
         this.language_detection = prefs.getBoolean("language_detection", false);
         this.autoclose_unseen = prefs.getBoolean("autoclose_unseen", false);
+        this.collapse_marked = prefs.getBoolean("collapse_marked", true);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             languages = new ArrayList<>();
@@ -6911,7 +6923,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     FragmentDialogColor fragment = new FragmentDialogColor();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentDialogNotes.this, 1);
-                    fragment.show(getParentFragmentManager(), "identity:color");
+                    fragment.show(getParentFragmentManager(), "notes:color");
                 }
             });
 

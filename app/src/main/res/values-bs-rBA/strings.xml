@@ -207,6 +207,7 @@
     <string name="title_setup_still">Još treba uraditi</string>
     <string name="title_setup_error">Greška</string>
     <string name="title_setup_configuring">Podešavanje računa &#8230;</string>
+    <string name="title_setup_app_password">Možda ćete trebati koristiti lozinku za aplikaciju</string>
     <string name="title_setup_close">Zatvori postavke</string>
     <string name="title_setup_export">Izvezi postavke</string>
     <string name="title_setup_import">Uvezi postavke</string>
@@ -253,6 +254,7 @@
     <string name="title_setup_theme_system">Prati sistem</string>
     <string name="title_setup_theme_black_background">Crna pozadina</string>
     <string name="title_setup_theme_html_light">Svijetla pozadina za pregled izvorne poruke</string>
+    <string name="title_setup_theme_composer_light">Svijetla pozadina u uređivaču poruka</string>
     <string name="title_setup_theme_system_hint">Ovo će automatski zamijeniti svijetlu/tamnu temu u odnosu na dan/noć, ukoliko je opcija podržana na Androidu</string>
     <string name="title_setup_theme_more_colors">Želim više boja</string>
     <string name="title_setup_advanced">Napredno</string>
@@ -360,6 +362,7 @@
     <string name="title_advanced_nav_hide_title">Sakriti opcije navigacijskog menija?</string>
     <string name="title_advanced_nav_hide_message">Možete ponovo omogućiti opcije na postavkama ekrana</string>
     <string name="title_advanced_nav_message_count">Prikaži broj lokalno spašenih poruka u navigacijskom meniju</string>
+    <string name="title_advanced_nav_unseen_drafts">Prikaži broj nepročitanih nacrta u navigacijskom meniju</string>
     <string name="title_advanced_startup">Prikaži na početnom ekranu</string>
     <string name="title_advanced_cards">Koristi kartični stil umjesto tabelarnog</string>
     <string name="title_advanced_cards_beige">Koristi bež pozadinu kada se koristi kartični stil (samo kod svijetlih tema)</string>
@@ -455,6 +458,7 @@
     <string name="title_advanced_autoclose">Automatski zatvori konverzacije</string>
     <string name="title_advanced_onclose">Pri zatvaranju konverzacija</string>
     <string name="title_advanced_autoclose_unread">Zatvori konverzacije markiranjem poruka kao \'nepročitane\'</string>
+    <string name="title_advanced_collapse_marked">Suzi poruke, koje se ručno označavaju kao pročitane ili nepročitane</string>
     <string name="title_advanced_undo">Vrati vrijeme isteka</string>
     <string name="title_advanced_quick_filter">Prikaži nenametljive ikonice za brzo filtriranje</string>
     <string name="title_advanced_quick_scroll">Prikaži nenametljive ikonice za brzo pomicanje gore/dolje</string>
@@ -776,6 +780,8 @@
     <string name="title_delete_channel">Izbriši kanal obavještenja</string>
     <string name="title_insert_contact">Dodaj kontakt</string>
     <string name="title_edit_contact">Uredi kontakt</string>
+    <string name="title_import_contacts">Uvezi vCards-e</string>
+    <string name="title_export_contacts">Izvezi vCards-e</string>
     <string name="title_create_sub_folder">Kreiraj podfolder</string>
     <string name="title_empty_trash_ask">Želite trajno izbrisati sve poruke u otpadu?</string>
     <string name="title_empty_spam_ask">Želite trajno izbrisati sve spam poruke?</string>
@@ -1138,7 +1144,7 @@
     <string name="title_search_hint">        U početku, pretraga se izvršava na uređaju.
         Da bi pretraživali i server, dodirnite dugme \'traži ponovo\'.
     </string>
-    <string name="title_search_index_hint">        Pretraživanje putem indeksa pretrage je brzo, ali pronalazi samo cijele riječi.
+    <string name="title_search_index_hint">        Pretraživanje putem indeksa je brzo, ali pronalazi samo cijele riječi u svim dijelovima poruka.
         Opcije ispod su namijenjene za nastavak pretraživanja e-mail servera.
     </string>
     <string name="title_search_text_hint">Pretraživanje teksta u porukama, kada postoji veliki broj poruka, možda neće raditi na nekim serverima</string>

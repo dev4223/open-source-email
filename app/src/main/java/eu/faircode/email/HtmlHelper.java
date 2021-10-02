@@ -105,6 +105,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -603,12 +604,18 @@ public class HtmlHelper {
                     String value = kv.get(key);
                     switch (key) {
                         case "color":
+                        case "background":
                         case "background-color":
                             // https://developer.mozilla.org/en-US/docs/Web/CSS/color
-                            if ("color".equals(key) && !text_color)
-                                continue;
-                            if ("background-color".equals(key) && !background_color)
-                                continue;
+                            // https://developer.mozilla.org/en-US/docs/Web/CSS/background
+                            // https://developer.mozilla.org/en-US/docs/Web/CSS/background-color
+                            if ("color".equals(key)) {
+                                if (!text_color)
+                                    continue;
+                            } else {
+                                if (!background_color)
+                                    continue;
+                            }
 
                             Integer color = parseColor(value);
 
@@ -1239,12 +1246,24 @@ public class HtmlHelper {
         return document;
     }
 
-    static void removeRelativeLinks(Document document){
-        for (Element a : document.select("a"))
-            if (a.attr("href").trim().startsWith("#")) {
+    static void removeRelativeLinks(Document document) {
+        Elements b = document.select("base");
+        String base = (b.size() > 0 ? b.get(0).attr("href") : null);
+        for (Element a : document.select("a")) {
+            String href = a.attr("href");
+            if (href.trim().startsWith("#")) {
                 a.tagName("span");
                 a.removeAttr("href");
-            }
+            } else if (!TextUtils.isEmpty(base))
+                try {
+                    // https://developer.android.com/reference/java/net/URI
+                    URI u = URI.create(base);
+                    URI r = u.resolve(href);
+                    a.attr("href", r.toString());
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+        }
     }
 
     static void autoLink(Document document) {
@@ -2656,6 +2675,7 @@ public class HtmlHelper {
                             String value = param.substring(semi + 1);
                             switch (key) {
                                 case "color":
+                                case "background":
                                 case "background-color":
                                     if (!TextUtils.isEmpty(value))
                                         try {

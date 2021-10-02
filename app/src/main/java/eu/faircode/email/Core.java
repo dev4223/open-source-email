@@ -512,7 +512,7 @@ class Core {
                             db.endTransaction();
                         }
 
-                        if (similar.size() > 0) {
+                        if (similar.size() > 0 && op.tries < TOTAL_RETRY_MAX) {
                             // Retry individually
                             group = false;
                             // Finally will reset state
@@ -2031,14 +2031,24 @@ class Core {
         List<Pair<Folder, Folder>> ifolders = new ArrayList<>();
         List<String> subscription = new ArrayList<>();
 
-        Folder[] personal;
+        List<Folder> personal = new ArrayList<>();
         try {
-            personal = istore.getPersonalNamespaces();
-            if (personal.length == 0)
-                throw new MessagingException("Empty personal namespaces");
+            Folder[] pnamespaces = istore.getPersonalNamespaces();
+
+            boolean root = false;
+            Folder d = istore.getDefaultFolder();
+            if (pnamespaces != null) {
+                personal.addAll(Arrays.asList(pnamespaces));
+                for (Folder p : pnamespaces)
+                    if (d.getFullName().equals(p.getFullName())) {
+                        root = true;
+                        break;
+                    }
+            }
+            if (!root)
+                personal.add(d);
         } catch (MessagingException ex) {
             Log.e(ex);
-            personal = new Folder[]{istore.getDefaultFolder()};
         }
 
         for (Folder namespace : personal) {
@@ -2110,6 +2120,11 @@ class Core {
                 " subscriptions=" + subscription.size() +
                 " fetched in " + duration + " ms");
 
+        if (ifolders.size() == 0) {
+            Log.e(account.host + " no folders listed");
+            return;
+        }
+
         // Check if system folders were renamed
         try {
             for (Pair<Folder, Folder> ifolder : ifolders) {
@@ -2120,6 +2135,7 @@ class Core {
                 String[] attrs = ((IMAPFolder) ifolder.second).getAttributes();
                 String type = EntityFolder.getType(attrs, fullName, false);
                 if (type != null &&
+                        !EntityFolder.INBOX.equals(type) &&
                         !EntityFolder.USER.equals(type) &&
                         !EntityFolder.SYSTEM.equals(type)) {
                     for (EntityFolder folder : new ArrayList<>(local.values()))
@@ -2136,19 +2152,18 @@ class Core {
                             db.folder().setFolderName(folder.id, fullName);
                         }
 
-                    // Reselect Gmail archive folder
-                    if (EntityFolder.ARCHIVE.equals(type) && account.isGmail()) {
-                        boolean gmail_archive_fixed = prefs.getBoolean("gmail_archive_fixed", false);
-                        if (!gmail_archive_fixed) {
-                            prefs.edit().putBoolean("gmail_archive_fixed", true).apply();
-                            EntityFolder archive = db.folder().getFolderByType(account.id, EntityFolder.ARCHIVE);
-                            if (archive == null) {
-                                archive = db.folder().getFolderByName(account.id, fullName);
-                                if (archive != null) {
-                                    Log.e("Reselecting Gmail archive=" + fullName);
-                                    archive.type = EntityFolder.ARCHIVE;
-                                    db.folder().setFolderType(archive.id, archive.type);
-                                }
+                    // Reselect system folders once
+                    String key = "reselected." + account.id + "." + type;
+                    boolean reselected = prefs.getBoolean(key, false);
+                    if (!reselected) {
+                        prefs.edit().putBoolean(key, true).apply();
+                        EntityFolder folder = db.folder().getFolderByType(account.id, type);
+                        if (folder == null) {
+                            folder = db.folder().getFolderByName(account.id, fullName);
+                            if (folder != null) {
+                                Log.e("Reselecting " + account.host + " " + type + "=" + fullName);
+                                folder.type = type;
+                                db.folder().setFolderType(folder.id, folder.type);
                             }
                         }
                     }
@@ -4891,16 +4906,15 @@ class Core {
                 }
             }
 
-            if (notify_reply_direct &&
-                    message.content &&
+            if (message.content &&
                     message.identity != null &&
                     message.from != null && message.from.length > 0 &&
                     db.folder().getOutbox() != null) {
                 Intent reply = new Intent(context, ServiceUI.class)
                         .setAction("reply:" + message.id)
                         .putExtra("group", group);
-                PendingIntent piReply = PendingIntent.getService(
-                        context, ServiceUI.PI_REPLY_DIRECT, reply, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent piReply = PendingIntentCompat.getService(
+                        context, ServiceUI.PI_REPLY_DIRECT, reply, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
                 NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
                         R.drawable.twotone_reply_24,
                         context.getString(R.string.title_advanced_notify_action_reply_direct),
@@ -4912,9 +4926,11 @@ class Core {
                         .setLabel(context.getString(R.string.title_advanced_notify_action_reply));
                 actionReply.addRemoteInput(input.build())
                         .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionReply.build());
-
-                wactions.add(actionReply.build());
+                if (notify_reply_direct) {
+                    mbuilder.addAction(actionReply.build());
+                    wactions.add(actionReply.build());
+                } else
+                    mbuilder.addInvisibleAction(actionReply.build());
             }
 
             if (notify_flag) {
@@ -4935,7 +4951,7 @@ class Core {
                 wactions.add(actionFlag.build());
             }
 
-            if (notify_seen) {
+            if (true) {
                 Intent seen = new Intent(context, ServiceUI.class)
                         .setAction("seen:" + message.id)
                         .putExtra("group", group);
@@ -4948,9 +4964,11 @@ class Core {
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ)
                         .setShowsUserInterface(false)
                         .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionSeen.build());
-
-                wactions.add(actionSeen.build());
+                if (notify_seen) {
+                    mbuilder.addAction(actionSeen.build());
+                    wactions.add(actionSeen.build());
+                } else
+                    mbuilder.addInvisibleAction(actionSeen.build());
             }
 
             if (notify_hide) {
@@ -5118,10 +5136,12 @@ class Core {
         // Build pending intent
         Intent intent = new Intent(context, ActivityError.class);
         intent.setAction(channel + ":" + account.id + ":" + id);
-        intent.putExtra("type", channel);
         intent.putExtra("title", title);
         intent.putExtra("message", message);
+        intent.putExtra("provider", account.provider);
         intent.putExtra("account", account.id);
+        intent.putExtra("protocol", account.protocol);
+        intent.putExtra("auth_type", account.auth_type);
         intent.putExtra("faq", 22);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntentCompat.getActivity(

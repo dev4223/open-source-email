@@ -386,7 +386,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     public boolean onMenuItemClick(MenuItem item) {
                         String tab = FragmentOptions.TAB_LABELS.get(item.getOrder());
                         startActivity(new Intent(ActivityView.this, ActivitySetup.class)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 .putExtra("tab", tab));
                         return true;
                     }
@@ -400,7 +400,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             @Override
             public boolean onLongClick(View view) {
                 startActivity(new Intent(ActivityView.this, ActivitySetup.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
                 return true;
             }
         });
@@ -682,6 +682,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuSetup();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                if (BuildConfig.DEBUG) {
+                    ContactInfo.clearCache(ActivityView.this, true);
+                    ToastEx.makeText(ActivityView.this, R.string.title_completed, Toast.LENGTH_LONG).show();
+                }
             }
         }));
 
@@ -1395,7 +1403,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                 Intent manage = new Intent(ActivityView.this, ActivitySetup.class)
                         .setAction("misc")
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         .putExtra("tab", "misc");
                 PendingIntent piManage = PendingIntentCompat.getActivity(
                         ActivityView.this, ActivitySetup.PI_MISC, manage, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -1635,7 +1643,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private void onMenuSetup() {
         startActivity(new Intent(ActivityView.this, ActivitySetup.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
     }
 
     private void onMenuLegend() {

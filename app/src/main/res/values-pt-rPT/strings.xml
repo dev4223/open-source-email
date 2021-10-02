@@ -186,6 +186,7 @@
     <string name="title_setup_still">Ainda por fazer</string>
     <string name="title_setup_error">Erro</string>
     <string name="title_setup_configuring">A configurar conta &#8230;</string>
+    <string name="title_setup_app_password">Talvez seja necessário usar uma senha da app</string>
     <string name="title_setup_export">Exportar definições</string>
     <string name="title_setup_import">Importar definições</string>
     <string name="title_setup_import_do">Contas importadas serão adicionadas sem sobrescrever as já existentes</string>
@@ -219,6 +220,7 @@
     <string name="title_setup_theme_system">Seguir o sistema</string>
     <string name="title_setup_theme_black_background">Fundo preto</string>
     <string name="title_setup_theme_html_light">Fundo claro para visualização da mensagem original</string>
+    <string name="title_setup_theme_composer_light">Fundo claro para editor de mensagens</string>
     <string name="title_setup_theme_system_hint">Isto mudará automaticamente para um tema claro/escuro no modo dia/noite, se suportado pelo Android</string>
     <string name="title_setup_theme_more_colors">Quero mais cores</string>
     <string name="title_setup_advanced">Avançado</string>
@@ -392,6 +394,7 @@
     <string name="title_advanced_collapse_multiple">Esconder mensagens numa conversa com múltiplas mensagens ao \'voltar\'</string>
     <string name="title_advanced_autoclose">Fechar conversas automaticamente</string>
     <string name="title_advanced_onclose">Ao fechar uma conversa</string>
+    <string name="title_advanced_collapse_marked">Recolher mensagens que estão marcadas, manualmente, como lidas ou não lidas</string>
     <string name="title_advanced_quick_filter">Mostrar ícones de filtro rápido não-intrusivos</string>
     <string name="title_advanced_quick_scroll">Mostrar ícones não-intrusivos de navegação rápida</string>
     <string name="title_advanced_autoread">Marcar mensagens como lidas automaticamente ao mover mensagens</string>
@@ -482,6 +485,7 @@
     <string name="title_no_password">Palavra-passe ausente</string>
     <string name="title_no_inbox">Caixa de entrada não encontrada</string>
     <string name="title_synchronize_enabled">Sincronizar</string>
+    <string name="title_import_contacts">Importar vCards</string>
     <string name="title_sort_unread_atop">Ordenar as não lidas no topo</string>
     <string name="title_search_folder">Pesquisar pasta</string>
     <string name="title_apply_to_all">Aplicar a tudo</string>
@@ -518,6 +522,9 @@
     <string name="title_signature_mismatch">O endereço de correio eletrónico do remetente e assinatura não corresponde</string>
     <string name="title_signature_algorithm">Algoritmo</string>
     <string name="title_search">Pesquisar</string>
+    <string name="title_search_index_hint">        A procura pelo índice de pesquisa é rápida, mas só encontra palavras inteiras em todas as partes da mensagem.
+        As opções abaixo são para continuar a procurar no servidor de e-mail.
+    </string>
     <string name="title_search_text_unsupported">\'%s\' significa que o servidor de email não suporta pesquisa através de textos de mensagens</string>
     <string name="title_search_more">Mais opções</string>
     <string name="title_filter_seen">Lida</string>
