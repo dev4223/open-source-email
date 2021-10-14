@@ -22,6 +22,7 @@ package eu.faircode.email;
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
 import static org.w3c.css.sac.Condition.SAC_CLASS_CONDITION;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
@@ -362,6 +363,15 @@ public class HtmlHelper {
         }
     }
 
+    private static int getMaxFormatTextSize(Context context) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        int mc = am.getMemoryClass();
+        if (mc >= 256)
+            return MAX_FORMAT_TEXT_SIZE;
+        else
+            return mc * MAX_FORMAT_TEXT_SIZE / 256;
+    }
+
     private static Document sanitize(Context context, Document parsed, boolean view, boolean show_images) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String theme = prefs.getString("theme", "blue_orange_system");
@@ -425,7 +435,7 @@ public class HtmlHelper {
         normalizeNamespaces(parsed, display_hidden);
 
         // Limit length
-        if (view && truncate(parsed, MAX_FORMAT_TEXT_SIZE)) {
+        if (view && truncate(parsed, getMaxFormatTextSize(context))) {
             parsed.body()
                     .appendElement("p")
                     .appendElement("em")
@@ -1247,22 +1257,30 @@ public class HtmlHelper {
     }
 
     static void removeRelativeLinks(Document document) {
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
         Elements b = document.select("base");
         String base = (b.size() > 0 ? b.get(0).attr("href") : null);
         for (Element a : document.select("a")) {
             String href = a.attr("href");
-            if (href.trim().startsWith("#")) {
-                a.tagName("span");
-                a.removeAttr("href");
-            } else if (!TextUtils.isEmpty(base))
+
+            if (href.contains(" ")) {
+                href = href.replace(" ", "%20");
+                a.attr("href", href);
+            }
+
+            if (!TextUtils.isEmpty(base))
                 try {
                     // https://developer.android.com/reference/java/net/URI
-                    URI u = URI.create(base);
-                    URI r = u.resolve(href);
-                    a.attr("href", r.toString());
+                    href = URI.create(base).resolve(href).toString();
+                    a.attr("href", href);
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
+
+            if (href.trim().startsWith("#")) {
+                a.tagName("span");
+                a.removeAttr("href");
+            }
         }
     }
 
@@ -2198,7 +2216,7 @@ public class HtmlHelper {
     static String getText(Context context, String html) {
         Document d = sanitizeCompose(context, html, false);
 
-        truncate(d, MAX_FORMAT_TEXT_SIZE);
+        truncate(d, getMaxFormatTextSize(context));
 
         SpannableStringBuilder ssb = fromDocument(context, d, null, null);
 
@@ -2898,8 +2916,9 @@ public class HtmlHelper {
                                 if (level > 0)
                                     level--;
 
-                                if (list == null || ("ul".equals(list.tagName()) &&
-                                        !(ltype != null && ltype.startsWith("decimal")))) {
+                                if (list == null ||
+                                        ("ul".equals(list.tagName()) &&
+                                                !NumberSpan.isSupportedType(ltype))) {
                                     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ul
                                     Object ul;
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
@@ -2922,7 +2941,7 @@ public class HtmlHelper {
                                         }
                                     }
 
-                                    setSpan(ssb, new NumberSpan(bulletIndent, bulletGap, colorAccent, textSize, level, index), start, ssb.length());
+                                    setSpan(ssb, new NumberSpan(bulletIndent, bulletGap, colorAccent, textSize, level, index, ltype), start, ssb.length());
                                 }
 
                                 break;

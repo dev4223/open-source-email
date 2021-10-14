@@ -174,6 +174,11 @@ public class Helper {
     // https://developer.android.com/distribute/marketing-tools/linking-to-google-play#PerformingSearch
     private static final String PLAY_STORE_SEARCH = "https://play.google.com/store/search";
 
+    private static final String[] ROMAN_1000 = {"", "M", "MM", "MMM"};
+    private static final String[] ROMAN_100 = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
+    private static final String[] ROMAN_10 = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
+    private static final String[] ROMAN_1 = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+
     static final Pattern EMAIL_ADDRESS
             = Pattern.compile(
             "[\\S]{1,256}" +
@@ -871,6 +876,8 @@ public class Helper {
             String html = "<br><br>";
 
             html += "<p style=\"font-size:small;\">";
+            html += "Android: " + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + ")<br>";
+            html += "Device: " + Build.MANUFACTURER + " " + Build.DEVICE + "<br>";
             html += "Locale: " + Html.escapeHtml(slocale.toString()) + "<br>";
             if (language != null)
                 html += "Language: " + Html.escapeHtml(language) + "<br>";
@@ -1524,6 +1531,15 @@ public class Helper {
         }
     }
 
+    public static String toRoman(int value) {
+        if (value < 0 || value >= 4000)
+            return Integer.toString(value);
+        return ROMAN_1000[value / 1000] +
+                ROMAN_100[(value % 1000) / 100] +
+                ROMAN_10[(value % 100) / 10] +
+                ROMAN_1[value % 10];
+    }
+
     // Files
 
     static String sanitizeFilename(String name) {
@@ -1630,41 +1646,28 @@ public class Helper {
     }
 
     static void copy(File src, File dst) throws IOException {
-        try (InputStream in = new FileInputStream(src)) {
-            try (FileOutputStream out = new FileOutputStream(dst)) {
-                copy(in, out);
+        try (InputStream is = new FileInputStream(src)) {
+            try (OutputStream os = new FileOutputStream(dst)) {
+                copy(is, os);
             }
         }
     }
 
-    static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[BUFFER_SIZE];
-        int len;
-        while ((len = in.read(buf)) > 0)
-            out.write(buf, 0, len);
+    static long copy(Context context, Uri uri, File file) throws IOException {
+        try (InputStream is = context.getContentResolver().openInputStream(uri)) {
+            try (OutputStream os = new FileOutputStream(file)) {
+                return copy(is, os);
+            }
+        }
     }
 
-    static long copy(Context context, Uri uri, File file) throws IOException {
+    static long copy(InputStream is, OutputStream os) throws IOException {
         long size = 0;
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = context.getContentResolver().openInputStream(uri);
-            os = new FileOutputStream(file);
-
-            byte[] buffer = new byte[Helper.BUFFER_SIZE];
-            for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
-                size += len;
-                os.write(buffer, 0, len);
-            }
-        } finally {
-            try {
-                if (is != null)
-                    is.close();
-            } finally {
-                if (os != null)
-                    os.close();
-            }
+        byte[] buf = new byte[BUFFER_SIZE];
+        int len;
+        while ((len = is.read(buf)) > 0) {
+            size += len;
+            os.write(buf, 0, len);
         }
         return size;
     }

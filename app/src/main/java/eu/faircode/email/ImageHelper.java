@@ -87,7 +87,7 @@ class ImageHelper {
             Helper.getBackgroundExecutor(0, "image_n");
 
     static final int DOWNLOAD_TIMEOUT = 15; // seconds
-    private static final int MAX_PROBE = 64 * 1024; // bytes
+    private static final int MAX_PROBE = 128 * 1024; // bytes
     private static final int SLOW_CONNECTION = 2 * 1024; // Kbps
 
     // https://developer.android.com/guide/topics/media/media-formats#image-formats
@@ -136,6 +136,7 @@ class ImageHelper {
         int bg = Color.HSVToColor(new float[]{h, s / 100f, v / 100f});
 
         Paint paint = new Paint();
+        paint.setAntiAlias(true);
         paint.setColor(bg);
 
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
@@ -191,6 +192,7 @@ class ImageHelper {
         canvas.drawColor(bg);
 
         Paint paint = new Paint();
+        paint.setAntiAlias(true);
         paint.setColor(lum < t ? Color.WHITE : Color.BLACK);
         paint.setTextSize(size / 2f);
         try {

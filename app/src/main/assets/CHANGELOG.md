@@ -2,15 +2,98 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
-### [Adratiklit](https://en.wikipedia.org/wiki/Adratiklit)
+### [Banji](https://en.wikipedia.org/wiki/Banji)
 
-### 1.1747
+### Next version
 
-* Disabled Android Auto support for the Play store version (*)
+* Added support for latin and roman numbered lists (view only)
+* Report new messages in same thread when composing a new message
+* Use account categories for identities
 * Small improvements and minor bug fixes
 * Updated translations
 
-(*) Google does not allow email apps with Android Auto support, see the FAQ.
+### 1.1763
+
+* Small improvements and minor bug fixes
+* Updated libraries
+* Updated translations
+
+### 1.1762
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1761
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1760
+
+* Added multiple select spam / block sender
+* Added conditional searching via search index
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1757
+
+* Improved send progress calculation
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1756
+
+* Added settings import result dialog
+* Added send progress bar in sending notification
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1755
+
+* Added no font option for outgoing messages (send settings)
+* Reduced memory usage
+* Small improvements and minor bug fixes
+* Updated translations
+
+### [Adratiklit](https://en.wikipedia.org/wiki/Adratiklit)
+
+### 1.1754
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1752
+
+* Added account categories [1]
+* Small improvements and minor bug fixes
+* Updated translations
+
+[1] accounts, unified folders and messages in the unified inbox will be grouped by category.
+
+### 1.1751
+
+* Fixed updating system folder properties
+
+### 1.1750
+
+* Auto reselect system folders
+
+### 1.1749
+
+* Fixed handling namespace errors
+
+### 1.1748
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1747
+
+* Disabled Android Auto support for the Play store version [1]
+* Small improvements and minor bug fixes
+* Updated translations
+
+[1] Google does not allow email apps with Android Auto support, see the FAQ.
 
 ### 1.1746
 

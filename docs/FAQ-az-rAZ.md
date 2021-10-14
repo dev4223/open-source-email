@@ -1697,112 +1697,112 @@ Third party apps do not have access to the Gmail snoozed messages folder.
 <br />
 
 <a name="faq68"></a>
-**~~(68) Why can Adobe Acrobat reader not open PDF attachments / Microsoft apps not open attached documents?~~**
+**~~(68) Adobe Acrobat reader, PDF qoşmalarını niyə aça bilmir / Microsoft tətbiqləri qoşmalı sənədləri açmır?~~**
 
-~~Adobe Acrobat reader and Microsoft apps still expects full access to all stored files,~~ ~~while apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider) since Android KitKat (2013)~~ ~~to have access to actively shared files only. This is for privacy and security reasons.~~
+~~Adobe Acrobat reader və Microsoft tətbiqləri, saxlanılmış bütün fayllara tam müraciəti gözləyərkən,~~ ~~Android KitKat (2013) versiyasından bəri tətbiqlərin yalnız aktiv olaraq paylaşılan fayllara müraciət etməsi üçün~~ ~~["Anbar Müraciət Framework"u](https://developer.android.com/guide/topics/providers/document-provider) istifadə etməsi lazımdır. Gizlilik və güvənlik səbəblərinə görə.~~
 
-~~You can workaround this by saving the attachment and opening it from the Adobe Acrobat reader / Microsoft app,~~ ~~but you are advised to install an up-to-date and preferably open source PDF reader / document viewer,~~ ~~for example one listed [here](https://github.com/offa/android-foss#-document--pdf-viewer).~~
+~~Qoşmanı saxlayıb Adobe Acrobat reader / Microsoft tətbiqlərində açaraq bu problemi həll edə bilərsiniz,~~ ~~ancaq ən yeni və tərcih edilmiş açıq mənbəli PDF reader / sənəd görüntüləyici quraşdırmağınız məsləhət görülür,~~ ~~məsələn, [burada](https://github.com/offa/android-foss#-document--pdf-viewer) siyahılananlardan biri.~~
 
 <br />
 
 <a name="faq69"></a>
-**(69) Can you add auto scroll up on new message?**
+**(69) Yeni mesaja "avto-yuxarı sürüşdürmə" əlavə edə bilərsiniz?**
 
-The message list is automatically scrolled up when navigating from a new message notification or after a manual refresh. Always automatically scrolling up on arrival of new messages would interfere with your own scrolling, but if you like you can enable this in the settings.
+Yeni bir mesaj bildirişində gəzinərkən və ya əllə bir təzələmədən sonra mesaj siyahısı avtomatik yuxarı sürüşdürülür. Yeni mesajlar gələndə, avto-yuxarı sürüşdürmə hər zaman özünüz tərəfindən icra edilən sürüşdürməyə əngəl olur, amma istəsəniz bunu tənzimləmələrdən fəallaşdıra bilərsiniz.
 
 <br />
 
 <a name="faq70"></a>
-**(70) When will messages be auto expanded?**
+**(70) Mesajlar nə vaxt avtomatik genişləndirilir?**
 
-When navigation to a conversation one message will be expanded if:
+Bir danışıqda gəzinərkən bir mesaj aşağıdakı hallarda genişləndirilir:
 
-* There is just one message in the conversation
-* There is exactly one unread message in the conversation
-* There is exactly one starred (favorite) message in the conversation (from version 1.1508)
+* Danışıqda sadəcə bir mesaj var
+* Danışıqda tam olaraq bir oxunmamış mesaj var
+* Danışıqda tam olaraq bir (sevimli) ulduzlanmış mesaj var (1.1508 versiyasından etibarən)
 
-There is one exception: the message was not downloaded yet and the message is too large to download automatically on a metered (mobile) connection. You can set or disable the maximum message size on the 'connection' settings tab.
+Bir istisna var: mesaj, hələ endirilməyib və mesaj ölçülən (mobil verilənlər) bağlantıda avtomatik olaraq endirilməyəcək qədər böyükdür. "Bağlantı" tənzimləmələri vərəqində maksimum mesaj həcmini tənzimləyə və ya sıradan çıxarda bilərsiniz.
 
-Duplicate (archived) messages, trashed messages and draft messages are not counted.
+Təkrarlanan (arxivlənmiş) mesajlar, tullantı qovluğundakı mesajlar və qaralama mesajları sayılmır.
 
-Messages will automatically be marked read on expanding, unless this was disabled in the individual account settings.
+Fərdi hesab tənzimləmələrinda sıradan çıxarılmadığı müddətcə, mesajlar genişləndiriləndə avtomatik olaraq oxundu olaraq işarələnir.
 
 <br />
 
 <a name="faq71"></a>
-**(71) How do I use filter rules?**
+**(71) Filtr qaydalarını necə istifadə edə bilərəm?**
 
-You can edit filter rules by long pressing a folder in the folder list of an account (tap the account name in the navigation/side menu).
+Bir hesabın qovluq siyahısındakı bir qovluğa uzun basaraq filtr qaydalarına düzəliş edə bilərsiniz (naviqasiya/yan menyudakı hesab adına toxunun).
 
-New rules will be applied to new messages received in the folder, not to existing messages. You can check the rule and apply the rule to existing messages or, alternatively, long press the rule in the rule list and select *Execute now*.
+Yeni qaydalar, mövcud mesajlara yox, qovluğa alınan yeni mesajlara tətbiq olunacaq. Qaydanı yoxlaya və qaydanı mövcud mesajlara tətbiq edə bilərsiniz, alternativ olaraq, qaydalar siyahısındakı qaydaya uzun basaraq *"İndi icra et"i* seçə bilərsiniz.
 
-You'll need to give a rule a name and you'll need to define the order in which a rule should be executed relative to other rules.
+Bir qaydaya ad verməli olacaqsınız və bir qaydanın digər əlaqəli qaydalara görə icra ediləcəyi sıranı təyin etməli olacaqsınız.
 
-You can disable a rule and you can stop processing other rules after a rule has been executed.
+Bir qaydanı sıradan çıxarda və bir qayda icra ediləndən sonra digər qaydaların emalını dayandıra bilərsiniz.
 
-The following rule conditions are available:
+Qayda şərtləri aşağıdakı kimidir:
 
-* Sender contains or sender is contact
-* Recipient contains
-* Subject contains
-* Has attachments (optional of specific type)
-* Header contains
-* Absolute time (received) between (since version 1.1540)
-* Relative time (received) between
+* Göndərən məzmunu və ya göndərən əlaqədir
+* Alıcı məzmunu
+* Mövzu məzmunu
+* Qoşmaları var (xüsusi növdə ixtiyari)
+* Başlıq məzmunu
+* Mütləq vaxt (alınan) arasında (1.1540 versiyasından bəri)
+* Əlaqəli vaxt (alınan) aralığı
 
-All the conditions of a rule need to be true for the rule action to be executed. All conditions are optional, but there needs to be at least one condition, to prevent matching all messages. If you want to match all senders or all recipients, you can just use the @ character as condition because all email addresses will contain this character. If you want to match a domain name, you can use as a condition something like *@example.org*
+Qayda əməliyyatının icra edilməsi üçün bir qaydanın bütün şərtləri doğru olmalıdır. Bütün şərtlər ixtiyaridir, ancaq bütün mesajların uyğunlaşmasının qarşısını almaq üçün ən azı bir şərt olmalıdır. Bütün göndərənləri və ya alıcıları uyğunlaşdırmaq istəyirsinizsə, sadəcə "@" simvolunu istifadə edə bilərsiniz, çünki bütün e-poçt ünvanları bu simvolu ehtiva edir. Bir domen adı ilə uyğunlaşdırmaq istəyirsinizsə, şərt olaraq *@nümunə.org* kimi bir şey istifadə edə bilərsiniz
 
-Note that email addresses are formatted like this:
+E-poçt ünvanlarının bu formatda olduğunu unutmayın:
 
 `
-"Somebody" <somebody@example.org>`
+"Kimsə" <somebody@example.org>`
 
-You can use multiple rules, possibly with a *stop processing*, for an *or* or a *not* condition.
+Bir *"və ya"* və ya bir *"deyil"* şərti üçün böyük ehtimal *"prosesi dayandır"* ilə bir neçə qaydanı istifadə edə bilərsiniz.
 
-Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression). Please see [here](https://developer.android.com/reference/java/util/regex/Pattern) for the documentation of Java regular expressions. You can test a regex [here](https://regexr.com/).
+["Müntəzəm ifadələr](https://en.wikipedia.org/wiki/Regular_expression) istifadə etmədiyiniz müddətcə, uyğunlaşma, böyük-kiçik hərfə qarşı həssas deyil. Java müntəzəm ifadələrinin sənədləşdirməsi üçün zəhmət olmasa [bura](https://developer.android.com/reference/java/util/regex/Pattern) baxın. Bir normal ifadəni [burada](https://regexr.com/) test edə bilərsiniz.
 
-Note that a regular expression supports an *or* operator, so if you want to match multiple senders, you can do this:
+Unutmayın, normal ifadə bir *"və ya"* operatorunu dəstəkləmir, ona görə də bir neçə göndərəni uyğunlaşdırmaq istəsəniz, bunu istifadə edə bilərsiniz:
 
 `
 .*alice@example\.org.*|.*bob@example\.org.*|.*carol@example\.org.*`
 
-Note that [dot all mode](https://developer.android.com/reference/java/util/regex/Pattern#DOTALL) is enabled to be able to match [unfolded headers](https://tools.ietf.org/html/rfc2822#section-3.2.3).
+Unutmayın, [qatlanmamış başlıqları](https://tools.ietf.org/html/rfc2822#section-3.2.3) uyğunlaşdıra bilmək üçün [bütün nöqtə rejimi](https://developer.android.com/reference/java/util/regex/Pattern#DOTALL) fəaldır.
 
-You can select one of these actions to apply to matching messages:
+Uyğunlaşan mesajlara tətbiq etmək üçün bu əməliyyatlardan birini seçə bilərsiniz:
 
-* No action (useful for *not*)
-* Mark as read
-* Mark as unread
-* Hide
-* Suppress notification
-* Snooze
-* Add star
-* Set importance (local priority)
-* Add keyword
-* Move
-* Copy (Gmail: label)
-* Answer/forward (with template)
-* Text-to-speech (sender and subject)
-* Automation (Tasker, etc)
+* Əməliyyat yoxdur (*"deyil"* üçün faydalıdır)
+* Oxundu olaraq işarələ
+* Oxunmadı olaraq işarələ
+* Gizlət
+* Bildirişi gizlət
+* Ertələ
+* Ulduz əlavə et
+* Vacibliyi tənzimlə (yerli prioritet)
+* Açarsöz əlavə et
+* Daşı
+* Kopyala (Gmail: etiket)
+* Cavabla/yönləndir (şablonla)
+* Danışıq mətni (göndərən və mövzu)
+* Avtomatlaşdırma (Tasker, və s.)
 
-An error in a rule condition can lead to a disaster, therefore irreversible actions are not supported.
+Bir qayda şərtindəki bir səhv fəlakətə səbəb ola bilər, buna görə də, geri qaytarıla bilməyən əməliyyatlar dəstəklənmir.
 
-Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions to the message text. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
+Qaydalar, birbaşa mesaj başlığı gətirildikdən sonra, ancaq mesaj mətni endirilməzdən əvvəl tətbiq edilir, buna görə də, mesaj mətninə şərtləri tətbiq etmək mümkün deyil. Unutmayın, böyük mesaj mətnləri, ölçülən bağlantılarda (mobil verilənlər) verilənlər istifadəsinə qənaət etmək üçün tələb ediləndə endirilir.
 
-If you want to forward a message, consider to use the move action instead. This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
+Bir mesajı yönləndirmək istəyirsinizsə, bunun əvəzinə daşıma əməliyyatını istifadə etməyi düşünün. Bu, yönləndirmədən daha çox güvənli hesab olunur, çünki yönləndirilən mesajlar spam olaraq nəzərə alına bilər.
 
-Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space it is not possible to preview which messages would match a header rule condition.
+Batereya və verilənlər istifadəsinə və anbar sahəsinə qənaət etmək üçün mesaj başlıqları, ilkin olaraq endirilmədiyinə və saxlanılmadığına görə hansı mesajların başlıq qayda şərti ilə uyğunlaşacağını əvvəlcədən izləmək mümkün deyil.
 
-Some common header conditions (regex):
+Bəzi ortaq başlıq şərtləri (normal ifadə):
 
 * *.&ast;Auto-Submitted:.&ast;* [RFC3834](https://tools.ietf.org/html/rfc3834)
-* *.&ast;Content-Type: multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
+* *.&ast;Content-Type: çox hissəli/hesabat.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
 
-In the three-dots *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
+Üç nöqtəli *"daha çox"* mesaj menyusunda, alınan bir mesaj üçün ən çox yayılmış şərtlərin doldurulduğu bir qayda yaratmaq üçün bir element var.
 
-The POP3 protocol does not support setting keywords and moving or copying messages.
+POP3 protokolu, açar sözlərin tənzimlənməsini, mesajların daşınması və ya kopyalanmasını dəstəkləmir.
 
-Using rules is a pro feature.
+Qaydaları istifadə etmək, pro özəllikdir.
 
 <br />
 
@@ -1818,47 +1818,47 @@ There can be just one primary account and there can be just one primary identity
 <br />
 
 <a name="faq73"></a>
-**(73) Is moving messages across accounts safe/efficient?**
+**(73) Mesajları hesablar arasında daşımaq güvənli/səmərəlidir?**
 
-Moving messages across accounts is safe because the raw, original messages will be downloaded and moved and because the source messages will be deleted only after the target messages have been added
+Xam, orijinal mesajlar endirilib daşınacağı və mənbə mesajlar, yalnız hədəf mesajlar əlavə ediləndən sonra silinəcəyi üçün mesajların hesablar arasında daşınması güvənlidir.
 
-Batch moving messages across accounts is efficient if both the source folder and target folder are set to synchronize, else FairEmail needs to connect to the folder(s) for each message.
+Həm mənbə qovluq, həm də hədəf qovluq eyniləşdirilmək üzrə tənzimlənibsə, mesajların hesablar arasında toplu daşınması səmərəlidir, əks halda FairEmail-in, hər mesaj üçün qovluq(lar)la bağlantı qurması lazımdır.
 
 <br />
 
 <a name="faq74"></a>
-**(74) Why do I see duplicate messages?**
+**(74) Niyə təkrarlanan mesajları görürəm?**
 
-Some providers, notably Gmail, list all messages in all folders, except trashed messages, in the archive (all messages) folder too. FairEmail shows all these messages in a non obtrusive way to indicate that these messages are in fact the same message.
+Bəzi təchizatçılar, xüsusilə də Gmail, tullantı qovluğundakı mesajlar istisna olmaqla, bütün qovluqlardakı bütün mesajları arxiv qovluğunda da (bütün mesajlar) siyahılayır. FairEmail, bu mesajların eyni mesaj olduğunu göstərmək üçün bütün mesajları narahat etməyən versiyada göstərir.
 
-Gmail allows one message to have multiple labels, which are presented to FairEmail as folders. This means that messages with multiple labels will be shown multiple times as well.
+Gmail, bir mesajın bir neçə etiketə sahib olmasına icazə verir, həmin etiketlər də FairEmail-ə qovluqlar olaraq təqdim edilir. Bu o deməkdir ki, bir neçə etiketə sahib mesajlar, bir neçə dəfə göstəriləcək.
 
 <br />
 
 <a name="faq75"></a>
-**(75) Can you make an iOS, Windows, Linux, etc version?**
+**(75) iOS, Windows, Linux və s. versiyasını hazırlaya bilərsiniz?**
 
-A lot of knowledge and experience is required to successfully develop an app for a specific platform, which is why I develop apps for Android only.
+Müəyyən bir platformda tətbiqi uğurlu şəkildə tərtib etmək üçün kifayət qədər bilik və təcrübə lazımdır, buna görə də tətbiqləri yalnız Android üçün tərtib edirəm.
 
 <br />
 
 <a name="faq76"></a>
-**(76) What does 'Clear local messages' do?**
+**(76) "Yerli mesajları təmizlə" nə edir?**
 
-The folder menu *Clear local messages* removes messages from the device which are present on the server too. It does not delete messages from the server. This can be useful after changing the folder settings to not download the message content (text and attachments), for example to save space.
+*"Yerli mesajları təmizlə"* qovluq menyusu, serverdə saxlanılan mesajları da cihazdan silir. Serverdən gələn mesajları silmir. Bu, məsələn yaddaş istifadəsinə qənaət etmək üçün qovluq tənzimləmələrini mesaj məzmununu (mətn və qoşmalar) endirməyəcək formada tənzimlədikdən sonra faydalı ola bilər.
 
 <br />
 
 <a name="faq77"></a>
-**(77) Why are messages sometimes shown with a small delay?**
+**(77) Niyə mesajlar bəzən kiçik bir gecikmə ilə göstərilir?**
 
-Depending on the speed of your device (processor speed and maybe even more memory speed) messages might be displayed with a small delay. FairEmail is designed to dynamically handle a large number of messages without running out of memory. This means that messages needs to be read from a database and that this database needs to be watched for changes, both of which might cause small delays.
+Cihazınızın sürətindən asılı olaraq (prosessor sürəti və bəlkə də həddən çox yaddaş sürəti) mesajlar, kiçik bir gecikmə ilə görüntülənə bilər. FairEmail, çox sayda mesajı, yaddaşı çox istifadə etmədən dinamik olaraq emal etmək üçün dizayn edilib. Bu o deməkdir ki, mesajlar, verilənlər bazasından oxunmalıdır və hər ikisi də kiçik gecikmələrə səbəb ola bildiyi üçün verilənlər bazası dəyişikliklər üçün izlənməlidir.
 
-Some convenience features, like grouping messages to display conversation threads and determining the previous/next message, take a little extra time. Note that there is no *the* next message because in the meantime a new message might have been arrived.
+Danışıq mövzularının görüntülənməsi üçün mesajların qruplaşdırılması və əvvəlki/sonrakı mesajların aşkarlanması kimi bəzi əlverişli özəlliklər, bir az vaxt aparır. Bu arada yeni bir mesaj gəlmiş ola biləcəyi üçün, *növbəti mesaj* olmadığını unutmayın.
 
-When comparing the speed of FairEmail with similar apps this should be part of the comparison. It is easy to write a similar, faster app which just displays a lineair list of messages while possible using too much memory, but it is not so easy to properly manage resource usage and to offer more advanced features like conversation threading.
+FairEmail-in sürətini oxşar tətbiqlərlə müqayisə edərkən, bu, müqayisənin bir hissəsi olmalıdır. Daha çox yaddaş istifadə edərək mümkün olub sadəcə mesajlarıın xətti bir siyahısını görüntüləyən oxşar və sürətli bir tətbiq yazmaq asandır, ancaq mənbə istifadəsini düzgün idarə etmək və danışıq mövzularının yaradılması kimi daha qabaqcıl özəllikləri təklif etmək heç də asan deyil.
 
-FairEmail is based on the state-of-the-art [Android architecture components](https://developer.android.com/topic/libraries/architecture/), so there is little room for performance improvements.
+FairEmail, [Android arxitektura komponentləri](https://developer.android.com/topic/libraries/architecture/) kimi ən son texnologiyaya əsaslanır, ona görə də performans təkmilləşdirmələri üçün az yer var.
 
 <br />
 
@@ -1954,74 +1954,74 @@ Scheduling is a pro feature.
 <br />
 
 <a name="faq79"></a>
-**(79) How do I use synchronize on demand (manual)?**
+**(79) İstədiyim eyniləşdirməni necə istifadə edə bilərəm (əllə)?**
 
-Normally, FairEmail maintains a connection to the configured email servers whenever possible to receive messages in real-time. If you don't want this, for example to be not disturbed or to save on battery usage, just disable receiving in the receive settings. This will stop the background service which takes care of automatic synchronization and will remove the associated status bar notification.
+Normalda FairEmail, mesajları real vaxt kəsiyində almaq üçün mümkün olanda konfiqurasiya edilmiş e-poçt serverləri ilə bağlantı qurur. Bunu, məsələn narahat edilmək və ya batereya istifadəsinə qənaət etmək istəmirsinizsə, sadəcə alma tənzimləmələrindən almanı (qəbulu) sıradan çıxardın. Bu, avto-eyniləşdirmə ilə məşğul olan arxaplan xidmətini dayandıracaq və əlaqəli status sətri bildirişini siləcək.
 
-You can also enable *Synchronize manually* in the advanced account settings if you want to manually synchronize specific accounts only.
+Yalnız müəyyən hesabları əllə eyniləşdirmək istəyirsinizsə, qabaqcıl hesab tənzimləmələrində *"Əllə eyniləşdirmə"ni* fəallaşdıra bilərsiniz.
 
-You can use pull-down-to-refresh in a message list or use the folder menu *Synchronize now* to manually synchronize messages.
+Mesaj siyahısını təzələmək üçün siyahını aşağı çəkə və ya mesajları əllə eyniləşdirmək üçün *"İndi eyniləşdir"* qovluq menyusunu istifadə edə bilərsiniz.
 
-If you want to synchronize some or all folders of an account manually, just disable synchronization for the folders (but not of the account).
+Bir hesabın bəzi və ya bütün qovluqlarını eyniləşdirmək istəyirsinizsə, sadəcə (hesab üçün yox) qovluqlar üçün eyniləşdirməni sıradan çıxardın.
 
-You'll likely want to disabled [browse on server](#user-content-faq24) too.
+Böyük ehtimalla ["serverdə hərəkət"i](#user-content-faq24) də sıradan çıxartmaq istəyəcəksiniz.
 
 <br />
 
 <a name="faq80"></a>
-**~~(80) How do I fix the error 'Unable to load BODYSTRUCTURE' ?~~**
+**~~(80) "BODYSTRUCTURE yüklənilə bilmir" xətasını necə düzəldə bilərəm?~~**
 
-~~The error message *Unable to load BODYSTRUCTURE* is caused by bugs in the email server,~~ ~~see [here](https://javaee.github.io/javamail/FAQ#imapserverbug) for more details.~~
+~~*"BODYSTRUCTURE yüklənilə bilmir"* xəta mesajının səbəbi, e-poçt serverindəki xətalardır.~~ ~~Daha çox məlumat üçün [bura](https://javaee.github.io/javamail/FAQ#imapserverbug) baxın.~~
 
-~~FairEmail already tries to workaround these bugs, but if this fail you'll need to ask for support from your provider.~~
+~~Onsuz da FairEmail, bu xətaları aradan qaldırmağa çalışır, ancaq bu nəticə verməsə, dəstək üçün e-poçt təchizatçınıza müraciət etməli olacaqsınız.~~
 
 <br />
 
 <a name="faq81"></a>
-**~~(81) Can you make the background of the original message dark in the dark theme?~~**
+**~~(81) Tünd temada orijinal mesajın arxaplanını da tünd edə bilərsiniz?~~**
 
-~~The original message is shown as the sender has sent it, including all colors.~~ ~~Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.~~
+~~Orijinal mesaj, bütün rənglər daxil olmaqla göndərənin göndərdiyi kimi görünür.~~ ~~Arxaplan rənginin dəyişdirilməsi həm orijinal görünüşü orijinallıqdan çıxarır, həm də mesajları, oxuna bilməyən hala çevirir.~~
 
 <br />
 
 <a name="faq82"></a>
-**(82) What is a tracking image?**
+**(82) İzləmə təsviri nədir?**
 
-Please see [here](https://en.wikipedia.org/wiki/Web_beacon) about what a tracking image exactly is. In short tracking images keep track if you opened a message.
+İzləmə təsvirinin tam olaraq nə olduğunu öyrənmək üçün zəhmət olmasa [bura](https://en.wikipedia.org/wiki/Web_beacon) baxın. Qısaca, bir mesajı açmısınızsa, izləmə təsvirləri izləməyə başlayır.
 
-FairEmail will in most cases automatically recognize tracking images and replace them by this icon:
+FairEmail əksər hallarda izləmə təsvirlərini avtomatik olaraq tanıyır və onları bu nişanla əvəz edir:
 
 ![Xarici təsvir](https://github.com/M66B/FairEmail/blob/master/images/baseline_my_location_black_48dp.png)
 
-Automatic recognition of tracking images can be disabled in the privacy settings.
+İzləmə təsvirlərinin avtomatik tanınması, gizlilik tənzimləmələrində sıradan çıxarıla bilər.
 
 <br />
 
 <a name="faq84"></a>
-**(84) What are local contacts for?**
+**(84) Yerli əlaqələr nə üçündür?**
 
-Local contact information is based on names and addresses found in incoming and outgoing messages.
+Yerli əlaqə məlumatları, gələn və gedən mesajlardan tapılan ad və ünvanlara əsaslanır.
 
-The main use of the local contacts storage is to offer auto completion when no contacts permission has been granted to FairEmail.
+FairEmail-ə heç bir əlaqə icazəsi verilməyəndə yerli əlaqələr anbarının əsas istifadəsi avto-tamamlama təklif edir.
 
-Another use is to generate [shortcuts](#user-content-faq31) on recent Android versions to quickly send a message to frequently contacted people. This is also why the number of times contacted and the last time contacted is being recorded and why you can make a contact a favorite or exclude it from favorites by long pressing it.
+Başqa bir istifadəsi isə tez-tez əlaqə saxlanılan şəxslərə cəld bir mesaj göndərmək üçün ən son Android versiyalarında [qısayollar](#user-content-faq31) yaratmaqdır. Həmçinin bu, bir şəxs ilə neçə dəfə və ən son nə vaxt əlaqə saxlanıldığı kimi məlumatları qeyd edir və buna görə də həmin əlaqəni uzun basaraq sevimlilərə əlavə edə və ya sevimlilərdən çıxarda bilərsiniz.
 
-The list of contacts is sorted on number of times contacted and the last time contacted.
+Əlaqələr siyahısı, əlaqə saxlanılma sayına və son dəfə əlaqə saxlanılmaya görə sıralanır.
 
-By default only names and addresses to whom you send messages to will be recorded. You can change this in the send settings.
+İlkin olaraq yalnız mesaj göndərdiyiniz adlar və ünvanlar qeyd ediləcək. Bunu göndərmə tənzimləmələrindən dəyişdirə bilərsiniz.
 
 <br />
 
 <a name="faq85"></a>
-**(85) Why is an identity not available?**
+**(85) Niyə heç bir kimlik mövcud deyil?**
 
-An identity is available for sending a new message or replying or forwarding an existing message only if:
+Yalnız aşağıdakı hallarda bir kimlik, yeni bir mesaj göndərmək və ya mesajı cavablandırmaq və ya mövcud bir mesajı yönləndirmək üçün əlçatan olur:
 
-* the identity is set to synchronize (send messages)
-* the associated account is set to synchronize (receive messages)
-* the associated account has a drafts folder
+* kimlik, eyniləşdiriləcək formada tənzimləndi (mesajları göndərilməsi)
+* əlaqəli hesab, eyniləşdiriləcək formada tənzimləndi (mesajların alınması)
+* əlaqəli hesabın bir qaralamalar qovluğu var
 
-FairEmail will try to select the best identity based on the *to* address of the message replied to / being forwarded.
+FairEmail, cavablandırılan/yönləndirilən mesajın *ünvanına* görə ən yaxşı kimliyi seçməyə çalışacaq.
 
 <br />
 

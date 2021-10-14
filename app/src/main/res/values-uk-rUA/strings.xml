@@ -227,9 +227,6 @@
     </string>
     <string name="title_setup_export_do">Файл експорту буде містити всі налаштування і дані, але ніяких повідомлень і зображень, на які посилаються в підписах</string>
     <string name="title_setup_import_do">Імпортовані облікові записи будуть додані без перезапису будь-яких записів що існують</string>
-    <string name="title_setup_import_gmail">      Починаючи з Android 8 (Oreo), облікові записи Gmail більше не можна імпортувати, тому що кожен обліковий запис повинен бути обраний для надання доступу до облікового запису.
-        Можна легко переналаштувати обліковий запис Gmail за допомогою майстра швидкого налаштування.
-    </string>
     <string name="title_setup_password">Пароль</string>
     <string name="title_setup_password_chars">Пароль містить елементи керування або пробіли</string>
     <string name="title_setup_password_repeat">Повторіть пароль</string>
@@ -272,6 +269,7 @@
     <string name="title_setup_options">Параметри</string>
     <string name="title_setup_defaults">Відновити типові</string>
     <string name="title_setup_reset_questions">Дозволити знову показувати питання</string>
+    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Показати зображення</string>
     <string name="title_advanced_hint_title">Розширенні налаштування</string>
     <string name="title_advanced_hint_message">        Ви переходите до більш розширених параметрів.
         Всі параметри мають загальновизнані стандартні значення, які не треба змінювати, якщо ви не маєте інших уподобань.
@@ -576,6 +574,7 @@
     <string name="title_advanced_log_info">Журнал налагодження</string>
     <string name="title_advanced_debug">Режим зневадження</string>
     <string name="title_advanced_manual_hint">Якщо отримання повідомлень вимкнено, то можливо отримувати повідомлення вручну, шляхом відтягуваня списку повідомлень донизу</string>
+    <string name="title_advanced_poll_battery">Це може призвести до високого використання заряду акумулятора!</string>
     <string name="title_advanced_poll_hint">Періодичнна перевірка на нові повідомлення щоразу порівнювнює локальні і віддалені повідомлення, є навантаженою операцією, що може призвести до додаткового розряджання батареї, особливо якщо є багато повідомлень. Режим \'завжди отримувати\' буде перешкоджати наступними перевіркам локального та відаленного змісту.</string>
     <string name="title_advanced_optimize_hint">Це може змінити частоту синхронізації для економії заряду акумулятора в залежності від можливостей і поведінки серверів електронної пошти</string>
     <string name="title_advanced_schedule_hint">Натисни на час, щоб встановити час</string>
@@ -679,6 +678,7 @@
     <string name="title_recommended">Рекомендовано</string>
     <string name="title_account_linked">Пов\'язані облікові записи</string>
     <string name="title_account_name">Назва облікового запису</string>
+    <string name="title_account_category">Категорія</string>
     <string name="title_account_name_hint">Використовується для диференціювання тек</string>
     <string name="title_account_interval_hint">Частота оновлення з\'єднання для push-повідомлень або частота перевірки на нові повідомлення</string>
     <string name="title_account_partial_fetch_hint">Вимкнути це лише у випадку пустих повідомлень або пошкоджених вкладень</string>
@@ -792,6 +792,7 @@
     <string name="title_insert_contact">Додати контакт</string>
     <string name="title_edit_contact">Редагувати контакт</string>
     <string name="title_import_contacts">Імпорт vCards</string>
+    <string name="title_export_contacts">Експорт vCards</string>
     <string name="title_create_sub_folder">Створити підтеку</string>
     <string name="title_empty_trash_ask">Видалити всі видалені повідомлення остаточно?</string>
     <string name="title_empty_spam_ask">Видалити всі спам-повідомлення?</string>
@@ -818,6 +819,7 @@
     <string name="title_sort_unread_atop">Сортувати, непрочитані зверху</string>
     <string name="title_search_folder">Знайти теку</string>
     <string name="title_apply_to_all">Застосувати до всіх</string>
+    <string name="title_edit_account_name">Редагувати ім\'я облікового запису</string>
     <string name="title_hide_folder">Сховати теку</string>
     <string name="title_unified_folder">Показати в об\'єднаній вхідній теці</string>
     <string name="title_navigation_folder">Показати в меню навігації</string>
@@ -1154,6 +1156,7 @@
     <string name="title_search_hint">        Спочатку пошук виконується на пристрої.
         Для також для пошуку на сервері, натисніть кнопку \'пошук знову\'.
     </string>
+    <string name="title_search_index_hint">Пошук за допомогою індексу пошуку швидкий, але знайде лише цілі слова.</string>
     <string name="title_search_text_hint">Пошук тексту в повідомленнях, при великій кількості повідомлень, може не працювати на деяких серверах</string>
     <string name="title_search_text_unsupported">\'%s\' означає, що поштовий сервер не підтримує пошук в повідомленнях</string>
     <string name="title_search_size_hint">Пошук повідомлень за розміром, при великій кількості повідомлень, може не працювати на деяких серверах</string>
@@ -1499,6 +1502,7 @@
         Щоб зберегти і підтримати FairEmail в довгостроковій перспективі, деякі зручності та розширені функції обмеженні.
         FairEmail показує маленьке повідомлення, щоб нагадати Вам про це, воно буде вилучено, якщо ви купите Pro функції.
     </string>
+    <string name="title_pro_whichever">Незалежно від функції, котра визначена як професійна функція, завжди є людина, яка скаржиться, що ця функція має бути безкоштовною. Будь ласка, не будьте тою особлививою людиною.</string>
     <string name="title_pro_hide">Приховати невелике повідомлення протягом %1$d тижнів</string>
     <string name="title_pro_hint">Купівля Pro-функцій дозволить вам використовувати всі поточні та майбутні Pro-функції, і допоможе підтримувати і обслуговувати цей додаток.</string>
     <string name="title_pro_price">Чому Pro функції такі дорогі?</string>
@@ -1582,6 +1586,7 @@
     <string name="title_accessibility_to">Одержувач</string>
     <string-array name="pollIntervalNames">
         <item>Завжди</item>
+        <item>Кожні 5 хвилин</item>
         <item>Кожні 15 хвилин</item>
         <item>Кожні 30 хвилин</item>
         <item>Кожну годину</item>

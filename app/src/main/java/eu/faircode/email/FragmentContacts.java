@@ -37,9 +37,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -47,7 +44,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.Group;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -65,7 +61,6 @@ import java.util.List;
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
-import ezvcard.Ezvcard;
 import ezvcard.VCard;
 import ezvcard.VCardVersion;
 import ezvcard.io.text.VCardReader;
@@ -86,6 +81,7 @@ public class FragmentContacts extends FragmentBase {
     private static final int REQUEST_ACCOUNT = 1;
     private static final int REQUEST_IMPORT = 2;
     private static final int REQUEST_EXPORT = 3;
+    static final int REQUEST_EDIT_NAME = 4;
 
     @Override
     @Nullable
@@ -259,6 +255,10 @@ public class FragmentContacts extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         handleExport(data);
                     break;
+                case REQUEST_EDIT_NAME:
+                    if (resultCode == RESULT_OK && data != null)
+                        onEditName(data.getBundleExtra("args"));
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -427,6 +427,29 @@ public class FragmentContacts extends FragmentBase {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "");
+    }
+
+    private void onEditName(Bundle args) {
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                String name = args.getString("name");
+
+                if (TextUtils.isEmpty(name))
+                    name = null;
+
+                DB db = DB.getInstance(context);
+                db.contact().setContactName(id, name);
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "contact:name");
     }
 
     public static class FragmentDelete extends FragmentDialogBase {

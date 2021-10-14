@@ -448,6 +448,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibInbox;
         private ImageButton ibMore;
         private ImageButton ibTools;
+        private View vwEmpty;
         private TextView tvReformatted;
         private TextView tvSignedData;
 
@@ -827,6 +828,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibInbox = vsBody.findViewById(R.id.ibInbox);
             ibMore = vsBody.findViewById(R.id.ibMore);
             ibTools = vsBody.findViewById(R.id.ibTools);
+            vwEmpty = vsBody.findViewById(R.id.vwEmpty);
             tvReformatted = vsBody.findViewById(R.id.tvReformatted);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
 
@@ -1649,6 +1651,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibInbox.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
             ibTools.setVisibility(View.GONE);
+            vwEmpty.setVisibility(View.GONE);
             tvReformatted.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
 
@@ -1866,7 +1869,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             vSeparatorBottom.setVisibility(View.VISIBLE);
             ibFull.setEnabled(false);
             ibFull.setVisibility(View.VISIBLE);
-            ibImages.setVisibility(View.GONE);
+            ibImages.setVisibility(View.INVISIBLE);
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(View.GONE);
@@ -1895,6 +1898,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibInbox.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
             ibTools.setVisibility(View.GONE);
+            vwEmpty.setVisibility(View.GONE);
             tvReformatted.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
 
@@ -2120,6 +2124,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                         ibTools.setTooltipText(ibTools.getContentDescription());
                     ibTools.setVisibility(outbox ? View.GONE : View.VISIBLE);
+                    vwEmpty.setVisibility(View.VISIBLE);
 
                     ibTrashBottom.setVisibility(button_extra && button_trash && trash ? View.VISIBLE : View.GONE);
                     ibArchiveBottom.setVisibility(button_extra && button_archive && archive ? View.VISIBLE : View.GONE);
@@ -2815,20 +2820,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean always_images = prefs.getBoolean("html_always_images", false);
 
                     // Show images
-                    ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.GONE);
+                    ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.INVISIBLE);
+
+                    boolean verifyable = (EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
+                            EntityMessage.SMIME_SIGNONLY.equals(message.encrypt));
+
+                    boolean unlocked = (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                            !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt)) ||
+                            (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                                    !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt));
 
                     // Show encrypt actions
-                    ibVerify.setVisibility(false ||
-                            EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
-                            EntityMessage.SMIME_SIGNONLY.equals(message.encrypt)
-                            ? View.VISIBLE : View.GONE);
-                    ibDecrypt.setImageResource(false ||
-                            (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) &&
-                                    !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt)) ||
-                            (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
-                                    !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
-                            ? R.drawable.twotone_lock_24 : R.drawable.twotone_lock_open_24
-                    );
+                    ibVerify.setVisibility(verifyable ? View.VISIBLE : View.GONE);
+                    ibDecrypt.setImageResource(unlocked
+                            ? R.drawable.twotone_lock_24 : R.drawable.twotone_lock_open_24);
+                    ibDecrypt.setImageTintList(ColorStateList.valueOf(unlocked
+                            ? colorControlNormal : colorAccent));
                     ibDecrypt.setVisibility(!EntityFolder.OUTBOX.equals(message.folderType) &&
                             (args.getBoolean("inline_encrypted") ||
                                     EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) ||
@@ -3998,24 +4005,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (folder == null)
                         return null;
 
+                    boolean ingoing = false;
                     boolean outgoing = EntityFolder.isOutgoing(folder.type);
 
                     if (message.identity != null) {
-                        if (message.from != null && message.from.length > 0) {
-                            EntityIdentity identity = db.identity().getIdentity(message.identity);
-                            if (identity == null)
-                                return null;
+                        EntityIdentity identity = db.identity().getIdentity(message.identity);
+                        if (identity == null)
+                            return null;
 
+                        if (message.to != null)
+                            for (Address recipient : message.to)
+                                if (identity.similarAddress(recipient)) {
+                                    ingoing = true;
+                                    break;
+                                }
+
+                        if (message.from != null)
                             for (Address sender : message.from)
                                 if (identity.similarAddress(sender)) {
                                     outgoing = true;
                                     break;
                                 }
-                        }
                     }
 
-                    if (outgoing && message.reply != null &&
-                            MessageHelper.equal(message.from, message.to))
+                    if (outgoing && ingoing && message.reply != null)
                         return message.reply;
 
                     return (outgoing ? message.to : message.from);
@@ -4827,7 +4840,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(message.uid != null ||
                     (message.accountProtocol == EntityAccount.TYPE_POP && message.headers != null));
 
-            popupMenu.getMenu().findItem(R.id.menu_share_as_html).setVisible(message.content && BuildConfig.DEBUG);
+            popupMenu.getMenu().findItem(R.id.menu_share_as_html).setVisible(message.content &&
+                    (debug || BuildConfig.DEBUG));
 
             boolean canRaw = (message.uid != null ||
                     (EntityFolder.INBOX.equals(message.folderType) &&
@@ -5373,7 +5387,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!TextUtils.isEmpty(message.subject))
                         result.put("subject", message.subject);
 
-                    String link = "message://" + BuildConfig.APPLICATION_ID + "/" + message.id;
+                    String link = "message://email.faircode.eu/link/#" + message.id;
 
                     Document document = JsoupEx.parse(file);
                     HtmlHelper.truncate(document, HtmlHelper.MAX_FULL_TEXT_SIZE / 2);
@@ -6365,6 +6379,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("accountName changed", next.id);
                 }
+                if (!Objects.equals(prev.accountCategory, next.accountCategory)) {
+                    same = false;
+                    log("accountCategory changed", next.id);
+                }
                 if (!Objects.equals(prev.accountColor, next.accountColor)) {
                     same = false;
                     log("accountColor changed", next.id);
@@ -6602,7 +6620,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         if (rv != null)
             savedState = rv.getLayoutManager().onSaveInstanceState();
 
-        differ.submitList(list);
+        differ.submitList(list, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (rv != null)
+                        rv.invalidateItemDecorations();
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+        });
     }
 
     PagedList<TupleMessageEx> getCurrentList() {

@@ -205,9 +205,6 @@
     </string>
     <string name="title_setup_export_do">Eksportfilen vil indeholde alle indstillinger og data, men hverken meddelelser eller signaturrefererede billeder</string>
     <string name="title_setup_import_do">Importerede konti tilføjes uden at overskrive eksisterende ditto</string>
-    <string name="title_setup_import_gmail">        Fra og med Android 8. Oreo kan Gmail-konti ikke længere importeres, da hver konto skal vælges for at give adgang til den.
-        Opsætningen af Gmail-konti kan let ændres vis guiden hurtig opsætning.
-    </string>
     <string name="title_setup_password">Adgangskode</string>
     <string name="title_setup_password_chars">Adgangskode indeholder kontrol- eller mellemrumstegn</string>
     <string name="title_setup_password_repeat">Gentag adgangskode</string>
@@ -222,6 +219,10 @@
     <string name="title_setup_exported">Indstillinger eksporteret</string>
     <string name="title_setup_imported">Indstillinger importeret</string>
     <string name="title_setup_import_invalid">Ugyldig indstillingsfil</string>
+    <string name="title_importing_account">Konto %1$s</string>
+    <string name="title_importing_identity">Identitet %1$s</string>
+    <string name="title_importing_exists">Oversprunget - findes allerede</string>
+    <string name="title_importing_wizard">Kør guide for at godkende igen</string>
     <string name="title_setup_reorder_accounts">Sortering af konti</string>
     <string name="title_setup_reorder_folders">Sortering af mapper</string>
     <string name="title_reset_order">Nulstil rækkefølge</string>
@@ -250,6 +251,10 @@
     <string name="title_setup_options">Valgmuligheder</string>
     <string name="title_setup_defaults">Gendan standardværdier</string>
     <string name="title_setup_reset_questions">Nulstil spørgsmål</string>
+    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Generelle spørgsmål</string>
+    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Vis oprindelige beskeder</string>
+    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Vis billeder</string>
+    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Bekræft links</string>
     <string name="title_advanced_hint_title">Flere avancerede indstillinger</string>
     <string name="title_advanced_hint_message">        De mere avancerede indstillinger tilgås nu.
         Alle valgmuligheder har almindeligt brugte standardværdier, som kan ændres jf. dine præferencer.
@@ -551,6 +556,7 @@
     <string name="title_advanced_log_info">Fejllogning</string>
     <string name="title_advanced_debug">Fejlretningstilstand</string>
     <string name="title_advanced_manual_hint">Er beskedmodtagelse er deaktiveret, er det stadig muligt at modtage beskeder ved at trække beskedlisten ned</string>
+    <string name="title_advanced_poll_battery">Dette kan forårsage højt strømforbrug!</string>
     <string name="title_advanced_poll_hint">Periodisk tjek for nye beskeder sammenligner lokal- og fjernbeskeder hver gang, hvilket er en kostbar handling, der kan resultere i ekstra batteriforbrug, især hvis der er mange beskeder. Modtag altid vilforhindre dette ved løbende at følge ændringer.</string>
     <string name="title_advanced_optimize_hint">Dette kan ændre synkfrekvensen for at spare strøm afhængigt af e-mailserverens funktioner og adfærd</string>
     <string name="title_advanced_schedule_hint">Tryk på et tidspunkt for at angive et tidspunkt</string>
@@ -651,6 +657,7 @@
     <string name="title_recommended">Anbefalet</string>
     <string name="title_account_linked">Forbundet konto</string>
     <string name="title_account_name">Kontonavn</string>
+    <string name="title_account_category">Kategori</string>
     <string name="title_account_name_hint">Benyttes til mappedifferentiering</string>
     <string name="title_account_interval_hint">Opfriskningsfrekvensen af forbindelsen til push-beskeder eller frekvensen for tjek af nye beskeder</string>
     <string name="title_account_partial_fetch_hint">Deaktivér dette kun i tilfælde af tomme beskeder eller ødelagte vedhæftninger</string>
@@ -791,6 +798,7 @@
     <string name="title_sort_unread_atop">Sortér ulæst øverst</string>
     <string name="title_search_folder">Søg efter mappe</string>
     <string name="title_apply_to_all">Anvend på alle</string>
+    <string name="title_edit_account_name">Redigér kontonavn</string>
     <string name="title_hide_folder">Skjul mappe</string>
     <string name="title_unified_folder">Vis i samlet indbakke</string>
     <string name="title_navigation_folder">Vis i navigationsmenu</string>
@@ -1126,9 +1134,7 @@
     <string name="title_search_hint">        Indledningsvis udføres søgningen på enheden.
          For også at søge på serveren, så tryk på knappen \'søg igen\'.
     </string>
-    <string name="title_search_index_hint">        Søgning via søgeindekset er hurtig, men finder kun hele ord i alle beskeddele.
-         Indstillingerne nedenfor er til at fortsætte søgningen på e-mailserveren.
-    </string>
+    <string name="title_search_index_hint">Søgning via søgeindekset er hurtig, men vil kun finde hele ord.</string>
     <string name="title_search_text_hint">Søgning efter tekst i beskeder, når der er et stort antal heraf, fungerer muligvis ikke på alle servere</string>
     <string name="title_search_text_unsupported">\'%s\' betyder, at e-mailserveren ikke understøtter søgning i beskedtekster</string>
     <string name="title_search_size_hint">Søgning efter beskeder efter størrelse, når der er et stort antal heraf, fungerer muligvis ikke på alle servere</string>
@@ -1473,6 +1479,7 @@
          For at vedligeholde og supportere FairEmail i det lange løb er visse avancerede og bekvemmelighedsfunktioner ikke gratis at benytte.
          For at minde dig om dette, viser FairEmail viser en lille meddelelse, der dog fjernes, hvis du køber Pro-funktionerne.
     </string>
+    <string name="title_pro_whichever">Uanset valgte Pro-funktioner, er der altid nogle, som klager over, at en funktion ikke er gratis. Vær venligst ikke en sådan person.</string>
     <string name="title_pro_hide">Skjul små meddelelser i %1$d uger</string>
     <string name="title_pro_hint">Køb af Pro-funktioner vil tillade brug alle aktuelle og fremtidige Pro-funktioner samt sikre denne apps vedligeholdelse og understøttelse</string>
     <string name="title_pro_price">Hvorfor er Pro-funktionerne så dyre?</string>
@@ -1553,6 +1560,7 @@
     <string name="title_accessibility_to">Modtager</string>
     <string-array name="pollIntervalNames">
         <item>Altid</item>
+        <item>Hvert 5. minut</item>
         <item>Hvert 15. minut</item>
         <item>Hvert 30. minut</item>
         <item>Hver time</item>

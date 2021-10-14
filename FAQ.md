@@ -572,6 +572,10 @@ After enabling two factor authentication there will be this error message:
 
 *[ALERT] Application-specific password required: https://support.google.com/mail/accounts/answer/185833 (Failure)*
 
+The error message "*Authentication failed - Invalid credentials*" means that the Android account manager was not able to refresh the access token.
+A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager.
+You can workaround this issue by using an app password.
+
 <br />
 
 *App specific password*
@@ -949,7 +953,14 @@ to check if the searched text is contained in the file, which is a relatively ex
 
 In the *miscellaneous settings* you can enable *Build search index* to significantly increase the speed of searching on the device,
 but be aware that this will increase battery and storage space usage.
-The search index is based on words, so searching for partial text is not possible.
+The search index is based on words in all message parts,
+so searching for partial text and searching in specific messages parts (from, subject, text, etc) is not possible.
+
+Note that only messages for which the message text was downloaded will be indexed.
+In the connection settings can be configured up to which size messages texts will be downloaded automatically
+when using a metered connection (generally mobile data or paid WiFi).
+In the folder properties (long press on a folder in the folder list of an account) downloading of messages texts can be enabled/disabled.
+
 Searching using the search index is by default AND, so searching for *apple orange* will search for apple AND orange.
 Words separated by commas result in searching for OR, so for example *apple, orange* will search for apple OR orange.
 Both can be combined, so searching for *apple, orange banana* will search for apple OR (orange AND banana).

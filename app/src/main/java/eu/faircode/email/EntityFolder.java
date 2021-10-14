@@ -187,8 +187,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
 
     private static Map<String, TypeScore> GUESS_FOLDER_TYPE = new HashMap<String, TypeScore>() {{
         // Contains:
-        put("all", new TypeScore(EntityFolder.ARCHIVE, 50));
-        put("Tous", new TypeScore(EntityFolder.ARCHIVE, 50));
+        //put("all", new TypeScore(EntityFolder.ARCHIVE, 50));
+        //put("Tous", new TypeScore(EntityFolder.ARCHIVE, 50));
         put("Archiv", new TypeScore(EntityFolder.ARCHIVE, 100)); // German
         put("archive", new TypeScore(EntityFolder.ARCHIVE, 100));
         put("archief", new TypeScore(EntityFolder.ARCHIVE, 100)); // Dutch
@@ -204,6 +204,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
         put("Szkice lokalne", new TypeScore(EntityFolder.DRAFTS, 100)); // Polish
 
         put("trash", new TypeScore(EntityFolder.TRASH, 100));
+        put("Deleted", new TypeScore(EntityFolder.TRASH, 100));
         //put("Bin", new TypeScore(EntityFolder.TRASH, 50));
         put("Papierkorb", new TypeScore(EntityFolder.TRASH, 100));
         put("corbeille", new TypeScore(EntityFolder.TRASH, 100));
@@ -215,6 +216,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
 
         put("junk", new TypeScore(EntityFolder.JUNK, 100));
         put("spam", new TypeScore(EntityFolder.JUNK, 100));
+        put("bulk", new TypeScore(EntityFolder.JUNK, 100));
         put("pourriel", new TypeScore(EntityFolder.JUNK, 100));
         put("quarantaine", new TypeScore(EntityFolder.JUNK, 50));
         put("Спам", new TypeScore(EntityFolder.JUNK, 100));
