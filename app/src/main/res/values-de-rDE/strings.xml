@@ -246,19 +246,22 @@
     <string name="title_setup_theme_black_background">Schwarzer Hintergrund</string>
     <string name="title_setup_theme_html_light">Heller Hintergrund für die Ansicht der Originalnachricht</string>
     <string name="title_setup_theme_composer_light">Heller Hintergrund für das Verfassenfenster</string>
+    <string name="title_setup_theme_you_hint">Die Material-You-Farben können in den Android-Einstellungen „Hintergründe und Stil” festgelegt werden.</string>
     <string name="title_setup_theme_system_hint">Dadurch wird automatisch auf ein helles/dunkles Design im Tag-/Nachtmodus umgeschaltet, wenn es von Android unterstützt wird</string>
     <string name="title_setup_theme_more_colors">Ich möchte mehr Farben</string>
     <string name="title_setup_advanced">Erweitert</string>
     <string name="title_setup_options">Optionen</string>
     <string name="title_setup_defaults">Standardeinstellungen wiederherstellen</string>
     <string name="title_setup_reset_questions">Fragen zurücksetzen</string>
-    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Allgemeine Fragen</string>
-    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Originalnachrichten anzeigen</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Bilder anzeigen</string>
-    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Links bestätigen</string>
+    <string name="title_setup_reset_general">Allgemeine Fragen</string>
+    <string name="title_setup_reset_full">Originalnachrichten anzeigen</string>
+    <string name="title_setup_reset_images">Bilder anzeigen</string>
+    <string name="title_setup_reset_links">Links bestätigen</string>
     <string name="title_advanced_hint_title">Erweiterte Optionen</string>
     <string name="title_advanced_hint_message">        Sie wechseln zu den erweiterten Optionen.
         Alle Optionen haben allgemein verwendete Standardwerte, die nur geändert werden sollten, wenn Sie andere Einstellungen bevorzugen.
+    </string>
+    <string name="title_advanced_hint_remark">Die Optionen sind nach Registerkarten kategorisiert, in Abschnitte unterteilt, nach Aussehen oder Verwendung geordnet und durchsuchbar.
     </string>
     <string name="title_advanced_hint_setup">Sie können ein Konto konfigurieren, indem Sie auf dem Hauptkonfigurationsbildschirm auf die Schaltfläche des Assistenten tippen.</string>
     <string name="title_advanced_section_main">Haupteinstellungen</string>
@@ -500,8 +503,10 @@
     <string name="title_advanced_confirm_links">Hyperlinks beim Öffnen bestätigen</string>
     <string name="title_advanced_check_links_dbl">Domain-Sperrlisten auf verdächtige Links prüfen</string>
     <string name="title_advanced_browse_links">Hyperlinks an Android übertragen</string>
-    <string name="title_advanced_confirm_images">Bilder anzeigen bestätigen</string>
+    <string name="title_advanced_confirm_images">Standardmäßig keine Bilder anzeigen</string>
+    <string name="title_advanced_ask_images">Anzeigen von Bildern bestätigen</string>
     <string name="title_advanced_confirm_html">Standardmäßig umformatierte Nachrichten anzeigen</string>
+    <string name="title_advanced_ask_html">Anzeigen der Originalnachrichten bestätigen</string>
     <string name="title_advanced_tracking">Versuchen, Verfolgungsbilder zu erkennen und zu deaktivieren</string>
     <string name="title_advanced_hide_timezone">Nachrichten ohne Zeitzoneninformationen senden</string>
     <string name="title_advanced_client_id">App-Name und -Version an E-Mail-Server senden</string>
@@ -510,7 +515,9 @@
     <string name="title_advanced_secure">Im Anwendungsverlauf verbergen und das Aufnehmen von Bildschirmfotos verhindern</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
+    <string name="title_advanced_autolock">Sperren bei ausgeschaltetem Bildschirm</string>
     <string name="title_advanced_generic_user_agent">Allgemeine Browser-Kennung verwenden</string>
+    <string name="title_advanced_load_emoji">Aktualisierte Emoji von Google Play-Diensten laden</string>
     <string name="title_advanced_disconnect_auto_update">Listen wöchentlich automatisch aktualisieren</string>
     <string name="title_advanced_disconnect_links">Listen verwenden, um vor Nachverfolgungslinks zu warnen</string>
     <string name="title_advanced_disconnect_images">Listen zur Erkennung von Nachverfolgungsbildern verwenden</string>
@@ -767,6 +774,8 @@
     <string name="title_notify_batch_disable">Benachrichtigung über neue Nachrichten deaktivieren</string>
     <string name="title_delete_local">Lokale Nachrichten löschen</string>
     <string name="title_delete_browsed">Durchsuchte Nachrichten löschen</string>
+    <string name="title_expunge">Endgültiges Löschen</string>
+    <string name="title_expunge_remark">Dadurch werden alle zum Löschen markierte Nachrichten dauerhaft gelöscht</string>
     <string name="title_empty_trash">Papierkorb leeren</string>
     <string name="title_empty_spam">Spamordner leeren</string>
     <string name="title_edit_properties">Eigenschaften bearbeiten</string>
@@ -956,7 +965,7 @@
     <string name="title_no_search">Die Suche auf dem Server ist für dieses Konto nicht verfügbar</string>
     <string name="title_too_large">Nachricht zu groß, um sie vollständig umformatieren zu können</string>
     <string name="title_truncated">Nachricht zu groß, um vollständig angezeigt zu werden</string>
-    <string name="title_insufficient_memory">Nachricht zu groß für den verfügbaren Arbeitsspeicher</string>
+    <string name="title_insufficient_memory">Nachricht zu groß für den verfügbaren Speicher (%1$d)</string>
     <string name="title_show_full">Vollständige Nachricht anzeigen</string>
     <string name="title_unused_inline">Ungenutzte Inline-Bilder werden beim Senden entfernt</string>
     <string name="title_accross_remark">E-Mails, die über unterschiedliche Konten verschoben werden, werden erneut heruntergeladen, was zu einem erhöhtem Datenverbrauch führt</string>
@@ -1445,6 +1454,7 @@
     <string name="title_download">Herunterladen</string>
     <string name="title_report">Bericht</string>
     <string name="title_fix">Problem beheben</string>
+    <string name="title_show">Anzeigen</string>
     <string name="title_enable">Aktivieren</string>
     <string name="title_enabled">Aktiviert</string>
     <string name="title_disable">Deaktivieren</string>
@@ -1456,7 +1466,7 @@
     <string name="title_clipboard_copied">In die Zwischenablage kopiert</string>
     <string name="title_ask_what">Fragen, was getan werden soll</string>
     <string name="title_no_ask_again">Nicht noch einmal fragen</string>
-    <string name="title_no_ask_for_again">Dieses für %1$s nicht mehr fragen</string>
+    <string name="title_no_ask_for_again">Nicht erneut nachfragen für %1$s</string>
     <string name="title_no_body">Kein Nachrichtentext gefunden</string>
     <string name="title_no_charset">Nicht unterstützte Kodierung: %1$s</string>
     <string name="title_via">über %1$s</string>

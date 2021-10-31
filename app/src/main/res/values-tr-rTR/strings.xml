@@ -251,10 +251,10 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_setup_options">Seçenekler</string>
     <string name="title_setup_defaults">Öntanımlıları geri yükle</string>
     <string name="title_setup_reset_questions">Soruları sıfırla</string>
-    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Genel Sorular</string>
-    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Orijinal mesajları göster</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Resimleri göster</string>
-    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Bağlantıları onaylayın</string>
+    <string name="title_setup_reset_general">Genel Sorular</string>
+    <string name="title_setup_reset_full">Orijinal mesajları göster</string>
+    <string name="title_setup_reset_images">Resimleri göster</string>
+    <string name="title_setup_reset_links">Bağlantıları onaylayın</string>
     <string name="title_advanced_hint_title">Daha gelişmiş seçenekler</string>
     <string name="title_advanced_hint_message">        Daha gelişmiş seçeneklere gidiyorsunuz.
         Tüm seçenekler, farklı bir tercihiniz olmadığı sürece değiştirmenizin gerekmediği yaygın kullanılan varsayılan değerlere sahiptir.
@@ -499,7 +499,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_confirm_links">Bağlantıları açmayı onayla</string>
     <string name="title_advanced_check_links_dbl">Şüpheli bağlantılar için alan engelleme listelerini kontrol edin</string>
     <string name="title_advanced_browse_links">Android\'i bağlantıları açması için görevlendir</string>
-    <string name="title_advanced_confirm_images">Görüntüleri göstermeyi onayla</string>
+    <string name="title_advanced_ask_images">Görüntüleri göstermeyi onayla</string>
     <string name="title_advanced_confirm_html">Yeniden formatlanmış mesajları varsayılan olarak göster</string>
     <string name="title_advanced_tracking">Takip resimlerini tanımaya ve devre dışı bırakmaya çalışın</string>
     <string name="title_advanced_hide_timezone">İletileri saat dilimi verisi olmadan gönder</string>
@@ -509,6 +509,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_secure">Son kullanılan uygulamalar ekranından gizle ve ekran görüntüsü alınmasını engelle</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Biyometrik doğrulama süresi bitti</string>
+    <string name="title_advanced_autolock">Ekran kapandığında kilitle</string>
     <string name="title_advanced_generic_user_agent">Genel tarayıcı kullanıcı aracısını kullan</string>
     <string name="title_advanced_disconnect_auto_update">Listeleri haftalık olarak otomatik güncelle</string>
     <string name="title_advanced_disconnect_links">Takipçi içeren bağlantıları önden uyarabilmek için listeleri kullan</string>
@@ -955,7 +956,6 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_no_search">Bu hesap için sunucuda arama yapılamıyor</string>
     <string name="title_too_large">Mesaj, tamamen yeniden biçimlendirilemeyecek kadar büyük</string>
     <string name="title_truncated">Mesaj tamamen görüntülenemeyecek kadar büyük</string>
-    <string name="title_insufficient_memory">Mesaj kullanılabilir belleğe sığmayacak kadar büyük</string>
     <string name="title_show_full">Mesajın tamamını göster</string>
     <string name="title_unused_inline">Kullanılmayan satır içi resimler gönderirken kaldırılacaktır</string>
     <string name="title_accross_remark">Hesaplar arasında taşınan iletiler daha fazla veri kullanımıyla sonuçlanacak şekilde tekrar indirilecek</string>
@@ -1443,6 +1443,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_download">İndir</string>
     <string name="title_report">Rapor Et</string>
     <string name="title_fix">Düzelt</string>
+    <string name="title_show">Göster</string>
     <string name="title_enable">Etkin</string>
     <string name="title_enabled">Etkin</string>
     <string name="title_disable">Devredışı</string>

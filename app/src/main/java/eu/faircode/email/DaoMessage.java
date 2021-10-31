@@ -277,10 +277,13 @@ public interface DaoMessage {
             " AND ui_hide")
     LiveData<List<Long>> liveHiddenThread(long account, String thread);
 
-    @Query("SELECT * FROM message" +
+    @Query("SELECT message.* FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
             " WHERE message.account = :account" +
             " AND message.thread = :thread" +
+            " AND folder.type <> '" + EntityFolder.DRAFTS + "'" +
+            " AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
+            " AND folder.type <> '" + EntityFolder.SENT + "'" +
             " AND folder.type <> '" + EntityFolder.ARCHIVE + "'" +
             " AND NOT ui_seen" +
             " AND NOT ui_hide")
@@ -573,7 +576,8 @@ public interface DaoMessage {
     @Query("SELECT uid FROM message" +
             " WHERE folder = :folder" +
             " AND (:received IS NULL OR received >= :received)" +
-            " AND NOT uid IS NULL")
+            " AND NOT uid IS NULL" +
+            " ORDER BY uid")
     List<Long> getUids(long folder, Long received);
 
     @Query("SELECT * FROM message" +

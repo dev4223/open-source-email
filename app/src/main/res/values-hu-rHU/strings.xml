@@ -212,7 +212,7 @@
     <string name="title_setup_options">Opciók</string>
     <string name="title_setup_defaults">Alapértékek visszaállítása</string>
     <string name="title_setup_reset_questions">Kérdések visszaállítása</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Képek megjelenítése</string>
+    <string name="title_setup_reset_images">Képek megjelenítése</string>
     <string name="title_advanced_hint_title">További haladó opciók</string>
     <string name="title_advanced_hint_message">        A haladó beállításokhoz navigálsz.
         Minden opciónak van gyakran használt alapértéke, amit nem kell változtatnod, kivéve, ha más opciókat preferálsz.
@@ -410,7 +410,7 @@
     <string name="title_advanced_sound">Válasszon értesítő hangot</string>
     <string name="title_advanced_confirm_links">Linkek megnyitásának megerősítésehez kötése</string>
     <string name="title_advanced_browse_links">A linkeket a rendzser kezelje</string>
-    <string name="title_advanced_confirm_images">Képek megjelenítésének megerősítéshez kötése</string>
+    <string name="title_advanced_ask_images">Képek megjelenítésének megerősítéshez kötése</string>
     <string name="title_advanced_confirm_html">Üzenetek alapértelmezett újraformázása</string>
     <string name="title_advanced_tracking">Próbálja meg felismerni és letiltani a követő képeket</string>
     <string name="title_advanced_hide_timezone">Üzenetek küldése időzóna adat nélkül</string>
@@ -803,7 +803,6 @@
     <string name="title_no_search">Nem elérhető a szerveren keresés ezen a fiókon</string>
     <string name="title_too_large">Az üzenet túl nagy a teljes újraformázáshoz</string>
     <string name="title_truncated">Az üzenet túl nagy a teljes megjelnítéshez</string>
-    <string name="title_insufficient_memory">Az üzenet túl nagy az elérhető memóriába való betöltéshez</string>
     <string name="title_show_full">Teljes szöveg megjelnítése</string>
     <string name="title_unused_inline">Nem használt beágyazott képek küldéskor törölve lesznek</string>
     <string name="title_accross_remark">A különböző fiókok között átmozgatott üzenetek újra letöltsére kerülnek, amely további adatforgalmat eredményez</string>
@@ -1246,6 +1245,7 @@
     <string name="title_download">Letöltés</string>
     <string name="title_report">Jelentés</string>
     <string name="title_fix">Javítás</string>
+    <string name="title_show">Megjelenítés</string>
     <string name="title_enable">Bekapcsolás</string>
     <string name="title_enabled">Bekapcsolva</string>
     <string name="title_disable">Letiltás</string>

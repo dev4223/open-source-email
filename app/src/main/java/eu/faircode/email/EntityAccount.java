@@ -163,12 +163,20 @@ public class EntityAccount extends EntityOrder implements Serializable {
         return "imap.gmail.com".equalsIgnoreCase(host);
     }
 
+    boolean isOutlook() {
+        return "outlook.office365.com".equalsIgnoreCase(host);
+    }
+
     boolean isYahooJp() {
         return "imap.mail.yahoo.co.jp".equalsIgnoreCase(host);
     }
 
     boolean isSeznam() {
         return "imap.seznam.cz".equalsIgnoreCase(host);
+    }
+
+    boolean isZoho() {
+        return (host != null && host.toLowerCase(Locale.ROOT).startsWith("imap.zoho."));
     }
 
     boolean isTransient(Context context) {
@@ -212,6 +220,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
                 NotificationManager.IMPORTANCE_HIGH);
         channel.setGroup(group.getId());
         channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        channel.setBypassDnd(true);
         channel.enableLights(true);
         nm.createNotificationChannel(channel);
     }

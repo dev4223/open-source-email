@@ -177,7 +177,7 @@
     <string name="title_setup_options">Опции</string>
     <string name="title_setup_defaults">Възстановяване по подразбиране</string>
     <string name="title_setup_reset_questions">Отказване на запитването</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Показване на изображения</string>
+    <string name="title_setup_reset_images">Показване на изображения</string>
     <string name="title_advanced_hint_title">Разширени настройки</string>
     <string name="title_advanced_section_synchronize">Получаване</string>
     <string name="title_advanced_section_send">Изпращане</string>
@@ -348,7 +348,7 @@
     <string name="title_advanced_sound">Избери звук за известяване</string>
     <string name="title_advanced_confirm_links">Потвърдете отварянето на връзката</string>
     <string name="title_advanced_browse_links">Изпращане на отварящите връзки към Android</string>
-    <string name="title_advanced_confirm_images">Потвърдете показването на изображения</string>
+    <string name="title_advanced_ask_images">Потвърдете показването на изображения</string>
     <string name="title_advanced_confirm_html">Показване на преформатирани съобщения по подразбиране</string>
     <string name="title_advanced_hide_timezone">Изпращане на съобщения без данни за часовата зона</string>
     <string name="title_advanced_display_hidden">Показване на скрит текст в съобщение</string>
@@ -670,7 +670,6 @@
     <string name="title_no_search">Търсенето в сървъра не е налично за този профил</string>
     <string name="title_too_large">Съобщението е твърде голямо, за да се преформатира напълно</string>
     <string name="title_truncated">Съобщението е твърде голямо, за да се покаже напълно</string>
-    <string name="title_insufficient_memory">Съобщението е твърде голямо за да се побере в наличната памет</string>
     <string name="title_show_full">Покажи цялото съобщение</string>
     <string name="title_unused_inline">Неизползваните вградени изображения ще бъдат премахнати при изпращане</string>
     <string name="title_accross_remark">Съобщенията, преместени в други профили, ще бъдат изтеглени наново, което ще доведе до допълнително използване на данни</string>
@@ -1092,6 +1091,7 @@
     <string name="title_download">Изтегляне</string>
     <string name="title_report">Отчет</string>
     <string name="title_fix">Поправка</string>
+    <string name="title_show">Показване</string>
     <string name="title_enable">Активирай</string>
     <string name="title_enabled">Активирано</string>
     <string name="title_disable">Деактивирай</string>

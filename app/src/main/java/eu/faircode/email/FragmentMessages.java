@@ -725,6 +725,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (pos == NO_POSITION)
                     return null;
 
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return null;
+
                 TupleMessageEx prev = adapter.getItemAtPosition(pos - 1);
                 TupleMessageEx message = adapter.getItemAtPosition(pos);
                 if (pos > 0 && prev == null)
@@ -3029,19 +3032,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             result.visible && result.hidden)
                         continue;
 
+                    if (message.ui_seen)
+                        result.seen = true;
+                    if (!message.ui_flagged)
+                        result.unflagged = true;
+
                     List<EntityMessage> messages = db.message().getMessagesByThread(
                             message.account, message.thread, threading ? null : id, null);
                     for (EntityMessage threaded : messages) {
                         if (threaded.folder.equals(message.folder))
-                            if (threaded.ui_seen)
-                                result.seen = true;
-                            else
+                            if (!threaded.ui_seen)
                                 result.unseen = true;
 
                         if (threaded.ui_flagged)
                             result.flagged = true;
-                        else
-                            result.unflagged = true;
 
                         int i = (message.importance == null ? EntityMessage.PRIORITIY_NORMAL : message.importance);
                         if (result.importance == null)
@@ -3120,6 +3124,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 long[] ids = args.getLongArray("ids");
 
                 final Context context = getContext();
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean flags = prefs.getBoolean("flags", true);
+                boolean flags_background = prefs.getBoolean("flags_background", false);
+
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), fabMore);
 
                 int order = 0;
@@ -3141,13 +3149,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, order++, R.string.title_unhide)
                             .setIcon(R.drawable.twotone_visibility_24);
 
-                if (result.unflagged)
+                if (result.unflagged && flags)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, order++, R.string.title_flag)
                             .setIcon(R.drawable.twotone_star_24);
-                if (result.flagged)
+                if (result.flagged && flags)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, order++, R.string.title_unflag)
                             .setIcon(R.drawable.twotone_star_border_24);
-                if (result.unflagged || result.flagged)
+                if ((result.unflagged || result.flagged) && flags_background)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, order++, R.string.title_flag_color)
                             .setIcon(R.drawable.twotone_auto_awesome_24);
 
@@ -6790,8 +6798,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 EntityMessage message = db.message().getMessage(id);
                 if (message == null)
                     throw new MessageRemovedException();
+
                 File file = message.getRawFile(context);
                 Log.i("Raw file=" + file);
+
+                if (!file.exists())
+                    db.message().setMessageRaw(message.id, false);
 
                 OutputStream os = null;
                 InputStream is = null;

@@ -246,19 +246,22 @@
     <string name="title_setup_theme_black_background">Fond noir</string>
     <string name="title_setup_theme_html_light">Arrière-plan clair pour l\'affichage du message original</string>
     <string name="title_setup_theme_composer_light">Arrière-plan clair pour l\'éditeur de message</string>
+    <string name="title_setup_theme_you_hint">Les couleurs Material You peuvent être configurées dans les paramètres Android Fond d\'écran &amp; style</string>
     <string name="title_setup_theme_system_hint">Ceci basculera automatiquement en mode clair/sombre le jour/la nuit si pris en charge par Android</string>
     <string name="title_setup_theme_more_colors">Je veux plus de couleurs</string>
     <string name="title_setup_advanced">Avancé</string>
     <string name="title_setup_options">Options</string>
     <string name="title_setup_defaults">Rétablir les paramètres par défaut</string>
     <string name="title_setup_reset_questions">Réinitialiser les questions</string>
-    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Questions générales</string>
-    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Afficher les messages originaux</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Afficher les images</string>
-    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Confirmer les liens</string>
+    <string name="title_setup_reset_general">Questions générales</string>
+    <string name="title_setup_reset_full">Afficher les messages originaux</string>
+    <string name="title_setup_reset_images">Afficher les images</string>
+    <string name="title_setup_reset_links">Confirmer les liens</string>
     <string name="title_advanced_hint_title">Paramètres avancés</string>
     <string name="title_advanced_hint_message">        Vous parcourez les paramètres avancés.
         Toutes les options ont des valeurs par défaut couramment utilisées que vous n\'avez pas besoin de modifier sauf si vous avez une préférence différente.
+    </string>
+    <string name="title_advanced_hint_remark">        Les options sont rangées par catégories dans des onglets divisés en sections, elles sont organisées selon l\'apparence ou l\'usage et peuvent être recherchées.
     </string>
     <string name="title_advanced_hint_setup">Vous pouvez configurer un compte en appuyant sur le bouton Assistant sur l\'écran principal de configuration.</string>
     <string name="title_advanced_section_main">Principal</string>
@@ -500,8 +503,10 @@
     <string name="title_advanced_confirm_links">Confirmer l\'ouverture des liens</string>
     <string name="title_advanced_check_links_dbl">Vérifier les listes de blocage de domaine pour les liens suspects</string>
     <string name="title_advanced_browse_links">Déléguer l\'ouverture des liens à Android</string>
-    <string name="title_advanced_confirm_images">Confirmer l\'affichage des images</string>
+    <string name="title_advanced_confirm_images">N\'afficher aucune image par défaut</string>
+    <string name="title_advanced_ask_images">Confirmer l\'affichage des images</string>
     <string name="title_advanced_confirm_html">Afficher les messages reformatés par défaut</string>
+    <string name="title_advanced_ask_html">Confirmer l\'affichage des messages originaux</string>
     <string name="title_advanced_tracking">Tenter de reconnaître et de désactiver les images de pistage</string>
     <string name="title_advanced_hide_timezone">Envoyer les messages sans les données de fuseau horaire</string>
     <string name="title_advanced_client_id">Envoyer le nom et la version de l\'application au serveur de messagerie</string>
@@ -510,7 +515,9 @@
     <string name="title_advanced_secure">Masquer FairEmail de la liste des applications récentes et empêcher la prise de captures d’écran</string>
     <string name="title_advanced_pin">Code PIN</string>
     <string name="title_advanced_biometrics_timeout">Délai d’expiration de l’authentification biométrique</string>
+    <string name="title_advanced_autolock">Verrouiller lorsque l\'écran s\'éteint</string>
     <string name="title_advanced_generic_user_agent">Utiliser l\'agent utilisateur générique du navigateur</string>
+    <string name="title_advanced_load_emoji">Charger les émojis mis à jour depuis les Services Google Play</string>
     <string name="title_advanced_disconnect_auto_update">Mettre à jour automatiquement les listes chaque semaine</string>
     <string name="title_advanced_disconnect_links">Utiliser des listes pour vous avertir des liens de pistage</string>
     <string name="title_advanced_disconnect_images">Utiliser des listes pour identifier les images de pistage</string>
@@ -767,6 +774,8 @@
     <string name="title_notify_batch_disable">Désactiver les notifications de nouveau message</string>
     <string name="title_delete_local">Supprimer les messages locaux</string>
     <string name="title_delete_browsed">Supprimer les messages consultés/recherchés</string>
+    <string name="title_expunge">Effacer</string>
+    <string name="title_expunge_remark">Ceci supprimera définitivement tous les messages marqués pour suppression</string>
     <string name="title_empty_trash">Vider la corbeille</string>
     <string name="title_empty_spam">Vider les indésirables</string>
     <string name="title_edit_properties">Modifier les propriétés</string>
@@ -957,7 +966,7 @@
     <string name="title_no_search">La recherche sur le serveur n\'est pas disponible pour ce compte</string>
     <string name="title_too_large">Message trop volumineux pour être complètement reformaté</string>
     <string name="title_truncated">Message trop volumineux pour être affiché complètement</string>
-    <string name="title_insufficient_memory">Message trop volumineux pour être chargé dans la mémoire disponible</string>
+    <string name="title_insufficient_memory">Message trop volumineux pour la mémoire disponible (%1$d)</string>
     <string name="title_show_full">Afficher le message complet</string>
     <string name="title_unused_inline">Les images incluses non utilisées seront supprimées lors de l’envoi</string>
     <string name="title_accross_remark">Les messages déplacés entre comptes seront téléchargés à nouveau entraînant une utilisation supplémentaire des données</string>
@@ -1021,7 +1030,7 @@
     <string name="title_send_now">Env. maint.</string>
     <string name="title_send_via">Envoyer via</string>
     <string name="title_send_at">Envoyer plus tard&#8230;</string>
-    <string name="title_send_auto_archive">Archiver un message avec réponse</string>
+    <string name="title_send_auto_archive">Archiver le message répondu</string>
     <string name="title_send_encryption">Chiffrement</string>
     <string name="title_send_priority">Priorité</string>
     <string name="title_no_server">Aucun serveur trouvé à \'%1$s\'</string>
@@ -1445,6 +1454,7 @@
     <string name="title_download">Télécharger</string>
     <string name="title_report">Signaler</string>
     <string name="title_fix">Corriger</string>
+    <string name="title_show">Afficher</string>
     <string name="title_enable">Activer</string>
     <string name="title_enabled">Activé</string>
     <string name="title_disable">Désactiver</string>

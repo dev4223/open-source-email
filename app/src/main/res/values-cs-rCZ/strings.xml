@@ -268,7 +268,7 @@
     <string name="title_setup_options">Možnosti</string>
     <string name="title_setup_defaults">Obnovit výchozí</string>
     <string name="title_setup_reset_questions">Obnovit otázky</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Zobrazit obrázky</string>
+    <string name="title_setup_reset_images">Zobrazit obrázky</string>
     <string name="title_advanced_hint_title">Pokročilé možnosti</string>
     <string name="title_advanced_hint_message">        Vcházíte do rozšířených možností.
         Všechny volby jsou nastaveny dle běžných konvencí, tudíž je není potřeba měnit, nemáte-li odlišnou preferenci.
@@ -513,7 +513,7 @@
     <string name="title_advanced_confirm_links">Potvrzovat otevírání odkazů</string>
     <string name="title_advanced_check_links_dbl">Kontrolovat seznamy blokovaných domén na podezřelé odkazy</string>
     <string name="title_advanced_browse_links">Otevírání odkazů přenechat Androidu</string>
-    <string name="title_advanced_confirm_images">Potvrzovat zobrazení obrázků</string>
+    <string name="title_advanced_ask_images">Potvrzovat zobrazení obrázků</string>
     <string name="title_advanced_confirm_html">Automaticky zobrazit zprávy přeformátované</string>
     <string name="title_advanced_tracking">Pokusit se rozpoznat a zakázat sledovací obrázky</string>
     <string name="title_advanced_hide_timezone">Zprávy odesílat bez časového pásma</string>
@@ -969,7 +969,6 @@
     <string name="title_no_search">Vyhledávání na serveru není pro tento účet k dispozici</string>
     <string name="title_too_large">Zpráva je příliš velká pro úplné přeformátování</string>
     <string name="title_truncated">Zpráva je příliš velká pro úplné zobrazení</string>
-    <string name="title_insufficient_memory">Zpráva je příliš velká, nevejde se do dostupné paměti</string>
     <string name="title_show_full">Zobrazit celou zprávu</string>
     <string name="title_unused_inline">Nepoužité vložené obrázky budou při odeslání odebrány</string>
     <string name="title_accross_remark">Zprávy přesunuté napříč účty budou opětovně staženy, což povede ke spotřebě dat navíc</string>
@@ -1456,6 +1455,7 @@
     <string name="title_download">Stáhnout</string>
     <string name="title_report">Nahlásit</string>
     <string name="title_fix">Opravit</string>
+    <string name="title_show">Ukázat</string>
     <string name="title_enable">Zapnout</string>
     <string name="title_enabled">Zapnuto</string>
     <string name="title_disable">Zakázat</string>

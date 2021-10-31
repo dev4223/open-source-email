@@ -187,7 +187,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_options">Opcions</string>
     <string name="title_setup_defaults">Restaura els valors per defecte</string>
     <string name="title_setup_reset_questions">Restableix les preguntes</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Mostra imatges</string>
+    <string name="title_setup_reset_images">Mostra imatges</string>
     <string name="title_advanced_hint_title">Més opcions avançades</string>
     <string name="title_advanced_section_synchronize">Rebre</string>
     <string name="title_advanced_section_send">Enviar</string>
@@ -352,7 +352,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_advanced_sound">Selecciona so de notificació</string>
     <string name="title_advanced_confirm_links">Confirmeu l’obertura d’enllaços</string>
     <string name="title_advanced_browse_links">Delega obrir enllaços a Android</string>
-    <string name="title_advanced_confirm_images">Confirmeu la visualització d’imatges</string>
+    <string name="title_advanced_ask_images">Confirmeu la visualització d’imatges</string>
     <string name="title_advanced_confirm_html">Mostra els missatges reformatats de manera predeterminada</string>
     <string name="title_advanced_hide_timezone">Envia missatges sense dades de fus horari</string>
     <string name="title_advanced_display_hidden">Mostra textos de missatges ocults</string>
@@ -669,7 +669,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_no_search">Cercar al servidor no està disponible per aquest compte</string>
     <string name="title_too_large">Missatge massa gran per reformatejar-lo completament</string>
     <string name="title_truncated">Missatge massa gran per mostrar-lo completament</string>
-    <string name="title_insufficient_memory">Missatge massa gran per adaptar-se a la memòria disponible</string>
     <string name="title_show_full">Mostrar missatge complert</string>
     <string name="title_unused_inline">Les imatges en línia no utilitzades seran esborrades al enviar</string>
     <string name="title_accross_remark">Els missatges transmesos pels comptes es descarregaran de nou i es produirà un ús addicional de dades</string>
@@ -1051,6 +1050,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_download">Descarrega</string>
     <string name="title_report">Informa</string>
     <string name="title_fix">Repara</string>
+    <string name="title_show">Mostra</string>
     <string name="title_enable">Habilita</string>
     <string name="title_enabled">Activat</string>
     <string name="title_disable">Deshabilita</string>

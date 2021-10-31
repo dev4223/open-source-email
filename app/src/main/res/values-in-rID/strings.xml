@@ -205,7 +205,7 @@
     <string name="title_setup_options">Opsi</string>
     <string name="title_setup_defaults">Kembalikan pengaturan standar</string>
     <string name="title_setup_reset_questions">Atur ulang pertanyaan</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Tampilkan gambar</string>
+    <string name="title_setup_reset_images">Tampilkan gambar</string>
     <string name="title_advanced_hint_title">Opsi lebih lanjut</string>
     <string name="title_advanced_hint_message">       Anda menavigasi ke opsi yang lebih canggih.
         Semua opsi umumnya menggunakan nilai standar, yang tidak perlu Anda ubah kecuali jika Anda memiliki preferensi yang berbeda.
@@ -407,7 +407,7 @@
     <string name="title_advanced_sound">Pilih suara pemberitahuan</string>
     <string name="title_advanced_confirm_links">Minta konfirmasi ketika membuka tautan</string>
     <string name="title_advanced_browse_links">Delegasikan ketika membuka tautan ke sistem Android</string>
-    <string name="title_advanced_confirm_images">Minta konfirmasi ketika menampilkan gambar</string>
+    <string name="title_advanced_ask_images">Minta konfirmasi ketika menampilkan gambar</string>
     <string name="title_advanced_confirm_html">Tampilkan pesan yang diformat ulang secara standar</string>
     <string name="title_advanced_tracking">Coba untuk mengenali dan nonaktifkan pelacakan gambar</string>
     <string name="title_advanced_hide_timezone">Kirim pesan tanpa data zona waktu</string>
@@ -825,7 +825,6 @@
     <string name="title_no_search">Pencarian di server tidak tersedia untuk akun ini</string>
     <string name="title_too_large">Pesan terlalu besar untuk diformat ulang sepenuhnya</string>
     <string name="title_truncated">Pesan terlalu besar untuk ditampilkan sepenuhnya</string>
-    <string name="title_insufficient_memory">Pesan terlalu besar untuk di simpan</string>
     <string name="title_show_full">Tampilkan pesan penuh</string>
     <string name="title_unused_inline">Gambar sebaris yang tidak digunakan akan dihapus saat dikirim</string>
     <string name="title_accross_remark">Pesan yang dipindahkan ke akun lain akan diunduh lagi sehingga mengakibatkan penggunaan data bertambah</string>
@@ -1185,6 +1184,7 @@
     <string name="title_download">Unduh</string>
     <string name="title_report">Laporan</string>
     <string name="title_fix">Perbaiki</string>
+    <string name="title_show">Tampilkan</string>
     <string name="title_enable">Aktifkan</string>
     <string name="title_enabled">Diaktifkan</string>
     <string name="title_disable">Nonaktifkan</string>

@@ -4,13 +4,45 @@
 
 ### [Banji](https://en.wikipedia.org/wiki/Banji)
 
-### Next version
+### 1.1769 - 2021-10-28
+
+* Fixed drafts not being removed
+* Added Emoji font loading (privacy settings)
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.1768 - 2021-10-27
+
+* Added Material You theme (Android 12)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1767 - 2021-10-26
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1766
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1765
+
+* Added option to disable lock on screen off for biometric authentication
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1764
 
 * Added support for latin and roman numbered lists (view only)
-* Report new messages in same thread when composing a new message
+* Report new messages when composing a message [1]
 * Use account categories for identities
 * Small improvements and minor bug fixes
 * Updated translations
+
+[1] This is an experiment which needs to be enabled in the miscellaneous settings.
 
 ### 1.1763
 

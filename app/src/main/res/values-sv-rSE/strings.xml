@@ -250,7 +250,7 @@
     <string name="title_setup_options">Alternativ</string>
     <string name="title_setup_defaults">Återställ standardvärden</string>
     <string name="title_setup_reset_questions">Återställ frågor</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Visa bilder</string>
+    <string name="title_setup_reset_images">Visa bilder</string>
     <string name="title_advanced_hint_title">Mer avancerade alternativ</string>
     <string name="title_advanced_hint_message">Du navigerar till de mer avancerade alternativen.
         Alla alternativ har använt standardvärden som kan ändras om du har en annan inställning.    </string>
@@ -494,7 +494,7 @@
     <string name="title_advanced_confirm_links">Bekräfta att länkar öppnas</string>
     <string name="title_advanced_check_links_dbl">Kontrollera domänblockeringslistor för misstänkta länkar</string>
     <string name="title_advanced_browse_links">Låt Android öppna länkar</string>
-    <string name="title_advanced_confirm_images">Bekräfta visning av bilder</string>
+    <string name="title_advanced_ask_images">Bekräfta visning av bilder</string>
     <string name="title_advanced_confirm_html">Visa omformaterade meddelanden som standard</string>
     <string name="title_advanced_tracking">Försök att känna igen och inaktivera spårningsbilder</string>
     <string name="title_advanced_hide_timezone">Skicka meddelanden utan tidszon</string>
@@ -504,6 +504,7 @@
     <string name="title_advanced_secure">Dölj dig från senaste appar-skärmen och förhindra tagning av skärmdumpar</string>
     <string name="title_advanced_pin">PIN-kod</string>
     <string name="title_advanced_biometrics_timeout">Tidsgräns för biometrisk autentisering</string>
+    <string name="title_advanced_autolock">Lås när skärmen stängs av</string>
     <string name="title_advanced_generic_user_agent">Använd generisk webbläsare användaragent</string>
     <string name="title_advanced_disconnect_auto_update">Uppdatera listor automatiskt varje vecka</string>
     <string name="title_advanced_disconnect_links">Använd listor för att varna för spårningslänkar</string>
@@ -951,7 +952,6 @@
     <string name="title_no_search">Sök på servern är inte tillgänglig för detta konto</string>
     <string name="title_too_large">Meddelandet är för stort för att omformatera</string>
     <string name="title_truncated">Meddelandet är för stort för att visas helt</string>
-    <string name="title_insufficient_memory">Meddelandet är för stort för att passa in i det tillgängliga minnet</string>
     <string name="title_show_full">Visa hela meddelandet</string>
     <string name="title_unused_inline">Infogade bilder som är oanvända kommer att tas bort vid sändning</string>
     <string name="title_accross_remark">Meddelanden flyttade över konton kommer att hämtas igen och orsakar extra dataanvändning</string>
@@ -1438,6 +1438,7 @@
     <string name="title_download">Ladda ned</string>
     <string name="title_report">Rapportera</string>
     <string name="title_fix">Åtgärda</string>
+    <string name="title_show">Visa</string>
     <string name="title_enable">Aktivera</string>
     <string name="title_enabled">Aktiverad</string>
     <string name="title_disable">Inaktivera</string>

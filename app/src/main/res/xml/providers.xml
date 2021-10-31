@@ -1353,4 +1353,69 @@
             port="587"
             starttls="true" />
     </provider>
+    <provider
+        name="Fastweb.it"
+        domain="fastwebnet\\.it"
+        link="https://www.fastweb.it/fastmail/guida/mail_POPeIMAP/">
+        <imap
+            host="imap.fastwebnet.it"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.fastwebnet.it"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Aruba.it"
+        link="https://guide.hosting.aruba.it/email/servizi-opzionali-email/email-imap.aspx">
+        <imap
+            host="imaps.aruba.it"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtps.aruba.it"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="StartMail"
+        appPassword="true"
+        domain="startmail\\.com"
+        link="https://support.startmail.com/hc/en-us/articles/360006596718-Server-addresses">
+        <imap
+            host="imap.startmail.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.startmail.com"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="wp.pl"
+        appPassword="true"
+        domain="wp\\.pl"
+        link="https://pomoc.wp.pl/jak-skonfigurowac-program-pocztowy">
+        <imap
+            host="imap.wp.pl"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.wp.pl"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="1blu"
+        link="https://faq.1blu.de/content/467/882/de/e_mail_einrichtung-_-wie-lauten-die-einstellungen-fuer-mein-e_mail_system.html">
+        <imap
+            host="imap.1blu.de"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.1blu.de"
+            port="465"
+            starttls="false" />
+    </provider>
 </providers>

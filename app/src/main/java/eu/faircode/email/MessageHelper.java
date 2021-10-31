@@ -2007,8 +2007,11 @@ public class MessageHelper {
             parts.addAll(text);
             parts.addAll(extra);
             for (PartHolder h : parts) {
-                if (h.part.getSize() > MAX_MESSAGE_SIZE) {
-                    warnings.add(context.getString(R.string.title_insufficient_memory));
+                int size = h.part.getSize();
+                if (size > 100 * 1024 * 1024)
+                    Log.e("Unreasonable message size=" + size);
+                if (size > MAX_MESSAGE_SIZE && size != Integer.MAX_VALUE) {
+                    warnings.add(context.getString(R.string.title_insufficient_memory, size));
                     return null;
                 }
 
@@ -2745,7 +2748,7 @@ public class MessageHelper {
                                 return parts;
                             } else {
                                 StringBuilder sb = new StringBuilder();
-                                sb.append(ct);
+                                sb.append(ct).append(" parts=").append(multipart.getCount()).append("/2");
                                 for (int i = 0; i < multipart.getCount(); i++)
                                     sb.append(' ').append(i).append('=').append(multipart.getBodyPart(i).getContentType());
                                 Log.e(sb.toString());
@@ -2767,7 +2770,7 @@ public class MessageHelper {
                                 return parts;
                             } else {
                                 StringBuilder sb = new StringBuilder();
-                                sb.append(ct);
+                                sb.append(ct).append(" parts=").append(multipart.getCount()).append("/2");
                                 for (int i = 0; i < multipart.getCount(); i++)
                                     sb.append(' ').append(i).append('=').append(multipart.getBodyPart(i).getContentType());
                                 Log.e(sb.toString());
@@ -2799,7 +2802,9 @@ public class MessageHelper {
                                 return parts;
                             }
                         }
-                        Log.e(ct.toString());
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Unexpected smime-type=").append(ct);
+                        Log.e(sb.toString());
                     }
                 }
             } catch (ParseException ex) {

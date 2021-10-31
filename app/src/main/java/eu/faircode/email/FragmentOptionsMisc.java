@@ -78,6 +78,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
@@ -135,13 +136,17 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swCheckpoints;
     private TextView tvSqliteCache;
     private SeekBar sbSqliteCache;
+    private TextView tvChunkSize;
+    private SeekBar sbChunkSize;
     private ImageButton ibSqliteCache;
     private SwitchCompat swModSeq;
     private SwitchCompat swExpunge;
+    private SwitchCompat swUidExpunge;
     private SwitchCompat swAuthPlain;
     private SwitchCompat swAuthLogin;
     private SwitchCompat swAuthNtlm;
     private SwitchCompat swAuthSasl;
+    private SwitchCompat swIdleDone;
     private SwitchCompat swExactAlarms;
     private SwitchCompat swDupMsgId;
     private SwitchCompat swTestIab;
@@ -150,6 +155,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvMemoryUsage;
     private TextView tvStorageUsage;
     private TextView tvSuffixes;
+    private TextView tvAndroidId;
     private TextView tvFingerprint;
     private TextView tvCursorWindow;
     private Button btnGC;
@@ -173,8 +179,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "experiments", "crash_reports", "cleanup_attachments",
             "protocol", "debug", "log_level",
             "query_threads", "wal", "checkpoints", "sqlite_cache",
-            "use_modseq", "perform_expunge",
-            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl",
+            "chunk_size", "use_modseq", "perform_expunge", "uid_expunge",
+            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "idle_done",
             "exact_alarms", "dup_msgids", "test_iab"
     };
 
@@ -182,6 +188,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "first", "app_support", "notify_archive", "message_swipe", "message_select", "folder_actions", "folder_sync",
             "crash_reports_asked", "review_asked", "review_later", "why",
             "reply_hint", "html_always_images", "open_full_confirmed",
+            "ask_images", "ask_html",
             "print_html_confirmed", "print_html_header", "print_html_images",
             "reformatted_hint",
             "selected_folders", "move_1_confirmed", "move_n_confirmed",
@@ -262,12 +269,16 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvSqliteCache = view.findViewById(R.id.tvSqliteCache);
         sbSqliteCache = view.findViewById(R.id.sbSqliteCache);
         ibSqliteCache = view.findViewById(R.id.ibSqliteCache);
+        tvChunkSize = view.findViewById(R.id.tvChunkSize);
+        sbChunkSize = view.findViewById(R.id.sbChunkSize);
         swModSeq = view.findViewById(R.id.swModSeq);
         swExpunge = view.findViewById(R.id.swExpunge);
+        swUidExpunge = view.findViewById(R.id.swUidExpunge);
         swAuthPlain = view.findViewById(R.id.swAuthPlain);
         swAuthLogin = view.findViewById(R.id.swAuthLogin);
         swAuthNtlm = view.findViewById(R.id.swAuthNtlm);
         swAuthSasl = view.findViewById(R.id.swAuthSasl);
+        swIdleDone = view.findViewById(R.id.swIdleDone);
         swExactAlarms = view.findViewById(R.id.swExactAlarms);
         swDupMsgId = view.findViewById(R.id.swDupMsgId);
         swTestIab = view.findViewById(R.id.swTestIab);
@@ -276,6 +287,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvMemoryUsage = view.findViewById(R.id.tvMemoryUsage);
         tvStorageUsage = view.findViewById(R.id.tvStorageUsage);
         tvSuffixes = view.findViewById(R.id.tvSuffixes);
+        tvAndroidId = view.findViewById(R.id.tvAndroidId);
         tvFingerprint = view.findViewById(R.id.tvFingerprint);
         tvCursorWindow = view.findViewById(R.id.tvCursorWindow);
         btnGC = view.findViewById(R.id.btnGC);
@@ -430,6 +442,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         return;
 
                     new AlertDialog.Builder(view.getContext())
+                            .setIcon(R.drawable.twotone_help_24)
                             .setTitle(languages.get(position - 1).second)
                             .setMessage(R.string.title_advanced_english_hint)
                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -464,6 +477,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onClick(View v) {
                 new AlertDialog.Builder(view.getContext())
+                        .setIcon(R.drawable.twotone_help_24)
                         .setTitle(R.string.title_advanced_language_system)
                         .setMessage(R.string.title_advanced_english_hint)
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -630,58 +644,74 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         btnRepair.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new SimpleTask<Void>() {
-                    @Override
-                    protected void onPostExecute(Bundle args) {
-                        prefs.edit().remove("debug").apply();
-                        ToastEx.makeText(v.getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
-                    }
+                new AlertDialog.Builder(view.getContext())
+                        .setIcon(R.drawable.twotone_bug_report_24)
+                        .setTitle(R.string.title_advanced_repair)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                new SimpleTask<Void>() {
+                                    @Override
+                                    protected void onPostExecute(Bundle args) {
+                                        prefs.edit().remove("debug").apply();
+                                        ToastEx.makeText(v.getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                                    }
 
-                    @Override
-                    protected Void onExecute(Context context, Bundle args) throws Throwable {
-                        DB db = DB.getInstance(context);
+                                    @Override
+                                    protected Void onExecute(Context context, Bundle args) throws Throwable {
+                                        DB db = DB.getInstance(context);
 
-                        List<EntityAccount> accounts = db.account().getAccounts();
-                        if (accounts == null)
-                            return null;
+                                        List<EntityAccount> accounts = db.account().getAccounts();
+                                        if (accounts == null)
+                                            return null;
 
-                        for (EntityAccount account : accounts) {
-                            if (account.protocol != EntityAccount.TYPE_IMAP)
-                                continue;
+                                        for (EntityAccount account : accounts) {
+                                            if (account.protocol != EntityAccount.TYPE_IMAP)
+                                                continue;
 
-                            List<EntityFolder> folders = db.folder().getFolders(account.id, false, false);
-                            if (folders == null)
-                                continue;
+                                            List<EntityFolder> folders = db.folder().getFolders(account.id, false, false);
+                                            if (folders == null)
+                                                continue;
 
-                            EntityFolder inbox = db.folder().getFolderByType(account.id, EntityFolder.INBOX);
-                            for (EntityFolder folder : folders) {
-                                if (inbox == null && "inbox".equalsIgnoreCase(folder.name))
-                                    folder.type = EntityFolder.INBOX;
+                                            EntityFolder inbox = db.folder().getFolderByType(account.id, EntityFolder.INBOX);
+                                            for (EntityFolder folder : folders) {
+                                                if (inbox == null && "inbox".equalsIgnoreCase(folder.name))
+                                                    folder.type = EntityFolder.INBOX;
 
-                                if (!EntityFolder.USER.equals(folder.type) &&
-                                        !EntityFolder.SYSTEM.equals(folder.type)) {
-                                    EntityLog.log(context, "Repairing " + account.name + ":" + folder.type);
-                                    folder.setProperties();
-                                    folder.setSpecials(account);
-                                    db.folder().updateFolder(folder);
-                                }
+                                                if (!EntityFolder.USER.equals(folder.type) &&
+                                                        !EntityFolder.SYSTEM.equals(folder.type)) {
+                                                    EntityLog.log(context, "Repairing " + account.name + ":" + folder.type);
+                                                    folder.setProperties();
+                                                    folder.setSpecials(account);
+                                                    db.folder().updateFolder(folder);
+                                                }
+                                            }
+                                        }
+
+                                        return null;
+                                    }
+
+                                    @Override
+                                    protected void onExecuted(Bundle args, Void data) {
+                                        ServiceSynchronize.reload(v.getContext(), null, true, "repair");
+                                    }
+
+                                    @Override
+                                    protected void onException(Bundle args, Throwable ex) {
+                                        Log.unexpectedError(getParentFragmentManager(), ex);
+                                    }
+                                }.execute(FragmentOptionsMisc.this, new Bundle(), "repair");
                             }
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, Void data) {
-                        ServiceSynchronize.reload(v.getContext(), null, true, "repair");
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Log.unexpectedError(getParentFragmentManager(), ex);
-                    }
-                }.execute(FragmentOptionsMisc.this, new Bundle(), "repair");
+                        })
+                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Do nothing
+                            }
+                        })
+                        .show();
             }
+
         });
 
         swAutostart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -755,11 +785,34 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        sbChunkSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progress = progress / 10;
+                if (progress < 1)
+                    progress = 1;
+                progress = progress * 10;
+                prefs.edit().putInt("chunk_size", progress).apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+        });
+
         swProtocol.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("protocol", checked).apply();
-                if (!checked)
+                if (checked)
+                    prefs.edit().putLong("protocol_since", new Date().getTime()).apply();
+                else
                     EntityLog.clear(compoundButton.getContext());
             }
         });
@@ -776,6 +829,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("perform_expunge", checked).apply();
+                swUidExpunge.setEnabled(checked);
+                ServiceSynchronize.reload(compoundButton.getContext(), null, true, "perform_expunge");
+            }
+        });
+
+        swUidExpunge.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("uid_expunge", checked).apply();
                 ServiceSynchronize.reload(compoundButton.getContext(), null, true, "perform_expunge");
             }
         });
@@ -805,6 +867,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("auth_sasl", checked).apply();
+            }
+        });
+
+        swIdleDone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("idle_done", checked).apply();
             }
         });
 
@@ -861,6 +930,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         for (String key : charsets.keySet())
                             sb.append(charsets.get(key).displayName()).append("\r\n");
                         new AlertDialog.Builder(getContext())
+                                .setIcon(R.drawable.twotone_info_24)
                                 .setTitle(R.string.title_advanced_charsets)
                                 .setMessage(sb.toString())
                                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -919,6 +989,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                 }
 
                 new AlertDialog.Builder(getContext())
+                        .setIcon(R.drawable.twotone_info_24)
                         .setTitle(R.string.title_advanced_ciphers)
                         .setMessage(sb.toString())
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -951,11 +1022,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     @Override
                     protected List<File> onExecute(Context context, Bundle args) {
                         List<File> files = new ArrayList<>();
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                            files.addAll(getFiles(context.getFilesDir(), MIN_FILE_SIZE));
-                            files.addAll(getFiles(context.getCacheDir(), MIN_FILE_SIZE));
-                        } else
+                        files.addAll(getFiles(context.getFilesDir(), MIN_FILE_SIZE));
+                        files.addAll(getFiles(context.getCacheDir(), MIN_FILE_SIZE));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                             files.addAll(getFiles(context.getDataDir(), MIN_FILE_SIZE));
+
                         Collections.sort(files, new Comparator<File>() {
                             @Override
                             public int compare(File f1, File f2) {
@@ -967,13 +1038,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
                     private List<File> getFiles(File dir, long minSize) {
                         List<File> files = new ArrayList<>();
-                        File[] listed = dir.listFiles();
-                        if (listed != null)
-                            for (File file : listed)
-                                if (file.isDirectory())
-                                    files.addAll(getFiles(file, minSize));
-                                else if (file.length() > minSize)
-                                    files.add(file);
+                        if (dir != null) {
+                            File[] listed = dir.listFiles();
+                            if (listed != null)
+                                for (File file : listed)
+                                    if (file.isDirectory())
+                                        files.addAll(getFiles(file, minSize));
+                                    else if (file.length() > minSize)
+                                        files.add(file);
+                        }
                         return files;
                     }
 
@@ -981,18 +1054,28 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     protected void onExecuted(Bundle args, List<File> files) {
                         StringBuilder sb = new StringBuilder();
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                            sb.append("Data: ").append(getContext().getDataDir()).append("\r\n");
-                        sb.append("Files: ").append(getContext().getFilesDir()).append("\r\n");
-                        sb.append("Cache: ").append(getContext().getCacheDir()).append("\r\n");
+                        final Context context = getContext();
+                        File dataDir = (Build.VERSION.SDK_INT < Build.VERSION_CODES.N
+                                ? null : context.getDataDir());
+                        File filesDir = context.getFilesDir();
+                        File cacheDir = context.getCacheDir();
+
+                        if (dataDir != null)
+                            sb.append("Data: ").append(dataDir).append("\r\n");
+                        if (filesDir != null)
+                            sb.append("Files: ").append(filesDir).append("\r\n");
+                        if (cacheDir != null)
+                            sb.append("Cache: ").append(cacheDir).append("\r\n");
+                        sb.append("\r\n");
 
                         for (File file : files)
-                            sb.append(file.getAbsolutePath())
+                            sb.append(Helper.humanReadableByteCount(file.length()))
                                     .append(' ')
-                                    .append(Helper.humanReadableByteCount(file.length()))
+                                    .append(file.getAbsolutePath())
                                     .append("\r\n");
 
-                        new AlertDialog.Builder(getContext())
+                        new AlertDialog.Builder(context)
+                                .setIcon(R.drawable.twotone_info_24)
                                 .setTitle(title)
                                 .setMessage(sb.toString())
                                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -1248,18 +1331,27 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swCheckpoints.setChecked(prefs.getBoolean("checkpoints", true));
 
         int sqlite_cache = prefs.getInt("sqlite_cache", DB.DEFAULT_CACHE_SIZE);
-        int cache_size = sqlite_cache * class_mb * 1024 / 100;
+        Integer cache_size = DB.getCacheSizeKb(getContext());
+        if (cache_size == null)
+            cache_size = 2000;
         tvSqliteCache.setText(getString(R.string.title_advanced_sqlite_cache,
                 NF.format(sqlite_cache),
                 Helper.humanReadableByteCount(cache_size * 1024L)));
         sbSqliteCache.setProgress(sqlite_cache);
 
+        int chunk_size = prefs.getInt("chunk_size", Core.DEFAULT_CHUNCK_SIZE);
+        tvChunkSize.setText(getString(R.string.title_advanced_chunk_size, chunk_size));
+        sbChunkSize.setProgress(chunk_size);
+
         swModSeq.setChecked(prefs.getBoolean("use_modseq", true));
         swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
+        swUidExpunge.setChecked(prefs.getBoolean("uid_expunge", false));
+        swUidExpunge.setEnabled(swExpunge.isChecked());
         swAuthPlain.setChecked(prefs.getBoolean("auth_plain", true));
         swAuthLogin.setChecked(prefs.getBoolean("auth_login", true));
         swAuthNtlm.setChecked(prefs.getBoolean("auth_ntlm", true));
         swAuthSasl.setChecked(prefs.getBoolean("auth_sasl", true));
+        swIdleDone.setChecked(prefs.getBoolean("idle_done", true));
         swExactAlarms.setChecked(prefs.getBoolean("exact_alarms", true));
         swDupMsgId.setChecked(prefs.getBoolean("dup_msgids", false));
         swTestIab.setChecked(prefs.getBoolean("test_iab", false));
@@ -1269,6 +1361,19 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                 class_mb + " MB",
                 class_large_mb + " MB",
                 Helper.humanReadableByteCount(mi.totalMem)));
+
+        String android_id;
+        try {
+            android_id = Settings.Secure.getString(
+                    getContext().getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
+            if (android_id == null)
+                android_id = "<null>";
+        } catch (Throwable ex) {
+            Log.w(ex);
+            android_id = "?";
+        }
+        tvAndroidId.setText(getString(R.string.title_advanced_android_id, android_id));
 
         tvFingerprint.setText(Helper.getFingerprint(getContext()));
 

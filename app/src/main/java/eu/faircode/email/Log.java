@@ -57,7 +57,10 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.InflateException;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -135,6 +138,8 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import io.requery.android.database.CursorWindowAllocationException;
 
 public class Log {
+    private static Context ctx;
+
     private static int level = android.util.Log.INFO;
     private static final int MAX_CRASH_REPORTS = 5;
     private static final String TAG = "fairemail";
@@ -283,6 +288,13 @@ public class Log {
         return android.util.Log.e(TAG, prefix + " " + ex + "\n" + android.util.Log.getStackTraceString(ex));
     }
 
+    public static void persist(String message) {
+        if (ctx == null)
+            Log.e(message);
+        else
+            EntityLog.log(ctx, message);
+    }
+
     static void setCrashReporting(boolean enabled) {
         try {
             if (enabled)
@@ -316,6 +328,7 @@ public class Log {
     }
 
     static void setup(Context context) {
+        ctx = context;
         setLevel(context);
         setupBugsnag(context);
     }
@@ -1613,9 +1626,15 @@ public class Log {
             final Throwable ex = (Throwable) getArguments().getSerializable("ex");
             boolean report = getArguments().getBoolean("report", true);
 
+            final Context context = getContext();
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View dview = inflater.inflate(R.layout.dialog_unexpected, null);
+            TextView tvError = dview.findViewById(R.id.tvError);
+
+            tvError.setText(Log.formatThrowable(ex, false));
+
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
-                    .setTitle(R.string.title_unexpected_error)
-                    .setMessage(Log.formatThrowable(ex, false))
+                    .setView(dview)
                     .setPositiveButton(android.R.string.cancel, null);
 
             if (report)
@@ -1976,6 +1995,7 @@ public class Log {
                             " sync=" + account.synchronize +
                             " exempted=" + account.poll_exempted +
                             " poll=" + account.poll_interval +
+                            " ondemand=" + account.ondemand +
                             " messages=" + content + "/" + messages +
                             " " + account.state +
                             (account.last_connected == null ? "" : " " + dtf.format(account.last_connected)) +
@@ -2035,6 +2055,7 @@ public class Log {
                             jfolder.put("read_only", folder.read_only);
                             jfolder.put("selectable", folder.selectable);
                             jfolder.put("inferiors", folder.inferiors);
+                            jfolder.put("auto_add", folder.auto_add);
                             jfolder.put("error", folder.error);
                             if (folder.last_sync != null)
                                 jfolder.put("last_sync", new Date(folder.last_sync).toString());

@@ -744,6 +744,29 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/ibSqliteCache" />
 
+                <eu.faircode.email.FixedTextView
+                    android:id="@+id/tvChunkSize"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_chunk_size"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSqliteCacheHint" />
+
+                <SeekBar
+                    android:id="@+id/sbChunkSize"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:max="1000"
+                    android:min="0"
+                    android:progress="100"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvChunkSize" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swModSeq"
                     android:layout_width="0dp"
@@ -753,7 +776,7 @@
                     android:text="@string/title_advanced_modseq"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvSqliteCacheHint"
+                    app:layout_constraintTop_toBottomOf="@id/sbChunkSize"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -769,6 +792,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swUidExpunge"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_uid_expunge"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swExpunge"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAuthPlain"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -777,7 +812,7 @@
                     android:text="@string/title_advanced_auth_plain"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swExpunge"
+                    app:layout_constraintTop_toBottomOf="@id/swUidExpunge"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -817,6 +852,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swIdleDone"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_idle_done"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swAuthSasl"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swExactAlarms"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -824,7 +871,7 @@
                     android:text="@string/title_advanced_exact_alarms"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swAuthSasl"
+                    app:layout_constraintTop_toBottomOf="@id/swIdleDone"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -913,6 +960,17 @@
                     app:layout_constraintTop_toBottomOf="@id/tvCursorWindow" />
 
                 <eu.faircode.email.FixedTextView
+                    android:id="@+id/tvAndroidId"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/title_advanced_android_id"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textIsSelectable="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSuffixes" />
+
+                <eu.faircode.email.FixedTextView
                     android:id="@+id/tvFingerprint"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -922,7 +980,7 @@
                     android:textIsSelectable="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvSuffixes" />
+                    app:layout_constraintTop_toBottomOf="@id/tvAndroidId" />
 
                 <Button
                     android:id="@+id/btnGC"

@@ -166,7 +166,7 @@
     <string name="title_setup_options">Aukerak</string>
     <string name="title_setup_defaults">Berrezarri balio lehenetsiak</string>
     <string name="title_setup_reset_questions">Berrezarri galderak</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Erakutsi irudiak</string>
+    <string name="title_setup_reset_images">Erakutsi irudiak</string>
     <string name="title_advanced_hint_title">Aukera aurreratu gehiago</string>
     <string name="title_advanced_section_synchronize">Jaso</string>
     <string name="title_advanced_section_send">Bidali</string>
@@ -320,7 +320,7 @@
     <string name="title_advanced_sound">Aukeratu jakinarazpenen soinua</string>
     <string name="title_advanced_confirm_links">Berretsi estekak irekitzea</string>
     <string name="title_advanced_browse_links">Delegatu Androiden estekak irekitzea</string>
-    <string name="title_advanced_confirm_images">Berretsi irudiak erakustea</string>
+    <string name="title_advanced_ask_images">Berretsi irudiak erakustea</string>
     <string name="title_advanced_confirm_html">Berez erakutsi erreformatutako mezuak</string>
     <string name="title_advanced_hide_timezone">Bidali mezuak denbora-zona daturik gabe</string>
     <string name="title_advanced_display_hidden">Erakutsi ezkutatutako mezuen testuak</string>
@@ -650,7 +650,6 @@
     <string name="title_no_search">Zerbitzariko bilaketa ez dago erabilgarri kontu honetarako</string>
     <string name="title_too_large">Mezua luzeegia da guztiz birformulatzeko</string>
     <string name="title_truncated">Mezua luzeegia da osorik erakusteko</string>
-    <string name="title_insufficient_memory">Mezua handiegia da erabilgarri dagoen memorian sartzeko</string>
     <string name="title_show_full">Erakutsi mezu osoa</string>
     <string name="title_unused_inline">Erabili gabeko txertatutako irudiak kenduko dira bidaltzean</string>
     <string name="title_accross_remark">Kontutik kontura eramandako mezuak berriro deskargatuko dira horrek dakarren datuen erabilera gehigarriarekin</string>
@@ -1062,6 +1061,7 @@
     <string name="title_download">Deskargatu</string>
     <string name="title_report">Txostena</string>
     <string name="title_fix">Konpondu</string>
+    <string name="title_show">Erakutsi</string>
     <string name="title_enable">Gaitu</string>
     <string name="title_enabled">Gaituta</string>
     <string name="title_disable">Desgaitu</string>

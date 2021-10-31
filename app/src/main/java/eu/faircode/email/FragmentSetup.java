@@ -55,6 +55,7 @@ import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.view.MenuCompat;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
@@ -277,6 +278,7 @@ public class FragmentSetup extends FragmentBase {
                                 lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_GMAIL));
                             else
                                 new AlertDialog.Builder(getContext())
+                                        .setIcon(R.drawable.twotone_info_24)
                                         .setTitle(item.getTitle())
                                         .setMessage(R.string.title_setup_gmail_support)
                                         .setNeutralButton(R.string.title_info, new DialogInterface.OnClickListener() {
@@ -322,6 +324,7 @@ public class FragmentSetup extends FragmentBase {
                                 lbm.sendBroadcast(item.getIntent());
                             else
                                 new AlertDialog.Builder(getContext())
+                                        .setIcon(R.drawable.twotone_info_24)
                                         .setTitle(item.getTitle())
                                         .setMessage(R.string.title_setup_oauth_permission)
                                         .setNeutralButton(R.string.title_info, new DialogInterface.OnClickListener() {
@@ -748,7 +751,7 @@ public class FragmentSetup extends FragmentBase {
             view.post(new Runnable() {
                 @Override
                 public void run() {
-                    tvNoInternet.setVisibility(View.GONE);
+                    updateInternet(true);
                 }
             });
         }
@@ -758,9 +761,15 @@ public class FragmentSetup extends FragmentBase {
             view.post(new Runnable() {
                 @Override
                 public void run() {
-                    tvNoInternet.setVisibility(View.VISIBLE);
+                    updateInternet(false);
                 }
             });
+        }
+
+        private void updateInternet(boolean available) {
+            if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                return;
+            tvNoInternet.setVisibility(available ? View.GONE : View.VISIBLE);
         }
     };
 
@@ -769,6 +778,8 @@ public class FragmentSetup extends FragmentBase {
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             return new AlertDialog.Builder(getContext())
+                    .setIcon(R.drawable.twotone_info_24)
+                    .setTitle(R.string.title_setup_doze)
                     .setMessage(R.string.title_setup_doze_instructions)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override

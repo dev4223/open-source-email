@@ -235,6 +235,8 @@
     <string name="title_advanced_hint_message">Está a navegar para as opções mais avançadas.
         Todas as opções têm valores padrão geralmente utilizados que podem ser alterados se tiver uma preferência diferente.
     </string>
+    <string name="title_advanced_hint_remark">        As opções são categorizadas por separador, divididas em secções, organizadas por aspeto ou uso, e pesquisáveis.
+    </string>
     <string name="title_advanced_section_main">Principal</string>
     <string name="title_advanced_section_synchronize">Receber</string>
     <string name="title_advanced_section_send">Enviar</string>
@@ -366,7 +368,6 @@
     <string name="title_advanced_addresses">Mostrar detalhes do endereço por pré-definição</string>
     <string name="title_advanced_attachments_alt">Mostrar anexos após o texto da mensagem</string>
     <string name="title_advanced_thumbnails">Mostrar miniaturas das imagens após o texto da mensagem</string>
-    <string name="title_advanced_message_text_zoom2">Zoom padrão do texto da mensagem %%</string>
     <string name="title_advanced_overview_mode">Ampliar as mensagens originais para caber na tela</string>
     <string name="title_advanced_contrast">Usar alto contraste para o texto da mensagem</string>
     <string name="title_advanced_text_color">Usar cores de texto</string>
@@ -436,13 +437,15 @@
     <string name="title_advanced_sound">Selecionar som de notificação</string>
     <string name="title_advanced_confirm_links">Confirmar abertura de links</string>
     <string name="title_advanced_browse_links">Delegar abertura de links para o Android</string>
-    <string name="title_advanced_confirm_images">Confirmar a exibição de imagens</string>
+    <string name="title_advanced_ask_images">Confirmar a exibição de imagens</string>
     <string name="title_advanced_confirm_html">Mostrar mensagens reformatadas por padrão</string>
     <string name="title_advanced_hide_timezone">Enviar mensagens sem dados de fuso horário</string>
     <string name="title_advanced_display_hidden">Mostrar texto oculto de mensagens</string>
     <string name="title_advanced_secure">Esconder do ecrã de aplicações recentes e impedir captura de ecrã</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Tempo limite para autenticação biométrica</string>
+    <string name="title_advanced_autolock">Bloquear quando o ecrã se desligar</string>
+    <string name="title_advanced_load_emoji">Carregar emoji atualizado do Google Play Services</string>
     <string name="title_advanced_sign_default">Assinar por padrão</string>
     <string name="title_advanced_encrypt_default">Encriptar por padrão</string>
     <string name="title_advanced_auto_decrypt">Desencriptar mensagens automaticamente</string>
@@ -490,6 +493,8 @@
     <string name="title_no_password">Palavra-passe ausente</string>
     <string name="title_no_inbox">Caixa de entrada não encontrada</string>
     <string name="title_synchronize_enabled">Sincronizar</string>
+    <string name="title_expunge">Esponja</string>
+    <string name="title_expunge_remark">Isto irá apagar permanentemente todas as mensagens marcadas para exclusão</string>
     <string name="title_import_contacts">Importar vCards</string>
     <string name="title_sort_unread_atop">Ordenar as não lidas no topo</string>
     <string name="title_search_folder">Pesquisar pasta</string>
@@ -517,6 +522,7 @@
     <string name="title_reply">Responder</string>
     <string name="title_no_viewer_name">Nome do conteúdo</string>
     <string name="title_no_viewer_type">Tipo de conteúdo</string>
+    <string name="title_insufficient_memory">Mensagem muito grande para a memória disponível (%1$d)</string>
     <string name="title_ask_reporting">Enviar relatórios de erro?</string>
     <string name="title_compose">Compor</string>
     <string name="title_language">Idioma:</string>
@@ -556,6 +562,7 @@
     <string name="title_updated">Atualização para a versão %1$s disponível</string>
     <string name="title_add">Adicionar</string>
     <string name="title_fix">Corrigir</string>
+    <string name="title_show">Mostrar</string>
     <string name="title_enable">Activar</string>
     <string name="title_enabled">Ativado</string>
     <string name="title_disable">Desactivar</string>

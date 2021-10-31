@@ -118,6 +118,7 @@ public class FragmentOAuth extends FragmentBase {
     private TextView tvGmailDraftsHint;
     private TextView tvOfficeAuthHint;
     private Button btnSupport;
+    private Button btnHelp;
 
     private Group grpError;
 
@@ -162,6 +163,7 @@ public class FragmentOAuth extends FragmentBase {
         tvGmailDraftsHint = view.findViewById(R.id.tvGmailDraftsHint);
         tvOfficeAuthHint = view.findViewById(R.id.tvOfficeAuthHint);
         btnSupport = view.findViewById(R.id.btnSupport);
+        btnHelp = view.findViewById(R.id.btnHelp);
 
         grpError = view.findViewById(R.id.grpError);
 
@@ -187,6 +189,18 @@ public class FragmentOAuth extends FragmentBase {
             @Override
             public void onClick(View v) {
                 Helper.view(v.getContext(), Helper.getSupportUri(v.getContext()), false);
+            }
+        });
+
+        btnHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    EmailProvider provider = EmailProvider.getProvider(v.getContext(), id);
+                    Helper.view(v.getContext(), Uri.parse(provider.link), false);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
             }
         });
 
@@ -473,6 +487,9 @@ public class FragmentOAuth extends FragmentBase {
     }
 
     private void onOAuthorized(String accessToken, String idToken, AuthState state) {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            return;
+
         Bundle args = new Bundle();
         args.putString("id", id);
         args.putString("name", name);
@@ -912,6 +929,9 @@ public class FragmentOAuth extends FragmentBase {
     private void showError(Throwable ex) {
         Log.e(ex);
 
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            return;
+
         if (ex instanceof IllegalArgumentException)
             tvError.setText(ex.getMessage());
         else
@@ -926,6 +946,16 @@ public class FragmentOAuth extends FragmentBase {
             if (ex instanceof AuthenticationFailedException)
                 tvOfficeAuthHint.setVisibility(View.VISIBLE);
         }
+
+        EmailProvider provider;
+        try {
+            provider = EmailProvider.getProvider(getContext(), id);
+        } catch (Throwable exex) {
+            Log.e(exex);
+            provider = null;
+        }
+
+        btnHelp.setVisibility((provider != null && provider.link != null ? View.VISIBLE : View.GONE));
 
         etName.setEnabled(true);
         etEmail.setEnabled(true);
@@ -944,6 +974,7 @@ public class FragmentOAuth extends FragmentBase {
     }
 
     private void hideError() {
+        btnHelp.setVisibility(View.GONE);
         grpError.setVisibility(View.GONE);
         tvGmailDraftsHint.setVisibility(View.GONE);
         tvOfficeAuthHint.setVisibility(View.GONE);

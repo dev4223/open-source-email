@@ -187,7 +187,7 @@
     <string name="title_setup_options">Alternativer</string>
     <string name="title_setup_defaults">Gjenopprett standarder</string>
     <string name="title_setup_reset_questions">Tilbakestill spørsmål</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Vise bilder</string>
+    <string name="title_setup_reset_images">Vise bilder</string>
     <string name="title_advanced_hint_title">Mer avanserte alternativer</string>
     <string name="title_advanced_section_main">Hoved</string>
     <string name="title_advanced_section_synchronize">Motta</string>
@@ -367,7 +367,7 @@
     <string name="title_advanced_sound">Velg varslingslyd</string>
     <string name="title_advanced_confirm_links">Bekreft åpningen av lenker</string>
     <string name="title_advanced_browse_links">Deleger lenker til Android</string>
-    <string name="title_advanced_confirm_images">Bekreft visningen av bilder</string>
+    <string name="title_advanced_ask_images">Bekreft visningen av bilder</string>
     <string name="title_advanced_confirm_html">Vis standardformaterte meldinger</string>
     <string name="title_advanced_tracking">Forsøk på å gjenkjenne og deaktivere sporingsbilder</string>
     <string name="title_advanced_hide_timezone">Send meldinger uten tidssonedata</string>
@@ -733,7 +733,6 @@
     <string name="title_no_search">Søk på tjeneren er ikke tilgjengelig for denne kontoen</string>
     <string name="title_too_large">Melding for stor til å omformatere fullstendig</string>
     <string name="title_truncated">Meldingen er for stor til å vises fullstendig</string>
-    <string name="title_insufficient_memory">Meldingen er for stor til å passe inn i det tilgjengelige minnet</string>
     <string name="title_show_full">Vis full melding</string>
     <string name="title_unused_inline">Ubrukte inline bilder blir fjernet ved sending</string>
     <string name="title_accross_remark">Meldinger som er flyttet over kontoer, lastes ned igjen, noe som resulterer i ekstra databruk</string>
@@ -1162,6 +1161,7 @@
     <string name="title_download">Last ned</string>
     <string name="title_report">Rapportere</string>
     <string name="title_fix">Fiks</string>
+    <string name="title_show">Vis</string>
     <string name="title_enable">Aktiver</string>
     <string name="title_enabled">Aktivert</string>
     <string name="title_disable">Deaktiver</string>

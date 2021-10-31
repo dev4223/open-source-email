@@ -245,19 +245,22 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_setup_theme_black_background">Zwarte achtergrond</string>
     <string name="title_setup_theme_html_light">Lichte achtergrond voor oorspronkelijke berichtweergave</string>
     <string name="title_setup_theme_composer_light">Lichte achtergrond voor berichteditor</string>
+    <string name="title_setup_theme_you_hint">De Material You kleuren kunnen worden geconfigureerd in de Android achtergrond en stijl instellingen</string>
     <string name="title_setup_theme_system_hint">Systeemthema volgen zal automatisch overschakelen naar lichte/donker bij dag/nacht, indien ondersteund door Android</string>
     <string name="title_setup_theme_more_colors">Ik wil meer kleuren</string>
     <string name="title_setup_advanced">Geavanceerd</string>
     <string name="title_setup_options">Opties</string>
     <string name="title_setup_defaults">Verstekwaarden herstellen</string>
     <string name="title_setup_reset_questions">Vragen resetten</string>
-    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Algemene vragen</string>
-    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Toon originele berichten</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Toon afbeeldingen</string>
-    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Bevestig koppelingen</string>
+    <string name="title_setup_reset_general">Algemene vragen</string>
+    <string name="title_setup_reset_full">Toon originele berichten</string>
+    <string name="title_setup_reset_images">Toon afbeeldingen</string>
+    <string name="title_setup_reset_links">Bevestig koppelingen</string>
     <string name="title_advanced_hint_title">Meer geavanceerde opties</string>
     <string name="title_advanced_hint_message">        U navigeert naar de meer geavanceerde opties.
         Alle opties hebben vaak gebruikte standaardwaarden die je niet hoeft te wijzigen tenzij je een andere voorkeur hebt.
+    </string>
+    <string name="title_advanced_hint_remark">        De opties zijn gecategoriseerd op tabblad, verdeeld in secties, georganiseerd op uiterlijk of gebruik en doorzoekbaar.
     </string>
     <string name="title_advanced_hint_setup">Je kunt een account configureren door op de wizard knop op het hoofdconfiguratiescherm te tikken.</string>
     <string name="title_advanced_section_main">Hoofd</string>
@@ -500,8 +503,10 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_advanced_confirm_links">Bevestig het openen van koppelingen</string>
     <string name="title_advanced_check_links_dbl">Controleer domeinblokkeringslijsten op verdachte links</string>
     <string name="title_advanced_browse_links">Het openen van links overdragen aan Android</string>
-    <string name="title_advanced_confirm_images">Bevestig het tonen van afbeeldingen</string>
+    <string name="title_advanced_confirm_images">Toon standaard geen afbeeldingen</string>
+    <string name="title_advanced_ask_images">Bevestig het tonen van afbeeldingen</string>
     <string name="title_advanced_confirm_html">Toon standaard opnieuw opgemaakte berichten</string>
+    <string name="title_advanced_ask_html">Bevestig het tonen van originele berichten</string>
     <string name="title_advanced_tracking">Probeer om tracking afbeeldingen te herkennen en uit te schakelen</string>
     <string name="title_advanced_hide_timezone">Berichten verzenden zonder tijdzone data</string>
     <string name="title_advanced_client_id">App-naam en -versie verzenden naar mailserver</string>
@@ -510,7 +515,9 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_advanced_secure">Verbergen van recente apps scherm en voorkomen dat screenshots worden gemaakt</string>
     <string name="title_advanced_pin">Pincode</string>
     <string name="title_advanced_biometrics_timeout">Biometrische verificatie verloopt na</string>
+    <string name="title_advanced_autolock">Vergrendel als scherm uitgaat</string>
     <string name="title_advanced_generic_user_agent">Gebruik algemene browser user agent</string>
+    <string name="title_advanced_load_emoji">Laad bijgewerkte Emoji van Google Play Services</string>
     <string name="title_advanced_disconnect_auto_update">Werk lijsten wekelijks automatisch bij</string>
     <string name="title_advanced_disconnect_links">Gebruik lijsten om te waarschuwen voor tracking links</string>
     <string name="title_advanced_disconnect_images">Gebruik lijsten om tracking afbeeldingen te herkennen</string>
@@ -767,6 +774,8 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_notify_batch_disable">Schakel meldingen voor nieuwe berichten uit</string>
     <string name="title_delete_local">Verwijder lokale berichten</string>
     <string name="title_delete_browsed">Verwijder gebladerde/gezochte berichten</string>
+    <string name="title_expunge">Uitwissen</string>
+    <string name="title_expunge_remark">Dit zal alle berichten die gemarkeerd zijn om te verwijderen permanent verwijderen</string>
     <string name="title_empty_trash">Prullenbak leegmaken</string>
     <string name="title_empty_spam">Spam map leegmaken</string>
     <string name="title_edit_properties">Bewerk eigenschappen</string>
@@ -957,7 +966,7 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_no_search">Zoeken op server is niet beschikbaar voor dit account</string>
     <string name="title_too_large">Bericht te groot om volledig opnieuw op te maken</string>
     <string name="title_truncated">Bericht is te groot om volledig weer te geven</string>
-    <string name="title_insufficient_memory">Bericht te groot om in het beschikbare geheugen te passen</string>
+    <string name="title_insufficient_memory">Bericht te groot voor het beschikbare geheugen (%1$d)</string>
     <string name="title_show_full">Toon volledig bericht</string>
     <string name="title_unused_inline">Ongebruikte inline afbeeldingen worden verwijderd bij verzenden</string>
     <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra datagebruik</string>
@@ -1444,6 +1453,7 @@ Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
     <string name="title_download">Downloaden</string>
     <string name="title_report">Rapporteer</string>
     <string name="title_fix">Oplossen</string>
+    <string name="title_show">Toon</string>
     <string name="title_enable">Inschakelen</string>
     <string name="title_enabled">Ingeschakeld</string>
     <string name="title_disable">Uitschakelen</string>

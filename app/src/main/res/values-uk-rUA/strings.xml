@@ -241,6 +241,10 @@
     <string name="title_setup_exported">Налаштування експортовано</string>
     <string name="title_setup_imported">Налаштування імпортовано</string>
     <string name="title_setup_import_invalid">Хибний файл налаштувань</string>
+    <string name="title_importing_account">Обліковка %1$s</string>
+    <string name="title_importing_identity">Особисті дані %1$s</string>
+    <string name="title_importing_exists">Пропущено: вже існує</string>
+    <string name="title_importing_wizard">Запустити майстер для повторної перевірки автентичності</string>
     <string name="title_setup_reorder_accounts">Порядок обліковок</string>
     <string name="title_setup_reorder_folders">Порядок тек</string>
     <string name="title_reset_order">Скинути порядок</string>
@@ -263,16 +267,22 @@
     <string name="title_setup_theme_black_background">Чорний фон</string>
     <string name="title_setup_theme_html_light">Світлий фон для оригінального перегляду повідомлень</string>
     <string name="title_setup_theme_composer_light">Світлий фон для редактора повідомлень</string>
+    <string name="title_setup_theme_you_hint">Колір \"Material You\", який ви можете налаштувати в налаштуваннях Android : Фоновий малюнок та теми пристрою</string>
     <string name="title_setup_theme_system_hint">Автоматичне перемкнення на світлу або темну тему вдень або вночі, якщо це підтримується в Android</string>
     <string name="title_setup_theme_more_colors">Я хочу більше кольорів</string>
     <string name="title_setup_advanced">Додатково</string>
     <string name="title_setup_options">Параметри</string>
     <string name="title_setup_defaults">Відновити типові</string>
     <string name="title_setup_reset_questions">Дозволити знову показувати питання</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Показати зображення</string>
+    <string name="title_setup_reset_general">Загальні запитання</string>
+    <string name="title_setup_reset_full">Показати оригінальні повідомлення</string>
+    <string name="title_setup_reset_images">Показати зображення</string>
+    <string name="title_setup_reset_links">Підтвердити посилання</string>
     <string name="title_advanced_hint_title">Розширенні налаштування</string>
     <string name="title_advanced_hint_message">        Ви переходите до більш розширених параметрів.
         Всі параметри мають загальновизнані стандартні значення, які не треба змінювати, якщо ви не маєте інших уподобань.
+    </string>
+    <string name="title_advanced_hint_remark">        Параметри класифіковані вкладками, розділені на секції, організовані за зовнішній виглядом або за використанням, та доступні для пошуку.
     </string>
     <string name="title_advanced_hint_setup">Ви можете налаштувати обліковий запис, натиснувши на кнопку майстра на головній сторінці конфігурації.</string>
     <string name="title_advanced_section_main">Головне</string>
@@ -514,7 +524,7 @@
     <string name="title_advanced_confirm_links">Підтвердити відкриття посилань</string>
     <string name="title_advanced_check_links_dbl">Перевіряти списки заблокованих доменів за сумнівними посиланнями</string>
     <string name="title_advanced_browse_links">Делегувати відкриття посилань до Android</string>
-    <string name="title_advanced_confirm_images">Підтвердити показ зображень</string>
+    <string name="title_advanced_ask_images">Підтвердити показ зображень</string>
     <string name="title_advanced_confirm_html">Показати відформатовані повідомлення за замовчуванням</string>
     <string name="title_advanced_tracking">Автоматично розпізнавати та вимикати зображення які використовуються для відстеження</string>
     <string name="title_advanced_hide_timezone">Надсилати повідомлення без даних часового поясу</string>
@@ -524,6 +534,7 @@
     <string name="title_advanced_secure">Приховати з екрану останніх програм і не дозволяти робити знімки екрану</string>
     <string name="title_advanced_pin">PIN-код</string>
     <string name="title_advanced_biometrics_timeout">Тайм-аут біометричної автентифікації</string>
+    <string name="title_advanced_autolock">Блокування при вимкненому екрані</string>
     <string name="title_advanced_generic_user_agent">Використовувати User agent браузера</string>
     <string name="title_advanced_disconnect_auto_update">Автоматично оновлювати списки щотижня</string>
     <string name="title_advanced_disconnect_links">Використовуйте списки для попередження про посилання за якими можливе відслідковування</string>
@@ -780,6 +791,8 @@
     <string name="title_notify_batch_disable">Вимкнути сповіщення про нові повідомлення</string>
     <string name="title_delete_local">Видалити локальні повідомлення</string>
     <string name="title_delete_browsed">Видалити переглянуті/знайденні повідомлення</string>
+    <string name="title_expunge">Витерти</string>
+    <string name="title_expunge_remark">Це назавжди видалить усі повідомлення, позначені для видалення</string>
     <string name="title_empty_trash">Очистити кошик</string>
     <string name="title_empty_spam">Очистити спам</string>
     <string name="title_edit_properties">Редагувати властивості</string>
@@ -970,7 +983,6 @@
     <string name="title_no_search">Пошук на сервері недоступний для цього облікового запису</string>
     <string name="title_too_large">Лист завеликий для повного переформатування</string>
     <string name="title_truncated">Лист завеликий для показу</string>
-    <string name="title_insufficient_memory">Лист завеликий для розміщення в доступній пам\'яті</string>
     <string name="title_show_full">Показати повне повідомлення</string>
     <string name="title_unused_inline">Невикористані вбудовані зображення будуть видалені при надсиланні</string>
     <string name="title_accross_remark">Повідомлення, які переміщуються через облікові записи, будуть завантажені знову, в результаті буде додаткове використання даних</string>
@@ -1458,6 +1470,7 @@
     <string name="title_download">Завантаження</string>
     <string name="title_report">Звіт</string>
     <string name="title_fix">Виправлення</string>
+    <string name="title_show">Показати</string>
     <string name="title_enable">Увімкнути</string>
     <string name="title_enabled">Увімкнено</string>
     <string name="title_disable">Вимкнути</string>

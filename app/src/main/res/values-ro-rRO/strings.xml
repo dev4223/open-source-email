@@ -256,19 +256,22 @@
     <string name="title_setup_theme_black_background">Fundal negru</string>
     <string name="title_setup_theme_html_light">Fond deschis pentru vizualizarea mesajului original</string>
     <string name="title_setup_theme_composer_light">Fundal luminos pentru editorul de mesaje</string>
+    <string name="title_setup_theme_you_hint">Culorile Material You pot fi configurate în Android Wallpaper &amp; setările de stil</string>
     <string name="title_setup_theme_system_hint">Dacă este suportată de Android, setare sistem, va schimba automat la deschis/întunecat în timpul zilei/nopții</string>
     <string name="title_setup_theme_more_colors">Vreau mai multe culori</string>
     <string name="title_setup_advanced">Setări avansate</string>
     <string name="title_setup_options">Opţiuni</string>
     <string name="title_setup_defaults">Restabiliți valorile implicite</string>
     <string name="title_setup_reset_questions">Resetare întrebări</string>
-    <string name="title_setup_reset_general" comment="title_setup_reset_general&#10;Title for option to reset general questions&#10;">Întrebări generale</string>
-    <string name="title_setup_reset_full" comment="title_setup_reset_full&#10;Title for option to reset questions about showing original messages&#10;">Afișați mesajele originale</string>
-    <string name="title_setup_reset_images" comment="title_setup_reset_images&#10;Title for option to reset questions about showing images">Afișare imagini</string>
-    <string name="title_setup_reset_links" comment="title_setup_reset_links&#10;Title for option to reset questions about confirming links&#10;">Confirmați link-urile</string>
+    <string name="title_setup_reset_general">Întrebări generale</string>
+    <string name="title_setup_reset_full">Afișați mesajele originale</string>
+    <string name="title_setup_reset_images">Afișare imagini</string>
+    <string name="title_setup_reset_links">Confirmați link-urile</string>
     <string name="title_advanced_hint_title">Opțiuni și mai avansate</string>
     <string name="title_advanced_hint_message">        Navigați la opțiunile mai avansate.
         Toate opțiunile au utilizat în mod obișnuit valori standard, pe care nu trebuie să o schimbați decât dacă aveți o preferință diferită.
+    </string>
+    <string name="title_advanced_hint_remark">        Opțiunile sunt clasificate pe file, împărțite în secțiuni, organizate în funcție de aspect sau utilizare și pot fi căutate.
     </string>
     <string name="title_advanced_hint_setup">Puteți configura un cont apăsând pe butonul wizard din ecranul principal de configurare.</string>
     <string name="title_advanced_section_main">Principal</string>
@@ -510,8 +513,10 @@
     <string name="title_advanced_confirm_links">Confirma deschiderea legăturilor</string>
     <string name="title_advanced_check_links_dbl">Verificați listele de blocare a domeniilor pentru link-uri suspecte</string>
     <string name="title_advanced_browse_links">Delegarea deschiderii de adrese către Android</string>
-    <string name="title_advanced_confirm_images">Confirmă afișarea imaginilor</string>
+    <string name="title_advanced_confirm_images">Nu afișați nicio imagine în mod implicit</string>
+    <string name="title_advanced_ask_images">Confirmă afișarea imaginilor</string>
     <string name="title_advanced_confirm_html">Arată implicit mesajele reformatate</string>
+    <string name="title_advanced_ask_html">Confirmarea afișării mesajelor originale</string>
     <string name="title_advanced_tracking">Încearcă să detectezi și dezactivezi în mod automat imaginile folosite la urmărire</string>
     <string name="title_advanced_hide_timezone">Trimite mesajele fără date despre fusul orar</string>
     <string name="title_advanced_client_id">Trimite numele aplicației și versiunea la serverul de e-mail</string>
@@ -520,6 +525,7 @@
     <string name="title_advanced_secure">Ascunde din lista de aplicații recente și previne capturarea ecranului</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Expirare autentificarea biometrică</string>
+    <string name="title_advanced_autolock">Blocare pe ecran oprit</string>
     <string name="title_advanced_generic_user_agent">Utilizați agentul utilizator generic al browserului</string>
     <string name="title_advanced_disconnect_auto_update">Actualizați automat listele săptămânal</string>
     <string name="title_advanced_disconnect_links">Folosește liste pentru a avertiza despre adrese de urmărire</string>
@@ -777,6 +783,8 @@
     <string name="title_notify_batch_disable">Dezactivarea notificărilor de mesaje noi</string>
     <string name="title_delete_local">Șterge mesajul local</string>
     <string name="title_delete_browsed">Șterge mesajele răsfoite/căutate</string>
+    <string name="title_expunge">Eliminați</string>
+    <string name="title_expunge_remark">Acest lucru va șterge definitiv toate mesajele marcate pentru ștergere</string>
     <string name="title_empty_trash">Golire coș de gunoi</string>
     <string name="title_empty_spam">Golire spam</string>
     <string name="title_edit_properties">Editare proprietăți</string>
@@ -967,7 +975,6 @@
     <string name="title_no_search">Căutarea pe server nu este disponibilă pentru acest cont</string>
     <string name="title_too_large">Mesaj prea mare pentru a fi complet reformatat</string>
     <string name="title_truncated">Mesaj prea mare pentru a-l putea afișa complet</string>
-    <string name="title_insufficient_memory">Mesaj prea mare pentru a-l putea încărca în memoria disponibilă</string>
     <string name="title_show_full">Arată mesajul întreg</string>
     <string name="title_unused_inline">Imaginile integrate nefolosite vor fi eliminate la trimitere</string>
     <string name="title_accross_remark">Mesajele mutate între conturi vor fi descărcate din nou consumând date în plus</string>
@@ -1455,6 +1462,7 @@
     <string name="title_download">Descărcare</string>
     <string name="title_report">Raportează</string>
     <string name="title_fix">Remediere</string>
+    <string name="title_show">Arată</string>
     <string name="title_enable">Activează</string>
     <string name="title_enabled">Activat</string>
     <string name="title_disable">Dezactivează</string>
