@@ -15,8 +15,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="?attr/colorUnread"
         android:textIsSelectable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvSizeEx"
@@ -27,8 +26,7 @@
         android:text="9023 MB"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textIsSelectable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvSubjectEx"
@@ -57,6 +55,6 @@
         android:id="@+id/grpAddressMeta"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:constraint_referenced_ids="paddingAddressBottom,tvSizeEx,tvSubjectEx" />
+        app:constraint_referenced_ids="tvSizeEx,tvSubjectEx" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
