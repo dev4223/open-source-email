@@ -516,6 +516,7 @@
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Límite de tiempo para autenticación biométrica</string>
     <string name="title_advanced_autolock">Bloquear al apagar pantalla</string>
+    <string name="title_advanced_autolock_nav">Bloquear al salir de la aplicación</string>
     <string name="title_advanced_generic_user_agent">Usar agente de usuario de navegador genérico</string>
     <string name="title_advanced_load_emoji">Cargar Emoji actualizado desde los Servicios de Google Play</string>
     <string name="title_advanced_disconnect_auto_update">Actualizar las listas automáticamente en forma semanal</string>
@@ -626,6 +627,7 @@
     <string name="title_advanced_display_harmful_hint">Desactivar esta opción podría ser perjudicial para su privacidad</string>
     <string name="title_advanced_display_hidden_hint">Esto puede resultar en textos dobles o de apariencia extraña</string>
     <string name="title_advanced_display_pin_hint">Un PIN tiene prioridad sobre la autenticación biométrica</string>
+    <string name="title_advanced_display_autolock_nav_hint">Habrá un tiempo de gracia de %1$d segundos</string>
     <string name="title_advanced_safe_browsing_hint">El servidor de Google sabe qué direcciones se están buscando</string>
     <string name="title_advanced_badge_hint">Sólo disponible en lanzadores soportados</string>
     <string name="title_advanced_notify_action_hint">Máximo 3 acciones mostradas</string>
@@ -1075,6 +1077,7 @@
     <string name="title_send_dialog">Mostrar opciones de envío</string>
     <string name="title_image_dialog">Mostrar opciones de imagen</string>
     <string name="title_media_toolbar">Barra de herramientas multimedia</string>
+    <string name="title_manage_local_contacts">Administrar contactos locales</string>
     <string name="title_insert_contact_group">Insertar grupo de contactos</string>
     <string name="title_insert_template">Insertar plantilla</string>
     <string name="title_create_template">Crear plantilla</string>

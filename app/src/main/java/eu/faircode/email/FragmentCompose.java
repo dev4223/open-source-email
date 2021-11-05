@@ -326,6 +326,10 @@ public class FragmentCompose extends FragmentBase {
 
     private static ExecutorService executor = Helper.getBackgroundExecutor(1, "encrypt");
 
+    private static final List<String> DO_NOT_REPLY = Collections.unmodifiableList(Arrays.asList(
+            "noreply", "no-reply", "do-not-reply"
+    ));
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -589,6 +593,7 @@ public class FragmentCompose extends FragmentBase {
                                 media_bar.inflateMenu(styling
                                         ? R.menu.action_compose_style_alt
                                         : R.menu.action_compose_media);
+                                invalidateOptionsMenu();
                             }
                         }
                     }, 20);
@@ -881,10 +886,10 @@ public class FragmentCompose extends FragmentBase {
                     onActionRecordAudio();
                     return true;
                 } else if (action == R.id.menu_take_photo) {
-                    onActionImage(true);
+                    onActionImage(true, false);
                     return true;
                 } else if (action == R.id.menu_image) {
-                    onActionImage(false);
+                    onActionImage(false, false);
                     return true;
                 } else if (action == R.id.menu_attachment) {
                     onActionAttachment();
@@ -958,7 +963,7 @@ public class FragmentCompose extends FragmentBase {
         bottom_navigation.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
 
-        getActivity().invalidateOptionsMenu();
+        invalidateOptionsMenu();
         Helper.setViewsEnabled(view, false);
 
         final DB db = DB.getInstance(getContext());
@@ -1447,6 +1452,7 @@ public class FragmentCompose extends FragmentBase {
         pgpService = new OpenPgpServiceConnection(getContext(), pkg, new OpenPgpServiceConnection.OnBound() {
             @Override
             public void onBound(IOpenPgpService2 service) {
+                Log.i("Bound to " + pkg);
                 load.run();
             }
 
@@ -1457,6 +1463,9 @@ public class FragmentCompose extends FragmentBase {
             }
         });
         pgpService.bindToService();
+
+        // Fall-safe
+        getMainHandler().postDelayed(load, 250);
     }
 
     @Override
@@ -1648,6 +1657,16 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_media).setChecked(media);
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
+        View image = media_bar.findViewById(R.id.menu_image);
+        if (image != null)
+            image.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    onActionImage(false, true);
+                    return true;
+                }
+            });
+
         if (EntityMessage.PGP_SIGNONLY.equals(encrypt) ||
                 EntityMessage.SMIME_SIGNONLY.equals(encrypt))
             bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_sign);
@@ -1751,7 +1770,7 @@ public class FragmentCompose extends FragmentBase {
                 encrypt = EntityMessage.ENCRYPT_NONE;
         }
 
-        getActivity().invalidateOptionsMenu();
+        invalidateOptionsMenu();
 
         Bundle args = new Bundle();
         args.putLong("id", working);
@@ -1835,6 +1854,7 @@ public class FragmentCompose extends FragmentBase {
         media_bar.inflateMenu(R.menu.action_compose_media);
         media_bar.setVisibility(media ? View.VISIBLE : View.GONE);
         style_bar.setVisibility(View.GONE);
+        invalidateOptionsMenu();
     }
 
     private void onMenuCompact() {
@@ -2315,10 +2335,10 @@ public class FragmentCompose extends FragmentBase {
             }
     }
 
-    private void onActionImage(boolean photo) {
+    private void onActionImage(boolean photo, boolean force) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean image_dialog = prefs.getBoolean("image_dialog", true);
-        if (image_dialog) {
+        if (image_dialog || force) {
             Helper.hideKeyboard(view);
 
             Bundle args = new Bundle();
@@ -5060,7 +5080,7 @@ public class FragmentCompose extends FragmentBase {
 
             working = data.draft.id;
             encrypt = data.draft.ui_encrypt;
-            getActivity().invalidateOptionsMenu();
+            invalidateOptionsMenu();
 
             subject = data.draft.subject;
             saved = args.getBoolean("saved");
@@ -5216,7 +5236,7 @@ public class FragmentCompose extends FragmentBase {
                         finish();
                     else {
                         encrypt = draft.ui_encrypt;
-                        getActivity().invalidateOptionsMenu();
+                        invalidateOptionsMenu();
 
                         Log.i("Draft content=" + draft.content);
                         if (draft.content && state == State.NONE) {
@@ -5486,9 +5506,9 @@ public class FragmentCompose extends FragmentBase {
 
                     // Get data
                     InternetAddress[] afrom = (identity == null ? null : new InternetAddress[]{new InternetAddress(identity.email, identity.name, StandardCharsets.UTF_8.name())});
-                    InternetAddress[] ato = MessageHelper.parseAddresses(context, to);
-                    InternetAddress[] acc = MessageHelper.parseAddresses(context, cc);
-                    InternetAddress[] abcc = MessageHelper.parseAddresses(context, bcc);
+                    InternetAddress[] ato = MessageHelper.dedup(MessageHelper.parseAddresses(context, to));
+                    InternetAddress[] acc = MessageHelper.dedup(MessageHelper.parseAddresses(context, cc));
+                    InternetAddress[] abcc = MessageHelper.dedup(MessageHelper.parseAddresses(context, bcc));
 
                     // Safe guard
                     if (action == R.id.action_send) {
@@ -5777,6 +5797,21 @@ public class FragmentCompose extends FragmentBase {
                                 recipients.addAll(Arrays.asList(draft.cc));
                             if (draft.bcc != null)
                                 recipients.addAll(Arrays.asList(draft.bcc));
+
+                            boolean noreply = false;
+                            for (Address recipient : recipients) {
+                                String email = ((InternetAddress) recipient).getAddress();
+                                String username = UriHelper.getEmailUser(email);
+                                if (!TextUtils.isEmpty(username)) {
+                                    username = username.toLowerCase(Locale.ROOT);
+                                    for (String value : DO_NOT_REPLY)
+                                        if (username.contains(value)) {
+                                            noreply = true;
+                                            break;
+                                        }
+                                }
+                            }
+                            args.putBoolean("remind_noreply", noreply);
 
                             if (identity != null && !TextUtils.isEmpty(identity.internal)) {
                                 boolean external = false;
@@ -6070,6 +6105,7 @@ public class FragmentCompose extends FragmentBase {
                 boolean remind_smime = args.getBoolean("remind_smime", false);
                 boolean remind_to = args.getBoolean("remind_to", false);
                 boolean remind_extra = args.getBoolean("remind_extra", false);
+                boolean remind_noreply = args.getBoolean("remind_noreply", false);
                 boolean remind_external = args.getBoolean("remind_external", false);
                 boolean remind_subject = args.getBoolean("remind_subject", false);
                 boolean remind_text = args.getBoolean("remind_text", false);
@@ -6081,7 +6117,8 @@ public class FragmentCompose extends FragmentBase {
                         (draft.bcc == null ? 0 : draft.bcc.length);
                 if (send_dialog || force_dialog ||
                         sent_missing || address_error != null || mx_error != null ||
-                        remind_dsn || remind_size || remind_pgp || remind_smime || remind_to || remind_external ||
+                        remind_dsn || remind_size || remind_pgp || remind_smime ||
+                        remind_to || remind_noreply || remind_external ||
                         recipients > RECIPIENTS_WARNING ||
                         (formatted && (draft.plain_only != null && draft.plain_only)) ||
                         (send_reminders &&
@@ -6166,7 +6203,7 @@ public class FragmentCompose extends FragmentBase {
     private void setBusy(boolean busy) {
         state = (busy ? State.LOADING : State.LOADED);
         Helper.setViewsEnabled(view, !busy);
-        getActivity().invalidateOptionsMenu();
+        invalidateOptionsMenu();
     }
 
     private static void addSignature(Context context, Document document, EntityMessage draft, EntityIdentity identity) {
@@ -6226,7 +6263,7 @@ public class FragmentCompose extends FragmentBase {
 
                 Helper.setViewsEnabled(view, true);
 
-                getActivity().invalidateOptionsMenu();
+                invalidateOptionsMenu();
             }
 
             @Override
@@ -6843,6 +6880,7 @@ public class FragmentCompose extends FragmentBase {
             final boolean remind_smime = args.getBoolean("remind_smime", false);
             final boolean remind_to = args.getBoolean("remind_to", false);
             final boolean remind_extra = args.getBoolean("remind_extra", false);
+            final boolean remind_noreply = args.getBoolean("remind_noreply", false);
             final boolean remind_external = args.getBoolean("remind_external", false);
             final boolean remind_subject = args.getBoolean("remind_subject", false);
             final boolean remind_text = args.getBoolean("remind_text", false);
@@ -6873,6 +6911,7 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvRemindSmime = dview.findViewById(R.id.tvRemindSmime);
             final TextView tvRemindTo = dview.findViewById(R.id.tvRemindTo);
             final TextView tvRemindExtra = dview.findViewById(R.id.tvRemindExtra);
+            final TextView tvRemindNoReply = dview.findViewById(R.id.tvRemindNoReply);
             final TextView tvRemindExternal = dview.findViewById(R.id.tvRemindExternal);
             final TextView tvRemindSubject = dview.findViewById(R.id.tvRemindSubject);
             final TextView tvRemindText = dview.findViewById(R.id.tvRemindText);
@@ -6923,6 +6962,7 @@ public class FragmentCompose extends FragmentBase {
 
             tvRemindTo.setVisibility(remind_to ? View.VISIBLE : View.GONE);
             tvRemindExtra.setVisibility(send_reminders && remind_extra ? View.VISIBLE : View.GONE);
+            tvRemindNoReply.setVisibility(remind_noreply ? View.VISIBLE : View.GONE);
             tvRemindExternal.setVisibility(remind_external ? View.VISIBLE : View.GONE);
             tvRemindSubject.setVisibility(send_reminders && remind_subject ? View.VISIBLE : View.GONE);
             tvRemindText.setVisibility(send_reminders && remind_text ? View.VISIBLE : View.GONE);

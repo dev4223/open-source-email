@@ -516,7 +516,9 @@
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Χρονικό περιθώριο για τη βιομετρική ταυτοποίηση</string>
     <string name="title_advanced_autolock">Κλείδωμα όταν σβήνει η οθόνη</string>
+    <string name="title_advanced_autolock_nav">Κλείδωμα κατά την έξοδο από την εφαρμογή</string>
     <string name="title_advanced_generic_user_agent">Χρήση του γενικού πράκτορα χρήστη του περιηγητή</string>
+    <string name="title_advanced_load_emoji">Φόρτωση ενημερωμένων Emoji από τις υπηρεσίες Google Play</string>
     <string name="title_advanced_disconnect_auto_update">Αυτόματη εβδομαδιαία ενημέρωση των λιστών</string>
     <string name="title_advanced_disconnect_links">Χρήση προειδοποιητικών λιστών για συνδέσμους ιχνηλάτησης</string>
     <string name="title_advanced_disconnect_images">Χρήση λιστών για ταυτοποίηση των εικόνων ιχνηλάτησης</string>
@@ -623,6 +625,7 @@
     <string name="title_advanced_display_harmful_hint">Η απενεργοποίηση αυτής της επιλογής μπορεί να θέσει σε κίνδυνο τα προσωπικά σας δεδομένα</string>
     <string name="title_advanced_display_hidden_hint">Ενδέχεται να προκαλέσει προβλήματα προβολής ή διπλά κείμενα</string>
     <string name="title_advanced_display_pin_hint">Ένα PIN έχει προτεραιότητα έναντι της βιομετρικής ταυτοποίησης</string>
+    <string name="title_advanced_display_autolock_nav_hint">Θα υπάρχει μια \"περίοδος χάριτος\" %1$d δευτερολέπτων</string>
     <string name="title_advanced_safe_browsing_hint">Ο διακομιστής Google γνωρίζει ποιες διευθύνσεις αναζητούνται</string>
     <string name="title_advanced_badge_hint">Διαθέσιμο μόνο σε launcher που υποστηρίζονται</string>
     <string name="title_advanced_notify_action_hint">Θα προβάλλονται, το μέγιστο, τρεις ενέργειες</string>
@@ -963,6 +966,7 @@
     <string name="title_no_search">Η αναζήτηση στο διακομιστή δεν είναι διαθέσιμη για αυτόν το λογαριασμό</string>
     <string name="title_too_large">Το μήνυμα είναι υπερβολικά μεγάλο για να αναμορφοποιηθεί πλήρως</string>
     <string name="title_truncated">Το μύνημα είναι πολύ μεγάλο για να προβληθεί ολόκληρο</string>
+    <string name="title_insufficient_memory">Υπερβολικά μεγάλο μήνυμα για τη διαθέσιμη μνήμη (%1$d)</string>
     <string name="title_show_full">Προβολή πλήρους μηνύματος</string>
     <string name="title_unused_inline">Οι μη χρησιμοποιημένες ένθετες εικόνες θα αφαιρεθούν κατά την αποστολή</string>
     <string name="title_accross_remark">Μηνύματα που έχουν μετακινηθεί μεταξύ των λογαριασμών θα κατέβουν εκ νέου, με αποτέλεσμα επιπλέον χρήση δεδομένων</string>
@@ -1071,6 +1075,7 @@
     <string name="title_send_dialog">Προβολή επιλογών αποστολής</string>
     <string name="title_image_dialog">Προβολή επιλογών εικόνας</string>
     <string name="title_media_toolbar">Γραμμή εργαλείων πολυμέσων</string>
+    <string name="title_manage_local_contacts">Διαχείριση τοπικών επαφών</string>
     <string name="title_insert_contact_group">Εισαγωγή ομάδας επαφών</string>
     <string name="title_insert_template">Εισαγωγή προτύπου</string>
     <string name="title_create_template">Δημιουργία προτύπου</string>
@@ -1100,6 +1105,7 @@
     <string name="title_smime_reminder">Κλειδιά S/MIME διαθέσιμα</string>
     <string name="title_to_missing">Λείπει παραλήπτης</string>
     <string name="title_extra_missing">Λείπει όνομα χρήστη</string>
+    <string name="title_noreply_reminder" comment="title_noreply_reminder&#10;&#10;'no-reply' should be translated!">Αποστολή σε μία \"Μην απαντάτε σε αυτό το μήνυμα\" διεύθυνση</string>
     <string name="title_external_reminder">Αποστολή προς μία εξωτερική διεύθυνση</string>
     <string name="title_subject_reminder">Το θέμα είναι κενό</string>
     <string name="title_text_reminder">Το μήνυμα είναι κενό</string>

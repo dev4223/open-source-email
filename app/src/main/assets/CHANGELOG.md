@@ -4,6 +4,24 @@
 
 ### [Banji](https://en.wikipedia.org/wiki/Banji)
 
+### 1.1772 - 2021-11-04
+
+* Added check for sending to no-reply addresses
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1771 - 2021-11-03
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1770 - 2021-11-01
+
+* Added option to lock app (biometric/PIN) on leaving app
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
 ### 1.1769 - 2021-10-28
 
 * Fixed drafts not being removed

@@ -516,8 +516,9 @@
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
     <string name="title_advanced_autolock">Sperren bei ausgeschaltetem Bildschirm</string>
+    <string name="title_advanced_autolock_nav">Beim Verlassen der App sperren</string>
     <string name="title_advanced_generic_user_agent">Allgemeine Browser-Kennung verwenden</string>
-    <string name="title_advanced_load_emoji">Aktualisierte Emoji von Google Play-Diensten laden</string>
+    <string name="title_advanced_load_emoji">Aktualisierte Emoji von Google-Play-Diensten laden</string>
     <string name="title_advanced_disconnect_auto_update">Listen wöchentlich automatisch aktualisieren</string>
     <string name="title_advanced_disconnect_links">Listen verwenden, um vor Nachverfolgungslinks zu warnen</string>
     <string name="title_advanced_disconnect_images">Listen zur Erkennung von Nachverfolgungsbildern verwenden</string>
@@ -626,6 +627,7 @@
     <string name="title_advanced_display_harmful_hint">Deaktivieren dieser Option kann für Ihre Privatsphäre schädlich sein</string>
     <string name="title_advanced_display_hidden_hint">Dies kann zu merkwürdigem Aussehen und doppelten Texten führen</string>
     <string name="title_advanced_display_pin_hint">Eine PIN hat Vorrang vor der biometrischen Authentifizierung</string>
+    <string name="title_advanced_display_autolock_nav_hint">Es wird eine Wartezeit von %1$d Sekunden geben</string>
     <string name="title_advanced_safe_browsing_hint">Der Google-Server erfährt, welche Adressen nachgeschlagen werden</string>
     <string name="title_advanced_badge_hint">Nur verfügbar auf unterstützten Launchern</string>
     <string name="title_advanced_notify_action_hint">Es werden maximal drei Aktionen angezeigt</string>
@@ -1074,6 +1076,7 @@
     <string name="title_send_dialog">Sendeoptionen anzeigen</string>
     <string name="title_image_dialog">Grafikoptionen anzeigen</string>
     <string name="title_media_toolbar">Mediensymbolleiste</string>
+    <string name="title_manage_local_contacts">Lokale Kontakte verwalten</string>
     <string name="title_insert_contact_group">Kontaktgruppe einfügen</string>
     <string name="title_insert_template">Vorlage einfügen</string>
     <string name="title_create_template">Vorlage erstellen</string>
@@ -1103,6 +1106,7 @@
     <string name="title_smime_reminder">S/MIME-Schlüssel verfügbar</string>
     <string name="title_to_missing">Empfänger fehlt</string>
     <string name="title_extra_missing">Benutzername fehlt</string>
+    <string name="title_noreply_reminder" comment="title_noreply_reminder&#10;&#10;'no-reply' should be translated!">Wird an eine „Nicht antworten”-E-Mail-Adresse gesendet</string>
     <string name="title_external_reminder">Senden an eine externe Adresse</string>
     <string name="title_subject_reminder">Betreff ist leer</string>
     <string name="title_text_reminder">Nachricht ist leer</string>
