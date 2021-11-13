@@ -61,7 +61,6 @@
     <string name="title_ask_spam_who">Третирай съобщението от %1$s като спам?</string>
     <string name="title_block">Блокиране %1$s</string>
     <string name="title_block_sender">Блокиране на подателя</string>
-    <string name="title_block_domain">Блокиране на домейна на подателя</string>
     <string name="title_junk_clear">Изчистване</string>
     <string name="title_notification_sending">Изпращане на съобщения</string>
     <string name="title_notification_waiting">Изчаква се подходяща връзка</string>
@@ -108,7 +107,6 @@
     <string name="title_setup_accounts">Профили</string>
     <string name="title_setup_identities">Самоличности</string>
     <string name="title_setup_other">Друг доставчик</string>
-    <string name="title_setup_gmail_support">Оторизацията на профила в Google работи само в официални версии, защото Android проверява подписа на приложението</string>
     <string name="title_setup_gmail_rationale">Моля, дайте разрешения за избор на профил</string>
     <string name="title_setup_gmail_permissions">Google ще поиска разрешения за четене, съставяне, изпращане и окончателно изтриване на целия ви имейл. FairEmail никога няма да изтрие вашите съобщения без вашето изрично съгласие.</string>
     <string name="title_setup_gmail_drafts">Ако папката за чернови не е достъпна от IMAP, това може да бъде коригирано в настройките на етикета на Gmail</string>
@@ -869,6 +867,7 @@
     <string name="title_filter_duplicates">Дублирани</string>
     <string name="title_compact">Сбит изглед</string>
     <string name="title_zoom">Размер на текста</string>
+    <string name="title_padding">Размер на отстъпа</string>
     <string name="title_select_language">Избор на език</string>
     <string name="title_select_all">Маркирай всички</string>
     <string name="title_select_found">Маркирай намереното</string>

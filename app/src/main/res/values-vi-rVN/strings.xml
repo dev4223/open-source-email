@@ -62,7 +62,6 @@
     <string name="title_junk_hint">Nhà cung cấp email của bạn có trách nhiệm lọc thư rác. Một ứng dụng email không có tất cả dữ liệu cần thiết để làm việc này một cách đáng tin cậy.</string>
     <string name="title_block">Chặn %1$s</string>
     <string name="title_block_sender">Chặn người gửi</string>
-    <string name="title_block_domain">Chặn miền người gửi</string>
     <string name="title_block_sender_hint">        Chặn người gửi là tính năng miễn phí.
         Chặn miền người gửi có sử dụng quy tắc lọc, đó là tính năng pro.
     </string>
@@ -134,8 +133,6 @@
     <string name="title_setup_identities">Danh tính</string>
     <string name="title_setup_other">Nhà cung cấp khác</string>
     <string name="title_setup_pop3">Tài khoản POP3</string>
-    <string name="title_setup_oauth_permission">Nhà cung cấp email đã chấp thuận OAuth chỉ với những phiên bản ứng dụng chính thức</string>
-    <string name="title_setup_gmail_support">Việc uỷ quyền các tài khoản Gmail sẽ chỉ được trong các phiên bản chính thức vì Android kiểm tra chữ ký ứng dụng</string>
     <string name="title_setup_gmail_rationale">Hãy cấp quyền để chọn một tài khoản và đọc tên của bạn</string>
     <string name="title_setup_gmail_permissions">Google sẽ hỏi xin quyền đọc, soạn thư, gửi và vĩnh viễn xoá tất cả email của bạn. FairEmail sẽ không bao giờ xoá các thư của bạn mà không có sự đồng ý cụ thể của bạn.</string>
     <string name="title_setup_gmail_drafts">Nếu thư mục nháp không truy cập được bởi IMAP, điều này có thể được sửa ở cài đặt nhãn Gmail</string>
@@ -1192,6 +1189,7 @@
     <string name="title_filter_duplicates">Bản sao</string>
     <string name="title_compact">Xem kiểu thu gọn</string>
     <string name="title_zoom">Cỡ chữ</string>
+    <string name="title_padding">Kích cỡ lùi</string>
     <string name="title_select_language">Chọn ngôn ngữ</string>
     <string name="title_select_all">Chọn tất cả</string>
     <string name="title_select_found">Chọn các thư được tìm thấy</string>

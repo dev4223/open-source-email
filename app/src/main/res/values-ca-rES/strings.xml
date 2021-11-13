@@ -68,7 +68,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_junk_hint">El seu proveïdor de correu electrònic és el responsable de filtrar el correu brossa. Una aplicació de correu electrònic no té totes les dades necessàries per fer això de manera confiable.</string>
     <string name="title_block">Bloqueja %1$s</string>
     <string name="title_block_sender">Bloqueja remitent</string>
-    <string name="title_block_domain">Bloquejar el domini complet del remitent</string>
     <string name="title_junk_filter">Utilitza el filtre local d\'SPAM</string>
     <string name="title_junk_clear">Elimina</string>
     <string name="title_notification_sending">Enviant missatge</string>
@@ -118,7 +117,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_identities">Identitats</string>
     <string name="title_setup_other">Altres proveïdors</string>
     <string name="title_setup_pop3">Compte POP3</string>
-    <string name="title_setup_gmail_support">Com que Android comprova les firmes dels aplicatius, es podran autoritzar comptes de Google des des les versions oficials</string>
     <string name="title_setup_gmail_rationale">Doneu permís per seleccionar un compte i llegir el vostre nom</string>
     <string name="title_setup_gmail_permissions">Google sol·licitarà permisos per llegir, compondre, enviar i suprimir tot el vostre correu electrònic. FairEmail mai suprimirà els vostres missatges sense el vostre consentiment explícit.</string>
     <string name="title_setup_gmail_drafts">Si IMAP no pot accedir a la carpeta d\'esborranys, es pot solucionar a la configuració de l\'etiqueta de Gmail</string>
@@ -847,6 +845,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_filter_duplicates">Duplicades</string>
     <string name="title_compact">Vista compacta</string>
     <string name="title_zoom">Mida del text</string>
+    <string name="title_padding">Separació del text</string>
     <string name="title_select_language">Selecciona idioma</string>
     <string name="title_select_all">Selecciona-ho tot</string>
     <string name="title_select_found">Seleccionar el trobat</string>

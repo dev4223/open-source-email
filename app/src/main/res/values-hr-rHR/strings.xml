@@ -73,7 +73,6 @@
     <string name="title_junk_hint">Tvoj pružatelj usluge je odgovoran za filtriranje spam poruka. Email klijent nema dovoljno podataka da radi ispravno.</string>
     <string name="title_block">Blokiraj %1$s</string>
     <string name="title_block_sender">Blokiraj pošiljatelja</string>
-    <string name="title_block_domain">Blokiraj domenu pošiljatelja</string>
     <string name="title_junk_filter">Koristi lokalni filter za neželjenu poštu</string>
     <string name="title_junk_clear">Očisti</string>
     <string name="title_notification_sending">Poruka se šalje</string>
@@ -120,7 +119,6 @@
     <string name="title_setup_identities">Identiteti</string>
     <string name="title_setup_other">Drugi davatelj usluga</string>
     <string name="title_setup_pop3">POP3 račun</string>
-    <string name="title_setup_gmail_support">Autoriziranje Google računa funkcionirati će u službenim verzijama samo zato što Android provjerava signaturu aplikacije</string>
     <string name="title_setup_gmail_rationale">Molimo dajte dopuštenje za izbor računa i čitanje vašeg imena</string>
     <string name="title_setup_gmail_permissions">Google će tražiti dopuštenja za čitanje, sastavljanje, slanje i trajno brisanje sve vaše e-pošte. FairEmail nikada neće izbrisati vaše poruke bez vašeg izričitog pristanka.</string>
     <string name="title_setup_gmail_drafts">Ako preko IMAP mapa skica nije dostupna, to se može popraviti u postavkama Gmail oznake</string>

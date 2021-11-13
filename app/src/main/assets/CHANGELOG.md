@@ -4,6 +4,39 @@
 
 ### [Banji](https://en.wikipedia.org/wiki/Banji)
 
+### 1.1778 - 2021-11-11
+
+* Fixed duplicate submenu icons
+* Small improvements and minor bug fixes
+
+### 1.1777 - 2021-11-11
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1776 - 2021-11-10
+
+* Added message menu icons
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1775 - 2021-11-09
+
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.1774 - 2021-11-08
+
+* Added option to configure card padding (3-dots overflow menu)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1773 - 2021-11-06
+
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### 1.1772 - 2021-11-04
 
 * Added check for sending to no-reply addresses

@@ -560,9 +560,10 @@ class Core {
                             // Fetch: NO The specified message set is invalid.
                             // Fetch: NO [SERVERBUG] SELECT Server error - Please try again later
                             // Fetch: NO [SERVERBUG] UID FETCH Server error - Please try again later
-                            // Fetch: NO Invalid message number (took 123 ms)
+                            // Fetch: NO Invalid message number (took nnn ms)
                             // Fetch: BAD Internal Server Error
                             // Fetch: BAD Error in IMAP command FETCH: Invalid messageset (n.nnn + n .nnn secs).
+                            // Fetch: NO FETCH sequence parse error in: nnn
                             // Fetch UID: NO Some messages could not be FETCHed (Failure)
                             // Fetch UID: NO [LIMIT] UID FETCH Rate limit hit.
                             // Fetch UID: NO Server Unavailable. 15
@@ -1672,33 +1673,25 @@ class Core {
         // Delete message
         DB db = DB.getInstance(context);
 
-        if (EntityFolder.INBOX.equals(folder.type)) {
-            if (account.leave_deleted) {
-                // Remove message/attachments files on cleanup
-                db.message().resetMessageContent(message.id);
-                db.attachment().resetAvailable(message.id);
-            } else {
-                Message imessage = findMessage(context, folder, message, istore, ifolder);
-                if (imessage != null) {
-                    Log.i(folder.name + " POP delete=" + message.uidl + "/" + message.msgid);
-                    imessage.setFlag(Flags.Flag.DELETED, true);
+        // Delete from server
+        if (EntityFolder.INBOX.equals(folder.type) && !account.leave_deleted) {
+            Message imessage = findMessage(context, folder, message, istore, ifolder);
+            if (imessage != null) {
+                Log.i(folder.name + " POP delete=" + message.uidl + "/" + message.msgid);
+                imessage.setFlag(Flags.Flag.DELETED, true);
 
-                    try {
-                        Log.i(folder.name + " POP expunge");
-                        ifolder.close(true);
-                        ifolder.open(Folder.READ_WRITE);
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                        state.error(new FolderClosedException(ifolder, "POP", new Exception(ex)));
-                    }
+                try {
+                    Log.i(folder.name + " POP expunge");
+                    ifolder.close(true);
+                    ifolder.open(Folder.READ_WRITE);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                    state.error(new FolderClosedException(ifolder, "POP", new Exception(ex)));
                 }
             }
+        }
 
-            // Synchronize will delete messages when needed
-            db.message().setMessageUiHide(message.id, true);
-        } else
-            db.message().deleteMessage(message.id);
-
+        // Move to trash folder
         if (!EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.TRASH.equals(folder.type)) {
             EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
@@ -1734,7 +1727,22 @@ class Core {
             }
 
             EntityAttachment.copy(context, id, message.id);
+
+            message.id = id;
         }
+
+        // Delete from device
+        if (EntityFolder.INBOX.equals(folder.type)) {
+            if (account.leave_deleted) {
+                // Remove message/attachments files on cleanup
+                db.message().resetMessageContent(message.id);
+                db.attachment().resetAvailable(message.id);
+            }
+
+            // Synchronize will delete messages when needed
+            db.message().setMessageUiHide(message.id, true);
+        } else
+            db.message().deleteMessage(message.id);
     }
 
     private static void onHeaders(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, IOException {
@@ -1970,7 +1978,7 @@ class Core {
         boolean drafts = false;
         Map<String, EntityFolder> local = new HashMap<>();
         List<EntityFolder> folders = db.folder().getFolders(account.id, false, false);
-        for (EntityFolder folder : folders)
+        for (EntityFolder folder : folders) {
             if (folder.tbc != null) {
                 try {
                     Log.i(folder.name + " creating");
@@ -2045,6 +2053,13 @@ class Core {
                         sync_folders = true;
                 }
             }
+
+            String key = "label.color." + folder.name;
+            if (folder.color == null)
+                prefs.edit().remove(key).apply();
+            else
+                prefs.edit().putInt(key, folder.color).apply();
+        }
         Log.i("Local folder count=" + local.size() + " drafts=" + drafts);
 
         if (!drafts) {
@@ -2718,6 +2733,7 @@ class Core {
                         message.list_post = helper.getListPost();
                         message.unsubscribe = helper.getListUnsubscribe();
                         message.headers = helper.getHeaders();
+                        message.infrastructure = helper.getInfrastructure();
                         message.subject = helper.getSubject();
                         message.size = parts.getBodySize();
                         message.total = helper.getSize();
@@ -3238,8 +3254,10 @@ class Core {
                                         for (Response response : responses)
                                             if (response.isBYE())
                                                 return new MessagingException("UID FETCH", new IOException(response.toString()));
-                                            else if (response.isNO() || response.isBAD())
-                                                return new MessagingException(response.toString());
+                                            else if (response.isNO())
+                                                return new CommandFailedException(response);
+                                            else if (response.isBAD())
+                                                return new BadCommandException(response);
                                         return new MessagingException("UID FETCH failed");
                                     }
                                 }
@@ -3679,6 +3697,7 @@ class Core {
             message.autocrypt = helper.getAutocrypt();
             if (download_headers)
                 message.headers = helper.getHeaders();
+            message.infrastructure = helper.getInfrastructure();
             message.subject = helper.getSubject();
             message.size = parts.getBodySize();
             message.total = helper.getSize();

@@ -62,7 +62,7 @@
     <string name="title_junk_hint">您的电子邮件提供商负责过滤垃圾邮件。电子邮件应用程序没有可靠地执行此操作所需的所有数据。</string>
     <string name="title_block">屏蔽 %1$s</string>
     <string name="title_block_sender">屏蔽发件人</string>
-    <string name="title_block_domain">屏蔽发件人域名</string>
+    <string name="title_block_sender_domain">屏蔽域名 \'%1$s\'</string>
     <string name="title_block_sender_hint">        屏蔽发件人是一个免费功能。
         屏蔽发件人域使用过滤规则，这是一个高级功能。
     </string>
@@ -134,8 +134,8 @@
     <string name="title_setup_identities">身份</string>
     <string name="title_setup_other">其他提供商</string>
     <string name="title_setup_pop3">POP3 账户</string>
-    <string name="title_setup_oauth_permission">电子邮件服务提供商仅允许官方应用程序版本使用OAuth</string>
-    <string name="title_setup_gmail_support">授权 Google 账户仅在官方版本下有效，因为 Android 会检查应用签名</string>
+    <string name="title_setup_oauth_permission">电子邮件提供商仅批准了 Play 商店和 GitHub 版本使用 OAuth</string>
+    <string name="title_setup_gmail_support">只有 Play 商店和 GitHub 版本才支持授权 Google 账户，因为 Android 会检查应用的数字签名</string>
     <string name="title_setup_gmail_rationale">请授予权限来选择一个账户并读取您的姓名</string>
     <string name="title_setup_gmail_permissions">Google 会请求读取、撰写、发送和永久删除您的所有电子邮件的权限。相比之下，未经您的明确同意，FairEmail 永远不会删除您的邮件。</string>
     <string name="title_setup_gmail_drafts">如果草稿文件夹无法通过IMAP访问，可以在Gmail的标签设置中进行修复</string>
@@ -544,6 +544,7 @@
     <string name="title_advanced_language">界面语言</string>
     <string name="title_advanced_language_system">系统</string>
     <string name="title_advanced_deepl">DeepL 集成</string>
+    <string name="title_advanced_sdcard">我想使用 SD 卡</string>
     <string name="title_advanced_watchdog">定期检查 FairEmail 是否仍在运行</string>
     <string name="title_advanced_updates">检查 GitHub 更新</string>
     <string name="title_advanced_check_weekly">每周而不是每天检查</string>
@@ -608,6 +609,7 @@
     <string name="title_advanced_parse_classes_hint">这将更准确地显示消息，但可能会有延迟</string>
     <string name="title_advanced_language_detection_hint">是否支持语言检测取决于设备制造商</string>
     <string name="title_advanced_autoexpand_hint">当对话中只有一条消息或只是一条未读消息时，自动打开该消息</string>
+    <string name="title_advanced_expandall_hint">展开多封邮件时不会显示回复按钮，因为这样会无法确定回复哪封邮件</string>
     <string name="title_advanced_autoseen_hint">在每个账户的高级账户设置中可以禁用展开消息时自动将其标记为已读</string>
     <string name="title_advanced_autoclose_hint">所有邮件已存档、发送或删除时自动关闭邮件会话</string>
     <string name="title_advanced_sender_hint">大多数提供商不允许修改发件人地址</string>
@@ -1096,7 +1098,7 @@
     <string name="title_smime_reminder">S/MIME 密钥可用</string>
     <string name="title_to_missing">缺少收件人</string>
     <string name="title_extra_missing">缺少用户名</string>
-    <string name="title_noreply_reminder" comment="title_noreply_reminder&#10;&#10;'no-reply' should be translated!">正在向“无回复”地址发送邮件</string>
+    <string name="title_noreply_reminder">正在向“无回复”地址发送邮件</string>
     <string name="title_external_reminder">发送到外部地址</string>
     <string name="title_subject_reminder">主题为空</string>
     <string name="title_text_reminder">消息为空</string>
@@ -1198,6 +1200,7 @@
     <string name="title_filter_duplicates">重复项</string>
     <string name="title_compact">紧凑视图</string>
     <string name="title_zoom">文本大小</string>
+    <string name="title_padding">内边距尺寸</string>
     <string name="title_select_language">选择语言</string>
     <string name="title_select_all">全选</string>
     <string name="title_select_found">选中找到的</string>

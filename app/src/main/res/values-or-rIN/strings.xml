@@ -24,6 +24,7 @@
         <item quantity="other">%1$dଟି ନୂଆ</item>
     </plurals>
     <string name="title_junk_hint">ସ୍ପାମ୍ ଫିଲ୍ଟର୍ କରିବା ପାଇଁ ଆପଣଙ୍କ ଇମେଲ୍ ପ୍ରଦାନକାରୀ ଦାୟୀ। ଏକ ଇମେଲ୍ ଆପ୍ ଏହା ବିଶ୍ୱସନୀୟ ଭାବରେ କରିବା ପାଇଁ ଆବଶ୍ୟକ ସମସ୍ତ ତଥ୍ୟ ନାହିଁ।</string>
+    <string name="title_block_sender_domain">\'%1$s\' ଡୋମେନଟିକୁ ଅବରୋଧ କରନ୍ତୁ</string>
     <string name="title_junk_clear">ଖାଲି କରନ୍ତୁ</string>
     <string name="title_notification_idle">ନିଷ୍କ୍ରିୟ</string>
     <string name="title_notification_failed">\'%1$s\' ବିଫଳ ହେଲା</string>
@@ -64,6 +65,8 @@
     <string name="title_setup_identities">ପରିଚୟଗୁଡ଼ିକ</string>
     <string name="title_setup_other">ଅନ୍ୟ ପ୍ରଦାନକାରୀ</string>
     <string name="title_setup_pop3">POP3 ଆକାଉଣ୍ଟ୍</string>
+    <string name="title_setup_oauth_permission">ଇମେଲ୍ ପ୍ରଦାନକାରୀ କେବଳ Play Store ଏବଂ GitHub ସଂସ୍କରଣ ପାଇଁ OAuth ଅନୁମୋଦନ କରିଛନ୍ତି</string>
+    <string name="title_setup_gmail_support">Google ଆକାଉଣ୍ଟଗୁଡ଼ିକର ପ୍ରାଧିକରଣ କେବଳ Play Store ଏବଂ GitHub ସଂସ୍କରଣରେ କାମ କରିବ କାରଣ ଆଣ୍ଡ୍ରଏଡ୍ ଡିଜିଟାଲ୍ ଆପ୍ ସ୍ବାକ୍ଷର ଯାଞ୍ଚ କରେ</string>
     <string name="title_setup_oauth_update">ବିଦ୍ୟମାନ ଆକାଉଣ୍ଟକୁ ପୁନଃ ପ୍ରାଧିକୃତ କରନ୍ତୁ</string>
     <string name="title_setup_oauth_updated">ଆକାଉଣ୍ଟ୍ ପ୍ରାଧିକରଣ ଅଦ୍ୟତନ କରାଯାଇଥିଲା</string>
     <string name="title_setup_oauth_authorize">ପ୍ରାଧିକୃତ କରନ୍ତୁ</string>
@@ -181,6 +184,7 @@
     <string name="title_advanced_language">ଭାଷା</string>
     <string name="title_advanced_language_system">ସିଷ୍ଟମ୍</string>
     <string name="title_advanced_deepl">DeepL ଏକୀକରଣ</string>
+    <string name="title_advanced_sdcard">ମୁଁ ଏକ SDcard ବ୍ୟବହାର କରିବାକୁ ଚାହୁଁଛି</string>
     <string name="title_advanced_updates">GitHub ଅପଡେଟସ୍ ପାଇଁ ଯାଞ୍ଚ କରନ୍ତୁ</string>
     <string name="title_advanced_check_weekly">ଦୈନିକ ବଦଳରେ ସାପ୍ତାହିକ ଯାଞ୍ଚ କରନ୍ତୁ</string>
     <string name="title_advanced_changelog">ଅପଡେଟ୍ ପରେ ପରିବର୍ତ୍ତନ ଲଗ୍ ଦେଖାନ୍ତୁ</string>
@@ -188,6 +192,7 @@
     <string name="title_advanced_app">ଆପ୍ ସେଟିଂସ୍</string>
     <string name="title_advanced_more">ଅଧିକ ବିକଳ୍ପ</string>
     <string name="title_advanced_poll_battery">ଏହା ଅଧିକ ବ୍ୟାଟେରୀ ବ୍ୟବହାର ର କାରଣ ହୋଇପାରେ!</string>
+    <string name="title_advanced_expandall_hint">ଏକାଧିକ ବାର୍ତ୍ତା ସମ୍ପ୍ରସାରଣ ହୋଇଥିବା ବେଳେ ଉତ୍ତର ବଟନ୍ ଦେଖାଯିବ ନାହିଁ କାରଣ ବଟନ୍ କେଉଁ ବାର୍ତ୍ତା ପାଇଁ ପ୍ରଯୁଜ୍ୟ ତାହା ଅସ୍ପଷ୍ଟ ଅଟେ</string>
     <string name="title_advanced_display_autolock_nav_hint">%1$d ସେକେଣ୍ଡର ଅନୁଗ୍ରହ ସମୟ ରହିବ</string>
     <string name="title_advanced_english_hint">ଏହା ଆପ୍ କୁ ପୁନଃଆରମ୍ଭ କରିବ</string>
     <string name="title_advanced_edit_name">ନାମ ସମ୍ପାଦନା</string>
@@ -253,6 +258,7 @@
     <string name="title_months_all">ସମସ୍ତ</string>
     <string name="title_folder_trash">ଆବର୍ଜନା ପାତ୍ର</string>
     <string name="title_folder_system">ସିଷ୍ଟମ୍</string>
+    <string name="title_filters_active">ଗୋଟିଏ କିମ୍ବା ଅଧିକ ଶୋଧକ ସକ୍ରିୟ</string>
     <string name="title_hide">ଲୁଚାଅ</string>
     <string name="title_unhide">ଦେଖାଅ</string>
     <string name="title_search_in_text">ପାଠ୍ୟରେ ଖୋଜନ୍ତୁ &#8230;</string>
@@ -304,7 +310,7 @@
     <string name="title_show_addresses">CC/BCC ଦେଖାଅ</string>
     <string name="title_manage_local_contacts">ସ୍ଥାନୀୟ ସମ୍ପର୍କଗୁଡ଼ିକୁ ପରିଚାଳନା କରନ୍ତୁ</string>
     <string name="title_translate">ଅନୁବାଦ କର</string>
-    <string name="title_noreply_reminder" comment="title_noreply_reminder&#10;&#10;'no-reply' should be translated!">ଏକ \'ଉତ୍ତର-ଦିଅନି\' ଠିକଣାକୁ ପଠାଉଛି</string>
+    <string name="title_noreply_reminder">ଏକ \'ଉତ୍ତର-ଦିଅନି\' ଠିକଣାକୁ ପଠାଉଛି</string>
     <string name="title_resync">ପୁନଃସିଙ୍କ୍ କରନ୍ତୁ</string>
     <string name="title_signature_subject">ବିଷୟ</string>
     <string name="title_search">ସନ୍ଧାନ କରନ୍ତୁ</string>
@@ -312,7 +318,7 @@
     <string name="title_search_index_hint">ସନ୍ଧାନ ଅନୁକ୍ରମଣିକା ମାଧ୍ୟମରେ ଖୋଜିବା ଦ୍ରୁତ ଅଟେ, କିନ୍ତୁ ଏହା ଦ୍ୱାରା କେବଳ ପୂର୍ଣ୍ଣ ଶବ୍ଦ ମିଳିଥାଏ।</string>
     <string name="title_search_more">ଅଧିକ ବିକଳ୍ପ</string>
     <string name="title_search_use_index">ସନ୍ଧାନ ଅନୁକ୍ରମଣିକା ବ୍ୟବହାର କରିବା</string>
-    <string name="title_search_with_unseen">ପଢ଼ି ନାହାଁନ୍ତି</string>
+    <string name="title_search_with_unseen">ଅପଠିତ</string>
     <string name="title_search_with_flagged">ତାରାଙ୍କିତ</string>
     <string name="title_search_with_hidden">ଲୁକ୍କାୟିତ (କେବଳ ଡିଭାଇସରେ)</string>
     <string name="title_search_with_encrypted">ଏନକ୍ରିପ୍ଟ ହୋଇଥିବା (କେବଳ ଡିଭାଇସରେ)</string>
@@ -326,7 +332,7 @@
     <string name="title_search_flag_invite">ଆମନ୍ତ୍ରଣ</string>
     <string name="title_search_flag_size">ଆକାର &gt; %1$s</string>
     <string name="title_sort_on_time">ସମୟ</string>
-    <string name="title_sort_on_unread">ପଢ଼ି ନାହାଁନ୍ତି</string>
+    <string name="title_sort_on_unread">ପଢ଼ି ନାହାଁନ୍ତି</string>
     <string name="title_sort_on_starred">ତାରାଙ୍କିତ</string>
     <string name="title_sort_on_priority">ପ୍ରାଥମିକତା</string>
     <string name="title_sort_on_sender">ପ୍ରେରକ</string>
@@ -334,6 +340,7 @@
     <string name="title_sort_on_size">ଆକାର</string>
     <string name="title_sort_on_attachments">ସଂଲଗ୍ନକରଣ</string>
     <string name="title_zoom">ପାଠ୍ୟ ଆକାର</string>
+    <string name="title_padding">ପ୍ୟାଡିଂ ଆକାର</string>
     <string name="title_select_language">ଭାଷା ଚୟନ କରନ୍ତୁ</string>
     <string name="title_select_all">ସମସ୍ତ ଚୟନ କରନ୍ତୁ</string>
     <string name="title_force_sync">ସିଙ୍କ୍ କରିବାକୁ ବାଧ୍ୟ କରନ୍ତୁ</string>
@@ -357,6 +364,7 @@
     <string name="title_rule_check">ଯାଞ୍ଚ କର</string>
     <string name="title_rule_tts_from">ପ୍ରେରକ</string>
     <string name="title_rule_tts_subject">ବିଷୟ</string>
+    <string name="title_rule_tts_content">ପାଠ୍ୟ</string>
     <string name="title_legend_section_synchronize">ସିଙ୍କ୍ରୋନାଇଜ୍</string>
     <string name="title_legend_section_folders">ଫୋଲ୍ଡରଗୁଡ଼ିକ</string>
     <string name="title_legend_section_messages">ବାର୍ତ୍ତାଗୁଡ଼ିକ</string>
@@ -394,10 +402,13 @@
     <string name="title_widget_account">ଆକାଉଣ୍ଟ୍</string>
     <string name="title_widget_account_all">ସମସ୍ତ</string>
     <string name="title_widget_font_size">ପାଠ୍ୟ ଆକାର</string>
-    <string name="title_accessibility_unseen">ପଢ଼ି ନାହାଁନ୍ତି</string>
+    <string name="title_widget_padding">ପ୍ୟାଡିଂ ଆକାର</string>
+    <string name="title_accessibility_seen">ପଠିତ</string>
+    <string name="title_accessibility_unseen">ଅପଠିତ</string>
     <!-- Thunderbird -->
     <string name="title_accessibility_flagged">ତାରାଙ୍କିତ</string>
     <string name="title_accessibility_view_help">ସହାୟତା ଦେଖନ୍ତୁ</string>
+    <string name="title_accessibility_edit">ସମ୍ପାଦନ</string>
     <string name="title_accessibility_attachment">ସଂଲଗ୍ନକରଣ</string>
     <string name="title_accessibility_from">ପ୍ରେରକ</string>
     <string-array name="pollIntervalNames">
