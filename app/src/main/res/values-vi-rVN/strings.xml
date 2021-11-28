@@ -452,7 +452,6 @@
     <string name="title_advanced_autounstar">Tự động bỏ sao khỏi thư khi di chuyển thư</string>
     <string name="title_advanced_auto_important">Tự động làm cho thư được gắn sao trở nên quan trọng</string>
     <string name="title_advanced_reset_importance">Đặt lại tầm quan trọng khi di chuyển thư</string>
-    <string name="title_advanced_default_snooze">Thời gian báo lại mặc định</string>
     <string name="title_advanced_notifications">Quản lý thông báo</string>
     <string name="title_advanced_notifications_default">Kênh mặc định</string>
     <string name="title_advanced_notifications_service">Kênh nhận</string>
@@ -570,10 +569,10 @@
     <string name="title_advanced_sync_delay_hint">Cái này sẽ làm chậm việc đồng bộ hóa thư</string>
     <string name="title_advanced_suggest_names_hint">Nếu bị tắt, chỉ có các địa chỉ email sẽ được sử dụng khi chọn các liên hệ</string>
     <string name="title_advanced_suggest_local_hint">Bên cạnh các liên hệ được Android cung cấp. Dữ liệu liên hệ sẽ được lưu trữ cho các thư mới được gửi hoặc nhận chỉ khi được bật.</string>
-    <string name="title_advanced_usenet_hint">Chèn \'-- \' giữa văn bản và chữ ký</string>
     <string name="title_advanced_send_reminders_hint">Hiện một lời cảnh báo khi văn bản thư hoặc chủ đề trống hoặc khi một tệp đính kèm có thể đang thiếu</string>
     <string name="title_advanced_reply_all_hint">Nếu bị tắt, việc nhấn giữ nút trả lời sẽ trả lời người gửi</string>
     <string name="title_advanced_reply_move_hint">Máy chủ email vẫn có thể thêm thư vào thư mục thư đã gửi</string>
+    <string name="title_advanced_usenet_hint">Chèn \'-- \' giữa văn bản và chữ ký</string>
     <string name="title_advanced_metered_hint">Các kết nối trả phí nói chung là kết nối di động hoặc điểm phát sóng Wi-Fi trả phí</string>
     <string name="title_advanced_metered_warning">Việc tắt tuỳ chọn này sẽ tắt việc nhận và gửi thư khi dùng kết nối internet di động</string>
     <string name="title_advanced_rlah_hint">Giả sử là không chuyển vùng trong EU (Liên minh châu Âu)</string>

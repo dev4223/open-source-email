@@ -116,6 +116,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_edit_account">Bewerk account</string>
     <string name="title_edit_identity">Bewerk identiteit</string>
     <string name="title_edit_folder">Bewerk map</string>
+    <string name="title_disable_gmail">Gmail app uitschakelen</string>
     <string name="title_setup">Instellingen</string>
     <string name="title_setup_help">Help</string>
     <string name="title_setup_quick">Snel instellen</string>
@@ -465,7 +466,8 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_advanced_autounstar">Automatisch ster verwijderen van berichten bij verplaatsende berichten</string>
     <string name="title_advanced_auto_important">Automatisch berichten met een ster belangrijk maken</string>
     <string name="title_advanced_reset_importance">Reset belang bij verplaatsen van berichten</string>
-    <string name="title_advanced_default_snooze">Standaard sluimertijd</string>
+    <string name="title_advanced_swipe_reply">Veeg uitgevouwde berichten naar rechts om te beantwoorden</string>
+    <string name="title_advanced_default_snooze">Standaard sluimer/vertragingstijd</string>
     <string name="title_advanced_notifications">Beheer meldingen</string>
     <string name="title_advanced_notifications_default">Standaardkanaal</string>
     <string name="title_advanced_notifications_service">Ontvangstkanaal</string>
@@ -587,10 +589,11 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_advanced_sync_delay_hint">Dit zal de synchronisatie van berichten vertragen</string>
     <string name="title_advanced_suggest_names_hint">Indien uitgeschakeld, worden alleen e-mailadressen gebruikt bij het selecteren van contacten</string>
     <string name="title_advanced_suggest_local_hint">Naast contacten die door Android worden geleverd. Contactgegevens worden alleen opgeslagen voor nieuw verzonden of ontvangen berichten wanneer ingeschakeld.</string>
-    <string name="title_advanced_usenet_hint">Voeg \'-- \' in tussen de tekst en de handtekening</string>
     <string name="title_advanced_send_reminders_hint">Toon een waarschuwing wanneer de berichttekst of het onderwerp leeg is of wanneer een bijlage zou kunnen ontbreken</string>
     <string name="title_advanced_reply_all_hint">Indien uitgeschakeld, zal door lang op de antwoordknop te drukken de afzender worden beantwoord</string>
     <string name="title_advanced_reply_move_hint">De e-mailserver kan de berichten nog steeds toevoegen aan de map met verzonden berichten</string>
+    <string name="title_advanced_usenet_hint">Voeg \'-- \' in tussen de tekst en de handtekening</string>
+    <string name="title_advanced_remove_signature_hint">Dit kan ertoe leiden dat te weinig of te veel tekst wordt verwijderd</string>
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Uitschakelen van deze optie zal het ontvangen en verzenden van berichten op mobiele internetverbindingen uitschakelen</string>
     <string name="title_advanced_rlah_hint">Veronderstel geen roaming binnen de EU</string>
@@ -867,6 +870,7 @@ Voeg gedeelde bestanden toe aan een nieuw concept</string>
     <string name="title_no_messages">Geen berichten</string>
     <string name="title_filters_active">Eén of meer filters actief</string>
     <string name="title_duplicate_in">Dubbel bericht in %1$s</string>
+    <string name="title_trashed_from">Verwijderd bericht van %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_subject_reply_alt">Re: %1$s</string>
@@ -1208,6 +1212,7 @@ Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
     <string name="title_filter_unknown">Onbekende afzenders</string>
     <string name="title_filter_hidden">Verborgen</string>
     <string name="title_filter_duplicates">Duplicaten</string>
+    <string name="title_filter_trash">Verwijderde</string>
     <string name="title_compact">Compacte weergave</string>
     <string name="title_zoom">Tekstgrootte</string>
     <string name="title_padding">Opvul grootte</string>
@@ -1488,6 +1493,7 @@ Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
     <string name="title_snooze_now">Sluimeren</string>
     <string name="title_loading">Laden &#8230;</string>
     <string name="title_fetching_again">Bericht opnieuw van de server ophalen</string>
+    <string name="title_go_back">Ga terug</string>
     <string name="title_conversation_actions">Acties</string>
     <string name="title_conversation_action_reply">Antwoord met: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Kopieer: \'%1$s\'</string>

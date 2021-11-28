@@ -47,6 +47,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageDecoder;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -161,7 +162,6 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
-import org.openintents.openpgp.IOpenPgpService2;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
@@ -294,7 +294,6 @@ public class FragmentCompose extends FragmentBase {
     private int pickRequest;
     private Uri pickUri;
 
-    private OpenPgpServiceConnection pgpService;
     private String[] pgpUserIds;
     private long[] pgpKeyIds;
     private long pgpSignKeyId;
@@ -1345,13 +1344,6 @@ public class FragmentCompose extends FragmentBase {
     @Override
     public void onDestroyView() {
         adapter = null;
-
-        if (pgpService != null && pgpService.isBound()) {
-            Log.i("PGP unbinding");
-            pgpService.unbindFromService();
-        }
-        pgpService = null;
-
         super.onDestroyView();
     }
 
@@ -1373,97 +1365,66 @@ public class FragmentCompose extends FragmentBase {
 
         state = State.NONE;
 
-        Runnable load = new Runnable() {
-            private boolean once = false;
-
-            @Override
-            public void run() {
-                if (once)
-                    return;
-                once = true;
-
-                try {
-                    if (savedInstanceState == null) {
-                        if (working < 0) {
-                            Bundle a = getArguments();
-                            if (a == null) {
-                                a = new Bundle();
-                                a.putString("action", "new");
-                                setArguments(a);
-                            }
-
-                            Bundle args = new Bundle();
-
-                            args.putString("action", a.getString("action"));
-                            args.putLong("id", a.getLong("id", -1));
-                            args.putLong("account", a.getLong("account", -1));
-                            args.putLong("identity", a.getLong("identity", -1));
-                            args.putLong("reference", a.getLong("reference", -1));
-                            args.putInt("dsn", a.getInt("dsn", -1));
-                            args.putSerializable("ics", a.getSerializable("ics"));
-                            args.putString("status", a.getString("status"));
-                            args.putBoolean("raw", a.getBoolean("raw", false));
-                            args.putLong("answer", a.getLong("answer", -1));
-                            args.putString("to", a.getString("to"));
-                            args.putString("cc", a.getString("cc"));
-                            args.putString("bcc", a.getString("bcc"));
-                            args.putString("inreplyto", a.getString("inreplyto"));
-                            args.putString("subject", a.getString("subject"));
-                            args.putString("body", a.getString("body"));
-                            args.putString("text", a.getString("text"));
-                            args.putString("selected", a.getString("selected"));
-
-                            if (a.containsKey("attachments")) {
-                                args.putParcelableArrayList("attachments", a.getParcelableArrayList("attachments"));
-                                a.remove("attachments");
-                                setArguments(a);
-                            }
-
-                            draftLoader.execute(FragmentCompose.this, args, "compose:new");
-                        } else {
-                            Bundle args = new Bundle();
-                            args.putString("action", "edit");
-                            args.putLong("id", working);
-                            draftLoader.execute(FragmentCompose.this, args, "compose:edit");
-                        }
-                    } else {
-                        working = savedInstanceState.getLong("fair:working");
-                        show_images = savedInstanceState.getBoolean("fair:show_images");
-                        photoURI = savedInstanceState.getParcelable("fair:photo");
-
-                        pickRequest = savedInstanceState.getInt("fair:pickRequest");
-                        pickUri = savedInstanceState.getParcelable("fair:pickUri");
-
-                        Bundle args = new Bundle();
-                        args.putString("action", working < 0 ? "new" : "edit");
-                        args.putLong("id", working);
-                        draftLoader.execute(FragmentCompose.this, args, "compose:instance");
+        try {
+            if (savedInstanceState == null) {
+                if (working < 0) {
+                    Bundle a = getArguments();
+                    if (a == null) {
+                        a = new Bundle();
+                        a.putString("action", "new");
+                        setArguments(a);
                     }
-                } catch (Throwable ex) {
-                    Log.e(ex);
+
+                    Bundle args = new Bundle();
+
+                    args.putString("action", a.getString("action"));
+                    args.putLong("id", a.getLong("id", -1));
+                    args.putLong("account", a.getLong("account", -1));
+                    args.putLong("identity", a.getLong("identity", -1));
+                    args.putLong("reference", a.getLong("reference", -1));
+                    args.putInt("dsn", a.getInt("dsn", -1));
+                    args.putSerializable("ics", a.getSerializable("ics"));
+                    args.putString("status", a.getString("status"));
+                    args.putBoolean("raw", a.getBoolean("raw", false));
+                    args.putLong("answer", a.getLong("answer", -1));
+                    args.putString("to", a.getString("to"));
+                    args.putString("cc", a.getString("cc"));
+                    args.putString("bcc", a.getString("bcc"));
+                    args.putString("inreplyto", a.getString("inreplyto"));
+                    args.putString("subject", a.getString("subject"));
+                    args.putString("body", a.getString("body"));
+                    args.putString("text", a.getString("text"));
+                    args.putString("selected", a.getString("selected"));
+
+                    if (a.containsKey("attachments")) {
+                        args.putParcelableArrayList("attachments", a.getParcelableArrayList("attachments"));
+                        a.remove("attachments");
+                        setArguments(a);
+                    }
+
+                    draftLoader.execute(FragmentCompose.this, args, "compose:new");
+                } else {
+                    Bundle args = new Bundle();
+                    args.putString("action", "edit");
+                    args.putLong("id", working);
+                    draftLoader.execute(FragmentCompose.this, args, "compose:edit");
                 }
-            }
-        };
+            } else {
+                working = savedInstanceState.getLong("fair:working");
+                show_images = savedInstanceState.getBoolean("fair:show_images");
+                photoURI = savedInstanceState.getParcelable("fair:photo");
 
-        final String pkg = Helper.getOpenKeychainPackage(getContext());
-        Log.i("PGP binding to " + pkg);
-        pgpService = new OpenPgpServiceConnection(getContext(), pkg, new OpenPgpServiceConnection.OnBound() {
-            @Override
-            public void onBound(IOpenPgpService2 service) {
-                Log.i("Bound to " + pkg);
-                load.run();
-            }
+                pickRequest = savedInstanceState.getInt("fair:pickRequest");
+                pickUri = savedInstanceState.getParcelable("fair:pickUri");
 
-            @Override
-            public void onError(Exception ex) {
-                Log.i(ex.getMessage());
-                load.run();
+                Bundle args = new Bundle();
+                args.putString("action", working < 0 ? "new" : "edit");
+                args.putLong("id", working);
+                draftLoader.execute(FragmentCompose.this, args, "compose:instance");
             }
-        });
-        pgpService.bindToService();
-
-        // Fail-safe
-        getMainHandler().postDelayed(load, MAX_PGP_BIND_DELAY);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     @Override
@@ -1474,9 +1435,6 @@ public class FragmentCompose extends FragmentBase {
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         cm.registerNetworkCallback(builder.build(), networkCallback);
-
-        if (!pgpService.isBound())
-            pgpService.bindToService();
     }
 
     @Override
@@ -2529,67 +2487,55 @@ public class FragmentCompose extends FragmentBase {
                 }
             }.setExecutor(executor).execute(this, args, "compose:alias");
         } else {
-            if (pgpService.isBound())
-                try {
-                    List<Address> recipients = new ArrayList<>();
-                    if (draft.from != null)
-                        recipients.addAll(Arrays.asList(draft.from));
-                    if (draft.to != null)
-                        recipients.addAll(Arrays.asList(draft.to));
-                    if (draft.cc != null)
-                        recipients.addAll(Arrays.asList(draft.cc));
-                    if (draft.bcc != null)
-                        recipients.addAll(Arrays.asList(draft.bcc));
+            try {
+                List<Address> recipients = new ArrayList<>();
+                if (draft.from != null)
+                    recipients.addAll(Arrays.asList(draft.from));
+                if (draft.to != null)
+                    recipients.addAll(Arrays.asList(draft.to));
+                if (draft.cc != null)
+                    recipients.addAll(Arrays.asList(draft.cc));
+                if (draft.bcc != null)
+                    recipients.addAll(Arrays.asList(draft.bcc));
 
-                    if (recipients.size() == 0)
-                        throw new IllegalArgumentException(getString(R.string.title_to_missing));
+                if (recipients.size() == 0)
+                    throw new IllegalArgumentException(getString(R.string.title_to_missing));
 
-                    List<String> emails = new ArrayList<>();
-                    for (int i = 0; i < recipients.size(); i++) {
-                        InternetAddress recipient = (InternetAddress) recipients.get(i);
-                        String email = recipient.getAddress();
-                        if (!emails.contains(email))
-                            emails.add(email);
-                    }
-                    pgpUserIds = emails.toArray(new String[0]);
-
-                    Intent intent;
-                    if (EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt))
-                        intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                    else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt)) {
-                        intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
-                        intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                    } else
-                        throw new IllegalArgumentException("Invalid encrypt=" + draft.ui_encrypt);
-
-                    Bundle largs = new Bundle();
-                    largs.putLong("id", working);
-                    largs.putString("session", UUID.randomUUID().toString());
-                    largs.putInt("action", action);
-                    largs.putBundle("extras", extras);
-                    largs.putBoolean("interactive", interactive);
-                    intent.putExtra(BuildConfig.APPLICATION_ID, largs);
-
-                    onPgp(intent);
-                } catch (Throwable ex) {
-                    if (ex instanceof IllegalArgumentException)
-                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
-                                .setGestureInsetBottomIgnored(true).show();
-                    else {
-                        Log.e(ex);
-                        Log.unexpectedError(getParentFragmentManager(), ex);
-                    }
+                List<String> emails = new ArrayList<>();
+                for (int i = 0; i < recipients.size(); i++) {
+                    InternetAddress recipient = (InternetAddress) recipients.get(i);
+                    String email = recipient.getAddress();
+                    if (!emails.contains(email))
+                        emails.add(email);
                 }
-            else {
-                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG)
-                        .setGestureInsetBottomIgnored(true);
-                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Helper.viewFAQ(v.getContext(), 12);
-                    }
-                });
-                snackbar.show();
+                pgpUserIds = emails.toArray(new String[0]);
+
+                Intent intent;
+                if (EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt))
+                    intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt)) {
+                    intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
+                    intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
+                } else
+                    throw new IllegalArgumentException("Invalid encrypt=" + draft.ui_encrypt);
+
+                Bundle largs = new Bundle();
+                largs.putLong("id", working);
+                largs.putString("session", UUID.randomUUID().toString());
+                largs.putInt("action", action);
+                largs.putBundle("extras", extras);
+                largs.putBoolean("interactive", interactive);
+                intent.putExtra(BuildConfig.APPLICATION_ID, largs);
+
+                onPgp(intent);
+            } catch (Throwable ex) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
+                else {
+                    Log.e(ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
             }
         }
     }
@@ -3203,17 +3149,12 @@ public class FragmentCompose extends FragmentBase {
                     result.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
                 } else {
                     // Call OpenPGP
-                    Log.i("Executing " + data.getAction());
-                    Log.logExtras(data);
-                    OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-                    result = api.executeApi(data, new FileInputStream(input), new FileOutputStream(output));
+                    result = PgpHelper.execute(context, data, new FileInputStream(input), new FileOutputStream(output));
                 }
 
                 // Process result
                 try {
                     int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
-                    Log.i("Result action=" + data.getAction() + " code=" + resultCode);
-                    Log.logExtras(data);
                     switch (resultCode) {
                         case OpenPgpApi.RESULT_CODE_SUCCESS:
                             // Attach key, signed/encrypted data
@@ -3422,6 +3363,17 @@ public class FragmentCompose extends FragmentBase {
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
+                } else if (ex instanceof OperationCanceledException) {
+                    Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_INDEFINITE)
+                            .setGestureInsetBottomIgnored(true);
+                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            snackbar.dismiss();
+                            Helper.viewFAQ(v.getContext(), 12);
+                        }
+                    });
+                    snackbar.show();
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -4766,6 +4718,7 @@ public class FragmentCompose extends FragmentBase {
                                     if (remove_signatures)
                                         d.body().filter(new NodeFilter() {
                                             private boolean remove = false;
+                                            private boolean noremove = false;
 
                                             @Override
                                             public FilterResult head(Node node, int depth) {
@@ -4788,9 +4741,14 @@ public class FragmentCompose extends FragmentBase {
                                                                 remove = true;
                                                         }
                                                     }
+                                                } else if (node instanceof Element) {
+                                                    Element element = (Element) node;
+                                                    if (remove && "blockquote".equals(element.tagName()))
+                                                        noremove = true;
                                                 }
 
-                                                return (remove ? FilterResult.REMOVE : FilterResult.CONTINUE);
+                                                return (remove && !noremove
+                                                        ? FilterResult.REMOVE : FilterResult.CONTINUE);
                                             }
 
                                             @Override
@@ -4990,6 +4948,9 @@ public class FragmentCompose extends FragmentBase {
                         EntityOperation.queue(context, data.draft, EntityOperation.ADD);
                 } else {
                     args.putBoolean("saved", true);
+
+                    if (!data.draft.ui_seen)
+                        EntityOperation.queue(context, data.draft, EntityOperation.SEEN, true);
 
                     // External draft
                     if (data.draft.identity == null) {
@@ -5296,9 +5257,8 @@ public class FragmentCompose extends FragmentBase {
                 }
             });
 
-            boolean experiments = prefs.getBoolean("experiments", false);
             boolean threading = prefs.getBoolean("threading", true);
-            if (experiments && threading)
+            if (threading)
                 db.message().liveUnreadThread(data.draft.account, data.draft.thread).observe(getViewLifecycleOwner(), new Observer<List<EntityMessage>>() {
                     private int lastDiff = 0;
                     private List<EntityMessage> base = null;
@@ -6318,6 +6278,7 @@ public class FragmentCompose extends FragmentBase {
                 Spanned spannedRef = null;
                 if (!ref.isEmpty()) {
                     Document dref = JsoupEx.parse(ref.outerHtml());
+                    HtmlHelper.autoLink(dref);
                     Document quote = HtmlHelper.sanitizeView(context, dref, show_images);
                     spannedRef = HtmlHelper.fromDocument(context, quote,
                             new Html.ImageGetter() {
@@ -6475,8 +6436,6 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private boolean hasPgpKey(Context context, List<Address> recipients) {
-        if (pgpService == null || !pgpService.isBound())
-            return false;
         if (recipients == null || recipients.size() == 0)
             return false;
 
@@ -6490,13 +6449,14 @@ public class FragmentCompose extends FragmentBase {
         intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, userIds);
 
         try {
-            OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-            Intent result = api.executeApi(intent, (InputStream) null, (OutputStream) null);
+            Intent result = PgpHelper.execute(context, intent, null, null, MAX_PGP_BIND_DELAY);
             int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
             if (resultCode == OpenPgpApi.RESULT_CODE_SUCCESS) {
                 long[] keyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
                 return (keyIds.length > 0);
             }
+        } catch (OperationCanceledException ignored) {
+            // Do nothing
         } catch (Throwable ex) {
             Log.w(ex);
         }
@@ -6903,6 +6863,8 @@ public class FragmentCompose extends FragmentBase {
             final int[] sendDelayedValues = getResources().getIntArray(R.array.sendDelayedValues);
             final String[] sendDelayedNames = getResources().getStringArray(R.array.sendDelayedNames);
 
+            final String pkgOpenKeyChain = Helper.getOpenKeychainPackage(context);
+
             final ViewGroup dview = (ViewGroup) LayoutInflater.from(context).inflate(R.layout.dialog_send, null);
             final Button btnFixSent = dview.findViewById(R.id.btnFixSent);
             final TextView tvAddressError = dview.findViewById(R.id.tvAddressError);
@@ -6926,6 +6888,7 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvPlainHint = dview.findViewById(R.id.tvPlainHint);
             final CheckBox cbReceipt = dview.findViewById(R.id.cbReceipt);
             final TextView tvReceiptHint = dview.findViewById(R.id.tvReceiptHint);
+            final TextView tvEncrypt = dview.findViewById(R.id.tvEncrypt);
             final Spinner spEncrypt = dview.findViewById(R.id.spEncrypt);
             final ImageButton ibEncryption = dview.findViewById(R.id.ibEncryption);
             final Spinner spPriority = dview.findViewById(R.id.spPriority);
@@ -7066,6 +7029,18 @@ public class FragmentCompose extends FragmentBase {
                     }.setExecutor(executor).execute(FragmentDialogSend.this, args, "compose:receipt");
                 }
             });
+
+            if (Helper.isOpenKeychainInstalled(context)) {
+                tvEncrypt.setPaintFlags(tvEncrypt.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+                tvEncrypt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String pkg = Helper.getOpenKeychainPackage(v.getContext());
+                        PackageManager pm = v.getContext().getPackageManager();
+                        v.getContext().startActivity(pm.getLaunchIntentForPackage(pkg));
+                    }
+                });
+            }
 
             spEncrypt.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override

@@ -517,9 +517,13 @@ public class Helper {
         }
     }
 
-    static boolean isOpenKeychainInstalled(Context context) {
+    static String getOpenKeychainPackage(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String provider = prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
+        return prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
+    }
+
+    static boolean isOpenKeychainInstalled(Context context) {
+        String provider = getOpenKeychainPackage(context);
 
         PackageManager pm = context.getPackageManager();
         Intent intent = new Intent(OpenPgpApi.SERVICE_INTENT_2);
@@ -527,6 +531,16 @@ public class Helper {
         List<ResolveInfo> ris = pm.queryIntentServices(intent, 0);
 
         return (ris != null && ris.size() > 0);
+    }
+
+    static boolean isInstalled(Context context, String pkg) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            pm.getPackageInfo(pkg, 0);
+            return true;
+        } catch (Throwable ex) {
+            return false;
+        }
     }
 
     static boolean isComponentEnabled(Context context, Class<?> clazz) {
@@ -821,11 +835,6 @@ public class Helper {
             view(context, Uri.parse(base + "#top"), "text/html", false, false);
         else
             view(context, Uri.parse(base + "#user-content-faq" + question), "text/html", false, false);
-    }
-
-    static String getOpenKeychainPackage(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
     }
 
     static Uri getPrivacyUri(Context context) {
@@ -1409,16 +1418,14 @@ public class Helper {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             Locale l = Locale.getDefault();
-            if (!l.getLanguage().equals(language))
-                locales.add(l);
+            locales.add(l);
             if (!"en".equals(language) && !"en".equals(l.getLanguage()))
                 locales.add(new Locale("en"));
         } else {
             LocaleList ll = context.getResources().getConfiguration().getLocales();
             for (int i = 0; i < ll.size(); i++) {
                 Locale l = ll.get(i);
-                if (!l.getLanguage().equals(language))
-                    locales.add(l);
+                locales.add(l);
             }
         }
 
@@ -1428,7 +1435,8 @@ public class Helper {
             configuration.setLocale(locale);
             Resources res = context.createConfigurationContext(configuration).getResources();
             String text = res.getString(resid, formatArgs);
-            result.add(text);
+            if (!result.contains(text))
+                result.add(text);
         }
 
         return result.toArray(new String[0]);

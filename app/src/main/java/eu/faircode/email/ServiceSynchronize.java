@@ -151,7 +151,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "download_headers", "download_eml",
             "prefer_ip4", "bind_socket", "standalone_vpn", "tcp_keep_alive", "ssl_harden", // force reconnect
             "experiments", "debug", "protocol", // force reconnect
-            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "idle_done", // force reconnect
+            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", // force reconnect
+            "keep_alive_poll", "empty_pool", "idle_done", // force reconnect
             "exact_alarms" // force schedule
     ));
 
@@ -1339,6 +1340,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 // Debug
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 boolean subscriptions = prefs.getBoolean("subscriptions", false);
+                boolean keep_alive_poll = prefs.getBoolean("keep_alive_poll", false);
+                boolean empty_pool = prefs.getBoolean("empty_pool", true);
                 boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.DEBUG);
 
                 final EmailService iservice = new EmailService(
@@ -1550,12 +1553,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 if (BuildConfig.DEBUG && "Postausgang".equals(folder.name))
                                     throw new ReadOnlyFolderException(ifolder);
                                 ifolder.open(Folder.READ_WRITE);
-                                db.folder().setFolderReadOnly(folder.id, ifolder.getUIDNotSticky());
+                                folder.read_only = ifolder.getUIDNotSticky();
+                                db.folder().setFolderReadOnly(folder.id, folder.read_only);
                             } catch (ReadOnlyFolderException ex) {
                                 Log.w(folder.name + " read only");
                                 try {
                                     ifolder.open(Folder.READ_ONLY);
-                                    db.folder().setFolderReadOnly(folder.id, true);
+                                    folder.read_only = true;
+                                    db.folder().setFolderReadOnly(folder.id, folder.read_only);
                                 } catch (Throwable ex1) {
                                     db.folder().setFolderError(folder.id, Log.formatThrowable(ex1));
                                     throw ex1;
@@ -1783,7 +1788,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     }
                                     handling = all;
 
-                                    if (istore instanceof IMAPStore) {
+                                    if (empty_pool && istore instanceof IMAPStore) {
                                         getMainHandler().removeCallbacks(purge);
                                         if (handling.size() == 0)
                                             getMainHandler().postDelayed(purge, PURGE_DELAY);
@@ -1909,12 +1914,15 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                                                                 try {
                                                                     ifolder.open(Folder.READ_WRITE);
-                                                                    if (ifolder instanceof IMAPFolder)
-                                                                        db.folder().setFolderReadOnly(folder.id, ((IMAPFolder) ifolder).getUIDNotSticky());
+                                                                    if (ifolder instanceof IMAPFolder) {
+                                                                        folder.read_only = ((IMAPFolder) ifolder).getUIDNotSticky();
+                                                                        db.folder().setFolderReadOnly(folder.id, folder.read_only);
+                                                                    }
                                                                 } catch (ReadOnlyFolderException ex) {
                                                                     Log.w(folder.name + " read only");
                                                                     ifolder.open(Folder.READ_ONLY);
-                                                                    db.folder().setFolderReadOnly(folder.id, true);
+                                                                    folder.read_only = true;
+                                                                    db.folder().setFolderReadOnly(folder.id, folder.read_only);
                                                                 }
 
                                                                 db.folder().setFolderState(folder.id, "connected");
@@ -1989,6 +1997,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 throw new StoreClosedException(iservice.getStore(), "Unrecoverable", cause);
                             }
 
+                            // Check token expiration
+                            iservice.check();
+
                             // Sends store NOOP
                             if (EmailService.SEPARATE_STORE_CONNECTION) {
                                 EntityLog.log(this, EntityLog.Type.Account,
@@ -2015,6 +2026,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                             // Sends folder NOOP
                                             if (!mapFolders.get(folder).isOpen())
                                                 throw new StoreClosedException(iservice.getStore(), "NOOP " + folder.name);
+                                            if (keep_alive_poll)
+                                                EntityOperation.poll(this, folder.id);
                                         } else {
                                             if (folder.poll_count == 0) {
                                                 EntityLog.log(this, folder.name + " queue sync poll");

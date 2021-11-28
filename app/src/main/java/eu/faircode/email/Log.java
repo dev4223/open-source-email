@@ -471,6 +471,7 @@ public class Log {
 
                     if (ex instanceof IllegalStateException &&
                             (no_internet.equals(ex.getMessage()) ||
+                                    "Token refreshed".equals(ex.getMessage()) ||
                                     "Not connected".equals(ex.getMessage()) ||
                                     "This operation is not allowed on a closed folder".equals(ex.getMessage())))
                         return false;
@@ -1447,6 +1448,10 @@ public class Log {
                     ex.getCause() instanceof SocketException)
                 return null;
 
+            if (ex instanceof ProtocolException &&
+                    ex.getCause() instanceof InterruptedException)
+                return null; // Interrupted waitIfIdle
+
             if (ex instanceof MessagingException &&
                     ("Not connected".equals(ex.getMessage()) || // POP3
                             "connection failure".equals(ex.getMessage()) ||
@@ -1500,7 +1505,8 @@ public class Log {
                 return null;
 
             if (ex instanceof IllegalStateException &&
-                    ("Not connected".equals(ex.getMessage()) ||
+                    ("Token refreshed".equals(ex.getMessage()) ||
+                            "Not connected".equals(ex.getMessage()) ||
                             "This operation is not allowed on a closed folder".equals(ex.getMessage())))
                 return null;
         }
@@ -1959,9 +1965,10 @@ public class Log {
 
             size += write(os, "accounts=" + accounts.size() +
                     " enabled=" + enabled +
-                    " interval=" + pollInterval +
-                    "\r\nmetered=" + metered +
+                    " interval=" + pollInterval + "\r\n" +
+                    " metered=" + metered +
                     " VPN=" + ConnectionHelper.vpnActive(context) +
+                    " NetGuard=" + Helper.isInstalled(context, "eu.faircode.netguard") + "\r\n" +
                     " optimizing=" + (ignoring == null ? null : !ignoring) +
                     " auto_optimize=" + auto_optimize +
                     "\r\n\r\n");

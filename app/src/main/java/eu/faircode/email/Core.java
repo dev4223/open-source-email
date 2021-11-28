@@ -149,7 +149,8 @@ class Core {
     private static final int DOWNLOAD_YIELD_COUNT = 25;
     private static final long DOWNLOAD_YIELD_DURATION = 1000; // milliseconds
     private static final long YIELD_DURATION = 200L; // milliseconds
-    private static final long JOIN_WAIT = 180 * 1000L; // milliseconds
+    private static final long JOIN_WAIT_ALIVE = 5 * 60 * 1000L; // milliseconds
+    private static final long JOIN_WAIT_INTERRUPT = 1 * 60 * 1000L; // milliseconds
     private static final long FUTURE_RECEIVED = 30 * 24 * 3600 * 1000L; // milliseconds
     private static final int LOCAL_RETRY_MAX = 2;
     private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
@@ -815,6 +816,9 @@ class Core {
         // Mark message (un)seen
         DB db = DB.getInstance(context);
 
+        if (folder.read_only)
+            return;
+
         if (!ifolder.getPermanentFlags().contains(Flags.Flag.SEEN)) {
             db.message().setMessageSeen(message.id, false);
             db.message().setMessageUiSeen(message.id, false);
@@ -845,6 +849,9 @@ class Core {
     private static void onFlag(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, JSONException, IOException {
         // Star/unstar message
         DB db = DB.getInstance(context);
+
+        if (folder.read_only)
+            return;
 
         if (!ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED)) {
             db.message().setMessageFlagged(message.id, false);
@@ -879,6 +886,9 @@ class Core {
         // Mark message (un)answered
         DB db = DB.getInstance(context);
 
+        if (folder.read_only)
+            return;
+
         if (!ifolder.getPermanentFlags().contains(Flags.Flag.ANSWERED)) {
             db.message().setMessageAnswered(message.id, false);
             db.message().setMessageUiAnswered(message.id, false);
@@ -905,6 +915,7 @@ class Core {
     private static void onKeyword(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, JSONException {
         // Set/reset user flag
         // https://tools.ietf.org/html/rfc3501#section-2.3.2
+
         String keyword = jargs.getString(0);
         boolean set = jargs.getBoolean(1);
 
@@ -914,14 +925,9 @@ class Core {
         if (message.uid == null)
             throw new IllegalArgumentException("keyword/uid");
 
-        if (!ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
-            if (MessageHelper.FLAG_FORWARDED.equals(keyword) && false) {
-                JSONArray janswered = new JSONArray();
-                janswered.put(true);
-                onAnswered(context, janswered, folder, message, ifolder);
-            }
+        if (folder.read_only ||
+                !ifolder.getPermanentFlags().contains(Flags.Flag.USER))
             return;
-        }
 
         Message imessage = ifolder.getMessageByUID(message.uid);
         if (imessage == null)
@@ -3941,7 +3947,8 @@ class Core {
                 }
             }
 
-            if ((!message.seen.equals(seen) || !message.ui_seen.equals(seen)) &&
+            if ((!message.seen.equals(seen) ||
+                    (!folder.read_only && !message.ui_seen.equals(seen))) &&
                     db.operation().getOperationCount(folder.id, message.id, EntityOperation.SEEN) == 0) {
                 update = true;
                 message.seen = seen;
@@ -3952,7 +3959,8 @@ class Core {
                 syncSimilar = true;
             }
 
-            if ((!message.answered.equals(answered) || !message.ui_answered.equals(message.answered)) &&
+            if ((!message.answered.equals(answered) ||
+                    (!folder.read_only && !message.ui_answered.equals(message.answered))) &&
                     db.operation().getOperationCount(folder.id, message.id, EntityOperation.ANSWERED) == 0) {
                 update = true;
                 message.answered = answered;
@@ -3961,7 +3969,8 @@ class Core {
                 syncSimilar = true;
             }
 
-            if ((!message.flagged.equals(flagged) || !message.ui_flagged.equals(flagged)) &&
+            if ((!message.flagged.equals(flagged) ||
+                    (!folder.read_only && !message.ui_flagged.equals(flagged))) &&
                     db.operation().getOperationCount(folder.id, message.id, EntityOperation.FLAG) == 0) {
                 update = true;
                 message.flagged = flagged;
@@ -3988,6 +3997,7 @@ class Core {
             }
 
             if (!Helper.equal(message.keywords, keywords) &&
+                    !folder.read_only &&
                     ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
                 update = true;
                 message.keywords = keywords;
@@ -4218,6 +4228,8 @@ class Core {
             EntityAccount account, EntityFolder folder, EntityMessage message,
             List<EntityRule> rules) {
 
+        if (account.protocol == EntityAccount.TYPE_IMAP && folder.read_only)
+            return;
         if (!ActivityBilling.isPro(context))
             return;
 
@@ -5000,6 +5012,26 @@ class Core {
                 wactions.add(actionTrash.build());
             }
 
+            if (notify_trash &&
+                    message.accountProtocol == EntityAccount.TYPE_POP &&
+                    message.accountLeaveDeleted) {
+                Intent delete = new Intent(context, ServiceUI.class)
+                        .setAction("delete:" + message.id)
+                        .putExtra("group", group);
+                PendingIntent piDelete = PendingIntentCompat.getService(
+                        context, ServiceUI.PI_DELETE, delete, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionDelete = new NotificationCompat.Action.Builder(
+                        R.drawable.twotone_delete_forever_24,
+                        context.getString(R.string.title_advanced_notify_action_trash),
+                        piDelete)
+                        .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
+                        .setShowsUserInterface(false)
+                        .setAllowGeneratedReplies(false);
+                mbuilder.addAction(actionDelete.build());
+
+                wactions.add(actionDelete.build());
+            }
+
             if (notify_junk &&
                     message.accountProtocol == EntityAccount.TYPE_IMAP &&
                     db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null) {
@@ -5492,17 +5524,18 @@ class Core {
                 try {
                     Log.i("Joining " + name +
                             " alive=" + thread.isAlive() +
-                            " state=" + thread.getState());
+                            " state=" + thread.getState() +
+                            " interrupted=" + interrupted);
 
-                    thread.join(JOIN_WAIT);
+                    thread.join(interrupted ? JOIN_WAIT_INTERRUPT : JOIN_WAIT_ALIVE);
 
                     // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.State.html
                     Thread.State state = thread.getState();
                     if (thread.isAlive()) {
+                        Log.e("Join " + name + " failed" +
+                                " state=" + state + " interrupted=" + interrupted);
                         if (interrupted)
-                            Log.w("Join " + name + " failed state=" + state + " interrupted=" + interrupted);
-                        if (interrupted)
-                            joined = true; // give up
+                            joined = true; // giving up
                         else {
                             thread.interrupt();
                             interrupted = true;
@@ -5512,7 +5545,7 @@ class Core {
                         joined = true;
                     }
                 } catch (InterruptedException ex) {
-                    Log.w(thread.getName() + " join " + ex.toString());
+                    Log.e(new Throwable(name, ex));
                 }
         }
 

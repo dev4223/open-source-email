@@ -117,6 +117,7 @@
     <string name="title_edit_account">Redigér konto</string>
     <string name="title_edit_identity">Redigér identitet</string>
     <string name="title_edit_folder">Redigér mappe</string>
+    <string name="title_disable_gmail">Deaktivér Gmail-app</string>
     <string name="title_setup">Indstillinger</string>
     <string name="title_setup_help">Hjælp</string>
     <string name="title_setup_quick">Hurtig opsætning</string>
@@ -462,7 +463,8 @@
     <string name="title_advanced_autounstar">Fjern automatisk stjerner fra beskeder, når de flyttes</string>
     <string name="title_advanced_auto_important">Gør automatisk stjernemarkerede beskeder vigtige</string>
     <string name="title_advanced_reset_importance">Nulstil vigtighed, når beskeder flyttes</string>
-    <string name="title_advanced_default_snooze">Standard udsættelsestid</string>
+    <string name="title_advanced_swipe_reply">Stryg udvidede beskeder til højre for at besvare</string>
+    <string name="title_advanced_default_snooze">Standard slumre-/forsinkelsestid</string>
     <string name="title_advanced_notifications">Håndtér notifikationer</string>
     <string name="title_advanced_notifications_default">Standardkanal</string>
     <string name="title_advanced_notifications_service">Modtagekanal</string>
@@ -582,10 +584,11 @@
     <string name="title_advanced_sync_delay_hint">Dette vil forøge beskedsynkroniseringstiden</string>
     <string name="title_advanced_suggest_names_hint">Hvis deaktiveret, bruges kun e-mailadresser ved valg af kontakter</string>
     <string name="title_advanced_suggest_local_hint">Ud over kontakter fra Android. Kontaktdata gemmes kun for nyligt afsendte eller modtagne beskeder, når aktiveret.</string>
-    <string name="title_advanced_usenet_hint">Indsæt \'-- \' mellem teksten og signaturen</string>
     <string name="title_advanced_send_reminders_hint">Vis en advarsel, når beskedtekst eller emne er tomt, eller en vedhæftet fil muligvis mangler</string>
     <string name="title_advanced_reply_all_hint">Hvis deaktiveret, vil langt tryk på Besvar-knappen svare afsenderen</string>
     <string name="title_advanced_reply_move_hint">E-mailserveren kan dog stadig føje beskederne til beskedafsendelsesmappen</string>
+    <string name="title_advanced_usenet_hint">Indsæt \'-- \' mellem teksten og signaturen</string>
+    <string name="title_advanced_remove_signature_hint">Dette kan resultere i, at for lidt/meget tekst fjernes</string>
     <string name="title_advanced_metered_hint">Forbrugsbaserede forbindelser er typisk mobildataforbindelser eller betalte Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Deaktivering af denne indstilling vil ikke gøre det muligt at modtage og sende meddelelser på mobildataforbindelser</string>
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
@@ -859,6 +862,7 @@
     <string name="title_no_messages">Ingen beskeder</string>
     <string name="title_filters_active">Ét eller flere filtre er aktive</string>
     <string name="title_duplicate_in">Dubletbeskeder i %1$s</string>
+    <string name="title_trashed_from">Slettede beskeder fra %1$s</string>
     <string name="title_subject_reply">Sv: %1$s</string>
     <string name="title_subject_forward">Vs: %1$s</string>
     <string name="title_subject_reply_alt">Sv: %1$s</string>
@@ -1201,6 +1205,7 @@
     <string name="title_filter_unknown">Ukendte afsendere</string>
     <string name="title_filter_hidden">Skjult</string>
     <string name="title_filter_duplicates">Dubletter</string>
+    <string name="title_filter_trash">Slettet</string>
     <string name="title_compact">Kompaktvisning</string>
     <string name="title_zoom">Tekststørrelse</string>
     <string name="title_padding">Fyldstørrelse</string>
@@ -1480,6 +1485,7 @@
     <string name="title_snooze_now">Udsæt</string>
     <string name="title_loading">Indlæser &#8230;</string>
     <string name="title_fetching_again">Henter beskeder igen fra server</string>
+    <string name="title_go_back">Gå tilbage</string>
     <string name="title_conversation_actions">Handlinger</string>
     <string name="title_conversation_action_reply">Svar med: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Kopiér: \'%1$s\'</string>

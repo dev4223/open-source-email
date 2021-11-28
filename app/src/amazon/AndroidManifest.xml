@@ -74,6 +74,10 @@
         <package android:name="org.sufficientlysecure.keychain" />
         <package android:name="org.sufficientlysecure.keychain.debug" />
 
+        <package android:name="eu.faircode.netguard" />
+
+        <package android:name="com.google.android.gm" />
+
         <intent>
             <action android:name="org.openintents.openpgp.IOpenPgpService2" />
         </intent>

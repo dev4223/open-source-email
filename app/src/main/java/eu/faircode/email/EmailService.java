@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.security.KeyChain;
 import android.system.ErrnoException;
+import android.system.OsConstants;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -44,10 +45,13 @@ import com.sun.mail.util.MailConnectException;
 import com.sun.mail.util.SocketConnectException;
 import com.sun.mail.util.TraceOutputStream;
 
+import org.json.JSONException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -112,6 +116,7 @@ public class EmailService implements AutoCloseable {
     private Session isession;
     private Service iservice;
     private StoreListener listener;
+    private ServiceAuthenticator authenticator;
 
     private ExecutorService executor = Helper.getBackgroundExecutor(0, "mail");
 
@@ -323,8 +328,9 @@ public class EmailService implements AutoCloseable {
                     @Override
                     public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
-                        int accounts = db.account().setAccountPassword(account.id, newPassword);
-                        int identities = db.identity().setIdentityPassword(account.id, account.user, newPassword, account.auth_type);
+                        account.password = newPassword;
+                        int accounts = db.account().setAccountPassword(account.id, account.password);
+                        int identities = db.identity().setIdentityPassword(account.id, account.user, account.password, account.auth_type);
                         EntityLog.log(context, EntityLog.Type.Account, account,
                                 "token refreshed=" + accounts + "/" + identities);
                     }
@@ -341,7 +347,8 @@ public class EmailService implements AutoCloseable {
                     @Override
                     public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
-                        int count = db.identity().setIdentityPassword(identity.id, newPassword);
+                        identity.password = newPassword;
+                        int count = db.identity().setIdentityPassword(identity.id, identity.password);
                         EntityLog.log(context, EntityLog.Type.Account, identity.account, null, null,
                                 identity.email + " token refreshed=" + count);
 
@@ -407,7 +414,7 @@ public class EmailService implements AutoCloseable {
         }
 
         properties.put("mail." + protocol + ".forcepasswordrefresh", "true");
-        ServiceAuthenticator authenticator = new ServiceAuthenticator(context,
+        authenticator = new ServiceAuthenticator(context,
                 auth, provider, keep_alive, user, password, intf);
 
         if ("imap.wp.pl".equals(host))
@@ -423,7 +430,7 @@ public class EmailService implements AutoCloseable {
             if (auth == AUTH_TYPE_OAUTH && "imap.mail.yahoo.com".equals(host))
                 properties.put("mail." + protocol + ".yahoo.guid", "FAIRMAIL_V1");
 
-            connect(host, port, auth, user, authenticator, factory);
+            connect(host, port, auth, user, factory);
         } catch (AuthenticationFailedException ex) {
             //if ("outlook.office365.com".equals(host) &&
             //        "AUTHENTICATE failed.".equals(ex.getMessage()))
@@ -435,7 +442,7 @@ public class EmailService implements AutoCloseable {
             if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OAUTH) {
                 try {
                     authenticator.refreshToken(true);
-                    connect(host, port, auth, user, authenticator, factory);
+                    connect(host, port, auth, user, factory);
                 } catch (Exception ex1) {
                     Log.e(ex1);
                     throw new AuthenticationFailedException(
@@ -487,8 +494,7 @@ public class EmailService implements AutoCloseable {
     }
 
     private void connect(
-            String host, int port, int auth,
-            String user, Authenticator authenticator,
+            String host, int port, int auth, String user,
             SSLSocketFactoryService factory) throws MessagingException {
         InetAddress main = null;
         boolean require_id = (purpose == PURPOSE_CHECK &&
@@ -531,10 +537,56 @@ public class EmailService implements AutoCloseable {
                 }
 
             EntityLog.log(context, "Connecting to " + main);
-            _connect(main, port, require_id, user, authenticator, factory);
+            _connect(main, port, require_id, user, factory);
         } catch (UnknownHostException ex) {
             throw new MessagingException(ex.getMessage(), ex);
         } catch (MessagingException ex) {
+            /*
+                com.sun.mail.util.MailConnectException: Couldn't connect to host, port: 74.125.140.108, 993; timeout 20000;
+                  nested exception is:
+                    java.net.ConnectException: failed to connect to imap.gmail.com/74.125.140.108 (port 993) from /:: (port 0) after 20000ms: connect failed: EACCES (Permission denied)
+                    at com.sun.mail.imap.IMAPStore.protocolConnect(SourceFile:38)
+                    at com.sun.mail.gimap.GmailStore.protocolConnect(SourceFile:1)
+                    at javax.mail.Service.connect(SourceFile:31)
+                    at eu.faircode.email.EmailService._connect(SourceFile:29)
+                    at eu.faircode.email.EmailService.connect(SourceFile:117)
+                    at eu.faircode.email.EmailService.connect(SourceFile:38)
+                    at eu.faircode.email.EmailService.connect(SourceFile:4)
+                    at eu.faircode.email.ServiceSynchronize.monitorAccount(SourceFile:38)
+                    at eu.faircode.email.ServiceSynchronize.access$1000(SourceFile:1)
+                    at eu.faircode.email.ServiceSynchronize$4$2.run(SourceFile:1)
+                    at java.lang.Thread.run(Thread.java:923)
+                Caused by: java.net.ConnectException: failed to connect to imap.gmail.com/74.125.140.108 (port 993) from /:: (port 0) after 20000ms: connect failed: EACCES (Permission denied)
+                    at libcore.io.IoBridge.connect(IoBridge.java:142)
+                    at java.net.PlainSocketImpl.socketConnect(PlainSocketImpl.java:142)
+                    at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:390)
+                    at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:230)
+                    at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:212)
+                    at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:436)
+                    at java.net.Socket.connect(Socket.java:621)
+                    at com.sun.mail.util.WriteTimeoutSocket.connect(SourceFile:2)
+                    at com.sun.mail.util.SocketFetcher.createSocket(SourceFile:52)
+                    at com.sun.mail.util.SocketFetcher.getSocket(SourceFile:27)
+                    at com.sun.mail.iap.Protocol.<init>(SourceFile:10)
+                    at com.sun.mail.imap.protocol.IMAPProtocol.<init>(SourceFile:1)
+                    at com.sun.mail.gimap.protocol.GmailProtocol.<init>(SourceFile:1)
+                    at com.sun.mail.gimap.GmailStore.newIMAPProtocol(SourceFile:2)
+                    at com.sun.mail.imap.IMAPStore.protocolConnect(SourceFile:17)
+                    ... 10 more
+                Caused by: android.system.ErrnoException: connect failed: EACCES (Permission denied)
+                    at libcore.io.Linux.connect(Native Method)
+                    at libcore.io.ForwardingOs.connect(ForwardingOs.java:94)
+                    at libcore.io.BlockGuardOs.connect(BlockGuardOs.java:138)
+                    at libcore.io.ForwardingOs.connect(ForwardingOs.java:94)
+                    at libcore.io.IoBridge.connectErrno(IoBridge.java:173)
+                    at libcore.io.IoBridge.connect(IoBridge.java:134)
+             */
+            if (ex instanceof MailConnectException &&
+                    ex.getCause() instanceof ConnectException &&
+                    ex.getCause().getCause() instanceof ErrnoException &&
+                    ((ErrnoException) ex.getCause().getCause()).errno == OsConstants.EACCES)
+                throw new SecurityException("Please check 'Restrict data usage' in the Android app settings", ex);
+
             boolean ioError = false;
             Throwable ce = ex;
             while (ce != null) {
@@ -605,7 +657,7 @@ public class EmailService implements AutoCloseable {
 
                         try {
                             EntityLog.log(context, "Falling back to " + iaddr);
-                            _connect(iaddr, port, require_id, user, authenticator, factory);
+                            _connect(iaddr, port, require_id, user, factory);
                             return;
                         } catch (MessagingException ex1) {
                             ex = ex1;
@@ -623,8 +675,7 @@ public class EmailService implements AutoCloseable {
     }
 
     private void _connect(
-            InetAddress address, int port, boolean require_id,
-            String user, Authenticator authenticator,
+            InetAddress address, int port, boolean require_id, String user,
             SSLSocketFactoryService factory) throws MessagingException {
         isession = Session.getInstance(properties, authenticator);
 
@@ -806,6 +857,10 @@ public class EmailService implements AutoCloseable {
             return false;
     }
 
+    public void check() {
+        authenticator.checkToken();
+    }
+
     public boolean isOpen() {
         return (iservice != null && iservice.isConnected());
     }
@@ -814,6 +869,8 @@ public class EmailService implements AutoCloseable {
         try {
             if (iservice != null && iservice.isConnected())
                 iservice.close();
+            if (authenticator != null)
+                authenticator = null;
         } finally {
             context = null;
         }

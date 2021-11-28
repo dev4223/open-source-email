@@ -2,7 +2,38 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Caudipteryx](https://en.wikipedia.org/wiki/Caudipteryx)
+
+### 1.1782 - 2021-11-27
+
+* Added optional set importance button
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1781 - 2021-11-23
+
+* Added behavior option to enable swipe right to reply
+* Added separate sort order setting for unified folders
+* Updated AndroidX
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### [Banji](https://en.wikipedia.org/wiki/Banji)
+
+### 1.1780 - 2021-11-15
+
+* Fixed empty lines in message headers
+* Improved handling of read-only folders
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1779 - 2021-11-13
+
+* Added using folder colors for Gmail labels
+* Added highlighting of searched text in messages
+* Added filter for trashed messages in conversations
+* Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.1778 - 2021-11-11
 

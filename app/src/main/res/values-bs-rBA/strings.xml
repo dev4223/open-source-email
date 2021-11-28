@@ -127,6 +127,7 @@
     <string name="title_edit_account">Uredi račun</string>
     <string name="title_edit_identity">Uredi identitet</string>
     <string name="title_edit_folder">Uredi folder</string>
+    <string name="title_disable_gmail">Onemogući Gmail aplikaciju</string>
     <string name="title_setup">Postavke</string>
     <string name="title_setup_help">Pomoć</string>
     <string name="title_setup_quick">Brzo podešavanje</string>
@@ -475,7 +476,8 @@
     <string name="title_advanced_autounstar">Automatski ukloni zvjezdicu s poruka pri premještanju istih</string>
     <string name="title_advanced_auto_important">Automatski označi poruke sa zvjezdicom kao važne</string>
     <string name="title_advanced_reset_importance">Resetuj važnost pri premještanju poruka</string>
-    <string name="title_advanced_default_snooze">Zadano vrijeme odgađanja</string>
+    <string name="title_advanced_swipe_reply">Prstom prevucite proširene poruke na desno za odgovor</string>
+    <string name="title_advanced_default_snooze">Zadano vrijeme odlaganja/odgađanja</string>
     <string name="title_advanced_notifications">Upravljaj obavještenjima</string>
     <string name="title_advanced_notifications_default">Zadani kanal</string>
     <string name="title_advanced_notifications_service">Prijemni kanal</string>
@@ -596,10 +598,11 @@
     <string name="title_advanced_sync_delay_hint">Ovo će usporiti sinhronizaciju poruka</string>
     <string name="title_advanced_suggest_names_hint">Ako je isključeno, koristit će se samo e-mail adrese pri izboru kontakata</string>
     <string name="title_advanced_suggest_local_hint">Pored kontakata koje pruža Android. Kontaktni podaci bit će čuvani za nove poslane ili primljene poruke samo kada je opcija uključena.</string>
-    <string name="title_advanced_usenet_hint">Ubaci \'-- \' između teksta i potpisa</string>
     <string name="title_advanced_send_reminders_hint">Prikazuje upozorenje kada su tekst poruke ili predmet prazni ili kada nedostaje prilog</string>
     <string name="title_advanced_reply_all_hint">Ako je isključeno, dugim dodirom na dugme \'odgovori\' ćete odgovoriti pošiljaocu</string>
     <string name="title_advanced_reply_move_hint">E-mail server još može dodavati poruke u folder za poslane poruke</string>
+    <string name="title_advanced_usenet_hint">Ubaci \'-- \' između teksta i potpisa</string>
+    <string name="title_advanced_remove_signature_hint">Ovo može rezultirati premalim ili prevelikim uklanjanjem teksta</string>
     <string name="title_advanced_metered_hint">Konekcije \'s ograničenim paketom\' su općenito mobilne konekcije ili plaćeni Wi-Fi hotspot-ovi</string>
     <string name="title_advanced_metered_warning">Isključivanje ove opcije će zaustaviti prijem i slanje poruka na mobilnim internet konekcijama</string>
     <string name="title_advanced_rlah_hint">Pretpostavka da nema roaminga unutar EU</string>
@@ -876,6 +879,7 @@
     <string name="title_no_messages">Nema poruka</string>
     <string name="title_filters_active">Jedan ili više filtera je aktivno</string>
     <string name="title_duplicate_in">Dupliciraj poruku u %1$s</string>
+    <string name="title_trashed_from">Izbrisana poruka od %1$s</string>
     <string name="title_subject_reply">Odg: %1$s</string>
     <string name="title_subject_forward">Pro: %1$s</string>
     <string name="title_subject_reply_alt">Odg: %1$s</string>
@@ -1218,6 +1222,7 @@
     <string name="title_filter_unknown">Nepoznati pošiljaoci</string>
     <string name="title_filter_hidden">Skrivenom</string>
     <string name="title_filter_duplicates">Duplikati</string>
+    <string name="title_filter_trash">Otpad</string>
     <string name="title_compact">Kompaktni izgled</string>
     <string name="title_zoom">Veličina teksta</string>
     <string name="title_padding">Veličina razmaka</string>
@@ -1498,6 +1503,7 @@
     <string name="title_snooze_now">Odgodi</string>
     <string name="title_loading">Učitavanje &#8230;</string>
     <string name="title_fetching_again">Ponovno dohvatanje poruka sa servera</string>
+    <string name="title_go_back">Idi nazad</string>
     <string name="title_conversation_actions">Radnje</string>
     <string name="title_conversation_action_reply">Odgovori koristeći: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Kopiraj: \'%1$s\'</string>
