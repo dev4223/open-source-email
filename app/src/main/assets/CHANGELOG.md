@@ -4,6 +4,20 @@
 
 ### [Caudipteryx](https://en.wikipedia.org/wiki/Caudipteryx)
 
+### Next version
+
+* Added display option to override widths in original message view
+* Small improvements and minor bug fixes
+
+### 1.1783 - 2021-12-02
+
+* Added display option to use highlight color for unread shadow
+* Added display option for wide color stripe
+* Added notification/delete for POP3 when "leave deleted" is enabled
+* Improved support for read-only folders
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### 1.1782 - 2021-11-27
 
 * Added optional set importance button

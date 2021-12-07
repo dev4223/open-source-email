@@ -367,6 +367,7 @@
     <string name="title_advanced_cards_beige">Μπεζ φόντο κατά τη χρήση του στιλ κάρτας (ανοιχτόχρωμα θέματα μόνο)</string>
     <string name="title_advanced_tabular_background">Να χρησιμοποιείται το χρώμα της κάρτας ως χρώμα φόντου κατά τη χρήση του στιλ πίνακα</string>
     <string name="title_advanced_cards_shadow">Σκίαση μη αναγνωσμένων μηνυμάτων κατά τη χρήση στιλ κάρτας</string>
+    <string name="title_advanced_cards_shadow_highlight">Χρήση του χρώματος επισήμανσης αντί του χρώματος έμφασης</string>
     <string name="title_advanced_date_header">Ομαδοποίηση κατά ημερομηνία</string>
     <string name="title_advanced_date_fixed">Προβολή κεφαλίδας σταθερής ημερομηνίας στην κορυφή</string>
     <string name="title_advanced_date_bold">Προβολή ημερομηνίας με έντονους χαρακτήρες</string>
@@ -375,6 +376,7 @@
     <string name="title_advanced_indentation">Αριστερή/δεξιά εσοχή ειλημμένων/απεσταλμένων μηνυμάτων στις συζητήσεις</string>
     <string name="title_advanced_highlight_unread">Να επισημαίνονται τα μη αναγνωσμένα μηνύματα</string>
     <string name="title_advanced_color_stripe">Προβολή χρωματιστής λωρίδας</string>
+    <string name="title_advanced_color_stripe_wide">Χρήση φαρδιάς λωρίδας χρώματος</string>
     <string name="title_advanced_avatars">Προβολή φωτογραφιών επαφών</string>
     <string name="title_advanced_gravatars">Προβολή Gravatar</string>
     <string name="title_advanced_bimi_unverified">Μη επαληθευμένος αποστολέας</string>
@@ -412,6 +414,7 @@
     <string name="title_advanced_thumbnails">Να προβάλλονται οι μικρογραφίες μετά από το κείμενο του μηνύματος</string>
     <string name="title_advanced_message_text_zoom2">Μεγέθυνση κειμένου μηνύματος από προεπιλογή: %1$s %%</string>
     <string name="title_advanced_overview_mode">Μεγέθυνση αρχικού μηνύματος για προσαρμογή στην οθόνη</string>
+    <string name="title_advanced_override_width">Να απενεργοποιηθούν τα σταθερά πλάτη στα αρχικά μηνύματα</string>
     <string name="title_advanced_contrast">Χρήση υψηλής αντίθεσης για το κείμενο του μηνύματος</string>
     <string name="title_advanced_monospaced">Χρήση γραμματοσειράς σταθερού πλάτους από προεπιλογή</string>
     <string name="title_advanced_monospaced_pre">Χρήση γραμματοσειράς σταθερού πλάτους για προ-μορφοποιημένο κείμενο</string>
@@ -484,6 +487,7 @@
     <string name="title_advanced_notify_preview_only">Προβολή ειδοποιήσεων μόνο με ένα κείμενο προεπισκόπησης</string>
     <string name="title_advanced_notify_actions">Ενέργειες ειδοποιήσεων</string>
     <string name="title_advanced_notify_action_trash">Απορρίμματα</string>
+    <string name="title_advanced_notify_action_delete">Διαγραφή</string>
     <string name="title_advanced_notify_action_junk">Ανεπιθύμητα</string>
     <string name="title_advanced_notify_action_archive">Αρχειοθέτηση</string>
     <string name="title_advanced_notify_action_move">Μετακίνηση</string>
@@ -608,13 +612,14 @@
     <string name="title_advanced_navbar_colorize_hint">Το αν αυτό λειτουργεί ή όχι, εξαρτάται από την έκδοση και εκδοχή του Android</string>
     <string name="title_advanced_split_hint">Θα χωρίσει την οθόνη σε μέρη</string>
     <string name="title_advanced_threading_hint">Ομαδοποίηση των μηνυμάτων που σχετίζονται αναμεταξύ τους</string>
-    <string name="title_advanced_highlight_hint">Το χρώμα επισήμανσης του θέματος θα χρησιμοποιηθεί για έμφαση</string>
+    <string name="title_advanced_highlight_hint">Το χρώμα έμφασης του θέματος θα χρησιμοποιηθεί για την επισήμανση</string>
     <string name="title_advanced_gravatars_hint">Το προσωπικό σας απόρρητο μπορεί να τεθεί σε κίνδυνο</string>
     <string name="title_advanced_name_email_hint">Τα ονόματα θα εμφανίζονται μόνον όταν είναι διαθέσιμα</string>
     <string name="title_advanced_preview_hint">Διαθέσιμο μόνον εφόσον το κείμενο του μηνύματος έχει κατέβει</string>
     <string name="title_advanced_preview_lines_hint">Μέγιστο %s χαρακτήρες συνολικά</string>
     <string name="title_advanced_preview_issue">Η κύλιση ενδέχεται να καθυστερεί εξαιτίας ενός σφάλματος σε ορισμένες εκδόσεις του Android, όταν ο αριθμός των σειρών υπερβαίνει τη μία</string>
     <string name="title_advanced_overview_mode_hint">Μπορεί να προκαλέσει πολύ μικρές γραμματοσειρές</string>
+    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">Αυτό μπορεί να κάνει τα μηνύματα να προβάλλονται πιο στενά, αλλά και κάπως παράξενα</string>
     <string name="title_advanced_placeholders_hint">Εφαρμόζεται μόνον στα αναμορφοποιημένα μηνύματα</string>
     <string name="title_advanced_inline_hint">Οι ένθετες εικόνες είναι οι εικόνες που περιλαμβάνονται στο μήνυμα</string>
     <string name="title_advanced_parse_classes_hint">Η προβολή των εικόνων θα είναι πιο ακριβής αλλά με ενδεχόμενη καθυστέρηση</string>

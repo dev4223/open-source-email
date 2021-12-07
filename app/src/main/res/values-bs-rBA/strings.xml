@@ -377,6 +377,7 @@
     <string name="title_advanced_cards_beige">Koristi bež pozadinu kada se koristi kartični stil (samo kod svijetlih tema)</string>
     <string name="title_advanced_tabular_background">Koristi boju kartice kao pozadinsku boju kada se koristi tabelarni stil</string>
     <string name="title_advanced_cards_shadow">Koristi sjenku za nepročitane poruke u kartičnom stilu</string>
+    <string name="title_advanced_cards_shadow_highlight">Koristi boju markiranja umjesto boje naglašavanja</string>
     <string name="title_advanced_date_header">Grupiši po datumu</string>
     <string name="title_advanced_date_fixed">Prikaži na vrhu fiksno zaglavlje s datumom</string>
     <string name="title_advanced_date_bold">Prikaži datum podebljan</string>
@@ -385,6 +386,7 @@
     <string name="title_advanced_indentation">Lijevo/desno poravnanje primljenih/poslanih poruka u konverzacijama</string>
     <string name="title_advanced_highlight_unread">Markiraj nepročitane poruke</string>
     <string name="title_advanced_color_stripe">Prikaži obojene pruge</string>
+    <string name="title_advanced_color_stripe_wide">Koristi široku traku s bojama</string>
     <string name="title_advanced_avatars">Prikaži fotografije kontakata</string>
     <string name="title_advanced_gravatars">Prikaži gravatare</string>
     <string name="title_advanced_bimi_unverified">Nepotvrđeni pošiljalac</string>
@@ -422,6 +424,7 @@
     <string name="title_advanced_thumbnails">Prikaži sličice fotografija poslije teksta poruke</string>
     <string name="title_advanced_message_text_zoom2">Zadani nivo zumiranja teksta: %1$s %%</string>
     <string name="title_advanced_overview_mode">Zumiraj originalne poruke da popune ekran</string>
+    <string name="title_advanced_override_width">Onemogući fiksne širine u izvornim porukama</string>
     <string name="title_advanced_contrast">Koristi visoki kontrast za tekst poruke</string>
     <string name="title_advanced_monospaced">Koristi po zadanom font jednake širine (monospace) za tekst poruke</string>
     <string name="title_advanced_monospaced_pre">Koristi font jednake širine za preformatirani tekst</string>
@@ -494,6 +497,7 @@
     <string name="title_advanced_notify_preview_only">Prikaži obavještenja samo sa pregledom poruka</string>
     <string name="title_advanced_notify_actions">Radnje za obavještenja</string>
     <string name="title_advanced_notify_action_trash">Otpad</string>
+    <string name="title_advanced_notify_action_delete">Izbriši</string>
     <string name="title_advanced_notify_action_junk">Spam</string>
     <string name="title_advanced_notify_action_archive">Arhiv</string>
     <string name="title_advanced_notify_action_move">Premjesti</string>
@@ -626,6 +630,7 @@
     <string name="title_advanced_preview_lines_hint">Maksimalno %s znak(ov)a ukupno</string>
     <string name="title_advanced_preview_issue">Pomjeranje može biti sporo zbog greške u nekim verzijama Androida kada je broj linija veći od jedan</string>
     <string name="title_advanced_overview_mode_hint">Ovo može rezultirati u jako malim fontovima</string>
+    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">Ovo ne samo da čini poruke užima, nego i čudnog izgleda</string>
     <string name="title_advanced_placeholders_hint">Ovo se primjenjuje samo na preformatirane poruke</string>
     <string name="title_advanced_inline_hint">Poravnate slike su slike unutar tijela poruke</string>
     <string name="title_advanced_parse_classes_hint">Ovo će preciznije prikazivati poruke, ali vjerovatno sa kašnjenjem</string>

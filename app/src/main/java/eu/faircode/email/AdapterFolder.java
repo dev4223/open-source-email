@@ -100,6 +100,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     private int dp12;
     private float textSize;
+    private int colorStripeWidth;
     private int textColorPrimary;
     private int textColorSecondary;
     private int colorUnread;
@@ -185,6 +186,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             grpFlagged = itemView.findViewById(R.id.grpFlagged);
             grpExtended = itemView.findViewById(R.id.grpExtended);
+
+            if (vwColor != null)
+                vwColor.getLayoutParams().width = colorStripeWidth;
         }
 
         private void wire() {
@@ -1033,7 +1037,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 private void onActionExecuteRules() {
                     Bundle args = new Bundle();
                     args.putString("question", context.getString(R.string.title_execute_rules));
-                    args.putLong("folder", folder.id);
+                    args.putLong("id", folder.id);
 
                     FragmentDialogAsk ask = new FragmentDialogAsk();
                     ask.setArguments(args);
@@ -1164,6 +1168,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         this.dp12 = Helper.dp2pixels(context, 12);
         this.textSize = Helper.getTextSize(context, zoom);
+        boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
+        this.colorStripeWidth = Helper.dp2pixels(context, color_stripe_wide ? 12 : 6);
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
 

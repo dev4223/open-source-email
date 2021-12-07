@@ -228,12 +228,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private int colorPrimary;
     private int colorPrimaryDark;
-
+    private int colorStripeWidth;
     private int colorAccent;
     private int textColorPrimary;
     private int textColorSecondary;
     private int textColorTertiary;
     private int textColorLink;
+    private int colorUnreadHighlight;
     private int colorUnread;
     private int colorSubject;
     private int colorRead;
@@ -252,6 +253,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean date;
     private boolean cards;
     private boolean shadow_unread;
+    private boolean shadow_highlight;
     private boolean threading;
     private boolean threading_unread;
     private boolean indentation;
@@ -675,6 +677,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibHelp = itemView.findViewById(R.id.ibHelp);
             ibSettings = itemView.findViewById(R.id.ibSettings);
 
+            if (vwColor != null)
+                vwColor.getLayoutParams().width = colorStripeWidth;
+
             if (tvFrom != null) {
                 if (compact) {
                     boolean full = "full".equals(sender_ellipsize);
@@ -947,6 +952,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibTranslate.setOnLongClickListener(this);
                 ibForceLight.setOnClickListener(this);
                 ibImportance.setOnClickListener(this);
+                ibImportance.setOnLongClickListener(this);
                 ibHide.setOnClickListener(this);
                 ibSeen.setOnClickListener(this);
                 ibAnswer.setOnClickListener(this);
@@ -1046,6 +1052,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibTranslate.setOnLongClickListener(null);
                 ibForceLight.setOnClickListener(null);
                 ibImportance.setOnClickListener(null);
+                ibImportance.setOnLongClickListener(null);
                 ibHide.setOnClickListener(null);
                 ibSeen.setOnClickListener(null);
                 ibAnswer.setOnClickListener(null);
@@ -1714,7 +1721,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (cards && shadow_unread) {
                 boolean shadow = (message.unseen > 0);
                 int color = (shadow
-                        ? ColorUtils.setAlphaComponent(colorAccent, 127)
+                        ? ColorUtils.setAlphaComponent(shadow_highlight ? colorUnreadHighlight : colorAccent, 127)
                         : Color.TRANSPARENT);
                 if (!Objects.equals(itemView.getTag(), shadow)) {
                     itemView.setTag(shadow);
@@ -2691,10 +2698,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     HtmlHelper.cleanup(document);
                     HtmlHelper.removeRelativeLinks(document);
-                    HtmlHelper.autoLink(document);
-
-                    if (message.ui_found && found && !TextUtils.isEmpty(searched))
-                        HtmlHelper.highlightSearched(context, document, searched);
 
                     // Check for inline encryption
                     boolean iencrypted = HtmlHelper.contains(document, new String[]{
@@ -2744,9 +2747,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     .text(context.getString(R.string.title_truncated));
 
                         HtmlHelper.guessSchemes(document);
+                        HtmlHelper.autoLink(document);
+
+                        if (message.ui_found && found && !TextUtils.isEmpty(searched))
+                            HtmlHelper.highlightSearched(context, document, searched);
 
                         boolean overview_mode = prefs.getBoolean("overview_mode", false);
+                        boolean override_width = prefs.getBoolean("override_width", false);
                         HtmlHelper.setViewport(document, overview_mode);
+                        if (override_width)
+                            HtmlHelper.overrideWidth(document);
                         if (inline || show_images)
                             HtmlHelper.embedInlineImages(context, message.id, document, show_images);
 
@@ -2769,6 +2779,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else {
                         // Cleanup message
                         document = HtmlHelper.sanitizeView(context, document, show_images);
+
+                        HtmlHelper.autoLink(document);
+
+                        if (message.ui_found && found && !TextUtils.isEmpty(searched))
+                            HtmlHelper.highlightSearched(context, document, searched);
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                             args.putParcelable("actions", getConversationActions(message, document, context));
@@ -3772,8 +3787,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (id == R.id.ibFlagged) {
                 onMenuColoredStar(message);
                 return true;
-            } else if (view.getId() == R.id.tvFolder) {
+            } else if (id == R.id.tvFolder) {
                 onGotoFolder(message);
+                return true;
+            } else if (id == R.id.ibImportance) {
+                int importance = (((message.ui_importance == null ? 1 : message.ui_importance) + 2) % 3);
+                onMenuSetImportance(message, importance);
                 return true;
             } else if (id == R.id.ibNotes) {
                 onActionCopyNote(message);
@@ -3783,7 +3802,47 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 fragment.show(parentFragment.getParentFragmentManager(), "deepl:configure");
                 return true;
             } else if (id == R.id.ibFull) {
-                onActionOpenFull(message);
+                boolean full = properties.getValue("full", message.id);
+                if (!full) {
+                    onActionOpenFull(message);
+                    return true;
+                }
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibFull);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_fullscreen, 1, R.string.title_fullscreen);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_fit_width, 2, R.string.title_fit_width)
+                        .setCheckable(true)
+                        .setChecked(prefs.getBoolean("overview_mode", false));
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_disable_widths, 3, R.string.title_disable_widths)
+                        .setCheckable(true)
+                        .setChecked(prefs.getBoolean("override_width", false));
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        int itemId = item.getItemId();
+                        if (itemId == R.string.title_fullscreen) {
+                            onActionOpenFull(message);
+                            return true;
+                        } else if (itemId == R.string.title_fit_width || itemId == R.string.title_disable_widths) {
+                            boolean enabled = !item.isChecked();
+                            item.setChecked(enabled);
+                            String key = (itemId == R.string.title_fit_width
+                                    ? "overview_mode" : "override_width");
+                            prefs.edit().putBoolean(key, enabled).apply();
+                            properties.setSize(message.id, null);
+                            properties.setHeight(message.id, null);
+                            properties.setPosition(message.id, null);
+                            bindBody(message, false);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+                popupMenu.show();
                 return true;
             } else if (id == R.id.ibMove) {
                 if (message.folderReadOnly)
@@ -5673,6 +5732,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     File file = EntityMessage.getFile(context, id);
                     Document d = JsoupEx.parse(file);
 
+                    if (BuildConfig.DEBUG) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                        boolean overview_mode = prefs.getBoolean("overview_mode", false);
+                        boolean override_width = prefs.getBoolean("override_width", false);
+                        HtmlHelper.setViewport(d, overview_mode);
+                        if (override_width)
+                            HtmlHelper.overrideWidth(d);
+                    }
+
                     List<CSSStyleSheet> sheets =
                             HtmlHelper.parseStyles(d.head().select("style"));
                     for (Element element : d.select("*")) {
@@ -5682,7 +5750,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 element.attr("style"),
                                 sheets);
                         if (!TextUtils.isEmpty(computed))
-                            element.attr("computed", computed);
+                            element.attr("x-computed", computed);
                     }
 
                     File dir = new File(context.getCacheDir(), "shared");
@@ -6133,6 +6201,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
 
+        boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
+        this.colorStripeWidth = Helper.dp2pixels(context, color_stripe_wide ? 12 : 6);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
@@ -6142,9 +6212,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         boolean highlight_unread = prefs.getBoolean("highlight_unread", true);
         boolean highlight_subject = prefs.getBoolean("highlight_subject", false);
-        int colorHighlight = prefs.getInt("highlight_color", Helper.resolveColor(context, R.attr.colorUnreadHighlight));
+        this.colorUnreadHighlight = prefs.getInt("highlight_color", Helper.resolveColor(context, R.attr.colorUnreadHighlight));
 
-        this.colorUnread = (highlight_unread ? colorHighlight : Helper.resolveColor(context, R.attr.colorUnread));
+        this.colorUnread = (highlight_unread ? colorUnreadHighlight : Helper.resolveColor(context, R.attr.colorUnread));
         this.colorRead = Helper.resolveColor(context, R.attr.colorRead);
         this.colorSubject = Helper.resolveColor(context, highlight_subject ? R.attr.colorUnreadHighlight : R.attr.colorRead);
         this.colorVerified = Helper.resolveColor(context, R.attr.colorVerified);
@@ -6168,6 +6238,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.date = prefs.getBoolean("date", true);
         this.cards = prefs.getBoolean("cards", true);
         this.shadow_unread = prefs.getBoolean("shadow_unread", false);
+        this.shadow_highlight = prefs.getBoolean("shadow_highlight", false);
         this.threading = prefs.getBoolean("threading", true);
         this.threading_unread = threading && prefs.getBoolean("threading_unread", false);
         this.indentation = prefs.getBoolean("indentation", false);

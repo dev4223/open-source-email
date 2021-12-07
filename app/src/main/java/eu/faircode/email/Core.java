@@ -182,7 +182,7 @@ class Core {
             EntityAccount account, EntityFolder folder, List<TupleOperationEx> ops,
             Store istore, Folder ifolder,
             State state, long serial)
-            throws JSONException {
+            throws JSONException, FolderClosedException {
         try {
             Log.i(folder.name + " start process");
 
@@ -216,10 +216,14 @@ class Core {
                         throw new IllegalArgumentException("Invalid folder=" + folder.id + "/" + op.folder);
 
                     if (account.protocol == EntityAccount.TYPE_IMAP &&
-                            !folder.local && ifolder != null && !ifolder.isOpen()) {
-                        Log.w(folder.name + " is closed");
-                        break;
-                    }
+                            !folder.local &&
+                            ifolder != null && !ifolder.isOpen())
+                        throw new FolderClosedException(ifolder, account.name + "/" + folder.name + " unexpectedly closed");
+
+                    if (account.protocol == EntityAccount.TYPE_POP &&
+                            EntityFolder.INBOX.equals(folder.type) &&
+                            ifolder != null && !ifolder.isOpen())
+                        throw new FolderClosedException(ifolder, account.name + "/" + folder.name + " unexpectedly closed");
 
                     // Fetch most recent copy of message
                     EntityMessage message = null;
@@ -1662,7 +1666,7 @@ class Core {
                 }
 
             if (perform_expunge) {
-                if (expunge(context, ifolder, deleted))
+                if (deleted.size() == 0 || expunge(context, ifolder, deleted))
                     db.message().deleteMessage(message.id);
             } else {
                 if (deleted.size() > 0)
@@ -1966,16 +1970,21 @@ class Core {
     }
 
     static void onSynchronizeFolders(
-            Context context, EntityAccount account, Store istore,
-            State state, boolean force) throws MessagingException {
+            Context context, EntityAccount account, Store istore, State state,
+            boolean keep_alive, boolean force) throws MessagingException {
         DB db = DB.getInstance(context);
+
+        if (account.protocol != EntityAccount.TYPE_IMAP)
+            return;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean sync_folders = prefs.getBoolean("sync_folders", true);
+        boolean sync_folders_poll = prefs.getBoolean("sync_folders_poll", false);
         boolean sync_shared_folders = prefs.getBoolean("sync_shared_folders", false);
-        Log.i(account.name + " sync folders=" + sync_folders + " shared=" + sync_shared_folders + " force=" + force);
+        Log.i(account.name + " sync folders=" + sync_folders + " poll=" + sync_folders_poll +
+                " shared=" + sync_shared_folders + " force=" + force);
 
-        if (force)
+        if (force || (keep_alive && sync_folders_poll))
             sync_folders = true;
         if (!sync_folders)
             sync_shared_folders = false;
@@ -2085,7 +2094,7 @@ class Core {
         if (!sync_folders)
             return;
 
-        Log.i("Start sync folders account=" + account.name);
+        EntityLog.log(context, "Start sync folders account=" + account.name);
 
         // Get default folder
         Folder defaultFolder = istore.getDefaultFolder();
@@ -3029,7 +3038,7 @@ class Core {
 
                 SearchTerm searchTerm = dateTerm;
                 Flags flags = ifolder.getPermanentFlags();
-                if (sync_nodate)
+                if (sync_nodate && !account.isOutlook())
                     searchTerm = new OrTerm(searchTerm, new ReceivedDateTerm(ComparisonTerm.LT, new Date(365 * 24 * 3600 * 1000L)));
                 if (sync_unseen && flags.contains(Flags.Flag.SEEN))
                     searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
@@ -5022,7 +5031,7 @@ class Core {
                         context, ServiceUI.PI_DELETE, delete, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionDelete = new NotificationCompat.Action.Builder(
                         R.drawable.twotone_delete_forever_24,
-                        context.getString(R.string.title_advanced_notify_action_trash),
+                        context.getString(R.string.title_advanced_notify_action_delete),
                         piDelete)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
                         .setShowsUserInterface(false)
@@ -5468,6 +5477,8 @@ class Core {
         }
 
         void reset() {
+            Thread.currentThread().interrupted(); // clear interrupted status
+            Log.i("Permits=" + semaphore.drainPermits());
             recoverable = true;
             lastActivity = null;
         }
@@ -5531,7 +5542,9 @@ class Core {
 
                     // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.State.html
                     Thread.State state = thread.getState();
-                    if (thread.isAlive()) {
+                    if (thread.isAlive() &&
+                            state != Thread.State.NEW &&
+                            state != Thread.State.TERMINATED) {
                         Log.e("Join " + name + " failed" +
                                 " state=" + state + " interrupted=" + interrupted);
                         if (interrupted)
@@ -5545,7 +5558,7 @@ class Core {
                         joined = true;
                     }
                 } catch (InterruptedException ex) {
-                    Log.e(new Throwable(name, ex));
+                    Log.i(new Throwable(name, ex));
                 }
         }
 

@@ -387,6 +387,7 @@
     <string name="title_advanced_cards_beige">להשתמש ברקע בז׳ בעת שימוש בסגנון כרטיסים (ערכות עיצוב בהירות בלבד)</string>
     <string name="title_advanced_tabular_background">להשתמש בצבע הכרטיס כצבע הרקע בעת שימוש בסגנון כרטיסיות</string>
     <string name="title_advanced_cards_shadow">להשתמש בהצללה להודעות שלא נקראו בעת שימוש בסגנון כרטיסים</string>
+    <string name="title_advanced_cards_shadow_highlight">להשתמש בצבע ההדגשה במקום בצבע המשני</string>
     <string name="title_advanced_date_header">קיבוץ לפי תאריך</string>
     <string name="title_advanced_date_fixed">להציג כותרת תאריך מקובעת למעלה</string>
     <string name="title_advanced_date_bold">הצגת תאריך בהדגשה</string>
@@ -395,6 +396,7 @@
     <string name="title_advanced_indentation">הזחה שמאלית/ימנית להודעות שהתקבלו/נשלחו בדיונים</string>
     <string name="title_advanced_highlight_unread">הדגשת הודעות שלא נקראו</string>
     <string name="title_advanced_color_stripe">הצגת פס צבע</string>
+    <string name="title_advanced_color_stripe_wide">להשתמש בפס צבע רחב</string>
     <string name="title_advanced_avatars">הצגת תמונות אנשי קשר</string>
     <string name="title_advanced_gravatars">הצגת Gravatarים</string>
     <string name="title_advanced_bimi_unverified">מוען בלתי מאומת</string>
@@ -432,6 +434,7 @@
     <string name="title_advanced_thumbnails">הצגת תמונות ממוזערות אחרי טקסט ההודעה</string>
     <string name="title_advanced_message_text_zoom2">תקריב טקסט ההודעות כבררת מחדל: %1$s %%</string>
     <string name="title_advanced_overview_mode">התאמת התקריב של ההודעות המקוריות לגודל המסך</string>
+    <string name="title_advanced_override_width">השבתת הגדרות רוחב קבועות בהודעות המקוריות</string>
     <string name="title_advanced_contrast">להשתמש בניגודיות גבוהה לטקסט ההודעות</string>
     <string name="title_advanced_monospaced">להשתמש בגופן ברוחב אחיד לטקסט ההודעה כבררת מחדל</string>
     <string name="title_advanced_monospaced_pre">להשתמש בטקסט ברוחב אחיד לטקסט שעוצב מראש</string>
@@ -504,6 +507,7 @@
     <string name="title_advanced_notify_preview_only">הצגת התראות עם תמצית טקסט בלבד</string>
     <string name="title_advanced_notify_actions">פעולות התראה</string>
     <string name="title_advanced_notify_action_trash">אשפה</string>
+    <string name="title_advanced_notify_action_delete">מחיקה</string>
     <string name="title_advanced_notify_action_junk">ספאם</string>
     <string name="title_advanced_notify_action_archive">ארכיון</string>
     <string name="title_advanced_notify_action_move">העברה</string>
@@ -636,6 +640,7 @@
     <string name="title_advanced_preview_lines_hint">%s תווים לכל היותר בסך הכול</string>
     <string name="title_advanced_preview_issue">גלילה עשויה להאט עקב תקלה בחלק מגרסאות ה־Android כשמספר השורות עולה על אחת</string>
     <string name="title_advanced_overview_mode_hint">יכול לגרום להקטנה מוגזמת של הגופנים</string>
+    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">זה יכול להצר הודעות אבל גם להציג בצורה מוזרה</string>
     <string name="title_advanced_placeholders_hint">חל על הודעות שעוצבו מחדש בלבד</string>
     <string name="title_advanced_inline_hint">תמונות מובנות הן תמונות שכלולות בהודעה</string>
     <string name="title_advanced_parse_classes_hint">זה יציג הודעות בצורה יותר מדויקת אך כנראה עם עיכוב מסוים</string>
