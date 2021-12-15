@@ -3,7 +3,6 @@
     <string name="app_search">FairEmail søk</string>
     <string name="app_changelog">Endringer</string>
     <string name="app_welcome">FairEmail er en åpen kildekode e-postprogram som er fokusert på personvern og sikkerhet. Av denne grunn kan noen funksjoner virke annerledes enn det du er vant til.</string>
-    <string name="app_crash">FairEmail støttes ikke på denne enheten fordi feil i Android forårsaker krasjer</string>
     <string name="app_exit">Gå \'tilbake\' igjen for å avslutte</string>
     <string name="app_cake">Ikke nok lagringsplass igjen</string>
     <string name="channel_service">Tak imot</string>
@@ -186,6 +185,8 @@
     <string name="title_setup_reset_questions">Tilbakestill spørsmål</string>
     <string name="title_setup_reset_images">Vise bilder</string>
     <string name="title_advanced_hint_title">Mer avanserte alternativer</string>
+    <string name="title_advanced_hint_message">        You are navigating to the more advanced options.        All options have commonly used standard values, which you do not need to change unless you have a different preference.
+    </string>
     <string name="title_advanced_section_main">Hoved</string>
     <string name="title_advanced_section_synchronize">Motta</string>
     <string name="title_advanced_section_send">Send</string>
@@ -387,8 +388,7 @@
     <string name="title_advanced_import_key">Importer privat nøkkel</string>
     <string name="title_advanced_manage_keys">Administrer private nøkler</string>
     <string name="title_advanced_ca">Installerte CA-sertifikater</string>
-    <string name="title_advanced_manage_keys_hint">        Dette vil åpnes i Android sikkerhetsinnstillinger.
-        Nøkler og sertifikater kan vanligvis bli funnet under Avansert - Kryptering og legitimasjon.
+    <string name="title_advanced_manage_keys_hint">        Dette vil åpnes i Android sikkerhetsinnstillinger.        Nøkler og sertifikater kan vanligvis bli funnet under Avansert - Kryptering og legitimasjon.
     </string>
     <string name="title_advanced_external_search">Tillat andre apper å søke i meldinger</string>
     <string name="title_advanced_shortcuts">Vis ofte brukte kontakter i Android-menyen</string>
@@ -623,8 +623,7 @@
     <string name="title_auto_trash">Flytt gamle meldinger automatisk til søppel</string>
     <string name="title_auto_delete">Slett gamle meldinger automatisk permanent</string>
     <string name="title_auto_delete_hint">Gamle meldinger er meldinger som ikke lenger lagres på enheten</string>
-    <string name="title_inbox_root_hint">        Enkelte leverandører krever at nye mapper opprettes under innboksen.
-        Dersom dette er tilfellet, kan du trykke lenge på innboksen og velge \'Opprett undermappe\'.
+    <string name="title_inbox_root_hint">        Enkelte leverandører krever at nye mapper opprettes under innboksen.        Dersom dette er tilfellet, kan du trykke lenge på innboksen og velge \'Opprett undermappe\'.
     </string>
     <string name="title_folder_name_missing">Mappenavn mangler</string>
     <string name="title_folder_exists">Mappen %1$s finnes</string>
@@ -731,6 +730,7 @@
     <string name="title_too_large">Melding for stor til å omformatere fullstendig</string>
     <string name="title_truncated">Meldingen er for stor til å vises fullstendig</string>
     <string name="title_show_full">Vis full melding</string>
+    <string name="title_fullscreen">Vis fullskjerm</string>
     <string name="title_unused_inline">Ubrukte inline bilder blir fjernet ved sending</string>
     <string name="title_accross_remark">Meldinger som er flyttet over kontoer, lastes ned igjen, noe som resulterer i ekstra databruk</string>
     <string name="title_raw_saved">Rå melding lagret</string>
@@ -753,8 +753,7 @@
     <string name="title_ask_reporting">Send feilrapporter?</string>
     <string name="title_reporting_why">Feilrapportering vil bidra til å forbedre FairEmail</string>
     <string name="title_ask_review">Vennligst anmeld FairEmail</string>
-    <string name="title_ask_review_rationale">        Du har brukt FairEmail en stund.
-        Vi blir takknemlig om du gir oss din vurdering av FairEmail i Play Store.
+    <string name="title_ask_review_rationale">        Du har brukt FairEmail en stund.        Vi blir takknemlig om du gir oss din vurdering av FairEmail i Play Store.
     </string>
     <string name="title_ask_once">Denne meldingen vil bare vises en gang, med mindre du velger \"Senere\"</string>
     <string name="title_third_party">Du bruker en versjon av en tredjepart</string>
@@ -1196,8 +1195,7 @@
     <string name="title_pro_feature">Dette er en Pro-funksjon</string>
     <string name="title_pro_list">Liste over Pro funksjoner</string>
     <string name="title_pro_purchase">Kjøp</string>
-    <string name="title_pro_info">        Utviklingen av FairEmail tok, bokstavelig talt, tusenvis av timer, men til tross for dette er de fleste funksjonene gratis.
-        FairEmail tar personvernet ditt alvorlig og viser hverken reklamer, eller bruker sporing og analytikk for å tjene penger.
+    <string name="title_pro_info">        Utviklingen av FairEmail tok, bokstavelig talt, tusenvis av timer, men til tross for dette er de fleste funksjonene gratis.        FairEmail tar personvernet ditt alvorlig og viser hverken reklamer, eller bruker sporing og analytikk for å tjene penger.
         For å opprettholde og vedlikeholde FairEmail i det lange løp, er enkelte avanserte- og bekvemmelighetsfunksjoner ikke gratis.
         FairEmail viser en kort beskjed for å minne deg på dette, som forsvinner dersom du kjøper Pro-versjonen.
     </string>
@@ -1407,4 +1405,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>Liten</item>
+        <item>Middels</item>
+        <item>Stor</item>
+        <item>Ekstra stor</item>
+    </string-array>
 </resources>

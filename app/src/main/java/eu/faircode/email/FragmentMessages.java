@@ -1783,6 +1783,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 });
             }
+
+            if ("headers".equals(name)) {
+                scrolling = false;
+                updateExpanded();
+            }
         }
 
         @Override
@@ -2783,11 +2788,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 popupMenu.getMenu().findItem(R.id.menu_reply_hard_bounce).setVisible(experiments);
                 popupMenu.getMenu().findItem(R.id.menu_reply_hard_bounce).setEnabled(canBounce);
                 popupMenu.getMenu().findItem(R.id.menu_new_message).setVisible(to != null && to.length > 0);
+                popupMenu.getMenu().findItem(R.id.menu_resend).setVisible(experiments);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !ActivityBilling.isPro(context));
 
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_sender).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(message.content);
+                popupMenu.getMenu().findItem(R.id.menu_resend).setEnabled(message.headers != null);
                 popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setEnabled(message.content);
 
@@ -2835,6 +2842,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             return true;
                         } else if (itemId == R.id.menu_forward) {
                             onMenuReply(message, "forward");
+                            return true;
+                        } else if (itemId == R.id.menu_resend) {
+                            onMenuReply(message, "resend");
                             return true;
                         } else if (itemId == R.id.menu_editasnew) {
                             onMenuReply(message, "editasnew");
@@ -7293,8 +7303,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onExecuted(Bundle args, PendingIntent pi) {
                 if (args.containsKey("sigresult")) {
                     String text = args.getString("sigresult");
-                    Snackbar.make(view, text, Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Snackbar sb = Snackbar.make(view, text, Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true);
+
+                    View sv = sb.getView();
+                    if (sv != null) {
+                        TextView tv = sv.findViewById(com.google.android.material.R.id.snackbar_text);
+                        if (tv != null)
+                            tv.setMaxLines(7);
+                    }
+
+                    sb.show();
                 }
 
                 if (pi != null)

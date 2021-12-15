@@ -4,10 +4,43 @@
 
 ### [Caudipteryx](https://en.wikipedia.org/wiki/Caudipteryx)
 
-### Next version
+### 1.1789 - 2021-12-14
+
+* Added support for foldable devices
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated translations
+
+### 1.1788 - 2021-12-13
+
+* Added experimental resend support (RFC2822 section 3.6.6)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1787 - 2021-12-11
+
+* Fixed always downloading headers/bodies for rules requiring this
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1786 - 2021-12-10
+
+* Fixed marking messages read in some situations
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1785 - 2021-12-09
+
+* Added "text contains" filter rule condition
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1784 - 2021-12-08
 
 * Added display option to override widths in original message view
+* Added sync twice within 30 seconds to sync all messages
 * Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.1783 - 2021-12-02
 

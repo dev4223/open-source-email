@@ -4,7 +4,8 @@
     <string name="app_changelog">Changelog</string>
     <string name="app_welcome">FairEmail è un\'app di email open source concentrata su privacy e sicurezza. Per questo motivo, alcune funzionalità potrebbero funzionare diversamente da ciò a cui sei abituato.</string>
     <string name="app_limitations">Ad esempio, i messaggi sono riformattati di default per rimuovere gli elementi non sicuri e migliorare la leggibilità, e l\'apertura dei link dev\'esser confermata per sicurezza. Sono entrambi disabilitabili, se desiderato.</string>
-    <string name="app_crash">FairEmail non è supportato su questo dispositivo perché i bug di Android causano arresti anomali</string>
+    <string name="app_unsupported">Alcuni errori nella versione Android di questo specifico dispositivo provocano crash</string>
+    <string name="app_continue">Continua comunque</string>
     <string name="app_exit">Torna \'indietro\' di nuovo per uscire</string>
     <string name="app_cake">Spazio di archiviazione rimanente insufficiente</string>
     <string name="app_updated">Ultimo aggiornamento: %1$s</string>
@@ -259,8 +260,7 @@
     <string name="title_setup_reset_images">Mostra le immagini</string>
     <string name="title_setup_reset_links">Confermare i link</string>
     <string name="title_advanced_hint_title">Opzioni più avanzate</string>
-    <string name="title_advanced_hint_message">        Stai navigando alle opzioni più avanzate.
-        Tutte le opzioni hanno comunemente usato valori standard, che non devi cambiare a meno che non abbia una preferenza differente.
+    <string name="title_advanced_hint_message">        Stai navigando alle opzioni più avanzate.        Tutte le opzioni hanno comunemente usato valori standard, che non devi cambiare a meno che non abbia una preferenza differente.
     </string>
     <string name="title_advanced_hint_remark">        Le opzioni sono categorizzate per scheda, divise in sezioni, organizzate per aspetto o uso e ricercabili.
     </string>
@@ -290,6 +290,7 @@
     <string name="title_advanced_kept_removed">Verifica se i vecchi messaggi sono stati rimossi dal server</string>
     <string name="title_advanced_gmail_thread">Stile di raggruppamento dei messaggi di Gmail per i profili di Gmail</string>
     <string name="title_advanced_sync_folders">Sincronizza elenco delle cartelle</string>
+    <string name="title_advanced_sync_folders_poll">Sincronizza attivamente l\'elenco delle cartelle</string>
     <string name="title_advanced_sync_shared_folders">Sincronizza gli elenchi delle cartelle condivise</string>
     <string name="title_advanced_subscriptions">Gestisci sottoscrizioni alla cartella</string>
     <string name="title_advanced_check_authentication">Verifica l\'autenticazione del messaggio</string>
@@ -414,6 +415,7 @@
     <string name="title_advanced_thumbnails">Mostra miniature delle immagini dopo il testo del messaggio</string>
     <string name="title_advanced_message_text_zoom2">Ingrandimento predefinito del testo del messaggio %1$s%%</string>
     <string name="title_advanced_overview_mode">Ingrandisci i messaggi originali per adattarsi allo schermo</string>
+    <string name="title_advanced_override_width">Disabilita le larghezze fisse nei messaggi originali</string>
     <string name="title_advanced_contrast">Usa il contrasto elevato per il testo del messaggio</string>
     <string name="title_advanced_monospaced">Usa di default caratteri monospaziati per il testo del messaggio</string>
     <string name="title_advanced_monospaced_pre">Usa caratteri monospaziati per il testo preformattato</string>
@@ -545,8 +547,7 @@
     <string name="title_advanced_import_key">Importa la chiave privata</string>
     <string name="title_advanced_manage_keys">Gestisci le chiavi private</string>
     <string name="title_advanced_ca">Certificati CA installati</string>
-    <string name="title_advanced_manage_keys_hint">        Questo passerà alle impostazioni di sicurezza di Android.
-        Chiavi e certificati si possono generalmente trovare sotto Avanzate - Crittografia e credenziali.
+    <string name="title_advanced_manage_keys_hint">        Questo passerà alle impostazioni di sicurezza di Android.        Chiavi e certificati si possono generalmente trovare sotto Avanzate - Crittografia e credenziali.
     </string>
     <string name="title_advanced_power_menu">Aggiungi azioni al menù di spegnimento Android</string>
     <string name="title_advanced_external_search">Consenti alle altre app di cercare tra i messaggi</string>
@@ -586,6 +587,7 @@
     <string name="title_advanced_sync_kept_hint">Questo trasferirà dati aggiuntivi e consumerà energia extra della batteria, specialmente se sono memorizzati molti messaggi sul dispositivo</string>
     <string name="title_advanced_gmail_thread_hint">Ciò si applica solo ai messaggi appena ricevuti e può corrompere i gruppi esistenti</string>
     <string name="title_advanced_sync_folders_hint">Disabilitarlo ridurrà in qualche modo l\'uso dei dati e della batteria, ma disabiliterà anche l\'aggiornamento dell\'elenco delle cartelle</string>
+    <string name="title_advanced_poll_folders_hint">Sincronizza periodicamente l\'elenco di cartelle oltre alla connessione a un profilo</string>
     <string name="title_advanced_check_authentication_hint">Questo controllerà i risultati dell\'autenticazione DKIM, SPF e DMARC come eseguita dal server email</string>
     <string name="title_advanced_check_reply_hint">Questo verificherà se il nome del dominio del mittente e l\'indirizzo di risposta sono uguali</string>
     <string name="title_advanced_lookup_mx_hint">Questo verificherà se esistano i registri DNS MX</string>
@@ -620,6 +622,7 @@
     <string name="title_advanced_preview_lines_hint">%s caratteri massimi in totale</string>
     <string name="title_advanced_preview_issue">Lo scorrimento può esser lento per un bug in alcune versioni di Android quando il numero di righe è maggiore di uno</string>
     <string name="title_advanced_overview_mode_hint">Questo può risultare in font molto piccoli</string>
+    <string name="title_advanced_override_width_hint">Questo può restringere i messaggi, ma anche sembrare strano</string>
     <string name="title_advanced_placeholders_hint">Questo si applica solo ai messaggi riformattati</string>
     <string name="title_advanced_inline_hint">Le immagini in linea sono immagini incluse nel messaggio</string>
     <string name="title_advanced_parse_classes_hint">Questo visualizzerà più accuratamente i messaggi, ma probabilmente con un ritardo</string>
@@ -847,8 +850,7 @@
     <string name="title_auto_delete">Elimina automaticamente e permanentemente i vecchi messaggi</string>
     <string name="title_auto_delete_hint">I vecchi messaggi sono messaggi non più conservati sul dispositivo</string>
     <string name="title_auto_delete_archive_hint">L\'eliminazione dalla cartella d\'archivio non è sempre consentita dal server email</string>
-    <string name="title_inbox_root_hint">        Alcuni provider richiedono la creazione di nuove cartelle nella posta in entrata.
-        In questo caso, puoi tenere premuta la posta in arrivo nell\'elenco delle cartelle e selezionare \'Crea sottocartella\'.
+    <string name="title_inbox_root_hint">        Alcuni provider richiedono la creazione di nuove cartelle nella posta in entrata.        In questo caso, puoi tenere premuta la posta in arrivo nell\'elenco delle cartelle e selezionare \'Crea sottocartella\'.
     </string>
     <string name="title_folder_name_missing">Nome della cartella mancante</string>
     <string name="title_folder_exists">La cartella %1$s esiste</string>
@@ -893,6 +895,7 @@
     <string name="title_importance_high">Alta</string>
     <string name="title_search_in_text">Cerca nel testo&#8230;</string>
     <string name="title_forward">Inoltra</string>
+    <string name="title_resend">Reinvia</string>
     <string name="title_new_message">Nuovo messaggio</string>
     <string name="title_editasnew">Modifica come nuovo</string>
     <string name="title_edit_notes">Modifica le note locali</string>
@@ -979,6 +982,9 @@
     <string name="title_truncated">Messaggio troppo grande da mostrare completamente</string>
     <string name="title_insufficient_memory">Messaggio troppo grande per la memoria disponibile (%1$d)</string>
     <string name="title_show_full">Mostra messaggio completo</string>
+    <string name="title_fullscreen">Visualizza a schermo intero</string>
+    <string name="title_fit_width">Adatta la larghezza</string>
+    <string name="title_disable_widths">Disabilita larghezze</string>
     <string name="title_unused_inline">Le immagini in linea inutilizzate saranno rimosse all\'invio</string>
     <string name="title_accross_remark">I messaggi spostati tra profili saranno riscaricati, risultando in un uso extra dei dati</string>
     <string name="title_raw_saved">Messaggio non elaborato salvato</string>
@@ -1002,16 +1008,14 @@
     <string name="title_ask_reporting">Inviare segnalazioni d\'errore?</string>
     <string name="title_reporting_why">La segnalazione degli errori aiuterà a migliorare FairEmail</string>
     <string name="title_ask_review">Sei pregato di valutare FairEmail</string>
-    <string name="title_ask_review_rationale">        Usi FairEmail da un po\'.
-        Sarebbe apprezzato se potessi valutare FairEmail nel Play Store.
+    <string name="title_ask_review_rationale">        Usi FairEmail da un po\'.        Sarebbe apprezzato se potessi valutare FairEmail nel Play Store.
     </string>
     <string name="title_need_help">Ho bisogno d\'aiuto</string>
     <string name="title_ask_once">Questo messaggio comparirà solo una volta, a meno che tu non selezioni \'Più tardi\'</string>
     <string name="title_third_party">Stai usando una versione di terze parti</string>
     <string name="title_expand_warning">Espandere questo messaggio scaricherà %1$s</string>
     <string name="title_download_message">Scaricando&#8230;</string>
-    <string name="title_reformatted">        Questa è la visualizzazione del messaggio riformattato.
-        Puoi toccare sull\'icona &#x26F6; per visualizzare il messaggio originale o nasconderlo.
+    <string name="title_reformatted">        Questa è la visualizzazione del messaggio riformattato.        Puoi toccare sull\'icona &#x26F6; per visualizzare il messaggio originale o nasconderlo.
         La riformattazione dei messaggi richiede un po\' di tempo, in base alla dimensione del messaggio e la velocità del tuo dispositivo.
     </string>
     <string name="title_compose">Scrivi</string>
@@ -1274,6 +1278,8 @@
     <string name="title_rule_subject">L\'oggetto contiene</string>
     <string name="title_rule_attachments">Ha allegati</string>
     <string name="title_rule_header">L\'intestazione contiene</string>
+    <string name="title_rule_body">Il testo contiene</string>
+    <string name="title_rule_body_remark">Usare questa condizione scaricherà sempre il testo del messaggio, il che potrebbe rallentare la sincronizzazione dell\'elenco dei messaggi</string>
     <string name="title_rule_time_abs">Tempo assoluto (di ricezione) tra</string>
     <string name="title_rule_time_after">Ricevuto dopo</string>
     <string name="title_rule_time_before">Ricevuto prima</string>
@@ -1303,6 +1309,7 @@
     <string name="title_rule_applied">Messaggi interessati: %1$d</string>
     <string name="title_rule_check">Verifica</string>
     <string name="title_rule_no_headers">Impossibile controllare le condizioni dell\'intestazione</string>
+    <string name="title_rule_no_body">Testo del messaggio non disponibile</string>
     <string name="title_rule_matched">Messaggi corrispondenti</string>
     <string name="title_rule_no_matches">Nessun messaggio corrispondente</string>
     <string name="title_rule_tts_ok">Configurazione riuscita</string>
@@ -1510,8 +1517,7 @@
     <string name="title_pro_purchase">Acquista</string>
     <string name="title_pro_one_time">%1$s (acquisto una tantum)</string>
     <string name="title_pro_no_play">Play Store non trovato</string>
-    <string name="title_pro_info">        Sviluppare FairEmail ha letteralmente impiegato migliaio di ore e, nonostante ciò, gran parte delle funzionalità sono gratuite.
-        FairEmail prende sul serio la tua privacy e non mostra annunci né usa il monitoraggio o le analisi per guadagnare denaro.
+    <string name="title_pro_info">        Sviluppare FairEmail ha letteralmente impiegato migliaio di ore e, nonostante ciò, gran parte delle funzionalità sono gratuite.        FairEmail prende sul serio la tua privacy e non mostra annunci né usa il monitoraggio o le analisi per guadagnare denaro.
         Per mantenere e supportare FairEmail a lungo termine, alcune funzionalità convenzionali e avanzate non sono gratuite.
         FairEmail mostra un piccolo messaggio per ricordartene, che sarà rimosso se acquisti le funzionalità pro.
     </string>
@@ -1737,4 +1743,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>Piccolo</item>
+        <item>Medio</item>
+        <item>Grande</item>
+        <item>Extra large</item>
+    </string-array>
 </resources>

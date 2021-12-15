@@ -114,6 +114,7 @@ import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.FolderClosedException;
 import javax.mail.FolderNotFoundException;
+import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
@@ -2727,7 +2728,7 @@ class Core {
                         message.references = TextUtils.join(" ", helper.getReferences());
                         message.inreplyto = helper.getInReplyTo();
                         message.deliveredto = helper.getDeliveredTo();
-                        message.thread = helper.getThreadId(context, account.id, 0);
+                        message.thread = helper.getThreadId(context, account.id, folder.id, 0);
                         message.priority = helper.getPriority();
                         message.auto_submitted = helper.getAutoSubmitted();
                         message.receipt_request = helper.getReceiptRequested();
@@ -2738,6 +2739,7 @@ class Core {
                         if (message.spf == null && helper.getSPF())
                             message.spf = true;
                         message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+                        message.smtp_from = helper.getMailFrom(authentication);
                         message.return_path = helper.getReturnPath();
                         message.submitter = helper.getSender();
                         message.from = helper.getFrom();
@@ -2794,7 +2796,15 @@ class Core {
                         if (message.avatar == null && notify_known && pro)
                             message.ui_ignored = true;
 
+                        message.from_domain = (message.checkFromDomain(context) == null);
+
+                        // No reply_domain
                         // No MX check
+                        // No blocklist
+
+                        boolean needsHeaders = EntityRule.needsHeaders(rules);
+                        List<Header> headers = (needsHeaders ? helper.getAllHeaders() : null);
+                        String body = parts.getHtml(context);
 
                         try {
                             db.beginTransaction();
@@ -2814,7 +2824,7 @@ class Core {
                                 attachment.id = db.attachment().insertAttachment(attachment);
                             }
 
-                            runRules(context, imessage, account, folder, message, rules);
+                            runRules(context, headers, body, account, folder, message, rules);
                             reportNewMessage(context, account, folder, message);
 
                             db.setTransactionSuccessful();
@@ -2822,7 +2832,6 @@ class Core {
                             db.endTransaction();
                         }
 
-                        String body = parts.getHtml(context);
                         File file = message.getFile(context);
                         Helper.writeText(file, body);
                         String text = HtmlHelper.getFullText(body);
@@ -3610,7 +3619,7 @@ class Core {
                     have = true;
 
                 if (dup.folder.equals(folder.id)) {
-                    String thread = helper.getThreadId(context, account.id, uid);
+                    String thread = helper.getThreadId(context, account.id, folder.id, uid);
                     Log.i(folder.name + " found as id=" + dup.id +
                             " uid=" + dup.uid + "/" + uid +
                             " msgid=" + msgid + " thread=" + thread);
@@ -3689,7 +3698,7 @@ class Core {
             message.inreplyto = helper.getInReplyTo();
             // Local address contains control or whitespace in string ``mailing list someone@example.org''
             message.deliveredto = helper.getDeliveredTo();
-            message.thread = helper.getThreadId(context, account.id, uid);
+            message.thread = helper.getThreadId(context, account.id, folder.id, uid);
             message.priority = helper.getPriority();
             message.auto_submitted = helper.getAutoSubmitted();
             message.receipt_request = helper.getReceiptRequested();
@@ -3700,6 +3709,7 @@ class Core {
             if (message.spf == null && helper.getSPF())
                 message.spf = true;
             message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+            message.smtp_from = helper.getMailFrom(authentication);
             message.return_path = helper.getReturnPath();
             message.submitter = helper.getSender();
             message.from = helper.getFrom();
@@ -3773,6 +3783,8 @@ class Core {
             if (message.avatar == null && notify_known && pro)
                 message.ui_ignored = true;
 
+            message.from_domain = (message.checkFromDomain(context) == null);
+
             // For contact forms
             boolean self = false;
             if (identity != null && message.from != null)
@@ -3783,7 +3795,7 @@ class Core {
                     }
 
             if (!self) {
-                String warning = message.checkReplyDomain(context);
+                String[] warning = message.checkReplyDomain(context);
                 message.reply_domain = (warning == null);
             }
 
@@ -3796,8 +3808,8 @@ class Core {
                     DnsHelper.checkMx(context, addresses);
                     message.mx = true;
                 } catch (UnknownHostException ex) {
+                    Log.w(ex);
                     message.mx = false;
-                    message.warning = ex.getMessage();
                 } catch (Throwable ex) {
                     Log.e(folder.name, ex);
                     message.warning = Log.formatThrowable(ex, false);
@@ -3844,6 +3856,13 @@ class Core {
                     }
             }
 
+            boolean needsHeaders = EntityRule.needsHeaders(rules);
+            boolean needsBody = EntityRule.needsBody(rules);
+            if (needsHeaders || needsBody)
+                Log.i(folder.name + " needs headers=" + needsHeaders + " body=" + needsBody);
+            List<Header> headers = (needsHeaders ? helper.getAllHeaders() : null);
+            String body = (needsBody ? helper.getMessageParts().getHtml(context) : null);
+
             try {
                 db.beginTransaction();
 
@@ -3860,7 +3879,7 @@ class Core {
                     attachment.id = db.attachment().insertAttachment(attachment);
                 }
 
-                runRules(context, imessage, account, folder, message, rules);
+                runRules(context, headers, body, account, folder, message, rules);
 
                 if (message.blocklist != null && message.blocklist) {
                     boolean use_blocklist = prefs.getBoolean("use_blocklist", false);
@@ -3902,7 +3921,7 @@ class Core {
                 EntityContact.received(context, account, folder, message);
 
                 // Download small messages inline
-                if (download && !message.ui_hide) {
+                if (body != null || (download && !message.ui_hide)) {
                     long maxSize;
                     if (state == null || state.networkState.isUnmetered())
                         maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
@@ -3912,10 +3931,12 @@ class Core {
                             maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
                     }
 
-                    if ((message.size != null && message.size < maxSize) ||
+                    if (body != null ||
+                            (message.size != null && message.size < maxSize) ||
                             (MessageClassifier.isEnabled(context)) && folder.auto_classify_source)
                         try {
-                            String body = parts.getHtml(context);
+                            if (body == null)
+                                body = parts.getHtml(context);
                             File file = message.getFile(context);
                             Helper.writeText(file, body);
                             String text = HtmlHelper.getFullText(body);
@@ -4063,19 +4084,27 @@ class Core {
                 }
             }
 
-            if (update || process)
+            if (update || process) {
+                boolean needsHeaders = EntityRule.needsHeaders(rules);
+                boolean needsBody = EntityRule.needsBody(rules);
+                if (needsHeaders || needsBody)
+                    Log.i(folder.name + " needs headers=" + needsHeaders + " body=" + needsBody);
+                List<Header> headers = (needsHeaders ? helper.getAllHeaders() : null);
+                String body = (needsBody ? helper.getMessageParts().getHtml(context) : null);
+
                 try {
                     db.beginTransaction();
 
                     db.message().updateMessage(message);
 
                     if (process)
-                        runRules(context, imessage, account, folder, message, rules);
+                        runRules(context, headers, body, account, folder, message, rules);
 
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }
+            }
 
             if (process) {
                 EntityContact.received(context, account, folder, message);
@@ -4233,7 +4262,7 @@ class Core {
     }
 
     private static void runRules(
-            Context context, Message imessage,
+            Context context, List<Header> headers, String html,
             EntityAccount account, EntityFolder folder, EntityMessage message,
             List<EntityRule> rules) {
 
@@ -4246,7 +4275,7 @@ class Core {
         try {
             boolean executed = false;
             for (EntityRule rule : rules)
-                if (rule.matches(context, message, imessage)) {
+                if (rule.matches(context, message, headers, html)) {
                     rule.execute(context, message);
                     executed = true;
                     if (rule.stop)

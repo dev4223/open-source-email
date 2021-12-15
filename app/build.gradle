@@ -3,7 +3,7 @@ apply plugin: 'com.bugsnag.android.gradle'
 apply plugin: 'kotlin-android'
 apply plugin: 'de.undercouch.download'
 
-def getVersionCode = { -> return 1783 }
+def getVersionCode = { -> return 1789 }
 def getRevision = { -> "a" }
 def getReleaseName = { -> return "Caudipteryx" }
 // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -36,7 +36,7 @@ android {
         // https://developer.android.com/guide/topics/graphics/vector-drawable-resources
         vectorDrawables.useSupportLibrary = true
 
-        ndkVersion "21.4.7075529"
+        ndkVersion "23.1.7779620"
         ndk {
             // Bugsnag, sqlite
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
@@ -76,20 +76,28 @@ android {
         includeInApk = false
         includeInBundle = false
     }
-
     packagingOptions {
-        exclude 'LICENSES'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/README.md'
-        exclude 'META-INF/CHANGES'
-        exclude 'META-INF/jersey-module-version'
-        exclude 'META-INF/COPYRIGHT.html'
-        exclude 'META-INF/LICENSE.gpl.txt'
-        exclude 'META-INF/LICENSE.commercial.txt'
-        exclude 'org/apache/**'
-        exclude 'LICENSE-2.0.txt'
-        exclude 'RELEASE.txt'
+        jniLibs {
+            excludes += [
+                    'org/apache/**'
+            ]
+        }
+        resources {
+            excludes += [
+                    'LICENSES',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/README.md',
+                    'META-INF/CHANGES',
+                    'META-INF/jersey-module-version',
+                    'META-INF/COPYRIGHT.html',
+                    'META-INF/LICENSE.gpl.txt',
+                    'META-INF/LICENSE.commercial.txt',
+                    'LICENSE-2.0.txt',
+                    'RELEASE.txt'
+            ]
+        }
     }
+
 
     // https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.SigningConfig.html
     signingConfigs {

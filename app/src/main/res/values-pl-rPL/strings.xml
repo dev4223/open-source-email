@@ -4,7 +4,8 @@
     <string name="app_changelog">Historia zmian</string>
     <string name="app_welcome">FairEmail to aplikacja e-mail o otwartym kodzie źródłowym, koncentrująca się na prywatności i bezpieczeństwie. Z tego powodu niektóre funkcje mogą działać inaczej niż to, do czego jesteś przyzwyczajony.</string>
     <string name="app_limitations">Na przykład wiadomości są domyślnie formatowane tak, aby usunąć niebezpieczne elementy i poprawić czytelność, a otwieranie linków musi zostać potwierdzone ze względów bezpieczeństwa. W razie potrzeby można to wyłączyć w opcjach.</string>
-    <string name="app_crash">FairEmail nie jest obsługiwany na tym urządzeniu, ponieważ błędy w Androidzie powodują awarie</string>
+    <string name="app_unsupported">Błędy w wersji Androida tego konkretnego urządzenia powodują awarie</string>
+    <string name="app_continue">Kontynuuj mimo to</string>
     <string name="app_exit">Ponownie \'wstecz\', aby wyjść</string>
     <string name="app_cake">Za mało miejsca w pamięci</string>
     <string name="app_updated">Ostatnia aktualizacja: %1$s</string>
@@ -279,8 +280,7 @@
     <string name="title_setup_reset_images">Pokaż obrazy</string>
     <string name="title_setup_reset_links">Potwierdź linki</string>
     <string name="title_advanced_hint_title">Ustawienia zaawansowane</string>
-    <string name="title_advanced_hint_message">        Przechodzisz do bardziej zaawansowanych opcji.
-         Wszystkie opcje mają powszechnie używane wartości standardowe, których nie trzeba zmieniać, chyba że masz inne preferencje.
+    <string name="title_advanced_hint_message">        Przechodzisz do bardziej zaawansowanych opcji.         Wszystkie opcje mają powszechnie używane wartości standardowe, których nie trzeba zmieniać, chyba że masz inne preferencje.
     </string>
     <string name="title_advanced_hint_remark">Opcje są podzielone na kategorie według zakładek, podzielone na sekcje, uporządkowane według wyglądu lub użycia i można je przeszukiwać.
     </string>
@@ -310,6 +310,7 @@
     <string name="title_advanced_kept_removed">Sprawdź, czy stare wiadomości zostały usunięte z serwera</string>
     <string name="title_advanced_gmail_thread">Styl grupowania wiadomości Gmail dla kont Gmail</string>
     <string name="title_advanced_sync_folders">Synchronizuj listę folderów</string>
+    <string name="title_advanced_sync_folders_poll">Aktywnie synchronizuj listę folderów</string>
     <string name="title_advanced_sync_shared_folders">Synchronizuj listy udostępnionych folderów</string>
     <string name="title_advanced_subscriptions">Zarządzaj subskrypcjami folderów</string>
     <string name="title_advanced_check_authentication">Sprawdź uwierzytelnianie wiadomości</string>
@@ -566,8 +567,7 @@
     <string name="title_advanced_import_key">Importuj klucz prywatny</string>
     <string name="title_advanced_manage_keys">Zarządzaj kluczami prywatnymi</string>
     <string name="title_advanced_ca">Zainstalowane certyfikaty CA</string>
-    <string name="title_advanced_manage_keys_hint">        To przeniesie Cię do ustawień zabezpieczeń Androida.
-        Klucze i certyfikaty można znaleźć w Zaawansowane - Szyfrowanie i uwierzytelnianie.
+    <string name="title_advanced_manage_keys_hint">        To przeniesie Cię do ustawień zabezpieczeń Androida.        Klucze i certyfikaty można znaleźć w Zaawansowane - Szyfrowanie i uwierzytelnianie.
     </string>
     <string name="title_advanced_power_menu">Dodaj akcje do menu zasilania Androida</string>
     <string name="title_advanced_external_search">Zezwalaj innym aplikacjom na wyszukiwanie w wiadomościach</string>
@@ -607,6 +607,7 @@
     <string name="title_advanced_sync_kept_hint">Spowoduje to użycie dodatkowych danych i zużycie dodatkowej energii baterii, zwłaszcza jeśli w urządzeniu przechowywanych jest wiele wiadomości</string>
     <string name="title_advanced_gmail_thread_hint">Dotyczy to tylko nowo odebranych wiadomości i może uszkodzić istniejące grupy</string>
     <string name="title_advanced_sync_folders_hint">Wyłączenie tej opcji nieco zmniejszy zużycie danych i baterii, ale wyłączy także aktualizację listy folderów</string>
+    <string name="title_advanced_poll_folders_hint">Okresowo synchronizuj listę folderów po połączeniu z kontem</string>
     <string name="title_advanced_check_authentication_hint">Spowoduje to sprawdzenie wyników uwierzytelniania DKIM, SPF i DMARC w sposób wykonywany przez serwer poczty elektronicznej</string>
     <string name="title_advanced_check_reply_hint">Spowoduje to sprawdzenie, czy nazwa domeny nadawcy i adres odpowiedzi są takie same</string>
     <string name="title_advanced_lookup_mx_hint">To sprawdzi, czy istnieją rekordy MX DNS</string>
@@ -641,7 +642,7 @@
     <string name="title_advanced_preview_lines_hint">Maksymalnie %s znaków</string>
     <string name="title_advanced_preview_issue">Przewijanie może być powolne z powodu błędu w niektórych wersjach Androida, gdy liczba linii jest większa niż jedna</string>
     <string name="title_advanced_overview_mode_hint">Może to skutkować bardzo małymi czcionkami</string>
-    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">Może to sprawić, że wiadomości będą węższe, ale też dziwnie wyglądające</string>
+    <string name="title_advanced_override_width_hint">Może to sprawić, że wiadomości będą węższe, ale też dziwnie wyglądające</string>
     <string name="title_advanced_placeholders_hint">Dotyczy to tylko przeformatowanych wiadomości</string>
     <string name="title_advanced_inline_hint">Obrazy wstawione są obrazami zawartymi w wiadomości</string>
     <string name="title_advanced_parse_classes_hint">Spowoduje to poprawniejsze wyświetlanie wiadomości, ale z możliwym opóźnieniem</string>
@@ -869,8 +870,7 @@
     <string name="title_auto_delete">Automatycznie trwale usuwaj stare wiadomości</string>
     <string name="title_auto_delete_hint">Stare wiadomości to wiadomości, które nie są już przechowywane na urządzeniu</string>
     <string name="title_auto_delete_archive_hint">Usunięcie z folderu archiwum nie zawsze jest dozwolone przez serwer e-mail</string>
-    <string name="title_inbox_root_hint">        Niektórzy dostawcy wymagają utworzenia nowych folderów w skrzynce odbiorczej.
-        W takim przypadku możesz dłużej nacisnąć skrzynkę odbiorczą na liście folderów i wybrać \'Utwórz podfolder\'.
+    <string name="title_inbox_root_hint">        Niektórzy dostawcy wymagają utworzenia nowych folderów w skrzynce odbiorczej.        W takim przypadku możesz dłużej nacisnąć skrzynkę odbiorczą na liście folderów i wybrać \'Utwórz podfolder\'.
     </string>
     <string name="title_folder_name_missing">Brak nazwy folderu</string>
     <string name="title_folder_exists">Folder %1$s istnieje</string>
@@ -915,6 +915,7 @@
     <string name="title_importance_high">Wysoka</string>
     <string name="title_search_in_text">Szukaj w tekście &#8230;</string>
     <string name="title_forward">Prześlij dalej</string>
+    <string name="title_resend">Wyślij ponownie</string>
     <string name="title_new_message">Nowa wiadomość</string>
     <string name="title_editasnew">Edytuj jako nową</string>
     <string name="title_edit_notes">Edytuj lokalne notatki</string>
@@ -1001,6 +1002,9 @@
     <string name="title_truncated">Wiadomość jest za duża, aby wyświetlić ją w całości</string>
     <string name="title_insufficient_memory">Wiadomość jest zbyt duża dla dostępnej pamięci (%1$d)</string>
     <string name="title_show_full">Pokaż pełną wiadomość</string>
+    <string name="title_fullscreen">Pokaż na pełnym ekranie</string>
+    <string name="title_fit_width">Dopasuj szerokość</string>
+    <string name="title_disable_widths">Wyłącz szerokości</string>
     <string name="title_unused_inline">Niewykorzystane wstawione obrazy zostaną usunięte podczas wysyłania</string>
     <string name="title_accross_remark">Wiadomości przenoszone pomiędzy kontami zostaną pobrane ponownie, wpływając na dodatkowe użycie danych</string>
     <string name="title_raw_saved">Zapisano nieprzetworzoną wiadomość</string>
@@ -1024,16 +1028,14 @@
     <string name="title_ask_reporting">Wyślij raporty o błędach?</string>
     <string name="title_reporting_why">Raportowanie błędów pomoże ulepszyć FairEmail</string>
     <string name="title_ask_review">Oceń FairEmail</string>
-    <string name="title_ask_review_rationale">        Używasz FairEmail już od jakiegoś czasu.
-        Byłbym wdzięczny, gdybyś mógł ocenić FairEmail w Sklepie Play.
+    <string name="title_ask_review_rationale">        Używasz FairEmail już od jakiegoś czasu.        Byłbym wdzięczny, gdybyś mógł ocenić FairEmail w Sklepie Play.
     </string>
     <string name="title_need_help">Potrzebuję pomocy</string>
     <string name="title_ask_once">Ta wiadomość pojawi się tylko raz, chyba że wybierzesz \'Później\'</string>
     <string name="title_third_party">Używasz wersji od innych firm</string>
     <string name="title_expand_warning">Rozwinięcie tej wiadomości spowoduje pobranie %1$s</string>
     <string name="title_download_message">Pobieranie &#8230;</string>
-    <string name="title_reformatted">        To jest sformatowany widok wiadomości.
-         Możesz dotknąć &#x26F6; ikonę, aby wyświetlić oryginalną wiadomość i ukryć tę wiadomość.
+    <string name="title_reformatted">        To jest sformatowany widok wiadomości.         Możesz dotknąć &#x26F6; ikonę, aby wyświetlić oryginalną wiadomość i ukryć tę wiadomość.
          Ponowne formatowanie wiadomości może zająć trochę czasu, w zależności od rozmiaru wiadomości i szybkości urządzenia.
     </string>
     <string name="title_compose">Napisz</string>
@@ -1296,6 +1298,8 @@
     <string name="title_rule_subject">Tytuł zawiera</string>
     <string name="title_rule_attachments">Zawiera załącznik</string>
     <string name="title_rule_header">Nagłówek zawiera</string>
+    <string name="title_rule_body">Tekst zawiera</string>
+    <string name="title_rule_body_remark">Użycie tego warunku będzie zawsze pobierało tekst wiadomości, co może spowolnić synchronizację listy wiadomości</string>
     <string name="title_rule_time_abs">Całkowity czas (otrzymany) między</string>
     <string name="title_rule_time_after">Otrzymane po</string>
     <string name="title_rule_time_before">Otrzymane przed</string>
@@ -1325,6 +1329,7 @@
     <string name="title_rule_applied">Problematycznych wiadomości: %1$d</string>
     <string name="title_rule_check">Sprawdź</string>
     <string name="title_rule_no_headers">Nie można sprawdzić stanów nagłówka</string>
+    <string name="title_rule_no_body">Tekst wiadomości jest niedostępny</string>
     <string name="title_rule_matched">Pasujące wiadomości</string>
     <string name="title_rule_no_matches">Brak pasujących wiadomości</string>
     <string name="title_rule_tts_ok">Ustawienia poprawne</string>
@@ -1532,8 +1537,7 @@
     <string name="title_pro_purchase">Kup</string>
     <string name="title_pro_one_time">%1$s (jednorazowy zakup)</string>
     <string name="title_pro_no_play">Sklep Play nie został znaleziony</string>
-    <string name="title_pro_info">        Opracowanie FairEmail zajęło dosłownie tysiące godzin, a mimo to większość funkcji jest darmowa.
-        FairEmail poważnie traktuje Twoją prywatność i nie wyświetla reklam oraz nie wykorzystuje śledzenia ani analiz do zarabiania pieniędzy.
+    <string name="title_pro_info">        Opracowanie FairEmail zajęło dosłownie tysiące godzin, a mimo to większość funkcji jest darmowa.        FairEmail poważnie traktuje Twoją prywatność i nie wyświetla reklam oraz nie wykorzystuje śledzenia ani analiz do zarabiania pieniędzy.
         Aby utrzymać i wspierać FairEmail na dłuższą metę, niektóre udogodnienia i zaawansowane funkcje nie są bezpłatne.
         FairEmail wyświetla małą wiadomość przypominającą o tym, która zostanie usunięta, jeśli kupisz funkcje pro.    </string>
     <string name="title_pro_whichever">Bez względu na to, jakie funkcje są wybierane jako Pro, zawsze jest ktoś, kto narzeka, że dana funkcja powinna być darmowa. Proszę nie bądź tą osobą.</string>
@@ -1760,4 +1764,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>Małe</item>
+        <item>Średnie</item>
+        <item>Duże</item>
+        <item>Bardzo duży</item>
+    </string-array>
 </resources>

@@ -7,7 +7,8 @@
     <string name="app_welcome">FairEmail is an open source email app focused on privacy and security. For this reason some features might work differently from what you are used to.</string>
     <string name="app_limitations">For example, messages are reformatted by default to remove unsafe elements and to improve readability, and opening links needs to be confirmed for safety. Both can be disabled if desired.</string>
     <string name="app_eula" translatable="false">THIS SOFTWARE IS PROVIDED BY THE AUTHOR \'\'AS IS\'\' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</string>
-    <string name="app_crash">FairEmail is not supported on this device because bugs in Android cause crashes</string>
+    <string name="app_unsupported">Bugs in the Android version of this particular device cause crashes</string>
+    <string name="app_continue">Continue anyway</string>
     <string name="app_exit">Go \'back\' again to exit</string>
     <string name="app_cake">Insufficient storage space left</string>
     <string name="app_updated">Last update: %1$s</string>
@@ -428,6 +429,7 @@
     <string name="title_advanced_landscape">Landscape mode</string>
     <string name="title_advanced_two_row">Use two rows</string>
     <string name="title_advanced_two_col">Use two columns</string>
+    <string name="title_advanced_min_screen_size">Minimum screen size for splitting the screen</string>
     <string name="title_advanced_nav_options">Show navigation menu options</string>
     <string name="title_advanced_nav_pin">Pin navigation menu</string>
     <string name="title_advanced_nav_hide_title">Hide navigation menu options?</string>
@@ -745,6 +747,7 @@
     <string name="title_advanced_date_hint">Messages are only grouped by date if they are sorted by time</string>
     <string name="title_advanced_navbar_colorize_hint">Whether this works depends on the Android version and variant</string>
     <string name="title_advanced_split_hint">This will split the screen into parts</string>
+    <string name="title_advanced_split_min_hint">This is a condition intended for foldable devices</string>
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
     <string name="title_advanced_highlight_hint">The accent color of the theme will be used for highlighting</string>
     <string name="title_advanced_gravatars_hint">There might be a privacy risk</string>
@@ -1051,6 +1054,7 @@
     <string name="title_importance_high">High</string>
     <string name="title_search_in_text">Search in text &#8230;</string>
     <string name="title_forward">Forward</string>
+    <string name="title_resend">Resend</string>
     <string name="title_new_message">New message</string>
     <string name="title_editasnew">Edit as new</string>
     <string name="title_edit_notes">Edit local notes</string>
@@ -1474,6 +1478,8 @@
     <string name="title_rule_attachments">Has attachments</string>
     <string name="title_rule_mime_type" translatable="false">Mime type</string>
     <string name="title_rule_header">Header contains</string>
+    <string name="title_rule_body">Text contains</string>
+    <string name="title_rule_body_remark">Using this condition will always download the message text, which may slow down the synchronization of the message list</string>
     <string name="title_rule_time_abs">Absolute time (received) between</string>
     <string name="title_rule_time_after">Received after</string>
     <string name="title_rule_time_before">Received before</string>
@@ -1505,6 +1511,7 @@
 
     <string name="title_rule_check">Check</string>
     <string name="title_rule_no_headers">Header conditions cannot be checked</string>
+    <string name="title_rule_no_body">Message text not available</string>
     <string name="title_rule_matched">Matching messages</string>
     <string name="title_rule_no_matches">No matching messages</string>
 
@@ -2151,6 +2158,13 @@
         <item>AES-128</item>
         <item>AES-192</item>
         <item>AES-256</item>
+    </string-array>
+
+    <string-array name="minScreenSizes">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
+        <item>Extra large</item>
     </string-array>
 
     <string name="fingerprint" translatable="false">17BA15C1AF55D925F98B99CEA4375D4CDF4C174B</string>

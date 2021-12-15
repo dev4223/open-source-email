@@ -3,7 +3,8 @@
     <string name="app_search">FairEmail ସନ୍ଧାନ</string>
     <string name="app_changelog">ପରିବର୍ତ୍ତନ ଲଗ୍</string>
     <string name="app_welcome">FairEmail ହେଉଛି ଏକ ଖୋଲା ଉତ୍ସ ଇମେଲ୍ ଆପ୍ ଯାହାକି ଗୋପନୀୟତା ଏବଂ ସୁରକ୍ଷା ଉପରେ ଧ୍ୟାନ ଦେଇଥାଏ। ଏହି କାରଣରୁ କିଛି ବୈଶିଷ୍ଟ୍ୟ ଆପଣ ଅଭ୍ୟସ୍ତ ଠାରୁ ଭିନ୍ନ ଭାବରେ କାର୍ଯ୍ୟ କରିପାରେ।</string>
-    <string name="app_crash">ଏହି ଡିଭାଇସରେ FairEmail ସମର୍ଥିତ ନୁହେଁ କାରଣ ଆଣ୍ଡ୍ରଏଡରେ ଥିବା ବଗ୍ ଯୋଗୁ କ୍ରାସ୍ ହୋଇଥାଏ</string>
+    <string name="app_unsupported">ଏହି ଡିଭାଇସର ଆଣ୍ଡ୍ରଏଡ୍ ସଂସ୍କରଣରେ ଥିବା ବଗ୍ କ୍ରାସ୍ ସୃଷ୍ଟି କରେ</string>
+    <string name="app_continue">ଯେକୌଣସି ପ୍ରକାରେ ଜାରି ରଖନ୍ତୁ</string>
     <string name="app_exit">ପ୍ରସ୍ଥାନ କରିବା ପାଇଁ ପୁଣି \'ବ୍ୟାକ୍\' ଯାଆନ୍ତୁ</string>
     <string name="app_updated">ଗତ ଅପଡେଟ୍: %1$s</string>
     <string name="channel_service">ପ୍ରାପ୍ତ କରନ୍ତୁ</string>
@@ -31,6 +32,9 @@
     </plurals>
     <string name="title_junk_hint">ସ୍ପାମ୍ ଫିଲ୍ଟର୍ କରିବା ପାଇଁ ଆପଣଙ୍କ ଇମେଲ୍ ପ୍ରଦାନକାରୀ ଦାୟୀ। ଏକ ଇମେଲ୍ ଆପ୍ ଏହା ବିଶ୍ୱସନୀୟ ଭାବରେ କରିବା ପାଇଁ ଆବଶ୍ୟକ ସମସ୍ତ ତଥ୍ୟ ନାହିଁ।</string>
     <string name="title_block_sender_domain">\'%1$s\' ଡୋମେନଟିକୁ ଅବରୋଧ କରନ୍ତୁ</string>
+    <string name="title_block_sender_hint">        ପ୍ରେରକକୁ ଅବରୋଧ କରିବା ଏକ ମାଗଣା ବୈଶିଷ୍ଟ୍ୟ।
+        ଗୋଟେ ପ୍ରେରକ ଡୋମେନ୍ ଅବରୋଧ କରିବାରେ ଫିଲ୍ଟର୍ ନିୟମ ବ୍ୟବହାର ହୁଏ, ଯାହା ଏକ ପ୍ରୋ ବୈଶିଷ୍ଟ୍ୟ ଅଟେ।
+    </string>
     <string name="title_junk_clear">ଖାଲି କରନ୍ତୁ</string>
     <string name="title_notification_idle">ନିଷ୍କ୍ରିୟ</string>
     <string name="title_notification_failed">\'%1$s\' ବିଫଳ ହେଲା</string>
@@ -151,6 +155,7 @@
     <string name="title_advanced_optimize">ସ୍ୱତଃସ୍ପୃତ ଭାବେ ଅପ୍ଟିମାଇଜ୍ କରନ୍ତୁ</string>
     <string name="title_advanced_advanced">ବିକଶିତ</string>
     <string name="title_advanced_quick_sync">ଦ୍ରୁତ ସିଙ୍କ୍</string>
+    <string name="title_advanced_sync_folders_poll">ଫୋଲ୍ଡର୍ ତାଲିକା ସକ୍ରିୟ ଭାବରେ ସିଙ୍କ୍ରୋନାଇଜ୍ କରିବା</string>
     <string name="title_advanced_keyboard_no_fullscreen">ପୂର୍ଣ୍ଣସ୍କ୍ରିନ୍ କୀବୋର୍ଡ୍ ପ୍ରତିରୋଧ କରନ୍ତୁ</string>
     <string name="title_advanced_compose_font">ଡିଫଲ୍ଟ ଫଣ୍ଟ</string>
     <string name="title_advanced_caption_general">ସାଧାରଣ</string>
@@ -158,6 +163,7 @@
     <string name="title_advanced_caption_message">ବାର୍ତ୍ତା</string>
     <string name="title_advanced_portrait">ପୋଟ୍ରେଟ୍ ମୋଡ୍</string>
     <string name="title_advanced_landscape">ଲ୍ୟାଣ୍ଡସ୍କେପ୍ ମୋଡ୍</string>
+    <string name="title_advanced_min_screen_size">ସ୍କ୍ରିନ୍ ବିଭାଜନ ପାଇଁ ସର୍ବନିମ୍ନ ସ୍କ୍ରିନ୍ ଆକାର</string>
     <string name="title_advanced_startup">ଷ୍ଟାର୍ଟ ସ୍କ୍ରିନରେ ଦେଖାନ୍ତୁ</string>
     <string name="title_advanced_cards_shadow_highlight">ଆକ୍ସେଣ୍ଟ ରଙ୍ଗ ବଦଳରେ ହାଇଲାଇଟ୍ ରଙ୍ଗ ବ୍ୟବହାର କରିବା</string>
     <string name="title_advanced_color_stripe_wide">ପ୍ରଶସ୍ତ ରଙ୍ଗ ଷ୍ଟ୍ରାଇପ୍ ବ୍ୟବହାର କରନ୍ତୁ</string>
@@ -211,7 +217,7 @@
     <string name="title_advanced_poll_battery">ଏହା ଅଧିକ ବ୍ୟାଟେରୀ ବ୍ୟବହାର ର କାରଣ ହୋଇପାରେ!</string>
     <string name="title_advanced_remove_signature_hint">ଏହା ଫଳରେ ବହୁତ କମ୍ କିମ୍ୱା ଅତ୍ୟଧିକ ପାଠ୍ୟ ଅପସାରଣ ହୋଇପାରେ</string>
     <string name="title_advanced_highlight_hint">ଥିମର ଆକ୍ସେଣ୍ଟ ରଙ୍ଗ ହାଇଲାଇଟ୍ କରିବା ପାଇଁ ବ୍ୟବହୃତ ହେବ</string>
-    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">ଏହା ବାର୍ତ୍ତାଗୁଡ଼ିକୁ ସଂକୀର୍ଣ୍ଣ କରିପାରେ, କିନ୍ତୁ ଅଦ୍ଭୁତ ଦେଖାଯାଏ</string>
+    <string name="title_advanced_override_width_hint">ଏହା ବାର୍ତ୍ତାଗୁଡ଼ିକୁ ସଂକୀର୍ଣ୍ଣ କରିପାରେ, କିନ୍ତୁ ଅଦ୍ଭୁତ ଦେଖାଯାଏ</string>
     <string name="title_advanced_expandall_hint">ଏକାଧିକ ବାର୍ତ୍ତା ସମ୍ପ୍ରସାରଣ ହୋଇଥିବା ବେଳେ ଉତ୍ତର ବଟନ୍ ଦେଖାଯିବ ନାହିଁ କାରଣ ବଟନ୍ କେଉଁ ବାର୍ତ୍ତା ପାଇଁ ପ୍ରଯୁଜ୍ୟ ତାହା ଅସ୍ପଷ୍ଟ ଅଟେ</string>
     <string name="title_advanced_display_autolock_nav_hint">%1$d ସେକେଣ୍ଡର ଅନୁଗ୍ରହ ସମୟ ରହିବ</string>
     <string name="title_advanced_english_hint">ଏହା ଆପ୍ କୁ ପୁନଃଆରମ୍ଭ କରିବ</string>
@@ -286,6 +292,7 @@
     <string name="title_hide">ଲୁଚାଅ</string>
     <string name="title_unhide">ଦେଖାଅ</string>
     <string name="title_search_in_text">ପାଠ୍ୟରେ ଖୋଜନ୍ତୁ &#8230;</string>
+    <string name="title_resend">ପୁନଃପ୍ରେରଣ</string>
     <string name="title_force_light">ହାଲୁକା ଥିମ୍ ବାଧ୍ୟ କରନ୍ତୁ</string>
     <string name="title_raw_send_message">ବାର୍ତ୍ତା</string>
     <string name="title_raw_send_thread">ବାର୍ତ୍ତାଳାପ</string>
@@ -310,6 +317,9 @@
     <string name="title_no_folder">ଫୋଲ୍ଡର୍ ବିଦ୍ୟମାନ ନାହିଁ</string>
     <string name="title_insufficient_memory">ଉପଲବ୍ଧ ମେମୋରୀ ଅପେକ୍ଷା ବାର୍ତ୍ତା ଅଧିକ ବଡ଼ ଅଟେ (%1$d)</string>
     <string name="title_show_full">ପୂର୍ଣ୍ଣ ବାର୍ତ୍ତା ଦେଖାନ୍ତୁ</string>
+    <string name="title_fullscreen">ପୂର୍ଣ୍ଣସ୍କ୍ରିନ୍ ଦେଖାନ୍ତୁ</string>
+    <string name="title_fit_width">ଓସାର ଫିଟ୍ କରନ୍ତୁ</string>
+    <string name="title_disable_widths">ଓସାର ଅକ୍ଷମ କରନ୍ତୁ</string>
     <string name="title_ask_help">FairEmail କୁ ଉନ୍ନତ କରିବାରେ ସାହାଯ୍ୟ କରନ୍ତୁ</string>
     <string name="title_need_help">ମତେ ସାହାଯ୍ୟ ଦରକାର</string>
     <string name="title_compose">ରଚନା କରନ୍ତୁ</string>
@@ -325,6 +335,9 @@
     <string name="title_send_priority">ପ୍ରାଥମିକତା</string>
     <string name="title_style">ଶୈଳୀ</string>
     <string name="title_style_size">ଆକାର</string>
+    <string name="title_style_size_small">ଛୋଟ</string>
+    <string name="title_style_size_medium">ମଧ୍ୟମ</string>
+    <string name="title_style_size_large">ବଡ଼</string>
     <string name="title_style_align_start">ଆରମ୍ଭ</string>
     <string name="title_style_align_center">କେନ୍ଦ୍ର</string>
     <string name="title_style_align_end">ଶେଷ</string>
@@ -397,11 +410,14 @@
     <string name="title_rule_snooze">ସ୍ନୁଜ୍</string>
     <string name="title_rule_move">ଘୁଞ୍ଚାନ୍ତୁ</string>
     <string name="title_rule_enabled">ସକ୍ଷମ ହୋଇଛି</string>
+    <string name="title_rule_body">ପାଠ୍ୟ ଧାରଣ କରେ</string>
+    <string name="title_rule_body_remark">ଏହି ସର୍ତ୍ତ ବ୍ୟବହାର କରିବା ଦ୍ୱାରା ସର୍ବଦା ବାର୍ତ୍ତାର ପାଠ୍ୟ ଡାଉନଲୋଡ୍ ହେବ, ଯାହା ବାର୍ତ୍ତା ତାଲିକାର ସିଙ୍କ୍ରୋନାଇଜେସନ୍ ମନ୍ଥର କରିପାରେ</string>
     <string name="title_rule_regex">RegEx</string>
     <string name="title_rule_identity">ପରିଚୟ</string>
     <string name="title_rule_template">ପ୍ରତ୍ୟୁତ୍ତର ଟେମ୍ପଲେଟ୍</string>
     <string name="title_rule_identity_missing">ପରିଚୟ ନିଖୋଜ</string>
     <string name="title_rule_check">ଯାଞ୍ଚ କର</string>
+    <string name="title_rule_no_body">ବାର୍ତ୍ତାର ପାଠ୍ୟ ଉପଲବ୍ଧ ନାହିଁ</string>
     <string name="title_rule_tts_from">ପ୍ରେରକ</string>
     <string name="title_rule_tts_subject">ବିଷୟ</string>
     <string name="title_rule_tts_content">ପାଠ୍ୟ</string>
@@ -474,13 +490,19 @@
         <item>Primary account folders</item>
         <item>ଆକାଉଣ୍ଟଗୁଡ଼ିକ</item>
     </string-array>
+    <string-array name="resizeNames">
+        <item>ଛୋଟ</item>
+        <item>ମଧ୍ୟମ</item>
+        <item>ବଡ଼</item>
+        <item>ଅତିରିକ୍ତ ବଡ଼</item>
+    </string-array>
     <!-- https://en.wikipedia.org/wiki/Display_resolution -->
     <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <string-array name="fontSizeNames">
         <item>ଡିଫଲ୍ଟ</item>
-        <item>Small</item>
-        <item>Medium</item>
-        <item>Large</item>
+        <item>ଛୋଟ</item>
+        <item>ମଧ୍ୟମ</item>
+        <item>ବଡ଼</item>
     </string-array>
     <string-array name="receiptNames">
         <item>କେବଳ ପଠନ ରସିଦ</item>
@@ -510,4 +532,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>ଛୋଟ</item>
+        <item>ମଧ୍ୟମ</item>
+        <item>ବଡ଼</item>
+        <item>ଅତିରିକ୍ତ ବଡ଼</item>
+    </string-array>
 </resources>

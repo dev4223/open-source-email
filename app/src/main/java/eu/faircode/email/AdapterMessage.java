@@ -300,6 +300,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean language_detection;
     private List<String> languages;
     private static boolean debug;
+    private int level;
 
     private boolean gotoTop = false;
     private Integer gotoPos = null;
@@ -362,7 +363,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvPreview;
         private TextView tvNotes;
         private TextView tvError;
-        private ImageButton ibHelp;
         private ImageButton ibSettings;
 
         private View vsBody;
@@ -674,7 +674,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCount = itemView.findViewById(R.id.tvCount);
             ivThread = itemView.findViewById(R.id.ivThread);
             tvError = itemView.findViewById(R.id.tvError);
-            ibHelp = itemView.findViewById(R.id.ibHelp);
             ibSettings = itemView.findViewById(R.id.ibSettings);
 
             if (vwColor != null)
@@ -916,7 +915,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFlagged.setOnLongClickListener(this);
                 tvFolder.setOnLongClickListener(this);
             }
-            ibHelp.setOnClickListener(this);
+            tvError.setOnClickListener(this);
             ibSettings.setOnClickListener(this);
 
             if (vsBody != null) {
@@ -1016,7 +1015,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFlagged.setOnLongClickListener(null);
                 tvFolder.setOnLongClickListener(null);
             }
-            ibHelp.setOnClickListener(null);
+            tvError.setOnClickListener(null);
             ibSettings.setOnClickListener(null);
 
             if (vsBody != null) {
@@ -1485,9 +1484,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvError.setText(text);
                 tvError.setVisibility(View.VISIBLE);
             } else {
+                if (BuildConfig.DEBUG && level <= android.util.Log.INFO)
+                    error = message.thread;
                 tvError.setText(error);
                 tvError.setVisibility(error == null ? View.GONE : View.VISIBLE);
-                ibHelp.setVisibility(error == null ? View.GONE : View.VISIBLE);
                 ibSettings.setVisibility(
                         error != null && EntityFolder.OUTBOX.equals(message.folderType)
                                 ? View.VISIBLE : View.GONE);
@@ -3551,7 +3551,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 onShowSnoozed(message);
             else if (view.getId() == R.id.ibFlagged)
                 onToggleFlag(message);
-            else if (view.getId() == R.id.ibHelp)
+            else if (view.getId() == R.id.tvError)
                 onHelp(message);
             else if (view.getId() == R.id.ibSettings)
                 onSettings(message);
@@ -3977,10 +3977,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 sb.append(context.getString(R.string.title_on_blocklist));
             }
 
+            if (Boolean.FALSE.equals(message.from_domain) && message.smtp_from != null)
+                for (Address smtp_from : message.smtp_from) {
+                    if (sb.length() > 0)
+                        sb.append('\n');
+                    String domain = UriHelper.getEmailDomain(((InternetAddress) smtp_from).getAddress());
+                    sb.append(context.getString(R.string.title_via, UriHelper.getParentDomain(context, domain)));
+                }
+
             if (Boolean.FALSE.equals(message.reply_domain)) {
-                if (sb.length() > 0)
-                    sb.append('\n');
-                sb.append(message.checkReplyDomain(context));
+                String[] warning = message.checkReplyDomain(context);
+                if (warning != null) {
+                    if (sb.length() > 0)
+                        sb.append('\n');
+                    sb.append(context.getString(R.string.title_reply_domain, warning[0], warning[1]));
+                }
             }
 
             if (message.from != null && message.from.length > 0) {
@@ -4089,6 +4100,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onHelp(TupleMessageEx message) {
+            ClipboardManager clipboard =
+                    (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard != null) {
+                ClipData clip = ClipData.newPlainText(context.getString(R.string.app_name), tvError.getText());
+                clipboard.setPrimaryClip(clip);
+            }
+
             Helper.viewFAQ(context, 130);
         }
 
@@ -6024,10 +6042,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             context.getString(R.string.title_accessibility_show_snooze_time)));
                 ibSnoozed.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
-                if (ibHelp.getVisibility() == View.VISIBLE)
-                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibHelp,
+                if (tvError.getVisibility() == View.VISIBLE)
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.tvError,
                             context.getString(R.string.title_accessibility_view_help)));
-                ibHelp.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                tvError.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
                 info.setContentDescription(populateContentDescription(message));
             }
@@ -6053,7 +6071,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 } else if (action == R.id.ibSnoozed) {
                     onShowSnoozed(message);
                     return true;
-                } else if (action == R.id.ibHelp) {
+                } else if (action == R.id.tvError) {
                     onHelp(message);
                     return true;
                 }
@@ -6299,6 +6317,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             languages = null;
 
         debug = prefs.getBoolean("debug", false);
+        level = prefs.getInt("log_level", Log.getDefaultLogLevel());
 
         DiffUtil.ItemCallback<TupleMessageEx> callback = new DiffUtil.ItemCallback<TupleMessageEx>() {
             @Override
@@ -6337,7 +6356,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     log("msgid changed", next.id);
                 }
                 // references
-                // deliveredto
+                if (!Objects.equals(prev.deliveredto, next.deliveredto)) {
+                    same = false;
+                    log("deliveredto changed", next.id);
+                }
                 // inreplyto
                 if (!Objects.equals(prev.thread, next.thread)) {
                     same = false;
@@ -6383,6 +6405,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("blocklist changed", next.id);
                 }
+                // from_domain
                 if (!Objects.equals(prev.reply_domain, next.reply_domain)) {
                     same = false;
                     log("reply_domain changed", next.id);
@@ -6394,6 +6417,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!Objects.equals(prev.sender, next.sender)) {
                     same = false;
                     log("sender changed", next.id);
+                }
+                // return_path
+                // smtp_from
+                if (!MessageHelper.equal(prev.submitter, next.submitter)) {
+                    same = false;
+                    log("submitter changed", next.id);
                 }
                 if (!MessageHelper.equal(prev.from, next.from)) {
                     same = false;
@@ -7233,7 +7262,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (TextUtils.isEmpty(message.msgid))
                             return null;
 
-                        List<EntityMessage> messages = db.message().getMessagesByMsgId(message.account, message.msgid);
+                        List<EntityMessage> messages =
+                                db.message().getMessagesBySimilarity(message.account, message.id, message.msgid);
                         if (messages == null)
                             return null;
 

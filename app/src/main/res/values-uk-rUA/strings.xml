@@ -4,7 +4,8 @@
     <string name="app_changelog">Список змін</string>
     <string name="app_welcome">FairEmail - це додаток з відкритим вихідним кодом, орієнтований на конфіденційність та безпеку. Тому деякі функції можуть відрізнятися від того, що ви використовуєте.</string>
     <string name="app_limitations">Наприклад, щоб видалити небезпечні елементи та покращити читання, і для додавання підтвердження відкриття посилань з метою безпеки - повідомлення переформатуються за замовчуванням. За бажанням, ці дії можуть бути відключені.</string>
-    <string name="app_crash">На цьому пристрої не підтримується FairEMail, оскільки помилки в Android спричиняють збої самої програми</string>
+    <string name="app_unsupported">Помилка в версії Android для конкретного пристрою викликають аварійне завершення роботи</string>
+    <string name="app_continue">Все одно продовжити</string>
     <string name="app_exit">Натисніть \"Назад\" знову, щоб вийти</string>
     <string name="app_cake">Залишилося недостатньо вільного місця для зберігання</string>
     <string name="app_updated">Останнє оновлення: %1$s</string>
@@ -280,8 +281,7 @@
     <string name="title_setup_reset_images">Показати зображення</string>
     <string name="title_setup_reset_links">Підтвердити посилання</string>
     <string name="title_advanced_hint_title">Розширенні налаштування</string>
-    <string name="title_advanced_hint_message">        Ви переходите до більш розширених параметрів.
-        Всі параметри мають загальновизнані стандартні значення, які не треба змінювати, якщо ви не маєте інших уподобань.
+    <string name="title_advanced_hint_message">        Ви переходите до більш розширених параметрів.        Всі параметри мають загальновизнані стандартні значення, які не треба змінювати, якщо ви не маєте інших уподобань.
     </string>
     <string name="title_advanced_hint_remark">        Параметри класифіковані вкладками, розділені на секції, організовані за зовнішній виглядом або за використанням, та доступні для пошуку.
     </string>
@@ -311,6 +311,7 @@
     <string name="title_advanced_kept_removed">Перевірка, чи були старі повідомлення видалені з сервера</string>
     <string name="title_advanced_gmail_thread">Gmail стиль групування повідомлень для облікових записів Gmail</string>
     <string name="title_advanced_sync_folders">Синхронізувати список тек</string>
+    <string name="title_advanced_sync_folders_poll">Активна синхронізація списку тек</string>
     <string name="title_advanced_sync_shared_folders">Синхронізувати спільний список тек</string>
     <string name="title_advanced_subscriptions">Керувати підписками тек</string>
     <string name="title_advanced_check_authentication">Перевірка автентичності повідомлення</string>
@@ -567,8 +568,7 @@
     <string name="title_advanced_import_key">Імпортувати особистий ключ</string>
     <string name="title_advanced_manage_keys">Керування особистими ключами</string>
     <string name="title_advanced_ca">Встановлені сертифікати ЦС</string>
-    <string name="title_advanced_manage_keys_hint">        Це дозволить відкрити налаштування безпеки Android.
-        Ключі та сертифікати зазвичай можна знайти в розділі Безпека та місцезнаходження - Додатково - Шифрування й облікові дані.
+    <string name="title_advanced_manage_keys_hint">        Це дозволить відкрити налаштування безпеки Android.        Ключі та сертифікати зазвичай можна знайти в розділі Безпека та місцезнаходження - Додатково - Шифрування й облікові дані.
     </string>
     <string name="title_advanced_power_menu">Додати дії до меню живлення в Android</string>
     <string name="title_advanced_external_search">Дозволити іншим програмам пошук в повідомленнях</string>
@@ -607,6 +607,7 @@
     <string name="title_advanced_sync_kept_hint">Це призведе до передачі додаткових даних та більшого споживання заряду акумулятора, особливо якщо багато повідомлень зберігаються на пристрої</string>
     <string name="title_advanced_gmail_thread_hint">Це відноситься тільки до нових повідомлень і може не стосуватися існуючих груп</string>
     <string name="title_advanced_sync_folders_hint">Вимкнення цього призведе до зменшення споживання даних та використання акумулятора, але також вимкне оновлення списку тек</string>
+    <string name="title_advanced_poll_folders_hint">Періодично синхронізувати список тек після підключення до облікового запису</string>
     <string name="title_advanced_check_authentication_hint">Це може перевіряти результати перевірок на DKIM, SPF і DMARC які були виконані сервером електронної пошти</string>
     <string name="title_advanced_check_reply_hint">Це перевірить, чи доменне ім\'я відправника та адреса для відповіді співпадають</string>
     <string name="title_advanced_lookup_mx_hint">Це перевірить, чи існують записи DNS MX</string>
@@ -641,7 +642,7 @@
     <string name="title_advanced_preview_lines_hint">Максимум: %s символів</string>
     <string name="title_advanced_preview_issue">Прокручування може бути повільним через помилку у деяких версіях Android, коли кількість рядків більше одного</string>
     <string name="title_advanced_overview_mode_hint">Це може призвести до дуже малих шрифтів</string>
-    <string name="title_advanced_override_width_hint" comment="title_advanced_override_width_hint&#10;narrower as in less wide.&#10;">Це може зробити повідомлення вужчими, але і воно може виглядати дивно</string>
+    <string name="title_advanced_override_width_hint">Це може зробити повідомлення вужчими, але і воно може виглядати дивно</string>
     <string name="title_advanced_placeholders_hint">Це стосується лише для переформатованих повідомлень</string>
     <string name="title_advanced_inline_hint">Вбудовані зображення включені в повідомлення</string>
     <string name="title_advanced_parse_classes_hint">Можливо, це буде більш точно відображати повідомлення, але, можливо, з затримкою</string>
@@ -869,8 +870,7 @@
     <string name="title_auto_delete">Автоматично видаляти старі повідомлення назавжди</string>
     <string name="title_auto_delete_hint">Старі повідомлення - це повідомлення, які більше не зберігаються на пристрої</string>
     <string name="title_auto_delete_archive_hint">Видалення з теки архіву не завжди дозволяється сервером електронної пошти</string>
-    <string name="title_inbox_root_hint">        Деякі постачальники вимагають створення нових тек нижче вхідної теки.
-        В цьому випадку, ви можете довго натиснути на кнопку \"Вхідні\" у списку тек і вибрати \"Створити підтеку\".
+    <string name="title_inbox_root_hint">        Деякі постачальники вимагають створення нових тек нижче вхідної теки.        В цьому випадку, ви можете довго натиснути на кнопку \"Вхідні\" у списку тек і вибрати \"Створити підтеку\".
     </string>
     <string name="title_folder_name_missing">Відсутнє ім\'я теки</string>
     <string name="title_folder_exists">Тека %1$s вже існує</string>
@@ -915,6 +915,7 @@
     <string name="title_importance_high">Високий</string>
     <string name="title_search_in_text">Пошук у тексті &#8230;</string>
     <string name="title_forward">Переслати</string>
+    <string name="title_resend">Перевідправити</string>
     <string name="title_new_message">Нове повідомлення</string>
     <string name="title_editasnew">Редагувати як нове</string>
     <string name="title_edit_notes">Редагувати локальні нотатки</string>
@@ -1001,6 +1002,9 @@
     <string name="title_truncated">Лист завеликий для показу</string>
     <string name="title_insufficient_memory">Повідомлення занадто велике для доступної пам\'яті (%1$d)</string>
     <string name="title_show_full">Показати повне повідомлення</string>
+    <string name="title_fullscreen">Показати на весь екран</string>
+    <string name="title_fit_width">За шириною</string>
+    <string name="title_disable_widths">Відключити ширину</string>
     <string name="title_unused_inline">Невикористані вбудовані зображення будуть видалені при надсиланні</string>
     <string name="title_accross_remark">Повідомлення, які переміщуються через облікові записи, будуть завантажені знову, в результаті буде додаткове використання даних</string>
     <string name="title_raw_saved">Збережено початковий текст повідомлення</string>
@@ -1024,16 +1028,14 @@
     <string name="title_ask_reporting">Надіслати звіт про помилки?</string>
     <string name="title_reporting_why">Надсилання звітів про помилки допоможе покращити FairEmail</string>
     <string name="title_ask_review">Будь ласка, зробіть рецензію на FairEmail</string>
-    <string name="title_ask_review_rationale">        Ви користуєтеся FairEmail деякий час.
-        Буду вдячний, якщо Ви зможете оцінити FairEmail у Play Store.
+    <string name="title_ask_review_rationale">        Ви користуєтеся FairEmail деякий час.        Буду вдячний, якщо Ви зможете оцінити FairEmail у Play Store.
     </string>
     <string name="title_need_help">Мені потрібна допомога</string>
     <string name="title_ask_once">Це повідомлення з\'явиться лише один раз, якщо ви не виберете \"Пізніше\"</string>
     <string name="title_third_party">Ви використовуєте версію програми від сторонніх розробників</string>
     <string name="title_expand_warning">Розкриття цього повідомлення може завантажити %1$s</string>
     <string name="title_download_message">Завантаження &#8230;</string>
-    <string name="title_reformatted">        Це вид переформатованого повідомлення.
-        Ви можете натиснути на &#x26F6; значок, щоб переглянути оригінальне повідомлення та приховати це повідомлення.
+    <string name="title_reformatted">        Це вид переформатованого повідомлення.        Ви можете натиснути на &#x26F6; значок, щоб переглянути оригінальне повідомлення та приховати це повідомлення.
         Переформатування повідомлень займає деякий час, в залежності від розміру повідомлення і швидкості Вашого пристрою.
     </string>
     <string name="title_compose">Написати лист</string>
@@ -1296,6 +1298,8 @@
     <string name="title_rule_subject">Тема містить</string>
     <string name="title_rule_attachments">Є вкладення</string>
     <string name="title_rule_header">Заголовок містить</string>
+    <string name="title_rule_body">Текст містить</string>
+    <string name="title_rule_body_remark">Використання цієї умови завжди завантажить текст повідомлення, який може уповільнити синхронізацію списку повідомлень</string>
     <string name="title_rule_time_abs">Абсолютний час (отримано) між</string>
     <string name="title_rule_time_after">Отримано після</string>
     <string name="title_rule_time_before">Отримано до</string>
@@ -1325,6 +1329,7 @@
     <string name="title_rule_applied">Повідомлення котрі підлягають: %1$d</string>
     <string name="title_rule_check">Перевірити</string>
     <string name="title_rule_no_headers">Умови заголовка не можуть бути перевірені</string>
+    <string name="title_rule_no_body">Не містить текст повідомлення</string>
     <string name="title_rule_matched">Відповідність повідомлень</string>
     <string name="title_rule_no_matches">Немає відповідних повідомлень</string>
     <string name="title_rule_tts_ok">Налаштування завершене</string>
@@ -1532,8 +1537,7 @@
     <string name="title_pro_purchase">Придбати</string>
     <string name="title_pro_one_time">%1$s (одноразове придбання)</string>
     <string name="title_pro_no_play">Play Store не знайдено</string>
-    <string name="title_pro_info">        Розробка FairEmail зайняла тисячі годин і незважаючи на це, більшість функцій можуть вільно використовуватися.
-        FairEmail серйозно охороняє Вашу конфіденційність і не показує рекламу, не використовує відстеження або аналітику, щоб заробити гроші.
+    <string name="title_pro_info">        Розробка FairEmail зайняла тисячі годин і незважаючи на це, більшість функцій можуть вільно використовуватися.        FairEmail серйозно охороняє Вашу конфіденційність і не показує рекламу, не використовує відстеження або аналітику, щоб заробити гроші.
         Щоб зберегти і підтримати FairEmail в довгостроковій перспективі, деякі зручності та розширені функції обмеженні.
         FairEmail показує маленьке повідомлення, щоб нагадати Вам про це, воно буде вилучено, якщо ви купите Pro функції.
     </string>
@@ -1761,4 +1765,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>Малий</item>
+        <item>Середній</item>
+        <item>Великий</item>
+        <item>Дуже великий</item>
+    </string-array>
 </resources>

@@ -4,7 +4,8 @@
     <string name="app_changelog">Dəyişiklik jurnalı</string>
     <string name="app_welcome">FairEmail, gizlilik və təhlükəsizliyə fokuslanmış bir açıq mənbəli e-poçt tətbiqidir. Buna görə də bəzi xüsusiyyətlər, istifadə etdiyinizdən fərqli şəkildə işləyə bilər.</string>
     <string name="app_limitations">Nümunə üçün, güvənli olmayan elementləri çıxartmaq və oxunaqlılığı artırmaq üçün mesajlar ilkin olaraq yenidən formatlanır və təhlükəsizlik üçün bağlantıların açılmasının təsdiqlənməsi lazım olur. İstəsəniz, hər ikisini sıradan çıxarda bilərsiniz.</string>
-    <string name="app_crash">FairEmail, Android-in çökmə səbəbli xətalarına görə bu cihazda dəstəklənmir</string>
+    <string name="app_unsupported">Bu cihazın Android versiyasındakı xətalar çökmələrə səbəb olur</string>
+    <string name="app_continue">Yenə də davam edilsin</string>
     <string name="app_exit">Çıxmaq üçün yenidən \'geri\'yə basın</string>
     <string name="app_cake">Anbar sahəsi yetərsizdir</string>
     <string name="app_updated">Son yeniləmə: %1$s</string>
@@ -290,6 +291,7 @@
     <string name="title_advanced_kept_removed">Köhnə mesajların serverlərdən silinib silinmədiyini yoxlayın</string>
     <string name="title_advanced_gmail_thread">Gmail hesabları üçün Gmail mesaj qruplaşdırma stili</string>
     <string name="title_advanced_sync_folders">Qovluq siyahısını eyniləşdir</string>
+    <string name="title_advanced_sync_folders_poll">Qovluq siyahısını aktiv olaraq eyniləşdir</string>
     <string name="title_advanced_sync_shared_folders">Paylaşılan qovluq siyahılarını eyniləşdir</string>
     <string name="title_advanced_subscriptions">Qovluq abunəliklərini idarə et</string>
     <string name="title_advanced_check_authentication">Mesaj kimlik təsdiqləməsini yoxla</string>
@@ -367,6 +369,7 @@
     <string name="title_advanced_cards_beige">Kart stilini istifadə edəndə bej arxaplan istifadə et (yalnız açıq temalar)</string>
     <string name="title_advanced_tabular_background">Cədvəl stili istifadə edəndə kart rəngini arxaplan rəngi kimi istifadə et</string>
     <string name="title_advanced_cards_shadow">Kart stilini istifadə edəndə oxunmamış mesajlar üçün kölgə istifadə et</string>
+    <string name="title_advanced_cards_shadow_highlight">Rəngi vurğulamaq əvəzinə vurğu rəngini istifadə et</string>
     <string name="title_advanced_date_header">Tarixə görə qruplaşdır</string>
     <string name="title_advanced_date_fixed">Sabit tarix başlığını üstdə göstər</string>
     <string name="title_advanced_date_bold">Tarixi qalın göstər</string>
@@ -375,6 +378,7 @@
     <string name="title_advanced_indentation">Danışıqlarda alınan/göndərilən mesajların sol/sağ boşluğu</string>
     <string name="title_advanced_highlight_unread">Oxunmamış mesajları vurğula</string>
     <string name="title_advanced_color_stripe">Rəng zolağını göstər</string>
+    <string name="title_advanced_color_stripe_wide">Geniş rəng zolağı istifadə et</string>
     <string name="title_advanced_avatars">Əlaqə fotolarını göstər</string>
     <string name="title_advanced_gravatars">\"Gravatar\"ları göstər</string>
     <string name="title_advanced_bimi_unverified">Təsdiqlənməmiş göndərən</string>
@@ -412,6 +416,7 @@
     <string name="title_advanced_thumbnails">Mesaj mətnindən sonra təsvir eskizlərini göstər</string>
     <string name="title_advanced_message_text_zoom2">İlkin mesajın mətn yaxınlaşdırması: %1$s %%</string>
     <string name="title_advanced_overview_mode">Orijinal mesajı tam ekrana qədər yaxınlaşdır</string>
+    <string name="title_advanced_override_width">Orijinal mesajlarda sabit genişlikləri sıradan çıxart</string>
     <string name="title_advanced_contrast">Mesaj mətni üçün yüksək ziddiyyət istifadə et</string>
     <string name="title_advanced_monospaced">Mesaj mətni üçün ilkin olaraq tək boşluqlu şrift istifadə et</string>
     <string name="title_advanced_monospaced_pre">Ön formatlı mətn üçün tək boşluqlu şrift istifadə et</string>
@@ -583,6 +588,7 @@
     <string name="title_advanced_sync_kept_hint">Bu, xüsusilə cihazda həddindən çox mesaj saxlanılanda ekstra data transfer edir və daha çox batareya enerjisi istifadə edir</string>
     <string name="title_advanced_gmail_thread_hint">Bu, yalnız yeni gələn mesajlara tətbiq olunur və mövcud qrupları zədələyə bilər</string>
     <string name="title_advanced_sync_folders_hint">Bunu sıradan çıxartmaq, verilənlər və batareya istifadəsini bir az azaldacaq, ancaq qovluq siyahısının yenilənməsini də sıradan çıxardacaq</string>
+    <string name="title_advanced_poll_folders_hint">Bir hesaba bağlandıqdan sonra əlavə olaraq qovluq siyahısını mütəmadi olaraq eyniləşdir</string>
     <string name="title_advanced_check_authentication_hint">Bu, e-poçt serveri tərəfindən icra edilən DKIM, SPF və DMARC kimlik təsdiqləməsinin nəticələrini yoxlayacaq</string>
     <string name="title_advanced_check_reply_hint">Bu, göndərənin domen adı ilə cavab ünvanının eyni olub-olmadığını yoxlayacaq</string>
     <string name="title_advanced_lookup_mx_hint">Bu, DNS MX qeydlərinin mövcudluğunu yoxlayacaq</string>
@@ -617,6 +623,7 @@
     <string name="title_advanced_preview_lines_hint">Cəmi maksimum %s simvol</string>
     <string name="title_advanced_preview_issue">Sətir sayı birdən çox olanda bəzi Android versiyalarında bir xətaya görə sürüşdürmə yavaşlaya bilər</string>
     <string name="title_advanced_overview_mode_hint">Bu, çox kiçik şriftlərə səbəb ola bilər</string>
+    <string name="title_advanced_override_width_hint">Bu, mesajları daraltmaqla yanaşı qəribə göstərə bilər</string>
     <string name="title_advanced_placeholders_hint">Bu, yalnız yenidən format edilmiş mesajlara tətbiq olunur</string>
     <string name="title_advanced_inline_hint">Sətiriçi təsvirlər, mesaja daxil edilən təsvirlərdir</string>
     <string name="title_advanced_parse_classes_hint">Bu, mesajları daha dəqiq görüntüləyəcək, ancaq gecikmə yaşana bilər</string>
@@ -890,6 +897,7 @@
     <string name="title_importance_high">Yüksək</string>
     <string name="title_search_in_text">Mətndə axtar &#8230;</string>
     <string name="title_forward">Yönləndir</string>
+    <string name="title_resend">Təkrar göndər</string>
     <string name="title_new_message">Yeni mesaj</string>
     <string name="title_editasnew">Yeni kimi düzəliş et</string>
     <string name="title_edit_notes">Yerli qeydlərə düzəliş et</string>
@@ -976,6 +984,9 @@
     <string name="title_truncated">Mesaj, tamamilə görüntülənməyəcək qədər böyükdür</string>
     <string name="title_insufficient_memory">Əlçatan yaddaş üçün mesaj çox böyükdür (%1$d)</string>
     <string name="title_show_full">Tam mesajı göstər</string>
+    <string name="title_fullscreen">Tam ekranda göstər</string>
+    <string name="title_fit_width">Enə uyğunlaşdır</string>
+    <string name="title_disable_widths">Eni sıradan çıxart</string>
     <string name="title_unused_inline">İstifadə edilməyən sətiriçi təsvirlər göndəriləndə çıxarılacaq</string>
     <string name="title_accross_remark">Hesablar arasında köçürülən mesajlar yenidən endiriləcək və bu da əlavə verilənlər istifadəsi ilə nəticələnəcək</string>
     <string name="title_raw_saved">Xam mesaj saxlanıldı</string>
@@ -1271,6 +1282,8 @@
     <string name="title_rule_subject">Mövzu məzmunu</string>
     <string name="title_rule_attachments">Qoşmaları var</string>
     <string name="title_rule_header">Başlıq məzmunu</string>
+    <string name="title_rule_body">Mətn ehtiva edir</string>
+    <string name="title_rule_body_remark">Bu şərtin istifadə edilməsi həmişə mesaj mətnini endirəcək, beləcə mesaj siyahısının eyniləşdirilməsi yavaşlayacaq</string>
     <string name="title_rule_time_abs">Dəqiq vaxt (alındı) aralığı</string>
     <string name="title_rule_time_after">Alınandan sonra</string>
     <string name="title_rule_time_before">Alınmazdan əvvəl</string>
@@ -1300,6 +1313,7 @@
     <string name="title_rule_applied">Təsirlənən mesajlar: %1$d</string>
     <string name="title_rule_check">Yoxla</string>
     <string name="title_rule_no_headers">Başlıq şərtləri yoxlanıla bilmədi</string>
+    <string name="title_rule_no_body">Mesaj mətni əlçatmazdır</string>
     <string name="title_rule_matched">Uyğun mesajlar</string>
     <string name="title_rule_no_matches">Uyğunlaşan mesaj yoxdur</string>
     <string name="title_rule_tts_ok">Quraşdırma hazırdır</string>
@@ -1727,4 +1741,10 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="minScreenSizes">
+        <item>Kiçik</item>
+        <item>Orta</item>
+        <item>Böyük</item>
+        <item>Ekstra böyük</item>
+    </string-array>
 </resources>
