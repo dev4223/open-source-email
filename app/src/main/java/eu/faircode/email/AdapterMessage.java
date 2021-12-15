@@ -1124,7 +1124,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvExpand.setVisibility(View.GONE);
             tvPreview.setVisibility(View.GONE);
             tvError.setVisibility(View.GONE);
-            ibHelp.setVisibility(View.GONE);
 
             clearExpanded(null);
 
