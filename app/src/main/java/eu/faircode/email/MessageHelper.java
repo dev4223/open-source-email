@@ -123,12 +123,14 @@ public class MessageHelper {
     private boolean ensuredStructure = false;
     private MimeMessage imessage;
     private String hash = null;
+    private InternetHeaders reportHeaders = null;
 
     private static File cacheDir = null;
 
     static final int SMALL_MESSAGE_SIZE = 192 * 1024; // bytes
     static final int DEFAULT_DOWNLOAD_SIZE = 4 * 1024 * 1024; // bytes
     static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
+    static final int MAX_SUBJECT_AGE = 48; // hours
 
     private static final int MAX_HEADER_LENGTH = 998;
     private static final int MAX_MESSAGE_SIZE = 10 * 1024 * 1024; // bytes
@@ -287,7 +289,7 @@ public class MessageHelper {
         if (message.from != null && message.from.length > 0)
             ourFrom = getFrom(message, identity);
 
-        if (message.headers == null) {
+        if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
             imessage.setHeader("Date", ourDate);
 
             // Addresses
@@ -332,8 +334,19 @@ public class MessageHelper {
                     case "reply-to":
                         imessage.setReplyTo(InternetAddress.parse(value));
                         break;
-                    // Resent-Sender
-                    // Resent-Message-ID
+                    case "message-id":
+                        if (send) {
+                            imessage.setHeader("Resent-Message-ID", message.msgid);
+                            imessage.updateMessageID(value);
+                        }
+                        break;
+                    case "references":
+                        imessage.setHeader("References", value);
+                        break;
+                    case "in-reply-to":
+                        imessage.setHeader("In-Reply-To", value);
+                        break;
+                    // Resent-Sender (=on behalf of)
                 }
             }
 
@@ -380,7 +393,7 @@ public class MessageHelper {
 
         // Send message
         if (identity != null) {
-            if (message.headers == null) {
+            if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
                 // Add reply to
                 if (identity.replyto != null)
                     imessage.setReplyTo(convertAddress(InternetAddress.parse(identity.replyto), identity));
@@ -402,9 +415,18 @@ public class MessageHelper {
                 // 1=Delivery receipt
                 // 2=Read+delivery receipt
 
+                // defacto standard
+                if (receipt_type == 1 || receipt_type == 2) // Delivery receipt
+                    imessage.addHeader("Return-Receipt-To", to);
+
+
                 // https://tools.ietf.org/html/rfc3798
-                if (receipt_type == 0 || receipt_type == 2) // Read receipt
+                if (receipt_type == 0 || receipt_type == 2) {
+                    // Read receipt
                     imessage.addHeader("Disposition-Notification-To", to);
+                    imessage.addHeader("Read-Receipt-To", to);
+                    imessage.addHeader("X-Confirm-Reading-To", to);
+                }
             }
         }
 
@@ -814,7 +836,7 @@ public class MessageHelper {
         // Build html body
         Document document = JsoupEx.parse(message.getFile(context));
 
-        if (message.headers != null) {
+        if (message.headers != null && Boolean.TRUE.equals(message.resend)) {
             Element body = document.body();
             if (body.children().size() == 1) {
                 // Restore original body
@@ -1073,6 +1095,15 @@ public class MessageHelper {
         this.imessage = message;
     }
 
+    boolean isReport() {
+        try {
+            return imessage.isMimeType("multipart/report");
+        } catch (Throwable ex) {
+            Log.w(ex);
+            return false;
+        }
+    }
+
     boolean getSeen() throws MessagingException {
         return imessage.isSet(Flags.Flag.SEEN);
     }
@@ -1140,51 +1171,25 @@ public class MessageHelper {
         if (refs != null)
             result.addAll(Arrays.asList(getReferences(refs)));
 
-        try {
-            // Merge references of original message for threading
-            if (imessage.isMimeType("multipart/report")) {
-                ContentType ct = new ContentType(imessage.getContentType());
-                String reportType = ct.getParameter("report-type");
-                if ("delivery-status".equalsIgnoreCase(reportType) ||
-                        "disposition-notification".equalsIgnoreCase(reportType)) {
-                    String arefs = null;
-                    String amsgid = null;
-
-                    MessageParts parts = new MessageParts();
-                    getMessageParts(imessage, parts, null);
-                    for (AttachmentPart apart : parts.attachments)
-                        if ("text/rfc822-headers".equalsIgnoreCase(apart.attachment.type)) {
-                            InternetHeaders iheaders = new InternetHeaders(apart.part.getInputStream());
-                            arefs = iheaders.getHeader("References", null);
-                            amsgid = iheaders.getHeader("Message-Id", null);
-                            break;
-                        } else if ("message/rfc822".equalsIgnoreCase(apart.attachment.type)) {
-                            Properties props = MessageHelper.getSessionProperties();
-                            Session isession = Session.getInstance(props, null);
-                            MimeMessage amessage = new MimeMessage(isession, apart.part.getInputStream());
-                            arefs = amessage.getHeader("References", null);
-                            amsgid = amessage.getHeader("Message-Id", null);
-                            break;
-                        }
-
-                    if (arefs != null)
-                        for (String ref : getReferences(arefs))
-                            if (!result.contains(ref)) {
-                                Log.i("rfc822 ref=" + ref);
-                                result.add(ref);
-                            }
-
-                    if (amsgid != null) {
-                        String msgid = MimeUtility.unfold(amsgid);
-                        if (!result.contains(msgid)) {
-                            Log.i("rfc822 id=" + msgid);
-                            result.add(msgid);
-                        }
+        // Merge references of reported message for threading
+        InternetHeaders iheaders = getReportHeaders();
+        if (iheaders != null) {
+            String arefs = iheaders.getHeader("References", null);
+            if (arefs != null)
+                for (String ref : getReferences(arefs))
+                    if (!result.contains(ref)) {
+                        Log.i("rfc822 ref=" + ref);
+                        result.add(ref);
                     }
+
+            String amsgid = iheaders.getHeader("Message-Id", null);
+            if (amsgid != null) {
+                String msgid = MimeUtility.unfold(amsgid);
+                if (!result.contains(msgid)) {
+                    Log.i("rfc822 id=" + msgid);
+                    result.add(msgid);
                 }
             }
-        } catch (Throwable ex) {
-            Log.w(ex);
         }
 
         return result.toArray(new String[0]);
@@ -1217,46 +1222,55 @@ public class MessageHelper {
         if (header != null)
             header = MimeUtility.unfold(header);
 
-        if (header == null)
-            try {
-                if (imessage.isMimeType("multipart/report")) {
-                    ContentType ct = new ContentType(imessage.getContentType());
-                    String reportType = ct.getParameter("report-type");
-                    if ("delivery-status".equalsIgnoreCase(reportType) ||
-                            "disposition-notification".equalsIgnoreCase(reportType)) {
-                        MessageParts parts = new MessageParts();
-                        getMessageParts(imessage, parts, null);
-                        for (AttachmentPart apart : parts.attachments)
-                            if ("text/rfc822-headers".equalsIgnoreCase(apart.attachment.type)) {
-                                InternetHeaders iheaders = new InternetHeaders(apart.part.getInputStream());
-                                String amsgid = iheaders.getHeader("Message-Id", null);
-                                if (amsgid != null) {
-                                    Log.i("rfc822 id=" + amsgid);
-                                    return amsgid;
-                                }
-                            } else if ("message/rfc822".equalsIgnoreCase(apart.attachment.type)) {
-                                Properties props = MessageHelper.getSessionProperties();
-                                Session isession = Session.getInstance(props, null);
-                                MimeMessage amessage = new MimeMessage(isession, apart.part.getInputStream());
-                                String amsgid = amessage.getHeader("Message-Id", null);
-                                if (amsgid != null) {
-                                    Log.i("rfc822 id=" + amsgid);
-                                    return amsgid;
-                                }
-                            }
-                    }
-                }
-            } catch (Throwable ex) {
-                Log.w(ex);
+        if (header == null) {
+            // Use reported message ID as synthetic in-reply-to
+            InternetHeaders iheaders = getReportHeaders();
+            if (iheaders != null) {
+                header = iheaders.getHeader("Message-Id", null);
+                if (header != null)
+                    Log.i("rfc822 id=" + header);
             }
+        }
 
         return header;
     }
 
+    private InternetHeaders getReportHeaders() {
+        try {
+            ensureStructure();
+
+            if (imessage.isMimeType("multipart/report")) {
+                ContentType ct = new ContentType(imessage.getContentType());
+                String reportType = ct.getParameter("report-type");
+                if ("delivery-status".equalsIgnoreCase(reportType) ||
+                        "disposition-notification".equalsIgnoreCase(reportType)) {
+                    MessageParts parts = new MessageParts();
+                    getMessageParts(imessage, parts, null);
+                    for (AttachmentPart apart : parts.attachments)
+                        if ("text/rfc822-headers".equalsIgnoreCase(apart.attachment.type)) {
+                            reportHeaders = new InternetHeaders(apart.part.getInputStream());
+                            break;
+                        } else if ("message/rfc822".equalsIgnoreCase(apart.attachment.type)) {
+                            Properties props = MessageHelper.getSessionProperties();
+                            Session isession = Session.getInstance(props, null);
+                            MimeMessage amessage = new MimeMessage(isession, apart.part.getInputStream());
+                            reportHeaders = amessage.getHeaders();
+                            break;
+                        }
+                }
+            }
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
+
+        return reportHeaders;
+    }
+
     String getThreadId(Context context, long account, long folder, long uid) throws MessagingException {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
         if (imessage instanceof GmailMessage) {
             // https://developers.google.com/gmail/imap/imap-extensions#access_to_the_gmail_thread_id_x-gm-thrid
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean gmail_thread_id = prefs.getBoolean("gmail_thread_id", false);
             if (gmail_thread_id) {
                 long thrid = ((GmailMessage) imessage).getThrId();
@@ -1270,7 +1284,7 @@ public class MessageHelper {
 
         List<String> refs = new ArrayList<>();
         for (String ref : getReferences())
-            if (!TextUtils.isEmpty(ref))
+            if (!TextUtils.isEmpty(ref) && !refs.contains(ref))
                 refs.add(ref);
 
         String inreplyto = getInReplyTo();
@@ -1278,18 +1292,15 @@ public class MessageHelper {
             refs.add(inreplyto);
 
         DB db = DB.getInstance(context);
-        for (String ref : refs) {
-            List<EntityMessage> before = db.message().getMessagesByMsgId(account, ref);
-            for (EntityMessage message : before) {
-                if (thread == null && !TextUtils.isEmpty(message.thread))
-                    thread = message.thread;
-                if (thread != null &&
-                        !TextUtils.isEmpty(message.thread) && !thread.equals(message.thread)) {
-                    Log.w("Updating before thread from " + message.thread + " to " + thread);
-                    db.message().updateMessageThread(message.account, message.thread, thread);
-                }
+        List<EntityMessage> before = new ArrayList<>();
+        for (String ref : refs)
+            before.addAll(db.message().getMessagesByMsgId(account, ref));
+
+        for (EntityMessage message : before)
+            if (!TextUtils.isEmpty(message.thread)) {
+                thread = message.thread;
+                break;
             }
-        }
 
         if (thread == null) {
             List<EntityMessage> similar = db.message().getMessagesByMsgId(account, msgid);
@@ -1303,12 +1314,33 @@ public class MessageHelper {
         if (thread == null)
             thread = getHash() + ":" + uid;
 
+        for (EntityMessage message : before)
+            if (!thread.equals(message.thread)) {
+                Log.w("Updating before thread from " + message.thread + " to " + thread);
+                db.message().updateMessageThread(message.account, message.thread, thread, null);
+            }
+
         List<EntityMessage> after = db.message().getMessagesByInReplyTo(account, msgid);
         for (EntityMessage message : after)
-            if (!TextUtils.isEmpty(message.thread) && !thread.equals(message.thread)) {
+            if (!thread.equals(message.thread)) {
                 Log.w("Updating after thread from " + message.thread + " to " + thread);
-                db.message().updateMessageThread(message.account, message.thread, thread);
+                db.message().updateMessageThread(message.account, message.thread, thread, null);
             }
+
+        boolean subject_threading = prefs.getBoolean("subject_threading", false);
+        if (subject_threading && !isReport()) {
+            String sender = getSortKey(getFrom());
+            String subject = getSubject();
+            long since = new Date().getTime() - MAX_SUBJECT_AGE * 3600 * 1000L;
+            if (!TextUtils.isEmpty(sender) && !TextUtils.isEmpty(subject)) {
+                List<EntityMessage> subjects = db.message().getMessagesBySubject(account, sender, subject, since);
+                for (EntityMessage message : subjects)
+                    if (!thread.equals(message.thread)) {
+                        Log.w("Updating subject thread from " + message.thread + " to " + thread);
+                        db.message().updateMessageThread(message.account, message.thread, thread, since);
+                    }
+            }
+        }
 
         return thread;
     }
@@ -1440,15 +1472,19 @@ public class MessageHelper {
     }
 
     boolean getReceiptRequested() throws MessagingException {
-        ensureHeaders();
-
-        // Return-Receipt-To = delivery receipt
-        // Disposition-Notification-To = read receipt
-        return (imessage.getHeader("Disposition-Notification-To") != null);
+        Address[] headers = getReceiptTo();
+        return (headers != null && headers.length > 0);
     }
 
     Address[] getReceiptTo() throws MessagingException {
-        return getAddressHeader("Disposition-Notification-To");
+        // Return-Receipt-To = delivery receipt
+        // Disposition-Notification-To = read receipt
+        Address[] receipt = getAddressHeader("Disposition-Notification-To");
+        if (receipt == null || receipt.length == 0)
+            receipt = getAddressHeader("Read-Receipt-To");
+        if (receipt == null || receipt.length == 0)
+            receipt = getAddressHeader("X-Confirm-Reading-To");
+        return receipt;
     }
 
     String getBimiSelector() throws MessagingException {
@@ -1612,10 +1648,12 @@ public class MessageHelper {
                     Log.w(ex);
                 }
 
-            email = decodeMime(email);
-            email = punyCode(email);
+            if (email != null) {
+                email = decodeMime(email);
+                email = punyCode(email);
 
-            iaddress.setAddress(email);
+                iaddress.setAddress(email);
+            }
 
             if (personal != null) {
                 try {
@@ -1956,22 +1994,26 @@ public class MessageHelper {
         if (!TextUtils.isEmpty(icloud))
             return "icloud";
 
-        String zoho = imessage.getHeader("X-ZohoMailClient", null);
-        if (!TextUtils.isEmpty(zoho))
-            return "zoho";
+        //String zoho = imessage.getHeader("X-ZohoMailClient", null);
+        //if (!TextUtils.isEmpty(zoho))
+        //    return "zoho";
 
         String icontact = imessage.getHeader("X-SFMC-Stack", null);
         if (!TextUtils.isEmpty(icontact))
             return "icontact";
 
+        String paypal = imessage.getHeader("X-Email-Type-Id", null);
+        if (!TextUtils.isEmpty(paypal))
+            return "paypal";
+
         String xmailer = imessage.getHeader("X-Mailer", null);
         if (!TextUtils.isEmpty(xmailer)) {
-            if (xmailer.contains("iPhone Mail"))
-                return "icloud";
+            //if (xmailer.contains("iPhone Mail"))
+            //    return "icloud";
             if (xmailer.contains("PHPMailer"))
                 return "phpmailer";
-            if (xmailer.contains("Zoho Mail"))
-                return "zoho";
+            //if (xmailer.contains("Zoho Mail"))
+            //    return "zoho";
         }
 
         String return_path = imessage.getHeader("Return-Path", null);
@@ -2253,9 +2295,9 @@ public class MessageHelper {
             return "text/html".equalsIgnoreCase(contentType.getBaseType());
         }
 
-        boolean isDSN() {
-            return ("message/delivery-status".equalsIgnoreCase(contentType.getBaseType()) ||
-                    "message/disposition-notification".equalsIgnoreCase(contentType.getBaseType()));
+        boolean isReport() {
+            String ct = contentType.getBaseType();
+            return Report.isDeliveryStatus(ct) || Report.isDispositionNotification(ct);
         }
     }
 
@@ -2523,54 +2565,30 @@ public class MessageHelper {
                                 }
                         }
                     }
-                } else if (h.isDSN()) {
-                    String action = null;
-                    String diag = null;
-                    String status = null;
+                } else if (h.isReport()) {
+                    Report report = new Report(h.contentType.getBaseType(), result);
+                    result = report.html;
 
-                    StringBuilder report = new StringBuilder();
-                    report.append("<hr><div style=\"font-family: monospace; font-size: small;\">");
-                    for (String line : result.split("\\r?\\n"))
-                        if (line.length() == 0)
-                            report.append("<br>");
-                        else if (Character.isWhitespace(line.charAt(0)))
-                            report.append(line).append("<br>");
-                        else {
-                            int colon = line.indexOf(':');
-                            if (colon < 0)
-                                report.append(line);
-                            else {
-                                String name = line.substring(0, colon).trim();
-                                String value = line.substring(colon + 1).trim();
-                                value = decodeMime(value);
-                                report
-                                        .append("<strong>")
-                                        .append(TextUtils.htmlEncode(name))
-                                        .append("</strong>")
-                                        .append(": ")
-                                        .append(TextUtils.htmlEncode(value))
-                                        .append("<br>");
+                    StringBuilder w = new StringBuilder();
 
-                                // https://datatracker.ietf.org/doc/html/rfc3464#section-2.3
-                                switch (name) {
-                                    case "Action":
-                                        action = value;
-                                        break;
-                                    case "Status":
-                                        status = value;
-                                        break;
-                                    case "Diagnostic-Code":
-                                        diag = value;
-                                        break;
-                                }
-                            }
+                    if (!report.isDelivered()) {
+                        if (report.diagnostic != null)
+                            w.append(report.diagnostic);
+                        if (report.action != null) {
+                            if (w.length() == 0)
+                                w.append(report.action);
+                            else
+                                w.append(" (").append(report.action).append(')');
                         }
-                    report.append("</div>");
-                    result = report.toString();
+                    }
 
-                    if (diag != null &&
-                            ("failed".equals(action) || "delayed".equals(action)))
-                        warnings.add(diag + (status == null ? "" : " (" + status + ")"));
+                    if (!report.isDisplayed()) {
+                        if (report.disposition != null)
+                            w.append(report.disposition);
+                    }
+
+                    if (w.length() > 0)
+                        warnings.add(w.toString());
                 } else
                     Log.w("Unexpected content type=" + h.contentType);
 
@@ -2578,6 +2596,22 @@ public class MessageHelper {
             }
 
             return sb.toString();
+        }
+
+        Report getReport() throws MessagingException, IOException {
+            for (PartHolder h : extra)
+                if (h.isReport()) {
+                    String result;
+                    Object content = h.part.getContent();
+                    if (content instanceof String)
+                        result = (String) content;
+                    else if (content instanceof InputStream)
+                        result = Helper.readStream((InputStream) content);
+                    else
+                        result = content.toString();
+                    return new Report(h.contentType.getBaseType(), result);
+                }
+            return null;
         }
 
         List<AttachmentPart> getAttachmentParts() {
@@ -3309,8 +3343,7 @@ public class MessageHelper {
                         !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename)) {
                     parts.text.add(new PartHolder(part, contentType));
                 } else {
-                    if ("message/delivery-status".equalsIgnoreCase(contentType.getBaseType()) ||
-                            "message/disposition-notification".equalsIgnoreCase(contentType.getBaseType()))
+                    if (Report.isDeliveryStatus(ct) || Report.isDispositionNotification(ct))
                         parts.extra.add(new PartHolder(part, contentType));
 
                     AttachmentPart apart = new AttachmentPart();
@@ -3696,6 +3729,119 @@ public class MessageHelper {
         @Override
         public String getMessage() {
             return className;
+        }
+    }
+
+    static class Report {
+        String type;
+        String reporter;
+        String action;
+        String recipient;
+        String status;
+        String diagnostic;
+        String disposition;
+        String html;
+
+        Report(String type, String content) {
+            this.type = type;
+            StringBuilder report = new StringBuilder();
+            report.append("<hr><div style=\"font-family: monospace; font-size: small;\">");
+            content = content.replaceAll("(\\r?\\n)+", "\n");
+            ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes());
+            try {
+                Enumeration<Header> headers = new InternetHeaders(bis).getAllHeaders();
+                while (headers.hasMoreElements()) {
+                    Header header = headers.nextElement();
+                    String name = header.getName();
+                    String value = header.getValue();
+                    value = decodeMime(value);
+                    report
+                            .append("<strong>")
+                            .append(TextUtils.htmlEncode(name))
+                            .append("</strong>")
+                            .append(": ")
+                            .append(TextUtils.htmlEncode(value))
+                            .append("<br>");
+
+                    if (isDeliveryStatus(type)) {
+                        // https://datatracker.ietf.org/doc/html/rfc3464#section-2.3
+                        switch (name) {
+                            case "Reporting-MTA":
+                                this.reporter = value;
+                                break;
+                            case "Action":
+                                this.action = value;
+                                break;
+                            case "Final-Recipient":
+                                this.recipient = value;
+                                break;
+                            case "Status":
+                                this.status = value;
+                                break;
+                            case "Diagnostic-Code":
+                                this.diagnostic = value;
+                                break;
+                        }
+                    } else if (isDispositionNotification(type)) {
+                        //https://datatracker.ietf.org/doc/html/rfc3798#section-3.2.6
+                        switch (name) {
+                            case "Reporting-UA":
+                                this.reporter = value;
+                                break;
+                            case "Original-Recipient":
+                                this.recipient = value;
+                                break;
+                            case "Disposition":
+                                this.disposition = value;
+                                break;
+                        }
+                    }
+                }
+            } catch (Throwable ex) {
+                Log.e(ex);
+                report.append(TextUtils.htmlEncode(ex.toString()));
+            }
+            report.append("</div>");
+            this.html = report.toString();
+        }
+
+        boolean isDeliveryStatus() {
+            return isDeliveryStatus(type);
+        }
+
+        boolean isDispositionNotification() {
+            return isDispositionNotification(type);
+        }
+
+        boolean isDelivered() {
+            return ("delivered".equals(action) || "relayed".equals(action) || "expanded".equals(action));
+        }
+
+        boolean isDisplayed() {
+            return isType("displayed");
+        }
+
+        boolean isDeleted() {
+            return isType("deleted");
+        }
+
+        private boolean isType(String t) {
+            // manual-action/MDN-sent-manually; displayed
+            if (disposition == null)
+                return false;
+            int semi = disposition.lastIndexOf(';');
+            if (semi < 0)
+                return false;
+            String type = disposition.substring(semi + 1).trim();
+            return t.equals(type);
+        }
+
+        static boolean isDeliveryStatus(String type) {
+            return "message/delivery-status".equalsIgnoreCase(type);
+        }
+
+        static boolean isDispositionNotification(String type) {
+            return "message/disposition-notification".equalsIgnoreCase(type);
         }
     }
 }

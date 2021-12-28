@@ -2223,7 +2223,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int maxRecipients = (compact ? MAX_RECIPIENTS_COMPACT : MAX_RECIPIENTS_NORMAL);
             Spanned submitter = formatAddresses(message.submitter, true);
             Spanned from = formatAddresses(message.senders, true);
-            Spanned replyto = formatAddresses(message.reply, true);
 
             grpAddresses.setVisibility(View.VISIBLE);
 
@@ -2265,12 +2264,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTo.setVisibility(show_addresses && (message.to != null && message.to.length > 0) ? View.VISIBLE : View.GONE);
             tvTo.setText(formatAddresses(message.to, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
 
-            tvReplyToTitle.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
-            tvReplyTo.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
-            tvReplyTo.setText(replyto);
-            
+            //tvReplyToTitle.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
+            //tvReplyTo.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
+            //tvReplyTo.setText(replyto);
+
+            boolean show_reply = (Boolean.FALSE.equals(message.reply_domain) || show_addresses) &&
+                    (message.reply != null && message.reply.length > 0);
+            tvReplyToTitle.setVisibility(show_reply ? View.VISIBLE : View.GONE);
+            tvReplyTo.setVisibility(show_reply ? View.VISIBLE : View.GONE);
+            tvReplyTo.setText(formatAddresses(message.reply, show_addresses));
+
             tvCcTitle.setVisibility(show_addresses && (message.cc != null && message.cc.length != 0) ? View.VISIBLE : View.GONE);
             tvCc.setVisibility(show_addresses && (message.cc != null && message.cc.length != 0) ? View.VISIBLE : View.GONE);
+
             tvCc.setText(formatAddresses(message.cc, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
 
             tvBccTitle.setVisibility(show_addresses && (message.bcc != null && message.bcc.length != 0) ? View.VISIBLE : View.GONE);
@@ -4117,11 +4123,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onReceipt(TupleMessageEx message) {
-            Intent reply = new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "dsn")
-                    .putExtra("dsn", EntityMessage.DSN_RECEIPT)
-                    .putExtra("reference", message.id);
-            context.startActivity(reply);
+            if (EntityFolder.isOutgoing(message.folderType))
+                ToastEx.makeText(context, R.string.title_legend_receipt, Toast.LENGTH_LONG).show();
+            else {
+                Intent reply = new Intent(context, ActivityCompose.class)
+                        .putExtra("action", "dsn")
+                        .putExtra("dsn", EntityMessage.DSN_RECEIPT)
+                        .putExtra("reference", message.id);
+                context.startActivity(reply);
+            }
         }
 
         private void onSearchContact(TupleMessageEx message) {
@@ -4905,7 +4915,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             aargs.putInt("protocol", message.accountProtocol);
             aargs.putLong("folder", message.folder);
             aargs.putString("type", message.folderType);
-            aargs.putString("from", MessageHelper.formatAddresses(message.from));
+            aargs.putString("from", DB.Converters.encodeAddresses(message.from));
             aargs.putBoolean("inJunk", EntityFolder.JUNK.equals(message.folderType));
             aargs.putBoolean("canBlock", canBlock);
 
@@ -7543,7 +7553,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             AlertDialog.Builder builder = new AlertDialog.Builder(context)
                     .setView(view)
-                    .setPositiveButton(android.R.string.cancel, null);
+                    .setPositiveButton(android.R.string.cancel, null)
+                    .setNeutralButton(R.string.title_copy_btn, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String html = HtmlHelper.toHtml((Spanned) tvText.getText(), context);
+                            String text = HtmlHelper.getText(context, html);
+                            ClipboardManager cbm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                            cbm.setPrimaryClip(ClipData.newHtmlText(getString(R.string.app_name), text, html));
+                            ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+                        }
+                    });
 
             return builder.create();
         }

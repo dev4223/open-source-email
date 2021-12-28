@@ -239,6 +239,7 @@ class Core {
 
                         if (message == null &&
                                 !EntityOperation.FETCH.equals(op.name) &&
+                                !EntityOperation.REPORT.equals(op.name) &&
                                 !EntityOperation.SYNC.equals(op.name) &&
                                 !EntityOperation.SUBSCRIBE.equals(op.name) &&
                                 !EntityOperation.PURGE.equals(op.name) &&
@@ -346,6 +347,7 @@ class Core {
 
                                 case EntityOperation.ANSWERED:
                                 case EntityOperation.ADD:
+                                case EntityOperation.REPORT:
                                     // Do nothing
                                     break;
 
@@ -443,6 +445,10 @@ class Core {
 
                                 case EntityOperation.EXISTS:
                                     onExists(context, jargs, account, folder, message, op, (IMAPFolder) ifolder);
+                                    break;
+
+                                case EntityOperation.REPORT:
+                                    onReport(context, jargs, folder, (IMAPStore) istore, (IMAPFolder) ifolder, state);
                                     break;
 
                                 case EntityOperation.SYNC:
@@ -1970,6 +1976,44 @@ class Core {
         }
     }
 
+    private static void onReport(Context context, JSONArray jargs, EntityFolder folder, IMAPStore istore, IMAPFolder ifolder, State state) throws JSONException, MessagingException {
+        String msgid = jargs.getString(0);
+        String keyword = jargs.getString(1);
+
+        if (TextUtils.isEmpty(msgid))
+            throw new IllegalArgumentException("msgid missing");
+
+        if (TextUtils.isEmpty(keyword))
+            throw new IllegalArgumentException("keyword missing");
+
+        if (folder.read_only)
+            throw new IllegalArgumentException(folder.name + " read-only");
+
+        if (!ifolder.getPermanentFlags().contains(Flags.Flag.USER))
+            throw new IllegalArgumentException(folder.name + " has no keywords");
+
+        Message[] imessages = ifolder.search(new MessageIDTerm(msgid));
+        if (imessages == null || imessages.length == 0)
+            throw new IllegalArgumentException(msgid + " not found");
+
+        for (Message imessage : imessages) {
+            long uid = ifolder.getUID(imessage);
+            Log.i("Report uid=" + uid + " keyword=" + keyword);
+
+            Flags flags = new Flags(keyword);
+            imessage.setFlags(flags, true);
+
+            if (BuildConfig.DEBUG)
+                try {
+                    JSONArray fargs = new JSONArray();
+                    fargs.put(uid);
+                    onFetch(context, fargs, folder, istore, ifolder, state);
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+        }
+    }
+
     static void onSynchronizeFolders(
             Context context, EntityAccount account, Store istore, State state,
             boolean keep_alive, boolean force) throws MessagingException {
@@ -1997,7 +2041,7 @@ class Core {
         for (EntityFolder folder : folders) {
             if (folder.tbc != null) {
                 try {
-                    Log.i(folder.name + " creating");
+                    EntityLog.log(context, folder.name + " creating");
                     Folder ifolder = istore.getFolder(folder.name);
                     if (!ifolder.exists()) {
                         ifolder.create(Folder.HOLDS_MESSAGES);
@@ -2011,7 +2055,7 @@ class Core {
 
             } else if (folder.rename != null) {
                 try {
-                    Log.i(folder.name + " rename into " + folder.rename);
+                    EntityLog.log(context, folder.name + " rename into " + folder.rename);
                     Folder ifolder = istore.getFolder(folder.name);
                     if (ifolder.exists()) {
                         // https://tools.ietf.org/html/rfc3501#section-6.3.9
@@ -2041,7 +2085,7 @@ class Core {
 
             } else if (folder.tbd != null && folder.tbd) {
                 try {
-                    Log.i(folder.name + " deleting");
+                    EntityLog.log(context, folder.name + " deleting");
                     Folder ifolder = istore.getFolder(folder.name);
                     if (ifolder.exists()) {
                         ifolder.setSubscribed(false);
@@ -2140,7 +2184,7 @@ class Core {
                         continue;
                     }
                     subscription.add(fullName);
-                    Log.i("Subscribed " + defaultFolder.getFullName() + ":" + fullName);
+                    Log.i("Subscribed " + fullName);
                 }
             } catch (Throwable ex) {
                     /*
@@ -2410,10 +2454,10 @@ class Core {
             List<EntityFolder> childs = parentFolders.get(name);
             if (EntityFolder.USER.equals(folder.type) ||
                     childs == null || childs.size() == 0) {
-                Log.i(name + " delete");
+                EntityLog.log(context, name + " delete");
                 db.folder().deleteFolder(account.id, name);
             } else
-                Log.i(name + " keep type=" + folder.type);
+                Log.w(name + " keep type=" + folder.type);
         }
     }
 
@@ -3564,6 +3608,7 @@ class Core {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean download_headers = prefs.getBoolean("download_headers", false);
         boolean notify_known = prefs.getBoolean("notify_known", false);
+        boolean experiments = prefs.getBoolean("experiments", false);
         boolean pro = ActivityBilling.isPro(context);
 
         long uid = ifolder.getUID(imessage);
@@ -3579,8 +3624,8 @@ class Core {
 
         if (imessage.isSet(Flags.Flag.DELETED)) {
             Log.w(folder.name + " deleted uid=" + uid);
-            expunge(context, ifolder, Arrays.asList(imessage));
-            throw new MessageRemovedException("Deleted");
+            if (expunge(context, ifolder, Arrays.asList(imessage)))
+                throw new MessageRemovedException("Deleted");
         }
 
         MessageHelper helper = new MessageHelper(imessage, context);
@@ -3863,6 +3908,40 @@ class Core {
             List<Header> headers = (needsHeaders ? helper.getAllHeaders() : null);
             String body = (needsBody ? helper.getMessageParts().getHtml(context) : null);
 
+            if (experiments && helper.isReport())
+                try {
+                    MessageHelper.Report r = parts.getReport();
+                    if (r != null) {
+                        String label = null;
+                        if (r.isDeliveryStatus())
+                            label = (r.isDelivered() ? "$Delivered" : "$NotDelivered");
+                        else if (r.isDispositionNotification())
+                            label = (r.isDisplayed() ? "$Displayed" : "$NotDisplayed");
+
+                        if (label != null) {
+                            Map<Long, EntityFolder> map = new HashMap<>();
+
+                            EntityFolder s = db.folder().getFolderByType(folder.account, EntityFolder.SENT);
+                            if (s != null)
+                                map.put(s.id, s);
+
+                            List<EntityMessage> reported = db.message().getMessagesByMsgId(folder.account, message.inreplyto);
+                            if (reported != null)
+                                for (EntityMessage m : reported)
+                                    if (!map.containsKey(m.folder)) {
+                                        EntityFolder f = db.folder().getFolder(m.folder);
+                                        if (f != null)
+                                            map.put(f.id, f);
+                                    }
+
+                            for (EntityFolder f : map.values())
+                                EntityOperation.queue(context, f, EntityOperation.REPORT, message.inreplyto, label);
+                        }
+                    }
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+
             try {
                 db.beginTransaction();
 
@@ -3919,6 +3998,9 @@ class Core {
 
             try {
                 EntityContact.received(context, account, folder, message);
+
+                if (body == null && helper.isReport())
+                    body = parts.getHtml(context);
 
                 // Download small messages inline
                 if (body != null || (download && !message.ui_hide)) {

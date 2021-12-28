@@ -1,10 +1,6 @@
 <a name="top"></a>
 # FairEmail support
 
-[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_de.png" width="18" height="18" /> Deutsch](https://translate.google.com/translate?sl=en&tl=de&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md) &nbsp;
-[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_fr.png" width="18" height="18" /> Français](https://translate.google.com/translate?sl=en&tl=fr&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md) &nbsp;
-[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_es.png" width="18" height="18" /> Español](https://translate.google.com/translate?sl=en&tl=es&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md) &nbsp;
-<br>
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md)
 
 If you have a question, please check the following frequently asked questions first.
@@ -104,6 +100,7 @@ Related questions:
 * Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
 * A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.
 * A [bug in Crowdin](https://crowdin.com/messages/536694) blocks updating FAQ.md (this text) for translation.
+* The Strato email server sometimes disconnects when sending messages, possibly due to stringent server firewall rules. This cannot be fixed by the app.
 
 <h2><a name="planned-features"></a>Planned features</h2>
 
@@ -447,6 +444,7 @@ The low priority status bar notification shows the number of pending operations,
 * *exists*: check if message exists
 * *rule*: execute rule on body text
 * *expunge*: permanently delete messages
+* *report*: process delivery or read receipt (experimental)
 
 Operations are processed only when there is a connection to the email server or when manually synchronizing.
 See also [this FAQ](#user-content-faq16).
@@ -1802,7 +1800,7 @@ or by a too short DH key on the email server and can unfortunately not be fixed 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4,
 which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
 
-The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION ...*'
+The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION or SSLV3_ALERT_HANDSHAKE_FAILURE ...*'
 might be caused by enabling hardening connections in the connection settings
 or by Android not supporting older protocols anymore, like SSLv3.
 
@@ -2372,11 +2370,14 @@ You can select one of these actions to apply to matching messages:
 * Add keyword
 * Move
 * Copy (Gmail: label)
+* Delete permanently (since version 1.1801)
 * Answer/forward (with template)
 * Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
 
-An small error in a rule condition can lead to a disaster, therefore irreversible actions, like permanent deletion, are unsupportable and won't be added.
+**Important**: permanent deletion is **irreversible**.
+Instead, consider to move messages to the trash folder
+and to set up auto deletion for the trash folder in the folder properties (long press the folder in the folder list of an account).
 
 If you want to forward a message, consider to use a *move* action instead.
 This will be more reliable than forwarding because forwarded messages might be considered as spam.
@@ -2407,7 +2408,7 @@ $$flagged$
 $$deleted$
 ```
 
-To match *passed* message checks via a header condition (since version 1.1787):
+To match *passed* message checks via a header condition (since version 1.1787; no/multi-from since version 1.1791):
 
 ```
 $$dkim$
@@ -2416,11 +2417,13 @@ $$dmarc$
 $$mx$
 $$blocklist$
 $$replydomain$
+$$nofrom$
+$$multifrom$
 ```
 
 Note that *regex* should be disable and that there should be no white space.
 
-Please be aware that a difference in the *from* and *reply-to* domain isn't a good indication of spam.
+Please be aware that a difference in the *from* and *reply-to* domain, and no or multi *from* addresses isn't a good indication of spam.
 
 <br />
 
@@ -2823,7 +2826,7 @@ Moreover, email servers have access to information, like the IP address, etc of 
 Spam filtering based on message headers might have been feasible,
 but unfortunately this technique is [patented by Microsoft](https://patents.google.com/patent/US7543076).
 
-Recent versions of FairEmail can filter spam to a certain extend using a message classifier.
+Recent versions of FairEmail can filter spam to a certain extent using a message classifier.
 Please see [this FAQ](#user-content-faq163) for more information about this.
 
 Of course you can report messages as spam with FairEmail,
@@ -3423,6 +3426,30 @@ Remarks:
 * Read and delivery receipts will be requested when enabled, they could go to the original sender or to you
 * The email server might refuse resent messages
 * DKIM, SPF and DMARC will likely fail, often causing resent messages to be considered as spam
+
+<br />
+
+*Process delivery/read receipt (version 1.1797+)*
+
+On receiving a delivery or read receipt, the related message will be looked up in the sent messages folder
+and the following keywords will be set depending on the contents of the report:
+
+```
+$Delivered
+$NotDelivered
+$Displayed
+$NotDisplayed
+```
+
+* Delivered: action = *delivered*, *relayed*, or *expanded*, [see here](https://datatracker.ietf.org/doc/html/rfc3464#section-2.3.3)
+* Displayed: disposition = *displayed*, [see here](https://datatracker.ietf.org/doc/html/rfc3798#section-3.2.6)
+
+It is probably a good idea to enable *Show keywords in message header* in the display settings.
+
+Note that the email server needs to support IMAP flags (keywords) for this feature.
+
+Filter rules will be applied to the received receipt, so it is possible to move/archive the receipt.
+See [this FAQ](#user-content-faq71) for a header condition to recognize receipts.
 
 <br />
 
@@ -4347,6 +4374,10 @@ Like most Android apps, FairEmail consults the Android address book for contact 
 
 There is also a local contact database, which is filled with contacts from sent and received messages.
 You can enable/disable this in the send settings of the app.
+
+If you want to import contacts into the local contact database,
+this is possible (in recent versions of the app) by tapping on the *Manage* button in the send settings.
+In the three-dots menu at the top right there is an import (and also an export) [vCard](https://en.wikipedia.org/wiki/VCard)s menu item.
 
 The Android address book is managed by the Android Contacts app (or a replacement for this app).
 Please see [this article](https://support.google.com/contacts/answer/1069522) about importing contacts to the Android address book.

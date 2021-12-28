@@ -690,7 +690,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 max_size = iservice.getMaxSize();
 
             List<Address> recipients = new ArrayList<>();
-            if (message.headers == null) {
+            if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
                 Address[] all = imessage.getAllRecipients();
                 if (all != null)
                     recipients.addAll(Arrays.asList(all));
@@ -788,6 +788,11 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
 
             // Show in sent folder
             if (sid != null) {
+                if (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) ||
+                        EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt))
+                    db.attachment().deleteAttachments(sid,
+                            new int[]{EntityAttachment.PGP_MESSAGE, EntityAttachment.SMIME_MESSAGE});
+
                 db.message().setMessageReceived(sid, start);
                 db.message().setMessageSent(sid, end);
                 db.message().setMessageUiHide(sid, false);
