@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -120,7 +120,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final long STILL_THERE_THRESHOLD = 3 * 60 * 1000L; // milliseconds
     private static final int TUNE_KEEP_ALIVE_INTERVAL_MIN = 9; // minutes
     private static final int TUNE_KEEP_ALIVE_INTERVAL_STEP = 2; // minutes
-    private static final int OPTIMIZE_KEEP_ALIVE_INTERVAL_MIN = 12; // minutes
     private static final int OPTIMIZE_POLL_INTERVAL = 15; // minutes
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 8; // seconds (totally 8+2x20=48 seconds)
@@ -1450,7 +1449,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         capabilities = capabilities.substring(0, 500) + "...";
 
                     Log.i(account.name + " idle=" + capIdle);
-                    if (!capIdle || account.poll_interval < OPTIMIZE_KEEP_ALIVE_INTERVAL_MIN)
+                    if (!capIdle || account.poll_interval < TUNE_KEEP_ALIVE_INTERVAL_MIN)
                         optimizeAccount(account, "IDLE");
 
                     db.account().setAccountState(account.id, "connected");
@@ -1943,7 +1942,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                             Core.processOperations(ServiceSynchronize.this,
                                                                     account, folder,
                                                                     partition,
-                                                                    iservice.getStore(), ifolder,
+                                                                    iservice, ifolder,
                                                                     state, serial);
 
                                                         } catch (Throwable ex) {
@@ -2047,9 +2046,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                     " poll count=" + folder.poll_count +
                                                     " factor=" + folder.poll_factor);
                                         }
-                                Core.onSynchronizeFolders(this,
-                                        account, iservice.getStore(), state,
-                                        true, false);
+                                if (!first)
+                                    Core.onSynchronizeFolders(this,
+                                            account, iservice.getStore(), state,
+                                            true, false);
                             }
                         } catch (Throwable ex) {
                             if (tune) {

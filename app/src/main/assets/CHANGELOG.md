@@ -2,11 +2,97 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Epidexipteryx](https://en.wikipedia.org/wiki/Epidexipteryx)
+
+### 1.1815 - 2022-01-19
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1814 - 2022-01-18
+
+* Added support for sensivity indicator (personal, private, confidential)
+* Added batch setting of message flags (protocol level)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1813 - 2022-01-17
+
+* Fixed downloading attachments on demand
+* Small improvements and minor bug fixes
+
+### 1.1812 - 2022-01-17
+
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### [Draconyx](https://en.wikipedia.org/wiki/Draconyx)
 
-### Next version
+### 1.1811 - 2022-01-14
+
+* Fixed scroll issue
+
+### 1.1810 - 2022-01-14
+
+* Fixed searching for options when swiping
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1809 - 2022-01-14
+
+* Reply with selected text in style
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1808 - 2022-01-13
+
+* Added share images button above mini gallery
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1807 - 2022-01-11
+
+* Fixed delay when going to a settings page
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1806 - 2022-01-11
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1805 - 2022-01-10
+
+* Long screenshots (Android 12+)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1804 - 2022-01-08
+
+* Added check for secure (TLS) transport (experimental)
+* Removed double confirm for permanently deleting messages
+* Allowing three tries for biometric authentication
+* Fixed RTL for sent messages
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1803 - 2022-01-06
+
+* Added rule action to play (alarm) sound (experimental)
+* Small improvements and minor bug fixes
+* Updated build tools and libraries
+* Updated translations
+
+### 1.1802 - 2022-01-03
+
+* Improved original message view scrolling
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1801 - 2021-12-30
 
 * Added rule action to permanently delete messages
+* Using IMAP flags to store low/high importance
 * Small improvements and minor bug fixes
 * Updated translations
 

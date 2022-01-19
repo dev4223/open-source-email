@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -1392,7 +1392,7 @@ public class FragmentCompose extends FragmentBase {
                     args.putString("subject", a.getString("subject"));
                     args.putString("body", a.getString("body"));
                     args.putString("text", a.getString("text"));
-                    args.putString("selected", a.getString("selected"));
+                    args.putCharSequence("selected", a.getCharSequence("selected"));
 
                     if (a.containsKey("attachments")) {
                         args.putParcelableArrayList("attachments", a.getParcelableArrayList("attachments"));
@@ -2299,9 +2299,8 @@ public class FragmentCompose extends FragmentBase {
         } else
             try {
                 startActivityForResult(intent, REQUEST_RECORD_AUDIO);
-            } catch (SecurityException ex) {
-                Log.w(ex);
-                Helper.reportNoViewer(getContext(), intent);
+            } catch (Throwable ex) {
+                Helper.reportNoViewer(getContext(), intent, ex);
             }
     }
 
@@ -2771,12 +2770,9 @@ public class FragmentCompose extends FragmentBase {
                     photoURI = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID, file);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-                } catch (SecurityException ex) {
-                    Log.w(ex);
-                    Helper.reportNoViewer(getContext(), intent);
                 } catch (Throwable ex) {
-                    // / java.lang.IllegalArgumentException: Failed to resolve canonical path for ...
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                    // java.lang.IllegalArgumentException: Failed to resolve canonical path for ...
+                    Helper.reportNoViewer(getContext(), intent, ex);
                 }
             }
         } else {
@@ -4243,7 +4239,7 @@ public class FragmentCompose extends FragmentBase {
             String external_subject = args.getString("subject", "");
             String external_body = args.getString("body", "");
             String external_text = args.getString("text");
-            String selected_text = args.getString("selected");
+            CharSequence selected_text = args.getCharSequence("selected");
             ArrayList<Uri> uris = args.getParcelableArrayList("attachments");
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -4787,12 +4783,16 @@ public class FragmentCompose extends FragmentBase {
                                 d = Document.createShell("");
 
                                 Element div = d.createElement("div");
-                                for (String line : selected_text.split("\\r?\\n")) {
-                                    Element span = document.createElement("span");
-                                    span.text(line);
-                                    div.appendChild(span);
-                                    div.appendElement("br");
-                                }
+                                if (selected_text instanceof Spanned)
+                                    div.html(HtmlHelper.toHtml((Spanned) selected_text, context));
+                                else
+                                    for (String line : selected_text.toString().split("\\r?\\n")) {
+                                        Element span = document.createElement("span");
+                                        span.text(line);
+                                        div.appendChild(span);
+                                        div.appendElement("br");
+                                    }
+
                                 d.body().appendChild(div);
                             }
 
@@ -4998,7 +4998,7 @@ public class FragmentCompose extends FragmentBase {
                         Log.i("Selected external identity=" + data.draft.identity);
                     }
 
-                    if (data.draft.revision == null) {
+                    if (data.draft.revision == null || data.draft.revisions == null) {
                         data.draft.revision = 1;
                         data.draft.revisions = 1;
                         db.message().setMessageRevision(data.draft.id, data.draft.revision);
@@ -5075,6 +5075,15 @@ public class FragmentCompose extends FragmentBase {
         protected void onExecuted(Bundle args, final DraftData data) {
             final String action = getArguments().getString("action");
             Log.i("Loaded draft id=" + data.draft.id + " action=" + action);
+
+            FragmentActivity activity = getActivity();
+            if (activity != null) {
+                Intent intent = activity.getIntent();
+                if (intent != null) {
+                    intent.putExtra("id", data.draft.id);
+                    intent.putExtra("action", "edit");
+                }
+            }
 
             working = data.draft.id;
             encrypt = data.draft.ui_encrypt;
@@ -5247,7 +5256,6 @@ public class FragmentCompose extends FragmentBase {
                                     @Override
                                     public void run() {
                                         try {
-
                                             boolean image_dialog = prefs.getBoolean("image_dialog", true);
                                             if (image_dialog) {
                                                 Helper.hideKeyboard(view);
@@ -5918,25 +5926,28 @@ public class FragmentCompose extends FragmentBase {
                                 args.putBoolean("remind_dsn", true);
 
                             // Check size
-                            if (identity != null && identity.max_size != null) {
-                                Properties props = MessageHelper.getSessionProperties();
-                                if (identity.unicode)
-                                    props.put("mail.mime.allowutf8", "true");
-                                Session isession = Session.getInstance(props, null);
-                                Message imessage = MessageHelper.from(context, draft, identity, isession, false);
+                            if (identity != null && identity.max_size != null)
+                                try {
+                                    Properties props = MessageHelper.getSessionProperties();
+                                    if (identity.unicode)
+                                        props.put("mail.mime.allowutf8", "true");
+                                    Session isession = Session.getInstance(props, null);
+                                    Message imessage = MessageHelper.from(context, draft, identity, isession, false);
 
-                                File file = draft.getRawFile(context);
-                                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                                    imessage.writeTo(os);
-                                }
+                                    File file = draft.getRawFile(context);
+                                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                                        imessage.writeTo(os);
+                                    }
 
-                                long size = file.length();
-                                if (size > identity.max_size) {
-                                    args.putBoolean("remind_size", true);
-                                    args.putLong("size", size);
-                                    args.putLong("max_size", identity.max_size);
+                                    long size = file.length();
+                                    if (size > identity.max_size) {
+                                        args.putBoolean("remind_size", true);
+                                        args.putLong("size", size);
+                                        args.putLong("max_size", identity.max_size);
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
                                 }
-                            }
                         } else {
                             int mid;
                             if (action == R.id.action_undo)
@@ -6919,8 +6930,6 @@ public class FragmentCompose extends FragmentBase {
             final int[] sendDelayedValues = getResources().getIntArray(R.array.sendDelayedValues);
             final String[] sendDelayedNames = getResources().getStringArray(R.array.sendDelayedNames);
 
-            final String pkgOpenKeyChain = Helper.getOpenKeychainPackage(context);
-
             final ViewGroup dview = (ViewGroup) LayoutInflater.from(context).inflate(R.layout.dialog_send, null);
             final Button btnFixSent = dview.findViewById(R.id.btnFixSent);
             final TextView tvAddressError = dview.findViewById(R.id.tvAddressError);
@@ -6948,6 +6957,9 @@ public class FragmentCompose extends FragmentBase {
             final Spinner spEncrypt = dview.findViewById(R.id.spEncrypt);
             final ImageButton ibEncryption = dview.findViewById(R.id.ibEncryption);
             final Spinner spPriority = dview.findViewById(R.id.spPriority);
+            final ImageButton ibPriority = dview.findViewById(R.id.ibPriority);
+            final Spinner spSensitivity = dview.findViewById(R.id.spSensitivity);
+            final ImageButton ibSensitivity = dview.findViewById(R.id.ibSensitivity);
             final TextView tvSendAt = dview.findViewById(R.id.tvSendAt);
             final ImageButton ibSendAt = dview.findViewById(R.id.ibSendAt);
             final CheckBox cbArchive = dview.findViewById(R.id.cbArchive);
@@ -6996,6 +7008,8 @@ public class FragmentCompose extends FragmentBase {
             spEncrypt.setSelection(0);
             spPriority.setTag(1);
             spPriority.setSelection(1);
+            spSensitivity.setTag(0);
+            spSensitivity.setSelection(0);
             tvSendAt.setText(null);
             cbArchive.setEnabled(false);
             cbNotAgain.setChecked(!send_dialog);
@@ -7208,7 +7222,62 @@ public class FragmentCompose extends FragmentBase {
                 }
             });
 
-            ibSendAt.setOnClickListener(new View.OnClickListener() {
+            ibPriority.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Invisible
+                }
+            });
+
+            spSensitivity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    int last = (int) spSensitivity.getTag();
+                    if (last != position) {
+                        spSensitivity.setTag(position);
+                        setSensitivity(position);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    spSensitivity.setTag(0);
+                    setSensitivity(0);
+                }
+
+                private void setSensitivity(int sensitivity) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", id);
+                    args.putInt("sensitivity", sensitivity);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+                            int sensitivity = args.getInt("sensitivity");
+
+                            DB db = DB.getInstance(context);
+                            db.message().setMessageSensitivity(id, sensitivity < 1 ? null : sensitivity);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(getParentFragmentManager(), ex);
+                        }
+                    }.setExecutor(executor).execute(FragmentDialogSend.this, args, "compose:sensitivity");
+                }
+            });
+
+            ibSensitivity.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Helper.viewFAQ(v.getContext(), 177);
+                }
+            });
+
+            View.OnClickListener sendAt = new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Bundle args = new Bundle();
@@ -7220,7 +7289,10 @@ public class FragmentCompose extends FragmentBase {
                     fragment.setTargetFragment(FragmentDialogSend.this, 1);
                     fragment.show(getParentFragmentManager(), "send:snooze");
                 }
-            });
+            };
+
+            tvSendAt.setOnClickListener(sendAt);
+            ibSendAt.setOnClickListener(sendAt);
 
             cbArchive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -7277,6 +7349,10 @@ public class FragmentCompose extends FragmentBase {
                     int priority = (draft.priority == null ? 1 : draft.priority);
                     spPriority.setTag(priority);
                     spPriority.setSelection(priority);
+
+                    int sensitivity = (draft.sensitivity == null ? 0 : draft.sensitivity);
+                    spSensitivity.setTag(sensitivity);
+                    spSensitivity.setSelection(sensitivity);
 
                     if (draft.ui_snoozed == null) {
                         if (send_delayed == 0)

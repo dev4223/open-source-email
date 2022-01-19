@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ActivityNotFoundException;
@@ -208,9 +208,8 @@ public class FragmentDialogBase extends DialogFragment {
     public void startActivity(Intent intent) {
         try {
             super.startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Log.w(ex);
-            Helper.reportNoViewer(getContext(), intent);
+        } catch (Throwable ex) {
+            Helper.reportNoViewer(getContext(), intent, ex);
         }
     }
 
@@ -218,9 +217,8 @@ public class FragmentDialogBase extends DialogFragment {
     public void startActivityForResult(Intent intent, int requestCode) {
         try {
             super.startActivityForResult(intent, requestCode);
-        } catch (ActivityNotFoundException ex) {
-            Log.w(ex);
-            Helper.reportNoViewer(getContext(), intent);
+        } catch (Throwable ex) {
+            Helper.reportNoViewer(getContext(), intent, ex);
         }
     }
 }

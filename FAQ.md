@@ -41,8 +41,11 @@ For authorizing:
 * Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
 * Apple iCloud, see [question 148](#user-content-faq148) ([German](https://support.apple.com/de-de/HT204397))
 * Free.fr, see [question 157](#user-content-faq157)
-* Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) isn't enabled
+* Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
 * Web.de: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html))
+* GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html))
+* T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
+* Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/) (German) and not your account password
 
 Please see [here](#user-content-faq22) for common error messages and solutions.
 
@@ -294,7 +297,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(142) How can I store sent messages in the inbox?](#user-content-faq142)
 * [~~(143) Can you add a trash folder for POP3 accounts?~~](#user-content-faq143)
 * [(144) How can I record voice notes?](#user-content-faq144)
-* [(145) How can I set a notification sound for an account, folder or sender?](#user-content-faq145)
+* [(145) How can I set a notification sound for an account, folder, sender or condition?](#user-content-faq145)
 * [(146) How can I fix incorrect message times?](#user-content-faq146)
 * [(147) What should I know about third party versions?](#user-content-faq147)
 * [(148) How can I use an Apple iCloud account?](#user-content-faq148)
@@ -325,6 +328,8 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(173) What is the difference between Play store / GitHub / F-Droid version?](#user-content-faq173)
 * [(174) Is auto discovery supported?](#user-content-faq174)
 * [(175) Why should battery optimizations be disabled?](#user-content-faq175)
+* [(176) When will a message be considered safely transported?](#user-content-faq176)
+* [(177) What does 'Sensitivity' mean?](#user-content-faq177)
 
 [I have another question.](#user-content-get-support)
 
@@ -838,6 +843,10 @@ Common errors:
 FairEmail and the OpenKeychain app cannot run at the same time, causing PGP operations to fail.
 If needed, please [see here](https://developer.android.com/studio/debug/dev-options#enable) about how to enable the developer options.
 
+**Important**: Android 8.1.0 on Tecno CF8 Camon 11 Pro devices blocks communication between apps
+with the message "*AutoStart limited*" in the system logcat.
+So, FairEmail (or any other app) can't communicate with the OpenKeychain app.
+
 <br />
 
 *S/MIME*
@@ -1309,6 +1318,7 @@ Too large messages and triggering the spam filter of an email server are the mos
 * *571 5.7.1 Message contains spam or virus or sender is blocked ...* means that the email server considered an outgoing message as spam. This probably means that the spam filters of the email server are too strict. You'll need to contact the email provider for support on this.
 * *451 4.7.0 Temporary server error. Please try again later. PRX4 ...*: please [see here](https://www.limilabs.com/blog/office365-temporary-server-error-please-try-again-later-prx4) or [see here](https://judeperera.wordpress.com/2019/10/11/fixing-451-4-7-0-temporary-server-error-please-try-again-later-prx4/).
 * *571 5.7.1 Relay access denied*: please double check the username and email address in the advanced identity settings (via the manual setup).
+* Please [see here](https://support.google.com/a/answer/3726730) for more information and other SMTP error codes
 
 If you want to use the Gmail SMTP server to workaround a too strict outgoing spam filter or to improve delivery of messages:
 
@@ -2103,7 +2113,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that starred messages can be synchronized/kept always? (this can be enabled in the receive settings)
 * Did you know that you can long press the 'write message' icon to go to the drafts folder?
 * Did you know there is an advanced option to mark messages read when they are moved? (archiving and trashing is also moving)
-* Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it?
+* Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it? (this can be enabled in the miscellaneous settings)
 * Did you know that FairEmail has a tablet mode? Rotate your device in landscape mode and conversation threads will be opened in a second column if there is enough screen space.
 * Did you know that you can long press a reply template to create a draft message from the template?
 * Did you know that you can long press, hold and swipe to select a range of messages?
@@ -2115,7 +2125,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
 * Did you know that you can insert the email addresses of an Android contact group via the three dots overflow menu?
-* Did you know that if you select text and hit reply, only the selected text will be quoted?
+* Did you know that if you select text and reply, only the selected text will be quoted?
 * Did you know that you can long press the trash icons (both in the message and the bottom action bar) to permanently delete a message or conversation? (version 1.1368+)
 * Did you know that you can long press the send action to show the send dialog, even if it was disabled?
 * Did you know that you can long press the full screen icon to show the original message text only?
@@ -2124,6 +2134,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the folder name in the message header when viewing a conversation to navigate to the folder? (since version 1.1720)
 * Did you know that you can long press the add contact button in the message composer to insert a contact group? (since version 1.1721)
 * Did you know that you can long press the image action to show the image dialog, even if it was disabled? (since version 1.1772)
+* Did you know that you can long press the "] [" button to fit original messages to the screen width? (this might result in "thin" messages)
 
 <br />
 
@@ -2175,15 +2186,24 @@ by [all supported Android versions](https://developer.android.com/training/artic
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq63)
 
-Large inline or attached [PNG](https://en.wikipedia.org/wiki/Portable_Network_Graphics) and [JPEG](https://en.wikipedia.org/wiki/JPEG) images
-will automatically be resized for displaying on screens.
-This is because email messages are limited in size, depending on the provider mostly between 10 and 50 MB.
-Images will by default be resized to a maximum width and height of about 1440 pixels and saved with a compression ratio of 90 %.
-Images are scaled down using whole number factors to reduce memory usage and to retain image quality.
-Automatically resizing of inline and/or attached images and the maximum target image size can be configured in the send settings.
+You can add images to a message in two ways:
 
-If you want to resize images on a case-by-case basis,
-you can use [Send Reduced](https://f-droid.org/en/packages/mobi.omegacentauri.SendReduced/) or a similar app.
+* As attachment, by tapping on the paperclip icon button in the bottom action bar
+* As image, by tapping on the image icon button in the bottom action bar
+
+If you disabled the bottom action bar, you can enable it again via the three-dots menu at the top right of the message editor.
+
+An attachment will always be sent as-is.
+An image can be added as attachment or inserted into a message and you can select to reduce the size of the image and to remove privacy sensitive information.
+
+Images will be scaled down using whole number factors to reduce memory usage and to retain the image quality.
+Scaled images will be saved with a compression ratio of 90 %.
+
+If the image options do not appear, you can enable them again via the three-dots menu.
+
+Note that most email providers limit the total message size to 10-50 MB.
+
+Automatically resizing of inline and/or attached images and the maximum target image size can be configured in the send settings.
 
 <br />
 
@@ -2371,6 +2391,7 @@ You can select one of these actions to apply to matching messages:
 * Move
 * Copy (Gmail: label)
 * Delete permanently (since version 1.1801)
+* Play sound (since version 1.1803; experimental)
 * Answer/forward (with template)
 * Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
@@ -2964,7 +2985,7 @@ See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=49
 
 You can synchronize Gmail categories by creating filters to label categorized messages:
 
-* Create a new filter via Gmail > Settings (wheel) > Filters and Blocked Addresses > Create a new filter
+* Create a new filter via Gmail > Settings wheel > See all settings > Filters and Blocked Addresses > Create a new filter
 * Enter a category search (see below) in the *Has the words* field and click *Create filter*
 * Check *Apply the label* and select a label and click *Create filter*
 
@@ -2977,7 +2998,9 @@ category:forums
 category:promotions
 ```
 
-Unfortunately, this is not possible for snoozed messages folder.
+Documentation: [see here](https://support.google.com/mail/answer/7190).
+
+Unfortunately, this is not possible for the snoozed messages folder.
 
 You can use *Force sync* in the three-dots menu of the unified inbox to let FairEmail synchronize the folder list again
 and you can long press the folders to enable synchronization.
@@ -3419,6 +3442,7 @@ The resend menu item will be shown grayed (dimmed) if the message headers are no
 
 Remarks:
 
+* Messages to, CC or BCC *undisclosed-recipients:* cannot be resend
 * The original subject is sent as-is, unless it is being changed
 * The original message text will be sent as-is, unless text is being entered
 * The original attachments are sent as they are, unless attachments are being added or removed
@@ -3525,7 +3549,7 @@ so you cannot use FairEmail to access Tutanota.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq130)
 
-A series of lines with orangish or red texts with technical information means that debug mode was enabled in the miscellaneous settings.
+If you don't understand an error, please [contact me](https://contact.faircode.eu/?product=fairemailsupport) for support.
 
 The warning *No server found at ...* means that there was no email server registered at the indicated domain name.
 Replying to the message might not be possible and might result in an error.
@@ -3540,7 +3564,7 @@ The error will almost always include a reason. Common reasons are that the messa
 The warning *Message too large to fit into the available memory* means that the message was larger than 10 MiB.
 Even if your device has plenty of storage space Android provides limited working memory to apps, which limits the size of messages that can be handled.
 
-Please see [here](#user-content-faq22) for other error messages in the outbox.
+Please see [here](#user-content-faq22) for other error messages.
 
 <br />
 
@@ -3678,15 +3702,13 @@ Note that FairEmail does support replying to calendar invites (a pro feature) an
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq139)
 
-In fact this Microsoft Exchange specific error is an incorrect error message caused by a bug in older Exchange server software.
+The confusing server error *User is authenticated but not connected* might occur if:
 
-The error *User is authenticated but not connected* might occur if:
-
+* External access was administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules) about how an administrator can enable it again
+* SMTP was administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission) about how an administrator can enable it again
 * Push messages are enabled for too many folders: see [this FAQ](#user-content-faq23) for more information and a workaround
-* The account password was changed: changing it in FairEmail too should fix the problem
 * An alias email address is being used as username instead of the primary email address
 * An incorrect login scheme is being used for a shared mailbox: the right scheme is *username@domain\SharedMailboxAlias*
-* IMAP was administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules) how an administrator can enable it again
 
 The shared mailbox alias will mostly be the email address of the shared account, like this:
 
@@ -3701,6 +3723,7 @@ The Outlook/Office 365 quick setup wizard supports setting up shared mailboxes.
 When using a shared mailbox, you might want to enable the option *Synchronize shared folder lists* in the receive settings.
 
 Sometimes it helps to use the *Other provider* wizard instead of the *Outlook/Office 365* wizard.
+You might need an app password for this, please see [this FAQ](#user-content-faq14).
 
 <br />
 
@@ -3798,7 +3821,7 @@ Voice notes will automatically be attached.
 <br />
 
 <a name="faq145"></a>
-**(145) How can I set a notification sound for an account, folder or sender?**
+**(145) How can I set a notification sound for an account, folder, sender or condition?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq145)
 
@@ -3818,7 +3841,14 @@ Sender:
 * Expand the addresses section by tapping on the down arrow
 * Tap on the bell icon to create or edit a notification channel and to change the notification sound
 
-The order of precendence is: sender sound, folder sound, account sound and default sound.
+Conditional: (since version 1.1803; experimental)
+
+* Long press the folder (inbox) in the folder list and select *Edit rules*
+* Add a rule with the big 'plus' button at the bottom right
+* Configure a rule condition, select *Play sound* as rule action and select a sound
+* For more information about filter rules, please [see here](#user-content-faq71)
+
+The order of precendence is: conditional sound, sender sound, folder sound, account sound and (default) notification sound.
 
 Setting a notification sound for an account, folder or sender requires Android 8 Oreo or later and is a pro feature.
 
@@ -4404,7 +4434,7 @@ Related questions:
 * The Play store version does not support [Gravatars](https://gravatar.com/), see [here](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-85226179) for the reason
 * The Play store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
 * The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently
-* The GitHub version has some different links and some options have a different default values (more geared to advanced users)
+* The GitHub version has some different links, some more options (like sharing the HTML of a message) and some different default values (more geared to advanced users)
 * The F-Droid build does not support OAuth, see [this FAQ](#user-content-faq147) about why not
 * The F-Droid build does not include [Google Play Billing](https://developer.android.com/google/play/billing/integrate), so Play store purchases cannot be reused
 * The F-Droid build is supported only if the version number is the same as the the version number of the latest GitHub version, see also [this FAQ](#user-content-faq147)
@@ -4450,6 +4480,56 @@ but unfortunately modifications by manufacturers often [require it anyway](https
 
 <br />
 
+
+<a name="faq176"></a>
+**(176) When will a message be considered safely transported?**
+
+If the receive option *Check transport layer security (TLS)* is enabled,
+a green shield will be shown only if a message was transported securely by all servers.
+
+To show shields, the option *Show authentication status indicator* in the display settings should be enabled.
+
+A message will be consired safely transported if *every* [Received](https://datatracker.ietf.org/doc/html/rfc2821#section-4.4) header:
+
+* contains the phrase 'using TLS', 'via HTTP', 'version=TLS'
+* contains the phrase '(qmail <nnn> invoked by uid <nnn>)' in the first added header
+* contains the phrase '(Postfix, from userid nnn)' in the first added header
+* has a *by* with a local address
+* has a *by* xxx.google.com
+* has a *from* with a local address
+* has a *via* with the value '[Frontend Transport](https://social.technet.microsoft.com/wiki/contents/articles/50370.exchange-2016-what-is-the-front-end-transport-service-on-the-mailbox-role.aspx)'
+* has a *with* with the value 'TLS'
+* has a *with* with the value 'local', '[LMTPx](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol), '[MAPI](https://en.wikipedia.org/wiki/MAPI)'
+* has a *with* with the value 'HTTP', 'HTTPS', or 'HTTPREST'
+* has a *with* with the value '[xMTPSx](https://datatracker.ietf.org/doc/html/rfc3848)' ('xMTPAx' is considered insecure)
+
+A local address is a local host address, a site local address or a link local address.
+
+Example:
+
+```
+Received: brown.elm.relay.mailchannels.net (brown.elm.relay.mailchannels.net. [23.83.212.23])
+	by mx.google.com with ESMTPS id d10si6675855pgb.5.2021.12.24.13.20.38
+	for <test@example.org> (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+```
+
+<br />
+
+<a name="faq177"></a>
+**(177) What does 'Sensitivity' mean?**
+
+The sensitivity of a message indicates the confidentiality of a message.
+
+* Personal: for you only
+* Private: for you and trusted people only
+* Confidential: for a company, organization or department only
+
+Please see [this article](https://support.microsoft.com/en-us/office/mark-your-email-as-normal-personal-private-or-confidential-4a76d05b-6c29-4a0d-9096-71784a6b12c1) for more information.
+
+The sensitivity indication is sent as [a message header](https://datatracker.ietf.org/doc/html/rfc4021#section-2.1.55).
+
+<br />
+
 <h2><a name="get-support"></a>Get support</h2>
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-get-support)
@@ -4470,6 +4550,9 @@ Requested features should:
 * not complicate the usage of FairEmail
 * fit within the philosophy of FairEmail (privacy oriented, security minded)
 * comply with common standards (IMAP, SMTP, etc)
+* comply with the [Core app quality guidelines](https://developer.android.com/docs/quality-guidelines/core-app-quality)
+
+A feature will be considered useful to most people if more than 0.1% of the users request a feature, which in practice means about 500 people.
 
 Features not fulfilling these requirements will likely be rejected.
 This is also to keep maintenance and support in the long term feasible.

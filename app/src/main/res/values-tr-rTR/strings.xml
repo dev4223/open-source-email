@@ -294,6 +294,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_sync_shared_folders">Paylaşılan klasörlerin listesini senkronize et</string>
     <string name="title_advanced_subscriptions">Dizin aboneliklerini yönet</string>
     <string name="title_advanced_check_authentication">Mesaj kimlik doğrulamasını kontrol et</string>
+    <string name="title_advanced_check_tls">İletim katmanı güvenliğini (TLS) kontrol edin</string>
     <string name="title_advanced_check_reply_domain">Mesajları senkronize ederken yanıt adresini kontrol edin</string>
     <string name="title_advanced_check_mx">İletilerin eşzamanlanmasında gönderen e-posta adreslerini kontrol et</string>
     <string name="title_advanced_check_blocklist">Gönderenin alan adının spam engelleme listesinde olup olmadığını kontrol et</string>
@@ -359,6 +360,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_two_row">İki satır kullan</string>
     <string name="title_advanced_two_col">İki sütun kullan</string>
     <string name="title_advanced_min_screen_size">Ekranı bölmek için minimum ekran boyutu</string>
+    <string name="title_advanced_close_pane">Bir konuşmayı kapatırken satırı veya sütunu daralt</string>
     <string name="title_advanced_nav_options">Gezinme menüsü seçeneklerini göster</string>
     <string name="title_advanced_nav_pin">Gezinme menüsünü sabitle</string>
     <string name="title_advanced_nav_hide_title">Gezinme menüsü seçenekleri gizlensin mi?</string>
@@ -592,6 +594,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_sync_folders_hint">Bunu devre dışı bırakmak veri ve pil kullanımını bir miktar azaltır, ancak klasör listesinin güncellenmesini de devre dışı bırakır</string>
     <string name="title_advanced_poll_folders_hint">Bir hesaba bağlandıktan sonra ek olarak klasör listesini periyodik olarak senkronize edin</string>
     <string name="title_advanced_check_authentication_hint">Bu, e-posta sunucusu tarafından gerçekleştirilen DKIM, SPF ve DMARC kimlik doğrulamasının sonuçlarını kontrol edecektir</string>
+    <string name="title_advanced_check_tls_hint">Bu, yalnızca bir mesaj tüm sunucular tarafından güvenli bir şekilde taşınmışsa yeşil bir kalkan gösterecektir</string>
     <string name="title_advanced_check_reply_hint">Bu, gönderenin alan adının ve yanıt adresinin aynı olup olmadığını kontrol edecektir</string>
     <string name="title_advanced_lookup_mx_hint">Bu, DNS MX kayıtlarının olup olmadığını kontrol eder</string>
     <string name="title_advanced_sync_delay_hint">Bu, iletilerin eşzamanlamasını yavaşlatır</string>
@@ -627,6 +630,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_preview_issue">Bazı Android sürümlerindeki bir hata nedeniyle satır sayısı birden fazla olduğunda kaydırma yavaş olabilir</string>
     <string name="title_advanced_overview_mode_hint">Bu çok küçük yazı tiplerine neden olabilir</string>
     <string name="title_advanced_override_width_hint">Bu, mesajları daraltabilir, ancak aynı zamanda garip görünebilir</string>
+    <string name="title_advanced_monospaced_pre_hint">Yalnızca düz metin iletiler önceden biçimlendirilmiş olarak kabul edilecektir</string>
     <string name="title_advanced_placeholders_hint">Bu yalnızca yeniden biçimlendirilmiş mesajlar için geçerlidir</string>
     <string name="title_advanced_inline_hint">Satıriçi resimler mesajın içine eklenen resimlerdir</string>
     <string name="title_advanced_parse_classes_hint">Bu, mesajları daha doğru bir şekilde gösterecektir, ancak muhtemelen bir gecikme ile</string>
@@ -788,6 +792,9 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_synchronize_subfolders">Alt Klasörler</string>
     <string name="title_synchronize_more">Daha fazla mesaj yükle</string>
     <string name="title_synchronize_more_hint">Bu, eski mesajların tek bir indirilmesiyle sonuçlanacak, bu nedenle günlük kullanım için daha fazla pil kullanımıyla sonuçlanmayacaktır</string>
+    <string name="title_synchronize_more_hint2">        Mesajlar, e-posta sunucusunun teslim edebildiği kadar hızlı getirilecek ve cihazın saklayabileceği ve indeksleyebileceği kadar hızlı saklanacaktır.
+        Sınırlayıcı faktör genellikle cihazın dahili depolama alanının hızıdır.
+       </string>
     <string name="title_synchronize_enabled">Eşzamanlama</string>
     <string name="title_synchronize_batch_enable">Senkronizasyonunu Etkinleştir</string>
     <string name="title_synchronize_batch_disable">Senkronizasyonunu Devre Dışı Bırak</string>
@@ -942,6 +949,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_copy_to">&#8230;\'ya kopyala</string>
     <string name="title_subscribe">Abonelik</string>
     <string name="title_delete">Sil</string>
+    <string name="title_delete_all">Tümünü sil</string>
     <string name="title_more">Daha fazla</string>
     <string name="title_less">Daha az</string>
     <string name="title_spam">İstenmeyen posta</string>
@@ -956,7 +964,6 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_move_to_account">%1$s&#8230; taşı</string>
     <string name="title_report_spam">Spam olarak işaretle</string>
     <string name="title_delete_permanently">Kalıcı olarak sil</string>
-    <string name="title_no_undo">Bunun geri alınamayacağını anlıyorum</string>
     <string name="title_snooze">Ertele &#8230;</string>
     <string name="title_archive">Arşivle</string>
     <string name="title_reply">Yanıtla</string>
@@ -1057,6 +1064,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_send_auto_archive">Yanıtlanan iletiyi arşivle</string>
     <string name="title_send_encryption">Şifreleme</string>
     <string name="title_send_priority">Öncelik</string>
+    <string name="title_send_sensitivity">Hassasiyet</string>
     <string name="title_no_server">%1$s\'de sunucu bulunamadı</string>
     <string name="title_style">Biçim</string>
     <string name="title_style_bold">Kalın yazı</string>
@@ -1227,7 +1235,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_filter_unflagged">Yıldızlı Olmayan</string>
     <string name="title_filter_unknown">Bilinmeyen gönderenler</string>
     <string name="title_filter_hidden">Gizli</string>
-    <string name="title_filter_deleted" comment="title_filter_deleted&#10;Filter out &quot;Deleted&quot; messages = messages with deleted flag set">Silindi</string>
+    <string name="title_filter_deleted">Silindi</string>
     <string name="title_filter_duplicates">Çift kopyalar</string>
     <string name="title_filter_trash">Çöp</string>
     <string name="title_compact">Derlitoplu görünüm</string>
@@ -1275,6 +1283,8 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_rule_answer">Cevapla/İleri</string>
     <string name="title_rule_tts">Konuşma metni</string>
     <string name="title_rule_automation">Özdevinim</string>
+    <string name="title_rule_delete">Kalıcı olarak sil</string>
+    <string name="title_rule_sound">Ses Çal</string>
     <string name="title_rule_caption">Kuralı düzenle</string>
     <string name="title_rule_title">Kural geçerlidir</string>
     <string name="title_rule_name">Ad</string>
@@ -1288,6 +1298,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_rule_attachments">Ekleri var</string>
     <string name="title_rule_header">Başlık içeriği</string>
     <string name="title_rule_body">Metin şunları içerir:</string>
+    <string name="title_rule_skip_quotes">Alıntılanan metni atla</string>
     <string name="title_rule_body_remark">Bu koşulun kullanılması her zaman mesaj metnini indirecektir, bu da mesaj listesinin senkronizasyonunu yavaşlatabilir</string>
     <string name="title_rule_time_abs">Kesin zaman aralığı (alındı)</string>
     <string name="title_rule_time_after">Alındıktan sonra</string>
@@ -1314,6 +1325,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_rule_answer_missing">Şablon eksik</string>
     <string name="title_rule_keyword_missing">Anahtar kelime eksik</string>
     <string name="title_rule_automation_hint">%1$s gönderme isteğinizi %2$s ekleyerek gönderecek</string>
+    <string name="title_rule_delete_hint">Kalıcı silme işlemi geri alınamaz, bu nedenle kural koşullarının doğru olduğundan emin olun!</string>
     <string name="title_rule_execute">Şimdi çalıştır</string>
     <string name="title_rule_applied">Etkilenen iletiler: %1$d</string>
     <string name="title_rule_check">Denetle</string>
@@ -1328,6 +1340,10 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_rule_tts_from">Gönderen</string>
     <string name="title_rule_tts_subject">Konu</string>
     <string name="title_rule_tts_content">Metin</string>
+    <string name="title_rule_select_sound">Ses seç</string>
+    <string name="title_rule_use_as_alarm">Alarm olarak kullan</string>
+    <string name="title_rule_alarm_hint">Bu, \"rahatsız etmeyin\" kurallarını yok sayar</string>
+    <string name="title_rule_alarm_duration">Maksimum alarm süresi (saniye)</string>
     <string name="title_legend_section_synchronize">Eşzamanlama</string>
     <string name="title_legend_section_folders">Klasörler</string>
     <string name="title_legend_section_messages">İletiler</string>
@@ -1352,6 +1368,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_legend_closing">Kapatılıyor</string>
     <string name="title_legend_unified">Birleşik gelen kutusu / birincil hesap</string>
     <string name="title_legend_inbox">Gelen kutusu</string>
+    <string name="title_legend_outbox">Giden Kutusu</string>
     <string name="title_legend_drafts">Taslaklar</string>
     <string name="title_legend_sent">Giden</string>
     <string name="title_legend_archive">Arşiv</string>
@@ -1371,6 +1388,9 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_legend_draft">Taslak var</string>
     <string name="title_legend_priority">Yüksek önceliğe sahip</string>
     <string name="title_legend_priority_low">Düşük önceliğe sahip</string>
+    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Kişisel mi</string>
+    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Özel mi</string>
+    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Gizli mi</string>
     <string name="title_legend_importance">Önemli</string>
     <string name="title_legend_importance_low">Önemli değil</string>
     <string name="title_legend_signed">İmzalı</string>
@@ -1685,6 +1705,12 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
         <item>Düşük</item>
         <item>Normal</item>
         <item>Yüksek</item>
+    </string-array>
+    <string-array name="sensitivityNames">
+        <item>Normal</item>
+        <item>Kişisel</item>
+        <item>Özel</item>
+        <item>Gizli</item>
     </string-array>
     <string-array name="linesNames">
         <item>1</item>

@@ -16,13 +16,15 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
@@ -35,7 +37,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -62,15 +63,17 @@ import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.EditorInfo;
@@ -109,7 +112,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import org.jsoup.helper.HttpConnection;
 import org.openintents.openpgp.util.OpenPgpApi;
 
 import java.io.ByteArrayOutputStream;
@@ -612,6 +614,41 @@ public class Helper {
 
     // View
 
+    static int getActionBarHeight(Context context) {
+        int actionBarHeight;
+        TypedValue tv = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            return TypedValue.complexToDimensionPixelSize(tv.data, dm);
+        } else
+            return Helper.dp2pixels(context, 56);
+    }
+
+    static int getBottomNavigationHeight(Context context) {
+        int resid = context.getResources().getIdentifier("design_bottom_navigation_height", "dimen", context.getPackageName());
+        if (resid <= 0)
+            return Helper.dp2pixels(context, 56);
+        else
+            return context.getResources().getDimensionPixelSize(resid);
+    }
+
+    static ObjectAnimator getFabAnimator(View fab, LifecycleOwner owner) {
+        ObjectAnimator animator = ObjectAnimator.ofFloat(fab, "alpha", 0.9f, 1.0f);
+        animator.setDuration(750L);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.addUpdateListener(new ObjectAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (!owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return;
+                fab.setScaleX((float) animation.getAnimatedValue());
+                fab.setScaleY((float) animation.getAnimatedValue());
+            }
+        });
+        return animator;
+    }
+
     static Intent getChooser(Context context, Intent intent) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             PackageManager pm = context.getPackageManager();
@@ -677,7 +714,7 @@ public class Helper {
                 if (isTnef(type, null))
                     viewFAQ(context, 155);
                 else
-                    reportNoViewer(context, intent);
+                    reportNoViewer(context, intent, null);
             else
                 context.startActivity(intent);
         } else
@@ -704,9 +741,8 @@ public class Helper {
         else
             try {
                 context.startActivity(intent);
-            } catch (ActivityNotFoundException ex) {
-                Log.w(ex);
-                reportNoViewer(context, intent);
+            } catch (Throwable ex) {
+                reportNoViewer(context, intent, ex);
             }
     }
 
@@ -737,12 +773,8 @@ public class Helper {
                 if (task)
                     view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(view);
-            } catch (ActivityNotFoundException ex) {
-                Log.w(ex);
-                reportNoViewer(context, uri);
             } catch (Throwable ex) {
-                Log.e(ex);
-                ToastEx.makeText(context, Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
+                reportNoViewer(context, uri, ex);
             }
         } else {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -770,12 +802,8 @@ public class Helper {
             CustomTabsIntent customTabsIntent = builder.build();
             try {
                 customTabsIntent.launchUrl(context, uri);
-            } catch (ActivityNotFoundException ex) {
-                Log.w(ex);
-                reportNoViewer(context, uri);
             } catch (Throwable ex) {
-                Log.e(ex);
-                ToastEx.makeText(context, Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
+                reportNoViewer(context, uri, ex);
             }
         }
     }
@@ -895,11 +923,11 @@ public class Helper {
 
             html += "<p style=\"font-size:small;\">";
             html += "Android: " + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + ")<br>";
-            html += "Device: " + Build.MANUFACTURER + " " + Build.DEVICE + "<br>";
+            html += "Device: " + Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE + "<br>";
             html += "Locale: " + Html.escapeHtml(slocale.toString()) + "<br>";
             if (language != null)
                 html += "Language: " + Html.escapeHtml(language) + "<br>";
-            if (reporting && uuid != null)
+            if ((reporting || BuildConfig.TEST_RELEASE) && uuid != null)
                 html += "UUID: " + Html.escapeHtml(uuid) + "<br>";
             html += "</p>";
 
@@ -1040,9 +1068,6 @@ public class Helper {
 
     static boolean isStaminaEnabled(Context context) {
         // https://dontkillmyapp.com/sony
-        if (BuildConfig.DEBUG)
-            return true;
-
         if (!isSony())
             return false;
 
@@ -1108,15 +1133,28 @@ public class Helper {
         }
     }
 
-    static void reportNoViewer(Context context, Uri uri) {
-        reportNoViewer(context, new Intent().setData(uri));
+    static void reportNoViewer(Context context, @NonNull Uri uri, @Nullable Throwable ex) {
+        reportNoViewer(context, new Intent().setData(uri), ex);
     }
 
-    static void reportNoViewer(Context context, Intent intent) {
+    static void reportNoViewer(Context context, @NonNull Intent intent, @Nullable Throwable ex) {
+        if (ex != null) {
+            if (ex instanceof ActivityNotFoundException && BuildConfig.PLAY_STORE_RELEASE)
+                Log.w(ex);
+            else
+                Log.e(ex);
+        }
+
+        if (Helper.isTnef(intent.getType(), null)) {
+            Helper.viewFAQ(context, 155);
+            return;
+        }
+
         View dview = LayoutInflater.from(context).inflate(R.layout.dialog_no_viewer, null);
         TextView tvName = dview.findViewById(R.id.tvName);
         TextView tvFullName = dview.findViewById(R.id.tvFullName);
         TextView tvType = dview.findViewById(R.id.tvType);
+        TextView tvException = dview.findViewById(R.id.tvException);
 
         String title = intent.getStringExtra(Intent.EXTRA_TITLE);
         Uri data = intent.getData();
@@ -1129,6 +1167,9 @@ public class Helper {
         tvFullName.setVisibility(title == null ? View.GONE : View.VISIBLE);
 
         tvType.setText(type);
+
+        tvException.setText(ex == null ? null : ex.toString());
+        tvException.setVisibility(ex == null ? View.GONE : View.VISIBLE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
                 .setView(dview)
@@ -1625,13 +1666,79 @@ public class Helper {
         }
     }
 
-    public static String toRoman(int value) {
+    static String toRoman(int value) {
         if (value < 0 || value >= 4000)
             return Integer.toString(value);
         return ROMAN_1000[value / 1000] +
                 ROMAN_100[(value % 1000) / 100] +
                 ROMAN_10[(value % 100) / 10] +
                 ROMAN_1[value % 10];
+    }
+
+    static ActionMode.Callback getActionModeWrapper(Context context) {
+        return new ActionMode.Callback() {
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                for (int i = 0; i < menu.size(); i++) {
+                    MenuItem item = menu.getItem(i);
+                    Intent intent = item.getIntent();
+                    if (intent != null) {
+                        item.setIntent(null);
+                        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                try {
+                                    context.startActivity(intent);
+                                } catch (Throwable ex) {
+                                    reportNoViewer(context, intent, ex);
+                                    /*
+                                        java.lang.SecurityException: Permission Denial: starting Intent { act=android.intent.action.PROCESS_TEXT typ=text/plain cmp=com.microsoft.launcher/com.microsoft.bing.ProcessTextSearch launchParam=MultiScreenLaunchParams { mDisplayId=0 mFlags=0 } (has extras) } from ProcessRecord{befc028 15098:eu.faircode.email/u0a406} (pid=15098, uid=10406) not exported from uid 10021
+                                            at android.os.Parcel.readException(Parcel.java:1693)
+                                            at android.os.Parcel.readException(Parcel.java:1646)
+                                            at android.app.ActivityManagerProxy.startActivity(ActivityManagerNative.java:3530)
+                                            at android.app.Instrumentation.execStartActivity(Instrumentation.java:1645)
+                                            at android.app.Activity.startActivityForResult(Activity.java:5033)
+                                            at android.view.View.startActivityForResult(View.java:6413)
+                                            at android.widget.Editor$ProcessTextIntentActionsHandler.fireIntent(Editor.java:7597)
+                                            at android.widget.Editor$ProcessTextIntentActionsHandler.performMenuItemAction(Editor.java:7542)
+                                            at android.widget.Editor$TextActionModeCallback.onActionItemClicked(Editor.java:4246)
+                                            at com.android.internal.policy.DecorView$ActionModeCallback2Wrapper.onActionItemClicked(DecorView.java:2971)
+                                            at com.android.internal.view.FloatingActionMode$3.onMenuItemSelected(FloatingActionMode.java:95)
+                                            at com.android.internal.view.menu.MenuBuilder.dispatchMenuItemSelected(MenuBuilder.java:761)
+                                            at com.android.internal.view.menu.MenuItemImpl.invoke(MenuItemImpl.java:157)
+                                            at com.android.internal.view.menu.MenuBuilder.performItemAction(MenuBuilder.java:904)
+                                            at com.android.internal.view.menu.MenuBuilder.performItemAction(MenuBuilder.java:894)
+                                            at com.android.internal.view.FloatingActionMode$4.onMenuItemClick(FloatingActionMode.java:124)
+                                            at com.android.internal.widget.FloatingToolbar$FloatingToolbarPopup$23.onItemClick(FloatingToolbar.java:1898)
+                                            at android.widget.AdapterView.performItemClick(AdapterView.java:339)
+                                            at android.widget.AbsListView.performItemClick(AbsListView.java:1705)
+                                            at android.widget.AbsListView$PerformClick.run(AbsListView.java:4171)
+                                            at android.widget.AbsListView$13.run(AbsListView.java:6735)
+                                     */
+                                }
+                                return true;
+                            }
+                        });
+                    }
+                }
+
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+            }
+        };
     }
 
     // Files
@@ -1977,6 +2084,14 @@ public class Helper {
         return false;
     }
 
+    static boolean shouldAutoLock(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean biometrics = prefs.getBoolean("biometrics", false);
+        String pin = prefs.getString("pin", null);
+        boolean autolock = prefs.getBoolean("autolock", true);
+        return (autolock && (biometrics || !TextUtils.isEmpty(pin)));
+    }
+
     static void authenticate(final FragmentActivity activity, final LifecycleOwner owner,
                              Boolean enabled, final
                              Runnable authenticated, final Runnable cancelled) {
@@ -2005,6 +2120,8 @@ public class Helper {
 
             final BiometricPrompt prompt = new BiometricPrompt(activity, executor,
                     new BiometricPrompt.AuthenticationCallback() {
+                        private int fails = 0;
+
                         @Override
                         public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
                             Log.w("Authenticate biometric error " + errorCode + ": " + errString);
@@ -2034,7 +2151,8 @@ public class Helper {
                         @Override
                         public void onAuthenticationFailed() {
                             Log.w("Authenticate biometric failed");
-                            ApplicationEx.getMainHandler().post(cancelled);
+                            if (++fails >= 3)
+                                ApplicationEx.getMainHandler().post(cancelled);
                         }
                     });
 
@@ -2128,7 +2246,32 @@ public class Helper {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (hasFocus)
-                        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                        try {
+                            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                            /*
+                                java.lang.IllegalArgumentException: View=DecorView@f197613[ActivityMain] not attached to window manager
+                                        at android.view.WindowManagerGlobal.findViewLocked(WindowManagerGlobal.java:604)
+                                        at android.view.WindowManagerGlobal.updateViewLayout(WindowManagerGlobal.java:493)
+                                        at android.view.WindowManagerImpl.updateViewLayout(WindowManagerImpl.java:121)
+                                        at android.app.Dialog.onWindowAttributesChanged(Dialog.java:1072)
+                                        at androidx.appcompat.view.WindowCallbackWrapper.onWindowAttributesChanged(WindowCallbackWrapper:114)
+                                        at android.view.Window.dispatchWindowAttributesChanged(Window.java:1236)
+                                        at com.android.internal.policy.PhoneWindow.dispatchWindowAttributesChanged(PhoneWindow.java:3229)
+                                        at android.view.Window.setSoftInputMode(Window.java:1123)
+                                        at eu.faircode.email.Helper$15.onFocusChange(Helper:2169)
+                                        at android.view.View.onFocusChanged(View.java:8828)
+                                        at android.widget.TextView.onFocusChanged(TextView.java:12091)
+                                        at android.widget.EditText.onFocusChanged(EditText.java:248)
+                                        at android.view.View.handleFocusGainInternal(View.java:8498)
+                                        at android.view.View.requestFocusNoSearch(View.java:14103)
+                                        at android.view.View.requestFocus(View.java:14077)
+                                        at android.view.View.requestFocus(View.java:14044)
+                                        at android.view.View.requestFocus(View.java:13986)
+                                        at eu.faircode.email.Helper$16.run(Helper:2187)
+                             */
+                        }
                 }
             });
 

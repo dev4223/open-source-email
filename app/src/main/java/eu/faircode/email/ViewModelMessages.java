@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -272,6 +272,14 @@ public class ViewModelMessages extends ViewModel {
             return;
         }
 
+        ObjectHolder<Boolean> alive = new ObjectHolder<>(true);
+        owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+            public void onAny() {
+                alive.value = owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED);
+            }
+        });
+
         Log.i("Observe previous/next id=" + id);
         //model.list.getValue().loadAround(lpos);
         model.list.observe(owner, new Observer<PagedList<TupleMessageEx>>() {
@@ -363,7 +371,7 @@ public class ViewModelMessages extends ViewModel {
                                     return getPair(plist, ds, count, from + j);
                         }
 
-                        for (int i = 0; i < count; i += CHUNK_SIZE) {
+                        for (int i = 0; i < count && alive.value; i += CHUNK_SIZE) {
                             Log.i("Observe previous/next load" +
                                     " range=" + i + "/#" + count);
                             List<TupleMessageEx> messages = ds.loadRange(i, Math.min(CHUNK_SIZE, count - i));

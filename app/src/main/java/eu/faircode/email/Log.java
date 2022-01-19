@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
 import android.app.ActivityManager;
@@ -51,10 +51,12 @@ import android.os.DeadSystemException;
 import android.os.Debug;
 import android.os.IBinder;
 import android.os.OperationCanceledException;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.Printer;
 import android.view.Display;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -423,7 +425,7 @@ public class Log {
                 @Override
                 public boolean onSession(@NonNull Session session) {
                     // opt-in
-                    return prefs.getBoolean("crash_reports", false);
+                    return prefs.getBoolean("crash_reports", false) || BuildConfig.TEST_RELEASE;
                 }
             });
 
@@ -432,7 +434,7 @@ public class Log {
                 public boolean onError(@NonNull Event event) {
                     // opt-in
                     boolean crash_reports = prefs.getBoolean("crash_reports", false);
-                    if (!crash_reports)
+                    if (!crash_reports && !BuildConfig.TEST_RELEASE)
                         return false;
 
                     Throwable ex = event.getOriginalError();
@@ -535,7 +537,7 @@ public class Log {
             Log.i("uuid=" + uuid);
             client.setUser(uuid, null, null);
 
-            if (prefs.getBoolean("crash_reports", false))
+            if (prefs.getBoolean("crash_reports", false) || BuildConfig.TEST_RELEASE)
                 Bugsnag.startSession();
         } catch (Throwable ex) {
             Log.e(ex);
@@ -1114,6 +1116,31 @@ public class Log {
                   at android.os.Handler.dispatchMessage(Handler.java:102)
                   at android.os.Looper.loop(Looper.java:158)
                   at android.app.ActivityThread.main(ActivityThread.java:7224)
+             */
+            return false;
+
+        if (ex instanceof NullPointerException &&
+                ex.getCause() instanceof RemoteException)
+            /*
+                java.lang.NullPointerException: Attempt to invoke virtual method 'boolean com.android.server.autofill.RemoteFillService$PendingRequest.cancel()' on a null object reference
+                    at android.os.Parcel.createException(Parcel.java:1956)
+                    at android.os.Parcel.readException(Parcel.java:1918)
+                    at android.os.Parcel.readException(Parcel.java:1868)
+                    at android.app.IActivityManager$Stub$Proxy.reportAssistContextExtras(IActivityManager.java:7079)
+                    at android.app.ActivityThread.handleRequestAssistContextExtras(ActivityThread.java:3338)
+                    at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1839)
+                    at android.os.Handler.dispatchMessage(Handler.java:106)
+                    at android.os.Looper.loop(Looper.java:193)
+                    at android.app.ActivityThread.main(ActivityThread.java:6971)
+                    at java.lang.reflect.Method.invoke(Native Method)
+                    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+                    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:865)
+                Caused by: android.os.RemoteException: Remote stack trace:
+                    at com.android.server.autofill.RemoteFillService.cancelCurrentRequest(RemoteFillService.java:177)
+                    at com.android.server.autofill.Session.cancelCurrentRequestLocked(Session.java:465)
+                    at com.android.server.autofill.Session.access$1000(Session.java:118)
+                    at com.android.server.autofill.Session$1.onHandleAssistData(Session.java:322)
+                    at com.android.server.am.ActivityManagerService.reportAssistContextExtras(ActivityManagerService.java:14510)
              */
             return false;
 
@@ -1758,7 +1785,7 @@ public class Log {
                 Build.VERSION.RELEASE, Build.VERSION.SDK_INT, targetSdk));
 
         boolean reporting = prefs.getBoolean("crash_reports", false);
-        if (reporting) {
+        if (reporting || BuildConfig.TEST_RELEASE) {
             String uuid = prefs.getString("uuid", null);
             sb.append(String.format("UUID: %s\r\n", uuid == null ? "-" : uuid));
         }
@@ -1768,6 +1795,13 @@ public class Log {
         sb.append(String.format("Now: %s\r\n", new Date()));
 
         sb.append("\r\n");
+
+        String osVersion = null;
+        try {
+            osVersion = System.getProperty("os.version");
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
 
         // Get device info
         sb.append(String.format("Brand: %s\r\n", Build.BRAND));
@@ -1779,6 +1813,9 @@ public class Log {
         sb.append(String.format("Time: %s\r\n", new Date(Build.TIME).toString()));
         sb.append(String.format("Display: %s\r\n", Build.DISPLAY));
         sb.append(String.format("Id: %s\r\n", Build.ID));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            sb.append(String.format("SoC: %s/%s\r\n", Build.SOC_MANUFACTURER, Build.SOC_MODEL));
+        sb.append(String.format("OS version: %s\r\n", osVersion));
         sb.append(String.format("uid: %d\r\n", android.os.Process.myUid()));
         sb.append("\r\n");
 
@@ -1892,6 +1929,10 @@ public class Log {
         sb.append(String.format("Battery optimizations: %s %s\r\n",
                 ignoring == null ? null : Boolean.toString(!ignoring),
                 Boolean.FALSE.equals(ignoring) ? "!!!" : ""));
+
+        PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        boolean psaving = power.isPowerSaveMode();
+        sb.append(String.format("Battery saving: %s %s\r\n", psaving, psaving ? "!!!" : ""));
 
         sb.append(String.format("Charging: %b; level: %d\r\n",
                 Helper.isCharging(context), Helper.getBatteryLevel(context)));
@@ -2039,14 +2080,17 @@ public class Log {
             boolean auto_optimize = prefs.getBoolean("auto_optimize", false);
             boolean schedule = prefs.getBoolean("schedule", false);
 
-            size += write(os, "accounts=" + accounts.size() +
-                    " enabled=" + enabled +
+            size += write(os, "enabled=" + enabled +
                     " interval=" + pollInterval + "\r\n" +
-                    " metered=" + metered +
+                    "metered=" + metered +
                     " VPN=" + ConnectionHelper.vpnActive(context) +
                     " NetGuard=" + Helper.isInstalled(context, "eu.faircode.netguard") + "\r\n" +
-                    " optimizing=" + (ignoring == null ? null : !ignoring) +
-                    " auto_optimize=" + auto_optimize +
+                    "optimizing=" + (ignoring == null ? null : !ignoring) +
+                    " auto_optimize=" + auto_optimize + "\r\n" +
+                    "accounts=" + accounts.size() +
+                    " folders=" + db.folder().countTotal() +
+                    " messages=" + db.message().countTotal() +
+                    " rules=" + db.rule().countTotal() +
                     "\r\n\r\n");
 
             if (schedule) {
@@ -2230,13 +2274,14 @@ public class Log {
                 size += write(os, ex.getMessage() + "\r\n");
             }
 
-            size += write(os, "VPN active=" + ConnectionHelper.vpnActive(context) + "\r\n\r\n");
-
             ConnectionHelper.NetworkState state = ConnectionHelper.getNetworkState(context);
             size += write(os, "Connected=" + state.isConnected() + "\r\n");
             size += write(os, "Suitable=" + state.isSuitable() + "\r\n");
             size += write(os, "Unmetered=" + state.isUnmetered() + "\r\n");
-            size += write(os, "Roaming=" + state.isRoaming() + "\r\n");
+            size += write(os, "Roaming=" + state.isRoaming() + "\r\n\r\n");
+
+            size += write(os, "VPN active=" + ConnectionHelper.vpnActive(context) + "\r\n");
+            size += write(os, "Data saving=" + ConnectionHelper.isDataSaving(context) + "\r\n");
             size += write(os, "Airplane=" + ConnectionHelper.airplaneMode(context) + "\r\n");
         }
 
@@ -2491,5 +2536,18 @@ public class Log {
 
     static InternetAddress myAddress() throws UnsupportedEncodingException {
         return new InternetAddress("marcel+fairemail@faircode.eu", "FairCode", StandardCharsets.UTF_8.name());
+    }
+
+    static StringBuilder getSpans(CharSequence text) {
+        StringBuilder sb = new StringBuilder();
+        TextUtils.dumpSpans(text, new Printer() {
+            @Override
+            public void println(String x) {
+                if (sb.length() > 0)
+                    sb.append(' ');
+                sb.append(x.replace('\n', '|')).append(']');
+            }
+        }, "[");
+        return sb;
     }
 }
