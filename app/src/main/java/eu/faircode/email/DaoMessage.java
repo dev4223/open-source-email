@@ -57,8 +57,6 @@ public interface DaoMessage {
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
             ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", (message.ui_encrypt IN (2, 4)) AS signed" +
-            ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", COUNT(DISTINCT" +
             "   CASE WHEN NOT message.hash IS NULL THEN message.hash" +
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
@@ -137,8 +135,6 @@ public interface DaoMessage {
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
             ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", (message.ui_encrypt IN (2, 4)) AS signed" +
-            ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", COUNT(DISTINCT" +
             "   CASE WHEN NOT message.hash IS NULL THEN message.hash" +
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
@@ -210,8 +206,6 @@ public interface DaoMessage {
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
             ", (folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", (message.ui_encrypt IN (2, 4)) AS signed" +
-            ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
             ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +
@@ -301,7 +295,7 @@ public interface DaoMessage {
 
     @Query("SELECT COUNT(*) FROM message" +
             " WHERE id IN (:ids)" +
-            " AND raw IS NULL or NOT raw")
+            " AND (raw IS NULL OR NOT raw)")
     LiveData<Integer> liveRaw(long[] ids);
 
     @Query("SELECT *" +
@@ -467,6 +461,19 @@ public interface DaoMessage {
     @Query("SELECT COUNT(*) FROM message")
     int countTotal();
 
+    @Query("SELECT COUNT(*) FROM message" +
+            " WHERE folder = :folder" +
+            " AND NOT ui_seen")
+    int countUnseen(long folder);
+
+    @Query("SELECT COUNT(*)" +
+            " FROM message" +
+            " WHERE folder = :folder" +
+            " AND notifying <> 0" +
+            " AND notifying <> " + EntityMessage.NOTIFYING_IGNORE +
+            " AND NOT (message.ui_seen OR message.ui_ignored OR message.ui_hide)")
+    int countNotifying(long folder);
+
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, identity.color AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
@@ -478,8 +485,6 @@ public interface DaoMessage {
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
             ", (folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", (message.ui_encrypt IN (2, 4)) AS signed" +
-            ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
             ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +
@@ -510,8 +515,6 @@ public interface DaoMessage {
             ", 1 AS unseen" +
             ", 0 AS unflagged" +
             ", 0 AS drafts" +
-            ", (message.ui_encrypt IN (2, 4)) AS signed" +
-            ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
             ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +

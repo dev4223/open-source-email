@@ -9,6 +9,7 @@
     <string name="app_exit">Znova stlačte \"Späť\" pre ukončenie</string>
     <string name="app_cake">Nedostatok voľného miesta na úložisku</string>
     <string name="app_updated">Posledná aktualizácia: %1$s</string>
+    <string name="app_download">Stiahnuté z: %1$s</string>
     <string name="channel_service">Prijať</string>
     <string name="channel_send">Odoslať</string>
     <string name="channel_notification">Email</string>
@@ -368,6 +369,7 @@
     <string name="title_advanced_timeout">Časový limit pripojenia (sekundy)</string>
     <string name="title_advanced_prefer_ip4">Uprednostňovať IPv4 pred IPv6</string>
     <string name="title_advanced_ssl_harden">Obrniť SSL pripojenia</string>
+    <string name="title_advanced_cert_strict">Prísna kontrola certifikátov</string>
     <string name="title_advanced_manage_connectivity">Spravovať pripojenie</string>
     <string name="title_advanced_caption_general">Všeobecné</string>
     <string name="title_advanced_caption_checks">Kontroly</string>
@@ -394,6 +396,7 @@
     <string name="title_advanced_tabular_background">Použiť rovnakú farbu pozadia ako farbu karty v tabuľkovom štýle</string>
     <string name="title_advanced_cards_shadow">Zatieniť neprečítané správy v štýle kariet</string>
     <string name="title_advanced_cards_shadow_highlight">Použiť farbu vysvietenia namiesto farby zvýraznenia</string>
+    <string name="title_advanced_category_header">Zoskupiť podľa kategórie účtu</string>
     <string name="title_advanced_date_header">Zoradiť podľa dátumu</string>
     <string name="title_advanced_date_fixed">Pripnúť na vrchu hlavičku s dátumom</string>
     <string name="title_advanced_date_bold">Dátum zobraziť tučným písmom</string>
@@ -633,6 +636,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_advanced_tcp_keep_alive_hint">Zapnutie môže na niektorých zariadeniach spôsobovať problémy s pripojením</string>
     <string name="title_advanced_validate_hint">Výsledkom môžu byť výpadky synchronizácie správ, najmä pri používaní VPN ale aj v iných občasných prípadoch</string>
     <string name="title_advanced_timeout_hint">Časový limit čítania/zápisu bude nastavený na dvojnásobok limitu spojenia. Čím vyššia hodnota, tým vyšší nárok na využívanie batérie.</string>
+    <string name="title_advanced_cert_strict_hint">Vypnutím upustíte od kontroly dôveryhodnosti certifikátov servera</string>
     <string name="title_advanced_ssl_harden_hint">Povolením zakážete slabé metódy a protokoly SSL, čo môže viesť k problémom so spojením</string>
     <string name="title_advanced_roaming_hint">Hlavičky správ budú vždy preberané počas roamingu. Na zakázanie internetu v roamingu použite nastavenia zariadenia.</string>
     <string name="title_advanced_browse_hint">Načítať viac správ pri posúvaní dolu</string>
@@ -709,6 +713,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_identity_unicode_remark">Väčšina serverov túto možnosť nepodporuje</string>
     <string name="title_identity_max_size">Maximálna veľkosť správy (MB)</string>
     <string name="title_identity_receipt">Predvolene si vyžiadať potvrdenie o doručení/prečítaní</string>
+    <string name="title_identity_receipt_legacy">Používať zastaralé hlavičky pre odpovede na žiadosť o potvrdenie o prečítaní</string>
     <string name="title_identity_use_ip_hint">Skúste toto zmeniť, Ak zo servera dostávate takéto alebo podobné hlásenia: \'invalid greeting\', \'requires valid address\'</string>
     <string name="title_identity_self_hint">Tiež znemožňuje odpovedať samému sebe</string>
     <string name="title_optional">Nepovinné</string>
@@ -801,6 +806,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_pop_folders">POP3 protokol nepodporuje vytváranie priečinkov</string>
     <string name="title_oauth_support">OAuth nie je podporovaný</string>
     <string name="title_review">Skontrolovať</string>
+    <string name="title_hint_accounts">Podržte dlhšie stlačený názov účtu a zobrazia sa možnosti, ako napríklad zakázať alebo vymazať účet</string>
     <string name="title_hint_alias">Kliknite a podržte totožnosť pre zobrazenie možností, akými sú napríklad kopírovať pre vytvorenie aliasov</string>
     <string name="title_service_auth">Odpoveď z poštového servera: \'%1$s\'</string>
     <string name="title_service_vpn">Môže byť spôsobené použitou VPN</string>
@@ -1022,6 +1028,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_fullscreen">Zobraziť na celú obrazovku</string>
     <string name="title_fit_width">Prispôsobiť šírke</string>
     <string name="title_disable_widths">Potlačiť šírku</string>
+    <string name="title_monospaced_pre">S pevnou šírkou &lt;pre&gt;</string>
     <string name="title_unused_inline">Nepoužité vnorené obrázky budú odstránené pri odoslaní</string>
     <string name="title_accross_remark">Správy premiestnené medzi účtami budú prevzaté znovu, s využitím ďalšieho prenosu údajov</string>
     <string name="title_raw_saved">Surová správa uložená</string>
@@ -1409,9 +1416,9 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_legend_draft">Koncept</string>
     <string name="title_legend_priority">Vysoká priorita</string>
     <string name="title_legend_priority_low">Nizka priorita</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Osobné</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Súkromné</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Dôverné</string>
+    <string name="title_legend_sensitivity_personal">Osobné</string>
+    <string name="title_legend_sensitivity_private">Súkromné</string>
+    <string name="title_legend_sensitivity_confidential">Dôverné</string>
     <string name="title_legend_importance">Dôležité</string>
     <string name="title_legend_importance_low">Nie dôležité</string>
     <string name="title_legend_signed">Podpísané</string>

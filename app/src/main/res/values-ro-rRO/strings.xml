@@ -9,6 +9,7 @@
     <string name="app_exit">Apăsați din nou \'Înapoi\' pentru a ieși</string>
     <string name="app_cake">Spațiu de stocare insuficient rămas</string>
     <string name="app_updated">Ultima actualizare: %1$s</string>
+    <string name="app_download">Descărcat de la: %1$s</string>
     <string name="channel_service">Primește</string>
     <string name="channel_send">Trimite</string>
     <string name="channel_notification">E-mail</string>
@@ -358,6 +359,7 @@
     <string name="title_advanced_timeout">Expirarea conexiunii (secunde)</string>
     <string name="title_advanced_prefer_ip4">Preferă IPv4 înaintea IPv6</string>
     <string name="title_advanced_ssl_harden">Întârire conexiuni SSL</string>
+    <string name="title_advanced_cert_strict">Verificarea strictă a certificatelor</string>
     <string name="title_advanced_manage_connectivity">Gestionare conexiuni</string>
     <string name="title_advanced_caption_general">Generale</string>
     <string name="title_advanced_caption_checks">Verificări</string>
@@ -384,6 +386,7 @@
     <string name="title_advanced_tabular_background">Utilizați culoarea cardului ca și culoare de fundal atunci când folosiți stilul tabular</string>
     <string name="title_advanced_cards_shadow">Utilizează umbra pentru mesajele necitite când se folosește stilul card</string>
     <string name="title_advanced_cards_shadow_highlight">Utilizați culoarea de evidențiere în loc de culoarea de accent</string>
+    <string name="title_advanced_category_header">Gruparea pe categorii de conturi</string>
     <string name="title_advanced_date_header">Grupare după dată</string>
     <string name="title_advanced_date_fixed">Afișați antetul cu dată fixă în partea de sus</string>
     <string name="title_advanced_date_bold">Afișați data marcată cu bold</string>
@@ -623,6 +626,7 @@
     <string name="title_advanced_tcp_keep_alive_hint">Activarea acesteia poate cauza probleme de conexiune pe unele dispozitive</string>
     <string name="title_advanced_validate_hint">Acest lucru poate duce la nesincronizarea mesajelor, de exemplu atunci când se utilizează un VPN, dar și în alte situații</string>
     <string name="title_advanced_timeout_hint">Timpul de expirare a citirii/scrierii va fi setat la dublul intervalului de expirare a conexiunii. Valori mai mari au ca rezultat o utilizare mai mare a bateriei.</string>
+    <string name="title_advanced_cert_strict_hint">Dezactivarea acestui lucru va relaxa verificarea certificatelor serverului</string>
     <string name="title_advanced_ssl_harden_hint">Activând această setare se vor dezactiva protocoalele și cifrările SSL slabe, putând duce la probleme de conectare</string>
     <string name="title_advanced_roaming_hint">Antetele mesajelor vor fi mereu descărcate și în roaming. Puteți folosi setările roaming ale dispozitivului pentru a dezactiva internetul atunci când sunteți în roaming.</string>
     <string name="title_advanced_browse_hint">Descarcă mai multe mesaje când se derulează în jos</string>
@@ -699,6 +703,7 @@
     <string name="title_identity_unicode_remark">Majoritatea serverelor nu acceptă acest lucru</string>
     <string name="title_identity_max_size">Dimensiunea maximă a mesajului (MB)</string>
     <string name="title_identity_receipt">Solicită implicit confirmare la livrare/citire</string>
+    <string name="title_identity_receipt_legacy">Utilizați antetele de cerere de primire vechi</string>
     <string name="title_identity_use_ip_hint">În cazul în care apare erori de tipul \'invalid greeting\', \'requires valid address\' sau similare, încercați să schimbați această setare</string>
     <string name="title_identity_self_hint">De asemenea, previne raspunsul către tine însuți</string>
     <string name="title_optional">Opțional</string>
@@ -791,6 +796,7 @@
     <string name="title_pop_folders">Protocolul POP3 nu suportă crearea de dosare</string>
     <string name="title_oauth_support">OAuth nu este suportat</string>
     <string name="title_review">Revizuire</string>
+    <string name="title_hint_accounts">Apăsați lung pe un cont pentru a afișa opțiunile, de exemplu pentru a dezactiva sau șterge un cont</string>
     <string name="title_hint_alias">Apăsare lunga pentru opțiuni, precum copiere pentru crearea de identități alias</string>
     <string name="title_service_auth">Serverul de e-mail a spus: \'%1$s\'</string>
     <string name="title_service_vpn">Acesta poate fi cauzată de VPN-ul folosit</string>
@@ -1012,6 +1018,7 @@
     <string name="title_fullscreen">Afișează pe ecranul complet</string>
     <string name="title_fit_width">Potrivește lățimea</string>
     <string name="title_disable_widths">Dezactivați lățimile</string>
+    <string name="title_monospaced_pre">Monospațiu &lt;pre&gt;</string>
     <string name="title_unused_inline">Imaginile integrate nefolosite vor fi eliminate la trimitere</string>
     <string name="title_accross_remark">Mesajele mutate între conturi vor fi descărcate din nou consumând date în plus</string>
     <string name="title_raw_saved">Mesaj original salvat</string>
@@ -1400,9 +1407,9 @@
     <string name="title_legend_draft">Are ciornă</string>
     <string name="title_legend_priority">Prioritate ridicată</string>
     <string name="title_legend_priority_low">Are prioritate redusă</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Este personal</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Este privat</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Este confidențial</string>
+    <string name="title_legend_sensitivity_personal">Este personal</string>
+    <string name="title_legend_sensitivity_private">Este privat</string>
+    <string name="title_legend_sensitivity_confidential">Este confidențial</string>
     <string name="title_legend_importance">Este important</string>
     <string name="title_legend_importance_low">Nu este important</string>
     <string name="title_legend_signed">Este semnat</string>

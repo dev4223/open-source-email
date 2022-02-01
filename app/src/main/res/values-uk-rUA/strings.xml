@@ -369,6 +369,7 @@
     <string name="title_advanced_timeout">Час очікування зв\'язку (секунди)</string>
     <string name="title_advanced_prefer_ip4">Віддавати перевагу IPv4 над IPv6</string>
     <string name="title_advanced_ssl_harden">Посилене SSL з\'єднання</string>
+    <string name="title_advanced_cert_strict">Сувора перевірка сертифікату</string>
     <string name="title_advanced_manage_connectivity">Керувати підключенням</string>
     <string name="title_advanced_caption_general">Загальні налаштування</string>
     <string name="title_advanced_caption_checks">Перевірки</string>
@@ -395,6 +396,7 @@
     <string name="title_advanced_tabular_background">Використовувати колір картки як тло під час використання табличного стилю</string>
     <string name="title_advanced_cards_shadow">Використовувати тінь для непрочитаних повідомлень під час використання стилю картки</string>
     <string name="title_advanced_cards_shadow_highlight">Використовувати колір підсвітки замість кольору акценту</string>
+    <string name="title_advanced_category_header">Групувати за категорією облікового запису</string>
     <string name="title_advanced_date_header">Групувати за датою</string>
     <string name="title_advanced_date_fixed">Показати фіксований заголовок дати зверху</string>
     <string name="title_advanced_date_bold">Показувати дату в жирному шрифті</string>
@@ -633,6 +635,7 @@
     <string name="title_advanced_tcp_keep_alive_hint">Включення може викликати проблеми з підключенням на деяких пристроях</string>
     <string name="title_advanced_validate_hint">Це може призвести до того що повідомлення можуть бути не синхронізовані, наприклад, при використанні VPN, а також в інших ситуаціях</string>
     <string name="title_advanced_timeout_hint">Тайм-аут читання/запису буде застосовано два рази часу підключення. Більш високі значення призведуть до збільшення використання заряду акумулятора.</string>
+    <string name="title_advanced_cert_strict_hint">Якщо вимкнути це, перевірку сертифікатів сервера буде послаблено</string>
     <string name="title_advanced_ssl_harden_hint">Увімкнення цієї опції дозволить відключити слабкі SSL протоколи і шифри, що може призвести до проблем з підключенням</string>
     <string name="title_advanced_roaming_hint">Заголовки повідомлень завжди будуть отримуватися під час роумінгу. Ви можете використовувати налаштування роумінгу в Вашому пристрої для вимкнення Інтернету під час роумінгу.</string>
     <string name="title_advanced_browse_hint">Завантажувати більше повідомлень при прокручуванні вниз</string>
@@ -709,6 +712,7 @@
     <string name="title_identity_unicode_remark">Більшість серверів не підтримують це</string>
     <string name="title_identity_max_size">Максимальний розмір повідомлення (МБ)</string>
     <string name="title_identity_receipt">Запитати про доставку/прочитання повідомлення за замовчуванням</string>
+    <string name="title_identity_receipt_legacy">Використовувати сумісний заголовок для запиту про отримання</string>
     <string name="title_identity_use_ip_hint">У разі отримання \'невірне привітання\', \'вимагає дійсної адреси\' або аналогічної помилки, спробуйте змінити це налаштування</string>
     <string name="title_identity_self_hint">Також запобігає Вам відповідати самому собі</string>
     <string name="title_optional">За бажанням</string>
@@ -801,6 +805,7 @@
     <string name="title_pop_folders">Протокол POP3 не підтримує створення тек</string>
     <string name="title_oauth_support">OAuth не підтримується</string>
     <string name="title_review">Відгук</string>
+    <string name="title_hint_accounts">Довготривале натискання, на назву облікового запису, відкриє меню додаткових параметрів, наприклад, для вимкнення або видалення облікового запису</string>
     <string name="title_hint_alias">Довге натискання на посвідчення особи для відображення параметрів, наприклад, копіювання для створення псевдонімів</string>
     <string name="title_service_auth">Поштовий сервер сказав: \'%1$s\'</string>
     <string name="title_service_vpn">Це може бути викликано мережею VPN, що використовується</string>
@@ -1019,6 +1024,7 @@
     <string name="title_fullscreen">Показати на весь екран</string>
     <string name="title_fit_width">За шириною</string>
     <string name="title_disable_widths">Відключити ширину</string>
+    <string name="title_monospaced_pre">Моноширинний &lt;pre&gt;</string>
     <string name="title_unused_inline">Невикористані вбудовані зображення будуть видалені при надсиланні</string>
     <string name="title_accross_remark">Повідомлення, які переміщуються через облікові записи, будуть завантажені знову, в результаті буде додаткове використання даних</string>
     <string name="title_raw_saved">Збережено початковий текст повідомлення</string>
@@ -1407,9 +1413,9 @@
     <string name="title_legend_draft">Має чернетку</string>
     <string name="title_legend_priority">Має високий пріоритет</string>
     <string name="title_legend_priority_low">Має низький пріоритет</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Є особистим</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Є приватним</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Є конфіденційним</string>
+    <string name="title_legend_sensitivity_personal">Є особистим</string>
+    <string name="title_legend_sensitivity_private">Є приватним</string>
+    <string name="title_legend_sensitivity_confidential">Є конфіденційним</string>
     <string name="title_legend_importance">Важливо</string>
     <string name="title_legend_importance_low">Не важливо</string>
     <string name="title_legend_signed">Підписано</string>

@@ -19,10 +19,24 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ImageSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.MenuCompat;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -30,6 +44,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.text.Collator;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.mail.Address;
@@ -62,6 +85,7 @@ public class EntityAnswer implements Serializable {
     public Boolean hide;
     @NonNull
     public Boolean external;
+    public Integer color;
     @NonNull
     public String text;
     @NonNull
@@ -139,6 +163,169 @@ public class EntityAnswer implements Serializable {
         return text;
     }
 
+    static void fillMenu(Menu main, boolean compose, List<EntityAnswer> answers, Context context) {
+        boolean grouped = BuildConfig.DEBUG;
+
+        int iconSize = context.getResources().getDimensionPixelSize(R.dimen.menu_item_icon_size);
+
+        List<EntityAnswer> favorites = new ArrayList<>();
+        List<String> groups = new ArrayList<>();
+        for (EntityAnswer answer : answers)
+            if (compose && answer.favorite)
+                favorites.add(answer);
+            else if (answer.group != null && !groups.contains(answer.group))
+                groups.add(answer.group);
+
+        Collator collator = Collator.getInstance(Locale.getDefault());
+        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
+        Collections.sort(groups, collator);
+
+        Collections.sort(answers, new Comparator<EntityAnswer>() {
+            @Override
+            public int compare(EntityAnswer a1, EntityAnswer a2) {
+                if (!grouped || a1.applied.equals(a2.applied))
+                    return collator.compare(a1.name, a2.name);
+                else
+                    return -a1.applied.compareTo(a2.applied);
+            }
+        });
+
+        Collections.sort(favorites, new Comparator<EntityAnswer>() {
+            @Override
+            public int compare(EntityAnswer a1, EntityAnswer a2) {
+                return collator.compare(a1.name, a2.name);
+            }
+        });
+
+        int order = 0;
+
+        Map<String, SubMenu> map = new HashMap<>();
+        for (String group : groups)
+            map.put(group, main.addSubMenu(Menu.NONE, order, order++, group));
+
+        NumberFormat NF = NumberFormat.getNumberInstance();
+        for (EntityAnswer answer : answers) {
+            if (compose && answer.favorite)
+                continue;
+            order++;
+
+            SpannableStringBuilder ssb = new SpannableStringBuilder(answer.name);
+
+            if (answer.color != null) {
+                Drawable d = new ColorDrawable(answer.color);
+                d.setBounds(0, 0, iconSize / 4, iconSize);
+
+                ImageSpan imageSpan = new CenteredImageSpan(d);
+                ssb.insert(0, "\uFFFC\u2002"); // object replacement character, en space
+                ssb.setSpan(imageSpan, 0, 1, 0);
+            }
+
+            if (grouped && answer.applied > 0) {
+                int start = ssb.length();
+                ssb.append(" (").append(NF.format(answer.applied)).append(")");
+                ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL),
+                        start, ssb.length(), 0);
+            }
+
+            MenuItem item;
+            if (answer.group == null)
+                item = main.add(Menu.NONE, order, order++, ssb);
+            else {
+                SubMenu smenu = map.get(answer.group);
+                item = smenu.add(answer.applied > 0 ? Menu.FIRST : Menu.NONE,
+                        smenu.size(), smenu.size() + 1, ssb);
+            }
+            item.setIntent(new Intent().putExtra("id", answer.id));
+        }
+
+        if (compose && BuildConfig.DEBUG) {
+            SubMenu profiles = main.addSubMenu(Menu.NONE, order, order++, "Profiles");
+            for (EmailProvider p : EmailProvider.loadProfiles(context)) {
+                SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                int start;
+                ssb.append("IMAP (account, receive)");
+
+                ssb.append(" host ");
+                start = ssb.length();
+                ssb.append(p.imap.host);
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append(" port ");
+                start = ssb.length();
+                ssb.append(Integer.toString(p.imap.port));
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append(" encryption ");
+                start = ssb.length();
+                ssb.append(p.imap.starttls ? "STARTTLS" : "SSL/TLS");
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append("\n\n");
+
+                ssb.append("SMTP (identity, send)");
+
+                ssb.append(" host ");
+                start = ssb.length();
+                ssb.append(p.smtp.host);
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append(" port ");
+                start = ssb.length();
+                ssb.append(Integer.toString(p.smtp.port));
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append(" encryption ");
+                start = ssb.length();
+                ssb.append(p.smtp.starttls ? "STARTTLS" : "SSL/TLS");
+                ssb.setSpan(new StyleSpan(Typeface.BOLD),
+                        start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                ssb.append("\n\n");
+
+                if (!TextUtils.isEmpty(p.link))
+                    ssb.append(p.link).append("\n\n");
+
+                profiles.add(999, profiles.size(), profiles.size() + 1, p.name +
+                        (p.appPassword ? "+" : ""))
+                        .setIntent(new Intent().putExtra("config", ssb));
+            }
+        }
+
+        Drawable icon = context.getResources().getDrawable(R.drawable.twotone_star_24);
+        icon.setBounds(0, 0, iconSize, iconSize);
+        icon = icon.getConstantState().newDrawable().mutate();
+        int color = Helper.resolveColor(context, R.attr.colorAccent);
+        icon.setTint(color);
+
+        for (EntityAnswer answer : favorites) {
+            SpannableStringBuilder ssb = new SpannableStringBuilder(answer.name);
+
+            if (answer.color != null) {
+                Drawable d = new ColorDrawable(answer.color);
+                d.setBounds(0, 0, iconSize / 4, iconSize);
+
+                ImageSpan imageSpan = new CenteredImageSpan(d);
+                ssb.insert(0, "\uFFFC\u2002"); // object replacement character, en space
+                ssb.setSpan(imageSpan, 0, 1, 0);
+            }
+
+            ImageSpan imageSpan = new CenteredImageSpan(icon);
+            ssb.insert(0, "\uFFFC\u2002"); // object replacement character, en space
+            ssb.setSpan(imageSpan, 0, 1, 0);
+
+            main.add(Menu.NONE, order, order++, ssb)
+                    .setIntent(new Intent().putExtra("id", answer.id));
+        }
+
+        if (grouped)
+            MenuCompat.setGroupDividerEnabled(main, true);
+    }
+
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("id", id);
@@ -149,6 +336,7 @@ public class EntityAnswer implements Serializable {
         json.put("favorite", favorite);
         json.put("hide", hide);
         json.put("external", external);
+        json.put("color", color);
         json.put("text", text);
         json.put("applied", applied);
         json.put("last_applied", last_applied);
@@ -167,6 +355,8 @@ public class EntityAnswer implements Serializable {
         answer.favorite = json.optBoolean("favorite");
         answer.hide = json.optBoolean("hide");
         answer.external = json.optBoolean("external");
+        if (json.has("color") && !json.isNull("color"))
+            answer.color = json.getInt("color");
         answer.text = json.getString("text");
         answer.applied = json.optInt("applied", 0);
         if (json.has("last_applied") && !json.isNull("last_applied"))
@@ -186,6 +376,7 @@ public class EntityAnswer implements Serializable {
                     this.hide.equals(other.hide) &&
                     this.external.equals(other.external) &&
                     this.text.equals(other.text) &&
+                    Objects.equals(this.color, other.color) &&
                     this.applied.equals(other.applied) &&
                     Objects.equals(this.last_applied, other.last_applied));
         }

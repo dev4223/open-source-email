@@ -111,6 +111,7 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.openintents.openpgp.util.OpenPgpApi;
 
@@ -597,6 +598,8 @@ public class Helper {
 
     static String getStandbyBucketName(int bucket) {
         switch (bucket) {
+            case 5:
+                return "exempted";
             case UsageStatsManager.STANDBY_BUCKET_ACTIVE:
                 return "active";
             case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
@@ -1324,6 +1327,16 @@ public class Helper {
         view.setLayoutParams(lparam);
     }
 
+    static void setSnackbarLines(Snackbar snackbar, int lines) {
+        View sv = snackbar.getView();
+        if (sv == null)
+            return;
+        TextView tv = sv.findViewById(com.google.android.material.R.id.snackbar_text);
+        if (tv == null)
+            return;
+        tv.setMaxLines(lines);
+    }
+
     static boolean isNight(Context context) {
         // https://developer.android.com/guide/topics/ui/look-and-feel/darktheme#configuration_changes
         int uiMode = context.getResources().getConfiguration().uiMode;
@@ -1675,7 +1688,7 @@ public class Helper {
                 ROMAN_1[value % 10];
     }
 
-    static ActionMode.Callback getActionModeWrapper(Context context) {
+    static ActionMode.Callback getActionModeWrapper(TextView view) {
         return new ActionMode.Callback() {
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -1687,15 +1700,27 @@ public class Helper {
                 for (int i = 0; i < menu.size(); i++) {
                     MenuItem item = menu.getItem(i);
                     Intent intent = item.getIntent();
-                    if (intent != null) {
+                    if (intent != null &&
+                            Intent.ACTION_PROCESS_TEXT.equals(intent.getAction())) {
                         item.setIntent(null);
                         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                             @Override
                             public boolean onMenuItemClick(MenuItem item) {
                                 try {
-                                    context.startActivity(intent);
+                                    int start = view.getSelectionStart();
+                                    int end = view.getSelectionEnd();
+                                    if (start > end) {
+                                        int tmp = start;
+                                        start = end;
+                                        end = tmp;
+                                    }
+                                    CharSequence selected = view.getText();
+                                    if (start >= 0 && end <= selected.length())
+                                        selected = selected.subSequence(start, end);
+                                    intent.putExtra(Intent.EXTRA_PROCESS_TEXT, selected);
+                                    view.getContext().startActivity(intent);
                                 } catch (Throwable ex) {
-                                    reportNoViewer(context, intent, ex);
+                                    reportNoViewer(view.getContext(), intent, ex);
                                     /*
                                         java.lang.SecurityException: Permission Denial: starting Intent { act=android.intent.action.PROCESS_TEXT typ=text/plain cmp=com.microsoft.launcher/com.microsoft.bing.ProcessTextSearch launchParam=MultiScreenLaunchParams { mDisplayId=0 mFlags=0 } (has extras) } from ProcessRecord{befc028 15098:eu.faircode.email/u0a406} (pid=15098, uid=10406) not exported from uid 10021
                                             at android.os.Parcel.readException(Parcel.java:1693)

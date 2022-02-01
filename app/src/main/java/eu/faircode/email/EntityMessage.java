@@ -319,6 +319,16 @@ public class EntityMessage implements Serializable {
         return hasKeyword(MessageHelper.FLAG_FORWARDED);
     }
 
+    boolean isSigned() {
+        return (EntityMessage.PGP_SIGNONLY.equals(ui_encrypt) ||
+                EntityMessage.SMIME_SIGNONLY.equals(ui_encrypt));
+    }
+
+    boolean isEncrypted() {
+        return (EntityMessage.PGP_SIGNENCRYPT.equals(ui_encrypt) ||
+                EntityMessage.SMIME_SIGNENCRYPT.equals(ui_encrypt));
+    }
+
     String[] checkFromDomain(Context context) {
         return MessageHelper.equalDomain(context, from, smtp_from);
     }
@@ -417,9 +427,10 @@ public class EntityMessage implements Serializable {
         boolean language_detection = prefs.getBoolean("language_detection", false);
         String l = (language_detection ? language : null);
 
+        DateFormat DTF = Helper.getDateTimeInstance(context);
+
         Element p = document.createElement("p");
         if (extended) {
-            DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
             if (from != null && from.length > 0) {
                 Element strong = document.createElement("strong");
                 strong.text(Helper.getString(context, l, R.string.title_from) + " ");
@@ -455,10 +466,8 @@ public class EntityMessage implements Serializable {
                 p.appendText(subject);
                 p.appendElement("br");
             }
-        } else {
-            DateFormat DTF = Helper.getDateTimeInstance(context);
+        } else
             p.text(DTF.format(new Date(received)) + " " + MessageHelper.formatAddresses(from) + ":");
-        }
 
         Element div = document.createElement("div")
                 .attr("fairemail", "reply");

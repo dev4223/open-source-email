@@ -394,6 +394,7 @@
     <string name="title_advanced_tabular_background">Použít barvu karty jako pozadí při zobrazení stylem tabulky</string>
     <string name="title_advanced_cards_shadow">Použít stín pro nepřečtené zprávy, při zobrazení stylem karet</string>
     <string name="title_advanced_cards_shadow_highlight">Použít barvu zvýraznění namísto kontrastní barvy</string>
+    <string name="title_advanced_category_header">Seskupit podle kategorie účtu</string>
     <string name="title_advanced_date_header">Seskupit podle data</string>
     <string name="title_advanced_date_fixed">Zobrazit nahoře datovou hlavičku</string>
     <string name="title_advanced_date_bold">Zobrazit datum tučně</string>
@@ -709,6 +710,7 @@
     <string name="title_identity_unicode_remark">Většina serverů toto nepodporuje</string>
     <string name="title_identity_max_size">Maximální velikost zprávy (MB)</string>
     <string name="title_identity_receipt">Automaticky požadovat potvrzení doručení/přečtení</string>
+    <string name="title_identity_receipt_legacy">Použít legacy hlavičku žádosti potvrzení o doručení</string>
     <string name="title_identity_use_ip_hint">V případech jako „neplatný pozdrav“, „vyžadována platná adresa“ či podobné chyby, zkuste změnit toto nastavení</string>
     <string name="title_identity_self_hint">Také předchází odpovídání na vlastní zprávy</string>
     <string name="title_optional">Nepovinné</string>
@@ -801,6 +803,7 @@
     <string name="title_pop_folders">Protokol POP3 nepodporuje vytváření složek</string>
     <string name="title_oauth_support">OAuth není podporováno</string>
     <string name="title_review">Zkontrolovat</string>
+    <string name="title_hint_accounts">Dlouhým stiskem účtu zobrazíte možnosti, například jeho vypnutí nebo smazání</string>
     <string name="title_hint_alias">Dlouze podržet pro možnosti, např. kopírování pro vytvoření aliasu identity</string>
     <string name="title_service_auth">E-mailový server navrátil: \'%1$s\'</string>
     <string name="title_service_vpn">Toto může být zapříčiněno použitou VPN</string>
@@ -1410,9 +1413,9 @@
     <string name="title_legend_draft">Má koncept</string>
     <string name="title_legend_priority">Má vysokou prioritu</string>
     <string name="title_legend_priority_low">Má nízkou prioritu</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Osobní</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Soukromé</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Důvěrné</string>
+    <string name="title_legend_sensitivity_personal">Osobní</string>
+    <string name="title_legend_sensitivity_private">Soukromé</string>
+    <string name="title_legend_sensitivity_confidential">Důvěrné</string>
     <string name="title_legend_importance">Je důležité</string>
     <string name="title_legend_importance_low">Není důležité</string>
     <string name="title_legend_signed">Je podepsáno</string>

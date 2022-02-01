@@ -9,6 +9,7 @@
     <string name="app_exit">\'Quay lại\' lần nữa để thoát</string>
     <string name="app_cake">Không đủ không gian bộ nhớ còn lại</string>
     <string name="app_updated">Lần cập nhật cuối: %1$s</string>
+    <string name="app_download">Được tải xuống từ: %1$s</string>
     <string name="channel_service">Nhận</string>
     <string name="channel_send">Gửi</string>
     <string name="channel_notification">Email</string>
@@ -65,7 +66,7 @@
     <string name="title_block_sender">Chặn người gửi</string>
     <string name="title_block_sender_domain">Chặn miền \'%1$s\'</string>
     <string name="title_block_sender_hint">        Chặn người gửi là tính năng miễn phí.
-        Chặn miền người gửi có sử dụng quy tắc lọc, đó là tính năng pro.
+        Chặn tên miền người gửi có sử dụng quy tắc lọc, đó là tính năng pro.
     </string>
     <string name="title_junk_filter">Dùng bộ lọc thư rác cục bộ</string>
     <string name="title_junk_filter_hint">Cái này có thể tăng sử dụng pin và đánh dấu thư là thư rác một cách không chính xác</string>
@@ -338,6 +339,7 @@
     <string name="title_advanced_timeout">Thời gian chờ kết nối (giây)</string>
     <string name="title_advanced_prefer_ip4">Ưu tiên IPv4 hơn IPv6</string>
     <string name="title_advanced_ssl_harden">Tăng bảo mật cho các kết nối SSL</string>
+    <string name="title_advanced_cert_strict">Kiểm tra chứng chỉ nghiêm ngặt</string>
     <string name="title_advanced_manage_connectivity">Quản lý sự kết nối</string>
     <string name="title_advanced_caption_general">Cài đặt chung</string>
     <string name="title_advanced_caption_checks">Kiểm tra</string>
@@ -364,6 +366,7 @@
     <string name="title_advanced_tabular_background">Sử dụng màu thẻ làm màu nền khi dùng kiểu tab</string>
     <string name="title_advanced_cards_shadow">Sử dụng cái bóng cho thư chưa đọc khi dùng kiểu thẻ</string>
     <string name="title_advanced_cards_shadow_highlight">Sử dụng màu đánh dấu thay vì màu nổi bật</string>
+    <string name="title_advanced_category_header">Nhóm theo thể loại tài khoản</string>
     <string name="title_advanced_date_header">Nhóm theo ngày</string>
     <string name="title_advanced_date_fixed">Hiện tiêu đề ngày cố định ở đầu</string>
     <string name="title_advanced_date_bold">Hiện ngày bằng chữ đậm</string>
@@ -602,6 +605,7 @@
     <string name="title_advanced_tcp_keep_alive_hint">Việc bật cái này có thể gây ra các vấn đề kết nối ở một số thiết bị</string>
     <string name="title_advanced_validate_hint">Cái này có thể dẫn đến không đồng bộ hoá thư, ví dụ khi sử dụng VPN, nhưng cũng trong các trường hợp khác</string>
     <string name="title_advanced_timeout_hint">Thời gian chờ đọc/ghi sẽ được đặt thành gấp đôi thời gian chờ kết nối. Các giá trị cao hơn sẽ dẫn đến hao pin nhiều hơn.</string>
+    <string name="title_advanced_cert_strict_hint">Việc tắt tuỳ chọn này sẽ nới lỏng việc kiểm tra chứng chỉ máy chủ</string>
     <string name="title_advanced_ssl_harden_hint">Việc bật cái này sẽ tắt các giao thức và mã hoá SSL yếu, điều này có thể dẫn đến các vấn đề về kết nối</string>
     <string name="title_advanced_roaming_hint">Tiêu đề thư sẽ luôn được lấy khi chuyển vùng. Bạn có thể sử dụng cài đặt chuyển vùng của thiết bị để tắt internet trong khi chuyển vùng.</string>
     <string name="title_advanced_browse_hint">Lấy nhiều thư hơn khi cuộn xuống</string>
@@ -678,6 +682,7 @@
     <string name="title_identity_unicode_remark">Đa số các máy chủ không hỗ trợ điều này</string>
     <string name="title_identity_max_size">Kích cỡ thư lớn nhất (MB)</string>
     <string name="title_identity_receipt">Yêu cầu xác nhận đã gửi/đã đọc theo mặc định</string>
+    <string name="title_identity_receipt_legacy">Sử dụng tiêu đề yêu cầu xác nhận cũ</string>
     <string name="title_identity_use_ip_hint">Trong trường hợp \'invalid greeting\', \'requires valid adress\' hoặc lỗi tương tự, hãy thử thay đổi cài đặt này</string>
     <string name="title_identity_self_hint">Cũng sẽ ngăn bạn trả lời chính mình</string>
     <string name="title_optional">Không bắt buộc</string>
@@ -770,6 +775,7 @@
     <string name="title_pop_folders">Giao thức POP3 không hỗ trợ việc tạo thư mục</string>
     <string name="title_oauth_support">OAuth không được hỗ trợ</string>
     <string name="title_review">Xem xét</string>
+    <string name="title_hint_accounts">Nhấn giữ tài khoản để hiển thị tuỳ chọn, ví dụ để tắt hoặc xoá tài khoản</string>
     <string name="title_hint_alias">Nhấn giữ một danh tính để hiển thị các tuỳ chọn, như là sao chép để tạo danh tính kiểu bí danh</string>
     <string name="title_service_auth">Máy chủ email nói: \'%1$s\'</string>
     <string name="title_service_vpn">Điều này có thể được gây ra bởi VPN đang được sử dụng</string>
@@ -991,6 +997,7 @@
     <string name="title_fullscreen">Hiện toàn màn hình</string>
     <string name="title_fit_width">Vừa với chiều rộng</string>
     <string name="title_disable_widths">Tắt chiều rộng</string>
+    <string name="title_monospaced_pre">Một khoảng cách &lt;pre&gt;</string>
     <string name="title_unused_inline">Các hình ảnh tích hợp không được sử dụng sẽ bị xoá khi gửi</string>
     <string name="title_accross_remark">Thư được di chuyển qua các tài khoản sẽ được tải xuống lại dẫn đến sử dụng thêm dữ liệu</string>
     <string name="title_raw_saved">Đã lưu thư thô</string>
@@ -1379,9 +1386,9 @@
     <string name="title_legend_draft">Có nháp</string>
     <string name="title_legend_priority">Ưu tiên cao</string>
     <string name="title_legend_priority_low">Ưu tiên thấp</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Là cá nhân</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Là riêng tư</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Là bí mật</string>
+    <string name="title_legend_sensitivity_personal">Là cá nhân</string>
+    <string name="title_legend_sensitivity_private">Là riêng tư</string>
+    <string name="title_legend_sensitivity_confidential">Là bí mật</string>
     <string name="title_legend_importance">Quan trọng</string>
     <string name="title_legend_importance_low">Không quan trọng</string>
     <string name="title_legend_signed">Được ký</string>

@@ -133,6 +133,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private Button btnRepair;
     private SwitchCompat swAutostart;
+    private SwitchCompat swExternalStorage;
     private TextView tvRoomQueryThreads;
     private SeekBar sbRoomQueryThreads;
     private ImageButton ibRoom;
@@ -146,6 +147,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swUndoManager;
     private SwitchCompat swWebViewLegacy;
     private SwitchCompat swModSeq;
+    private SwitchCompat swUid;
     private SwitchCompat swExpunge;
     private SwitchCompat swUidExpunge;
     private SwitchCompat swAuthPlain;
@@ -188,9 +190,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "updates", "weekly", "show_changelog",
             "experiments", "crash_reports", "cleanup_attachments",
             "protocol", "debug", "log_level", "test1", "test2", "test3", "test4", "test5",
+            // "external_storage",
             "query_threads", "wal", "checkpoints", "sqlite_cache",
             "chunk_size", "undo_manager", "webview_legacy",
-            "use_modseq", "perform_expunge", "uid_expunge",
+            "use_modseq", "uid_command", "perform_expunge", "uid_expunge",
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl",
             "keep_alive_poll", "empty_pool", "idle_done",
             "exact_alarms", "infra", "dup_msgids", "test_iab"
@@ -278,6 +281,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         btnRepair = view.findViewById(R.id.btnRepair);
         swAutostart = view.findViewById(R.id.swAutostart);
+        swExternalStorage = view.findViewById(R.id.swExternalStorage);
         tvRoomQueryThreads = view.findViewById(R.id.tvRoomQueryThreads);
         sbRoomQueryThreads = view.findViewById(R.id.sbRoomQueryThreads);
         ibRoom = view.findViewById(R.id.ibRoom);
@@ -291,6 +295,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swUndoManager = view.findViewById(R.id.swUndoManager);
         swWebViewLegacy = view.findViewById(R.id.swWebViewLegacy);
         swModSeq = view.findViewById(R.id.swModSeq);
+        swUid = view.findViewById(R.id.swUid);
         swExpunge = view.findViewById(R.id.swExpunge);
         swUidExpunge = view.findViewById(R.id.swUidExpunge);
         swAuthPlain = view.findViewById(R.id.swAuthPlain);
@@ -773,6 +778,50 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swExternalStorage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("external_storage", isChecked).apply();
+
+                Bundle args = new Bundle();
+                args.putBoolean("external_storage", isChecked);
+
+                new SimpleTask<Void>() {
+                    @Override
+                    protected Void onExecute(Context context, Bundle args) throws IOException {
+                        boolean external_storage = args.getBoolean("external_storage");
+
+                        File source = (!external_storage
+                                ? context.getExternalFilesDir(null)
+                                : context.getFilesDir());
+
+                        File target = (external_storage
+                                ? context.getExternalFilesDir(null)
+                                : context.getFilesDir());
+
+                        source = new File(source, "attachments");
+                        target = new File(target, "attachments");
+
+                        File[] attachments = source.listFiles();
+                        if (attachments != null)
+                            for (File attachment : attachments) {
+                                File dest = new File(target, attachment.getName());
+                                Log.i("Move " + attachment + " to " + dest);
+                                Helper.copy(attachment, dest);
+                                attachment.delete();
+                            }
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(getParentFragmentManager(), ex);
+                    }
+                }.execute(FragmentOptionsMisc.this, args, "external");
+            }
+        });
+
         sbRoomQueryThreads.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -891,6 +940,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swUid.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("uid_command", checked).apply();
+                System.setProperty("fairemail.uid_command", Boolean.toString(checked));
+                ServiceSynchronize.reload(compoundButton.getContext(), null, true, "uid_command");
+            }
+        });
+
         swExpunge.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -904,7 +962,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("uid_expunge", checked).apply();
-                ServiceSynchronize.reload(compoundButton.getContext(), null, true, "perform_expunge");
+                ServiceSynchronize.reload(compoundButton.getContext(), null, true, "uid_expunge");
             }
         });
 
@@ -1113,6 +1171,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         files.addAll(getFiles(context.getCacheDir(), MIN_FILE_SIZE));
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                             files.addAll(getFiles(context.getDataDir(), MIN_FILE_SIZE));
+                        files.addAll(getFiles(context.getExternalFilesDir(null), MIN_FILE_SIZE));
 
                         Collections.sort(files, new Comparator<File>() {
                             @Override
@@ -1139,32 +1198,40 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
                     @Override
                     protected void onExecuted(Bundle args, List<File> files) {
-                        StringBuilder sb = new StringBuilder();
+                        SpannableStringBuilder ssb = new SpannableStringBuilderEx();
 
                         final Context context = getContext();
                         File dataDir = (Build.VERSION.SDK_INT < Build.VERSION_CODES.N
                                 ? null : context.getDataDir());
                         File filesDir = context.getFilesDir();
                         File cacheDir = context.getCacheDir();
+                        File externalDir = context.getExternalFilesDir(null);
 
                         if (dataDir != null)
-                            sb.append("Data: ").append(dataDir).append("\r\n");
+                            ssb.append("Data: ").append(dataDir.getAbsolutePath()).append("\r\n");
                         if (filesDir != null)
-                            sb.append("Files: ").append(filesDir).append("\r\n");
+                            ssb.append("Files: ").append(filesDir.getAbsolutePath()).append("\r\n");
                         if (cacheDir != null)
-                            sb.append("Cache: ").append(cacheDir).append("\r\n");
-                        sb.append("\r\n");
+                            ssb.append("Cache: ").append(cacheDir.getAbsolutePath()).append("\r\n");
+                        if (externalDir != null)
+                            ssb.append("External: ").append(externalDir.getAbsolutePath()).append("\r\n");
+                        ssb.append("\r\n");
 
-                        for (File file : files)
-                            sb.append(Helper.humanReadableByteCount(file.length()))
-                                    .append(' ')
+                        for (File file : files) {
+                            int start = ssb.length();
+                            ssb.append(Helper.humanReadableByteCount(file.length()));
+                            ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                            ssb.append(' ')
                                     .append(file.getAbsolutePath())
                                     .append("\r\n");
+                        }
+
+                        ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL), 0, ssb.length(), 0);
 
                         new AlertDialog.Builder(context)
                                 .setIcon(R.drawable.twotone_info_24)
                                 .setTitle(title)
-                                .setMessage(sb.toString())
+                                .setMessage(ssb)
                                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
@@ -1415,6 +1482,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swTest5.setChecked(prefs.getBoolean("test5", false));
 
         swAutostart.setChecked(Helper.isComponentEnabled(getContext(), ReceiverAutoStart.class));
+        swExternalStorage.setChecked(prefs.getBoolean("external_storage", false));
 
         int query_threads = prefs.getInt("query_threads", DB.DEFAULT_QUERY_THREADS);
         tvRoomQueryThreads.setText(getString(R.string.title_advanced_room_query_threads, NF.format(query_threads)));
@@ -1439,6 +1507,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swUndoManager.setChecked(prefs.getBoolean("undo_manager", false));
         swWebViewLegacy.setChecked(prefs.getBoolean("webview_legacy", false));
         swModSeq.setChecked(prefs.getBoolean("use_modseq", true));
+        swUid.setChecked(prefs.getBoolean("uid_command", false));
         swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
         swUidExpunge.setChecked(prefs.getBoolean("uid_expunge", false));
         swUidExpunge.setEnabled(swExpunge.isChecked());

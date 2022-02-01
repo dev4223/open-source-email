@@ -9,6 +9,7 @@
     <string name="app_exit">Çıxmaq üçün yenidən \'geri\'yə basın</string>
     <string name="app_cake">Anbar sahəsi yetərsizdir</string>
     <string name="app_updated">Son yeniləmə: %1$s</string>
+    <string name="app_download">%1$s üzərindən endirildi</string>
     <string name="channel_service">Al</string>
     <string name="channel_send">Göndər</string>
     <string name="channel_notification">E-poçt</string>
@@ -349,6 +350,7 @@
     <string name="title_advanced_timeout">Bağlantı bitmə vaxtı (saniyə)</string>
     <string name="title_advanced_prefer_ip4">IPv6 əvəzinə IPv4 tərcih et</string>
     <string name="title_advanced_ssl_harden">SSL bağlantılarını sağlam et</string>
+    <string name="title_advanced_cert_strict">Ciddi sertifikat yoxlanışı</string>
     <string name="title_advanced_manage_connectivity">Bağlantını idarə et</string>
     <string name="title_advanced_caption_general">Ümumi</string>
     <string name="title_advanced_caption_checks">Yoxlanışlar</string>
@@ -375,6 +377,7 @@
     <string name="title_advanced_tabular_background">Cədvəl stili istifadə edəndə kart rəngini arxaplan rəngi kimi istifadə et</string>
     <string name="title_advanced_cards_shadow">Kart stilini istifadə edəndə oxunmamış mesajlar üçün kölgə istifadə et</string>
     <string name="title_advanced_cards_shadow_highlight">Rəngi vurğulamaq əvəzinə vurğu rəngini istifadə et</string>
+    <string name="title_advanced_category_header">Hesab kateqoriyasına görə qruplaşdır</string>
     <string name="title_advanced_date_header">Tarixə görə qruplaşdır</string>
     <string name="title_advanced_date_fixed">Sabit tarix başlığını üstdə göstər</string>
     <string name="title_advanced_date_bold">Tarixi qalın göstər</string>
@@ -614,6 +617,7 @@
     <string name="title_advanced_tcp_keep_alive_hint">Bunun fəallaşdırılması, bəzi cihazlarda bağlantı problemlərinə səbəb ola bilər</string>
     <string name="title_advanced_validate_hint">Bu, məsələn bir VPN istifadə edəndə və digər hallarda mesajların eyniləşdirilməməsi ilə nəticələnə bilər</string>
     <string name="title_advanced_timeout_hint">Oxuma/yazma üçün bitmə vaxtı, bağlantı üçün bitmə vaxtının iki qatına tənzimlənəcək. Yüksək dəyərlər, daha çox batareya istifadəsi ilə nəticələnəcək.</string>
+    <string name="title_advanced_cert_strict_hint">Bunu sıradan çıxartmaq, server sertifikatlarının yoxlanışını rahatladacaq</string>
     <string name="title_advanced_ssl_harden_hint">Bunu fəallaşdırmaq, zəif SSL protokollarını və şifrələrini sıradan çıxardacaq, bu da bağlantı problemlərinə səbəb ola bilər</string>
     <string name="title_advanced_roaming_hint">Mesaj başlıqları roaminqdə həmişə götürüləcəkdir. Roaminqdə ikən interneti bağlamaq üçün cihazın roaminq tənzimləməsini istifadə edə bilərsiniz.</string>
     <string name="title_advanced_browse_hint">Aşağı sürüşdürəndə daha çox mesaj gətiriləcək</string>
@@ -690,6 +694,7 @@
     <string name="title_identity_unicode_remark">Əksər server bunu dəstəkləmir</string>
     <string name="title_identity_max_size">Maksimum mesaj həcmi (MB)</string>
     <string name="title_identity_receipt">Çatdırılma/oxuma bildirişini ilkin olaraq tələb et</string>
+    <string name="title_identity_receipt_legacy">Köhnə qəbz tələb başlıqlarını istifadə et</string>
     <string name="title_identity_use_ip_hint">\"Etibarsız salamlaşma\", \"etibarlı ünvan tələb olunur\" və ya oxşar xətaların baş verdiyi hallarda, bu tənzimləməni dəyişdirməyə çalışın</string>
     <string name="title_identity_self_hint">Həmçinin özünüzə cavab verməyin qarşısını alır</string>
     <string name="title_optional">İstənilən</string>
@@ -782,6 +787,7 @@
     <string name="title_pop_folders">POP3 protokolu qovluq yaratmağı dəstəkləmir</string>
     <string name="title_oauth_support">OAuth dəstəklənmir</string>
     <string name="title_review">Nəzər yetir</string>
+    <string name="title_hint_accounts">Bir hesabı sıradan çıxartmaq və ya silmək kimi seçimləri görüntüləmək üçün hesabın üzərinə uzun basın</string>
     <string name="title_hint_alias">Ləqəb kimliklərini yaratmaq üçün kopyalamaq kimi seçimləri görüntüləmək üçün bir kimliyə uzun basın</string>
     <string name="title_service_auth">E-poçt serverinin cavabı: \'%1$s\'</string>
     <string name="title_service_vpn">Bu, istifadə edilən VPN-ə görə ola bilər</string>
@@ -1004,6 +1010,7 @@
     <string name="title_fullscreen">Tam ekranda göstər</string>
     <string name="title_fit_width">Enə uyğunlaşdır</string>
     <string name="title_disable_widths">Eni sıradan çıxart</string>
+    <string name="title_monospaced_pre">Tək boşluqlu &lt;pre&gt;</string>
     <string name="title_unused_inline">İstifadə edilməyən sətiriçi təsvirlər göndəriləndə çıxarılacaq</string>
     <string name="title_accross_remark">Hesablar arasında köçürülən mesajlar yenidən endiriləcək və bu da əlavə verilənlər istifadəsi ilə nəticələnəcək</string>
     <string name="title_raw_saved">Xam mesaj saxlanıldı</string>
@@ -1069,6 +1076,7 @@
     <string name="title_send_auto_archive">Cavablanan mesajı arxivlə</string>
     <string name="title_send_encryption">Şifrələmə</string>
     <string name="title_send_priority">Əhəmiyyət</string>
+    <string name="title_send_sensitivity">Həssaslıq</string>
     <string name="title_no_server">\"%1$s\" üzərində heç bir server tapılmadı</string>
     <string name="title_style">Stil</string>
     <string name="title_style_bold">Qalın</string>
@@ -1393,6 +1401,9 @@
     <string name="title_legend_draft">Qaralaması var</string>
     <string name="title_legend_priority">Yüksək əhəmiyyətə sahibdir</string>
     <string name="title_legend_priority_low">Aşağı əhəmiyyətə sahibdir</string>
+    <string name="title_legend_sensitivity_personal">Şəxsidir</string>
+    <string name="title_legend_sensitivity_private">Özəldir</string>
+    <string name="title_legend_sensitivity_confidential">Məxfidir</string>
     <string name="title_legend_importance">Vacib</string>
     <string name="title_legend_importance_low">Vacib deyil</string>
     <string name="title_legend_signed">İmzalıdır</string>
@@ -1712,8 +1723,8 @@
     <string-array name="sensitivityNames">
         <item>Normal</item>
         <item>Şəxsi</item>
-        <item>Private</item>
-        <item>Confidential</item>
+        <item>Özəl</item>
+        <item>Məxfi</item>
     </string-array>
     <string-array name="fontSizeNames">
         <item>İlkin</item>

@@ -9,6 +9,7 @@
     <string name="app_exit">Zum Beenden erneut „Zurück“ drücken</string>
     <string name="app_cake">Unzureichender Speicherplatz</string>
     <string name="app_updated">Letzte Aktualisierung: %1$s</string>
+    <string name="app_download">Heruntergeladen von: %1$s</string>
     <string name="channel_service">Empfangen</string>
     <string name="channel_send">Senden</string>
     <string name="channel_notification">Neue E-Mail</string>
@@ -347,6 +348,7 @@
     <string name="title_advanced_timeout">Zeitüberschreitung der Verbindung (Sekunden)</string>
     <string name="title_advanced_prefer_ip4">IPv4 gegenüber IPv6 bevorzugen</string>
     <string name="title_advanced_ssl_harden">SSL-Verbindungen stärken</string>
+    <string name="title_advanced_cert_strict">Strenge Zertifikatsprüfung</string>
     <string name="title_advanced_manage_connectivity">Konnektivität verwalten</string>
     <string name="title_advanced_caption_general">Allgemein</string>
     <string name="title_advanced_caption_checks">Prüfen</string>
@@ -373,6 +375,7 @@
     <string name="title_advanced_tabular_background">Kartenfarbe als Hintergrundfarbe verwenden, wenn Tabellenstil genutzt wird</string>
     <string name="title_advanced_cards_shadow">Schatten für ungelesene Nachrichten verwenden, wenn Kartenstil verwendet wird</string>
     <string name="title_advanced_cards_shadow_highlight">Hervorhebungsfarbe statt Akzentfarbe verwenden</string>
+    <string name="title_advanced_category_header">Nach Kontenkategorie gruppieren</string>
     <string name="title_advanced_date_header">Nach Datum gruppieren</string>
     <string name="title_advanced_date_fixed">Feste Datumskopfzeile oben anzeigen</string>
     <string name="title_advanced_date_bold">Datum fett anzeigen</string>
@@ -612,6 +615,7 @@
     <string name="title_advanced_tcp_keep_alive_hint">Das Aktivieren dieser Funktion kann bei einigen Geräten zu Verbindungsproblemen führen</string>
     <string name="title_advanced_validate_hint">Dies kann dazu führen, dass Nachrichten nicht synchronisiert werden, zum Beispiel bei der Verwendung eines VPN, aber auch in anderen Situationen</string>
     <string name="title_advanced_timeout_hint">Die Zeitüberschreitung beim Lesen oder Schreiben wird auf das Doppelte der Verbindungszeitüberschreitung festgelegt. Höhere Werte führen zu einem höheren Akkuverbrauch.</string>
+    <string name="title_advanced_cert_strict_hint">Durch das Deaktivieren dieser Option wird die Überprüfung der Serverzertifikate gelockert</string>
     <string name="title_advanced_ssl_harden_hint">Wenn dies eingeschaltet ist, werden schwache SSL-Protokolle und Chiffren deaktiviert, was zu Verbindungsproblemen führen kann</string>
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgerufen. Sie können die Roaming-Einstellung des Gerätes verwenden, um das Internet während des Roamings zu deaktivieren.</string>
     <string name="title_advanced_browse_hint">Durch Herunterziehen weitere Nachrichten abholen</string>
@@ -688,6 +692,7 @@
     <string name="title_identity_unicode_remark">Die meisten Server unterstützen dies nicht</string>
     <string name="title_identity_max_size">Maximale Nachrichtengröße (MB)</string>
     <string name="title_identity_receipt">Empfangs-/Lesebestätigung standardmäßig anfordern</string>
+    <string name="title_identity_receipt_legacy">Kopfzeilen der alten Empfangsanforderung verwenden</string>
     <string name="title_identity_use_ip_hint">Bei \'invalid greeting\', \'requires valid address\' oder einem ähnlichen Fehler, versuchen Sie, diese Einstellung zu ändern</string>
     <string name="title_identity_self_hint">Verhindert ebenfalls, dass Sie sich selbst antworten</string>
     <string name="title_optional">Optional</string>
@@ -780,6 +785,7 @@
     <string name="title_pop_folders">Das POP3-Protokoll unterstützt das Erstellen von Ordnern nicht</string>
     <string name="title_oauth_support">OAuth wird nicht unterstützt</string>
     <string name="title_review">Kontrolle</string>
+    <string name="title_hint_accounts">Drücken Sie lange auf ein Konto, um Optionen anzuzeigen, z. B. zum Deaktivieren oder Löschen eines Kontos</string>
     <string name="title_hint_alias">Lange Drücken für Optionen, wie z.B. Kopieren oder um Alias-Adressen zu erstellen</string>
     <string name="title_service_auth">Der E-Mail-Server meldete: „%1$s”</string>
     <string name="title_service_vpn">Dies kann durch das verwendete VPN verursacht werden</string>
@@ -1000,6 +1006,7 @@
     <string name="title_fullscreen">Vollbild anzeigen</string>
     <string name="title_fit_width">An Bildschirmbreite anpassen</string>
     <string name="title_disable_widths">Breitenanpassung deaktivieren</string>
+    <string name="title_monospaced_pre">Festbreitenschriftart &lt;pre&gt;</string>
     <string name="title_unused_inline">Ungenutzte Inline-Bilder werden beim Senden entfernt</string>
     <string name="title_accross_remark">E-Mails, die über unterschiedliche Konten verschoben werden, werden erneut heruntergeladen, was zu einem erhöhtem Datenverbrauch führt</string>
     <string name="title_raw_saved">Rohdaten gespeichert</string>
@@ -1389,9 +1396,9 @@
     <string name="title_legend_draft">Entwurf vorhanden</string>
     <string name="title_legend_priority">Hat hohe Priorität</string>
     <string name="title_legend_priority_low">Hat niedrige Priorität</string>
-    <string name="title_legend_sensitivity_personal" comment="title_legend_sensitivity_personal&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Ist persönlich</string>
-    <string name="title_legend_sensitivity_private" comment="title_legend_sensitivity_private&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55">Ist privat</string>
-    <string name="title_legend_sensitivity_confidential" comment="title_legend_sensitivity_confidential&#10;https://www.rfc-editor.org/rfc/rfc4021.html#section-2.1.55&#10;">Ist Vertraulich</string>
+    <string name="title_legend_sensitivity_personal">Ist persönlich</string>
+    <string name="title_legend_sensitivity_private">Ist privat</string>
+    <string name="title_legend_sensitivity_confidential">Ist Vertraulich</string>
     <string name="title_legend_importance">Wichtig</string>
     <string name="title_legend_importance_low">Nicht wichtig</string>
     <string name="title_legend_signed">Signiert</string>
