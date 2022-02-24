@@ -397,12 +397,43 @@
         app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
         app:layout_constraintTop_toBottomOf="@id/tvStored" />
 
+    <eu.faircode.email.FixedTextView
+        android:id="@+id/tvThreadTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:labelFor="@+id/tvThread"
+        android:text="@string/title_thread"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
+
+    <eu.faircode.email.FixedTextView
+        android:id="@+id/tvThread"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:text="123"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textIsSelectable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
+        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_addresses"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="end"
-        app:constraint_referenced_ids="tvSubmitterTitle,tvDeliveredToTitle,tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvSentTitle,tvStoredTitle,tvLanguageTitle" />
+        app:constraint_referenced_ids="
+            tvSubmitterTitle,tvDeliveredToTitle,
+            tvFromExTitle,tvToTitle,tvReplyToTitle,
+            tvCcTitle,tvBccTitle,
+            tvIdentityTitle,
+            tvSentTitle,tvStoredTitle,
+            tvSizeExTitle,tvLanguageTitle,tvThreadTitle" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"

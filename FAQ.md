@@ -44,6 +44,7 @@ For authorizing:
 * Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
 * Web.de: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html))
 * GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html))
+* GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html))
 * T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
 * Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/) (German) and not your account password
 
@@ -103,7 +104,7 @@ Related questions:
 * Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
 * A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.
 * A [bug in Crowdin](https://crowdin.com/messages/536694) blocks updating FAQ.md (this text) for translation.
-* The Strato email server sometimes disconnects when sending messages, possibly due to stringent server firewall rules. This cannot be fixed by the app.
+* Search suggestions causes the keyboard losing focus on Android 12L
 
 <h2><a name="planned-features"></a>Planned features</h2>
 
@@ -330,6 +331,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(175) Why should battery optimizations be disabled?](#user-content-faq175)
 * [(176) When will a message be considered safely transported?](#user-content-faq176)
 * [(177) What does 'Sensitivity' mean?](#user-content-faq177)
+* [(178) Why are widgets not updating?](#user-content-faq178)
 
 [I have another question.](#user-content-get-support)
 
@@ -338,24 +340,31 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq1)
 
-The following Android permissions are needed:
+The following Android permissions are **required**:
 
-* *have full network access* (INTERNET): to send and receive email
-* *view network connections* (ACCESS_NETWORK_STATE): to monitor internet connectivity changes
-* *run at startup* (RECEIVE_BOOT_COMPLETED): to start monitoring on device start
+* *have full network access* (INTERNET): to send and receive via the internet
+* *view network connections* (ACCESS_NETWORK_STATE): to monitor connectivity changes (mobile data, WiFi)
+* *run at startup* (RECEIVE_BOOT_COMPLETED): to start sending and receiving on device start
 * *foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
-* *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while synchronizing messages
-* *in-app billing* (BILLING): to allow in-app purchases
-* *schedule exact alarm* (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later)
-* Optional: *read your contacts* (READ_CONTACTS): to auto complete addresses, to show contact photos and [to pick contacts](https://developer.android.com/guide/components/intents-common#PickContactDat)
-* Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
-* Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
-* Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
+* *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while performing actions, like synchronization of messages
+* *schedule exact alarm* (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later), for example to snooze messages
+* *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication (fingerprint, face unlock, etc)
+* *in-app billing* (BILLING): for in-app purchases
+
+<br />
+
+The following Android permissions are **optional**:
+
+* *read your contacts* (READ_CONTACTS): to auto complete addresses, to show contact photos and [to pick contacts](https://developer.android.com/guide/components/intents-common#PickContactDat)
+* *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
+* *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
 * Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)
 * Android 5.1 Lollipop and before: *Read profile* (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)
 
 [Optional permissions](https://developer.android.com/training/permissions/requesting) are supported on Android 6 Marshmallow and later only.
-On earlier Android versions you will be asked to grant the optional permissions on installing FairEmail.
+On earlier Android versions you will be asked to grant the permissions on installing FairEmail.
+
+<br />
 
 The following permissions are needed to show the count of unread messages as a badge (see also [this FAQ](#user-content-faq106)):
 
@@ -376,6 +385,8 @@ The following permissions are needed to show the count of unread messages as a b
 * *me.everything.badger.permission.BADGE_COUNT_READ*
 * *me.everything.badger.permission.BADGE_COUNT_WRITE*
 * *com.vivo.notification.permission.BADGE_ICON*
+
+<br />
 
 FairEmail will keep a list of addresses you receive messages from and send messages to
 and will use this list for contact suggestions when no contacts permissions is granted to FairEmail.
@@ -704,7 +715,10 @@ and setting the user name field to your main email address.
 Note that you can copy an identity by long pressing it.
 
 Alternatively, you can enable *Allow editing sender address* in the advanced settings of an existing identity to edit the username when composing a new message,
-if your provider allows this.
+if your provider allows this. Considering the email address test@example.org you can use these special username formats:
+
+* Username *+extra* will result in the email address *test+extra@example.org*
+* Username *@extra* will result in the email address *test@extra.example.org*
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
@@ -1134,7 +1148,7 @@ Please see the Play store description of the app or [see here](https://email.fai
 The right question is "*why are there so many taxes and fees?*":
 
 * VAT: 25 % (depending on your country)
-* Google fee: 30 %
+* Google fee: 15-30 %
 * Income tax: 50 %
 * <sub>Paypal fee: 5-10 % depending on the country/amount</sub>
 
@@ -1144,7 +1158,7 @@ Also note that most free apps will appear not to be sustainable in the end, wher
 and that free apps may have a catch, like sending privacy sensitive information to the internet.
 There are no privacy violating ads in the app either.
 
-I have been working on FairEmail almost every day for more than two years, so I think the price is more than reasonable.
+I have been working on FairEmail almost every day for more than three years, so I think the price is more than reasonable.
 For this reason there won't be discounts either.
 
 <br />
@@ -1252,8 +1266,8 @@ This can for example happen when connectivity was abruptly lost. A typical examp
 The errors *... BYE Logging out ...*, *... Connection reset ...* mean that the email server
 or something between the email server and the app, for example a router or a firewall (app), actively terminated an existing connection.
 
-The error *... Connection closed by peer ...* might be caused by a not updated Exchange server,
-see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
+The error *... Connection closed by peer ...* means that the email server actively closed the connection.
+This might be caused by a not updated Exchange server, see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
 
 The errors *... Read error ...*, *... Write error ...*, *... Read timed out ...*, *... Broken pipe ...* mean that the email server is not responding anymore or that the internet connection is bad.
 
@@ -1690,6 +1704,8 @@ The real battery usage can be seen by navigating to this screen:
 
 *Android settings*, *Battery*, three-dots menu *Battery usage*, three-dots menu *Show full device usage*
 
+Alternatively: tap on the *App settings* button in the main settings screen of the app and tap on *Battery*.
+
 As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby*.
 If this isn't the case, please turn on *Auto optimize* in the receive settings.
 If this doesn't help, please [ask for support](https://contact.faircode.eu/?product=fairemailsupport).
@@ -1812,6 +1828,9 @@ or by a too short DH key on the email server and can unfortunately not be fixed 
 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4,
 which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
+
+The error '*Handshake failed SSL handshake terminated ... SSLV3_ALERT_HANDSHAKE_FAILURE ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO*'
+can be caused by [this Android 7.0 bug](https://issuetracker.google.com/issues/37122132). This can unfortunately not be fixed by FairEmail.
 
 The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION or SSLV3_ALERT_HANDSHAKE_FAILURE ...*'
 might be caused by enabling hardening connections in the connection settings
@@ -2132,7 +2151,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the trash icons (both in the message and the bottom action bar) to permanently delete a message or conversation? (version 1.1368+)
 * Did you know that you can long press the send action to show the send dialog, even if it was disabled?
 * Did you know that you can long press the full screen icon to show the original message text only?
-* Did you know that you can long press the answer button to reply to the sender? (since version 1.1562)
+* Did you know that you can long press the answer button to reply to the sender? (since version 1.1562; since version 1.1839 you can configure the action in the send settings)
 * Did you know that you can long press the message move button to move across accounts? (since version 1.1702)
 * Did you know that you can long press the folder name in the message header when viewing a conversation to navigate to the folder? (since version 1.1720)
 * Did you know that you can long press the add contact button in the message composer to insert a contact group? (since version 1.1721)
@@ -2695,6 +2714,8 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 Please see [here](https://en.wikipedia.org/wiki/Web_beacon) about what a tracking image exactly is.
 In short tracking images keep track if you opened a message.
 
+The BBC article '[Spy pixels in emails have become endemic](https://www.bbc.com/news/technology-56071437)' is worth reading.
+
 FairEmail will in most cases automatically recognize tracking images and replace them by this icon:
 
 ![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_my_location_black_48dp.png)
@@ -2756,7 +2777,7 @@ FairEmail will try to select the best identity based on the *to* address of the 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq87)
 
 The error message *invalid credentials* means either that the user name and/or password is incorrect,
-for example because the password was changed or expired, or that the account authorization has expired.
+for example because the password was changed or expired, or that the account authorization has expired, for example due to logging out.
 
 If the password is incorrect/expired, you will have to update the password in the account and/or identity settings.
 
@@ -2895,6 +2916,12 @@ See also [here](https://developer.android.com/guide/topics/data/install-location
 Messages, attachments, etc stored on external storage media, like an sdcard, can be accessed by other apps and is therefore not safe.
 See [here](https://developer.android.com/training/data-storage) for the details.
 Instead, consider to use [adoptable storage](https://source.android.com/devices/storage/adoptable).
+
+Since version 1.1829 is it possible to store attachments to external storage space private to the app (except for file managers) via an option in the debug panel.
+You can enable the debug panel by enabling debug mode in the miscellaneous settings (last option).
+To prevent ongoing operations from storing attachments at the old location
+you should disable receiving messages in the receive settings and wait until all operations have been completed before changing this option.
+Please be aware that removing the storage space will inevitably result in problems, which is one of the reasons why this option is hidden.
 
 When needed you can save (raw) messages via the three-dots menu just above the message text
 and save attachments by tapping on the floppy icon.
@@ -3045,7 +3072,7 @@ Note that only [JPEG](https://en.wikipedia.org/wiki/JPEG) and [PNG](https://en.w
 
 * Error reports will help improve FairEmail
 * Error reporting is optional and opt-in
-* Error reporting can be enabled/disabled in the settings, section miscellaneous
+* Error reporting can be enabled/disabled via the *miscellaneous* settings tab page
 * Error reports will automatically be sent anonymously to [Bugsnag](https://www.bugsnag.com/)
 * Bugsnag for Android is [open source](https://github.com/bugsnag/bugsnag-android)
 * See [here](https://docs.bugsnag.com/platforms/android/automatically-captured-data/) about what data will be sent in case of errors
@@ -3215,7 +3242,7 @@ Please see these websites for lists of privacy oriented email providers with adv
 * [Privacy Guides](https://privacyguides.org/providers/email/)
 * [Privacy Tools](https://www.privacytools.io/providers/email/)
 
-Some providers, like ProtonMail, Tutanota, use proprietary email protocols, which make it impossible to use third party email apps.
+**Important**: Some providers, like ProtonMail, Tutanota, use proprietary email protocols, which make it impossible to use third party email apps.
 Please see [this FAQ](#user-content-faq129) for more information.
 
 Using your own (custom) domain name, which is supported by most email providers, will make it easier to switch to another email provider.
@@ -4237,6 +4264,8 @@ it is not feasible to add for each color combination (literally millions) a pred
 Moreover, a theme is more than just a few colors.
 For example themes with a yellow accent color use a darker link color for enough contrast.
 
+Most people like the beige background for the light themes, but if you don't like it, it can be disabled in the display settings.
+
 The [Material You](https://material.io/blog/announcing-material-you) theme,
 a more dynamic theme based on the selected background image ("Monet"),
 which was introduced in Android 12 on Google Pixel devices,
@@ -4497,8 +4526,8 @@ To show shields, the option *Show authentication status indicator* in the displa
 A message will be consired safely transported if *every* [Received](https://datatracker.ietf.org/doc/html/rfc2821#section-4.4) header:
 
 * contains the phrase 'using TLS', 'via HTTP', 'version=TLS'
-* contains the phrase '(qmail <nnn> invoked by uid <nnn>)' in the first added header
-* contains the phrase '(Postfix, from userid nnn)' in the first added header
+* contains the phrase '(qmail <nnn> invoked by uid <nnn>)'
+* contains the phrase '(Postfix, from userid nnn)'
 * has a *by* with a local address
 * has a *by* xxx.google.com
 * has a *from* with a local address
@@ -4532,6 +4561,16 @@ The sensitivity of a message indicates the confidentiality of a message.
 Please see [this article](https://support.microsoft.com/en-us/office/mark-your-email-as-normal-personal-private-or-confidential-4a76d05b-6c29-4a0d-9096-71784a6b12c1) for more information.
 
 The sensitivity indication is sent as [a message header](https://datatracker.ietf.org/doc/html/rfc4021#section-2.1.55).
+
+<br />
+
+<a name="faq178"></a>
+**(178) Why are widgets not updating?**
+
+Apps provide the layout and data for widgets on demand, but the homescreen app/launcher manages all widgets, with a little help from Android.
+
+If widgets are not being updated, this is often caused by missing permission.
+Please see [this video](https://www.youtube.com/watch?v=ywQrYJ6rtnM) about how to fix this.
 
 <br />
 

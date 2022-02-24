@@ -2,7 +2,124 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Fulgurotherium](https://en.wikipedia.org/wiki/Fulgurotherium)
+
+### 1.1846 - 2022-02-24
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1845 - 2022-02-23
+
+* Address bubble fixes and improvements
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1844 - 2022-02-23
+
+* Improved address bubble handling
+* Added "extra small" image resize option
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1843 - 2022-02-22
+
+* Added address bubbles (enable via overflow menu / message editor)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1842 - 2022-02-20
+
+* Added (black or) white theme
+* Added option to always navigation from message list to folder list
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1841 - 2022-02-19
+
+* Improved plain text only check
+* Updated [Public Suffix List](https://publicsuffix.org/)
+* Preliminary Android 13 support
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1840 - 2022-02-17
+
+* Fixed auto linking of email addresses
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1839 - 2022-02-16
+
+* Added an option to select the long press answer button action
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1838 - 2022-02-15
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1837 - 2022-02-14
+
+* Added menu item to show plain text part
+* Added [AMP](https://amp.dev/about/email/) support
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1836 - 2022-02-12
+
+* Added option to disable using bundled fonts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1835 - 2022-02-11
+
+* Added default display font setting
+* Replaced Cambo by Caladea font
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1834 - 2022-02-10
+
+* Added Croscore and Crosextra fonts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1833 - 2022-02-07
+
+* Added view original signature
+* Added support for CSS text-transform
+* Added option to disable divider lines for tabular layout
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1832 - 2022-02-05
+
+* Added saving S/MIME public keys
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1831 - 2022-02-04
+
+* Added slider to change message column width
+* Added option for formal/informal DeepL translation
+* Added insert line to long press menu
+* Small improvements and minor bug fixes
+* Updated libraries/AndroidX
+* Updated translations
+
 ### [Epidexipteryx](https://en.wikipedia.org/wiki/Epidexipteryx)
+
+### 1.1830 - 2022-02-02
+
+* Fixed extra buttons option
+
+### 1.1829 - 2022-02-02
+
+* Reduced logging
+* Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.1828 - 2022-02-01
 

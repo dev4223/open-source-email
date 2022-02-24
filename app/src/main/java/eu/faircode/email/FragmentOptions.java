@@ -131,8 +131,10 @@ public class FragmentOptions extends FragmentBase {
             "subscriptions",
             "check_authentication", "check_tls", "check_reply_domain", "check_mx", "check_blocklist",
             "send_pending",
-            "startup", "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_highlight",
+            "startup",
+            "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_highlight", "dividers",
             "portrait2", "portrait2c", "portrait_min_size", "landscape", "landscape_min_size",
+            "column_width",
             "nav_count", "nav_unseen_drafts", "navbar_colorize",
             "indentation", "group_category", "date", "date_fixed", "date_bold", "threading", "threading_unread",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
@@ -143,7 +145,7 @@ public class FragmentOptions extends FragmentBase {
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines",
             "message_zoom", "overview_mode", "override_width", "addresses", "button_extra", "attachments_alt", "thumbnails",
-            "contrast", "monospaced", "monospaced_pre",
+            "contrast", "display_font", "monospaced_pre",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_color",
@@ -346,38 +348,51 @@ public class FragmentOptions extends FragmentBase {
             }
 
             private void suggest(String query) {
-                if (data == null &&
-                        query != null && query.length() > 0)
-                    new SimpleTask<SuggestData>() {
-                        @Override
-                        protected SuggestData onExecute(Context context, Bundle args) throws Throwable {
-                            SuggestData data = new SuggestData();
-                            data.titles = new String[TAB_PAGES.length];
-                            data.views = new View[TAB_PAGES.length];
+                Bundle args = new Bundle();
+                args.putString("query", query);
 
-                            LayoutInflater inflater = LayoutInflater.from(context);
-                            for (int tab = 0; tab < TAB_PAGES.length; tab++) {
-                                data.titles[tab] = getString(PAGE_TITLES[tab]);
-                                data.views[tab] = inflater.inflate(TAB_PAGES[tab], null);
-                            }
-
+                new SimpleTask<SuggestData>() {
+                    @Override
+                    protected SuggestData onExecute(Context context, Bundle args) {
+                        if (TextUtils.isEmpty(args.getString("query")))
                             return data;
+
+                        return (data == null ? getSuggestData(context) : data);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, SuggestData result) {
+                        data = result;
+                        _suggest(args.getString("query"));
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.w(ex);
+                        try {
+                            // Fallback to UI thread (Android 5.1.1)
+                            data = getSuggestData(getContext());
+                            _suggest(args.getString("query"));
+                        } catch (Throwable exex) {
+                            Log.unexpectedError(getParentFragmentManager(), exex);
+                        }
+                    }
+
+                    private SuggestData getSuggestData(Context context) {
+                        SuggestData data = new SuggestData();
+                        data.titles = new String[TAB_PAGES.length];
+                        data.views = new View[TAB_PAGES.length];
+
+                        LayoutInflater inflater = LayoutInflater.from(context);
+                        for (int tab = 0; tab < TAB_PAGES.length; tab++) {
+                            data.titles[tab] = context.getString(PAGE_TITLES[tab]);
+                            data.views[tab] = inflater.inflate(TAB_PAGES[tab], null);
                         }
 
-                        @Override
-                        protected void onExecuted(Bundle args, SuggestData result) {
-                            data = result;
-                            _suggest(query);
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Log.unexpectedError(getParentFragmentManager(), ex);
-                        }
-                    }.setExecutor(executor)
-                            .execute(FragmentOptions.this, new Bundle(), "option:suggest");
-                else
-                    _suggest(query);
+                        return data;
+                    }
+                }.setExecutor(executor)
+                        .execute(FragmentOptions.this, args, "option:suggest");
             }
 
             private void _suggest(String query) {

@@ -192,11 +192,13 @@ public class EmailService implements AutoCloseable {
         boolean auth_login = prefs.getBoolean("auth_login", true);
         boolean auth_ntlm = prefs.getBoolean("auth_ntlm", true);
         boolean auth_sasl = prefs.getBoolean("auth_sasl", true);
+        boolean auth_apop = prefs.getBoolean("auth_apop", false);
         Log.i("Authenticate" +
                 " plain=" + auth_plain +
                 " login=" + auth_login +
                 " ntlm=" + auth_ntlm +
-                " sasl=" + auth_sasl);
+                " sasl=" + auth_sasl +
+                " apop=" + auth_apop);
 
         properties.put("mail.event.scope", "folder");
         properties.put("mail.event.executor", executor);
@@ -207,6 +209,8 @@ public class EmailService implements AutoCloseable {
             properties.put("mail." + protocol + ".auth.login.disable", "true");
         if (!auth_ntlm)
             properties.put("mail." + protocol + ".auth.ntlm.disable", "true");
+        if (auth_apop)
+            properties.put("mail." + protocol + ".apop.enable", "true");
 
         // SASL is attempted before other authentication methods
         properties.put("mail." + protocol + ".sasl.enable", Boolean.toString(auth_sasl));
@@ -944,6 +948,7 @@ public class EmailService implements AutoCloseable {
 
     private static class SSLSocketFactoryService extends SSLSocketFactory {
         // openssl s_client -connect host:port < /dev/null 2>/dev/null | openssl x509 -fingerprint -noout -in /dev/stdin
+        // nmap --script ssl-enum-ciphers -Pn -p port host
         private String server;
         private boolean secure;
         private boolean ssl_harden;
@@ -959,17 +964,24 @@ public class EmailService implements AutoCloseable {
             this.cert_strict = cert_strict;
             this.trustedFingerprint = fingerprint;
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
+            // https://developer.android.com/about/versions/oreo/android-8.0-changes.html#security-all
+            SSLContext sslContext = SSLContext.getInstance(insecure ? "SSL" : "TLS");
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             tmf.init((KeyStore) null);
 
             TrustManager[] tms = tmf.getTrustManagers();
+            Log.i("Trust managers=" + (tms == null ? null : tms.length));
+
             if (tms == null || tms.length == 0 || !(tms[0] instanceof X509TrustManager)) {
                 Log.e("Missing root trust manager");
                 sslContext.init(null, tms, null);
             } else {
                 final X509TrustManager rtm = (X509TrustManager) tms[0];
+
+                if (tms.length > 1)
+                    for (TrustManager tm : tms)
+                        Log.e("Trust manager " + tm.getClass());
 
                 X509TrustManager tm = new X509TrustManager() {
                     // openssl s_client -connect <host>
@@ -999,17 +1011,15 @@ public class EmailService implements AutoCloseable {
                                 Principal principal = certificate.getSubjectDN();
                                 if (principal == null)
                                     throw ex;
-                                else {
-                                    if (ex.getCause() instanceof CertPathValidatorException &&
-                                            "Trust anchor for certification path not found."
-                                                    .equals(ex.getCause().getMessage())) {
-                                        if (cert_strict)
-                                            throw new CertificateException(principal.getName(), ex);
-                                        else
-                                            Log.w(ex);
-                                    } else
-                                        throw new CertificateException(principal.getName(), ex);
-                                }
+                                else if (cert_strict)
+                                    throw new CertificateException(principal.getName(), ex);
+                                else if (noAnchor(ex) || isExpired(ex)) {
+                                    if (BuildConfig.PLAY_STORE_RELEASE)
+                                        Log.i(ex);
+                                    else
+                                        Log.w(ex);
+                                } else
+                                    throw new CertificateException(principal.getName(), ex);
                             }
 
                             // Check host name
@@ -1052,6 +1062,29 @@ public class EmailService implements AutoCloseable {
                     @Override
                     public X509Certificate[] getAcceptedIssuers() {
                         return rtm.getAcceptedIssuers();
+                    }
+
+                    private boolean noAnchor(Throwable ex) {
+                        while (ex != null) {
+                            if (ex instanceof CertPathValidatorException &&
+                                    "Trust anchor for certification path not found."
+                                            .equals(ex.getMessage()))
+                                return true;
+                            ex = ex.getCause();
+                        }
+                        return false;
+                    }
+
+                    private boolean isExpired(Throwable ex) {
+                        while (ex != null) {
+                            if (ex instanceof CertPathValidatorException &&
+                                    "timestamp check failed"
+                                            .equals(ex.getMessage()))
+                                return true;
+
+                            ex = ex.getCause();
+                        }
+                        return false;
                     }
                 };
 
@@ -1117,14 +1150,16 @@ public class EmailService implements AutoCloseable {
                 SSLSocket sslSocket = (SSLSocket) socket;
 
                 if (!secure) {
+                    // Protocols
                     sslSocket.setEnabledProtocols(sslSocket.getSupportedProtocols());
 
+                    // Ciphers
                     List<String> ciphers = new ArrayList<>();
-                    for (String cipher : sslSocket.getSupportedCipherSuites())
-                        if (!cipher.endsWith("_SCSV"))
-                            ciphers.add(cipher);
+                    ciphers.addAll(Arrays.asList(sslSocket.getSupportedCipherSuites()));
+                    ciphers.remove("TLS_FALLBACK_SCSV");
                     sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
                 } else if (ssl_harden) {
+                    // Protocols
                     List<String> protocols = new ArrayList<>();
                     for (String protocol : sslSocket.getEnabledProtocols())
                         if (SSL_PROTOCOL_BLACKLIST.contains(protocol))
@@ -1133,6 +1168,7 @@ public class EmailService implements AutoCloseable {
                             protocols.add(protocol);
                     sslSocket.setEnabledProtocols(protocols.toArray(new String[0]));
 
+                    // Ciphers
                     List<String> ciphers = new ArrayList<>();
                     for (String cipher : sslSocket.getEnabledCipherSuites()) {
                         if (SSL_CIPHER_BLACKLIST.matcher(cipher).matches())
@@ -1142,10 +1178,11 @@ public class EmailService implements AutoCloseable {
                     }
                     sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
                 } else {
+                    // Ciphers
                     List<String> ciphers = new ArrayList<>();
                     ciphers.addAll(Arrays.asList(sslSocket.getEnabledCipherSuites()));
                     for (String cipher : sslSocket.getSupportedCipherSuites())
-                        if (cipher.contains("3DES")) {
+                        if (!ciphers.contains(cipher) && cipher.contains("3DES")) {
                             // Some servers support 3DES and RC4 only
                             Log.i("SSL enabling cipher=" + cipher);
                             ciphers.add(cipher);

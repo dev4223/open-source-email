@@ -201,6 +201,7 @@
     <string name="title_setup_error">Fejl</string>
     <string name="title_setup_configuring">Opsætter konto &#8230;</string>
     <string name="title_setup_app_password">En app-adgangskode skal muligvis benyttes</string>
+    <string name="title_setup_extra">Ekstra</string>
     <string name="title_setup_close">Luk indstillinger</string>
     <string name="title_setup_export">Eksportindstillinger</string>
     <string name="title_setup_import">Importindstillinger</string>
@@ -241,6 +242,8 @@
     <string name="title_setup_theme_red_green">Rødt/grønt</string>
     <string name="title_setup_theme_grey">Gråt</string>
     <string name="title_setup_theme_black">Sort</string>
+    <string name="title_setup_theme_white">Hvidt</string>
+    <string name="title_setup_theme_black_or_white">Sort eller hvidt</string>
     <string name="title_setup_theme_black_and_white">Sort og hvid</string>
     <string name="title_setup_theme_reverse">Omvendte farver</string>
     <string name="title_setup_theme_light">Lyst</string>
@@ -311,10 +314,11 @@
     <string name="title_advanced_suggest_received">Foreslå adresser fra modtagne beskeder</string>
     <string name="title_advanced_suggest_frequently">Sortér foreslåede adresser efter brugsfrekvens</string>
     <string name="title_advanced_alt_re_fwd">Alternativt besvarelses-/videresendelsespræfiks</string>
+    <string name="title_advanced_send_chips">Vis adressebobler</string>
     <string name="title_advanced_send_reminders">Vis påmindelser</string>
     <string name="title_advanced_send_delayed">Udsæt afsendelsen af beskeder</string>
     <string name="title_advanced_attach_new">Føj delte filer til et nyt udkast</string>
-    <string name="title_advanced_reply_all">Langt tryk på svarknappen for at besvare alle</string>
+    <string name="title_advanced_answer_action">Langt tryk på svarknappen vil:</string>
     <string name="title_advanced_send_pending">Vis ikke-påtrængende afsendelsesforsinkelsesikon</string>
     <string name="title_advanced_compose_font">Standardskrifttype</string>
     <string name="title_advanced_prefix_once">Kun ét emnepræfiks ved svar eller videresendelse</string>
@@ -345,6 +349,7 @@
     <string name="title_advanced_rlah">Roam, som var du hjemme</string>
     <string name="title_advanced_download_headers">Download alle brevoverskrifter</string>
     <string name="title_advanced_download_eml">Download råformat beskedfiler</string>
+    <string name="title_advanced_download_plain">Download som standard kun simpel tekst dele (hvis tilgængelig)</string>
     <string name="title_advanced_validated">Kræv en valideret (kontrolleret) forbindelse</string>
     <string name="title_advanced_vpn_only">Tilslut kun vha. VPN</string>
     <string name="title_advanced_timeout">Forbindelses-timeout (sekunder)</string>
@@ -365,6 +370,7 @@
     <string name="title_advanced_two_col">Brug to kolonner</string>
     <string name="title_advanced_min_screen_size">Minimumsskærmstørrelse for opsplitning af skærmen</string>
     <string name="title_advanced_close_pane">Skjul række eller kolonne, når en samtale lukkes</string>
+    <string name="title_advanced_column_width">Beskedkolonnebredde: %1$s %%</string>
     <string name="title_advanced_nav_options">Vis navigeringsmenuindstillinger</string>
     <string name="title_advanced_nav_pin">Fastgør navigeringsmenu</string>
     <string name="title_advanced_nav_hide_title">Skjul navigeringsmenuindstillinger?</string>
@@ -377,6 +383,7 @@
     <string name="title_advanced_tabular_background">Brug kortfarve som baggrundsfarve ifm. tabelform</string>
     <string name="title_advanced_cards_shadow">Brug skyggeeffekt til ulæste beskeder, når kortstil benyttes</string>
     <string name="title_advanced_cards_shadow_highlight">Brug fremhævningsfarve i stedet for accentfarve</string>
+    <string name="title_advanced_tabular_dividers">Brug skillelinjer ifm. tabelform</string>
     <string name="title_advanced_category_header">Gruppere efter kontokategori</string>
     <string name="title_advanced_date_header">Gruppér efter dato</string>
     <string name="title_advanced_date_fixed">Vis fast datohoved øverst</string>
@@ -392,6 +399,7 @@
     <string name="title_advanced_bimi_unverified">Ubekræftet afsender</string>
     <string name="title_advanced_bimi_verified">Bekræftet afsender</string>
     <string name="title_advanced_favicons">Vis favoritkoner</string>
+    <string name="title_advanced_favicons_partial">Skan kun de første %1$s af websiden</string>
     <string name="title_advanced_generated_icons">Vis genererede ikoner</string>
     <string name="title_advanced_identicons">Vis identikoner</string>
     <string name="title_advanced_circular">Vis runde ikoner</string>
@@ -442,6 +450,7 @@
     <string name="title_advanced_actionbar">Vis samtale-handlingsbjælke</string>
     <string name="title_advanced_actionbar_color">Benyt kontofarve som baggrundsfarve til samtalens handlingsbjælke</string>
     <string name="title_advanced_navbar_colorize">Farvelæg Android-navigeringsbjælken</string>
+    <string name="title_advanced_bundled_fonts">Brug bundtede skrifttyper</string>
     <string name="title_advanced_parse_classes">CSS-fortolkning</string>
     <string name="title_advanced_authentication">Vis godkendelsesadvarsler</string>
     <string name="title_advanced_authentication_hint">De underliggende tjek kan opsættes i modtagelsesindstillingerne</string>
@@ -474,6 +483,7 @@
     <string name="title_advanced_undo">Fortryd timeout</string>
     <string name="title_advanced_quick_filter">Vis ikke-påtrængende hurtige filterikoner</string>
     <string name="title_advanced_quick_scroll">Vis ikke-påtrængende hurtige rul op/ned ikoner</string>
+    <string name="title_advanced_folder_nav">Returnér altid til mappelisten fra en beskedliste</string>
     <string name="title_advanced_autoread">Auto-markér beskeder som læst, når de flyttes</string>
     <string name="title_advanced_star_snoozed">Auto-tilføj stjerne på udsatte beskeder</string>
     <string name="title_advanced_autounstar">Fjern automatisk stjerner fra beskeder, når de flyttes</string>
@@ -607,7 +617,6 @@
     <string name="title_advanced_suggest_names_hint">Hvis deaktiveret, bruges kun e-mailadresser ved valg af kontakter</string>
     <string name="title_advanced_suggest_local_hint">Ud over kontakter fra Android. Kontaktdata gemmes kun for nyligt afsendte eller modtagne beskeder, når aktiveret.</string>
     <string name="title_advanced_send_reminders_hint">Vis en advarsel, når beskedtekst eller emne er tomt, eller en vedhæftet fil muligvis mangler</string>
-    <string name="title_advanced_reply_all_hint">Hvis deaktiveret, vil langt tryk på Besvar-knappen svare afsenderen</string>
     <string name="title_advanced_reply_move_hint">E-mailserveren kan dog stadig føje beskederne til beskedafsendelsesmappen</string>
     <string name="title_advanced_usenet_hint">Indsæt \'-- \' mellem teksten og signaturen</string>
     <string name="title_advanced_remove_signature_hint">Dette kan resultere i, at for lidt/meget tekst fjernes</string>
@@ -615,6 +624,7 @@
     <string name="title_advanced_metered_warning">Deaktivering af denne indstilling vil ikke gøre det muligt at modtage og sende meddelelser på mobildataforbindelser</string>
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
     <string name="title_advanced_usage_hint">Dette vil forøge batteri-, data- samt lagerpladsforbrug</string>
+    <string name="title_advanced_plain_hint">Aktivering af dette reducerer dataforbruget, men beskeder vises uden styling</string>
     <string name="title_advanced_tcp_keep_alive_hint">Aktivering af dette kan på visse enheder forårsage forbindelsesproblemer</string>
     <string name="title_advanced_validate_hint">Dette kan betyde, at beskeder i visse situationer ikke synkes, bl.a. ved brug af VPN</string>
     <string name="title_advanced_timeout_hint">Læse-/skrive-timeout indstilles til det dobbelte af forbindelses-timeout. Højere værdier vil resultere i øget batteriforbrug.</string>
@@ -775,6 +785,7 @@
     <string name="title_drafts_select">Afsendelse af e-mails kræver valg af en kladdemappe under kontoindstillingerne</string>
     <string name="title_account_auth_update">Opdatér godkendelse</string>
     <string name="title_account_auth_password">Skift til adgangskodegodkendelse</string>
+    <string name="title_delete_account">Slet konto</string>
     <string name="title_account_delete">Slet denne konto permanent?</string>
     <string name="title_identity_delete">Slet denne identitet permanent?</string>
     <string name="title_edit_html">Redigér som HTML</string>
@@ -801,6 +812,9 @@
     <string name="title_synchronize_subfolders">Undermapper</string>
     <string name="title_synchronize_more">Hent flere beskeder</string>
     <string name="title_synchronize_more_hint">Dette vil resultere i en enkelt download af ældre beskeder uden større strømforbrug end alm. hverdagsbrug</string>
+    <string name="title_synchronize_more_hint2">        Beskeder vil blive hentet så hurtigt som e-mail-serveren kan levere dem og gemt så hurtigt som enheden kan gemme og indeksere dem.
+        Den begrænsende faktor er normalt hastigheden af enhedens interne lagerplads.
+    </string>
     <string name="title_synchronize_enabled">Synkroniserer</string>
     <string name="title_synchronize_batch_enable">Aktivér synkronisering</string>
     <string name="title_synchronize_batch_disable">Deaktivér synkronisering</string>
@@ -1027,6 +1041,8 @@
     <string name="title_ask_show_html_images">Vis altid billeder, når originalbeskederne vises</string>
     <string name="title_ask_show_image">Visning af billeder kan lække personfølsomme data</string>
     <string name="title_ask_show_image_hint">Billeder genkendt som sporingsbilleder, vises ikke</string>
+    <string name="title_ask_show_amp">Vis AMP-variant af beskeden?</string>
+    <string name="title_ask_show_amp_hint">AMP-beskeder er designet til at være dynamiske og interagere med Internet, og de kan derfor potentielt bruges til brugersporing</string>
     <string name="title_ask_delete_local">Slet lokale beskeder? Beskeder forbliver på den eksterne server.</string>
     <string name="title_ask_help">Hjælp med at forbedre FairEmail</string>
     <string name="title_ask_reporting">Send fejlrapporter?</string>
@@ -1125,6 +1141,7 @@
     <string name="title_translate_configure">Opsæt&#8230;</string>
     <string name="title_translate_key">Angiv nøgle</string>
     <string name="title_translating">Oversætter&#8230;</string>
+    <string name="title_translate_formal">Brug formel form</string>
     <string name="title_translate_small">Benyt lille kildetekstskrifttype</string>
     <string name="title_translate_usage">Forbrug: %1$s/%2$s (%3$d %%)</string>
     <string name="title_translate_tap">Tryk på teksten, der skal oversættes</string>
@@ -1168,6 +1185,8 @@
     <string name="title_encrypt">Kryptér</string>
     <string name="title_decrypt">Dekryptér</string>
     <string name="title_resync">Synkronisér igen</string>
+    <string name="title_alternative_text">Vis simpel tekst</string>
+    <string name="title_alternative_html">Vis HTML</string>
     <string name="title_no_openpgp">OpenKeychain ikke fundet</string>
     <string name="title_user_interaction">Overfører til OpenKeychain</string>
     <string name="title_signed_data">Bekræft signaturen for at vise beskedtekst</string>
@@ -1266,6 +1285,9 @@
     <string name="title_edit_signature_remark">Selvom Android ikke kan vise al HTML, sendes den som-om</string>
     <string name="title_edit_signature_text">Signaturtekst</string>
     <string name="title_edit_signature_image">Indsæt billede</string>
+    <string name="title_edit_signature_image_hint">        Ved beskedafsendelse kopieres billedet ind i beskeden fra den valgte placering.
+        Slet derfor ikke billedfilen!
+    </string>
     <string name="title_answer_caption">Redigér skabelon</string>
     <string name="title_answer_reply">Svarskabelon</string>
     <string name="title_answer_name">Skabelonnavn</string>
@@ -1325,6 +1347,8 @@
     <string name="title_rule_thread">Alle beskeder i samme samtale og mappe</string>
     <string name="title_rule_identity">Identitet</string>
     <string name="title_rule_template">Besvarelsesskabelon</string>
+    <string name="title_rule_answer_subject">Brug skabelonnavn som emne</string>
+    <string name="title_rule_original_text">Medtag oprindelig beskedtekst</string>
     <string name="title_rule_forward_to">Videresend til</string>
     <string name="title_rule_cc">Svar til Cc-adresser</string>
     <string name="title_rule_with_attachments">Med vedhæftninger</string>
@@ -1451,6 +1475,7 @@
     <string name="title_legend_show_unsubscribe">Afabonnér fra liste</string>
     <string name="title_legend_show_images">Vis billeder</string>
     <string name="title_legend_hide_images">Skjul billeder</string>
+    <string name="title_legend_show_amp">Vis AMP-variant</string>
     <string name="title_legend_show_full">Vis oprindelig besked</string>
     <string name="title_legend_show_reformatted">Vis omformateret besked</string>
     <string name="title_legend_edit">Redigér</string>
@@ -1510,6 +1535,7 @@
     <string name="title_later">Senere</string>
     <string name="title_undo">Fortryd</string>
     <string name="title_redo">Annullér fortryd</string>
+    <string name="title_insert_line">Indsæt linje</string>
     <string name="title_add">Tilføj</string>
     <string name="title_browse">Åbn med</string>
     <string name="title_info">Info</string>
@@ -1688,6 +1714,7 @@
         <item>Gå til næste samtale</item>
     </string-array>
     <string-array name="resizeNames">
+        <item>Ekstra lille</item>
         <item>Lille</item>
         <item>Mellem</item>
         <item>Stor</item>
@@ -1772,6 +1799,7 @@
         <item>5 s</item>
         <item>7,5 s</item>
         <item>10 s</item>
+        <item>15 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Kursiv</item>
@@ -1779,7 +1807,6 @@
         <item>Sans-serif</item>
         <item>Monospatieret</item>
         <item>Fantasi</item>
-        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
     <string-array name="addressFormatNames">

@@ -35,6 +35,7 @@ import android.os.Looper;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.os.strictmode.Violation;
+import android.text.TextUtils;
 import android.util.Printer;
 import android.webkit.CookieManager;
 
@@ -53,7 +54,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ApplicationEx extends Application
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+        implements androidx.work.Configuration.Provider, SharedPreferences.OnSharedPreferenceChangeListener {
     private Thread.UncaughtExceptionHandler prev = null;
 
     @Override
@@ -94,6 +95,13 @@ public class ApplicationEx extends Application
         }
 
         return context;
+    }
+
+    @NonNull
+    public androidx.work.Configuration getWorkManagerConfiguration() {
+        return new androidx.work.Configuration.Builder()
+                .setMinimumLoggingLevel(android.util.Log.INFO)
+                .build();
     }
 
     @Override
@@ -220,14 +228,20 @@ public class ApplicationEx extends Application
         }
 
         ServiceSynchronize.scheduleWatchdog(this);
-        try {
-            WorkManager.getInstance(this).cancelUniqueWork("WorkerWatchdog");
-        } catch (IllegalStateException ex) {
-            Log.e(ex);
-        }
 
-        WorkerAutoUpdate.init(this);
-        WorkerCleanup.init(this);
+        boolean work_manager = prefs.getBoolean("work_manager", true);
+        Log.i("Work manager=" + work_manager);
+        if (work_manager) {
+            // Legacy
+            try {
+                WorkManager.getInstance(this).cancelUniqueWork("WorkerWatchdog");
+            } catch (IllegalStateException ex) {
+                Log.e(ex);
+            }
+
+            WorkerAutoUpdate.init(this);
+            WorkerCleanup.init(this);
+        }
 
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
 
@@ -560,6 +574,27 @@ public class ApplicationEx extends Application
                 boolean ascending = prefs.getBoolean("ascending_list", false);
                 editor.putBoolean("ascending_unified", ascending);
             }
+        } else if (version < 1835) {
+            boolean monospaced = prefs.getBoolean("monospaced", false);
+
+            String compose_font = prefs.getString("compose_font", "");
+            if (TextUtils.isEmpty(compose_font))
+                editor.putString("compose_font", monospaced ? "monospace" : "sans-serif");
+
+            if (monospaced) {
+                String display_font = prefs.getString("display_font", "");
+                if (TextUtils.isEmpty(display_font))
+                    editor.putString("display_font", "monospace");
+            }
+
+            editor.remove("monospaced");
+        } else if (version < 1837) {
+            if (!prefs.contains("compact_folders"))
+                editor.putBoolean("compact_folders", false);
+        } else if (version < 1839) {
+            boolean reply_all = prefs.getBoolean("reply_all", false);
+            if (reply_all)
+                editor.remove("reply_all").putString("answer_action", "reply_all");
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

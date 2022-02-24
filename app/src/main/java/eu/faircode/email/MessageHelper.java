@@ -51,6 +51,7 @@ import com.sun.mail.util.MessageRemovedIOException;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.simplejavamail.outlookmessageparser.OutlookMessageParser;
 import org.simplejavamail.outlookmessageparser.model.OutlookAttachment;
@@ -237,6 +238,7 @@ public class MessageHelper {
         System.setProperty("mail.mime.multipart.ignoremissingendboundary", "true"); // default true
         System.setProperty("mail.mime.multipart.allowempty", "true"); // default false
         System.setProperty("mail.mime.contentdisposition.strict", "false"); // default true
+        //System.setProperty("mail.mime.contenttypehandler", "eu.faircode.email.ContentTypeHandler");
 
         //System.setProperty("mail.imap.parse.debug", "true");
 
@@ -441,7 +443,8 @@ public class MessageHelper {
 
         // Send message
         if (identity != null) {
-            if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
+            if ((message.headers == null || !Boolean.TRUE.equals(message.resend)) &&
+                    (message.dsn == null || EntityMessage.DSN_NONE.equals(message.dsn))) {
                 // Add reply to
                 if (identity.replyto != null)
                     imessage.setReplyTo(convertAddress(InternetAddress.parse(identity.replyto), identity));
@@ -489,226 +492,228 @@ public class MessageHelper {
 
         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
 
-        if (message.from != null && message.from.length > 0)
-            for (EntityAttachment attachment : attachments)
-                if (EntityAttachment.PGP_KEY.equals(attachment.encryption)) {
-                    InternetAddress from = (InternetAddress) message.from[0];
+        if (message.dsn == null || EntityMessage.DSN_NONE.equals(message.dsn)) {
+            if (message.from != null && message.from.length > 0)
+                for (EntityAttachment attachment : attachments)
+                    if (EntityAttachment.PGP_KEY.equals(attachment.encryption)) {
+                        InternetAddress from = (InternetAddress) message.from[0];
 
-                    if (autocrypt) {
-                        String mode = (mutual ? "mutual" : "nopreference");
+                        if (autocrypt) {
+                            String mode = (mutual ? "mutual" : "nopreference");
 
-                        StringBuilder sb = new StringBuilder();
-                        File file = attachment.getFile(context);
-                        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                            String line = br.readLine();
-                            while (line != null) {
-                                String data = null;
-                                if (line.length() > 0 &&
-                                        !line.startsWith("-----BEGIN ") &&
-                                        !line.startsWith("-----END "))
-                                    data = line;
+                            StringBuilder sb = new StringBuilder();
+                            File file = attachment.getFile(context);
+                            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                                String line = br.readLine();
+                                while (line != null) {
+                                    String data = null;
+                                    if (line.length() > 0 &&
+                                            !line.startsWith("-----BEGIN ") &&
+                                            !line.startsWith("-----END "))
+                                        data = line;
 
-                                line = br.readLine();
+                                    line = br.readLine();
 
-                                // https://www.w3.org/Protocols/rfc822/3_Lexical.html#z0
-                                if (data != null &&
-                                        line != null && !line.startsWith("-----END "))
-                                    sb.append("\r\n ").append(data);
+                                    // https://www.w3.org/Protocols/rfc822/3_Lexical.html#z0
+                                    if (data != null &&
+                                            line != null && !line.startsWith("-----END "))
+                                        sb.append("\r\n ").append(data);
+                                }
                             }
+
+                            // https://autocrypt.org/level1.html#the-autocrypt-header
+                            imessage.addHeader("Autocrypt",
+                                    "addr=" + from.getAddress() + ";" +
+                                            " prefer-encrypt=" + mode + ";" +
+                                            " keydata=" + sb.toString());
+                        }
+                    }
+
+            // PGP: https://tools.ietf.org/html/rfc3156
+            // S/MIME: https://tools.ietf.org/html/rfc8551
+            for (final EntityAttachment attachment : attachments)
+                if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
+                    Log.i("Sending PGP signed message");
+
+                    for (final EntityAttachment content : attachments)
+                        if (EntityAttachment.PGP_CONTENT.equals(content.encryption)) {
+                            BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
+
+                            final ContentType cts = new ContentType(attachment.type);
+                            String micalg = cts.getParameter("micalg");
+                            if (TextUtils.isEmpty(micalg)) {
+                                // Some providers strip parameters
+                                // https://tools.ietf.org/html/rfc3156#section-5
+                                Log.w("PGP micalg missing type=" + attachment.type);
+                            }
+                            ParameterList params = cts.getParameterList();
+                            if (params != null)
+                                params.remove("micalg");
+                            cts.setParameterList(params);
+
+                            // Build signature
+                            BodyPart bpSignature = new MimeBodyPart();
+                            bpSignature.setFileName(attachment.name);
+                            FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
+                            dsSignature.setFileTypeMap(new FileTypeMap() {
+                                @Override
+                                public String getContentType(File file) {
+                                    return cts.toString();
+                                }
+
+                                @Override
+                                public String getContentType(String filename) {
+                                    return cts.toString();
+                                }
+                            });
+                            bpSignature.setDataHandler(new DataHandler(dsSignature));
+                            bpSignature.setDisposition(Part.INLINE);
+
+                            // Build message
+                            ContentType ct = new ContentType("multipart/signed");
+                            if (micalg != null)
+                                ct.setParameter("micalg", micalg);
+                            ct.setParameter("protocol", "application/pgp-signature");
+                            String ctx = ct.toString();
+                            int slash = ctx.indexOf("/");
+                            Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
+                            multipart.addBodyPart(bpContent);
+                            multipart.addBodyPart(bpSignature);
+                            imessage.setContent(multipart);
+
+                            return imessage;
+                        }
+                    throw new IllegalStateException("PGP content not found");
+                } else if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
+                    Log.i("Sending PGP encrypted message");
+
+                    // Build header
+                    // https://tools.ietf.org/html/rfc3156
+                    BodyPart bpHeader = new MimeBodyPart();
+                    bpHeader.setContent("Version: 1\n", "application/pgp-encrypted");
+
+                    // Build content
+                    BodyPart bpContent = new MimeBodyPart();
+                    bpContent.setFileName(attachment.name);
+                    FileDataSource dsContent = new FileDataSource(attachment.getFile(context));
+                    dsContent.setFileTypeMap(new FileTypeMap() {
+                        @Override
+                        public String getContentType(File file) {
+                            return attachment.type;
                         }
 
-                        // https://autocrypt.org/level1.html#the-autocrypt-header
-                        imessage.addHeader("Autocrypt",
-                                "addr=" + from.getAddress() + ";" +
-                                        " prefer-encrypt=" + mode + ";" +
-                                        " keydata=" + sb.toString());
-                    }
+                        @Override
+                        public String getContentType(String filename) {
+                            return attachment.type;
+                        }
+                    });
+                    bpContent.setDataHandler(new DataHandler(dsContent));
+                    bpContent.setDisposition(Part.INLINE);
+
+                    // Build message
+                    ContentType ct = new ContentType("multipart/encrypted");
+                    ct.setParameter("protocol", "application/pgp-encrypted");
+                    String ctx = ct.toString();
+                    int slash = ctx.indexOf("/");
+                    Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
+                    multipart.addBodyPart(bpHeader);
+                    multipart.addBodyPart(bpContent);
+                    imessage.setContent(multipart);
+
+                    if (encrypt_subject)
+                        imessage.setSubject("...");
+
+                    return imessage;
+                } else if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
+                    Log.i("Sending S/MIME signed message");
+
+                    for (final EntityAttachment content : attachments)
+                        if (EntityAttachment.SMIME_CONTENT.equals(content.encryption)) {
+                            BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
+
+                            final ContentType cts = new ContentType(attachment.type);
+                            String micalg = cts.getParameter("micalg");
+                            if (TextUtils.isEmpty(micalg)) {
+                                // Some providers strip parameters
+                                Log.w("S/MIME micalg missing type=" + attachment.type);
+                                micalg = "sha-256";
+                            }
+                            ParameterList params = cts.getParameterList();
+                            if (params != null)
+                                params.remove("micalg");
+                            cts.setParameterList(params);
+
+                            // Build signature
+                            BodyPart bpSignature = new MimeBodyPart();
+                            bpSignature.setFileName(attachment.name);
+                            FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
+                            dsSignature.setFileTypeMap(new FileTypeMap() {
+                                @Override
+                                public String getContentType(File file) {
+                                    return cts.toString();
+                                }
+
+                                @Override
+                                public String getContentType(String filename) {
+                                    return cts.toString();
+                                }
+                            });
+                            bpSignature.setDataHandler(new DataHandler(dsSignature));
+                            bpSignature.setDisposition(Part.INLINE);
+
+                            // Build message
+                            ContentType ct = new ContentType("multipart/signed");
+                            ct.setParameter("micalg", micalg);
+                            ct.setParameter("protocol", "application/pkcs7-signature");
+                            ct.setParameter("smime-type", "signed-data");
+                            String ctx = ct.toString();
+                            int slash = ctx.indexOf("/");
+                            Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
+                            multipart.addBodyPart(bpContent);
+                            multipart.addBodyPart(bpSignature);
+                            imessage.setContent(multipart);
+
+                            return imessage;
+                        }
+                    throw new IllegalStateException("S/MIME content not found");
+                } else if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
+                    Log.i("Sending S/MIME encrypted message");
+
+                    // Build message
+                    imessage.setDisposition(Part.ATTACHMENT);
+                    imessage.setFileName(attachment.name);
+                    imessage.setDescription("S/MIME Encrypted Message");
+
+                    ContentType ct = new ContentType("application/pkcs7-mime");
+                    ct.setParameter("name", attachment.name);
+                    ct.setParameter("smime-type", "enveloped-data");
+
+                    File file = attachment.getFile(context);
+                    FileDataSource dataSource = new FileDataSource(file);
+                    dataSource.setFileTypeMap(new FileTypeMap() {
+                        @Override
+                        public String getContentType(File file) {
+                            return ct.toString();
+                        }
+
+                        @Override
+                        public String getContentType(String filename) {
+                            return ct.toString();
+                        }
+                    });
+
+                    imessage.setDataHandler(new DataHandler(dataSource));
+
+                    return imessage;
                 }
 
-        // PGP: https://tools.ietf.org/html/rfc3156
-        // S/MIME: https://tools.ietf.org/html/rfc8551
-        for (final EntityAttachment attachment : attachments)
-            if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
-                Log.i("Sending PGP signed message");
-
-                for (final EntityAttachment content : attachments)
-                    if (EntityAttachment.PGP_CONTENT.equals(content.encryption)) {
-                        BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
-
-                        final ContentType cts = new ContentType(attachment.type);
-                        String micalg = cts.getParameter("micalg");
-                        if (TextUtils.isEmpty(micalg)) {
-                            // Some providers strip parameters
-                            // https://tools.ietf.org/html/rfc3156#section-5
-                            Log.w("PGP micalg missing type=" + attachment.type);
-                        }
-                        ParameterList params = cts.getParameterList();
-                        if (params != null)
-                            params.remove("micalg");
-                        cts.setParameterList(params);
-
-                        // Build signature
-                        BodyPart bpSignature = new MimeBodyPart();
-                        bpSignature.setFileName(attachment.name);
-                        FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
-                        dsSignature.setFileTypeMap(new FileTypeMap() {
-                            @Override
-                            public String getContentType(File file) {
-                                return cts.toString();
-                            }
-
-                            @Override
-                            public String getContentType(String filename) {
-                                return cts.toString();
-                            }
-                        });
-                        bpSignature.setDataHandler(new DataHandler(dsSignature));
-                        bpSignature.setDisposition(Part.INLINE);
-
-                        // Build message
-                        ContentType ct = new ContentType("multipart/signed");
-                        if (micalg != null)
-                            ct.setParameter("micalg", micalg);
-                        ct.setParameter("protocol", "application/pgp-signature");
-                        String ctx = ct.toString();
-                        int slash = ctx.indexOf("/");
-                        Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
-                        multipart.addBodyPart(bpContent);
-                        multipart.addBodyPart(bpSignature);
-                        imessage.setContent(multipart);
-
-                        return imessage;
-                    }
-                throw new IllegalStateException("PGP content not found");
-            } else if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
-                Log.i("Sending PGP encrypted message");
-
-                // Build header
-                // https://tools.ietf.org/html/rfc3156
-                BodyPart bpHeader = new MimeBodyPart();
-                bpHeader.setContent("Version: 1\n", "application/pgp-encrypted");
-
-                // Build content
-                BodyPart bpContent = new MimeBodyPart();
-                bpContent.setFileName(attachment.name);
-                FileDataSource dsContent = new FileDataSource(attachment.getFile(context));
-                dsContent.setFileTypeMap(new FileTypeMap() {
-                    @Override
-                    public String getContentType(File file) {
-                        return attachment.type;
-                    }
-
-                    @Override
-                    public String getContentType(String filename) {
-                        return attachment.type;
-                    }
-                });
-                bpContent.setDataHandler(new DataHandler(dsContent));
-                bpContent.setDisposition(Part.INLINE);
-
-                // Build message
-                ContentType ct = new ContentType("multipart/encrypted");
-                ct.setParameter("protocol", "application/pgp-encrypted");
-                String ctx = ct.toString();
-                int slash = ctx.indexOf("/");
-                Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
-                multipart.addBodyPart(bpHeader);
-                multipart.addBodyPart(bpContent);
-                imessage.setContent(multipart);
-
-                if (encrypt_subject)
-                    imessage.setSubject("...");
-
-                return imessage;
-            } else if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
-                Log.i("Sending S/MIME signed message");
-
-                for (final EntityAttachment content : attachments)
-                    if (EntityAttachment.SMIME_CONTENT.equals(content.encryption)) {
-                        BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
-
-                        final ContentType cts = new ContentType(attachment.type);
-                        String micalg = cts.getParameter("micalg");
-                        if (TextUtils.isEmpty(micalg)) {
-                            // Some providers strip parameters
-                            Log.w("S/MIME micalg missing type=" + attachment.type);
-                            micalg = "sha-256";
-                        }
-                        ParameterList params = cts.getParameterList();
-                        if (params != null)
-                            params.remove("micalg");
-                        cts.setParameterList(params);
-
-                        // Build signature
-                        BodyPart bpSignature = new MimeBodyPart();
-                        bpSignature.setFileName(attachment.name);
-                        FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
-                        dsSignature.setFileTypeMap(new FileTypeMap() {
-                            @Override
-                            public String getContentType(File file) {
-                                return cts.toString();
-                            }
-
-                            @Override
-                            public String getContentType(String filename) {
-                                return cts.toString();
-                            }
-                        });
-                        bpSignature.setDataHandler(new DataHandler(dsSignature));
-                        bpSignature.setDisposition(Part.INLINE);
-
-                        // Build message
-                        ContentType ct = new ContentType("multipart/signed");
-                        ct.setParameter("micalg", micalg);
-                        ct.setParameter("protocol", "application/pkcs7-signature");
-                        ct.setParameter("smime-type", "signed-data");
-                        String ctx = ct.toString();
-                        int slash = ctx.indexOf("/");
-                        Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
-                        multipart.addBodyPart(bpContent);
-                        multipart.addBodyPart(bpSignature);
-                        imessage.setContent(multipart);
-
-                        return imessage;
-                    }
-                throw new IllegalStateException("S/MIME content not found");
-            } else if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
-                Log.i("Sending S/MIME encrypted message");
-
-                // Build message
-                imessage.setDisposition(Part.ATTACHMENT);
-                imessage.setFileName(attachment.name);
-                imessage.setDescription("S/MIME Encrypted Message");
-
-                ContentType ct = new ContentType("application/pkcs7-mime");
-                ct.setParameter("name", attachment.name);
-                ct.setParameter("smime-type", "enveloped-data");
-
-                File file = attachment.getFile(context);
-                FileDataSource dataSource = new FileDataSource(file);
-                dataSource.setFileTypeMap(new FileTypeMap() {
-                    @Override
-                    public String getContentType(File file) {
-                        return ct.toString();
-                    }
-
-                    @Override
-                    public String getContentType(String filename) {
-                        return ct.toString();
-                    }
-                });
-
-                imessage.setDataHandler(new DataHandler(dataSource));
-
-                return imessage;
+            if (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) ||
+                    EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt)) {
+                String msg = "Storing unencrypted message" +
+                        " encrypt=" + message.encrypt + "/" + message.ui_encrypt;
+                Log.w(msg);
+                throw new IllegalArgumentException(msg);
             }
-
-        if (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) ||
-                EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt)) {
-            String msg = "Storing unencrypted message" +
-                    " encrypt=" + message.encrypt + "/" + message.ui_encrypt;
-            Log.w(msg);
-            throw new IllegalArgumentException(msg);
         }
 
         build(context, message, attachments, identity, send, imessage);
@@ -886,8 +891,7 @@ public class MessageHelper {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean format_flowed = prefs.getBoolean("format_flowed", false);
-        boolean monospaced = prefs.getBoolean("monospaced", false);
-        String compose_font = prefs.getString("compose_font", monospaced ? "monospace" : "sans-serif");
+        String compose_font = prefs.getString("compose_font", "");
         boolean auto_link = prefs.getBoolean("auto_link", false);
 
         // Build html body
@@ -911,22 +915,27 @@ public class MessageHelper {
             if (auto_link)
                 HtmlHelper.autoLink(document);
 
-            if (!TextUtils.isEmpty(compose_font))
-                for (Element child : document.body().children())
-                    if (!TextUtils.isEmpty(child.text()) &&
-                            TextUtils.isEmpty(child.attr("fairemail"))) {
-                        String old = child.attr("style");
-                        String style = HtmlHelper.mergeStyles(
-                                "font-family:" + compose_font, old);
-                        if (!old.equals(style))
-                            child.attr("style", style);
-                    }
+            if (!TextUtils.isEmpty(compose_font)) {
+                List<Node> childs = new ArrayList<>();
+                for (Node child : document.body().childNodes())
+                    if (TextUtils.isEmpty(child.attr("fairemail"))) {
+                        childs.add(child);
+                        child.remove();
+                    } else
+                        break;
+
+                Element div = document.createElement("div").attr("style",
+                        "font-family:" + StyleHelper.getFamily(compose_font));
+                for (Node child : childs)
+                    div.appendChild(child);
+                document.body().prependChild(div);
+            }
 
             document.select("div[fairemail=signature]").removeAttr("fairemail");
             document.select("div[fairemail=reference]").removeAttr("fairemail");
 
             Elements reply = document.select("div[fairemail=reply]");
-            if (message.plain_only != null && message.plain_only)
+            if (message.isPlainOnly())
                 reply.select("strong").tagName("span");
             reply.removeAttr("fairemail");
 
@@ -963,6 +972,7 @@ public class MessageHelper {
                         attachment.type = type;
                         attachment.disposition = Part.INLINE;
                         attachment.cid = acid;
+                        attachment.related = true;
                         attachment.size = null;
                         attachment.progress = 0;
                         attachment.id = db.attachment().insertAttachment(attachment);
@@ -1055,7 +1065,7 @@ public class MessageHelper {
             }
 
         if (availableAttachments == 0)
-            if (message.plain_only != null && message.plain_only)
+            if (message.isPlainOnly())
                 imessage.setContent(plainContent, plainContentType);
             else
                 imessage.setContent(altMultiPart);
@@ -1064,7 +1074,7 @@ public class MessageHelper {
             Multipart relatedMultiPart = new MimeMultipart("related");
 
             BodyPart bodyPart;
-            if (message.plain_only != null && message.plain_only)
+            if (message.isPlainOnly())
                 bodyPart = plainPart;
             else {
                 bodyPart = new MimeBodyPart();
@@ -1303,7 +1313,7 @@ public class MessageHelper {
                 if ("delivery-status".equalsIgnoreCase(reportType) ||
                         "disposition-notification".equalsIgnoreCase(reportType)) {
                     MessageParts parts = new MessageParts();
-                    getMessageParts(imessage, parts, null);
+                    getMessageParts(null, imessage, parts, null);
                     for (AttachmentPart apart : parts.attachments)
                         if ("text/rfc822-headers".equalsIgnoreCase(apart.attachment.type)) {
                             reportHeaders = new InternetHeaders(apart.part.getInputStream());
@@ -1326,7 +1336,7 @@ public class MessageHelper {
 
     String getThreadId(Context context, long account, long folder, long uid) throws MessagingException {
         if (threadId == null)
-            if (!BuildConfig.PLAY_STORE_RELEASE)
+            if (true)
                 threadId = _getThreadIdAlt(context, account, folder, uid);
             else
                 threadId = _getThreadId(context, account, folder, uid);
@@ -1473,7 +1483,9 @@ public class MessageHelper {
 
         List<String> all = new ArrayList<>(refs);
         all.add(msgid);
-        List<TupleThreadInfo> infos = db.message().getThreadInfo(account, all);
+        List<TupleThreadInfo> infos = (all.size() == 0
+                ? new ArrayList<>()
+                : db.message().getThreadInfo(account, all));
 
         // References, In-Reply-To (sent before)
         for (TupleThreadInfo info : infos)
@@ -1490,6 +1502,25 @@ public class MessageHelper {
                     thread = info.thread;
                     break;
                 }
+        }
+
+        if (thread == null && BuildConfig.DEBUG) {
+            String awsses = imessage.getHeader("X-SES-Outgoing", null);
+            if (!TextUtils.isEmpty(awsses)) {
+                Address[] froms = getFrom();
+                if (froms != null && froms.length > 0) {
+                    String from = ((InternetAddress) froms[0]).getAddress();
+                    if (!TextUtils.isEmpty(from) && from.endsWith("@faircode.eu")) {
+                        Address[] rr = getReply();
+                        Address[] tos = (rr != null && rr.length > 0 ? rr : getTo());
+                        if (tos != null && tos.length > 0) {
+                            String email = ((InternetAddress) tos[0]).getAddress();
+                            if (!TextUtils.isEmpty(email))
+                                thread = "ses:" + email;
+                        }
+                    }
+                }
+            }
         }
 
         // Common reference
@@ -1817,7 +1848,7 @@ public class MessageHelper {
         if (header.trim().startsWith("=?"))
             return header;
 
-        Charset detected = CharsetHelper.detect(header);
+        Charset detected = CharsetHelper.detect(header, StandardCharsets.ISO_8859_1);
         if (detected == null && CharsetHelper.isUTF8(header))
             detected = StandardCharsets.UTF_8;
         if (detected == null ||
@@ -2185,9 +2216,8 @@ public class MessageHelper {
 
         // (qmail nnn invoked by uid nnn); 1 Jan 2022 00:00:00 -0000
         // by <host name> (Postfix, from userid nnn)
-        if (first &&
-                (header.matches(".*\\(qmail \\d+ invoked by uid \\d+\\).*") ||
-                        header.matches(".*\\(Postfix, from userid \\d+\\).*"))) {
+        if (header.matches(".*\\(qmail \\d+ invoked by uid \\d+\\).*") ||
+                header.matches(".*\\(Postfix, from userid \\d+\\).*")) {
             Log.i("--- phrase");
             return true;
         }
@@ -2630,7 +2660,9 @@ public class MessageHelper {
         while (p + 1 < parts.size()) {
             MimeTextPart p1 = parts.get(p);
             MimeTextPart p2 = parts.get(p + 1);
-            if (p1.charset != null && p1.charset.equalsIgnoreCase(p2.charset) &&
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1374149
+            if (!"ISO-2022-JP".equalsIgnoreCase(p1.charset) &&
+                    p1.charset != null && p1.charset.equalsIgnoreCase(p2.charset) &&
                     p1.encoding != null && p1.encoding.equalsIgnoreCase(p2.encoding)) {
                 try {
                     byte[] b1 = decodeWord(p1.text, p1.encoding, p1.charset);
@@ -2752,13 +2784,30 @@ public class MessageHelper {
             return protected_subject;
         }
 
-        Boolean isPlainOnly() {
-            if (text.size() + extra.size() == 0)
+        Integer isPlainOnly(boolean download_plain) {
+            Integer plain = isPlainOnly();
+            if (plain == null)
                 return null;
-            for (PartHolder h : text)
-                if (!h.isPlainText())
-                    return false;
-            return true;
+            if (download_plain && plain == 0x80)
+                plain |= 1;
+            return plain;
+        }
+
+        Integer isPlainOnly() {
+            int html = 0;
+            int plain = 0;
+            for (PartHolder h : text) {
+                if (h.isHtml())
+                    html++;
+                if (h.isPlainText())
+                    plain++;
+            }
+
+            if (html + plain == 0)
+                return null;
+            if (html == 0)
+                return 1;
+            return (plain > 0 ? 0x80 : 0);
         }
 
         boolean hasBody() throws MessagingException {
@@ -2774,13 +2823,14 @@ public class MessageHelper {
         }
 
         void normalize() {
-            Boolean plain = isPlainOnly();
-            if (plain == null || plain)
+            Integer plain = isPlainOnly();
+            if (plain != null && (plain & 1) != 0)
                 for (AttachmentPart apart : attachments)
                     if (!TextUtils.isEmpty(apart.attachment.cid) ||
                             !Part.ATTACHMENT.equals(apart.attachment.disposition)) {
                         Log.i("Normalizing " + apart.attachment);
                         apart.attachment.cid = null;
+                        apart.attachment.related = false;
                         apart.attachment.disposition = Part.ATTACHMENT;
                     }
         }
@@ -2790,7 +2840,6 @@ public class MessageHelper {
 
             List<PartHolder> all = new ArrayList<>();
             all.addAll(text);
-            all.addAll(extra);
             for (PartHolder h : all) {
                 int s = h.part.getSize();
                 if (s >= 0)
@@ -2814,6 +2863,10 @@ public class MessageHelper {
         }
 
         String getHtml(Context context) throws MessagingException, IOException {
+            return getHtml(context, false);
+        }
+
+        String getHtml(Context context, boolean plain_text) throws MessagingException, IOException {
             if (text.size() == 0) {
                 Log.i("No body part");
                 return null;
@@ -2822,8 +2875,26 @@ public class MessageHelper {
             StringBuilder sb = new StringBuilder();
 
             List<PartHolder> parts = new ArrayList<>();
-            parts.addAll(text);
+
+            Integer plain = isPlainOnly();
+            if (plain != null && (plain & 1) != 0)
+                // Plain only
+                parts.addAll(text);
+            else {
+                // Either plain and HTML or HTML only
+                boolean hasPlain = (plain != null && (plain & 0x80) != 0);
+                for (PartHolder h : text)
+                    if (plain_text && hasPlain) {
+                        if (h.isPlainText())
+                            parts.add(h);
+                    } else {
+                        if (h.isHtml())
+                            parts.add(h);
+                    }
+            }
+
             parts.addAll(extra);
+
             for (PartHolder h : parts) {
                 int size = h.part.getSize();
                 if (size > 100 * 1024 * 1024)
@@ -2880,7 +2951,7 @@ public class MessageHelper {
                             Log.i("Charset upgrade=UTF8");
                             result = new String(result.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
                         } else {
-                            Charset detected = CharsetHelper.detect(result);
+                            Charset detected = CharsetHelper.detect(result, StandardCharsets.ISO_8859_1);
                             if (detected == null) {
                                 if (CharsetHelper.isUTF8(result)) {
                                     Log.i("Charset plain=UTF8");
@@ -2894,8 +2965,10 @@ public class MessageHelper {
                     } else if (StandardCharsets.UTF_8.equals(cs))
                         result = CharsetHelper.utf8toW1252(result);
 
+                    // https://datatracker.ietf.org/doc/html/rfc3676
                     if ("flowed".equalsIgnoreCase(h.contentType.getParameter("format")))
-                        result = HtmlHelper.flow(result);
+                        result = HtmlHelper.flow(result,
+                                "yes".equalsIgnoreCase(h.contentType.getParameter("delsp")));
 
                     // https://www.w3.org/QA/2002/04/valid-dtd-list.html
                     if (result.length() > DOCTYPE.length()) {
@@ -2934,7 +3007,7 @@ public class MessageHelper {
                     // Fix incorrect UTF16
                     try {
                         if (CHARSET16.contains(cs)) {
-                            Charset detected = CharsetHelper.detect(result);
+                            Charset detected = CharsetHelper.detect(result, cs);
                             if (!CHARSET16.contains(detected))
                                 Log.w(new Throwable("Charset=" + cs + " detected=" + detected));
                             if (StandardCharsets.US_ASCII.equals(detected) ||
@@ -2984,7 +3057,7 @@ public class MessageHelper {
                                         break;
                                     }
 
-                                    Charset detected = CharsetHelper.detect(result);
+                                    Charset detected = CharsetHelper.detect(result, c);
                                     if (c.equals(detected))
                                         break;
 
@@ -3031,7 +3104,8 @@ public class MessageHelper {
                         }
                     }
 
-                    if (report.isDispositionNotification() && !report.isDisplayed()) {
+                    if (report.isDispositionNotification() &&
+                            !(report.isDisplayed() || report.isDeleted())) {
                         if (report.disposition != null)
                             w.append(report.disposition);
                     }
@@ -3558,8 +3632,8 @@ public class MessageHelper {
                         if (content instanceof Multipart) {
                             Multipart multipart = (Multipart) content;
                             if (multipart.getCount() == 2) {
-                                getMessageParts(multipart.getBodyPart(0), parts, null);
-                                getMessageParts(multipart.getBodyPart(1), parts,
+                                getMessageParts(part, multipart.getBodyPart(0), parts, null);
+                                getMessageParts(part, multipart.getBodyPart(1), parts,
                                         "application/pgp-signature".equals(protocol)
                                                 ? EntityAttachment.PGP_SIGNATURE
                                                 : EntityAttachment.SMIME_SIGNATURE);
@@ -3602,7 +3676,7 @@ public class MessageHelper {
                             Multipart multipart = (Multipart) content;
                             if (multipart.getCount() == 2) {
                                 // Ignore header
-                                getMessageParts(multipart.getBodyPart(1), parts, EntityAttachment.PGP_MESSAGE);
+                                getMessageParts(part, multipart.getBodyPart(1), parts, EntityAttachment.PGP_MESSAGE);
                                 return parts;
                             } else {
                                 StringBuilder sb = new StringBuilder();
@@ -3620,10 +3694,10 @@ public class MessageHelper {
                     ContentType ct = new ContentType(part.getContentType());
                     String smimeType = ct.getParameter("smime-type");
                     if ("enveloped-data".equalsIgnoreCase(smimeType)) {
-                        getMessageParts(part, parts, EntityAttachment.SMIME_MESSAGE);
+                        getMessageParts(null, part, parts, EntityAttachment.SMIME_MESSAGE);
                         return parts;
                     } else if ("signed-data".equalsIgnoreCase(smimeType)) {
-                        getMessageParts(part, parts, EntityAttachment.SMIME_SIGNED_DATA);
+                        getMessageParts(null, part, parts, EntityAttachment.SMIME_SIGNED_DATA);
                         return parts;
                     } else if ("signed-receipt".equalsIgnoreCase(smimeType)) {
                         // https://datatracker.ietf.org/doc/html/rfc2634#section-2
@@ -3631,10 +3705,10 @@ public class MessageHelper {
                         if (TextUtils.isEmpty(smimeType)) {
                             String name = ct.getParameter("name");
                             if ("smime.p7m".equalsIgnoreCase(name)) {
-                                getMessageParts(part, parts, EntityAttachment.SMIME_MESSAGE);
+                                getMessageParts(null, part, parts, EntityAttachment.SMIME_MESSAGE);
                                 return parts;
                             } else if ("smime.p7s".equalsIgnoreCase(name)) {
-                                getMessageParts(part, parts, EntityAttachment.SMIME_SIGNED_DATA);
+                                getMessageParts(null, part, parts, EntityAttachment.SMIME_SIGNED_DATA);
                                 return parts;
                             }
                         }
@@ -3647,7 +3721,7 @@ public class MessageHelper {
                 Log.w(ex);
             }
 
-            getMessageParts(imessage, parts, null);
+            getMessageParts(null, imessage, parts, null);
         } catch (OutOfMemoryError ex) {
             Log.e(ex);
             parts.warnings.add(Log.formatThrowable(ex, false));
@@ -3671,7 +3745,7 @@ public class MessageHelper {
         return parts;
     }
 
-    private void getMessageParts(Part part, MessageParts parts, Integer encrypt) throws IOException, MessagingException {
+    private void getMessageParts(Part parent, Part part, MessageParts parts, Integer encrypt) throws IOException, MessagingException {
         try {
             Log.d("Part class=" + part.getClass() + " type=" + part.getContentType());
 
@@ -3697,36 +3771,17 @@ public class MessageHelper {
                 else
                     throw new MessagingStructureException(content);
 
-                boolean other = false;
-                List<Part> plain = new ArrayList<>();
                 int count = multipart.getCount();
-                boolean alternative = part.isMimeType("multipart/alternative");
                 for (int i = 0; i < count; i++)
                     try {
                         BodyPart child = multipart.getBodyPart(i);
-                        if (alternative && count > 1 && child.isMimeType("text/plain"))
-                            plain.add(child);
-                        else {
-                            getMessageParts(child, parts, encrypt);
-                            other = true;
-                        }
+                        getMessageParts(part, child, parts, encrypt);
                     } catch (ParseException ex) {
                         // Nested body: try to continue
                         // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
                         Log.w(ex);
                         parts.warnings.add(Log.formatThrowable(ex, false));
                     }
-
-                if (alternative && count > 1 && !other)
-                    for (Part child : plain)
-                        try {
-                            getMessageParts(child, parts, encrypt);
-                        } catch (ParseException ex) {
-                            // Nested body: try to continue
-                            // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
-                            Log.w(ex);
-                            parts.warnings.add(Log.formatThrowable(ex, false));
-                        }
             } else {
                 // https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
                 String disposition;
@@ -3816,12 +3871,21 @@ public class MessageHelper {
                             parts.warnings.add(Log.formatThrowable(ex, false));
                     }
 
+                    Boolean related = null;
+                    if (parent != null)
+                        try {
+                            related = parent.isMimeType("multipart/related");
+                        } catch (MessagingException ex) {
+                            Log.w(ex);
+                        }
+
                     apart.attachment = new EntityAttachment();
                     apart.attachment.disposition = apart.disposition;
                     apart.attachment.name = apart.filename;
                     apart.attachment.type = contentType.getBaseType().toLowerCase(Locale.ROOT);
                     apart.attachment.size = (long) apart.part.getSize();
                     apart.attachment.cid = cid;
+                    apart.attachment.related = related;
                     apart.attachment.encryption = apart.encrypt;
 
                     if ("text/calendar".equalsIgnoreCase(apart.attachment.type) &&

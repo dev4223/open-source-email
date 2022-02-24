@@ -21,7 +21,6 @@ package eu.faircode.email;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -101,6 +100,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     private boolean subscriptions;
 
+    private int dp3;
     private int dp12;
     private float textSize;
     private int colorStripeWidth;
@@ -116,6 +116,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private List<TupleFolderEx> selected = new ArrayList<>();
 
     private NumberFormat NF = NumberFormat.getNumberInstance();
+
+    private static final int DENSE_ITEMS_THRESHOLD = 50;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
@@ -226,6 +228,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private void bindTo(final TupleFolderEx folder) {
             boolean disabled = isDisabled(folder);
 
+            int p = (show_compact && all.size() < DENSE_ITEMS_THRESHOLD ? dp3 : 0);
+            view.setPadding(p, p, p, p);
             view.setActivated(folder.tbc != null || folder.rename != null || folder.tbd != null);
             view.setAlpha(folder.hide || disabled ? Helper.LOW_LIGHT : 1.0f);
 
@@ -292,10 +296,18 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     ? View.VISIBLE : View.INVISIBLE);
 
             if (listener == null && folder.selectable) {
-                ivUnified.setVisibility((account > 0 || primary) && folder.unified ? View.VISIBLE : View.GONE);
-                ivSubscribed.setVisibility(subscriptions && folder.subscribed != null && folder.subscribed ? View.VISIBLE : View.GONE);
-                ivRule.setVisibility(folder.rules > 0 ? View.VISIBLE : View.GONE);
-                ivNotify.setVisibility(folder.notify ? View.VISIBLE : View.GONE);
+                ivUnified.setVisibility(
+                        (account > 0 || primary) && folder.unified && !show_compact
+                                ? View.VISIBLE : View.GONE);
+                ivSubscribed.setVisibility(
+                        subscriptions && folder.subscribed != null && folder.subscribed && !show_compact
+                                ? View.VISIBLE : View.GONE);
+                ivRule.setVisibility(
+                        folder.rules > 0 && !show_compact
+                                ? View.VISIBLE : View.GONE);
+                ivNotify.setVisibility(
+                        folder.notify && !show_compact
+                                ? View.VISIBLE : View.GONE);
                 ivAutoAdd.setVisibility(BuildConfig.DEBUG &&
                         EntityFolder.SENT.equals(folder.type) &&
                         (folder.auto_add == null || folder.auto_add)
@@ -1178,6 +1190,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         this.subscribed_only = prefs.getBoolean("subscribed_only", false) && subscriptions;
         this.sort_unread_atop = prefs.getBoolean("sort_unread_atop", false);
 
+        this.dp3 = Helper.dp2pixels(context, 3);
         this.dp12 = Helper.dp2pixels(context, 12);
         this.textSize = Helper.getTextSize(context, zoom);
         boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
