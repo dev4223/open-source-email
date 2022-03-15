@@ -228,6 +228,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -353,6 +354,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private Long closeId = null;
     private int autoCloseCount = 0;
     private boolean autoExpanded = true;
+
+    private Integer lastUnseen;
+    private Boolean lastRefreshing;
+    private Boolean lastFolderErrors;
+    private Boolean lastAccountErrors;
 
     final private Map<String, String> kv = new HashMap<>();
     final private Map<String, List<Long>> values = new HashMap<>();
@@ -700,12 +706,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         List<Long> expanded = values.get("expanded");
                         Log.i("Capture expanded=" + (expanded == null ? null : expanded.size()));
                         if (expanded != null && expanded.size() == 1) {
-                            int pos = adapter.getPositionForKey(expanded.get(0));
+                            long id = expanded.get(0);
+                            int pos = adapter.getPositionForKey(id);
                             Log.i("Capture pos=" + pos);
                             child = llm.findViewByPosition(pos);
                             Log.i("Capture child=" + child);
-                            if (child != null)
-                                rect.set(0, 0, child.getWidth(), child.getHeight());
+                            if (child != null) {
+                                int w = child.getWidth();
+                                int h = child.getHeight();
+                                Log.i("Capture " + w + "x" + h);
+                                rect.set(0, 0, w, h);
+                            }
                         }
                     } catch (Throwable ex) {
                         Log.e(ex);
@@ -3283,9 +3294,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (result.hasTrash == null) result.hasTrash = false;
                 if (result.hasJunk == null) result.hasJunk = false;
 
-                result.accounts = new ArrayList<>();
-                if (!result.hasPop)
-                    result.accounts.addAll(db.account().getSynchronizingAccounts(EntityAccount.TYPE_IMAP));
+                result.accounts = new LinkedHashMap<>();
+                if (!result.hasPop) {
+                    List<EntityAccount> syncing = db.account().getSynchronizingAccounts(EntityAccount.TYPE_IMAP);
+                    if (syncing != null)
+                        for (EntityAccount a : syncing)
+                            result.accounts.put(a, accounts.containsKey(a.id));
+                }
 
                 if (result.folders.size() > 1)
                     result.folders = new ArrayList<>();
@@ -3372,18 +3387,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             leave ? R.string.title_trash : R.string.title_delete_permanently)
                             .setIcon(leave ? R.drawable.twotone_delete_24 : R.drawable.twotone_delete_forever_24);
 
-                    for (EntityAccount account : result.accounts) {
+                    for (EntityAccount account : result.accounts.keySet()) {
                         String title = getString(R.string.title_move_to_account, account.name);
-                        SpannableString ss = new SpannableString(title);
+                        SpannableString ssb = new SpannableString(title);
                         if (account.name != null && account.color != null) {
                             int i = title.indexOf(account.name);
                             int first = title.codePointAt(i);
                             int count = Character.charCount(first);
-                            ss.setSpan(new ForegroundColorSpan(account.color), i, i + count, 0);
-                            ss.setSpan(new StyleSpan(Typeface.BOLD), i, i + count, 0);
-                            ss.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_LARGE), i, i + count, 0);
+                            ssb.setSpan(new ForegroundColorSpan(account.color), i, i + count, 0);
+                            ssb.setSpan(new StyleSpan(Typeface.BOLD), i, i + count, 0);
+                            ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_LARGE), i, i + count, 0);
                         }
-                        MenuItem item = popupMenu.getMenu().add(Menu.FIRST, R.string.title_move_to_account, order++, ss)
+                        if (!result.accounts.get(account))
+                            ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL), 0, ssb.length(), 0);
+                        MenuItem item = popupMenu.getMenu().add(Menu.FIRST, R.string.title_move_to_account, order++, ssb)
                                 .setIcon(R.drawable.twotone_drive_file_move_24);
                         item.setIntent(new Intent().putExtra("account", account.id));
                     }
@@ -5444,17 +5461,31 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
         }
 
+        if (Objects.equals(lastUnseen, unseen) &&
+                Objects.equals(lastRefreshing, refreshing) &&
+                Objects.equals(lastFolderErrors, folderErrors) &&
+                Objects.equals(lastAccountErrors, accountErrors)) {
+            Log.i("Folder state unchanged");
+            return;
+        }
+
+        lastUnseen = unseen;
+        lastRefreshing = refreshing;
+        lastFolderErrors = folderErrors;
+        lastAccountErrors = accountErrors;
+
         // Get name
         String name;
+        Context context = getContext();
         if (viewType == AdapterMessage.ViewType.UNIFIED)
             if (type == null) {
                 name = (folders.size() == 1 ? folders.get(0).accountName : null);
                 if (name == null)
                     name = getString(R.string.title_folder_unified);
             } else
-                name = EntityFolder.localizeType(getContext(), type);
+                name = "»" + EntityFolder.localizeType(context, type);
         else {
-            name = (folders.size() > 0 ? folders.get(0).getDisplayName(getContext()) : "");
+            name = (folders.size() > 0 ? folders.get(0).getDisplayName(context) : "");
             if (folders.size() == 1) {
                 String accountName = folders.get(0).accountName;
                 if (accountName != null)
@@ -5463,10 +5494,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         // Show name/unread
-        if (unseen == 0)
-            setSubtitle(name);
-        else
-            setSubtitle(getString(R.string.title_name_count, name, NF.format(unseen)));
+        if (unseen > 0)
+            name = getString(R.string.title_name_count, name, NF.format(unseen));
+        setSubtitle(name);
 
         fabError.setTag(accountErrors);
         if (folderErrors || accountErrors)
@@ -9097,7 +9127,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Boolean leave_deleted;
         boolean read_only;
         List<Long> folders;
-        List<EntityAccount> accounts;
+        Map<EntityAccount, Boolean> accounts;
         EntityAccount copyto;
     }
 

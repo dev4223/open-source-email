@@ -569,7 +569,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 for (EntityMessage m : replied)
                     if (!m.ui_hide) {
                         EntityFolder folder = db.folder().getFolder(m.folder);
-                        if (folder != null && EntityFolder.USER.equals(folder.type)) {
+                        if (folder != null &&
+                                (EntityFolder.INBOX.equals(folder.type) ||
+                                        EntityFolder.ARCHIVE.equals(folder.type) ||
+                                        EntityFolder.USER.equals(folder.type))) {
                             sent = folder;
                             break;
                         }
@@ -621,6 +624,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 message.ui_seen = true;
                 message.ui_hide = true;
                 message.ui_busy = Long.MAX_VALUE; // Needed to keep messages in user folders
+                message.raw = null;
                 message.error = null;
                 message.id = db.message().insertMessage(message);
 

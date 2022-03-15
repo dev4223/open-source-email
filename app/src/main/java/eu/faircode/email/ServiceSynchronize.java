@@ -2315,70 +2315,83 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                 if (state.isRunning()) {
                     long now = new Date().getTime();
+                    boolean logarithmic_backoff = prefs.getBoolean("logarithmic_backoff", true);
 
-                    // Check for fast successive server, connectivity, etc failures
-                    long poll_interval = Math.min(account.poll_interval, CONNECT_BACKOFF_ALARM_START);
-                    long fail_threshold = poll_interval * 60 * 1000L * FAST_FAIL_THRESHOLD / 100;
-                    long was_connected = (account.last_connected == null ? 0 : now - account.last_connected);
-                    if (was_connected < fail_threshold) {
-                        if (state.getBackoff() == CONNECT_BACKOFF_START) {
-                            fast_fails++;
-                            if (fast_fails == 1)
-                                first_fail = now;
-                            else if (fast_fails >= FAST_FAIL_COUNT) {
-                                long avg_fail = (now - first_fail) / fast_fails;
-                                if (avg_fail < fail_threshold) {
-                                    long missing = (fail_threshold - avg_fail) * fast_fails;
-                                    int compensate = (int) (missing / (CONNECT_BACKOFF_ALARM_START * 60 * 1000L));
-                                    if (compensate > 0) {
-                                        if (was_connected != 0 && was_connected < CONNECT_BACKOFF_GRACE)
-                                            compensate = 1;
+                    if (logarithmic_backoff) {
+                        // Check for fast successive server, connectivity, etc failures
+                        long poll_interval = Math.min(account.poll_interval, CONNECT_BACKOFF_ALARM_START);
+                        long fail_threshold = poll_interval * 60 * 1000L * FAST_FAIL_THRESHOLD / 100;
+                        long was_connected = (account.last_connected == null ? 0 : now - account.last_connected);
+                        if (was_connected < fail_threshold) {
+                            if (state.getBackoff() == CONNECT_BACKOFF_START) {
+                                fast_fails++;
+                                if (fast_fails == 1)
+                                    first_fail = now;
+                                else if (fast_fails >= FAST_FAIL_COUNT) {
+                                    long avg_fail = (now - first_fail) / fast_fails;
+                                    if (avg_fail < fail_threshold) {
+                                        long missing = (fail_threshold - avg_fail) * fast_fails;
+                                        int compensate = (int) (missing / (CONNECT_BACKOFF_ALARM_START * 60 * 1000L));
+                                        if (compensate > 0) {
+                                            if (was_connected != 0 && was_connected < CONNECT_BACKOFF_GRACE)
+                                                compensate = 1;
 
-                                        int backoff = compensate * CONNECT_BACKOFF_ALARM_START;
-                                        if (backoff > CONNECT_BACKOFF_ALARM_MAX)
-                                            backoff = CONNECT_BACKOFF_ALARM_MAX;
+                                            int backoff = compensate * CONNECT_BACKOFF_ALARM_START;
+                                            if (backoff > CONNECT_BACKOFF_ALARM_MAX)
+                                                backoff = CONNECT_BACKOFF_ALARM_MAX;
 
-                                        String msg = "Fast" +
-                                                " fails=" + fast_fails +
-                                                " was=" + (was_connected / 1000L) +
-                                                " first=" + ((now - first_fail) / 1000L) +
-                                                " poll=" + poll_interval +
-                                                " avg=" + (avg_fail / 1000L) + "/" + (fail_threshold / 1000L) +
-                                                " missing=" + (missing / 1000L) +
-                                                " compensate=" + compensate +
-                                                " backoff=" + backoff +
-                                                " host=" + account.host +
-                                                " ex=" + Log.formatThrowable(last_fail, false);
-                                        if (compensate > 2)
-                                            Log.e(msg);
-                                        EntityLog.log(this, EntityLog.Type.Account, account, msg);
+                                            String msg = "Fast" +
+                                                    " fails=" + fast_fails +
+                                                    " was=" + (was_connected / 1000L) +
+                                                    " first=" + ((now - first_fail) / 1000L) +
+                                                    " poll=" + poll_interval +
+                                                    " avg=" + (avg_fail / 1000L) + "/" + (fail_threshold / 1000L) +
+                                                    " missing=" + (missing / 1000L) +
+                                                    " compensate=" + compensate +
+                                                    " backoff=" + backoff +
+                                                    " host=" + account.host +
+                                                    " ex=" + Log.formatThrowable(last_fail, false);
+                                            if (compensate > 2)
+                                                Log.e(msg);
+                                            EntityLog.log(this, EntityLog.Type.Account, account, msg);
 
-                                        state.setBackoff(backoff * 60);
+                                            state.setBackoff(backoff * 60);
+                                        }
                                     }
                                 }
                             }
+                        } else {
+                            fast_fails = 0;
+                            first_fail = 0;
                         }
-                    } else {
-                        fast_fails = 0;
-                        first_fail = 0;
                     }
 
                     int backoff = state.getBackoff();
                     int recently = (lastLost + LOST_RECENTLY < now ? 1 : 2);
                     EntityLog.log(this, EntityLog.Type.Account, account,
-                            account.name + " backoff=" + backoff + " recently=" + recently + "x");
+                            account.name + " backoff=" + backoff +
+                                    " recently=" + recently + "x" +
+                                    " logarithmic=" + logarithmic_backoff);
 
-                    if (backoff < CONNECT_BACKOFF_MAX)
-                        state.setBackoff(backoff * 2);
-                    else if (backoff == CONNECT_BACKOFF_MAX)
-                        if (AlarmManagerCompatEx.hasExactAlarms(this))
-                            state.setBackoff(CONNECT_BACKOFF_INTERMEDIATE * 60);
-                        else
+                    if (logarithmic_backoff) {
+                        if (backoff < CONNECT_BACKOFF_MAX)
+                            state.setBackoff(backoff * 2);
+                        else if (backoff == CONNECT_BACKOFF_MAX)
+                            if (AlarmManagerCompatEx.hasExactAlarms(this))
+                                state.setBackoff(CONNECT_BACKOFF_INTERMEDIATE * 60);
+                            else
+                                state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
+                        else if (backoff == CONNECT_BACKOFF_INTERMEDIATE * 60)
                             state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
-                    else if (backoff == CONNECT_BACKOFF_INTERMEDIATE * 60)
-                        state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
-                    else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60) {
-                        int b = backoff * 2;
+                        else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60) {
+                            int b = backoff * 2;
+                            if (b > CONNECT_BACKOFF_ALARM_MAX * 60)
+                                b = CONNECT_BACKOFF_ALARM_MAX * 60;
+                            state.setBackoff(b);
+                        }
+                    } else {
+                        // Linear back-off
+                        int b = backoff + (backoff < CONNECT_BACKOFF_INTERMEDIATE * 60 ? 60 : 5 * 60);
                         if (b > CONNECT_BACKOFF_ALARM_MAX * 60)
                             b = CONNECT_BACKOFF_ALARM_MAX * 60;
                         state.setBackoff(b);
@@ -2963,27 +2976,57 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     static void scheduleWatchdog(Context context) {
-        Intent intent = new Intent(context, ServiceSynchronize.class)
-                .setAction("watchdog");
-        PendingIntent pi;
-        if (isBackgroundService(context))
-            pi = PendingIntentCompat.getService(context, PI_WATCHDOG, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        else
-            pi = PendingIntentCompat.getForegroundService(context, PI_WATCHDOG, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        try {
+            Intent intent = new Intent(context, ServiceSynchronize.class)
+                    .setAction("watchdog");
+            PendingIntent pi;
+            if (isBackgroundService(context))
+                pi = PendingIntentCompat.getService(context, PI_WATCHDOG, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            else
+                pi = PendingIntentCompat.getForegroundService(context, PI_WATCHDOG, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean watchdog = prefs.getBoolean("watchdog", true);
-        boolean enabled = prefs.getBoolean("enabled", true);
-        if (watchdog && enabled) {
-            long now = new Date().getTime();
-            long next = now - now % WATCHDOG_INTERVAL + WATCHDOG_INTERVAL + WATCHDOG_INTERVAL / 4;
-            if (next < now + WATCHDOG_INTERVAL / 5)
-                next += WATCHDOG_INTERVAL;
-            EntityLog.log(context, "Watchdog next=" + new Date(next));
-            AlarmManagerCompatEx.setAndAllowWhileIdle(context, am, AlarmManager.RTC_WAKEUP, next, pi);
-        } else
+            AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(pi);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean watchdog = prefs.getBoolean("watchdog", true);
+            boolean enabled = prefs.getBoolean("enabled", true);
+            if (watchdog && enabled) {
+                long now = new Date().getTime();
+                long next = now - now % WATCHDOG_INTERVAL + WATCHDOG_INTERVAL + WATCHDOG_INTERVAL / 4;
+                if (next < now + WATCHDOG_INTERVAL / 5)
+                    next += WATCHDOG_INTERVAL;
+                EntityLog.log(context, "Watchdog next=" + new Date(next));
+                AlarmManagerCompatEx.setAndAllowWhileIdle(context, am, AlarmManager.RTC_WAKEUP, next, pi);
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+            /*
+                Redmi Note 8 Pro Android 11 (SDK 30)
+
+                java.lang.RuntimeException:
+                  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:7019)
+                  at android.app.ActivityThread.access$1600 (ActivityThread.java:263)
+                  at android.app.ActivityThread$H.handleMessage (ActivityThread.java:2034)
+                  at android.os.Handler.dispatchMessage (Handler.java:106)
+                  at android.os.Looper.loop (Looper.java:236)
+                  at android.app.ActivityThread.main (ActivityThread.java:8057)
+                  at java.lang.reflect.Method.invoke (Native Method)
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:620)
+                  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1011)
+                Caused by: java.lang.SecurityException:
+                  at android.os.Parcel.createExceptionOrNull (Parcel.java:2376)
+                  at android.os.Parcel.createException (Parcel.java:2360)
+                  at android.os.Parcel.readException (Parcel.java:2343)
+                  at android.os.Parcel.readException (Parcel.java:2285)
+                  at android.app.IActivityManager$Stub$Proxy.getIntentSenderWithFeature (IActivityManager.java:6884)
+                  at android.app.PendingIntent.buildServicePendingIntent (PendingIntent.java:657)
+                  at android.app.PendingIntent.getForegroundService (PendingIntent.java:645)
+                  at eu.faircode.email.PendingIntentCompat.getForegroundService (PendingIntentCompat.java:51)
+                  at eu.faircode.email.ServiceSynchronize.scheduleWatchdog (ServiceSynchronize.java:2972)
+                  at eu.faircode.email.ApplicationEx.onCreate (ApplicationEx.java:229)
+             */
+        }
     }
 
     static void eval(Context context, String reason) {

@@ -237,6 +237,7 @@
     <string name="title_setup_password_different">הסיסמאות אינן תואמות</string>
     <string name="title_setup_password_invalid">סיסמה שגויה</string>
     <string name="title_setup_import_accounts">ייבוא חשבונות וזהויות</string>
+    <string name="title_setup_import_delete">מחיקת חשבונות קיימים תחילה</string>
     <string name="title_setup_import_rules">ייבוא כללי סינון</string>
     <string name="title_setup_import_contacts">ייבוא אנשי קשר מקומיים</string>
     <string name="title_setup_import_answers">ייבוא תבניות תגובות</string>
@@ -355,7 +356,7 @@
     <string name="title_advanced_signature_reply">להשתמש בחתימה לתגובות</string>
     <string name="title_advanced_signature_forward">להשתמש בחתימה להעברות</string>
     <string name="title_advanced_discard_delete">השלכת טיוטה מוחקת אותה לצמיתות</string>
-    <string name="title_advanced_reply_move">בעת מענה להודעה בתיקיית משתמש, המענה יישמר באותה התיקייה</string>
+    <string name="title_advanced_reply_move">בעת מענה להודעה, המענה יישמר באותה התיקייה</string>
     <string name="title_advanced_auto_link">ליצור קישורים אוטומטית</string>
     <string name="title_advanced_plain_only">לשלוח טקסט פשוט בלבד כבררת מחדל</string>
     <string name="title_advanced_flow">‚שורות תחומות’ לטקסט פשוט</string>
@@ -397,6 +398,7 @@
     <string name="title_advanced_nav_hide_message">אפשר להפעיל את האפשרויות שוב בהגדרות התצוגה</string>
     <string name="title_advanced_nav_message_count">להציג את מספר ההודעות שמאוחסנות מקומית בתפריט הניווט</string>
     <string name="title_advanced_nav_unseen_drafts">להציג את מספר הטיוטות שלא נקראו בתפריט הניווט</string>
+    <string name="title_advanced_nav_pinned_count">להציג את מספר ההודעות שלא נקראו בתפריט הניווט הנעוץ</string>
     <string name="title_advanced_startup">הצגה במסך הפתיחה</string>
     <string name="title_advanced_cards">להשתמש בסגנון כרטיסים במקום בסגנון לשוניות</string>
     <string name="title_advanced_cards_beige">להשתמש ברקע בז׳ בעת שימוש בסגנון כרטיסים (ערכות עיצוב בהירות בלבד)</string>
@@ -416,6 +418,7 @@
     <string name="title_advanced_color_stripe_wide">להשתמש בפס צבע רחב</string>
     <string name="title_advanced_avatars">הצגת תמונות אנשי קשר</string>
     <string name="title_advanced_gravatars">הצגת Gravatarים</string>
+    <string name="title_advanced_libravatars">הצגת Libravatarים</string>
     <string name="title_advanced_bimi_unverified">מוען בלתי מאומת</string>
     <string name="title_advanced_bimi_verified">מוען מאומת</string>
     <string name="title_advanced_favicons">הצגת סמלי אתרים</string>
@@ -448,6 +451,7 @@
     <string name="title_advanced_preview_italic">תצוגה מקדימה של ההודעה בכתב נטוי</string>
     <string name="title_advanced_preview_lines">מספר השורות בתצוגה המקדימה</string>
     <string name="title_advanced_addresses">הרחבת פרטי הכתובת כברירת מחדל</string>
+    <string name="title_advanced_unzip">הצגת תוכן הקבצים המצורפים הדחוסים</string>
     <string name="title_advanced_attachments_alt">הצגת הקבצים המצורפים אחרי טקסט ההודעה</string>
     <string name="title_advanced_thumbnails">הצגת תמונות ממוזערות אחרי טקסט ההודעה</string>
     <string name="title_advanced_message_text_zoom2">תקריב טקסט ההודעות כבררת מחדל: %1$s %%</string>
@@ -568,6 +572,10 @@
     <string name="title_advanced_disconnect_auto_update">לעדכן את הרשימות אוטומטית כל שבוע</string>
     <string name="title_advanced_disconnect_links">להשתמש ברשימות כדי להזהיר על קישורי מעקב</string>
     <string name="title_advanced_disconnect_images">להשתמש ברשימות כדי לזהות תמונות מעקב</string>
+    <string name="title_advanced_mnemonic">מחיקת הנתונים בצד המרוחק</string>
+    <string name="title_advanced_mnemonic_hint">כל הודעה שהתקבלה עם המילים שלהלן כחלק מהנושא ימחקו את נתוני היישומון אוטומטית ומיידית</string>
+    <string name="title_advanced_clear_all">מחיקת נתוני היישומון</string>
+    <string name="title_advanced_clear_all_remark">נתוני היישומון יימחקו ללא אפשרות לשחזור!</string>
     <string name="title_advanced_sign_default">חתימה כבררת מחדל</string>
     <string name="title_advanced_encrypt_default">הצפנה כבררת מחדל</string>
     <string name="title_advanced_auto_decrypt">פענוח הודעות אוטומטית</string>
@@ -591,6 +599,7 @@
     </string>
     <string name="title_advanced_power_menu">הוספת פעולות לתפריט הכיבוי של Android</string>
     <string name="title_advanced_external_search">לאפשר ליישומונים אחרים לחפש בהודעות</string>
+    <string name="title_advanced_sort_answers">סידור תבניות המענה לפי תדירות השימוש</string>
     <string name="title_advanced_shortcuts">הצגת אנשי קשר בשימוש תדיר בתפריט השיתוף של Android</string>
     <string name="title_advanced_fts">בניית אינדקס חיפוש</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d תועדו באינדקס (%3$s)</string>
@@ -669,6 +678,7 @@
     <string name="title_advanced_monospaced_pre_hint">הודעות בטקסט פשוט בלבד תיחשבנה שעוצבו מראש</string>
     <string name="title_advanced_placeholders_hint">חל על הודעות שעוצבו מחדש בלבד</string>
     <string name="title_advanced_inline_hint">תמונות מובנות הן תמונות שכלולות בהודעה</string>
+    <string name="compressed">תוכן קבצים דחוסים (%1$s) עם למעלה מ־%2$s קבצים או עם קבצים שגודלם עולה על %3$s לא יוצגו</string>
     <string name="title_advanced_parse_classes_hint">זה יציג הודעות בצורה יותר מדויקת אך כנראה עם עיכוב מסוים</string>
     <string name="title_advanced_language_detection_hint">תמיכה בזיהוי שפות תלויה ביצרן המכשיר</string>
     <string name="title_advanced_autoexpand_hint">לפתוח הודעות אוטומטית כשיש רק הודעה אחת או רק הודעה אחת שלא נקראה בדיון</string>
@@ -812,7 +822,7 @@
     <string name="title_last_connected">חיבור אחרון: %1$s</string>
     <string name="title_backoff_until">בהמתנה לאחר הכשל עד: %1$s</string>
     <string name="title_storage_quota">ניצולת האחסון בשרת: %1$s/%2$s</string>
-    <string name="title_pop_support">פרוטוקול POP3 תומך בהורדת ובמחיקת הודעות מתיבת הדואר הנכנס בלבד. אין אפשרות לסמן שהודעות נקראו, להעביר הודעות וכן הלאה ב־POP3. התמנשקות מול POP3 דורשת ניצולת סוללה ונתונים גבוהה יותר מאשר IMAP. לכן, מוטב לשקול להשתמש בפרוטוקול IMAP מתי שרק ניתן.</string>
+    <string name="title_pop_support">פרוטוקול POP3 יכול רק להוריד ולמחוק הודעות מתיבת הדואר הנכנס. אי אפשר לסמן הודעות כנקראו, לדווח על ספאם, להעביר הודעות וכו׳. כדאי להשתמש בפרוטוקול IMAP כשאפשר.</string>
     <string name="title_pop_sent">אם המכשיר שלך ילך לאיבוד או ייגנב, ההודעות שנשלחו עלולות ללכת לאיבוד.</string>
     <string name="title_pop_warning">אם שרת POP3 לא תומך בפקודת UIDL, צריכת הנתונים עשויה להיות גבוהה. לכן, יש להתאים את תדירות התשאול שלהלן בהתאם.</string>
     <string name="title_pop_folders">פרוטוקול POP3 לא תומך ביצירת תיקיות</string>
@@ -1258,6 +1268,7 @@
     <string name="title_search_in_junk">בספאם</string>
     <string name="title_search_with_before">לפני</string>
     <string name="title_search_with_after">אחרי</string>
+    <string name="title_search_device_first">חיפוש במכשיר תחילה</string>
     <string name="title_search_flag_unseen">לא נקרא</string>
     <string name="title_search_flag_flagged">עם כוכב</string>
     <string name="title_search_flag_hidden">מוסתר</string>
@@ -1314,6 +1325,7 @@
     <string name="title_answer_group">קבוצת תבניות (רשות)</string>
     <string name="title_answer_standard">ברירת מחדל</string>
     <string name="title_answer_favorite">מועדפת</string>
+    <string name="title_answer_snippet" comment="title_answer_snippet&#10;Option title to mark a reply template as text fragment, which can be inserted by long press on an open space">מקטע</string>
     <string name="title_answer_receipt">להשתמש כאישור קריאה</string>
     <string name="title_answer_hide">הסתרה מהתפריטים</string>
     <string name="title_answer_text">טקסט תבנית</string>

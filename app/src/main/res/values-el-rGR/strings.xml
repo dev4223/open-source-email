@@ -2,7 +2,7 @@
 <resources>
     <string name="app_search">Αναζήτηση FairEmail</string>
     <string name="app_changelog">Αρχείο καταγραφής αλλαγών</string>
-    <string name="app_welcome">Το FairEmail είναι μια ανοικτού κώδικα εφαρμογή ηλ. ταχυδρομείου που επικεντρώνεται στην προστασία του απορρήτου και την ασφάλειά σας. Για τον λόγο αυτό ορισμένες δυνατότητες ενδέχεται να λειτουργούν διαφορετικά από ό, τι έχετε συνηθίσει.</string>
+    <string name="app_welcome">Το FairEmail είναι μια ανοικτού κώδικα εφαρμογή ηλεκτρονικού ταχυδρομείου που επικεντρώνεται στην προστασία του απορρήτου και την ασφάλειά σας. Για τον λόγο αυτό ορισμένες δυνατότητες ενδέχεται να λειτουργούν διαφορετικά από ό,τι έχετε συνηθίσει.</string>
     <string name="app_limitations">Για παράδειγμα, τα μηνύματα επαναμορφοποιούνται από προεπιλογή, με στόχο την αφαίρεση μη ασφαλών στοιχείων και τη βελτίωση της αναγνωσιμότητας, ενώ το άνοιγμα συνδέσμων πρέπει να επιβεβαιώνεται για λόγους ασφάλειας. Και οι δύο λειτουργίες απενεργοποιούνται, εφόσον το επιθυμείτε.</string>
     <string name="app_unsupported">Σφάλματα στην έκδοση Android της συγκεκριμένης συσκευής κάνουν την εφαρμογή να καταρρέει</string>
     <string name="app_continue">Συνέχεια ούτως ή άλλως</string>
@@ -217,6 +217,7 @@
     <string name="title_setup_password_different">Οι κωδικοί πρόσβασης δεν ταιριάζουν</string>
     <string name="title_setup_password_invalid">Μη έγκυρος κωδικός πρόσβασης</string>
     <string name="title_setup_import_accounts">Εισαγωγή λογαριασμών και ταυτοτήτων</string>
+    <string name="title_setup_import_delete">Να διαγραφούν πρώτα οι υπάρχοντες λογαριασμοί</string>
     <string name="title_setup_import_rules">Εισαγωγή κανόνων φίλτρων</string>
     <string name="title_setup_import_contacts">Εισαγωγή τοπικών επαφών</string>
     <string name="title_setup_import_answers">Εισαγωγή προτύπων απάντησης</string>
@@ -334,7 +335,7 @@
     <string name="title_advanced_signature_reply">Χρήση υπογραφής κατά την απάντηση</string>
     <string name="title_advanced_signature_forward">Χρήση υπογραφής κατά την προώθηση</string>
     <string name="title_advanced_discard_delete">Οριστική διαγραφή ενός προσχεδίου όταν αυτό απορρίπτεται</string>
-    <string name="title_advanced_reply_move">Κατά την απάντηση ενός μηνύματος εντός ενός φακέλου χρήστη, να αποθηκεύεται η απάντηση μέσα στον ίδιο φάκελο</string>
+    <string name="title_advanced_reply_move">Κατά την απάντηση ενός μηνύματος, να αποθηκεύεται η απάντηση μέσα στον ίδιο φάκελο</string>
     <string name="title_advanced_auto_link">Αυτόματη δημιουργία συνδέσμων</string>
     <string name="title_advanced_plain_only">Αποστολή απλού κειμένου από προεπιλογή</string>
     <string name="title_advanced_flow">Αναπροσαρμοσμένη μορφοποίηση για απλό κείμενο</string>
@@ -370,12 +371,13 @@
     <string name="title_advanced_min_screen_size">Ελάχιστο μέγεθος οθόνης για διαχωρισμό της οθόνης</string>
     <string name="title_advanced_close_pane">Σύμπτυξη γραμμής ή στήλης κατά το κλείσιμο μιας συζήτησης</string>
     <string name="title_advanced_column_width">Πλάτος της στήλης μηνυμάτων: %1$s %%</string>
-    <string name="title_advanced_nav_options">Προβολή των επιλογών του μενού πλοήγησης</string>
+    <string name="title_advanced_nav_options">Να προβάλλονται οι επιλογές του μενού πλοήγησης</string>
     <string name="title_advanced_nav_pin">Καρφίτσωμα του μενού πλοήγησης</string>
     <string name="title_advanced_nav_hide_title">Απόκρυψη των επιλογών του μενού πλοήγησης;</string>
     <string name="title_advanced_nav_hide_message">Μπορείτε να ενεργοποιήσετε ξανά τις επιλογές στις ρυθμίσεις εμφάνισης</string>
-    <string name="title_advanced_nav_message_count">Να εμφανίζεται ο αριθμός των τοπικά αποθηκευμένων μηνυμάτων στο μενού πλοήγησης</string>
-    <string name="title_advanced_nav_unseen_drafts">Να εμφανίζεται ο αριθμός των μη αναγνωσμένων προσχεδίων στο μενού πλοήγησης</string>
+    <string name="title_advanced_nav_message_count">Να προβάλλεται ο αριθμός των τοπικά αποθηκευμένων μηνυμάτων στο μενού πλοήγησης</string>
+    <string name="title_advanced_nav_unseen_drafts">Να προβάλλεται ο αριθμός των μη αναγνωσμένων προσχεδίων στο μενού πλοήγησης</string>
+    <string name="title_advanced_nav_pinned_count">Να προβάλλεται ο αριθμός των μη αναγνωσμένων μηνυμάτων στο καρφιτσωμένο μενού πλοήγησης</string>
     <string name="title_advanced_startup">Εμφάνιση στην οθόνη έναρξης</string>
     <string name="title_advanced_cards">Προβολή σε στιλ κάρτας αντί σε στιλ πίνακα</string>
     <string name="title_advanced_cards_beige">Μπεζ φόντο κατά τη χρήση του στιλ κάρτας (ανοιχτόχρωμα θέματα μόνο)</string>
@@ -395,6 +397,7 @@
     <string name="title_advanced_color_stripe_wide">Χρήση φαρδιάς λωρίδας χρώματος</string>
     <string name="title_advanced_avatars">Προβολή φωτογραφιών επαφών</string>
     <string name="title_advanced_gravatars">Προβολή Gravatar</string>
+    <string name="title_advanced_libravatars">Προβολή Libravatar</string>
     <string name="title_advanced_bimi_unverified">Μη επαληθευμένος αποστολέας</string>
     <string name="title_advanced_bimi_verified">Επαληθευμένος αποστολέας</string>
     <string name="title_advanced_favicons">Προβολή favicon</string>
@@ -427,6 +430,7 @@
     <string name="title_advanced_preview_italic">Να προβάλλεται η προεπισκόπηση μηνύματος σε πλάγια γραφή</string>
     <string name="title_advanced_preview_lines">Αριθμός των γραμμών της προεπισκόπησης</string>
     <string name="title_advanced_addresses">Να αναπτύσσονται οι λεπτομέρειες της διεύθυνσης από προεπιλογή</string>
+    <string name="title_advanced_unzip">Να προβάλλονται τα περιεχόμενα των συμπιεσμένων συνημμένων</string>
     <string name="title_advanced_attachments_alt">Να προβάλλονται τα συνημμένα μετά το κείμενο του μηνύματος</string>
     <string name="title_advanced_thumbnails">Να προβάλλονται οι μικρογραφίες μετά από το κείμενο του μηνύματος</string>
     <string name="title_advanced_message_text_zoom2">Μεγέθυνση κειμένου μηνύματος από προεπιλογή: %1$s %%</string>
@@ -547,6 +551,10 @@
     <string name="title_advanced_disconnect_auto_update">Αυτόματη εβδομαδιαία ενημέρωση των λιστών</string>
     <string name="title_advanced_disconnect_links">Χρήση προειδοποιητικών λιστών για συνδέσμους ιχνηλάτησης</string>
     <string name="title_advanced_disconnect_images">Χρήση λιστών για ταυτοποίηση των εικόνων ιχνηλάτησης</string>
+    <string name="title_advanced_mnemonic">Διαγραφή δεδομένων εξ αποστάσεως</string>
+    <string name="title_advanced_mnemonic_hint">Οποιοδήποτε μήνυμα έχει ληφθεί και έχει τις παρακάτω λέξεις στη γραμμή θέματος, θα διαγράψει αυτόματα και αμέσως τα δεδομένα της εφαρμογής</string>
+    <string name="title_advanced_clear_all">Διαγραφή των δεδομένων της εφαρμογής</string>
+    <string name="title_advanced_clear_all_remark">Τα δεδομένα της εφαρμογής θα διαγραφούν αμετάκλητα!</string>
     <string name="title_advanced_sign_default">Υπογραφή από προεπιλογή</string>
     <string name="title_advanced_encrypt_default">Κρυπτογράφηση από προεπιλογή</string>
     <string name="title_advanced_auto_decrypt">Αυτόματη αποκρυπτογράφηση μηνυμάτων</string>
@@ -568,6 +576,7 @@
     <string name="title_advanced_manage_keys_hint">        Αυτό θα ανοίξει τις ρυθμίσεις ασφαλείας του Android.        Τα κλειδιά και τα πιστοποιητικά βρίσκονται γενικά στις ρυθμίσεις: \"Σύνθετες - Κρυπτογράφηση και διαπιστευτήρια\".    </string>
     <string name="title_advanced_power_menu">Προσθήκη ενεργειών στο μενού ελέγχου συσκευών του Android</string>
     <string name="title_advanced_external_search">Να επιτρέπεται σε άλλες εφαρμογές να διενεργούν αναζητήσεις στα μηνύματα</string>
+    <string name="title_advanced_sort_answers">Ταξινόμηση προτύπων απάντησης κατά συχνότητα χρήσης</string>
     <string name="title_advanced_shortcuts">Προβολή των πιο συχνά χρησιμοποιούμενων επαφών στο μενού \"Κοινοποίηση\" του Android</string>
     <string name="title_advanced_fts">Κατασκευή ευρετηρίου αναζήτησης</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d μηνύματα ευρετηριασμένα (%3$s)</string>
@@ -646,6 +655,7 @@
     <string name="title_advanced_monospaced_pre_hint">Μηνύματα με απλό κείμενο μόνο θα εκλαμβάνονται ως προμορφοποιημένα</string>
     <string name="title_advanced_placeholders_hint">Εφαρμόζεται μόνον στα αναμορφοποιημένα μηνύματα</string>
     <string name="title_advanced_inline_hint">Οι ένθετες εικόνες είναι οι εικόνες που περιλαμβάνονται στο μήνυμα</string>
+    <string name="compressed">Τα περιεχόμενα των συμπιεσμένων αρχείων (%1$s) με περισσότερα από %2$s αρχεία ή με αρχεία μεγαλύτερα από %3$s δεν θα προβάλλονται</string>
     <string name="title_advanced_parse_classes_hint">Η προβολή των εικόνων θα είναι πιο ακριβής αλλά με ενδεχόμενη καθυστέρηση</string>
     <string name="title_advanced_language_detection_hint">Η υποστήριξη αναγνώρισης γλώσσας εξαρτάται από τον κατασκευαστή της συσκευής</string>
     <string name="title_advanced_autoexpand_hint">Αυτόματο άνοιγμα του μηνύματος όταν υπάρχει μόνον ένα μήνυμα ή μόνον ένα μη αναγνωσμένο μήνυμα σε μία συζήτηση</string>
@@ -789,7 +799,7 @@
     <string name="title_last_connected">Τελευταία σύνδεση: %1$s</string>
     <string name="title_backoff_until">Αναμονή μετά από μία αποτυχία μέχρι: %1$s</string>
     <string name="title_storage_quota">Χρήση χωρητικότητας διακομιστή: %1$s/%2$s</string>
-    <string name="title_pop_support">Το πρωτόκολλο POP3 υποστηρίζει το κατέβασμα και τη διαγραφή μηνυμάτων μόνον από τα εισερχόμενα. Το POP3 δεν μπορεί να επισημαίνει μηνύματα ως αναγνωσμένα, να τα μετακινεί, κλπ. Το POP3 καταναλώνει περισσότερη μπαταρία και δεδομένα από το IMAP. Συνεπώς, σκεφτείτε να χρησιμοποιείτε το πρωτόκολλο IMAP όποτε είναι δυνατόν.</string>
+    <string name="title_pop_support">Το πρωτόκολλο POP3 μπορεί μόνο να κατεβάζει και να διαγράφει μηνύματα από τα εισερχόμενα. Δεν είναι δυνατόν να επισημαίνονται μηνύματα ως αναγνωσμένα, να αναφέρονται ανεπιθύμητα μηνύματα, να μετακινούνται μηνύματα κλπ. Έχετε υπόψη να χρησιμοποιείτε το πρωτόκολλο IMAP όποτε είναι δυνατόν.</string>
     <string name="title_pop_sent">Εάν η συσκευή σας χαθεί ή κλαπεί, ενδέχεται να χαθούν απεσταλμένα μηνύματα.</string>
     <string name="title_pop_warning">Εάν ένας POP3 διακομιστής δεν υποστηρίζει την εντολή UIDL, η χρήση δεδομένων μπορεί να είναι υψηλή. Συνεπώς, ρυθμίστε, παρακάτω, τη συχνότητα συγχρονισμού αναλόγως.</string>
     <string name="title_pop_folders">Το πρωτόκολλο POP3 δεν υποστηρίζει τη δημιουργία φακέλων</string>
@@ -1232,6 +1242,7 @@
     <string name="title_search_in_junk">Στα Ανεπιθύμητα</string>
     <string name="title_search_with_before">Πριν από</string>
     <string name="title_search_with_after">Μετά από</string>
+    <string name="title_search_device_first">Αναζήτηση πρώτα στη συσκευή</string>
     <string name="title_search_flag_unseen">μη αναγνωσμένα</string>
     <string name="title_search_flag_flagged">με αστέρι</string>
     <string name="title_search_flag_hidden">κρυφά</string>
@@ -1288,6 +1299,7 @@
     <string name="title_answer_group">Ομάδα προτύπων (προαιρετικό)</string>
     <string name="title_answer_standard">Προεπιλογή</string>
     <string name="title_answer_favorite">Αγαπημένα</string>
+    <string name="title_answer_snippet" comment="title_answer_snippet&#10;Option title to mark a reply template as text fragment, which can be inserted by long press on an open space">Απόσπασμα</string>
     <string name="title_answer_receipt">Χρήση ως αποδεικτικού ανάγνωσης</string>
     <string name="title_answer_hide">Απόκρυψη από τα μενού</string>
     <string name="title_answer_text">Κείμενο προτύπου</string>

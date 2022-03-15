@@ -217,6 +217,7 @@
     <string name="title_setup_password_different">Les mots de passe ne correspondent pas</string>
     <string name="title_setup_password_invalid">Mot de passe invalide</string>
     <string name="title_setup_import_accounts">Importer les comptes et identités</string>
+    <string name="title_setup_import_delete">Supprimer d\'abord les comptes existants</string>
     <string name="title_setup_import_rules">Importer les règles de filtrage</string>
     <string name="title_setup_import_contacts">Importer les contacts locaux</string>
     <string name="title_setup_import_answers">Importer les modèles de réponse</string>
@@ -335,7 +336,7 @@
     <string name="title_advanced_signature_reply">Utiliser la signature lors de la réponse</string>
     <string name="title_advanced_signature_forward">Utiliser la signature lors du transfert</string>
     <string name="title_advanced_discard_delete">Lors de l’abandon d’un brouillon, le supprimer définitivement</string>
-    <string name="title_advanced_reply_move">Lors de la réponse à un message dans un dossier utilisateur, enregistrer la réponse dans le même dossier</string>
+    <string name="title_advanced_reply_move">Lors de la réponse à un message, enregistrer la réponse dans le même dossier</string>
     <string name="title_advanced_auto_link">Créer automatiquement des liens</string>
     <string name="title_advanced_plain_only">Envoyer uniquement le texte brut par défaut</string>
     <string name="title_advanced_flow">Utiliser \'format flowed\' pour le texte brut</string>
@@ -377,6 +378,7 @@
     <string name="title_advanced_nav_hide_message">Vous pouvez réactiver les options dans les paramètres d\'affichage</string>
     <string name="title_advanced_nav_message_count">Afficher le nombre de messages stockés localement dans le menu de navigation</string>
     <string name="title_advanced_nav_unseen_drafts">Afficher le nombre de brouillons non lus dans le menu de navigation</string>
+    <string name="title_advanced_nav_pinned_count">Afficher le nombre de messages non lus dans le menu de navigation épinglé</string>
     <string name="title_advanced_startup">Afficher sur l’écran de démarrage</string>
     <string name="title_advanced_cards">Utiliser le style carte au lieu du style tableau</string>
     <string name="title_advanced_cards_beige">Afficher un arrière-plan beige lors de l\'utilisation du style carte (thèmes clairs seulement)</string>
@@ -396,6 +398,7 @@
     <string name="title_advanced_color_stripe_wide">Utiliser une bande de couleur large</string>
     <string name="title_advanced_avatars">Afficher la photo des contacts</string>
     <string name="title_advanced_gravatars">Afficher les Gravatars</string>
+    <string name="title_advanced_libravatars">Afficher les Libravatars</string>
     <string name="title_advanced_bimi_unverified">Expéditeur non vérifié</string>
     <string name="title_advanced_bimi_verified">Expéditeur vérifié</string>
     <string name="title_advanced_favicons">Afficher l\'icône des sites web</string>
@@ -428,6 +431,7 @@
     <string name="title_advanced_preview_italic">Afficher l’aperçu du message en italique</string>
     <string name="title_advanced_preview_lines">Nombre de lignes d’aperçu</string>
     <string name="title_advanced_addresses">Afficher les détails de l’adresse par défaut</string>
+    <string name="title_advanced_unzip">Afficher le contenu des pièces jointes compressées</string>
     <string name="title_advanced_attachments_alt">Afficher les pièces jointes après le texte du message</string>
     <string name="title_advanced_thumbnails">Afficher les vignettes des images après le texte du message</string>
     <string name="title_advanced_message_text_zoom2">Zoom du texte du message par défaut : %1$s %%</string>
@@ -548,6 +552,10 @@
     <string name="title_advanced_disconnect_auto_update">Mettre à jour automatiquement les listes chaque semaine</string>
     <string name="title_advanced_disconnect_links">Utiliser des listes pour vous avertir des liens de pistage</string>
     <string name="title_advanced_disconnect_images">Utiliser des listes pour identifier les images de pistage</string>
+    <string name="title_advanced_mnemonic">Supprimer les données à distance</string>
+    <string name="title_advanced_mnemonic_hint">Tout courriel reçu contenant les mots ci-dessous dans l\'objet supprimera automatiquement et immédiatement toutes les données de l\'application sur cet appareil</string>
+    <string name="title_advanced_clear_all">Supprimer les données de l\'application</string>
+    <string name="title_advanced_clear_all_remark">Les données de l\'application seront définitivement supprimées!</string>
     <string name="title_advanced_sign_default">Signer par défaut</string>
     <string name="title_advanced_encrypt_default">Chiffrer par défaut</string>
     <string name="title_advanced_auto_decrypt">Déchiffrer automatiquement les messages</string>
@@ -571,6 +579,7 @@
     </string>
     <string name="title_advanced_power_menu">Ajouter des actions au menu alimentation d\'Android</string>
     <string name="title_advanced_external_search">Autoriser les autres applications à rechercher dans les messages</string>
+    <string name="title_advanced_sort_answers">Trier les modèles de réponse par fréquence d\'utilisation</string>
     <string name="title_advanced_shortcuts">Afficher les contacts fréquemment utilisés dans le menu « Partager » d’Android</string>
     <string name="title_advanced_fts">Construire l’index de recherche</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexés (%3$s)</string>
@@ -650,6 +659,7 @@
     <string name="title_advanced_monospaced_pre_hint">Seuls les messages en texte brut seront considérés comme préformatés</string>
     <string name="title_advanced_placeholders_hint">Ceci s\'applique uniquement aux messages reformatés</string>
     <string name="title_advanced_inline_hint">Les images incluses dans le message font partie intégrante du message</string>
+    <string name="compressed">Le contenu des fichiers compressés (%1$s) avec plus de %2$s fichiers ou avec des fichiers de taille supérieure à %3$s ne sera pas affiché</string>
     <string name="title_advanced_parse_classes_hint">L’affichage des messages sera plus fidèle mais pourra être retardé</string>
     <string name="title_advanced_language_detection_hint">La prise en charge de la détection de la langue dépend du fabricant de l\'appareil</string>
     <string name="title_advanced_autoexpand_hint">Ouvrir automatiquement le message s’il n’y a qu’un seul message ou un seul message non lu dans une conversation</string>
@@ -793,7 +803,7 @@
     <string name="title_last_connected">Dernière connexion : %1$s</string>
     <string name="title_backoff_until">Attente après l\'échec jusqu\'à : %1$s</string>
     <string name="title_storage_quota">Utilisation du stockage sur le serveur : %1$s/%2$s</string>
-    <string name="title_pop_support">Le protocole POP3 prend en charge le téléchargement et la suppression des messages depuis la boîte de réception uniquement. POP3 ne permet pas de marquer les messages comme lus, de les déplacer, etc. POP3 utilisera davantage de pile et de données qu’IMAP. Par conséquent, envisagez d’utiliser le protocole IMAP lorsque cela est possible.</string>
+    <string name="title_pop_support">Le protocole POP3 ne peut que télécharger et supprimer des messages de la boîte de réception. Il n\'est pas possible de marquer les messages comme lus, de signaler le courrier indésirable, de déplacer les messages, etc. Envisagez d\'utiliser le protocole IMAP dans la mesure du possible.</string>
     <string name="title_pop_sent">Si votre appareil est perdu ou volé, les messages envoyés pourraient être perdus.</string>
     <string name="title_pop_warning">Si un serveur POP3 ne prend pas en charge la commande UIDL, l\'utilisation des données peut être élevée. Ajustez donc la fréquence de synchronisation ci-dessous en conséquence.</string>
     <string name="title_pop_folders">Le protocole POP3 ne permet pas la création de dossiers</string>
@@ -1239,6 +1249,7 @@
     <string name="title_search_in_junk">Dans les indésirables</string>
     <string name="title_search_with_before">Avant</string>
     <string name="title_search_with_after">Après</string>
+    <string name="title_search_device_first">Rechercher d\'abord sur l\'appareil</string>
     <string name="title_search_flag_unseen">non lus</string>
     <string name="title_search_flag_flagged">suivis</string>
     <string name="title_search_flag_hidden">masqués</string>
@@ -1295,6 +1306,7 @@
     <string name="title_answer_group">Groupe de modèles (facultatifl)</string>
     <string name="title_answer_standard">Par défaut</string>
     <string name="title_answer_favorite">Favori</string>
+    <string name="title_answer_snippet" comment="title_answer_snippet&#10;Option title to mark a reply template as text fragment, which can be inserted by long press on an open space">Fragment</string>
     <string name="title_answer_receipt">Utiliser comme confirmation de lecture</string>
     <string name="title_answer_hide">Masquer du menu « Répondre »</string>
     <string name="title_answer_text">Texte du modèle</string>

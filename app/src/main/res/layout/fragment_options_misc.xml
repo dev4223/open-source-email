@@ -86,15 +86,27 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSortAnswers"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:tag="nosuggest"
+                    android:text="@string/title_advanced_sort_answers"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swExternalSearch"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swExternalAnswer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_external_answer"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swExternalSearch"
+                    app:layout_constraintTop_toBottomOf="@id/swSortAnswers"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -356,6 +368,17 @@
                     app:layout_constraintTop_toBottomOf="@id/swWatchdog"
                     app:switchPadding="12dp" />
 
+                <eu.faircode.email.FixedImageButton
+                    android:id="@+id/ibChannelUpdated"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/swUpdates"
+                    app:srcCompat="@drawable/switch_off_on" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swWeekly"
                     android:layout_width="0dp"
@@ -365,7 +388,7 @@
                     android:text="@string/title_advanced_check_weekly"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swUpdates"
+                    app:layout_constraintTop_toBottomOf="@id/ibChannelUpdated"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -419,8 +442,10 @@
                     android:id="@+id/tvUuid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:layout_marginEnd="48dp"
                     android:fontFamily="monospace"
+                    android:selectAllOnFocus="true"
                     android:text="UUID"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textIsSelectable="true"
@@ -561,7 +586,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_test1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -573,7 +598,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_test2"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -585,7 +610,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_test3"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -597,7 +622,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_test4"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -609,7 +634,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:tag="debug"
+                    android:tag="nosuggest"
                     android:text="@string/title_advanced_test5"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -636,7 +661,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
             android:layout_marginTop="12dp"
-            android:tag="debug"
+            android:tag="nosuggest"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -657,7 +682,7 @@
                     android:drawableStart="@drawable/twotone_warning_24"
                     android:drawableEnd="@drawable/twotone_warning_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorError"
+                    android:drawableTint="?attr/colorWarning"
                     android:gravity="center"
                     android:text="@string/title_advanced_caption_debug"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -709,7 +734,7 @@
                     android:layout_marginTop="12dp"
                     android:drawableStart="@drawable/twotone_warning_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorError"
+                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_external_storage"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -777,6 +802,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:checked="true"
                     android:text="@string/title_advanced_wal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -788,10 +814,23 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:checked="true"
                     android:text="@string/title_advanced_checkpoints"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swWal"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAnalyze"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_analyze"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swCheckpoints"
                     app:switchPadding="12dp" />
 
                 <eu.faircode.email.FixedTextView
@@ -804,7 +843,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swCheckpoints" />
+                    app:layout_constraintTop_toBottomOf="@id/swAnalyze" />
 
                 <SeekBar
                     android:id="@+id/sbSqliteCache"
@@ -861,16 +900,38 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvChunkSize" />
 
+                <eu.faircode.email.FixedTextView
+                    android:id="@+id/tvThreadRange"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_thread_range"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/sbChunkSize" />
+
+                <SeekBar
+                    android:id="@+id/sbThreadRange"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:max="10"
+                    android:min="0"
+                    android:progress="7"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvThreadRange" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swUndoManager"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:checked="true"
                     android:text="@string/title_advanced_undo_manager"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/sbChunkSize"
+                    app:layout_constraintTop_toBottomOf="@id/sbThreadRange"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -886,6 +947,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swBrowserZoom"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_browser_zoom"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swWebViewLegacy"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swModSeq"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -894,7 +967,7 @@
                     android:text="@string/title_advanced_modseq"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swWebViewLegacy"
+                    app:layout_constraintTop_toBottomOf="@id/swBrowserZoom"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1027,6 +1100,31 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swLogarithmicBackoff"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_logarithmic_backoff"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swIdleDone"
+                    app:switchPadding="12dp" />
+
+                <eu.faircode.email.FixedTextView
+                    android:id="@+id/tvLogarithmicBackoffHint"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_logarithmic_backoff_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?attr/colorWarning"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swLogarithmicBackoff" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swExactAlarms"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1034,7 +1132,7 @@
                     android:text="@string/title_advanced_exact_alarms"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swIdleDone"
+                    app:layout_constraintTop_toBottomOf="@id/tvLogarithmicBackoffHint"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1417,6 +1515,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/btnCiphers" />
 
+                <Button
+                    android:id="@+id/btnAllPermissions"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_all_permissions"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/btnFiles" />
+
                 <eu.faircode.email.FixedTextView
                     android:id="@+id/tvPermissions"
                     android:layout_width="0dp"
@@ -1427,7 +1535,7 @@
                     android:textIsSelectable="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/btnFiles" />
+                    app:layout_constraintTop_toBottomOf="@id/btnAllPermissions" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>

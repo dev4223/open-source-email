@@ -35,6 +35,8 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PermissionGroupInfo;
+import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteFullException;
@@ -109,7 +111,6 @@ import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -1586,14 +1587,6 @@ public class Log {
             if (ex instanceof ConnectionException)
                 return null;
 
-            if (ex instanceof MailConnectException &&
-                    ex.getCause() instanceof SocketTimeoutException)
-                ex = new Throwable("No response received from email server", ex);
-
-            if (ex instanceof MessagingException &&
-                    ex.getCause() instanceof UnknownHostException)
-                ex = new Throwable("Email server address lookup failed", ex);
-
             if (ex instanceof StoreClosedException ||
                     ex instanceof FolderClosedException ||
                     ex instanceof FolderClosedIOException ||
@@ -1606,6 +1599,14 @@ public class Log {
                             "This operation is not allowed on a closed folder".equals(ex.getMessage())))
                 return null;
         }
+
+        if (ex instanceof MailConnectException &&
+                ex.getCause() instanceof SocketTimeoutException)
+            ex = new Throwable("No response received from email server", ex);
+
+        if (ex instanceof MessagingException &&
+                ex.getCause() instanceof UnknownHostException)
+            ex = new Throwable("Email server address lookup failed", ex);
 
         StringBuilder sb = new StringBuilder();
         if (BuildConfig.DEBUG)
@@ -1892,7 +1893,7 @@ public class Log {
         Point dim = new Point();
         display.getSize(dim);
         float density = context.getResources().getDisplayMetrics().density;
-        sb.append(String.format("Density %f\r\n", density));
+        sb.append(String.format("Density 1dp=%f\r\n", density));
         sb.append(String.format("Resolution: %.2f x %.2f dp\r\n", dim.x / density, dim.y / density));
 
         Configuration config = context.getResources().getConfiguration();
@@ -2015,8 +2016,12 @@ public class Log {
                 Map<String, ?> settings = prefs.getAll();
                 List<String> keys = new ArrayList<>(settings.keySet());
                 Collections.sort(keys);
-                for (String key : keys)
-                    size += write(os, key + "=" + settings.get(key) + "\r\n");
+                for (String key : keys) {
+                    Object value = settings.get(key);
+                    if ("wipe_mnemonic".equals(key) && value != null)
+                        value = "[redacted]";
+                    size += write(os, key + "=" + value + "\r\n");
+                }
             }
 
             db.attachment().setDownloaded(attachment.id, size);
@@ -2461,7 +2466,7 @@ public class Log {
             EntityAttachment attachment = new EntityAttachment();
             attachment.message = id;
             attachment.sequence = sequence;
-            attachment.name = "channel.txt";
+            attachment.name = "notification.txt";
             attachment.type = "text/plain";
             attachment.disposition = Part.ATTACHMENT;
             attachment.size = null;
@@ -2496,7 +2501,8 @@ public class Log {
                         name = Integer.toString(filter);
                 }
 
-                size += write(os, String.format("Interruption filter allow=%s\r\n\r\n", name));
+                size += write(os, String.format("Interruption filter allow=%s %s\r\n\r\n",
+                        name, (filter == NotificationManager.INTERRUPTION_FILTER_ALL ? "" : "!!!")));
 
                 for (NotificationChannel channel : nm.getNotificationChannels())
                     try {
@@ -2630,6 +2636,27 @@ public class Log {
                     } catch (Throwable ex) {
                         size += write(os, String.format("%s\r\n", ex));
                     }
+
+                try {
+                    PackageManager pm = context.getPackageManager();
+                    List<PermissionGroupInfo> groups = pm.getAllPermissionGroups(0);
+                    groups.add(0, null); // Ungrouped
+
+                    for (PermissionGroupInfo group : groups) {
+                        String name = (group == null ? null : group.name);
+                        size += write(os, String.format("\r\n%s\r\n", name == null ? "Ungrouped" : name));
+                        size += write(os, "----------------------------------------\r\n");
+
+                        try {
+                            for (PermissionInfo permission : pm.queryPermissionsByGroup(name, 0))
+                                size += write(os, String.format("%s\r\n", permission.name));
+                        } catch (Throwable ex) {
+                            size += write(os, String.format("%s\r\n", ex));
+                        }
+                    }
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
             }
 
             db.attachment().setDownloaded(attachment.id, size);
@@ -2689,7 +2716,7 @@ public class Log {
         attachment.id = db.attachment().insertAttachment(attachment);
 
         MessageClassifier.save(context);
-        File source = MessageClassifier.getFile(context);
+        File source = MessageClassifier.getFile(context, false);
         File target = attachment.getFile(context);
         Helper.copy(source, target);
 

@@ -90,7 +90,7 @@ import javax.net.ssl.SSLSession;
 public class ContactInfo {
     private String email;
     private Bitmap bitmap;
-    private String type;
+    private String type; // contact, vmc, gravatar, libravatar, favicon, identicon, letter, unknown
     private boolean verified;
     private String displayName;
     private Uri lookupUri;
@@ -157,6 +157,10 @@ public class ContactInfo {
 
     Uri getLookupUri() {
         return lookupUri;
+    }
+
+    boolean isEmailBased() {
+        return ("gravatar".equals(type) || "libravatar".equals(type));
     }
 
     boolean isKnown() {
@@ -258,6 +262,7 @@ public class ContactInfo {
         boolean avatars = prefs.getBoolean("avatars", true);
         boolean bimi = prefs.getBoolean("bimi", false);
         boolean gravatars = prefs.getBoolean("gravatars", false);
+        boolean libravatars = prefs.getBoolean("libravatars", false);
         boolean favicons = prefs.getBoolean("favicons", false);
         boolean generated = prefs.getBoolean("generated_icons", true);
         boolean identicons = prefs.getBoolean("identicons", false);
@@ -308,7 +313,7 @@ public class ContactInfo {
         // Favicon
         if (info.bitmap == null &&
                 !EntityFolder.JUNK.equals(folderType) &&
-                (bimi || (gravatars && canGravatars()) || favicons)) {
+                (bimi || (canGravatars() && (gravatars || libravatars)) || favicons)) {
             String d = UriHelper.getEmailDomain(info.email);
             if (d != null) {
                 // Prevent using Doodles
@@ -317,10 +322,12 @@ public class ContactInfo {
                         "googlemail.com".equals(d))
                     d = "support.google.com";
 
-                // https://yahoo.fr redirects unsafely to http://fr.yahoo.com/favicon.ico
-                String[] dparts = d.split("\\.");
-                if (dparts.length > 1 && "yahoo".equals(dparts[dparts.length - 2]))
-                    d = "yahoo.com";
+                // https://yahoo.fr/co.uk redirects unsafely to http://fr.yahoo.com/favicon.ico
+                for (String yahoo : d.split("\\."))
+                    if ("yahoo".equals(yahoo)) {
+                        d = "yahoo.com";
+                        break;
+                    }
 
                 final String domain = d.toLowerCase(Locale.ROOT);
                 final String email = info.email.toLowerCase(Locale.ROOT);
@@ -334,6 +341,8 @@ public class ContactInfo {
                     File[] files = null;
                     if (gravatars && canGravatars()) {
                         File f = new File(dir, email + ".gravatar");
+                        if (!f.exists())
+                            f = new File(dir, email + ".libravatar");
                         if (f.exists())
                             files = new File[]{f};
                     }
@@ -391,8 +400,51 @@ public class ContactInfo {
                                         int status = urlConnection.getResponseCode();
                                         if (status == HttpURLConnection.HTTP_OK) {
                                             // Positive reply
-                                            Bitmap bitmap = BitmapFactory.decodeStream(urlConnection.getInputStream());
+                                            Bitmap bitmap = ImageHelper.getScaledBitmap(urlConnection.getInputStream(), url.toString(), null, scaleToPixels);
                                             return (bitmap == null ? null : new Favicon(bitmap, "gravatar", false));
+                                        } else if (status == HttpURLConnection.HTTP_NOT_FOUND) {
+                                            // Negative reply
+                                            return null;
+                                        } else
+                                            throw new IOException("Error " + status + ": " + urlConnection.getResponseMessage());
+                                    } finally {
+                                        urlConnection.disconnect();
+                                    }
+                                }
+                            }));
+
+                        if (libravatars && canGravatars())
+                            futures.add(executorFavicon.submit(new Callable<Favicon>() {
+                                @Override
+                                public Favicon call() throws Exception {
+                                    // https://wiki.libravatar.org/api/
+                                    String baseUrl = BuildConfig.LIBRAVATAR_URI;
+                                    for (String dns : BuildConfig.LIBRAVATAR_DNS.split(",")) {
+                                        DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, dns + "." + domain, "srv");
+                                        if (records.length > 0) {
+                                            baseUrl = (records[0].port == 443 ? "https" : "http") + "://" + records[0].name + "/avatar/";
+                                            break;
+                                        }
+                                    }
+
+                                    String hash = Helper.md5(email.getBytes());
+
+                                    URL url = new URL(baseUrl + hash + "?d=404");
+                                    Log.i("Libravatar key=" + email + " url=" + url);
+
+                                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                                    urlConnection.setRequestMethod("GET");
+                                    urlConnection.setReadTimeout(GRAVATAR_TIMEOUT);
+                                    urlConnection.setConnectTimeout(GRAVATAR_TIMEOUT);
+                                    urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+                                    urlConnection.connect();
+
+                                    try {
+                                        int status = urlConnection.getResponseCode();
+                                        if (status == HttpURLConnection.HTTP_OK) {
+                                            // Positive reply
+                                            Bitmap bitmap = ImageHelper.getScaledBitmap(urlConnection.getInputStream(), url.toString(), null, scaleToPixels);
+                                            return (bitmap == null ? null : new Favicon(bitmap, "libravatar", false));
                                         } else if (status == HttpURLConnection.HTTP_NOT_FOUND) {
                                             // Negative reply
                                             return null;
@@ -480,7 +532,7 @@ public class ContactInfo {
 
                         // Add to cache
                         File output = new File(dir,
-                                ("gravatar".equals(info.type) ? email : domain) +
+                                (info.isEmailBased() ? email : domain) +
                                         "." + info.type +
                                         (info.verified ? "_verified" : ""));
                         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(output))) {
@@ -616,6 +668,8 @@ public class ContactInfo {
                         continue;
 
                     URL url = new URL(base, href);
+                    if (!"https".equals(url.getProtocol()))
+                        throw new FileNotFoundException(url.toString());
                     Log.i("GET favicon manifest " + url);
 
                     HttpsURLConnection m = (HttpsURLConnection) url.openConnection();
@@ -638,6 +692,7 @@ public class ContactInfo {
                                 String type = jicon.optString("type", "");
                                 if (!TextUtils.isEmpty(src)) {
                                     Element img = doc.createElement("link")
+                                            .attr("rel", "manifest")
                                             .attr("href", src)
                                             .attr("sizes", sizes)
                                             .attr("type", type);
@@ -652,29 +707,16 @@ public class ContactInfo {
                     Log.w(ex);
                 }
 
+        String host = base.getHost();
+
         Collections.sort(imgs, new Comparator<Element>() {
             @Override
             public int compare(Element img1, Element img2) {
-                boolean l1 = "link".equals(img1.tagName());
-                boolean l2 = "link".equals(img2.tagName());
-                int l = Boolean.compare(l1, l2);
-                if (l != 0)
-                    return -l;
-
-                // https://en.wikipedia.org/wiki/Favicon#How_to_use
-                boolean i1 = "icon".equalsIgnoreCase(img1.attr("rel")
-                        .replace("shortcut", "").trim());
-                boolean i2 = "icon".equalsIgnoreCase(img2.attr("rel")
-                        .replace("shortcut", "").trim());
-                int i = Boolean.compare(i1, i2);
-                if (i != 0)
-                    return -i;
-
-                int t1 = getOrder(img1);
-                int t2 = getOrder(img2);
+                int t1 = getOrder(host, img1);
+                int t2 = getOrder(host, img2);
                 int t = Integer.compare(t1, t2);
                 if (t != 0)
-                    return t;
+                    return -t;
 
                 int s1 = getSize(img1.attr("sizes"));
                 int s2 = getSize(img2.attr("sizes"));
@@ -686,7 +728,7 @@ public class ContactInfo {
 
         Log.i("Favicons " + base + "=" + imgs.size());
         for (int i = 0; i < imgs.size(); i++)
-            Log.i("Favicon " + i + "=" + imgs.get(i) + " @" + base);
+            Log.i("Favicon #" + getOrder(host, imgs.get(i)) + " " + i + "=" + imgs.get(i) + " @" + base);
 
         List<Future<Pair<Favicon, URL>>> futures = new ArrayList<>();
         for (Element img : imgs) {
@@ -725,16 +767,45 @@ public class ContactInfo {
         return null;
     }
 
-    private static int getOrder(Element img) {
-        String href = img.attr("href");
-        String type = img.attr("type");
+    private static int getOrder(String host, Element img) {
+        // https://en.wikipedia.org/wiki/Favicon#How_to_use
+        String href = img.attr("href")
+                .toLowerCase(Locale.ROOT)
+                .trim();
+        String rel = img.attr("rel")
+                .toLowerCase(Locale.ROOT)
+                .replace("shortcut", "") // "shortcut icon"
+                .trim();
+        String type = img.attr("type")
+                .trim();
 
-        int order = -1;
-        String h = (href == null ? "" : href.toLowerCase(Locale.ROOT));
-        if (h.endsWith(".ico"))
-            order = 2;
-        else if (h.endsWith(".svg") || "image/svg+xml".equals(type))
-            order = 1;
+        int order = 0;
+        if ("link".equals(img.tagName()))
+            order += 100;
+
+        boolean isIco = (href.endsWith(".ico") || "image/x-icon".equals(type));
+        boolean isSvg = (href.endsWith(".svg") || "image/svg+xml".equals(type));
+        boolean isMask = ("mask-icon".equals(rel) || img.hasAttr("mask"));
+
+        if (isMask)
+            order = -10; // Safari: "mask-icon"
+        else if ("icon".equals(rel) && !isIco)
+            order += 20;
+        else if ("apple-touch-icon".equals(rel) ||
+                "apple-touch-icon-precomposed".equals(rel)) {
+            // "apple-touch-startup-image"
+            if ("mailbox.org".equals(host))
+                order += 30;
+            else
+                order += 10;
+        }
+
+        if (isIco)
+            order += 1;
+        else if (isSvg)
+            order += 2;
+        else
+            order += 5;
 
         return order;
     }
@@ -767,7 +838,7 @@ public class ContactInfo {
         Log.i("GET favicon " + url);
 
         if (!"https".equals(url.getProtocol()))
-            throw new FileNotFoundException("http");
+            throw new FileNotFoundException(url.toString());
 
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -873,20 +944,33 @@ public class ContactInfo {
         }
     }
 
+    static Uri getLookupUri(List<Address> addresses) {
+        return getLookupUri(addresses.toArray(new Address[0]));
+    }
+
     static Uri getLookupUri(Address[] addresses) {
         if (addresses == null)
             return null;
 
         for (Address from : addresses) {
             String email = ((InternetAddress) from).getAddress();
-            if (!TextUtils.isEmpty(email)) {
-                Lookup lookup = emailLookup.get(email.toLowerCase(Locale.ROOT));
-                if (lookup != null)
-                    return lookup.uri;
-            }
+            if (TextUtils.isEmpty(email))
+                continue;
+
+            Lookup lookup = emailLookup.get(email.toLowerCase(Locale.ROOT));
+            if (lookup != null)
+                return lookup.uri;
         }
 
         return null;
+    }
+
+    static Uri getLookupUri(String email) {
+        if (TextUtils.isEmpty(email))
+            return null;
+
+        Lookup lookup = emailLookup.get(email.toLowerCase(Locale.ROOT));
+        return (lookup == null ? null : lookup.uri);
     }
 
     static Address[] fillIn(Address[] addresses, boolean prefer_contact, boolean only_contact) {

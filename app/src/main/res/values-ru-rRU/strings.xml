@@ -237,6 +237,7 @@
     <string name="title_setup_password_different">Пароли не совпадают</string>
     <string name="title_setup_password_invalid">Пароль неверный</string>
     <string name="title_setup_import_accounts">Импорт учётных записей и идентификаторов</string>
+    <string name="title_setup_import_delete">Удалить существующие учётные записи</string>
     <string name="title_setup_import_rules">Импорт правил фильтров</string>
     <string name="title_setup_import_contacts">Импорт локальных контактов</string>
     <string name="title_setup_import_answers">Импорт шаблонов ответов</string>
@@ -331,7 +332,7 @@
     <string name="title_advanced_suggest_local">Предлагать локальные контакты</string>
     <string name="title_advanced_suggest_sent">Предлагать адреса, найденные в отправленных сообщениях</string>
     <string name="title_advanced_suggest_received">Предлагать адреса, найденные в полученных сообщениях</string>
-    <string name="title_advanced_suggest_frequently">Сортировать предложенные адреса по частоте использования</string>
+    <string name="title_advanced_suggest_frequently">Сортировать предлагаемые адреса по частоте использования</string>
     <string name="title_advanced_alt_re_fwd">Альтернативный префикс ответа/пересылки</string>
     <string name="title_advanced_send_chips">Показывать пузыри адреса</string>
     <string name="title_advanced_send_reminders">Показывать напоминания</string>
@@ -354,7 +355,7 @@
     <string name="title_advanced_signature_reply">Использовать подпись при ответе</string>
     <string name="title_advanced_signature_forward">Использовать подпись при пересылке</string>
     <string name="title_advanced_discard_delete">При отказе от черновика удалять его безвозвратно</string>
-    <string name="title_advanced_reply_move">При ответе на сообщение в пользовательской папке сохранять ответ в ней же</string>
+    <string name="title_advanced_reply_move">При ответе на сообщение сохранять ответ в той же папке</string>
     <string name="title_advanced_auto_link">Автоматическое создание ссылок</string>
     <string name="title_advanced_plain_only">По умолчанию отправлять простым текстом</string>
     <string name="title_advanced_flow">\"Пластичное\" форматирование обычного текста</string>
@@ -396,6 +397,7 @@
     <string name="title_advanced_nav_hide_message">Снова включить панель можно в разделе настроек \"Отображение\"</string>
     <string name="title_advanced_nav_message_count">Показывать количество сохранённых локально сообщений в меню навигации</string>
     <string name="title_advanced_nav_unseen_drafts">Показывать количество непрочитанных черновиков в меню навигации</string>
+    <string name="title_advanced_nav_pinned_count">Показывать количество непрочитанных сообщений в закреплённом меню навигации</string>
     <string name="title_advanced_startup">При запуске показывать</string>
     <string name="title_advanced_cards">Использовать карточный стиль вместо табличного</string>
     <string name="title_advanced_cards_beige">Использовать бежевый фон для карточного стиля (только для светлых тем)</string>
@@ -414,7 +416,8 @@
     <string name="title_advanced_color_stripe">Показывать цветовую полосу</string>
     <string name="title_advanced_color_stripe_wide">Использовать широкий диапазон цветов</string>
     <string name="title_advanced_avatars">Показывать фотографии контакта</string>
-    <string name="title_advanced_gravatars">Показывать Граватары</string>
+    <string name="title_advanced_gravatars">Показывать граватары</string>
+    <string name="title_advanced_libravatars">Показывать либраватары</string>
     <string name="title_advanced_bimi_unverified">Непроверенный отправитель</string>
     <string name="title_advanced_bimi_verified">Проверенный отправитель</string>
     <string name="title_advanced_favicons">Показывать значки сайтов</string>
@@ -447,6 +450,7 @@
     <string name="title_advanced_preview_italic">Показывать предпросмотр сообщения курсивом</string>
     <string name="title_advanced_preview_lines">Количество строк предпросмотра</string>
     <string name="title_advanced_addresses">По умолчанию показывать подробную информацию об адресах</string>
+    <string name="title_advanced_unzip">Показывать содержимое сжатых вложений</string>
     <string name="title_advanced_attachments_alt">Показывать вложения после текста сообщения</string>
     <string name="title_advanced_thumbnails">Показывать миниатюры изображений после текста сообщения</string>
     <string name="title_advanced_message_text_zoom2">Масштаб текста сообщения по умолчанию: %1$s%%</string>
@@ -567,6 +571,10 @@
     <string name="title_advanced_disconnect_auto_update">Еженедельное автообновление списков</string>
     <string name="title_advanced_disconnect_links">Использовать списки для предупреждения об отслеживающих ссылках</string>
     <string name="title_advanced_disconnect_images">Использовать списки для распознавания отслеживающих изображений</string>
+    <string name="title_advanced_mnemonic">Удалённое удаление данных</string>
+    <string name="title_advanced_mnemonic_hint">Любое сообщение, полученное со следующими словами в строке темы, автоматически удалит данные приложения</string>
+    <string name="title_advanced_clear_all">Удаление данных приложения</string>
+    <string name="title_advanced_clear_all_remark">Данные приложения будут безвозвратно удалены!</string>
     <string name="title_advanced_sign_default">Подписывать по умолчанию</string>
     <string name="title_advanced_encrypt_default">Шифровать по умолчанию</string>
     <string name="title_advanced_auto_decrypt">Автоматически расшифровывать сообщения</string>
@@ -590,6 +598,7 @@
     </string>
     <string name="title_advanced_power_menu">Добавить действия в меню питания Android</string>
     <string name="title_advanced_external_search">Разрешать другим приложениям искать в сообщениях</string>
+    <string name="title_advanced_sort_answers">Сортировать шаблоны ответов по частоте использования</string>
     <string name="title_advanced_shortcuts">Показывать часто используемые контакты в меню \"Поделиться\" Android</string>
     <string name="title_advanced_fts">Создавать индекс поиска</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d сообщений проиндексировано (%3$s)</string>
@@ -669,6 +678,7 @@
     <string name="title_advanced_monospaced_pre_hint">Сообщения, содержащие только простой текст, будут рассматриваться как форматированные</string>
     <string name="title_advanced_placeholders_hint">Относится только к изменённым сообщениям</string>
     <string name="title_advanced_inline_hint">Встроенные изображения – это изображения, включённые в сообщение</string>
+    <string name="compressed">Содержимое сжатых файлов (%1$s) с более чем %2$s файлами или файлами размером более %3$s не будет показано</string>
     <string name="title_advanced_parse_classes_hint">Позволит более точно отображать сообщения, но, возможно, с задержкой</string>
     <string name="title_advanced_language_detection_hint">Поддержка определения языка зависит от производителя устройства</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
@@ -812,7 +822,7 @@
     <string name="title_last_connected">Последнее подключение: %1$s</string>
     <string name="title_backoff_until">Ожидание после ошибки до: %1$s</string>
     <string name="title_storage_quota">Занято на сервере: %1$s/%2$s</string>
-    <string name="title_pop_support">Протокол POP3 поддерживает загрузку и удаление сообщений только из папки \"Входящие\". POP3 не может помечать сообщения прочитанными, перемещать их и т.д. POP3 расходует больше энергии батареи и трафика, чем IMAP. Поэтому всегда используйте протокол IMAP, если это возможно.</string>
+    <string name="title_pop_support">Протокол POP3 позволяет только загружать и удалять сообщения в папке \"Входящие\". Невозможно помечать сообщения как прочитанные, сообщать о спаме, перемещать сообщения и т.д. По возможности используйте протокол IMAP.</string>
     <string name="title_pop_sent">Если ваше устройство будет потеряно или украдено, отправленные сообщения могут быть утрачены.</string>
     <string name="title_pop_warning">Если сервер POP3 не поддерживает команду UIDL, объём передаваемых данных может быть большим. Установите ниже приемлемую частоту опроса.</string>
     <string name="title_pop_folders">Протокол POP3 не поддерживает создание папок</string>
@@ -1257,6 +1267,7 @@
     <string name="title_search_in_junk">В спаме</string>
     <string name="title_search_with_before">Перед</string>
     <string name="title_search_with_after">После</string>
+    <string name="title_search_device_first">Сначала поиск на устройстве</string>
     <string name="title_search_flag_unseen">не прочитано</string>
     <string name="title_search_flag_flagged">избранное</string>
     <string name="title_search_flag_hidden">скрыто</string>
@@ -1313,6 +1324,7 @@
     <string name="title_answer_group">Группа шаблонов (необязательно)</string>
     <string name="title_answer_standard">По умолчанию</string>
     <string name="title_answer_favorite">Избранное</string>
+    <string name="title_answer_snippet" comment="title_answer_snippet&#10;Option title to mark a reply template as text fragment, which can be inserted by long press on an open space">Фрагмент</string>
     <string name="title_answer_receipt">Использовать как уведомление о прочтении</string>
     <string name="title_answer_hide">Скрыть из меню</string>
     <string name="title_answer_text">Текст шаблона</string>

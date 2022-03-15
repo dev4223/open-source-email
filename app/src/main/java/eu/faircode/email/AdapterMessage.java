@@ -150,6 +150,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.w3c.dom.Entity;
 import org.w3c.dom.css.CSSStyleSheet;
 
 import java.io.BufferedOutputStream;
@@ -463,6 +464,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvBody;
         private View wvBody;
         private ContentLoadingProgressBar pbBody;
+        private View vwRipple;
         private TextView tvNoInternetBody;
         private ImageButton ibDownloading;
         private Group grpDownloading;
@@ -589,9 +591,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 if (image.length > 0 && image[0].getSource() != null) {
                                     ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
                                     Uri uri = Uri.parse(a.getSource());
-                                    if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                                    if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+                                        ripple(event);
                                         if (onOpenLink(uri, null, false))
                                             return true;
+                                    }
                                 }
                             }
 
@@ -607,6 +611,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 if (url.equals(title))
                                     title = null;
 
+                                ripple(event);
                                 if (onOpenLink(uri, title, false))
                                     return true;
                             }
@@ -616,8 +621,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
                                 String source = a.getSource();
                                 if (!TextUtils.isEmpty(source)) {
-                                    if (!a.isTracking())
+                                    if (!a.isTracking()) {
+                                        ripple(event);
                                         onOpenImage(message.id, source);
+                                    }
                                     return true;
                                 }
                             }
@@ -630,6 +637,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             }
 
                             return false;
+                        }
+
+                        private void ripple(MotionEvent event) {
+                            int r = context.getResources().getDimensionPixelSize(R.dimen.ripple_radius);
+                            vwRipple.setLeft(tvBody.getLeft() + Math.round(event.getX()) - r);
+                            vwRipple.setTop(tvBody.getTop() + Math.round(event.getY()) - r);
+                            vwRipple.setRight(tvBody.getLeft() + Math.round(event.getX()) + r);
+                            vwRipple.setBottom(tvBody.getTop() + Math.round(event.getY()) + r);
+                            vwRipple.setClickable(true);
+                            vwRipple.setPressed(true);
+                            vwRipple.setPressed(false);
+                            vwRipple.setClickable(false);
                         }
                     });
 
@@ -861,6 +880,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBody = vsBody.findViewById(R.id.tvBody);
             wvBody = vsBody.findViewById(R.id.wvBody);
             pbBody = vsBody.findViewById(R.id.pbBody);
+            vwRipple = vsBody.findViewById(R.id.vwRipple);
             tvNoInternetBody = vsBody.findViewById(R.id.tvNoInternetBody);
             ibDownloading = vsBody.findViewById(R.id.ibDownloading);
             grpDownloading = vsBody.findViewById(R.id.grpDownloading);
@@ -945,6 +965,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibNotifyContact.setOnClickListener(this);
                 ibPinContact.setOnClickListener(this);
                 ibAddContact.setOnClickListener(this);
+                if (BuildConfig.DEBUG)
+                    ibAddContact.setOnLongClickListener(this);
 
                 ibCopyHeaders.setOnClickListener(this);
                 ibCloseHeaders.setOnClickListener(this);
@@ -1052,7 +1074,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSearchContact.setOnClickListener(null);
                 ibNotifyContact.setOnClickListener(null);
                 ibPinContact.setOnClickListener(null);
-                ibAddContact.setOnClickListener(null);
+                ibAddContact.setOnLongClickListener(null);
+                if (BuildConfig.DEBUG)
+                    ibAddContact.setOnClickListener(null);
 
                 ibCopyHeaders.setOnClickListener(null);
                 ibCloseHeaders.setOnClickListener(null);
@@ -1410,7 +1434,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSnoozed.setVisibility(message.ui_snoozed == null && !message.ui_unsnoozed ? View.GONE : View.VISIBLE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
             ivForwarded.setVisibility(message.isForwarded() ? View.VISIBLE : View.GONE);
-            ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
+            ivAttachments.setVisibility(message.totalAttachments > 0 ? View.VISIBLE : View.GONE);
 
             if (viewType == ViewType.FOLDER)
                 tvFolder.setText(outbox ? message.identityEmail : message.accountName);
@@ -1749,10 +1773,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ConstraintLayout cl = (ConstraintLayout) flow.getParent();
             for (int id : flow.getReferencedIds()) {
                 View v = cl.findViewById(id);
-                // flow.removeView(v);
-                // cl.removeView(v);
+                cl.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            flow.removeView(v);
+                            cl.removeView(v);
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
+                    }
+                });
                 // https://github.com/androidx/constraintlayout/issues/430
-                v.setVisibility(View.GONE);
+                // v.setVisibility(View.GONE);
             }
         }
 
@@ -2110,6 +2143,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 else if (EntityFolder.TRASH.equals(folder.type))
                                     hasTrash = true;
 
+                    boolean pop = (message.accountProtocol == EntityAccount.TYPE_POP);
+                    boolean imap = (message.accountProtocol == EntityAccount.TYPE_IMAP);
+
                     boolean inArchive = EntityFolder.ARCHIVE.equals(message.folderType);
                     boolean inSent = EntityFolder.SENT.equals(message.folderType);
                     boolean inTrash = EntityFolder.TRASH.equals(message.folderType);
@@ -2117,27 +2153,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
 
                     boolean move = !(message.folderReadOnly || message.uid == null) ||
-                            (message.accountProtocol == EntityAccount.TYPE_POP &&
-                                    EntityFolder.TRASH.equals(message.folderType));
+                            (pop && EntityFolder.TRASH.equals(message.folderType));
                     boolean archive = (move && (hasArchive && !inArchive && !inSent && !inTrash && !inJunk));
-                    boolean trash = (move || outbox || debug ||
-                            message.accountProtocol == EntityAccount.TYPE_POP);
-                    boolean inbox = (move && hasInbox && (inArchive || inTrash || inJunk)) ||
-                            (message.accountProtocol == EntityAccount.TYPE_POP && message.accountLeaveDeleted && inTrash);
-                    boolean keywords = (message.uid != null &&
-                            message.accountProtocol == EntityAccount.TYPE_IMAP);
+                    boolean trash = (move || outbox || debug || pop);
+                    boolean inbox = (move && hasInbox && (inArchive || inTrash || inJunk) && imap) ||
+                            (pop && message.accountLeaveDeleted && inTrash);
+                    boolean keywords = (message.uid != null && imap);
                     boolean labels = (data.isGmail && move && !inTrash && !inJunk && !outbox);
-                    boolean seen = (message.uid != null ||
-                            message.accountProtocol == EntityAccount.TYPE_POP);
+                    boolean seen = (message.uid != null || pop);
 
                     int froms = (message.from == null ? 0 : message.from.length);
                     int tos = (message.to == null ? 0 : message.to.length);
 
                     boolean delete = (inTrash || !hasTrash || inJunk || outbox ||
-                            message.uid == null || message.accountProtocol == EntityAccount.TYPE_POP);
+                            message.uid == null || pop);
 
-                    boolean headers = (message.uid != null ||
-                            (message.accountProtocol == EntityAccount.TYPE_POP && message.headers != null));
+                    boolean headers = (message.uid != null || (pop && message.headers != null));
 
                     evalProperties(message); // TODO: done again in bindBody
 
@@ -2858,6 +2889,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 HtmlHelper.restorePre(document);
                         }
 
+                        boolean browser_zoom = prefs.getBoolean("browser_zoom", false);
+                        int message_zoom = prefs.getInt("message_zoom", 100);
+                        if (browser_zoom && message_zoom != 100) {
+                            String z = String.format("%.2f", message_zoom / 100f);
+                            document.select("body").attr("style",
+                                    "zoom: " + z + ";" +
+                                            "-moz-transform: scale(" + z + ");" + // Firefox
+                                            "-moz-transform-origin: 0 0;" +
+                                            "-o-transform: scale(" + z + ");" + // Opera
+                                            "-o-transform-origin: 0 0;" +
+                                            "-webkit-transform: scale(" + z + ");" + // Safari
+                                            "-webkit-transform-origin: 0 0;" +
+                                            "transform: scale(" + z + ");" + // Standard
+                                            "transform-origin: 0 0;");
+                        }
+
                         HtmlHelper.guessSchemes(document);
                         HtmlHelper.autoLink(document);
 
@@ -3196,28 +3243,36 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean show_inline = properties.getValue("inline", message.id);
             Log.i("Show inline=" + show_inline);
 
-            boolean has_inline = false;
-            int download = 0;
-            boolean save = (attachments.size() > 1);
+            int available = 0;
+            int unavailable = 0;
+            int downloadable = 0;
             boolean downloading = false;
+            boolean has_inline = false;
             EntityAttachment calendar = null;
 
-            List<EntityAttachment> a = new ArrayList<>();
+            List<EntityAttachment> show = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
+                if (attachment.subsequence == null) {
+                    if (attachment.available)
+                        available++;
+                    else
+                        unavailable++;
+
+                    if (attachment.progress == null) {
+                        if (!attachment.available)
+                            downloadable++;
+                    } else
+                        downloading = true;
+                }
+
                 boolean inline = (attachment.isEncryption() ||
                         "text/x-amp-html".equals(attachment.type) ||
                         (attachment.isInline() && attachment.isImage()));
                 if (inline && attachment.available)
                     has_inline = true;
-                if (attachment.progress == null && !attachment.available)
-                    download++;
-                if (!attachment.available)
-                    save = false;
-                if (attachment.progress != null)
-                    downloading = true;
 
                 if (show_inline || !inline || !attachment.available)
-                    a.add(attachment);
+                    show.add(attachment);
 
                 if (attachment.available &&
                         "text/calendar".equals(attachment.getMimeType()))
@@ -3228,7 +3283,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 public void run() {
                     try {
-                        adapterAttachment.set(a);
+                        adapterAttachment.set(show);
                     } catch (Throwable ex) {
                         Log.e(ex);
                     }
@@ -3242,8 +3297,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cbInline.setChecked(show_inline);
             cbInline.setVisibility(has_inline ? View.VISIBLE : View.GONE);
 
-            ibSaveAttachments.setVisibility(save ? View.VISIBLE : View.GONE);
-            ibDownloadAttachments.setVisibility(download > 1 && suitable ? View.VISIBLE : View.GONE);
+            ibSaveAttachments.setVisibility(available > 1 && unavailable == 0 ? View.VISIBLE : View.GONE);
+            ibDownloadAttachments.setVisibility(downloadable > 1 && suitable ? View.VISIBLE : View.GONE);
             tvNoInternetAttachments.setVisibility(downloading && !suitable ? View.VISIBLE : View.GONE);
 
             cbInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -4081,6 +4136,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (id == R.id.ibFlagged) {
                 onMenuColoredStar(message);
                 return true;
+            } else if (id == R.id.ibAddContact) {
+                onGpa(message);
+                return true;
             } else if (id == R.id.tvFolder) {
                 onGotoFolder(message);
                 return true;
@@ -4431,6 +4489,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:flag");
+        }
+
+        private void onGpa(TupleMessageEx message) {
+            Address[] from;
+            if (message.reply == null || message.reply.length == 0)
+                from = (isOutgoing(message) ? message.to : message.from);
+            else
+                from = message.reply;
+            if (from == null || from.length == 0)
+                return;
+            String email = ((InternetAddress) from[0]).getAddress();
+            if (TextUtils.isEmpty(email))
+                return;
+            Uri uri = Uri.parse(BuildConfig.GPA_URI).buildUpon()
+                    .appendQueryParameter("search", email)
+                    .build();
+            Helper.view(context, uri, true);
         }
 
         private void onGotoFolder(TupleMessageEx message) {
@@ -5115,7 +5190,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
                     context.startActivity(new Intent(context, ActivityAMP.class)
                             .setData(uri)
-                            .putExtra("subject", message.subject));
+                            .putExtra("id", attachment.message));
                 }
 
                 @Override
@@ -5271,7 +5346,33 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionMove(TupleMessageEx message, final boolean copy) {
-            onActionMove(message, copy, message.account, new long[]{message.folder});
+            if (message.accountProtocol == EntityAccount.TYPE_POP &&
+                    EntityFolder.TRASH.equals(message.folderType) && !message.accountLeaveDeleted) {
+                Bundle args = new Bundle();
+                args.putLong("id", message.account);
+
+                new SimpleTask<EntityFolder>() {
+                    @Override
+                    protected EntityFolder onExecute(Context context, Bundle args) {
+                        long id = args.getLong("id");
+
+                        DB db = DB.getInstance(context);
+                        return db.folder().getFolderByType(id, EntityFolder.INBOX);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityFolder inbox) {
+                        onActionMove(message, copy, message.account,
+                                new long[]{message.folder, inbox == null ? -1L : inbox.id});
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    }
+                }.execute(context, owner, args, "move:pop");
+            } else
+                onActionMove(message, copy, message.account, new long[]{message.folder});
         }
 
         private void onActionMove(TupleMessageEx message, final boolean copy, long account, long[] disabled) {
@@ -5479,6 +5580,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_raw_send_message).setEnabled(canRaw);
             popupMenu.getMenu().findItem(R.id.menu_raw_send_thread).setEnabled(canRaw);
 
+            popupMenu.getMenu().findItem(R.id.menu_thread_info)
+                    .setVisible(BuildConfig.TEST_RELEASE || BuildConfig.DEBUG || debug);
+
             popupMenu.getMenu().findItem(R.id.menu_resync)
                     .setEnabled(message.uid != null ||
                             message.accountProtocol == EntityAccount.TYPE_POP)
@@ -5581,6 +5685,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return true;
                     } else if (itemId == R.id.menu_raw_send_thread) {
                         onMenuRawSend(message, true);
+                        return true;
+                    } else if (itemId == R.id.menu_thread_info) {
+                        onMenuThreadInfo(message);
                         return true;
                     } else if (itemId == R.id.menu_resync) {
                         onMenuResync(message);
@@ -5915,6 +6022,95 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "importance:set");
+        }
+
+        private void onMenuThreadInfo(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+
+            new SimpleTask<List<EntityMessage>>() {
+                @Override
+                protected List<EntityMessage> onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
+                    Map<String, EntityMessage> map = new HashMap<>();
+
+                    DB db = DB.getInstance(context);
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    if (!TextUtils.isEmpty(message.inreplyto))
+                        for (EntityMessage m : db.message().getMessagesByMsgId(message.account, message.inreplyto))
+                            map.put(m.msgid, m);
+
+                    if (!TextUtils.isEmpty(message.references))
+                        for (String ref : message.references.split(" "))
+                            for (EntityMessage m : db.message().getMessagesByMsgId(message.account, ref))
+                                map.put(m.msgid, m);
+
+                    return new ArrayList(map.values());
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, List<EntityMessage> referenced) {
+                    DateFormat DTF = Helper.getDateTimeInstance(context);
+
+                    SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+
+                    int start = 0;
+                    ssb.append("Message-ID: ");
+                    ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                    ssb.append(message.msgid).append("\n");
+
+                    if (!TextUtils.isEmpty(message.inreplyto)) {
+                        start = ssb.length();
+                        ssb.append("In-reply-to: ");
+                        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                        ssb.append(message.inreplyto).append("\n");
+                    }
+
+                    if (!TextUtils.isEmpty(message.references)) {
+                        start = ssb.length();
+                        ssb.append("References: ");
+                        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                        ssb.append("\n");
+                        for (String ref : message.references.split(" "))
+                            ssb.append(ref).append("\n");
+                    }
+
+                    start = ssb.length();
+                    ssb.append("Thread: ");
+                    ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                    ssb.append(message.thread).append("\n");
+
+                    ssb.append("\n");
+
+                    if (referenced != null)
+                        for (EntityMessage ref : referenced) {
+                            start = ssb.length();
+                            ssb.append(ref.msgid).append(": ");
+                            ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), 0);
+                            ssb.append(DTF.format(ref.received)).append(' ')
+                                    .append(ref.subject == null ? "" : ref.subject)
+                                    .append("\n\n");
+                        }
+
+                    ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL), 0, ssb.length(), 0);
+
+                    new AlertDialog.Builder(context)
+                            .setTitle(context.getString(R.string.title_thread_info))
+                            .setMessage(ssb)
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show();
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                }
+            }.execute(context, owner, args, "message:resync");
+
         }
 
         private void onMenuResync(TupleMessageEx message) {
@@ -6811,6 +7007,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         boolean contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         boolean avatars = prefs.getBoolean("avatars", true);
         boolean gravatars = prefs.getBoolean("gravatars", false);
+        boolean libravatars = prefs.getBoolean("libravatars", false);
         boolean favicons = prefs.getBoolean("favicons", false);
         boolean generated = prefs.getBoolean("generated_icons", true);
 
@@ -6822,7 +7019,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.threading_unread = threading && prefs.getBoolean("threading_unread", false);
         this.indentation = prefs.getBoolean("indentation", false);
 
-        this.avatars = (contacts && avatars) || (gravatars || favicons || generated);
+        this.avatars = (contacts && avatars) || (gravatars || libravatars || favicons || generated);
         this.color_stripe = prefs.getBoolean("color_stripe", true);
         this.check_authentication = prefs.getBoolean("check_authentication", true);
         this.check_tls = prefs.getBoolean("check_tls", true);
@@ -6855,7 +7052,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.flags_background = prefs.getBoolean("flags_background", false);
         this.preview = prefs.getBoolean("preview", false);
         this.preview_italic = prefs.getBoolean("preview_italic", true);
-        this.preview_lines = prefs.getInt("preview_lines", 2);
+        this.preview_lines = prefs.getInt("preview_lines", 1);
         this.message_zoom = prefs.getInt("message_zoom", 100);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.thumbnails = prefs.getBoolean("thumbnails", true);
@@ -7254,6 +7451,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (prev.visible_unseen != next.visible_unseen) {
                     same = false;
                     log("visible_unseen changed " + prev.visible_unseen + "/" + next.visible_unseen, next.id);
+                }
+                if (prev.totalAttachments != next.totalAttachments) {
+                    same = false;
+                    log("totalAttachments changed " + prev.totalAttachments + "/" + next.totalAttachments, next.id);
                 }
                 if (!Objects.equals(prev.totalSize, next.totalSize)) {
                     same = false;

@@ -49,6 +49,11 @@ import com.sun.mail.util.BASE64DecoderStream;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.zip.UnsupportedZipFeatureException;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -141,6 +146,13 @@ public class MessageHelper {
     static final int DEFAULT_DOWNLOAD_SIZE = 4 * 1024 * 1024; // bytes
     static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
     static final int MAX_SUBJECT_AGE = 48; // hours
+    static final int DEFAULT_THREAD_RANGE = 7; // 2^7 = 128 days
+    static final int MAX_UNZIP_COUNT = 20;
+    static final long MAX_UNZIP_SIZE = 1000 * 1000 * 1000L;
+
+    static final List<String> UNZIP_FORMATS = BuildConfig.PLAY_STORE_RELEASE
+            ? Collections.unmodifiableList(Arrays.asList("zip"))
+            : Collections.unmodifiableList(Arrays.asList("zip, gz, tar.gz"));
 
     static final List<String> RECEIVED_WORDS = Collections.unmodifiableList(Arrays.asList(
             "from", "by", "via", "with", "id", "for"
@@ -1334,10 +1346,10 @@ public class MessageHelper {
         return reportHeaders;
     }
 
-    String getThreadId(Context context, long account, long folder, long uid) throws MessagingException {
+    String getThreadId(Context context, long account, long folder, long uid, long received) throws MessagingException {
         if (threadId == null)
             if (true)
-                threadId = _getThreadIdAlt(context, account, folder, uid);
+                threadId = _getThreadIdAlt(context, account, folder, uid, received);
             else
                 threadId = _getThreadId(context, account, folder, uid);
         return threadId;
@@ -1429,7 +1441,7 @@ public class MessageHelper {
         return thread;
     }
 
-    private String _getThreadIdAlt(Context context, long account, long folder, long uid) throws MessagingException {
+    private String _getThreadIdAlt(Context context, long account, long folder, long uid, long received) throws MessagingException {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (imessage instanceof GmailMessage) {
@@ -1483,9 +1495,15 @@ public class MessageHelper {
 
         List<String> all = new ArrayList<>(refs);
         all.add(msgid);
+
+        int thread_range = prefs.getInt("thread_range", MessageHelper.DEFAULT_THREAD_RANGE);
+        int range = (int) Math.pow(2, thread_range);
+        Long start = (received == 0 ? null : received - range * 24 * 3600 * 1000L);
+        Long end = (received == 0 ? null : received + range * 24 * 3600 * 1000L);
+
         List<TupleThreadInfo> infos = (all.size() == 0
                 ? new ArrayList<>()
-                : db.message().getThreadInfo(account, all));
+                : db.message().getThreadInfo(account, all, start, end));
 
         // References, In-Reply-To (sent before)
         for (TupleThreadInfo info : infos)
@@ -2917,16 +2935,32 @@ public class MessageHelper {
 
                     if (content instanceof String)
                         result = (String) content;
-                    else if (content instanceof InputStream)
+                    else if (content instanceof InputStream) {
+                        // java.io.ByteArrayInputStream
                         // Typically com.sun.mail.util.QPDecoderStream
-                        result = Helper.readStream((InputStream) content);
-                    else
+                        if (BuildConfig.DEBUG && false)
+                            warnings.add(content.getClass().getName());
+                        Charset charset;
+                        try {
+                            String cs = h.contentType.getParameter("charset");
+                            charset = (cs == null ? StandardCharsets.ISO_8859_1 : Charset.forName(cs));
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                            charset = StandardCharsets.ISO_8859_1;
+                        }
+                        result = Helper.readStream((InputStream) content, charset);
+                    } else {
+                        Log.e(content.getClass().getName());
                         result = content.toString();
+                    }
                 } catch (IOException | FolderClosedException | MessageRemovedException ex) {
                     throw ex;
                 } catch (Throwable ex) {
-                    Log.w(ex);
-                    warnings.add(Log.formatThrowable(ex, false));
+                    Log.e(ex);
+                    if (BuildConfig.TEST_RELEASE)
+                        warnings.add(ex + "\n" + android.util.Log.getStackTraceString(ex));
+                    else
+                        warnings.add(Log.formatThrowable(ex, false));
                     return null;
                 }
 
@@ -3104,8 +3138,7 @@ public class MessageHelper {
                         }
                     }
 
-                    if (report.isDispositionNotification() &&
-                            !(report.isDisplayed() || report.isDeleted())) {
+                    if (report.isDispositionNotification() && !report.isMdnDisplayed()) {
                         if (report.disposition != null)
                             w.append(report.disposition);
                     }
@@ -3349,7 +3382,161 @@ public class MessageHelper {
                             }
                     } catch (Throwable ex) {
                         Log.e(ex);
+                        db.attachment().setWarning(local.id, Log.formatThrowable(ex));
                     }
+
+                else if (local.isCompressed()) {
+                    // https://commons.apache.org/proper/commons-compress/examples.html
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean unzip = prefs.getBoolean("unzip", true);
+
+                    if (unzip)
+                        if (local.isGzip() && !local.isTarGzip())
+                            try (GzipCompressorInputStream gzip = new GzipCompressorInputStream(
+                                    new BufferedInputStream(new FileInputStream(local.getFile(context))))) {
+                                String name = gzip.getMetaData().getFilename();
+                                long total = gzip.getUncompressedCount();
+
+                                Log.i("Gzipped attachment seq=" + local.sequence + " " + name + ":" + total);
+
+                                if (total <= MAX_UNZIP_SIZE) {
+                                    if (name == null &&
+                                            local.name != null && local.name.endsWith(".gz"))
+                                        name = local.name.substring(0, local.name.length() - 3);
+
+                                    EntityAttachment attachment = new EntityAttachment();
+                                    attachment.message = local.message;
+                                    attachment.sequence = local.sequence;
+                                    attachment.subsequence = 1;
+                                    attachment.name = name;
+                                    attachment.type = Helper.guessMimeType(name);
+                                    if (total >= 0)
+                                        attachment.size = total;
+                                    attachment.id = db.attachment().insertAttachment(attachment);
+
+                                    File efile = attachment.getFile(context);
+                                    Log.i("Gunzipping to " + efile);
+
+                                    int last = 0;
+                                    long size = 0;
+                                    try (OutputStream os = new FileOutputStream(efile)) {
+                                        byte[] buffer = new byte[Helper.BUFFER_SIZE];
+                                        for (int len = gzip.read(buffer); len != -1; len = gzip.read(buffer)) {
+                                            size += len;
+                                            if (size > MAX_UNZIP_SIZE)
+                                                throw new IOException("File too large");
+                                            os.write(buffer, 0, len);
+
+                                            if (total > 0) {
+                                                int progress = (int) (size * 100 / total);
+                                                if (progress / 20 > last / 20) {
+                                                    last = progress;
+                                                    db.attachment().setProgress(attachment.id, progress);
+                                                }
+                                            }
+                                        }
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                        db.attachment().setError(attachment.id, Log.formatThrowable(ex));
+                                        db.attachment().setAvailable(attachment.id, true); // unrecoverable
+                                    }
+
+                                    db.attachment().setDownloaded(attachment.id, efile.length());
+                                }
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                                db.attachment().setWarning(local.id, Log.formatThrowable(ex));
+                            }
+                        else
+                            try (FileInputStream fis = new FileInputStream(local.getFile(context))) {
+                                ArchiveInputStream ais = new ArchiveStreamFactory().createArchiveInputStream(
+                                        new BufferedInputStream(local.isTarGzip() ? new GzipCompressorInputStream(fis) : fis));
+
+                                int count = 0;
+                                ArchiveEntry entry;
+                                while ((entry = ais.getNextEntry()) != null)
+                                    if (ais.canReadEntryData(entry) && !entry.isDirectory()) {
+                                        if (entry.getSize() > MAX_UNZIP_SIZE)
+                                            count = MAX_UNZIP_COUNT;
+                                        if (++count > MAX_UNZIP_COUNT)
+                                            break;
+                                    }
+
+                                Log.i("Zip entries=" + count);
+                                if (count <= MAX_UNZIP_COUNT) {
+                                    fis.getChannel().position(0);
+
+                                    ais = new ArchiveStreamFactory().createArchiveInputStream(
+                                            new BufferedInputStream(local.isTarGzip() ? new GzipCompressorInputStream(fis) : fis));
+
+                                    int subsequence = 1;
+                                    while ((entry = ais.getNextEntry()) != null) {
+                                        if (!ais.canReadEntryData(entry)) {
+                                            Log.w("Zip invalid=" + entry);
+                                            continue;
+                                        }
+
+                                        String name = entry.getName();
+                                        long total = entry.getSize();
+
+                                        if (entry.isDirectory() ||
+                                                (name != null && name.endsWith("\\"))) {
+                                            Log.i("Zipped folder=" + name);
+                                            continue;
+                                        }
+
+                                        Log.i("Zipped attachment seq=" + local.sequence + ":" + subsequence +
+                                                " " + name + ":" + total);
+
+                                        EntityAttachment attachment = new EntityAttachment();
+                                        attachment.message = local.message;
+                                        attachment.sequence = local.sequence;
+                                        attachment.subsequence = subsequence++;
+                                        attachment.name = name;
+                                        attachment.type = Helper.guessMimeType(name);
+                                        if (total >= 0)
+                                            attachment.size = total;
+                                        attachment.id = db.attachment().insertAttachment(attachment);
+
+                                        File efile = attachment.getFile(context);
+                                        Log.i("Unzipping to " + efile);
+
+                                        int last = 0;
+                                        long size = 0;
+                                        try (OutputStream os = new FileOutputStream(efile)) {
+                                            byte[] buffer = new byte[Helper.BUFFER_SIZE];
+                                            for (int len = ais.read(buffer); len != -1; len = ais.read(buffer)) {
+                                                size += len;
+                                                if (size > MAX_UNZIP_SIZE)
+                                                    throw new IOException("File too large");
+                                                os.write(buffer, 0, len);
+
+                                                if (total > 0) {
+                                                    int progress = (int) (size * 100 / total);
+                                                    if (progress / 20 > last / 20) {
+                                                        last = progress;
+                                                        db.attachment().setProgress(attachment.id, progress);
+                                                    }
+                                                }
+                                            }
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                            db.attachment().setError(attachment.id, Log.formatThrowable(ex));
+                                            db.attachment().setAvailable(attachment.id, true); // unrecoverable
+                                        }
+
+                                        db.attachment().setDownloaded(attachment.id, efile.length());
+                                    }
+                                }
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                                // Unsupported feature encryption used in entry ...
+                                if (ex instanceof UnsupportedZipFeatureException)
+                                    db.attachment().setWarning(local.id, ex.getMessage());
+                                else
+                                    db.attachment().setWarning(local.id, Log.formatThrowable(ex));
+                            }
+                }
             }
         }
 
@@ -3619,7 +3806,7 @@ public class MessageHelper {
                             }
                         }
                     } else
-                        throw new MessagingStructureException(content);
+                        throw new MessagingStructureException(content, "multipart/mixed");
                 }
 
                 if (part.isMimeType("multipart/signed")) {
@@ -3664,7 +3851,7 @@ public class MessageHelper {
                                 Log.e(sb.toString());
                             }
                         } else
-                            throw new MessagingStructureException(content);
+                            throw new MessagingStructureException(content, "multipart/signed");
                     } else
                         Log.e(ct.toString());
                 } else if (part.isMimeType("multipart/encrypted")) {
@@ -3686,7 +3873,7 @@ public class MessageHelper {
                                 Log.e(sb.toString());
                             }
                         } else
-                            throw new MessagingStructureException(content);
+                            throw new MessagingStructureException(content, "multipart/encrypted");
                     } else
                         Log.e(ct.toString());
                 } else if (part.isMimeType("application/pkcs7-mime") ||
@@ -3769,7 +3956,7 @@ public class MessageHelper {
                 if (content instanceof Multipart)
                     multipart = (Multipart) part.getContent();
                 else
-                    throw new MessagingStructureException(content);
+                    throw new MessagingStructureException(content, "multipart/*");
 
                 int count = multipart.getCount();
                 for (int i = 0; i < count; i++)
@@ -4249,17 +4436,19 @@ public class MessageHelper {
 
     static class MessagingStructureException extends MessagingException {
         private String className;
+        private String expected;
 
-        MessagingStructureException(Object content) {
+        MessagingStructureException(Object content, String expected) {
             super();
             if (content != null)
                 this.className = content.getClass().getName();
+            this.expected = expected;
         }
 
         @Nullable
         @Override
         public String getMessage() {
-            return className;
+            return className + " expected: " + expected;
         }
     }
 
@@ -4348,23 +4537,48 @@ public class MessageHelper {
             return ("delivered".equals(action) || "relayed".equals(action) || "expanded".equals(action));
         }
 
-        boolean isDisplayed() {
-            return isType("displayed");
+        boolean isMdnManual() {
+            return "manual-action".equals(getAction(0));
         }
 
-        boolean isDeleted() {
-            return isType("deleted");
+        boolean isMdnAutomatic() {
+            return "automatic-action".equals(getAction(0));
         }
 
-        private boolean isType(String t) {
-            // manual-action/MDN-sent-manually; displayed
+        boolean isMdnManualSent() {
+            return "MDN-sent-manually".equals(getAction(1));
+        }
+
+        boolean isMdnAutomaticSent() {
+            return "MDN-sent-automatically".equals(getAction(1));
+        }
+
+        boolean isMdnDisplayed() {
+            return "displayed".equalsIgnoreCase(getType());
+        }
+
+        boolean isMdnDeleted() {
+            return "deleted".equalsIgnoreCase(getType());
+        }
+
+        private String getAction(int index) {
             if (disposition == null)
-                return false;
+                return null;
             int semi = disposition.lastIndexOf(';');
             if (semi < 0)
-                return false;
-            String type = disposition.substring(semi + 1).trim();
-            return t.equals(type);
+                return null;
+            String[] action = disposition.substring(0, semi).trim().split("/");
+            return (index < action.length ? action[index] : null);
+        }
+
+        private String getType() {
+            // manual-action/MDN-sent-manually; displayed
+            if (disposition == null)
+                return null;
+            int semi = disposition.lastIndexOf(';');
+            if (semi < 0)
+                return null;
+            return disposition.substring(semi + 1).trim();
         }
 
         static boolean isDeliveryStatus(String type) {

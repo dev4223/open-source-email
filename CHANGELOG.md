@@ -2,7 +2,89 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Gobivenator](https://en.wikipedia.org/wiki/Gobivenator)
+
+### Next versoion
+
+* Added inserting templates as text snippets
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1856 - 2022-03-14
+
+* Added click link feedback
+* Added option for direct server search
+* Improved favicon selection
+* Improved DMARC report viewer
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1855 - 2022-03-12
+
+* Added option to show contents of zipped attachments (enabled by default)
+* Added option to sort reply templates by frequency of use
+* Added basic [DMARC](https://en.wikipedia.org/wiki/DMARC) report viewer
+* Enabled [sqlite analyze](https://sqlite.org/lang_analyze.html)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1854 - 2022-03-09
+
+* Added [Libravatar](https://www.libravatar.org/) support
+* Added some more [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word lists
+* Added [CSS inherit](https://developer.mozilla.org/en-US/docs/Web/CSS/inherit) support
+* Targeting [Android 12L](https://developer.android.com/about/versions/12/12L) (SDK 32)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1853 - 2022-03-07
+
+* Added BIP39 word lists in various languages
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1852 - 2022-03-07
+
+* Added image dimensions to mini gallery
+* Added PGP and S/MIME key indicators to address bubbles
+* Added delete existing accounts option to import dialog
+* Added clear all data settings tile
+* Added remote clear all data via mnemonic
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### [Fulgurotherium](https://en.wikipedia.org/wiki/Fulgurotherium)
+
+### 1.1851 - 2022-03-02
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1850 - 2022-02-28
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1849 - 2022-02-26
+
+* Fixed inserting photos after device rotation
+* Showing if there are attachments in conversations
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1848 - 2022-02-25
+
+* Fixed POP3 delete
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1847 - 2022-02-24
+
+* Address bubbles: generated icons
+* Address bubbles: RTL support
+* Address bubbles: accessibility improvements
+* Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.1846 - 2022-02-24
 

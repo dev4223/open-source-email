@@ -47,6 +47,7 @@ For authorizing:
 * GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html))
 * T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
 * Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/) (German) and not your account password
+* Yandex: please check if [IMAP is enabled](https://yandex.com/support/mail/mail-clients/others.html)
 
 Please see [here](#user-content-faq22) for common error messages and solutions.
 
@@ -282,7 +283,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(126) Can message previews be sent to my wearable?](#user-content-faq126)
 * [(127) How can I fix 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
 * [(128) How can I reset asked questions, for example to show images?](#user-content-faq128)
-* [(129) Are ProtonMail, Tutanota supported?](#user-content-faq129)
+* [(129) Are ProtonMail, Tutanota, CTemplar supported?](#user-content-faq129)
 * [(130) What does message error ... mean?](#user-content-faq130)
 * [(131) Can you change the direction for swiping to previous/next message?](#user-content-faq131)
 * [(132) Why are new message notifications silent?](#user-content-faq132)
@@ -332,6 +333,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(176) When will a message be considered safely transported?](#user-content-faq176)
 * [(177) What does 'Sensitivity' mean?](#user-content-faq177)
 * [(178) Why are widgets not updating?](#user-content-faq178)
+* [(179) What are reply templates?](#user-content-faq179)
 
 [I have another question.](#user-content-get-support)
 
@@ -577,6 +579,22 @@ Some people ask:
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq6)
 
+<hr />
+
+**Important**: using your account password [won't be possible anymore from May 30, 2022](https://support.google.com/accounts/answer/6010255).
+
+How to fix:
+
+* Go to the *Settings* via the navigation menu (left side menu)
+* Tap on the *Wizard* button and select *Gmail (OAuth)*
+* Tick the checkbox to authenticate an existing account (else you'll create a new account!)
+* Fill in the fields and follow the steps
+* Repeat for each Gmail account
+
+Alternatively, you can use an app password, please see below.
+
+<hr />
+
 If you use the Play store or GitHub version of FairEmail,
 you can use the quick setup wizard to easily setup a Gmail account and identity.
 The Gmail quick setup wizard is not available for third party builds, like the F-Droid build
@@ -586,7 +604,7 @@ The Gmail quick setup wizard won't work if the Android account manager doesn't w
 which is typically the case if the account selection is being *canceled* right away.
 
 If you don't want to use or can't use an on-device Google account, for example on recent Huawei devices,
-you can either enable access for "less secure apps" and use your account password (not advised)
+you can ~~either enable access for "less secure apps" and use your account password (not advised)~~
 or enable two factor authentication and use an app specific password.
 To use a password you can use the quick setup wizard and select *Other provider*.
 
@@ -604,7 +622,9 @@ After enabling two factor authentication there will be this error message:
 
 *[ALERT] Application-specific password required: https://support.google.com/mail/accounts/answer/185833 (Failure)*
 
-The error message "*Authentication failed - Invalid credentials*" or *Token refresh required* means that the Android account manager was not able to refresh the access token.
+The error message "*Authentication failed - Invalid credentials*" or *Token refresh required* means that the Android account manager was not able to refresh the access token,
+or that getting an access token was not allowed,
+for example when the account is a [Family Link](https://support.google.com/families/answer/7101025) account, in which case you can use the Gmail app only.
 A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager.
 You can workaround this issue by using an app password.
 Please [see here](#user-content-howto) about how you can delete the account configured with the quick setup wizard.
@@ -617,7 +637,7 @@ See [here](https://support.google.com/accounts/answer/185833) about how to gener
 
 <br />
 
-*Enable "Less secure apps"*
+~~*Enable "Less secure apps"*~~
 
 **Important**: using this method is not recommended because it is less reliable.
 
@@ -1248,6 +1268,9 @@ can likely be solved by changing the advanced identity setting *Use local IP add
 The error *... Couldn't connect to host ...* means that there was no response from the email server within a reasonable time (20 seconds by default).
 Mostly this indicates internet connectivity issues, possibly caused by a VPN or by a firewall app.
 You can try to increase the connection timeout in the connection settings of FairEmail, for when the email server is really slow.
+Some devices have a firewall, which you can access like this:
+
+*Settings, Data usage, Three-dots overflow menu, Data usage control*
 
 The error *... Connection refused ...* means that the email server
 or something between the email server and the app, like a firewall, actively refused the connection.
@@ -1287,6 +1310,9 @@ FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in sh
 The error *... Login Rate Limit Hit ...* means that there were too many login attempts with an incorrect password. Please double check your password or authenticate the account again with the quick setup wizard (OAuth only).
 
 The error *... NO mailbox selected READ-ONLY ...* indicates [this Zimbra problem](https://sebastian.marsching.com/wiki/Network/Zimbra#Mailbox_Selected_READ-ONLY_Error_in_Thunderbird).
+
+The Outlook specific error *... Command Error. 10 ...* probably means that the OAuth token expired or was invalidated.
+Authenticating the account again with the quick setup wizard will probably resolve this condition.
 
 Please [see here](#user-content-faq4) for the errors *... Untrusted ... not in certificate ...*, *... Invalid security certificate (Can't verify identity of server) ...* or *... Trust anchor for certification path not found ...*
 
@@ -3079,6 +3105,8 @@ Note that only [JPEG](https://en.wikipedia.org/wiki/JPEG) and [PNG](https://en.w
 * See [here](https://docs.bugsnag.com/legal/privacy-policy/) for the privacy policy of Bugsnag
 * Error reports will be sent to *sessions.bugsnag.com:443* and *notify.bugsnag.com:443*
 
+Error reports have helped to find otherwise hard to find bugs and therefore improve the overall stability of the app.
+
 <br />
 
 <a name="faq105"></a>
@@ -3242,7 +3270,7 @@ Please see these websites for lists of privacy oriented email providers with adv
 * [Privacy Guides](https://privacyguides.org/providers/email/)
 * [Privacy Tools](https://www.privacytools.io/providers/email/)
 
-**Important**: Some providers, like ProtonMail, Tutanota, use proprietary email protocols, which make it impossible to use third party email apps.
+**Important**: Some providers, like ProtonMail, Tutanota and CTemplar, use proprietary email protocols, which make it impossible to use third party email apps.
 Please see [this FAQ](#user-content-faq129) for more information.
 
 Using your own (custom) domain name, which is supported by most email providers, will make it easier to switch to another email provider.
@@ -3343,6 +3371,7 @@ Note that:
 * An app like FairEmail cannot select which Google account to use
 * It may take a while until the Play store app has synchronized a purchase to another device
 * Play Store purchases cannot be used without the Play Store, which is also not allowed by Play Store rules
+* You can't restore purchases with [microG](https://microg.org/)
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
 
@@ -3422,8 +3451,12 @@ for example if the internet connection is bad or a firewall or a VPN is blocking
 FairEmail will retry one time after waiting 8 seconds while keeping the device awake (=use battery power).
 If this fails, FairEmail will schedule an alarm to retry after 5, 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
 
+By temporarily enabling debug mode in the miscellaneous settings, you can disable this logarithmic back-off scheme (since version 1.1855).
+This will result in using a linear back-off scheme, which means that after each successive failure the waiting time will be
+increased by 1 minute the first 5 minutes and thereafter by 5 minutes up to 60 minutes.
+
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby)
-does not allow to wake the device earlier than after 15 minutes.
+does not allow to wake the device earlier than after 15 minutes when doze mode is active.
 
 *Force sync* in the three-dots menu of the unified inbox can be used to let FairEmail attempt to reconnect without waiting.
 
@@ -3458,6 +3491,8 @@ Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) (=har
 
 Hard bounces will mostly be processed automatically because they affect the reputation of the email provider.
 The bounce address (=*Return-Path* header) is mostly very specific, so the email server can determine the sending account.
+
+Some email servers, reportedly the Outlook.com email server, respond with a hard bounce to a hard bounce. In other words, hard bounces are being rejected.
 
 For some background, see for [this Wikipedia article](https://en.wikipedia.org/wiki/Bounce_message).
 
@@ -3562,17 +3597,20 @@ You can reset asked questions via the three dots overflow menu in the miscellane
 <br />
 
 <a name="faq129"></a>
-**(129) Are ProtonMail, Tutanota supported?**
+**(129) Are ProtonMail, Tutanota, CTemplar supported?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq129)
 
-ProtonMail uses a proprietary email protocol
+**ProtonMail** uses a proprietary email protocol
 and [does not directly support IMAP](https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/),
-so you cannot use FairEmail to access ProtonMail.
+so you cannot use FairEmail or any other Android email client to access ProtonMail.
 
-Tutanota uses a proprietary email protocol
+**Tutanota** uses a proprietary email protocol
 and [does not support IMAP](https://tutanota.com/faq/#imap),
-so you cannot use FairEmail to access Tutanota.
+so you cannot use FairEmail or any other email client to access Tutanota.
+
+**CTemplar** [does not support IMAP](https://ctemplar.com/help/answer/do-you-offer-imap-2/) yet,
+so you cannot use FairEmail or any other email client to access CTemplar.
 
 <br />
 
@@ -4465,7 +4503,7 @@ Related questions:
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq173)
 
 * The Play store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
-* The Play store version does not support [Gravatars](https://gravatar.com/), see [here](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-85226179) for the reason
+* The Play store version does not support [Gravatars](https://gravatar.com/) and [Libravatars](https://www.libravatar.org/), see [here](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-85226179) for the reason
 * The Play store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
 * The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently
 * The GitHub version has some different links, some more options (like sharing the HTML of a message) and some different default values (more geared to advanced users)
@@ -4518,6 +4556,8 @@ but unfortunately modifications by manufacturers often [require it anyway](https
 <a name="faq176"></a>
 **(176) When will a message be considered safely transported?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq176)
+
 If the receive option *Check transport layer security (TLS)* is enabled,
 a green shield will be shown only if a message was transported securely by all servers.
 
@@ -4552,6 +4592,8 @@ Received: brown.elm.relay.mailchannels.net (brown.elm.relay.mailchannels.net. [2
 <a name="faq177"></a>
 **(177) What does 'Sensitivity' mean?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq177)
+
 The sensitivity of a message indicates the confidentiality of a message.
 
 * Personal: for you only
@@ -4567,10 +4609,32 @@ The sensitivity indication is sent as [a message header](https://datatracker.iet
 <a name="faq178"></a>
 **(178) Why are widgets not updating?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq178)
+
 Apps provide the layout and data for widgets on demand, but the homescreen app/launcher manages all widgets, with a little help from Android.
 
 If widgets are not being updated, this is often caused by missing permission.
 Please see [this video](https://www.youtube.com/watch?v=ywQrYJ6rtnM) about how to fix this.
+
+<br />
+
+<a name="faq179"></a>
+**(179) What are reply templates?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq179)
+
+Reply templates are predefined answer texts. They can be defined via the main navigation menu (left side menu).
+
+You can reply with a template, insert a template via the three-dots overflow menu in the message editor,
+and long press on an open space to insert a snippet (the latter requires Android 6 Marshmallow or later).
+
+Templates can have the following options:
+
+* *Default*: standard template to use when writing a new message
+* *Use as read receipt*: template to use instead of the default read receipt text
+* *Favorite*: template will be added in the main reply popup menu
+* *Snippet*: template will be used as text fragment (since version 1.1857)
+* *Hide from menus*: template will be hidden (disabled)
 
 <br />
 

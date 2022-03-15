@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +50,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
     private LayoutInflater inflater;
 
     private boolean nav_count;
+    private boolean nav_count_pinned;
     private boolean nav_unseen_drafts;
     private int colorUnread;
     private int textColorSecondary;
@@ -62,6 +64,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
         private View view;
         private ImageView ivItem;
         private ImageView ivBadge;
+        private TextView tvCount;
         private TextView tvItem;
         private TextView tvItemExtra;
         private ImageView ivExtra;
@@ -73,6 +76,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
             view = itemView.findViewById(R.id.clItem);
             ivItem = itemView.findViewById(R.id.ivItem);
             ivBadge = itemView.findViewById(R.id.ivBadge);
+            tvCount = itemView.findViewById(R.id.tvCount);
             tvItem = itemView.findViewById(R.id.tvItem);
             tvItemExtra = itemView.findViewById(R.id.tvItemExtra);
             ivExtra = itemView.findViewById(R.id.ivExtra);
@@ -103,7 +107,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
             else
                 ivItem.clearColorFilter();
 
-            long count;
+            int count;
             if (EntityFolder.OUTBOX.equals(folder.type) ||
                     (!nav_unseen_drafts && EntityFolder.DRAFTS.equals(folder.type)))
                 count = folder.messages;
@@ -111,6 +115,9 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
                 count = folder.unseen;
 
             ivBadge.setVisibility(count == 0 || expanded ? View.GONE : View.VISIBLE);
+
+            tvCount.setText(Helper.formatNumber(count, 99, NF));
+            tvCount.setVisibility(count == 0 || expanded || !nav_count_pinned ? View.GONE : View.VISIBLE);
 
             if (count == 0)
                 tvItem.setText(EntityFolder.localizeType(context, folder.type));
@@ -142,10 +149,43 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             if (EntityFolder.OUTBOX.equals(folder.type))
                 lbm.sendBroadcast(new Intent(ActivityView.ACTION_VIEW_OUTBOX));
-            else
-                lbm.sendBroadcast(
-                        new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                .putExtra("type", folder.type));
+            else {
+                Bundle args = new Bundle();
+                args.putString("type", folder.type);
+
+                new SimpleTask<EntityFolder>() {
+                    @Override
+                    protected EntityFolder onExecute(Context context, Bundle args) throws Throwable {
+                        String type = args.getString("type");
+
+                        DB db = DB.getInstance(context);
+                        List<EntityFolder> folders = db.folder().getFoldersByType(type);
+
+                        return (folders != null && folders.size() == 1 ? folders.get(0) : null);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityFolder one) {
+                        if (one == null)
+                            lbm.sendBroadcast(
+                                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                            .putExtra("type", folder.type));
+                        else
+                            lbm.sendBroadcast(
+                                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                            .putExtra("account", one.account)
+                                            .putExtra("folder", one.id)
+                                            .putExtra("type", one.type));
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        lbm.sendBroadcast(
+                                new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                        .putExtra("type", folder.type));
+                    }
+                }.execute(context, owner, args, "nav:folder");
+            }
         }
     }
 
@@ -156,6 +196,7 @@ public class AdapterNavUnified extends RecyclerView.Adapter<AdapterNavUnified.Vi
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.nav_count = prefs.getBoolean("nav_count", false);
+        this.nav_count_pinned = prefs.getBoolean("nav_count_pinned", false);
         this.nav_unseen_drafts = prefs.getBoolean("nav_unseen_drafts", false);
         boolean highlight_unread = prefs.getBoolean("highlight_unread", true);
         int colorHighlight = prefs.getInt("highlight_color", Helper.resolveColor(context, R.attr.colorUnreadHighlight));

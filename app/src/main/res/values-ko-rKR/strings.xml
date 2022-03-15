@@ -170,6 +170,7 @@
     <string name="title_setup_password_repeat">비밀번호 재입력</string>
     <string name="title_setup_password_missing">비밀번호 누락</string>
     <string name="title_setup_password_invalid">유효하지 않은 비밀번호</string>
+    <string name="title_setup_import_delete">기존 계정을 먼저 삭제하십시오</string>
     <string name="title_setup_exported">설정 내보냄</string>
     <string name="title_setup_imported">설정 불러옴</string>
     <string name="title_setup_reorder_accounts">계정 정렬</string>
@@ -235,6 +236,7 @@
     <string name="title_advanced_signature_reply">답장 시 서명 사용</string>
     <string name="title_advanced_signature_forward">전달 시 서명 사용</string>
     <string name="title_advanced_discard_delete">초안이 영구적으로 삭제됩니다</string>
+    <string name="title_advanced_reply_move">답장 시 응답을 같은 폴더에 저장합니다</string>
     <string name="title_advanced_metered">과금 연결 사용</string>
     <string name="title_advanced_rlah">EU 내 무제한 로밍</string>
     <string name="title_advanced_download_headers">모든 메시지 제목 다운로드</string>
@@ -250,6 +252,7 @@
     <string name="title_advanced_caption_message_header">메시지 제목</string>
     <string name="title_advanced_caption_message_body">메시지 본문</string>
     <string name="title_advanced_close_pane">대화 상자를 닫을 때 행 또는 열 축소</string>
+    <string name="title_advanced_nav_pinned_count">고정된 내비게이션 메뉴에 읽지 않은 메시지 수 표시</string>
     <string name="title_advanced_tabular_dividers">태블릿 스타일 사용 중 구분선 표시</string>
     <string name="title_advanced_category_header">계정 카테고리로 묶기</string>
     <string name="title_advanced_date_header">날짜로 묶기</string>
@@ -257,6 +260,7 @@
     <string name="title_advanced_date_bold">날짜를 굵게 표시</string>
     <string name="title_advanced_threading">대화 스레딩</string>
     <string name="title_advanced_gravatars">그라바타 표시</string>
+    <string name="title_advanced_libravatars">리브라바타 표시</string>
     <string name="title_advanced_bimi_unverified">확인되지 않은 발신자</string>
     <string name="title_advanced_bimi_verified">확인된 발신자</string>
     <string name="title_advanced_favicons">파비콘 표시</string>
@@ -270,6 +274,7 @@
     <string name="title_advanced_preview_italic">메시지 미리보기를 기울임꼴로 표시</string>
     <string name="title_advanced_preview_lines">미리보기 줄 수</string>
     <string name="title_advanced_addresses">주소 상세정보를 기본으로 펼치기</string>
+    <string name="title_advanced_unzip">압축한 첨부 파일의 내용 표시</string>
     <string name="title_advanced_text_color">글씨 색상 사용</string>
     <string name="title_advanced_text_size">글씨 크기 사용</string>
     <string name="title_advanced_text_font">글꼴 사용</string>
@@ -310,6 +315,10 @@
     <string name="title_advanced_notify_subtext">부가 텍스트로 계정이나 폴더명 보기</string>
     <string name="title_advanced_client_id">앱 이름 및 버전을 이메일 서버로 전송</string>
     <string name="title_advanced_pin">PIN</string>
+    <string name="title_advanced_mnemonic">원격 데이터 삭제</string>
+    <string name="title_advanced_mnemonic_hint">제목에 아래 단어가 포함된 이메일을 받은 경우 자동으로 이 기기의 모든 앱 데이터를 즉시 삭제합니다</string>
+    <string name="title_advanced_clear_all">앱 데이터 삭제</string>
+    <string name="title_advanced_clear_all_remark">앱 데이터가 삭제되며 되돌릴 수 없습니다!</string>
     <string name="title_advanced_openpgp">OpenPGP 제공업체</string>
     <string name="title_advanced_autocrypt">Autocrypt 사용</string>
     <string name="title_advanced_encrypt_subject">제목 암호화</string>
@@ -320,6 +329,7 @@
     <string name="title_advanced_import_key">개인 키 불러오기</string>
     <string name="title_advanced_manage_keys">개인 키 관리</string>
     <string name="title_advanced_power_menu">Android 전원 메뉴에 동작 추가</string>
+    <string name="title_advanced_sort_answers">답장 템플릿을 사용 빈도순으로 정렬</string>
     <string name="title_advanced_language">언어</string>
     <string name="title_advanced_language_system">시스템</string>
     <string name="title_advanced_cleanup">비우기</string>
@@ -375,6 +385,7 @@
     <string name="title_account_delete">이 계정을 영구적으로 삭제할까요?</string>
     <string name="title_edit_html">HTML 편집</string>
     <string name="title_sign_key">서명 키: %1$s</string>
+    <string name="title_pop_support">POP3 프로토콜은 받은 편지함에서 메시지를 다운로드하고 삭제하는 작업만 수행할 수 있습니다. 메시지를 읽은 상태로 표시, 스팸 신고, 메시지 이동 등의 작업은 불가능합니다. 가능하면 IMAP 프로토콜을 사용하십시오.</string>
     <string name="title_oauth_support">OAuth가 지원되지 않습니다</string>
     <string name="title_review">검토</string>
     <string name="title_hint_accounts">길게 눌러 계정 비활성화 및 삭제 등 설정 표시</string>
@@ -624,6 +635,7 @@
     <string name="title_answer_name">템플릿명</string>
     <string name="title_answer_standard">기본값</string>
     <string name="title_answer_favorite">즐겨찾기</string>
+    <string name="title_answer_snippet" comment="title_answer_snippet&#10;Option title to mark a reply template as text fragment, which can be inserted by long press on an open space">스니펫</string>
     <string name="title_answer_hide">메뉴에서 숨기기</string>
     <string name="title_answer_text">템플릿 내용</string>
     <string name="title_answer_placeholder">자리표시자</string>

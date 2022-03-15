@@ -22,13 +22,19 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.Spanned;
+import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.DynamicDrawableSpan;
@@ -36,6 +42,7 @@ import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.view.ContextThemeWrapper;
 import android.view.MotionEvent;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,7 +56,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
+import javax.mail.Address;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -59,6 +70,15 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
     private int colorAccent;
     private ContextThemeWrapper ctx;
     private Tokenizer tokenizer;
+    private Map<String, Integer> encryption = new ConcurrentHashMap<>();
+
+    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "chips");
+
+    private static int[] icons = new int[]{
+            R.drawable.twotone_vpn_key_24_p,
+            R.drawable.twotone_vpn_key_24_s,
+            R.drawable.twotone_vpn_key_24_b
+    };
 
     public EditTextMultiAutoComplete(@NonNull Context context) {
         super(context);
@@ -132,6 +152,12 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
     }
 
     @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        setAlpha(enabled ? 1.0f : Helper.LOW_LIGHT);
+    }
+
+    @Override
     public boolean onPreDraw() {
         try {
             return super.onPreDraw();
@@ -194,8 +220,14 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
         public void run() {
             try {
                 final Context context = getContext();
+                final Resources res = getResources();
                 final Editable edit = getText();
+                final int dp3 = Helper.dp2pixels(context, 3);
+                final int dp24 = Helper.dp2pixels(context, 24);
                 final boolean send_chips = prefs.getBoolean("send_chips", true);
+                boolean generated = prefs.getBoolean("generated_icons", true);
+                boolean identicons = prefs.getBoolean("identicons", false);
+                boolean circular = prefs.getBoolean("circular", true);
 
                 final boolean focus = hasFocus();
                 final int selStart = getSelectionStart();
@@ -226,8 +258,8 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                                 int s = edit.getSpanStart(span);
                                 int e = edit.getSpanEnd(span);
                                 if (s == start && e == i + 1) {
-                                    found = true;
-                                    if (!(focus && overlap(start, i, selStart, selEnd)))
+                                    found = !span.needsUpdate();
+                                    if (found && !(focus && overlap(start, i, selStart, selEnd)))
                                         tbd.remove(span);
                                     break;
                                 }
@@ -235,10 +267,10 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
 
                             if (!found && start < i + 1 &&
                                     !(focus && overlap(start, i, selStart, selEnd))) {
-                                String email = edit.subSequence(start, i + 1).toString();
+                                String address = edit.subSequence(start, i + 1).toString();
                                 InternetAddress[] parsed;
                                 try {
-                                    parsed = MessageHelper.parseAddresses(context, email);
+                                    parsed = MessageHelper.parseAddresses(context, address);
                                     if (parsed != null)
                                         for (InternetAddress a : parsed)
                                             a.validate();
@@ -252,28 +284,80 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                                     else if (kar != ',')
                                         edit.insert(++i, ",");
 
-                                    Drawable avatar = null;
-                                    Uri lookupUri = ContactInfo.getLookupUri(parsed);
-                                    if (lookupUri != null) {
-                                        InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
-                                                context.getContentResolver(), lookupUri, false);
-                                        avatar = Drawable.createFromStream(is, email);
-                                    }
+                                    String email = parsed[0].getAddress();
+                                    String personal = parsed[0].getPersonal();
 
-                                    String e = parsed[0].getAddress();
-                                    String p = parsed[0].getPersonal();
-                                    String text = (TextUtils.isEmpty(p) ? e : p);
+                                    Bitmap bm = null;
+                                    Uri lookupUri = ContactInfo.getLookupUri(parsed);
+                                    if (lookupUri != null)
+                                        try (InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
+                                                context.getContentResolver(), lookupUri, false)) {
+                                            bm = BitmapFactory.decodeStream(is);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                        }
+
+                                    if (bm == null && generated && !TextUtils.isEmpty(address))
+                                        if (identicons)
+                                            bm = ImageHelper.generateIdenticon(email, dp24, 5, context);
+                                        else
+                                            bm = ImageHelper.generateLetterIcon(email, personal, dp24, context);
+
+                                    if (bm != null && circular && !identicons)
+                                        bm = ImageHelper.makeCircular(bm, dp3);
+
+                                    Drawable avatar = (bm == null ? null : new BitmapDrawable(res, bm));
+
+                                    String text = (TextUtils.isEmpty(personal) ? email : personal);
 
                                     // https://github.com/material-components/material-components-android/blob/master/docs/components/Chip.md
                                     ChipDrawable cd = ChipDrawable.createFromResource(ctx, R.xml.chip);
                                     cd.setChipIcon(avatar);
-                                    // cd.setLayoutDirection(View.LAYOUT_DIRECTION_LOCALE);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                                        try {
+                                            if (TextDirectionHeuristics.FIRSTSTRONG_LTR.isRtl(text, 0, text.length()))
+                                                cd.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                        }
                                     cd.setText(text);
                                     cd.setChipBackgroundColor(ColorStateList.valueOf(colorAccent));
+
+                                    ClipImageSpan is = new ClipImageSpan(cd);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+                                        is.setContentDescription(email);
+
+                                    Integer has = encryption.get(email);
+                                    if (has == null) {
+                                        final List<Address> recipient = Arrays.asList(new Address[]{parsed[0]});
+                                        executor.submit(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                try {
+                                                    int has = 0;
+                                                    if (PgpHelper.hasPgpKey(context, recipient))
+                                                        has |= 1;
+                                                    if (SmimeHelper.hasSmimeKey(context, recipient))
+                                                        has |= 2;
+                                                    encryption.put(email, has);
+
+                                                    if (has != 0) {
+                                                        is.invalidate();
+                                                        post(update);
+                                                    }
+                                                } catch (Throwable ex) {
+                                                    Log.w(ex);
+                                                }
+                                            }
+                                        });
+                                    } else if (has != 0) {
+                                        cd.setCloseIcon(context.getDrawable(icons[has - 1]));
+                                        cd.setCloseIconVisible(true);
+                                    }
+
                                     cd.setMaxWidth(getWidth());
                                     cd.setBounds(0, 0, cd.getIntrinsicWidth(), cd.getIntrinsicHeight());
 
-                                    ClipImageSpan is = new ClipImageSpan(cd);
                                     edit.setSpan(is, start, i + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                                     if (kar == ',' &&
@@ -305,8 +389,18 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
     }
 
     private static class ClipImageSpan extends ImageSpan {
+        private boolean update;
+
         public ClipImageSpan(@NonNull Drawable drawable) {
             super(drawable, DynamicDrawableSpan.ALIGN_BOTTOM);
+        }
+
+        void invalidate() {
+            update = true;
+        }
+
+        boolean needsUpdate() {
+            return update;
         }
     }
 }

@@ -95,7 +95,7 @@ public class FragmentDialogForwardRaw extends FragmentDialogBase {
                 try {
                     db.beginTransaction();
 
-                    List<String> msgids = new ArrayList<>();
+                    List<String> hashes = new ArrayList<>();
 
                     for (long id : ids) {
                         EntityMessage message = db.message().getMessage(id);
@@ -128,9 +128,12 @@ public class FragmentDialogForwardRaw extends FragmentDialogBase {
                             continue;
 
                         for (EntityMessage thread : messages) {
-                            if (msgids.contains(thread.msgid))
-                                continue;
-                            msgids.add(thread.msgid);
+                            if (threads) {
+                                String hash = (message.hash == null ? message.msgid : message.hash);
+                                if (hashes.contains(hash))
+                                    continue;
+                                hashes.add(hash);
+                            }
 
                             result.add(thread.id);
 

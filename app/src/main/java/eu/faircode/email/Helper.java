@@ -133,6 +133,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -177,6 +178,8 @@ public class Helper {
     static final String SUPPORT_URI = "https://contact.faircode.eu/";
     static final String TEST_URI = "https://play.google.com/apps/testing/" + BuildConfig.APPLICATION_ID;
     static final String BIMI_PRIVACY_URI = "https://datatracker.ietf.org/doc/html/draft-brotman-ietf-bimi-guidance-03#section-7.4";
+    static final String ID_COMMAND_URI = "https://datatracker.ietf.org/doc/html/rfc2971#section-3.1";
+    static final String AUTH_RESULTS_URI = "https://datatracker.ietf.org/doc/html/rfc7601";
     static final String FAVICON_PRIVACY_URI = "https://en.wikipedia.org/wiki/Favicon";
     static final String GRAVATAR_PRIVACY_URI = "https://en.wikipedia.org/wiki/Gravatar";
     static final String LICENSE_URI = "https://www.gnu.org/licenses/gpl-3.0.html";
@@ -193,7 +196,7 @@ public class Helper {
     private static final String[] ROMAN_1 = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
 
     static final Pattern EMAIL_ADDRESS = Pattern.compile(
-            "[\\S]{1,256}" +
+            "[\\S&&[^\"@]]{1,256}" +
                     "\\@" +
                     "[\\p{L}0-9][\\p{L}0-9\\-\\_]{0,64}" +
                     "(" +
@@ -696,7 +699,8 @@ public class Helper {
                 "message/delivery-status".equals(type) ||
                 "message/disposition-notification".equals(type) ||
                 "text/rfc822-headers".equals(type) ||
-                "text/x-amp-html".equals(type)))
+                "text/x-amp-html".equals(type) ||
+                "text/xml".equals(type) /* DMARC */))
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         if (!TextUtils.isEmpty(name))
@@ -1315,9 +1319,11 @@ public class Helper {
                     child instanceof CheckBox ||
                     child instanceof ImageView /* =ImageButton */ ||
                     child instanceof RadioButton ||
-                    (child instanceof Button && "disable".equals(child.getTag())))
+                    (child instanceof Button && "disable".equals(child.getTag()))) {
+                if (child instanceof ImageView && ((ImageView) child).getImageTintList() != null)
+                    child.setAlpha(enabled ? 1.0f : LOW_LIGHT);
                 child.setEnabled(enabled);
-            else if (child instanceof BottomNavigationView) {
+            } else if (child instanceof BottomNavigationView) {
                 Menu menu = ((BottomNavigationView) child).getMenu();
                 menu.setGroupEnabled(0, enabled);
             } else if (child instanceof RecyclerView)
@@ -1518,6 +1524,12 @@ public class Helper {
             return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
         else
             return DateUtils.getRelativeTimeSpanString(context, millis);
+    }
+
+    static String formatNumber(Integer number, long max, NumberFormat nf) {
+        if (number == null)
+            return null;
+        return nf.format(Math.min(number, max)) + (number > max ? "+" : "");
     }
 
     static void linkPro(final TextView tv) {
@@ -2163,11 +2175,18 @@ public class Helper {
 
                         @Override
                         public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-                            Log.w("Authenticate biometric error " + errorCode + ": " + errString);
+                            if (isCancelled(errorCode))
+                                Log.w("Authenticate biometric error " + errorCode + ": " + errString);
+                            else
+                                Log.e("Authenticate biometric error " + errorCode + ": " + errString);
 
-                            if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
-                                    errorCode != BiometricPrompt.ERROR_CANCELED &&
-                                    errorCode != BiometricPrompt.ERROR_USER_CANCELED)
+                            if (isHardwareFailure(errorCode)) {
+                                prefs.edit().remove("biometrics").apply();
+                                ApplicationEx.getMainHandler().post(authenticated);
+                                return;
+                            }
+
+                            if (!isCancelled(errorCode))
                                 ApplicationEx.getMainHandler().post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -2192,6 +2211,19 @@ public class Helper {
                             Log.w("Authenticate biometric failed");
                             if (++fails >= 3)
                                 ApplicationEx.getMainHandler().post(cancelled);
+                        }
+
+                        private boolean isCancelled(int errorCode) {
+                            return (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                                    errorCode == BiometricPrompt.ERROR_CANCELED ||
+                                    errorCode == BiometricPrompt.ERROR_USER_CANCELED);
+                        }
+
+                        private boolean isHardwareFailure(int errorCode) {
+                            return (errorCode == BiometricPrompt.ERROR_HW_UNAVAILABLE ||
+                                    errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS ||
+                                    errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
+                                    errorCode == BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL);
                         }
                     });
 
@@ -2539,5 +2571,10 @@ public class Helper {
         Parcel p = Parcel.obtain();
         bundle.writeToParcel(p, 0);
         return p.dataSize();
+    }
+
+    static void clearAll(Context context) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        am.clearApplicationUserData();
     }
 }

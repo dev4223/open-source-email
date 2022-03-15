@@ -27,6 +27,8 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.text.Editable;
 import android.text.Layout;
+import android.text.NoCopySpan;
+import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -925,16 +927,25 @@ public class StyleHelper {
         }
     }
 
+    static void markAsTranslated(Editable text, int start, int end) {
+        for (TranslatedSpan span : text.getSpans(0, text.length(), TranslatedSpan.class))
+            text.removeSpan(span);
+        text.setSpan(new TranslatedSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    static class TranslatedSpan implements NoCopySpan {
+    }
+
     static String getFamily(String family) {
         // https://web.mit.edu/jmorzins/www/fonts.html
         // https://en.wikipedia.org/wiki/Croscore_fonts
         // https://developer.mozilla.org/en-US/docs/Web/CSS/font-family
         // TODO: Microsoft: Georgia (Serif), Tahoma (Sans-serif), Trebuchet MS (Sans-serif)
         String faces = family.toLowerCase(Locale.ROOT);
-        if (faces.contains("open sans"))
-            return "Open Sans, Arial, Verdana, Helvetica, Helvetica Neue, sans-serif";
+        if (faces.contains("montserrat"))
+            return "Montserrat, Gotham, \"Proxima Nova\", sans-serif";
         if (faces.contains("arimo"))
-            return "Arimo, Arial, Verdana, Helvetica, Helvetica Neue, sans-serif";
+            return "Arimo, Arial, Verdana, Helvetica, \"Helvetica Neue\", sans-serif";
         if (faces.contains("tinos"))
             return "Tinos, \"Times New Roman\", Times, serif";
         if (faces.contains("cousine"))
@@ -972,8 +983,10 @@ public class StyleHelper {
             return ResourcesCompat.getFont(context, R.font.fantasy);
 
         if (bundled_fonts) {
-            if (faces.contains("open sans"))
-                return ResourcesCompat.getFont(context, R.font.opensans);
+            if (faces.contains("montserrat") ||
+                    faces.contains("gotham") ||
+                    faces.contains("proxima nova"))
+                return ResourcesCompat.getFont(context, R.font.montserrat);
 
             if (faces.contains("arimo") ||
                     faces.contains("arial") ||
@@ -1038,8 +1051,10 @@ public class StyleHelper {
             result.add(new FontDescriptor("cousine", "Cousine (Courier New)", true));
             result.add(new FontDescriptor("lato", "Lato (Calibri)", true));
             result.add(new FontDescriptor("caladea", "Caladea (Cambria)", true));
-            if (BuildConfig.DEBUG)
-                result.add(new FontDescriptor("open sans", "Open Sans", true));
+
+            if (BuildConfig.DEBUG) {
+                result.add(new FontDescriptor("montserrat", "Montserrat", true));
+            }
 
             result.add(new FontDescriptor("comic sans", "OpenDyslexic", true));
         }

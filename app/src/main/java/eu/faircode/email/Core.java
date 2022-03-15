@@ -2909,7 +2909,7 @@ class Core {
                         message.references = TextUtils.join(" ", helper.getReferences());
                         message.inreplyto = helper.getInReplyTo();
                         message.deliveredto = helper.getDeliveredTo();
-                        message.thread = helper.getThreadId(context, account.id, folder.id, 0);
+                        message.thread = helper.getThreadId(context, account.id, folder.id, 0, received);
                         message.priority = helper.getPriority();
                         message.sensitivity = helper.getSensitivity();
                         message.auto_submitted = helper.getAutoSubmitted();
@@ -3807,7 +3807,7 @@ class Core {
                     have = true;
 
                 if (dup.folder.equals(folder.id)) {
-                    String thread = helper.getThreadId(context, account.id, folder.id, uid);
+                    String thread = helper.getThreadId(context, account.id, folder.id, uid, dup.received);
                     Log.i(folder.name + " found as id=" + dup.id +
                             " uid=" + dup.uid + "/" + uid +
                             " msgid=" + msgid + " thread=" + thread);
@@ -3886,7 +3886,7 @@ class Core {
             message.inreplyto = helper.getInReplyTo();
             // Local address contains control or whitespace in string ``mailing list someone@example.org''
             message.deliveredto = helper.getDeliveredTo();
-            message.thread = helper.getThreadId(context, account.id, folder.id, uid);
+            message.thread = helper.getThreadId(context, account.id, folder.id, uid, received);
             if (BuildConfig.DEBUG && message.thread.startsWith("outlook:"))
                 message.warning = message.thread;
             message.priority = helper.getPriority();
@@ -3966,11 +3966,11 @@ class Core {
             // Borrow reply name from sender name
             if (message.from != null && message.from.length == 1 &&
                     message.reply != null && message.reply.length == 1) {
+                InternetAddress from = (InternetAddress) message.from[0];
                 InternetAddress reply = (InternetAddress) message.reply[0];
-                if (TextUtils.isEmpty(reply.getPersonal())) {
-                    InternetAddress from = (InternetAddress) message.from[0];
+                if (TextUtils.isEmpty(reply.getPersonal()) &&
+                        Objects.equals(from.getAddress(), reply.getAddress()))
                     reply.setPersonal(from.getPersonal());
-                }
             }
 
             EntityIdentity identity = matchIdentity(context, folder, message);
@@ -4070,7 +4070,7 @@ class Core {
                         if (r.isDeliveryStatus())
                             label = (r.isDelivered() ? MessageHelper.FLAG_DELIVERED : MessageHelper.FLAG_NOT_DELIVERED);
                         else if (r.isDispositionNotification())
-                            label = (r.isDisplayed() ? MessageHelper.FLAG_DISPLAYED : MessageHelper.FLAG_NOT_DISPLAYED);
+                            label = (r.isMdnDisplayed() ? MessageHelper.FLAG_DISPLAYED : MessageHelper.FLAG_NOT_DISPLAYED);
 
                         if (label != null) {
                             Map<Long, EntityFolder> map = new HashMap<>();
@@ -4504,6 +4504,14 @@ class Core {
             Context context, List<Header> headers, String html,
             EntityAccount account, EntityFolder folder, EntityMessage message,
             List<EntityRule> rules) {
+
+        if (EntityFolder.INBOX.equals(folder.type)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String mnemonic = prefs.getString("wipe_mnemonic", null);
+            if (mnemonic != null && message.subject != null &&
+                    message.subject.toLowerCase(Locale.ROOT).contains(mnemonic))
+                Helper.clearAll(context);
+        }
 
         if (account.protocol == EntityAccount.TYPE_IMAP && folder.read_only)
             return;

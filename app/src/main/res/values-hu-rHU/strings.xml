@@ -241,6 +241,8 @@
     <string name="title_setup_theme_red_green">Piros/zöld</string>
     <string name="title_setup_theme_grey">Szürke</string>
     <string name="title_setup_theme_black">Fekete</string>
+    <string name="title_setup_theme_white">Fehér</string>
+    <string name="title_setup_theme_black_or_white">Fekete vagy fehér</string>
     <string name="title_setup_theme_black_and_white">Fekete és fehér</string>
     <string name="title_setup_theme_reverse">Színek felcserélése</string>
     <string name="title_setup_theme_light">Világos</string>
@@ -329,7 +331,6 @@
     <string name="title_advanced_signature_reply">Aláírás használata válaszoláskor</string>
     <string name="title_advanced_signature_forward">Aláírás használata toivábbításkor</string>
     <string name="title_advanced_discard_delete">Piszkozat végleges törlése annak elvetésekor</string>
-    <string name="title_advanced_reply_move">Ha egy felhasználói mappában lévő üzenetre válaszol, mentse a választ ugyanabba a mappába</string>
     <string name="title_advanced_auto_link">Automatikus link létrehozása</string>
     <string name="title_advanced_plain_only">Nyers szöveg alapértelmezett küldése</string>
     <string name="title_advanced_flow">\'format flowed\' üres szöveghez</string>
@@ -771,6 +772,7 @@
     <string name="title_drafts_select">Emailek küldéséhez egy piszkozat mappa kiválasztása szükséges a fiókbeállításokban</string>
     <string name="title_account_auth_update">Hitelesítés frissítése</string>
     <string name="title_account_auth_password">Váltás jelszó alapú azonosításra</string>
+    <string name="title_delete_account">Fiók törlése</string>
     <string name="title_account_delete">Véglegesen törli a fiókot?</string>
     <string name="title_identity_delete">Véglegesen törli az identitást?</string>
     <string name="title_edit_html">Szerkesztés HTML-ként</string>
@@ -778,7 +780,6 @@
     <string name="title_last_connected">Utoljára csatlakozva: %1$s</string>
     <string name="title_backoff_until">Várakozás hiba után eddig: %1$s</string>
     <string name="title_storage_quota">Szerver tárhely használatban: %1$s/%2$s</string>
-    <string name="title_pop_support">A POP3 protokoll csak a bérkezett mappa üzeneteinek letöltését vagy törlését támogatja. Nem lehetséges az üzenetek olvasottként megjelölése, azok mozgatása, stb. A POP3 továbbá magasabb adatkapcsolat- és akkumulátorhasználattal jár. Javasolt tehát az IMAP használata, amikor csak lehetséges.</string>
     <string name="title_pop_sent">Ha eszközét ellopják vagy elvesződik, az elküldött üzenetek elveszhetnek.</string>
     <string name="title_pop_warning">Ha egy POP3 szerver nem támogatja az UIDL parancsot, az adathasználat megnőhet. Ezért ennek megfelelően állítsa be a frissítési gyakoriságot.</string>
     <string name="title_pop_folders">A POP3 protokol nem támogatja a könyvtárak létrehozását</string>
@@ -1217,6 +1218,7 @@
     <string name="title_search_in_junk">Levélszemétben is</string>
     <string name="title_search_with_before">Előtt</string>
     <string name="title_search_with_after">Után</string>
+    <string name="title_search_device_first">Először keressen az eszközön</string>
     <string name="title_search_flag_unseen">olvasatlan</string>
     <string name="title_search_flag_flagged">csillagozott</string>
     <string name="title_search_flag_hidden">rejtett</string>
@@ -1506,6 +1508,7 @@
     <string name="title_later">Később</string>
     <string name="title_undo">Visszavonás</string>
     <string name="title_redo">Mégis</string>
+    <string name="title_insert_line">Sor beszúrása</string>
     <string name="title_add">Hozzáadás</string>
     <string name="title_browse">Megnyitás a következővel:</string>
     <string name="title_info">Info</string>
@@ -1683,7 +1686,7 @@
         <item>Ugrás a következő beszélgetéshez</item>
     </string-array>
     <string-array name="resizeNames">
-        <item>Extra small</item>
+        <item>Nagyon kicsi</item>
         <item>Kicsi</item>
         <item>Közepes</item>
         <item>Nagy</item>
