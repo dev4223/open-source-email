@@ -591,12 +591,17 @@ public class FragmentCompose extends FragmentBase {
         etBody.addTextChangedListener(new TextWatcher() {
             private Integer added = null;
             private Integer removed = null;
+            private Integer replaced = null;
 
             @Override
             public void beforeTextChanged(CharSequence text, int start, int count, int after) {
                 if (count == 1 && after == 0 && (start == 0 || text.charAt(start) == '\n')) {
                     Log.i("Removed=" + start);
                     removed = start;
+                }
+                if (BuildConfig.DEBUG && count - after == 1) {
+                    Log.i("Replaced=" + start);
+                    replaced = start;
                 }
             }
 
@@ -734,6 +739,20 @@ public class FragmentCompose extends FragmentBase {
                     StyleHelper.renumber(text, true, etBody.getContext());
 
                     removed = null;
+                }
+
+                if (replaced != null) {
+                    StyleHelper.TranslatedSpan[] nc =
+                            text.getSpans(replaced, replaced + 1, StyleHelper.TranslatedSpan.class);
+                    if (nc != null)
+                        for (StyleHelper.TranslatedSpan p : nc) {
+                            int start = text.getSpanStart(p);
+                            int end = text.getSpanEnd(p);
+                            text.delete(start, end);
+                            text.removeSpan(p);
+                        }
+
+                    replaced = null;
                 }
 
                 if (lp != null)
@@ -2154,6 +2173,8 @@ public class FragmentCompose extends FragmentBase {
                          */
                         int len = 2 + translation.translated_text.length();
                         edit.insert(paragraph.second, "\n\n" + translation.translated_text);
+                        StyleHelper.markAsTranslated(edit, paragraph.second, paragraph.second + len);
+
                         etBody.setSelection(paragraph.second + len);
 
                         boolean small = prefs.getBoolean("deepl_small", false);
