@@ -197,18 +197,6 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swCategory"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:checked="true"
-                    android:text="@string/title_advanced_category_header"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swTabularDividers"
-                    app:switchPadding="12dp" />
-
-                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swDate"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -217,7 +205,7 @@
                     android:text="@string/title_advanced_date_header"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swCategory"
+                    app:layout_constraintTop_toBottomOf="@id/swTabularDividers"
                     app:switchPadding="12dp" />
 
                 <eu.faircode.email.FixedTextView
@@ -481,6 +469,17 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNavCategories"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_nav_categories"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNavOptions"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swNavMessageCount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -488,7 +487,7 @@
                     android:text="@string/title_advanced_nav_message_count"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNavOptions"
+                    app:layout_constraintTop_toBottomOf="@id/swNavCategories"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -651,6 +650,17 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swActionbar"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swCategory"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_category_header"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swActionbarColor"
                     app:switchPadding="12dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
@@ -1795,6 +1805,12 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swAttachmentsAlt"
                     app:switchPadding="12dp" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpUnzip"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="swUnzip,tvUnzipHint" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 

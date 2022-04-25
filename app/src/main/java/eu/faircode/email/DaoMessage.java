@@ -102,7 +102,7 @@ public interface DaoMessage {
             " AND (NOT :filter_deleted OR NOT message.ui_deleted)" +
             " AND (:filter_language IS NULL OR SUM(message.language = :filter_language) > 0)" +
             " ORDER BY -IFNULL(message.importance, 1)" +
-            ", account.category COLLATE NOCASE" +
+            ", CASE WHEN :group_category THEN account.category ELSE '' END COLLATE NOCASE" +
             ", CASE" +
             "   WHEN 'unread' = :sort THEN SUM(1 - message.ui_seen) = 0" +
             "   WHEN 'starred' = :sort THEN COUNT(message.id) - SUM(1 - message.ui_flagged) = 0" +
@@ -117,7 +117,7 @@ public interface DaoMessage {
             ", CASE WHEN :ascending THEN message.received ELSE -message.received END")
     DataSource.Factory<Integer, TupleMessageEx> pagedUnified(
             String type,
-            boolean threading,
+            boolean threading, boolean group_category,
             String sort, boolean ascending,
             boolean filter_seen, boolean filter_unflagged, boolean filter_unknown, boolean filter_snoozed, boolean filter_deleted, String filter_language,
             boolean found,
@@ -164,7 +164,7 @@ public interface DaoMessage {
             " LEFT JOIN identity_view AS identity ON identity.id = message.identity" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
             " JOIN folder_view AS f ON f.id = :folder" +
-            " WHERE (message.account = f.account OR " + is_outbox + ")" +
+            " WHERE (message.account = f.account OR message.account = identity.account OR " + is_outbox + ")" +
             " AND (:threading OR folder.id = :folder)" +
             " AND (NOT message.ui_hide OR :debug)" +
             " AND (NOT :found OR message.ui_found = :found)" +
@@ -463,6 +463,11 @@ public interface DaoMessage {
             " AND sender = :sender")
     int countSender(long folder, String sender);
 
+    @Query("SELECT COUNT(*) FROM message" +
+            " JOIN folder ON folder.id = message.folder" +
+            " WHERE folder.account IS NULL")
+    int countOutbox();
+
     @Query("SELECT COUNT(*) FROM message")
     int countTotal();
 
@@ -618,6 +623,12 @@ public interface DaoMessage {
             " AND NOT uid IS NULL" +
             " AND NOT content")
     List<EntityMessage> getMessagesWithoutContent(long folder, Long received);
+
+    @Query("SELECT uid FROM message" +
+            " WHERE folder = :folder" +
+            " AND ui_deleted" +
+            " AND NOT uid IS NULL")
+    List<Long> getDeletedUids(long folder);
 
     @Query("SELECT uid FROM message" +
             " WHERE folder = :folder" +

@@ -80,6 +80,8 @@ public class FragmentBase extends Fragment {
     private static final int REQUEST_ATTACHMENTS = 52;
     private static final int REQUEST_RECOVERABLE_PERMISSION = 53;
 
+    static final int REQUEST_PERMISSIONS = 1000;
+
     static final String ACTION_STORE_ATTACHMENT = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENT";
     static final String ACTION_STORE_ATTACHMENTS = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENTS";
 
@@ -504,6 +506,9 @@ public class FragmentBase extends Fragment {
                     os = context.getContentResolver().openOutputStream(uri);
                     is = new FileInputStream(file);
 
+                    if (os == null)
+                        throw new FileNotFoundException(uri.toString());
+
                     byte[] buffer = new byte[Helper.BUFFER_SIZE];
                     int read;
                     while ((read = is.read(buffer)) != -1)
@@ -589,6 +594,9 @@ public class FragmentBase extends Fragment {
                         try {
                             os = context.getContentResolver().openOutputStream(document.getUri());
                             is = new FileInputStream(file);
+
+                            if (os == null)
+                                throw new FileNotFoundException(uri.toString());
 
                             byte[] buffer = new byte[Helper.BUFFER_SIZE];
                             int read;

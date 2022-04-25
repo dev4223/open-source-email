@@ -175,7 +175,7 @@ public class ConnectionHelper {
 
     static NetworkInfo getNetworkInfo(Context context, Network network) {
         try {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
             return (cm == null ? null : cm.getNetworkInfo(network));
         } catch (Throwable ex) {
             Log.e(ex);
@@ -197,7 +197,7 @@ public class ConnectionHelper {
             state.suitable = (isMetered != null && (metered || !isMetered));
             state.active = getActiveNetwork(context);
 
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
 
             if (state.connected && !roaming) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
@@ -215,7 +215,7 @@ public class ConnectionHelper {
 
                 if (state.roaming != null && state.roaming && rlah)
                     try {
-                        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                        TelephonyManager tm = Helper.getSystemService(context, TelephonyManager.class);
                         if (tm != null) {
                             String sim = tm.getSimCountryIso();
                             String network = tm.getNetworkCountryIso();
@@ -242,7 +242,7 @@ public class ConnectionHelper {
         boolean require_validated = prefs.getBoolean("require_validated", false);
         boolean vpn_only = prefs.getBoolean("vpn_only", false);
 
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null) {
             Log.i("isMetered: no connectivity manager");
             return null;
@@ -251,6 +251,8 @@ public class ConnectionHelper {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
             NetworkInfo ani = cm.getActiveNetworkInfo();
             if (ani == null || !ani.isConnected())
+                return null;
+            if (vpn_only && !vpnActive(context))
                 return null;
             return cm.isActiveNetworkMetered();
         }
@@ -381,7 +383,7 @@ public class ConnectionHelper {
     }
 
     static Network getActiveNetwork(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null)
             return null;
 
@@ -456,8 +458,7 @@ public class ConnectionHelper {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
             return false;
 
-        ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null)
             return false;
 
@@ -468,8 +469,34 @@ public class ConnectionHelper {
         return (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED);
     }
 
+    static String getDataSaving(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+            return null;
+
+        try {
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+            if (cm == null)
+                return null;
+
+            int status = cm.getRestrictBackgroundStatus();
+            switch (status) {
+                case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED:
+                    return "disabled";
+                case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED:
+                    return "enabled";
+                case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED:
+                    return "whitelisted";
+                default:
+                    return Integer.toString(status);
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return null;
+        }
+    }
+
     static boolean vpnActive(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null)
             return false;
 
@@ -487,8 +514,13 @@ public class ConnectionHelper {
     }
 
     static boolean airplaneMode(Context context) {
-        return Settings.Global.getInt(context.getContentResolver(),
-                Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+        try {
+            return (Settings.Global.getInt(context.getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, 0) != 0);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return false;
+        }
     }
 
     static InetAddress from6to4(InetAddress addr) {
@@ -506,6 +538,9 @@ public class ConnectionHelper {
     }
 
     static boolean isNumericAddress(String host) {
+        // IPv4-mapped IPv6 can be 45 characters
+        if (host == null || host.length() > 64)
+            return false;
         return ConnectionHelper.jni_is_numeric_address(host);
     }
 

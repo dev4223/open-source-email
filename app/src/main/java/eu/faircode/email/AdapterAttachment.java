@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +33,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
@@ -207,8 +209,11 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                 if (attachment.available)
                     onShare(attachment);
                 else {
-                    if (attachment.progress == null && attachment.subsequence == null)
-                        onDownload(attachment);
+                    if (attachment.progress == null)
+                        if (attachment.subsequence == null)
+                            onDownload(attachment);
+                        else if (!TextUtils.isEmpty(attachment.error))
+                            ToastEx.makeText(context, attachment.error, Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -256,11 +261,13 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                 protected Void onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
 
+                    EntityAttachment attachment;
+
                     DB db = DB.getInstance(context);
                     try {
                         db.beginTransaction();
 
-                        EntityAttachment attachment = db.attachment().getAttachment(id);
+                        attachment = db.attachment().getAttachment(id);
                         if (attachment == null)
                             return null;
 
@@ -413,7 +420,12 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                 Log.d("Changed @" + position + " #" + count);
             }
         });
-        diff.dispatchUpdatesTo(this);
+
+        try {
+            diff.dispatchUpdatesTo(this);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     private static class DiffCallback extends DiffUtil.Callback {

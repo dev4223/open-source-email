@@ -157,26 +157,28 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
         }
 
         private void wire() {
-            view.post(new Runnable() {
-                @Override
-                public void run() {
-                    int left;
-                    int right;
-                    if (view.getLayoutDirection() == View.LAYOUT_DIRECTION_LTR) {
-                        left = view.getWidth() - view.getWidth() / 3;
-                        right = view.getWidth();
-                    } else {
-                        left = 0;
-                        right = view.getWidth() / 3;
+            if (!settings)
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        int left;
+                        int right;
+                        if (view.getLayoutDirection() == View.LAYOUT_DIRECTION_LTR) {
+                            left = view.getWidth() - view.getWidth() / 3;
+                            right = view.getWidth();
+                        } else {
+                            left = 0;
+                            right = view.getWidth() / 3;
+                        }
+                        Rect rect = new Rect(
+                                left,
+                                view.getTop(),
+                                right,
+                                view.getBottom());
+                        view.setTouchDelegate(new TouchDelegate(rect, ibInbox));
                     }
-                    Rect rect = new Rect(
-                            left,
-                            view.getTop(),
-                            right,
-                            view.getBottom());
-                    view.setTouchDelegate(new TouchDelegate(rect, ibInbox));
-                }
-            });
+                });
+
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
             ibInbox.setOnClickListener(this);
@@ -218,7 +220,10 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 tvName.setTextColor(account.unseen > 0 ? colorUnread : textColorSecondary);
             }
 
-            tvUser.setText(account.user);
+            StringBuilder user = new StringBuilder(account.user);
+            if (account.provider != null && (BuildConfig.DEBUG || debug))
+                user.append(" (").append(account.provider).append(')');
+            tvUser.setText(user);
 
             if ("connected".equals(account.state)) {
                 ivState.setImageResource(R.drawable.twotone_cloud_done_24);
@@ -257,13 +262,21 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                     account.backoff_until == null ? "-" : DTF.format(account.backoff_until)));
             tvBackoff.setVisibility(account.backoff_until == null || !settings ? View.GONE : View.VISIBLE);
 
-            Integer percent = (settings ? null : account.getQuotaPercentage());
-            tvUsage.setText(percent == null ? null : NF.format(percent) + "%");
-            tvUsage.setVisibility(percent == null || compact ? View.GONE : View.VISIBLE);
+            Integer percent = account.getQuotaPercentage();
+            boolean warning = (percent != null && percent > EntityAccount.QUOTA_WARNING);
+
+            tvUsage.setText(settings || percent == null ? null : NF.format(percent) + "%");
+            tvUsage.setVisibility(settings || percent == null || (compact && !warning) ? View.GONE : View.VISIBLE);
             tvQuota.setText(context.getString(R.string.title_storage_quota,
                     (account.quota_usage == null ? "-" : Helper.humanReadableByteCount(account.quota_usage)),
                     (account.quota_limit == null ? "-" : Helper.humanReadableByteCount(account.quota_limit))));
             tvQuota.setVisibility(settings && (account.quota_usage != null || account.quota_limit != null) ? View.VISIBLE : View.GONE);
+
+            tvUsage.setTextColor(warning ? colorWarning : textColorSecondary);
+            tvUsage.setTypeface(warning ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+
+            tvQuota.setTextColor(warning ? colorWarning : textColorSecondary);
+            tvQuota.setTypeface(warning ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
 
             tvMaxSize.setText(account.max_size == null ? null : Helper.humanReadableByteCount(account.max_size));
             tvMaxSize.setVisibility(settings && account.max_size != null && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
@@ -375,7 +388,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             if (account.notify &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 String channelId = EntityAccount.getNotificationChannelId(account.id);
-                NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
                 NotificationChannel channel = nm.getNotificationChannel(channelId);
                 if (channel != null)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_channel, order++, R.string.title_edit_channel);
@@ -671,7 +684,12 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 Log.d("Changed @" + position + " #" + count);
             }
         });
-        diff.dispatchUpdatesTo(this);
+
+        try {
+            diff.dispatchUpdatesTo(this);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     void setCompact(boolean compact) {

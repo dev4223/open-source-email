@@ -2,9 +2,172 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Hulsanpes](https://en.wikipedia.org/wiki/Hulsanpes)
+
+### 1.1883 - 2022-04-25
+
+* Added auto save draft for every new paragraph (can be turned off in the send settings)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1882 - 2022-04-25
+
+* Fixed dark texts in dark themes
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1881 - 2022-04-24
+
+* Added advanced account option to sync outside schedule
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1879 - 2022-04-23
+
+* Added warning about airplane mode enabled
+* Added advanced account option to connect via unmetered networks only
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1878 - 2022-04-21
+
+* Fixed printing
+* Fixed signature verification in some cases
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1877 - 2022-04-21
+
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.1876 - 2022-04-20
+
+* Added auto select same identity for same recipient for new messages
+* Added option to add signature to first reply only
+* Added option to hide folders with all read messages (start screen only)
+* Fixed memory leaks
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
 ### [Gobivenator](https://en.wikipedia.org/wiki/Gobivenator)
 
-### Next versoion
+### 1.1875 - 2022-04-13
+
+* Fixed crash on some Android versions
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1874 - 2022-04-13
+
+* Added padding option for tabular view in overflow menu
+* Added selection of contact type (home, work, etc) when inserting contact group
+* Fixed some memory leaks
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1873 - 2022-04-09
+
+* Fix scroll stuttering in some case
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1872 - 2022-04-09
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1871 - 2022-04-09
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1870 - 2022-04-08
+
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated translations
+
+### 1.1869 - 2022-04-07
+
+* Added [DeepL HTML support](https://www.deepl.com/docs-api/handling-html-(beta)/)
+* Fixed inline image handling for external drafts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1868 - 2022-04-06
+
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://publicsuffix.org/)
+* Updated build tools
+* Updated translations
+
+### 1.1867 - 2022-04-04
+
+* Added highlighting (marking) of text
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1866 - 2022-04-02
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1865 - 2022-04-01
+
+* Added searching in rule actions
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1864 - 2022-03-30
+
+* Fixed starting disabled accounts
+
+### 1.1863 - 2022-03-30
+
+* Converting background images into images (reformatted message view)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1862 - 2022-03-28
+
+* Added local contact editor
+* Added local contact groups
+* Added block sender for POP3 accounts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1861 - 2022-03-25
+
+* Added option to show account categories in the navigation menu
+* Added managing filter rules to the navigation menu
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated [Public Suffix List](https://publicsuffix.org/)
+* Updated translations
+
+### 1.1860 - 2022-03-23
+
+* Added sent sound selection
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1859 - 2022-03-22
+
+* Showing common filter rule action values in rule lists
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1858 - 2022-03-21
+
+* Added remove all attachments button to message editor
+* Showing filter rule condition values in rule lists
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1857 - 2022-03-19
 
 * Added inserting templates as text snippets
 * Small improvements and minor bug fixes

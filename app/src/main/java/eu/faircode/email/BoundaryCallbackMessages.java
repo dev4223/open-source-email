@@ -51,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -196,13 +197,13 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         return;
                     }
 
-                    if (intf != null)
-                        ApplicationEx.getMainHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
+                    ApplicationEx.getMainHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (intf != null)
                                 intf.onLoading();
-                            }
-                        });
+                        }
+                    });
                     if (server)
                         try {
                             found = load_server(state);
@@ -221,13 +222,13 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 } catch (final Throwable ex) {
                     state.error = true;
                     Log.e("Boundary", ex);
-                    if (intf != null)
-                        ApplicationEx.getMainHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
+                    ApplicationEx.getMainHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (intf != null)
                                 intf.onException(ex);
-                            }
-                        });
+                        }
+                    });
                 } finally {
                     state.queued--;
                     Log.i("Boundary queued -" + state.queued);
@@ -236,15 +237,14 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     crumb.put("free", Integer.toString(Log.getFreeMemMb()));
                     Log.breadcrumb("Boundary done", crumb);
 
-                    if (intf != null) {
-                        final int f = found;
-                        ApplicationEx.getMainHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
+                    final int f = found;
+                    ApplicationEx.getMainHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (intf != null)
                                 intf.onLoaded(f);
-                            }
-                        });
-                    }
+                        }
+                    });
                 }
             }
         });
@@ -487,7 +487,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         }
 
         EntityAccount account = db.account().getAccount(browsable.account);
-        if (account == null)
+        if (account == null || account.protocol != EntityAccount.TYPE_IMAP)
             return 0;
 
         if (state.imessages == null)
@@ -772,6 +772,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
     void destroy(State state) {
         state.destroyed = true;
+        this.intf = null;
         Log.i("Boundary destroy");
 
         executor.submit(new Runnable() {
@@ -1095,11 +1096,17 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             json.put("in_trash", in_trash);
             json.put("in_junk", in_junk);
 
+            Calendar now = Calendar.getInstance();
+            now.set(Calendar.MILLISECOND, 0);
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MINUTE, 0);
+            now.set(Calendar.HOUR, 0);
+
             if (after != null)
-                json.put("after", after);
+                json.put("after", after - now.getTimeInMillis());
 
             if (before != null)
-                json.put("before", before);
+                json.put("before", before - now.getTimeInMillis());
 
             return json;
         }
@@ -1135,11 +1142,17 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             criteria.in_trash = json.optBoolean("in_trash");
             criteria.in_junk = json.optBoolean("in_junk");
 
+            Calendar now = Calendar.getInstance();
+            now.set(Calendar.MILLISECOND, 0);
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MINUTE, 0);
+            now.set(Calendar.HOUR, 0);
+
             if (json.has("after"))
-                criteria.after = json.getLong("after");
+                criteria.after = json.getLong("after") + now.getTimeInMillis();
 
             if (json.has("before"))
-                criteria.before = json.getLong("before");
+                criteria.before = json.getLong("before") + now.getTimeInMillis();
 
             return criteria;
         }

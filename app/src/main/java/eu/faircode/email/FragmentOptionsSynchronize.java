@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,6 +49,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -72,6 +74,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     private TextView tvScheduleStart;
     private TextView tvScheduleEnd;
     private CheckBox[] cbDay;
+    private TextView tvScheduleIgnore;
     private ImageButton ibSchedules;
 
     private SwitchCompat swQuickSyncImap;
@@ -146,6 +149,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
                 view.findViewById(R.id.cbDay5),
                 view.findViewById(R.id.cbDay6)
         };
+        tvScheduleIgnore = view.findViewById(R.id.tvScheduleIgnore);
         ibSchedules = view.findViewById(R.id.ibSchedules);
 
         swQuickSyncImap = view.findViewById(R.id.swQuickSyncImap);
@@ -277,6 +281,14 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
                 }
             });
         }
+
+        tvScheduleIgnore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(v.getContext());
+                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_VIEW_ACCOUNTS));
+            }
+        });
 
         ibSchedules.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -442,8 +454,6 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("check_blocklist", checked).apply();
                 swUseBlocklist.setEnabled(checked);
-                if (badapter != null)
-                    badapter.enabledChanged();
             }
         });
 
@@ -634,8 +644,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             }
 
             private void bindTo(EntityAccount account) {
-                cbExempted.setEnabled(!Helper.isOptimizing12(context) &&
-                        !account.ondemand && account.protocol == EntityAccount.TYPE_IMAP);
+                cbExempted.setEnabled(!account.ondemand && account.protocol == EntityAccount.TYPE_IMAP);
                 cbExempted.setChecked(account.poll_exempted);
                 cbExempted.setText(account.name);
             }
@@ -687,7 +696,12 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
             DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, accounts), false);
             items = accounts;
-            diff.dispatchUpdatesTo(this);
+
+            try {
+                diff.dispatchUpdatesTo(this);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
         }
 
         private class DiffCallback extends DiffUtil.Callback {
@@ -755,7 +769,6 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         private Context context;
         private LayoutInflater inflater;
 
-        private boolean enabled;
         private List<DnsBlockList.BlockList> items;
 
         public class ViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener {
@@ -777,7 +790,6 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             private void bindTo(DnsBlockList.BlockList blocklist) {
                 cbEnabled.setText(blocklist.name);
                 cbEnabled.setChecked(DnsBlockList.isEnabled(context, blocklist));
-                cbEnabled.setEnabled(enabled);
             }
 
             @Override
@@ -797,13 +809,6 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
             setHasStableIds(true);
             this.items = items;
-            enabledChanged();
-        }
-
-        void enabledChanged() {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            this.enabled = prefs.getBoolean("check_blocklist", false);
-            notifyDataSetChanged();
         }
 
         @Override

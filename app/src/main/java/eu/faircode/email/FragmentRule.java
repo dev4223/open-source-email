@@ -32,7 +32,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -142,10 +144,12 @@ public class FragmentRule extends FragmentBase {
     private Spinner spAnswer;
     private CheckBox cbAnswerSubject;
     private CheckBox cbOriginalText;
+    private CheckBox cbWithAttachments;
     private EditText etTo;
     private ImageButton ibTo;
+    private CheckBox cbResend;
+    private CheckBox cbAttached;
     private CheckBox cbCc;
-    private CheckBox cbWithAttachments;
 
     private Button btnTtsSetup;
     private Button btnTtsData;
@@ -294,10 +298,12 @@ public class FragmentRule extends FragmentBase {
         spAnswer = view.findViewById(R.id.spAnswer);
         cbAnswerSubject = view.findViewById(R.id.cbAnswerSubject);
         cbOriginalText = view.findViewById(R.id.cbOriginalText);
+        cbWithAttachments = view.findViewById(R.id.cbWithAttachments);
         etTo = view.findViewById(R.id.etTo);
         ibTo = view.findViewById(R.id.ibTo);
+        cbResend = view.findViewById(R.id.cbResend);
+        cbAttached = view.findViewById(R.id.cbAttached);
         cbCc = view.findViewById(R.id.cbCc);
-        cbWithAttachments = view.findViewById(R.id.cbWithAttachments);
 
         btnTtsSetup = view.findViewById(R.id.btnTtsSetup);
         btnTtsData = view.findViewById(R.id.btnTtsData);
@@ -617,11 +623,41 @@ public class FragmentRule extends FragmentBase {
         spIdent.setOnItemSelectedListener(onItemSelectedListener);
         spAnswer.setOnItemSelectedListener(onItemSelectedListener);
 
+        etTo.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (cbResend == null)
+                    return;
+
+                cbResend.setEnabled(!TextUtils.isEmpty(s.toString()));
+            }
+        });
+
         ibTo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
                 startActivityForResult(Helper.getChooser(getContext(), pick), REQUEST_TO);
+            }
+        });
+
+        cbResend.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                checked = (checked && compoundButton.isEnabled());
+                spAnswer.setEnabled(!checked);
+                cbAnswerSubject.setEnabled(!checked);
+                cbOriginalText.setEnabled(!checked);
+                cbWithAttachments.setEnabled(!checked);
+                cbAttached.setEnabled(false);
             }
         });
 
@@ -774,15 +810,15 @@ public class FragmentRule extends FragmentBase {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Object tag = btnFolder.getTag();
-        outState.putInt("fair:start", spScheduleDayStart.getSelectedItemPosition());
-        outState.putInt("fair:end", spScheduleDayEnd.getSelectedItemPosition());
-        outState.putInt("fair:action", spAction.getSelectedItemPosition());
-        outState.putInt("fair:importance", spImportance.getSelectedItemPosition());
+        Object tag = (btnFolder == null ? null : btnFolder.getTag());
+        outState.putInt("fair:start", spScheduleDayStart == null ? 0 : spScheduleDayStart.getSelectedItemPosition());
+        outState.putInt("fair:end", spScheduleDayEnd == null ? 0 : spScheduleDayEnd.getSelectedItemPosition());
+        outState.putInt("fair:action", spAction == null ? 0 : spAction.getSelectedItemPosition());
+        outState.putInt("fair:importance", spImportance == null ? 0 : spImportance.getSelectedItemPosition());
         outState.putLong("fair:target", tag == null ? -1 : (long) tag);
-        outState.putCharSequence("fair:name", btnFolder.getText());
-        outState.putInt("fair:identity", spIdent.getSelectedItemPosition());
-        outState.putInt("fair:answer", spAnswer.getSelectedItemPosition());
+        outState.putCharSequence("fair:name", btnFolder == null ? null : btnFolder.getText());
+        outState.putInt("fair:identity", spIdent == null ? 0 : spIdent.getSelectedItemPosition());
+        outState.putInt("fair:answer", spAnswer == null ? 0 : spAnswer.getSelectedItemPosition());
         outState.putParcelable("fair:sound", sound);
 
         super.onSaveInstanceState(outState);
@@ -1143,10 +1179,12 @@ public class FragmentRule extends FragmentBase {
 
                                     cbAnswerSubject.setChecked(jaction.optBoolean("answer_subject", false));
                                     cbOriginalText.setChecked(jaction.optBoolean("original_text", true));
+                                    cbWithAttachments.setChecked(jaction.optBoolean("attachments"));
 
                                     etTo.setText(jaction.optString("to"));
+                                    cbResend.setChecked(jaction.optBoolean("resend"));
+                                    cbAttached.setChecked(jaction.optBoolean("attached"));
                                     cbCc.setChecked(jaction.optBoolean("cc"));
-                                    cbWithAttachments.setChecked(jaction.optBoolean("attachments"));
                                     break;
 
                                 case EntityRule.TYPE_SOUND:
@@ -1486,9 +1524,11 @@ public class FragmentRule extends FragmentBase {
                     jaction.put("answer", answer == null || answer.id == null ? -1 : answer.id);
                     jaction.put("answer_subject", cbAnswerSubject.isChecked());
                     jaction.put("original_text", cbOriginalText.isChecked());
-                    jaction.put("to", etTo.getText().toString().trim());
-                    jaction.put("cc", cbCc.isChecked());
                     jaction.put("attachments", cbWithAttachments.isChecked());
+                    jaction.put("to", etTo.getText().toString().trim());
+                    jaction.put("resend", cbResend.isChecked());
+                    jaction.put("attached", cbAttached.isChecked());
+                    jaction.put("cc", cbCc.isChecked());
                     break;
 
                 case EntityRule.TYPE_SOUND:

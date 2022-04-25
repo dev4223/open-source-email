@@ -60,6 +60,8 @@ import androidx.lifecycle.Lifecycle;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -84,6 +86,7 @@ public class FragmentPop extends FragmentBase {
     private TextView tvColorPro;
 
     private CheckBox cbSynchronize;
+    private CheckBox cbIgnoreSchedule;
     private CheckBox cbOnDemand;
     private CheckBox cbPrimary;
     private CheckBox cbNotify;
@@ -94,6 +97,7 @@ public class FragmentPop extends FragmentBase {
     private CheckBox cbLeaveDevice;
     private EditText etMax;
     private EditText etInterval;
+    private CheckBox cbUnmetered;
 
     private ArrayAdapter<EntityFolder> adapterSwipe;
     private Spinner spLeft;
@@ -108,6 +112,7 @@ public class FragmentPop extends FragmentBase {
     private ContentLoadingProgressBar pbWait;
 
     private long id = -1;
+    private int auth = AUTH_TYPE_PASSWORD;
     private boolean saving = false;
 
     private static final int REQUEST_COLOR = 1;
@@ -148,6 +153,7 @@ public class FragmentPop extends FragmentBase {
         tvColorPro = view.findViewById(R.id.tvColorPro);
 
         cbSynchronize = view.findViewById(R.id.cbSynchronize);
+        cbIgnoreSchedule = view.findViewById(R.id.cbIgnoreSchedule);
         cbOnDemand = view.findViewById(R.id.cbOnDemand);
         cbPrimary = view.findViewById(R.id.cbPrimary);
         cbNotify = view.findViewById(R.id.cbNotify);
@@ -158,6 +164,7 @@ public class FragmentPop extends FragmentBase {
         cbLeaveDevice = view.findViewById(R.id.cbLeaveDevice);
         etMax = view.findViewById(R.id.etMax);
         etInterval = view.findViewById(R.id.etInterval);
+        cbUnmetered = view.findViewById(R.id.cbUnmeteredOnly);
 
         spLeft = view.findViewById(R.id.spLeft);
         spRight = view.findViewById(R.id.spRight);
@@ -200,6 +207,9 @@ public class FragmentPop extends FragmentBase {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (tilPassword == null)
+                    return;
+
                 String password = s.toString();
                 boolean warning = (Helper.containsWhiteSpace(password) ||
                         Helper.containsControlChars(password));
@@ -237,6 +247,7 @@ public class FragmentPop extends FragmentBase {
         cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                cbIgnoreSchedule.setEnabled(checked);
                 cbOnDemand.setEnabled(checked);
                 cbPrimary.setEnabled(checked);
             }
@@ -303,6 +314,7 @@ public class FragmentPop extends FragmentBase {
         args.putInt("encryption", encryption);
         args.putBoolean("insecure", cbInsecure.isChecked());
         args.putString("port", etPort.getText().toString());
+        args.putInt("auth", auth);
         args.putString("user", etUser.getText().toString());
         args.putString("password", tilPassword.getEditText().getText().toString());
 
@@ -311,6 +323,7 @@ public class FragmentPop extends FragmentBase {
         args.putInt("color", btnColor.getColor());
 
         args.putBoolean("synchronize", cbSynchronize.isChecked());
+        args.putBoolean("ignore_schedule", cbIgnoreSchedule.isChecked());
         args.putBoolean("ondemand", cbOnDemand.isChecked());
         args.putBoolean("primary", cbPrimary.isChecked());
         args.putBoolean("notify", cbNotify.isChecked());
@@ -321,6 +334,7 @@ public class FragmentPop extends FragmentBase {
         args.putBoolean("leave_device", cbLeaveDevice.isChecked());
         args.putString("max", etMax.getText().toString());
         args.putString("interval", etInterval.getText().toString());
+        args.putBoolean("unmetered", cbUnmetered.isChecked());
 
         args.putLong("left", ((EntityFolder) spLeft.getSelectedItem()).id);
         args.putLong("right", ((EntityFolder) spRight.getSelectedItem()).id);
@@ -353,6 +367,7 @@ public class FragmentPop extends FragmentBase {
                 int encryption = args.getInt("encryption");
                 boolean insecure = args.getBoolean("insecure");
                 String port = args.getString("port");
+                int auth = args.getInt("auth");
                 String user = args.getString("user").trim();
                 String password = args.getString("password");
 
@@ -361,6 +376,7 @@ public class FragmentPop extends FragmentBase {
                 Integer color = args.getInt("color");
 
                 boolean synchronize = args.getBoolean("synchronize");
+                boolean ignore_schedule = args.getBoolean("ignore_schedule");
                 boolean ondemand = args.getBoolean("ondemand");
                 boolean primary = args.getBoolean("primary");
                 boolean notify = args.getBoolean("notify");
@@ -370,6 +386,7 @@ public class FragmentPop extends FragmentBase {
                 boolean leave_device = args.getBoolean("leave_device");
                 String max = args.getString("max");
                 String interval = args.getString("interval");
+                boolean unmetered = args.getBoolean("unmetered");
 
                 long left = args.getLong("left");
                 long right = args.getLong("right");
@@ -408,6 +425,14 @@ public class FragmentPop extends FragmentBase {
                 DB db = DB.getInstance(context);
                 EntityAccount account = db.account().getAccount(id);
 
+                JSONObject jconditions = new JSONObject();
+                if (account != null && account.conditions != null)
+                    try {
+                        jconditions = new JSONObject(account.conditions);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+
                 if (should) {
                     if (account == null)
                         return !TextUtils.isEmpty(host) && !TextUtils.isEmpty(user);
@@ -432,6 +457,8 @@ public class FragmentPop extends FragmentBase {
                         return true;
                     if (!Objects.equals(account.synchronize, synchronize))
                         return true;
+                    if (ignore_schedule != jconditions.optBoolean("ignore_schedule"))
+                        return true;
                     if (!Objects.equals(account.ondemand, ondemand))
                         return true;
                     if (!Objects.equals(account.primary, account.synchronize && primary))
@@ -449,6 +476,8 @@ public class FragmentPop extends FragmentBase {
                     if (!Objects.equals(account.max_messages, max_messages))
                         return true;
                     if (!Objects.equals(account.poll_interval, poll_interval))
+                        return true;
+                    if (unmetered != jconditions.optBoolean("unmetered"))
                         return true;
 
                     if (!Objects.equals(account.swipe_left, left))
@@ -483,11 +512,13 @@ public class FragmentPop extends FragmentBase {
                             EmailService.PURPOSE_CHECK, true)) {
                         iservice.connect(
                                 host, Integer.parseInt(port),
-                                AUTH_TYPE_PASSWORD, null,
+                                auth, null,
                                 user, password,
                                 null, null);
                     }
                 }
+
+                boolean reschedule = (ignore_schedule != jconditions.optBoolean("ignore_schedule"));
 
                 try {
                     db.beginTransaction();
@@ -495,7 +526,7 @@ public class FragmentPop extends FragmentBase {
                     if (account != null && !account.password.equals(password)) {
                         String domain = UriHelper.getParentDomain(context, account.host);
                         String match = (Objects.equals(account.host, domain) ? account.host : "%." + domain);
-                        int count = db.identity().setIdentityPassword(account.id, account.user, password, AUTH_TYPE_PASSWORD, match);
+                        int count = db.identity().setIdentityPassword(account.id, account.user, password, auth, match);
                         Log.i("Updated passwords=" + count + " match=" + match);
                     }
 
@@ -508,7 +539,7 @@ public class FragmentPop extends FragmentBase {
                     account.encryption = encryption;
                     account.insecure = insecure;
                     account.port = Integer.parseInt(port);
-                    account.auth_type = AUTH_TYPE_PASSWORD;
+                    account.auth_type = auth;
                     account.user = user;
                     account.password = password;
 
@@ -517,6 +548,7 @@ public class FragmentPop extends FragmentBase {
                     account.color = color;
 
                     account.synchronize = synchronize;
+                    jconditions.put("ignore_schedule", ignore_schedule);
                     account.ondemand = ondemand;
                     account.primary = (account.synchronize && primary);
                     account.notify = notify;
@@ -526,6 +558,9 @@ public class FragmentPop extends FragmentBase {
                     account.leave_on_device = leave_device;
                     account.max_messages = max_messages;
                     account.poll_interval = poll_interval;
+
+                    jconditions.put("unmetered", unmetered);
+                    account.conditions = jconditions.toString();
 
                     account.swipe_left = left;
                     account.swipe_right = right;
@@ -558,67 +593,16 @@ public class FragmentPop extends FragmentBase {
                             account.deleteNotificationChannel(context);
                     }
 
-                    EntityFolder inbox = db.folder().getFolderByType(account.id, EntityFolder.INBOX);
-                    if (inbox == null) {
-                        inbox = new EntityFolder();
-                        inbox.account = account.id;
-                        inbox.name = "INBOX";
-                        inbox.type = EntityFolder.INBOX;
-                        inbox.synchronize = true;
-                        inbox.unified = true;
-                        inbox.notify = true;
-                        inbox.sync_days = Integer.MAX_VALUE;
-                        inbox.keep_days = Integer.MAX_VALUE;
-                        inbox.initialize = 0;
-                        inbox.id = db.folder().insertFolder(inbox);
+                    for (EntityFolder folder : EntityFolder.getPopFolders(context)) {
+                        EntityFolder existing = db.folder().getFolderByType(account.id, folder.type);
+                        if (existing == null) {
+                            folder.account = account.id;
+                            folder.id = db.folder().insertFolder(folder);
+                            existing = folder;
+                        }
 
-                        if (account.synchronize)
-                            EntityOperation.sync(context, inbox.id, true);
-                    }
-
-                    EntityFolder drafts = db.folder().getFolderByType(account.id, EntityFolder.DRAFTS);
-                    if (drafts == null) {
-                        drafts = new EntityFolder();
-                        drafts.account = account.id;
-                        drafts.name = context.getString(R.string.title_folder_drafts);
-                        drafts.type = EntityFolder.DRAFTS;
-                        drafts.synchronize = false;
-                        drafts.unified = false;
-                        drafts.notify = false;
-                        drafts.sync_days = Integer.MAX_VALUE;
-                        drafts.keep_days = Integer.MAX_VALUE;
-                        drafts.initialize = 0;
-                        drafts.id = db.folder().insertFolder(drafts);
-                    }
-
-                    EntityFolder sent = db.folder().getFolderByType(account.id, EntityFolder.SENT);
-                    if (sent == null) {
-                        sent = new EntityFolder();
-                        sent.account = account.id;
-                        sent.name = context.getString(R.string.title_folder_sent);
-                        sent.type = EntityFolder.SENT;
-                        sent.synchronize = false;
-                        sent.unified = false;
-                        sent.notify = false;
-                        sent.sync_days = Integer.MAX_VALUE;
-                        sent.keep_days = Integer.MAX_VALUE;
-                        sent.initialize = 0;
-                        sent.id = db.folder().insertFolder(sent);
-                    }
-
-                    EntityFolder trash = db.folder().getFolderByType(account.id, EntityFolder.TRASH);
-                    if (trash == null) {
-                        trash = new EntityFolder();
-                        trash.account = account.id;
-                        trash.name = context.getString(R.string.title_folder_trash);
-                        trash.type = EntityFolder.TRASH;
-                        trash.synchronize = false;
-                        trash.unified = false;
-                        trash.notify = false;
-                        trash.sync_days = Integer.MAX_VALUE;
-                        trash.keep_days = Integer.MAX_VALUE;
-                        trash.initialize = 0;
-                        trash.id = db.folder().insertFolder(trash);
+                        if (account.synchronize && existing.synchronize)
+                            EntityOperation.sync(context, existing.id, true);
                     }
 
                     db.setTransactionSuccessful();
@@ -626,11 +610,13 @@ public class FragmentPop extends FragmentBase {
                     db.endTransaction();
                 }
 
-                ServiceSynchronize.eval(context, "POP3");
+                if (reschedule)
+                    ServiceSynchronize.reschedule(context);
+                else
+                    ServiceSynchronize.eval(context, "POP3");
 
                 if (!synchronize) {
-                    NotificationManager nm =
-                            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
                     nm.cancel("receive:" + account.id, NotificationHelper.NOTIFICATION_TAGGED);
                     nm.cancel("alert:" + account.id, NotificationHelper.NOTIFICATION_TAGGED);
                 }
@@ -698,7 +684,8 @@ public class FragmentPop extends FragmentBase {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putString("fair:password", tilPassword.getEditText().getText().toString());
+        outState.putString("fair:password", tilPassword == null ? null : tilPassword.getEditText().getText().toString());
+        outState.putInt("fair:auth", auth);
         super.onSaveInstanceState(outState);
     }
 
@@ -721,6 +708,14 @@ public class FragmentPop extends FragmentBase {
             @Override
             protected void onExecuted(Bundle args, final EntityAccount account) {
                 if (savedInstanceState == null) {
+                    JSONObject jcondition = new JSONObject();
+                    try {
+                        if (account != null && account.conditions != null)
+                            jcondition = new JSONObject(account.conditions);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+
                     etHost.setText(account == null ? null : account.host);
                     etPort.setText(account == null ? null : Long.toString(account.port));
 
@@ -741,6 +736,7 @@ public class FragmentPop extends FragmentBase {
                     btnColor.setColor(account == null ? null : account.color);
 
                     cbSynchronize.setChecked(account == null ? true : account.synchronize);
+                    cbIgnoreSchedule.setChecked(jcondition.optBoolean("ignore_schedule"));
                     cbOnDemand.setChecked(account == null ? false : account.ondemand);
                     cbPrimary.setChecked(account == null ? false : account.primary);
 
@@ -761,6 +757,7 @@ public class FragmentPop extends FragmentBase {
                                 ? EntityAccount.DEFAULT_MAX_MESSAGES : account.max_messages));
 
                     etInterval.setText(account == null ? "" : Long.toString(account.poll_interval));
+                    cbUnmetered.setChecked(jcondition.optBoolean("unmetered"));
                     cbIdentity.setChecked(account == null);
 
                     List<EntityFolder> folders = getSwipeActions();
@@ -777,6 +774,8 @@ public class FragmentPop extends FragmentBase {
                                 : account.swipe_right.equals(folder.id))
                             spRight.setSelection(pos);
                     }
+
+                    auth = (account == null ? AUTH_TYPE_PASSWORD : account.auth_type);
 
                     new SimpleTask<EntityAccount>() {
                         @Override
@@ -797,10 +796,17 @@ public class FragmentPop extends FragmentBase {
                     }.execute(FragmentPop.this, new Bundle(), "account:primary");
                 } else {
                     tilPassword.getEditText().setText(savedInstanceState.getString("fair:password"));
+                    auth = savedInstanceState.getInt("fair:auth");
                 }
 
                 Helper.setViewsEnabled(view, true);
 
+                if (auth != AUTH_TYPE_PASSWORD) {
+                    etUser.setEnabled(false);
+                    tilPassword.setEnabled(false);
+                }
+
+                cbIgnoreSchedule.setEnabled(cbSynchronize.isChecked());
                 cbOnDemand.setEnabled(cbSynchronize.isChecked());
                 cbPrimary.setEnabled(cbSynchronize.isChecked());
 

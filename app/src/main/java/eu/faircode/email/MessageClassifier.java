@@ -25,7 +25,6 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.JsonReader;
 import android.util.JsonWriter;
-import android.util.MalformedJsonException;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -105,7 +104,7 @@ public class MessageClassifier {
                     !classified.equals(folder.name) &&
                     !TextUtils.isEmpty(message.msgid) &&
                     !message.hasKeyword(MessageHelper.FLAG_CLASSIFIED) &&
-                    !message.hasKeyword(MessageHelper.FLAG_FILTERED) &&
+                    (!message.hasKeyword(MessageHelper.FLAG_FILTERED) || BuildConfig.DEBUG) &&
                     !accountMsgIds.get(folder.account).contains(message.msgid) &&
                     !EntityFolder.JUNK.equals(folder.type)) {
                 boolean pro = ActivityBilling.isPro(context);

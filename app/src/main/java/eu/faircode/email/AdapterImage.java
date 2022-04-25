@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ColorSpace;
 import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -340,7 +339,12 @@ public class AdapterImage extends RecyclerView.Adapter<AdapterImage.ViewHolder> 
                 Log.d("Changed @" + position + " #" + count);
             }
         });
-        diff.dispatchUpdatesTo(this);
+
+        try {
+            diff.dispatchUpdatesTo(this);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     private static class DiffCallback extends DiffUtil.Callback {

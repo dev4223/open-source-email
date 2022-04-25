@@ -208,8 +208,7 @@ public class ServiceUI extends IntentService {
         // https://issuetracker.google.com/issues/159152393
         String tag = "unseen." + group + ":" + id;
 
-        NotificationManager nm =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager nm = Helper.getSystemService(this, NotificationManager.class);
         nm.cancel(tag, NotificationHelper.NOTIFICATION_TAGGED);
     }
 
@@ -292,7 +291,7 @@ public class ServiceUI extends IntentService {
 
             if (block_sender)
                 EntityContact.update(this,
-                        message.account, message.from,
+                        message.account, message.identity, message.from,
                         EntityContact.TYPE_JUNK, message.received);
 
             db.setTransactionSuccessful();
@@ -367,9 +366,6 @@ public class ServiceUI extends IntentService {
     }
 
     private void onFlag(long id) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean threading = prefs.getBoolean("threading", true);
-
         DB db = DB.getInstance(this);
         try {
             db.beginTransaction();
@@ -378,12 +374,8 @@ public class ServiceUI extends IntentService {
             if (message == null)
                 return;
 
-            List<EntityMessage> messages = db.message().getMessagesByThread(
-                    message.account, message.thread, threading ? null : id, message.folder);
-            for (EntityMessage threaded : messages) {
-                EntityOperation.queue(this, threaded, EntityOperation.FLAG, true);
-                EntityOperation.queue(this, threaded, EntityOperation.SEEN, true);
-            }
+            EntityOperation.queue(this, message, EntityOperation.FLAG, true);
+            EntityOperation.queue(this, message, EntityOperation.SEEN, true);
 
             db.setTransactionSuccessful();
         } finally {

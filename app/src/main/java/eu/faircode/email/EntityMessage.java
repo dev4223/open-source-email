@@ -557,7 +557,7 @@ public class EntityMessage implements Serializable {
         PendingIntent pi = PendingIntentCompat.getForegroundService(
                 context, ServiceSynchronize.PI_UNSNOOZE, snoozed, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager am = Helper.getSystemService(context, AlarmManager.class);
         if (wakeup == null || wakeup == Long.MAX_VALUE) {
             Log.i("Cancel snooze id=" + id);
             am.cancel(pi);
@@ -565,6 +565,32 @@ public class EntityMessage implements Serializable {
             Log.i("Set snooze id=" + id + " wakeup=" + new Date(wakeup));
             AlarmManagerCompatEx.setAndAllowWhileIdle(context, am, AlarmManager.RTC_WAKEUP, wakeup, pi);
         }
+    }
+
+    static String getSwipeType(Long type) {
+        if (type == null)
+            return "none";
+        if (type > 0)
+            return "folder";
+        if (SWIPE_ACTION_ASK.equals(type))
+            return "ask";
+        if (SWIPE_ACTION_SEEN.equals(type))
+            return "seen";
+        if (SWIPE_ACTION_SNOOZE.equals(type))
+            return "snooze";
+        if (SWIPE_ACTION_HIDE.equals(type))
+            return "hide";
+        if (SWIPE_ACTION_MOVE.equals(type))
+            return "move";
+        if (SWIPE_ACTION_FLAG.equals(type))
+            return "flag";
+        if (SWIPE_ACTION_DELETE.equals(type))
+            return "delete";
+        if (SWIPE_ACTION_JUNK.equals(type))
+            return "junk";
+        if (SWIPE_ACTION_REPLY.equals(type))
+            return "reply";
+        return "???";
     }
 
     @Override

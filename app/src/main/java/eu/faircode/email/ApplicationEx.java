@@ -114,6 +114,8 @@ public class ApplicationEx extends Application
                 " process=" + android.os.Process.myPid());
         Log.logMemory(this, "App");
 
+        CoalMine.install(this);
+
         registerActivityLifecycleCallbacks(lifecycleCallbacks);
 
         getMainLooper().setMessageLogging(new Printer() {
@@ -141,12 +143,15 @@ public class ApplicationEx extends Application
                             StackTraceElement[] stack = v.getStackTrace();
                             for (StackTraceElement ste : stack) {
                                 String clazz = ste.getClassName();
+                                if (clazz == null)
+                                    continue;
+                                if (clazz.startsWith("leakcanary."))
+                                    return;
                                 if ("com.sun.mail.util.WriteTimeoutSocket".equals(clazz))
                                     return;
-                                if (clazz != null &&
-                                        (clazz.startsWith("org.chromium") ||
-                                                clazz.startsWith("com.android.webview.chromium") ||
-                                                clazz.startsWith("androidx.appcompat.widget")))
+                                if (clazz.startsWith("org.chromium") ||
+                                        clazz.startsWith("com.android.webview.chromium") ||
+                                        clazz.startsWith("androidx.appcompat.widget"))
                                     return;
                             }
 
@@ -159,6 +164,7 @@ public class ApplicationEx extends Application
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final boolean crash_reports = prefs.getBoolean("crash_reports", false);
+        final boolean leak_canary = prefs.getBoolean("leak_canary", false);
         final boolean load_emoji = prefs.getBoolean("load_emoji", BuildConfig.PLAY_STORE_RELEASE);
 
         prev = Thread.getDefaultUncaughtExceptionHandler();
@@ -183,6 +189,7 @@ public class ApplicationEx extends Application
         });
 
         Log.setup(this);
+        CoalMine.setup(leak_canary);
 
         upgrade(this);
 
@@ -215,6 +222,7 @@ public class ApplicationEx extends Application
                 Log.e(ex);
             }
 
+        EmailProvider.init(this);
         EncryptionHelper.init(this);
         MessageHelper.setSystemProperties(this);
 
@@ -226,8 +234,6 @@ public class ApplicationEx extends Application
             ServiceSynchronize.watchdog(this);
             ServiceSend.watchdog(this);
         }
-
-        ServiceSynchronize.scheduleWatchdog(this);
 
         boolean work_manager = prefs.getBoolean("work_manager", true);
         Log.i("Work manager=" + work_manager);
@@ -251,45 +257,49 @@ public class ApplicationEx extends Application
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        switch (key) {
-            case "enabled":
-                ServiceSynchronize.reschedule(this);
-                WorkerCleanup.init(this);
-                ServiceSynchronize.scheduleWatchdog(this);
-                WidgetSync.update(this);
-                break;
-            case "poll_interval":
-            case "schedule":
-            case "schedule_start":
-            case "schedule_end":
-            case "schedule_day0":
-            case "schedule_day1":
-            case "schedule_day2":
-            case "schedule_day3":
-            case "schedule_day4":
-            case "schedule_day5":
-            case "schedule_day6":
-                ServiceSynchronize.reschedule(this);
-                break;
-            case "check_blocklist":
-            case "use_blocklist":
-                DnsBlockList.clearCache();
-                break;
-            case "watchdog":
-                ServiceSynchronize.scheduleWatchdog(this);
-                break;
-            case "secure": // privacy
-            case "load_emoji": // privacy
-            case "shortcuts": // misc
-            case "language": // misc
-            case "wal": // misc
-                // Should be excluded for import
-                restart(this);
-                break;
-            case "debug":
-            case "log_level":
-                Log.setLevel(this);
-                break;
+        try {
+            switch (key) {
+                case "enabled":
+                    ServiceSynchronize.reschedule(this);
+                    WorkerCleanup.init(this);
+                    ServiceSynchronize.scheduleWatchdog(this);
+                    WidgetSync.update(this);
+                    break;
+                case "poll_interval":
+                case "schedule":
+                case "schedule_start":
+                case "schedule_end":
+                case "schedule_day0":
+                case "schedule_day1":
+                case "schedule_day2":
+                case "schedule_day3":
+                case "schedule_day4":
+                case "schedule_day5":
+                case "schedule_day6":
+                    ServiceSynchronize.reschedule(this);
+                    break;
+                case "check_blocklist":
+                case "use_blocklist":
+                    DnsBlockList.clearCache();
+                    break;
+                case "watchdog":
+                    ServiceSynchronize.scheduleWatchdog(this);
+                    break;
+                case "secure": // privacy
+                case "load_emoji": // privacy
+                case "shortcuts": // misc
+                case "language": // misc
+                case "wal": // misc
+                    // Should be excluded for import
+                    restart(this);
+                    break;
+                case "debug":
+                case "log_level":
+                    Log.setLevel(this);
+                    break;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
     }
 
@@ -601,6 +611,10 @@ public class ApplicationEx extends Application
         } else if (version < 1855) {
             if (!prefs.contains("preview_lines"))
                 editor.putInt("preview_lines", 2);
+        } else if (version < 1874) {
+            boolean cards = prefs.getBoolean("cards", true);
+            if (!cards)
+                editor.remove("view_padding");
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
@@ -758,6 +772,8 @@ public class ApplicationEx extends Application
         @Override
         public void onActivityDestroyed(@NonNull Activity activity) {
             log(activity, "onActivityDestroyed");
+            Helper.clearViews(activity);
+
         }
 
         @Override

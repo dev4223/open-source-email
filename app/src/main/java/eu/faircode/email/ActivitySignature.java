@@ -20,7 +20,6 @@ package eu.faircode.email;
 */
 
 import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -52,9 +51,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.util.Objects;
 
@@ -273,12 +272,14 @@ public class ActivitySignature extends ActivityBase {
         else if (etText.isRaw())
             etText.setText(html);
         else
-            etText.setText(HtmlHelper.fromHtml(html, new Html.ImageGetter() {
+            etText.setText(HtmlHelper.fromHtml(html, new HtmlHelper.ImageGetterEx() {
                 @Override
-                public Drawable getDrawable(String source) {
-                    if (source != null && source.startsWith("cid:"))
-                        source = null;
-                    return ImageHelper.decodeImage(ActivitySignature.this, -1, source, true, 0, 1.0f, etText);
+                public Drawable getDrawable(Element element) {
+                    String source = element.attr("src");
+                    if (source.startsWith("cid:"))
+                        element.attr("src", "cid:");
+                    return ImageHelper.decodeImage(ActivitySignature.this,
+                            -1, element, true, 0, 1.0f, etText);
                 }
             }, null, this));
         loaded = true;
@@ -341,7 +342,7 @@ public class ActivitySignature extends ActivityBase {
             final int start = etText.getSelectionStart();
             final int end = etText.getSelectionEnd();
 
-            ClipboardManager cbm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipboardManager cbm = Helper.getSystemService(this, ClipboardManager.class);
             if (cbm != null && cbm.hasPrimaryClip()) {
                 String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(this).toString();
                 uri = Uri.parse(link);
@@ -376,6 +377,8 @@ public class ActivitySignature extends ActivityBase {
 
     private void onImageSelected(Uri uri) {
         try {
+            NoStreamException.check(uri, this);
+
             getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             int start = etText.getSelectionStart();
@@ -406,16 +409,8 @@ public class ActivitySignature extends ActivityBase {
                             })
                             .show();
             }
-        } catch (SecurityException ex) {
-            Snackbar sb = Snackbar.make(view, R.string.title_no_stream, Snackbar.LENGTH_INDEFINITE)
-                    .setGestureInsetBottomIgnored(true);
-            sb.setAction(R.string.title_info, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.viewFAQ(ActivitySignature.this, 49);
-                }
-            });
-            sb.show();
+        } catch (NoStreamException ex) {
+            ex.report(this);
         } catch (Throwable ex) {
             Log.unexpectedError(getSupportFragmentManager(), ex);
         }

@@ -47,6 +47,7 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.DeadObjectException;
@@ -422,7 +423,7 @@ public class Log {
             config.setDiscardClasses(ignore);
 
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
 
             String no_internet = context.getString(R.string.title_no_internet);
 
@@ -677,7 +678,7 @@ public class Log {
 
     static void logMemory(Context context, String message) {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager activityManager = Helper.getSystemService(context, ActivityManager.class);
         activityManager.getMemoryInfo(mi);
         int mb = Math.round(mi.availMem / 0x100000L);
         int perc = Math.round(mi.availMem / (float) mi.totalMem * 100.0f);
@@ -1737,11 +1738,24 @@ public class Log {
             View dview = inflater.inflate(R.layout.dialog_unexpected, null);
             TextView tvError = dview.findViewById(R.id.tvError);
 
-            tvError.setText(Log.formatThrowable(ex, false));
+            String message = Log.formatThrowable(ex, false);
+            tvError.setText(message);
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+            AlertDialog.Builder builder = new AlertDialog.Builder(context)
                     .setView(dview)
-                    .setPositiveButton(android.R.string.cancel, null);
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.menu_faq, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Uri uri = Helper.getSupportUri(context);
+                            if (!TextUtils.isEmpty(message))
+                                uri = uri
+                                        .buildUpon()
+                                        .appendQueryParameter("message", "Unexpected: " + message)
+                                        .build();
+                            Helper.view(context, uri, true);
+                        }
+                    });
 
             if (report)
                 builder.setNeutralButton(R.string.title_report, new DialogInterface.OnClickListener() {
@@ -1843,9 +1857,27 @@ public class Log {
         sb.append(String.format("uid: %d\r\n", android.os.Process.myUid()));
         sb.append("\r\n");
 
+        int[] contacts = ContactInfo.getStats();
+        sb.append(String.format("Contact lookup: %d cached: %d\r\n",
+                contacts[0], contacts[1]));
+
+        Locale slocale = Resources.getSystem().getConfiguration().locale;
+        String language = prefs.getString("language", null);
+        sb.append(String.format("Locale: def=%s sys=%s lang=%s\r\n",
+                Locale.getDefault(), slocale, language));
+
+        String charset = MimeUtility.getDefaultJavaCharset();
+        sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
+
+        sb.append("Transliterate: ")
+                .append(TextHelper.canTransliterate())
+                .append("\r\n");
+
+        sb.append("\r\n");
+
         sb.append(String.format("Processors: %d\r\n", Runtime.getRuntime().availableProcessors()));
 
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
         sb.append(String.format("Memory class: %d/%d MB Total: %s\r\n",
@@ -1873,22 +1905,7 @@ public class Log {
 
         sb.append("\r\n");
 
-        Locale slocale = Resources.getSystem().getConfiguration().locale;
-        String language = prefs.getString("language", null);
-        sb.append(String.format("Locale: def=%s sys=%s lang=%s\r\n",
-                Locale.getDefault(), slocale, language));
-
-        String charset = MimeUtility.getDefaultJavaCharset();
-        sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
-
-        sb.append("Transliterate: ")
-                .append(TextHelper.canTransliterate())
-                .append("\r\n");
-
-        sb.append("\r\n");
-
-
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = Helper.getSystemService(context, WindowManager.class);
         Display display = wm.getDefaultDisplay();
         Point dim = new Point();
         display.getSize(dim);
@@ -1946,7 +1963,7 @@ public class Log {
                 ignoring == null ? null : Boolean.toString(!ignoring),
                 Boolean.FALSE.equals(ignoring) ? "!!!" : ""));
 
-        PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager power = Helper.getSystemService(context, PowerManager.class);
         boolean psaving = power.isPowerSaveMode();
         sb.append(String.format("Battery saving: %s %s\r\n", psaving, psaving ? "!!!" : ""));
 
@@ -1955,7 +1972,7 @@ public class Log {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // https://developer.android.com/reference/android/app/usage/UsageStatsManager
-            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+            UsageStatsManager usm = Helper.getSystemService(context, UsageStatsManager.class);
             int bucket = usm.getAppStandbyBucket();
             boolean inactive = usm.isAppInactive(BuildConfig.APPLICATION_ID);
             sb.append(String.format("Standby bucket: %d-%b-%s %s\r\n",
@@ -2020,6 +2037,8 @@ public class Log {
                     Object value = settings.get(key);
                     if ("wipe_mnemonic".equals(key) && value != null)
                         value = "[redacted]";
+                    if (key != null && key.startsWith("oauth."))
+                        value = "[redacted]";
                     size += write(os, key + "=" + value + "\r\n");
                 }
             }
@@ -2055,9 +2074,11 @@ public class Log {
                 int pollInterval = ServiceSynchronize.getPollInterval(context);
                 boolean metered = prefs.getBoolean("metered", true);
                 Boolean ignoring = Helper.isIgnoringOptimizations(context);
+                boolean canSchedule = AlarmManagerCompatEx.canScheduleExactAlarms(context);
                 boolean auto_optimize = prefs.getBoolean("auto_optimize", false);
                 boolean schedule = prefs.getBoolean("schedule", false);
 
+                String ds = ConnectionHelper.getDataSaving(context);
                 boolean vpn = ConnectionHelper.vpnActive(context);
                 boolean ng = Helper.isInstalled(context, "eu.faircode.netguard");
                 boolean tc = Helper.isInstalled(context, "net.kollnig.missioncontrol");
@@ -2065,15 +2086,18 @@ public class Log {
                 size += write(os, "enabled=" + enabled + (enabled ? "" : " !!!") +
                         " interval=" + pollInterval + "\r\n" +
                         "metered=" + metered + (metered ? "" : " !!!") +
+                        " restricted=" + ds + ("enabled".equals(ds) ? " !!!" : "") +
                         " vpn=" + vpn + (vpn ? " !!!" : "") +
                         " ng=" + ng + " tc=" + tc + "\r\n" +
                         "optimizing=" + (ignoring == null ? null : !ignoring) + (Boolean.FALSE.equals(ignoring) ? " !!!" : "") +
+                        " canSchedule=" + canSchedule + (canSchedule ? "" : " !!!") +
                         " auto_optimize=" + auto_optimize + (auto_optimize ? " !!!" : "") + "\r\n" +
                         "accounts=" + accounts.size() +
                         " folders=" + db.folder().countTotal() +
                         " messages=" + db.message().countTotal() +
                         " rules=" + db.rule().countTotal() +
-                        " operations=" + db.operation().getOperationCount() +
+                        " ops=" + db.operation().getOperationCount() +
+                        " outbox=" + db.message().countOutbox() +
                         "\r\n\r\n");
 
                 if (schedule) {
@@ -2103,6 +2127,17 @@ public class Log {
                             messages += folder.messages;
                         }
 
+                        boolean unmetered = false;
+                        boolean ignore_schedule = false;
+                        try {
+                            if (account.conditions != null) {
+                                JSONObject jconditions = new JSONObject(account.conditions);
+                                unmetered = jconditions.optBoolean("unmetered");
+                                ignore_schedule = jconditions.optBoolean("ignore_schedule");
+                            }
+                        } catch (Throwable ignored) {
+                        }
+
                         size += write(os, account.name + (account.primary ? "*" : "") +
                                 " " + (account.protocol == EntityAccount.TYPE_IMAP ? "IMAP" : "POP") + "/" + account.auth_type +
                                 " " + account.host + ":" + account.port + "/" + account.encryption +
@@ -2112,6 +2147,8 @@ public class Log {
                                 " ondemand=" + account.ondemand +
                                 " msgs=" + content + "/" + messages +
                                 " ops=" + db.operation().getOperationCount(account.id) +
+                                " ischedule=" + ignore_schedule + (ignore_schedule ? " !!!" : "") +
+                                " unmetered=" + unmetered + (unmetered ? " !!!" : "") +
                                 " " + account.state +
                                 (account.last_connected == null ? "" : " " + dtf.format(account.last_connected)) +
                                 (account.error == null ? "" : "\r\n" + account.error) +
@@ -2134,6 +2171,17 @@ public class Log {
                                         " " + folder.state +
                                         (folder.last_sync == null ? "" : " " + dtf.format(folder.last_sync)) +
                                         "\r\n");
+                            }
+
+                        List<TupleAccountSwipes> swipes = db.account().getAccountSwipes(account.id);
+                        if (swipes == null)
+                            size += write(os, "<> swipes?\r\n");
+                        else
+                            for (TupleAccountSwipes swipe : swipes) {
+                                size += write(os, "> " + EntityMessage.getSwipeType(swipe.swipe_left) + " " +
+                                        swipe.left_name + ":" + swipe.left_type + "\r\n");
+                                size += write(os, "< " + EntityMessage.getSwipeType(swipe.swipe_right) + " " +
+                                        swipe.right_name + ":" + swipe.right_type + "\r\n");
                             }
 
                         size += write(os, "\r\n");
@@ -2246,7 +2294,7 @@ public class Log {
             long size = 0;
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
 
                 NetworkInfo ani = cm.getActiveNetworkInfo();
                 if (ani != null)
@@ -2476,7 +2524,7 @@ public class Log {
             long size = 0;
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
 
 
                 String name;
@@ -2603,7 +2651,7 @@ public class Log {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     try {
                         // https://developer.android.com/reference/android/app/ApplicationExitInfo
-                        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                        ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
                         List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(
                                 context.getPackageName(), 0, 20);
                         for (ApplicationExitInfo info : infos)
@@ -2621,7 +2669,7 @@ public class Log {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
                     try {
-                        UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+                        UsageStatsManager usm = Helper.getSystemService(context, UsageStatsManager.class);
                         UsageEvents events = usm.queryEventsForSelf(now - 12 * 3600L, now);
                         UsageEvents.Event event = new UsageEvents.Event();
                         while (events != null && events.hasNextEvent()) {

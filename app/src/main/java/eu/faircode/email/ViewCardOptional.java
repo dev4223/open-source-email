@@ -57,12 +57,12 @@ public class ViewCardOptional extends CardView {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         cards = prefs.getBoolean("cards", true);
         compact = prefs.getBoolean("compact", false);
-        padding = prefs.getInt("view_padding", compact ? 0 : 1);
+        padding = prefs.getInt("view_padding", compact || !cards ? 0 : 1);
 
         // dev4223: was: '3 : 6' and '12 + (compact ? 3 : 6)'
         // old: margin = Helper.dp2pixels(context, compact ? 1 : 2);
         // old: ident = Helper.dp2pixels(context, 6 + (compact ? 2 : 4));
-        margin = Helper.dp2pixels(context, (padding + 1) * 3);
+        margin = Helper.dp2pixels(context, (padding + (cards ? 1 : 0)) * 3);
 
         // dev4223: was: 'vsetRadius(cards ? margin : 0);'
         setRadius(cards ? 4 : 0);
@@ -76,8 +76,9 @@ public class ViewCardOptional extends CardView {
             ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
             lparam.setMargins(margin, margin, margin, margin);
             setLayoutParams(lparam);
-            setContentPadding(margin, margin, margin, margin);
         }
+
+        setContentPadding(margin, margin, margin, margin);
 
         super.onAttachedToWindow();
     }

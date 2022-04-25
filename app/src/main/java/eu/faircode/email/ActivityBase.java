@@ -53,16 +53,17 @@ import androidx.core.graphics.ColorUtils;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.lang.reflect.Field;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -118,6 +119,30 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                 view.setSystemUiVisibility(flags);
             }
         }
+
+        String requestKey = getRequestKey();
+        if (!BuildConfig.PLAY_STORE_RELEASE)
+            EntityLog.log(this, "Listing key=" + requestKey);
+        getSupportFragmentManager().setFragmentResultListener(requestKey, this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                try {
+                    result.setClassLoader(ApplicationEx.class.getClassLoader());
+                    int requestCode = result.getInt("requestCode");
+                    int resultCode = result.getInt("resultCode");
+
+                    EntityLog.log(ActivityBase.this, "Received key=" + requestKey +
+                            " request=" + requestCode +
+                            " result=" + resultCode);
+
+                    Intent data = new Intent();
+                    data.putExtra("args", result);
+                    onActivityResult(requestCode, resultCode, data);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+        });
 
         prefs.registerOnSharedPreferenceChangeListener(this);
 
@@ -295,6 +320,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
         try {
             super.onDestroy();
+            originalContext = null;
         } catch (Throwable ex) {
             Log.w(ex);
             /*
@@ -351,6 +377,10 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                   at android.app.Activity.performDestroy(Activity.java:7522)
              */
         }
+    }
+
+    public String getRequestKey() {
+        return this.getClass().getName() + ":activity";
     }
 
     @Override
@@ -443,7 +473,11 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             File file = new File(dir, fname);
 
             Log.i("Copying shared file to " + file);
-            Helper.copy(getContentResolver().openInputStream(uri), new FileOutputStream(file));
+            InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null)
+                throw new FileNotFoundException(uri.toString());
+
+            Helper.copy(is, new FileOutputStream(file));
 
             return FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID, file);
         } catch (Throwable ex) {
@@ -770,26 +804,12 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         @Override
         public void onFragmentViewDestroyed(@NonNull FragmentManager fm, @NonNull Fragment f) {
             log(fm, f, "onFragmentViewDestroyed");
+            Helper.clearViews(f);
         }
 
         @Override
         public void onFragmentDestroyed(@NonNull FragmentManager fm, @NonNull Fragment f) {
             log(fm, f, "onFragmentDestroyed");
-            if (BuildConfig.PLAY_STORE_RELEASE)
-                return;
-            try {
-                for (Field field : f.getClass().getDeclaredFields()) {
-                    Class<?> type = field.getType();
-                    if (View.class.isAssignableFrom(type) ||
-                            RecyclerView.Adapter.class.isAssignableFrom(type)) {
-                        Log.i("Clearing " + f.getClass().getSimpleName() + ":" + field.getName());
-                        field.setAccessible(true);
-                        field.set(f, null);
-                    }
-                }
-            } catch (Throwable ex) {
-                Log.w(ex);
-            }
         }
 
         @Override

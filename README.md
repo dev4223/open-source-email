@@ -131,7 +131,7 @@ Supported download locations:
 * [GitHub](https://github.com/M66B/FairEmail/releases)
 * [Play store](https://play.google.com/store/apps/details?id=eu.faircode.email)
 * [Play store](https://play.google.com/apps/testing/eu.faircode.email) (test)
-* [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/) ([last build status](https://f-droid.org/wiki/page/eu.faircode.email/lastbuild)) (the F-Droid app can be downloaded [here](https://f-droid.org/))
+* [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/) (the F-Droid app can be downloaded [here](https://f-droid.org/))
 * ~~[AppGallery](https://wap3.hispace.hicloud.com/uowap/index.jsp#/detailApp/C101678151) (the AppGallery app can be downloaded [here](https://huaweimobileservices.com/appgallery/))~~
 * ~~[Amazon](https://www.amazon.com/gp/product/B0983R6MH2)~~ (the APK file repackaged by Amazon is incomplete! An issue report was never answered by Amazon.)
 
@@ -238,7 +238,7 @@ Error reporting is disabled by default, see also [the privacy policy](https://gi
 
 ## License
 
-Copyright &copy; 2018-2021 Marcel Bokhorst. All rights reserved.
+Copyright &copy; 2018-2022 Marcel Bokhorst. All rights reserved.
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.txt)
 

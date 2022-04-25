@@ -46,6 +46,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -108,9 +109,12 @@ public class ContactInfo {
     private static final ExecutorService executorFavicon =
             Helper.getBackgroundExecutor(0, "favicon");
 
-    private static final int GENERATED_ICON_SIZE = 96; // dp
+    private static final int GENERATED_ICON_SIZE = 48; // dp
     private static final int FAVICON_ICON_SIZE = 64; // dp
-    private static final int GRAVATAR_TIMEOUT = 5 * 1000; // milliseconds
+    private static final int GRAVATAR_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
+    private static final int GRAVATAR_READ_TIMEOUT = 10 * 1000; // milliseconds
+    private static final int LIBRAVATAR_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
+    private static final int LIBRAVATAR_READ_TIMEOUT = 10 * 1000; // milliseconds
     private static final int FAVICON_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
     private static final int FAVICON_READ_TIMEOUT = 10 * 1000; // milliseconds
     private static final long CACHE_CONTACT_DURATION = 2 * 60 * 1000L; // milliseconds
@@ -391,8 +395,8 @@ public class ContactInfo {
 
                                     HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                                     urlConnection.setRequestMethod("GET");
-                                    urlConnection.setReadTimeout(GRAVATAR_TIMEOUT);
-                                    urlConnection.setConnectTimeout(GRAVATAR_TIMEOUT);
+                                    urlConnection.setReadTimeout(GRAVATAR_READ_TIMEOUT);
+                                    urlConnection.setConnectTimeout(GRAVATAR_CONNECT_TIMEOUT);
                                     urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
                                     urlConnection.connect();
 
@@ -434,8 +438,8 @@ public class ContactInfo {
 
                                     HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                                     urlConnection.setRequestMethod("GET");
-                                    urlConnection.setReadTimeout(GRAVATAR_TIMEOUT);
-                                    urlConnection.setConnectTimeout(GRAVATAR_TIMEOUT);
+                                    urlConnection.setReadTimeout(LIBRAVATAR_READ_TIMEOUT);
+                                    urlConnection.setConnectTimeout(LIBRAVATAR_CONNECT_TIMEOUT);
                                     urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
                                     urlConnection.connect();
 
@@ -476,6 +480,15 @@ public class ContactInfo {
                                     }
                                 }));
 
+                                int dot = host.indexOf('.');
+                                host = host.substring(dot + 1);
+                            }
+
+                            host = domain;
+                            while (host.indexOf('.') > 0) {
+                                final URL base = new URL("https://" + host);
+                                final URL www = new URL("https://www." + host);
+
                                 futures.add(executorFavicon.submit(new Callable<Favicon>() {
                                     @Override
                                     public Favicon call() throws Exception {
@@ -499,25 +512,28 @@ public class ContactInfo {
                         for (Future<Favicon> future : futures)
                             try {
                                 Favicon favicon = future.get();
-                                if (favicon != null) {
-                                    float lum = 0; // ImageHelper.getLuminance(favicon.bitmap);
-                                    if (lum < MIN_FAVICON_LUMINANCE) {
-                                        Bitmap bitmap = Bitmap.createBitmap(
-                                                favicon.bitmap.getWidth(),
-                                                favicon.bitmap.getHeight(),
-                                                favicon.bitmap.getConfig());
-                                        bitmap.eraseColor(Color.WHITE);
-                                        Canvas canvas = new Canvas(bitmap);
-                                        canvas.drawBitmap(favicon.bitmap, 0, 0, null);
-                                        favicon.bitmap.recycle();
-                                        favicon.bitmap = bitmap;
-                                    }
+                                Log.i("Using favicon source=" + (favicon == null ? null : favicon.source));
 
-                                    info.bitmap = favicon.bitmap;
-                                    info.type = favicon.type;
-                                    info.verified = favicon.verified;
-                                    break;
+                                if (favicon == null)
+                                    continue;
+
+                                float lum = 0; // ImageHelper.getLuminance(favicon.bitmap);
+                                if (lum < MIN_FAVICON_LUMINANCE) {
+                                    Bitmap bitmap = Bitmap.createBitmap(
+                                            favicon.bitmap.getWidth(),
+                                            favicon.bitmap.getHeight(),
+                                            favicon.bitmap.getConfig());
+                                    bitmap.eraseColor(Color.WHITE);
+                                    Canvas canvas = new Canvas(bitmap);
+                                    canvas.drawBitmap(favicon.bitmap, 0, 0, null);
+                                    favicon.bitmap.recycle();
+                                    favicon.bitmap = bitmap;
                                 }
+
+                                info.bitmap = favicon.bitmap;
+                                info.type = favicon.type;
+                                info.verified = favicon.verified;
+                                break;
                             } catch (ExecutionException exex) {
                                 ex = exex.getCause();
                             } catch (Throwable exex) {
@@ -862,7 +878,7 @@ public class ContactInfo {
             Bitmap bitmap = ImageHelper.getScaledBitmap(connection.getInputStream(), url.toString(), mimeType, scaleToPixels);
             if (bitmap == null)
                 throw new FileNotFoundException("decodeStream");
-            return new Favicon(bitmap);
+            return new Favicon(bitmap, url.toString());
         } finally {
             connection.disconnect();
         }
@@ -870,7 +886,7 @@ public class ContactInfo {
 
     private static boolean isRecoverable(Throwable ex, Context context) {
         if (ex instanceof SocketTimeoutException) {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
             NetworkInfo ni = (cm == null ? null : cm.getActiveNetworkInfo());
             return (ni == null || !ni.isConnected());
         }
@@ -879,6 +895,7 @@ public class ContactInfo {
                 (ex instanceof UnknownHostException &&
                         ex.getMessage() != null &&
                         ex.getMessage().contains("No address associated with hostname")) ||
+                ex instanceof EOFException ||
                 ex instanceof FileNotFoundException ||
                 ex instanceof SSLPeerUnverifiedException ||
                 (ex instanceof SSLException &&
@@ -1035,6 +1052,12 @@ public class ContactInfo {
         return all;
     }
 
+    static int[] getStats() {
+        synchronized (emailContactInfo) {
+            return new int[]{emailLookup.size(), emailContactInfo.size()};
+        }
+    }
+
     private static class Lookup {
         Uri uri;
         String displayName;
@@ -1044,15 +1067,18 @@ public class ContactInfo {
         private Bitmap bitmap;
         private String type;
         private boolean verified;
+        private String source;
 
-        private Favicon(@NonNull Bitmap bitmap) {
+        private Favicon(@NonNull Bitmap bitmap, String source) {
             this(bitmap, "favicon", false);
+            this.source = source;
         }
 
         private Favicon(@NonNull Bitmap bitmap, String type, boolean verified) {
             this.bitmap = bitmap;
             this.type = type;
             this.verified = verified;
+            this.source = type;
         }
     }
 }

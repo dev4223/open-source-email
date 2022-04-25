@@ -183,6 +183,43 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swSuggestFrequently" />
 
+                <Button
+                    android:id="@+id/btnBlockedSenders"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:drawableEnd="@drawable/twotone_report_24"
+                    android:drawablePadding="6dp"
+                    android:text="@string/title_blocked_senders"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/btnLocalContacts" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAutoIdentity"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_auto_identity"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/btnBlockedSenders"
+                    app:switchPadding="12dp" />
+
+                <eu.faircode.email.FixedTextView
+                    android:id="@+id/tvAutoIdentity"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_auto_identity_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swAutoIdentity" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swPrefixOnce"
                     android:layout_width="0dp"
@@ -192,7 +229,7 @@
                     android:text="@string/title_advanced_prefix_once"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/btnLocalContacts"
+                    app:layout_constraintTop_toBottomOf="@id/tvAutoIdentity"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -378,6 +415,18 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/spAnswerAction"
                     app:switchPadding="12dp" />
+
+                <Button
+                    android:id="@+id/btnSound"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:drawableEnd="@drawable/twotone_audiotrack_24"
+                    android:drawablePadding="6dp"
+                    android:text="@string/title_advanced_sound"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swSendPending" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
@@ -411,6 +460,18 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAutoSave"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_auto_save"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvCaptionMessage"
+                    app:switchPadding="12dp" />
+
                 <eu.faircode.email.FixedTextView
                     android:id="@+id/tvComposeFont"
                     android:layout_width="0dp"
@@ -422,7 +483,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvCaptionMessage" />
+                    app:layout_constraintTop_toBottomOf="@id/swAutoSave" />
 
                 <Spinner
                     android:id="@+id/spComposeFont"
@@ -550,6 +611,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSignatureReplyOnce"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_signature_reply_once"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swSignatureReply"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swSignatureForward"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -558,7 +631,7 @@
                     android:text="@string/title_advanced_signature_forward"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swSignatureReply"
+                    app:layout_constraintTop_toBottomOf="@id/swSignatureReplyOnce"
                     app:switchPadding="12dp" />
 
                 <Button

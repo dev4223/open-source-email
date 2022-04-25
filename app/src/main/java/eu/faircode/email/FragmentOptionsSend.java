@@ -19,8 +19,12 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -57,6 +61,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSuggestReceived;
     private SwitchCompat swSuggestFrequently;
     private Button btnLocalContacts;
+    private Button btnBlockedSenders;
+    private SwitchCompat swAutoIdentity;
     private SwitchCompat swPrefixOnce;
     private SwitchCompat swPrefixCount;
     private RadioGroup rgRe;
@@ -67,7 +73,9 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swAttachNew;
     private Spinner spAnswerAction;
     private SwitchCompat swSendPending;
+    private Button btnSound;
 
+    private SwitchCompat swAutoSave;
     private Spinner spComposeFont;
     private SwitchCompat swSeparateReply;
     private SwitchCompat swExtendedReply;
@@ -78,6 +86,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private Spinner spSignatureLocation;
     private SwitchCompat swSignatureNew;
     private SwitchCompat swSignatureReply;
+    private SwitchCompat swSignatureReplyOnce;
     private SwitchCompat swSignatureForward;
     private Button btnEditSignature;
     private SwitchCompat swDiscardDelete;
@@ -95,12 +104,12 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
     private final static String[] RESET_OPTIONS = new String[]{
             "keyboard", "keyboard_no_fullscreen",
-            "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently",
+            "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently", "auto_identity",
             "alt_re", "alt_fwd",
             "send_reminders", "send_chips", "send_delayed",
-            "attach_new", "answer_action", "send_pending",
-            "compose_font", "prefix_once", "prefix_count", "separate_reply", "extended_reply", "write_below", "quote_reply", "quote_limit", "resize_reply",
-            "signature_location", "signature_new", "signature_reply", "signature_forward",
+            "attach_new", "answer_action", "send_pending", "sound_sent",
+            "auto_save", "compose_font", "prefix_once", "prefix_count", "separate_reply", "extended_reply", "write_below", "quote_reply", "quote_limit", "resize_reply",
+            "signature_location", "signature_new", "signature_reply", "signature_reply_once", "signature_forward",
             "discard_delete", "reply_move",
             "auto_link", "plain_only", "format_flowed", "usenet_signature", "remove_signatures",
             "receipt_default", "receipt_type", "receipt_legacy", "lookup_mx"
@@ -123,6 +132,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swSuggestReceived = view.findViewById(R.id.swSuggestReceived);
         swSuggestFrequently = view.findViewById(R.id.swSuggestFrequently);
         btnLocalContacts = view.findViewById(R.id.btnLocalContacts);
+        btnBlockedSenders = view.findViewById(R.id.btnBlockedSenders);
+        swAutoIdentity = view.findViewById(R.id.swAutoIdentity);
         swPrefixOnce = view.findViewById(R.id.swPrefixOnce);
         swPrefixCount = view.findViewById(R.id.swPrefixCount);
         rgRe = view.findViewById(R.id.rgRe);
@@ -133,7 +144,9 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swAttachNew = view.findViewById(R.id.swAttachNew);
         spAnswerAction = view.findViewById(R.id.spAnswerAction);
         swSendPending = view.findViewById(R.id.swSendPending);
+        btnSound = view.findViewById(R.id.btnSound);
 
+        swAutoSave = view.findViewById(R.id.swAutoSave);
         spComposeFont = view.findViewById(R.id.spComposeFont);
         swSeparateReply = view.findViewById(R.id.swSeparateReply);
         swExtendedReply = view.findViewById(R.id.swExtendedReply);
@@ -144,6 +157,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         spSignatureLocation = view.findViewById(R.id.spSignatureLocation);
         swSignatureNew = view.findViewById(R.id.swSignatureNew);
         swSignatureReply = view.findViewById(R.id.swSignatureReply);
+        swSignatureReplyOnce = view.findViewById(R.id.swSignatureReplyOnce);
         swSignatureForward = view.findViewById(R.id.swSignatureForward);
         btnEditSignature = view.findViewById(R.id.btnEditSignature);
         swDiscardDelete = view.findViewById(R.id.swDiscardDelete);
@@ -233,6 +247,23 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             }
         });
 
+        btnBlockedSenders.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_MANAGE_LOCAL_CONTACTS)
+                        .putExtra("junk", true));
+            }
+        });
+
+        swAutoIdentity.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("auto_identity", checked).apply();
+                swPrefixCount.setEnabled(checked);
+            }
+        });
+
         swPrefixOnce.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -316,6 +347,27 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             }
         });
 
+        btnSound.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String sound = prefs.getString("sound_sent", null);
+                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.title_advanced_sound));
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
+                startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_SOUND_OUTBOUND);
+            }
+        });
+
+        swAutoSave.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("auto_save", checked).apply();
+            }
+        });
+
         spComposeFont.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -328,13 +380,6 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("compose_font").apply();
-            }
-        });
-
-        swSeparateReply.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("separate_reply", checked).apply();
             }
         });
 
@@ -403,6 +448,14 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("signature_reply", checked).apply();
+                swSignatureReplyOnce.setEnabled(checked);
+            }
+        });
+
+        swSignatureReplyOnce.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("signature_reply_once", checked).apply();
             }
         });
 
@@ -460,6 +513,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("usenet_signature", checked).apply();
+                if (checked)
+                    prefs.edit().putInt("signature_location", 2).apply();
             }
         });
 
@@ -564,6 +619,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swSuggestReceived.setChecked(prefs.getBoolean("suggest_received", false));
         swSuggestFrequently.setChecked(prefs.getBoolean("suggest_frequently", false));
         swSuggestFrequently.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
+        swAutoIdentity.setChecked(prefs.getBoolean("auto_identity", true));
 
         swPrefixOnce.setChecked(prefs.getBoolean("prefix_once", true));
         swPrefixCount.setChecked(prefs.getBoolean("prefix_count", false));
@@ -595,6 +651,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
         swSendPending.setChecked(prefs.getBoolean("send_pending", true));
 
+        swAutoSave.setChecked(prefs.getBoolean("auto_save", true));
+
         String compose_font = prefs.getString("compose_font", "");
         List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext());
         for (int pos = 0; pos < fonts.size(); pos++) {
@@ -617,6 +675,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
         swSignatureNew.setChecked(prefs.getBoolean("signature_new", true));
         swSignatureReply.setChecked(prefs.getBoolean("signature_reply", true));
+        swSignatureReplyOnce.setChecked(prefs.getBoolean("signature_reply_once", false));
+        swSignatureReplyOnce.setEnabled(swSignatureReply.isChecked());
         swSignatureForward.setChecked(prefs.getBoolean("signature_forward", true));
         swDiscardDelete.setChecked(prefs.getBoolean("discard_delete", true));
         swReplyMove.setChecked(prefs.getBoolean("reply_move", false));
@@ -634,5 +694,36 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swReceiptLegacy.setChecked(prefs.getBoolean("receipt_legacy", false));
 
         swLookupMx.setChecked(prefs.getBoolean("lookup_mx", false));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        try {
+            switch (requestCode) {
+                case ActivitySetup.REQUEST_SOUND_OUTBOUND:
+                    if (resultCode == RESULT_OK && data != null)
+                        onSelectSound(data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+                    break;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
+    private void onSelectSound(Uri uri) {
+        Log.i("Selected ringtone=" + uri);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        if (uri == null) // no/silent sound
+            prefs.edit().remove("sound_sent").apply();
+        else {
+            if ("content".equals(uri.getScheme()))
+                prefs.edit().putString("sound_sent", uri.toString()).apply();
+            else
+                prefs.edit().remove("sound_sent").apply();
+        }
     }
 }

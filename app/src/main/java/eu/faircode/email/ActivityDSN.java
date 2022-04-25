@@ -19,7 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
-import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,8 +30,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.constraintlayout.widget.Group;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -94,19 +91,15 @@ public class ActivityDSN extends ActivityBase {
             protected Result onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
 
-                if (uri == null)
-                    throw new FileNotFoundException();
-
-                if (!"content".equals(uri.getScheme()) &&
-                        !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    Log.w("DSN uri=" + uri);
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
-                }
+                NoStreamException.check(uri, context);
 
                 Result result = new Result();
 
                 ContentResolver resolver = context.getContentResolver();
                 try (InputStream is = resolver.openInputStream(uri)) {
+                    if (is == null)
+                        throw new FileNotFoundException(uri.toString());
+
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     byte[] buffer = new byte[Helper.BUFFER_SIZE];
                     int length;
@@ -128,9 +121,8 @@ public class ActivityDSN extends ActivityBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(findViewById(android.R.id.content), ex.getMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                if (ex instanceof NoStreamException)
+                    ((NoStreamException) ex).report(ActivityDSN.this);
                 else
                     Log.unexpectedError(getSupportFragmentManager(), ex, false);
             }

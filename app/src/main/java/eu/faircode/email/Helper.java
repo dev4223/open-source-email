@@ -23,6 +23,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
 
 import android.Manifest;
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
@@ -74,7 +75,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -108,7 +108,9 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.PagerAdapter;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -118,6 +120,7 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -450,27 +453,22 @@ public class Helper {
     }
 
     static Boolean isIgnoringOptimizations(Context context) {
+        if (isArc())
+            return true;
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             return null;
 
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager pm = Helper.getSystemService(context, PowerManager.class);
         if (pm == null)
             return null;
 
         return pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
     }
 
-    static boolean isOptimizing12(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || true)
-            return false;
-
-        Boolean ignoring = Helper.isIgnoringOptimizations(context);
-        return (ignoring != null && !ignoring);
-    }
-
     static Integer getBatteryLevel(Context context) {
         try {
-            BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+            BatteryManager bm = Helper.getSystemService(context, BatteryManager.class);
             if (bm == null)
                 return null;
             return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -484,7 +482,7 @@ public class Helper {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             return false;
         try {
-            BatteryManager bm = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+            BatteryManager bm = Helper.getSystemService(context, BatteryManager.class);
             if (bm == null)
                 return false;
             return bm.isCharging();
@@ -525,7 +523,7 @@ public class Helper {
                 int enabled = Settings.System.getInt(resolver, Settings.Secure.LOCK_PATTERN_ENABLED, 0);
                 return (enabled != 0);
             } else {
-                KeyguardManager kgm = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+                KeyguardManager kgm = Helper.getSystemService(context, KeyguardManager.class);
                 return (kgm != null && kgm.isDeviceSecure());
             }
         } catch (Throwable ex) {
@@ -596,8 +594,7 @@ public class Helper {
 
     static boolean isAccessibilityEnabled(Context context) {
         try {
-            AccessibilityManager am =
-                    (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+            AccessibilityManager am = Helper.getSystemService(context, AccessibilityManager.class);
             return (am != null && am.isEnabled());
         } catch (Throwable ex) {
             Log.e(ex);
@@ -624,6 +621,10 @@ public class Helper {
         }
     }
 
+    static <T extends Object> T getSystemService(Context context, Class<T> type) {
+        return ContextCompat.getSystemService(context.getApplicationContext(), type);
+    }
+
     // View
 
     static int getActionBarHeight(Context context) {
@@ -645,11 +646,7 @@ public class Helper {
     }
 
     static ObjectAnimator getFabAnimator(View fab, LifecycleOwner owner) {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(fab, "alpha", 0.9f, 1.0f);
-        animator.setDuration(750L);
-        animator.setRepeatCount(ValueAnimator.INFINITE);
-        animator.setRepeatMode(ValueAnimator.REVERSE);
-        animator.addUpdateListener(new ObjectAnimator.AnimatorUpdateListener() {
+        ObjectAnimator.AnimatorUpdateListener listener = new ObjectAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 if (!owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
@@ -657,7 +654,26 @@ public class Helper {
                 fab.setScaleX((float) animation.getAnimatedValue());
                 fab.setScaleY((float) animation.getAnimatedValue());
             }
+        };
+
+        ObjectAnimator animator = ObjectAnimator.ofFloat(fab, "alpha", 0.9f, 1.0f);
+        animator.setDuration(750L);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.addUpdateListener(listener);
+
+        owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            public void onDestroyed() {
+                try {
+                    animator.removeUpdateListener(listener);
+                    owner.getLifecycle().removeObserver(this);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
         });
+
         return animator;
     }
 
@@ -694,14 +710,6 @@ public class Helper {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndTypeAndNormalize(uri, type);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-        if (!("message/rfc822".equals(type) ||
-                "message/delivery-status".equals(type) ||
-                "message/disposition-notification".equals(type) ||
-                "text/rfc822-headers".equals(type) ||
-                "text/x-amp-html".equals(type) ||
-                "text/xml".equals(type) /* DMARC */))
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         if (!TextUtils.isEmpty(name))
             intent.putExtra(Intent.EXTRA_TITLE, Helper.sanitizeFilename(name));
@@ -827,6 +835,9 @@ public class Helper {
     }
 
     static void customTabsWarmup(Context context) {
+        if (context == null)
+            return;
+
         try {
             CustomTabsClient.bindCustomTabsService(context, "com.android.chrome", new CustomTabsServiceConnection() {
                 @Override
@@ -1112,18 +1123,16 @@ public class Helper {
                 // Vivo
                 isRealme() ||
                 isBlackview() ||
-                isSony() ||
-                BuildConfig.DEBUG);
+                isSony());
     }
 
-    static boolean isDozeRequired() {
-        return (Build.VERSION.SDK_INT > Build.VERSION_CODES.R && false);
+    static boolean isAndroid12() {
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
     }
 
     static String getUiModeType(Context context) {
         try {
-            UiModeManager uimm =
-                    (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+            UiModeManager uimm = Helper.getSystemService(context, UiModeManager.class);
             int uiModeType = uimm.getCurrentModeType();
             switch (uiModeType) {
                 case Configuration.UI_MODE_TYPE_UNDEFINED:
@@ -1266,6 +1275,59 @@ public class Helper {
         return fragment.getClass().getName() + ":result:" + who;
     }
 
+    static void clearViews(Object instance) {
+        try {
+            String cname = instance.getClass().getSimpleName();
+            for (Field field : instance.getClass().getDeclaredFields()) {
+                String fname = cname + ":" + field.getName();
+
+                Class<?> ftype = field.getType();
+                Class<?> type = (ftype.isArray() ? ftype.getComponentType() : ftype);
+
+                if (type == null) {
+                    Log.e(fname + "=null");
+                    continue;
+                }
+
+                if (View.class.isAssignableFrom(type) ||
+                        Animator.class.isAssignableFrom(type) ||
+                        Snackbar.class.isAssignableFrom(type) ||
+                        SelectionTracker.class.isAssignableFrom(type) ||
+                        SelectionTracker.SelectionPredicate.class.isAssignableFrom(type) ||
+                        PagerAdapter.class.isAssignableFrom(type) ||
+                        RecyclerView.Adapter.class.isAssignableFrom(type))
+                    try {
+                        Log.i("Clearing " + fname);
+
+                        field.setAccessible(true);
+
+                        if (!ftype.isArray()) {
+                            if (Animator.class.isAssignableFrom(type)) {
+                                Animator animator = (Animator) field.get(instance);
+                                if (animator != null) {
+                                    if (animator.isStarted())
+                                        animator.cancel();
+                                    animator.setTarget(null);
+                                }
+                            }
+
+                            if (Snackbar.class.isAssignableFrom(type)) {
+                                Snackbar snackbar = (Snackbar) field.get(instance);
+                                if (snackbar != null)
+                                    snackbar.setAction(null, null);
+                            }
+                        }
+
+                        field.set(instance, null);
+                    } catch (Throwable ex) {
+                        Log.e(new Throwable(fname, ex));
+                    }
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
     // Graphics
 
     static int dp2pixels(Context context, int dp) {
@@ -1377,8 +1439,12 @@ public class Helper {
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Log.i("showKeyboard view=" + view);
-                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+                try {
+                    Log.i("showKeyboard view=" + view);
+                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
             }
         }, 250);
     }
@@ -1390,8 +1456,12 @@ public class Helper {
         if (imm == null)
             return;
 
-        Log.i("hideKeyboard view=" + view);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        try {
+            Log.i("hideKeyboard view=" + view);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     static String getViewName(View view) {
@@ -1915,6 +1985,8 @@ public class Helper {
 
     static long copy(Context context, Uri uri, File file) throws IOException {
         try (InputStream is = context.getContentResolver().openInputStream(uri)) {
+            if (is == null)
+                throw new FileNotFoundException(uri.toString());
             try (OutputStream os = new FileOutputStream(file)) {
                 return copy(is, os);
             }
@@ -2175,7 +2247,7 @@ public class Helper {
 
                         @Override
                         public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-                            if (isCancelled(errorCode))
+                            if (isCancelled(errorCode) || errorCode == BiometricPrompt.ERROR_UNABLE_TO_PROCESS)
                                 Log.w("Authenticate biometric error " + errorCode + ": " + errString);
                             else
                                 Log.e("Authenticate biometric error " + errorCode + ": " + errString);
@@ -2313,39 +2385,6 @@ public class Helper {
                 }
             });
 
-            etPin.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus)
-                        try {
-                            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                            /*
-                                java.lang.IllegalArgumentException: View=DecorView@f197613[ActivityMain] not attached to window manager
-                                        at android.view.WindowManagerGlobal.findViewLocked(WindowManagerGlobal.java:604)
-                                        at android.view.WindowManagerGlobal.updateViewLayout(WindowManagerGlobal.java:493)
-                                        at android.view.WindowManagerImpl.updateViewLayout(WindowManagerImpl.java:121)
-                                        at android.app.Dialog.onWindowAttributesChanged(Dialog.java:1072)
-                                        at androidx.appcompat.view.WindowCallbackWrapper.onWindowAttributesChanged(WindowCallbackWrapper:114)
-                                        at android.view.Window.dispatchWindowAttributesChanged(Window.java:1236)
-                                        at com.android.internal.policy.PhoneWindow.dispatchWindowAttributesChanged(PhoneWindow.java:3229)
-                                        at android.view.Window.setSoftInputMode(Window.java:1123)
-                                        at eu.faircode.email.Helper$15.onFocusChange(Helper:2169)
-                                        at android.view.View.onFocusChanged(View.java:8828)
-                                        at android.widget.TextView.onFocusChanged(TextView.java:12091)
-                                        at android.widget.EditText.onFocusChanged(EditText.java:248)
-                                        at android.view.View.handleFocusGainInternal(View.java:8498)
-                                        at android.view.View.requestFocusNoSearch(View.java:14103)
-                                        at android.view.View.requestFocus(View.java:14077)
-                                        at android.view.View.requestFocus(View.java:14044)
-                                        at android.view.View.requestFocus(View.java:13986)
-                                        at eu.faircode.email.Helper$16.run(Helper:2187)
-                             */
-                        }
-                }
-            });
-
             try {
                 dialog.show();
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
@@ -2355,13 +2394,18 @@ public class Helper {
                 long wait = (long) Math.pow(PIN_FAILURE_DELAY, pin_failure_count) * 1000L;
                 long delay = pin_failure_at + wait - new Date().getTime();
                 Log.i("PIN wait=" + wait + " delay=" + delay);
-                ApplicationEx.getMainHandler().postDelayed(new Runnable() {
+                dview.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        etPin.setCompoundDrawables(null, null, null, null);
-                        etPin.setEnabled(true);
-                        etPin.requestFocus();
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        try {
+                            etPin.setCompoundDrawables(null, null, null, null);
+                            etPin.setEnabled(true);
+                            etPin.requestFocus();
+                            showKeyboard(etPin);
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
                     }
                 }, delay < 0 ? 0 : delay);
 

@@ -7,6 +7,7 @@
     <string name="app_exit">أنقر مرة أخرى للخروج من التطبيق</string>
     <string name="app_cake">مساحة تخزين غير كافية</string>
     <string name="app_updated">آخر تحديث: %1$s</string>
+    <string name="app_download">نُزّل من: %1$s</string>
     <string name="channel_service">إستلام</string>
     <string name="channel_send">أرسل</string>
     <string name="channel_notification">البريد الإلكتروني</string>
@@ -277,6 +278,8 @@
     <string name="title_empty_trash">إفراغ سلّة المهملات</string>
     <string name="title_edit_properties">تعديل الخصائص</string>
     <string name="title_edit_rules">تعديل القواعد</string>
+    <string name="title_contact_email">البريد الإلكتروني</string>
+    <string name="title_contact_name">الإسم</string>
     <string name="title_folder_name">إسم المجلد</string>
     <string name="title_display_name">الاسم المعروض</string>
     <string name="title_show_folders">اظهار المجلدات المخفية</string>
@@ -606,4 +609,17 @@
     <!-- https://www.bouncycastle.org/specifications.html -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#page-29 -->
     <!-- https://datatracker.ietf.org/doc/html/rfc5751#section-2.7 -->
+    <string-array name="contactTypes">
+        <item>Recipient</item>
+        <item>المُرسِل</item>
+        <item>محظور</item>
+        <item>Not blocked</item>
+    </string-array>
+    <string-array name="contactGroupTypes">
+        <item>Any</item>
+        <item>Home</item>
+        <item>Work</item>
+        <item>أخرى</item>
+        <item>Mobile</item>
+    </string-array>
 </resources>

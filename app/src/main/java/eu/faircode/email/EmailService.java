@@ -47,6 +47,7 @@ import com.sun.mail.util.SocketConnectException;
 import com.sun.mail.util.TraceOutputStream;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -278,6 +279,9 @@ public class EmailService implements AutoCloseable {
             properties.put("mail." + protocol + ".peek", "true");
             properties.put("mail." + protocol + ".appendbuffersize", Integer.toString(APPEND_BUFFER_SIZE));
 
+            if (!"gimaps".equals(protocol) && BuildConfig.DEBUG)
+                properties.put("mail." + protocol + ".folder.class", IMAPFolderEx.class.getName());
+
         } else if ("smtp".equals(protocol) || "smtps".equals(protocol)) {
             // https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html#properties
             properties.put("mail.smtps.starttls.enable", "false");
@@ -384,7 +388,7 @@ public class EmailService implements AutoCloseable {
         if (bind_socket &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             try {
-                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
                 Network active = cm.getActiveNetwork();
                 if (active != null) {
                     EntityLog.log(context, EntityLog.Type.Network, "Binding to" +
@@ -437,6 +441,9 @@ public class EmailService implements AutoCloseable {
             if (auth == AUTH_TYPE_OAUTH && "imap.mail.yahoo.com".equals(host))
                 properties.put("mail." + protocol + ".yahoo.guid", "FAIRMAIL_V1");
 
+            if (auth == AUTH_TYPE_OAUTH && "pop3s".equals(protocol) && "outlook.office365.com".equals(host))
+                properties.put("mail." + protocol + ".auth.xoauth2.two.line.authentication.format", "true");
+
             connect(host, port, auth, user, factory);
         } catch (AuthenticationFailedException ex) {
             //if ("outlook.office365.com".equals(host) &&
@@ -450,6 +457,8 @@ public class EmailService implements AutoCloseable {
                 try {
                     authenticator.refreshToken(true);
                     connect(host, port, auth, user, factory);
+                } catch (FileNotFoundException ex1) {
+                    throw new AuthenticationFailedException(ex1.getMessage(), ex1);
                 } catch (Exception ex1) {
                     Log.e(ex1);
                     String msg = ex.getMessage();
@@ -460,17 +469,10 @@ public class EmailService implements AutoCloseable {
                             context.getString(R.string.title_service_auth, msg),
                             ex.getNextException());
                 }
-            } else if (purpose == PURPOSE_CHECK) {
-                String msg = ex.getMessage();
-                if (msg != null)
-                    msg = msg.trim();
-                if (TextUtils.isEmpty(msg))
-                    throw ex;
-                throw new AuthenticationFailedException(
-                        context.getString(R.string.title_service_auth, msg),
-                        ex.getNextException());
             } else
-                throw ex;
+                throw new AuthenticationFailedException(
+                        context.getString(R.string.title_service_auth, ex.getMessage()),
+                        ex.getNextException());
         } catch (MailConnectException ex) {
             if (ConnectionHelper.vpnActive(context)) {
                 MailConnectException mex = new MailConnectException(
@@ -886,11 +888,11 @@ public class EmailService implements AutoCloseable {
         }
     }
 
-    public void dump() {
-        EntityLog.log(context, EntityLog.Type.Protocol, "Dump start");
+    public void dump(String tag) {
+        EntityLog.log(context, EntityLog.Type.Protocol, "Dump start " + tag);
         while (breadcrumbs != null && !breadcrumbs.isEmpty())
             EntityLog.log(context, EntityLog.Type.Protocol, "Dump " + breadcrumbs.pop());
-        EntityLog.log(context, EntityLog.Type.Protocol, "Dump end");
+        EntityLog.log(context, EntityLog.Type.Protocol, "Dump end" + tag);
     }
 
     private static class SocketFactoryService extends SocketFactory {

@@ -31,7 +31,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -56,6 +55,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 public class FragmentAnswer extends FragmentBase {
     private ViewGroup view;
@@ -247,12 +247,14 @@ public class FragmentAnswer extends FragmentBase {
                     if (html == null)
                         etText.setText(null);
                     else
-                        etText.setText(HtmlHelper.fromHtml(html, new Html.ImageGetter() {
+                        etText.setText(HtmlHelper.fromHtml(html, new HtmlHelper.ImageGetterEx() {
                             @Override
-                            public Drawable getDrawable(String source) {
-                                if (source != null && source.startsWith("cid:"))
-                                    source = null;
-                                return ImageHelper.decodeImage(context, -1, source, true, 0, 1.0f, etText);
+                            public Drawable getDrawable(Element element) {
+                                String source = element.attr("src");
+                                if (source.startsWith("cid:"))
+                                    element.attr("src", "cid:");
+                                return ImageHelper.decodeImage(context,
+                                        -1, element, true, 0, 1.0f, etText);
                             }
                         }, null, context));
                 }
@@ -500,6 +502,8 @@ public class FragmentAnswer extends FragmentBase {
 
     private void onImageSelected(Uri uri) {
         try {
+            NoStreamException.check(uri, getContext());
+
             getContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             int start = etText.getSelectionStart();
@@ -511,16 +515,8 @@ public class FragmentAnswer extends FragmentBase {
             ssb.setSpan(is, start + 1, start + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             etText.setText(ssb);
             etText.setSelection(start + 2);
-        } catch (SecurityException ex) {
-            Snackbar sb = Snackbar.make(view, R.string.title_no_stream, Snackbar.LENGTH_INDEFINITE)
-                    .setGestureInsetBottomIgnored(true);
-            sb.setAction(R.string.title_info, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.viewFAQ(v.getContext(), 49);
-                }
-            });
-            sb.show();
+        } catch (NoStreamException ex) {
+            ex.report(getActivity());
         } catch (Throwable ex) {
             Log.unexpectedError(getParentFragmentManager(), ex);
         }
@@ -574,7 +570,7 @@ public class FragmentAnswer extends FragmentBase {
         if (action == R.id.menu_link) {
             Uri uri = null;
 
-            ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipboardManager cbm = Helper.getSystemService(getContext(), ClipboardManager.class);
             if (cbm != null && cbm.hasPrimaryClip()) {
                 String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
                 uri = Uri.parse(link);

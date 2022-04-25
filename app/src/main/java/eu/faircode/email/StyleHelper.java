@@ -81,7 +81,8 @@ public class StyleHelper {
             QuoteSpan.class, IndentSpan.class,
             StrikethroughSpan.class,
             URLSpan.class,
-            TypefaceSpan.class, CustomTypefaceSpan.class
+            TypefaceSpan.class, CustomTypefaceSpan.class,
+            TranslatedSpan.class
     ));
 
     static boolean apply(int action, LifecycleOwner owner, View anchor, EditText etBody, Object... args) {
@@ -227,6 +228,8 @@ public class StyleHelper {
                                 return setBlockQuote(item);
                             } else if (groupId == R.id.group_style_indentation) {
                                 return setIndentation(item);
+                            } else if (groupId == R.id.group_style_mark) {
+                                return setMark(item);
                             } else if (groupId == R.id.group_style_strikethrough) {
                                 return setStrikeThrough(item);
                             } else if (groupId == R.id.group_style_code) {
@@ -608,6 +611,32 @@ public class StyleHelper {
                         return true;
                     }
 
+                    private boolean setMark(MenuItem item) {
+                        Log.breadcrumb("style", "action", "strike");
+
+                        Context context = etBody.getContext();
+
+                        boolean has = false;
+                        MarkSpan[] spans = edit.getSpans(start, end, MarkSpan.class);
+                        for (MarkSpan span : spans) {
+                            int s = edit.getSpanStart(span);
+                            int e = edit.getSpanEnd(span);
+                            int f = edit.getSpanFlags(span);
+                            edit.removeSpan(span);
+                            if (splitSpan(edit, start, end, s, e, f, true,
+                                    new MarkSpan(), new MarkSpan()))
+                                has = true;
+                        }
+
+                        if (!has)
+                            edit.setSpan(new MarkSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                        etBody.setText(edit);
+                        etBody.setSelection(end);
+
+                        return true;
+                    }
+
                     private boolean setStrikeThrough(MenuItem item) {
                         Log.breadcrumb("style", "action", "strike");
 
@@ -980,45 +1009,45 @@ public class StyleHelper {
                     .replace("\"", ""));
 
         if (faces.contains("fairemail"))
-            return ResourcesCompat.getFont(context, R.font.fantasy);
+            return ResourcesCompat.getFont(context.getApplicationContext(), R.font.fantasy);
 
         if (bundled_fonts) {
             if (faces.contains("montserrat") ||
                     faces.contains("gotham") ||
                     faces.contains("proxima nova"))
-                return ResourcesCompat.getFont(context, R.font.montserrat);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.montserrat);
 
             if (faces.contains("arimo") ||
                     faces.contains("arial") ||
                     faces.contains("verdana") ||
                     faces.contains("helvetica") ||
                     faces.contains("helvetica neue"))
-                return ResourcesCompat.getFont(context, R.font.arimo);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.arimo);
 
             if (faces.contains("tinos") ||
                     faces.contains("times") ||
                     faces.contains("times new roman"))
-                return ResourcesCompat.getFont(context, R.font.tinos);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.tinos);
 
             if (faces.contains("cousine") ||
                     faces.contains("courier") ||
                     faces.contains("courier new"))
-                return ResourcesCompat.getFont(context, R.font.cousine);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.cousine);
 
             if (faces.contains("lato") ||
                     faces.contains("carlito") ||
                     faces.contains("calibri"))
-                return ResourcesCompat.getFont(context, R.font.lato);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.lato);
 
             if (faces.contains("caladea") ||
                     faces.contains("cambo") ||
                     faces.contains("cambria"))
-                return ResourcesCompat.getFont(context, R.font.caladea);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.caladea);
 
             if (faces.contains("opendyslexic") ||
                     faces.contains("comic sans") ||
                     faces.contains("comic sans ms"))
-                return ResourcesCompat.getFont(context, R.font.opendyslexic);
+                return ResourcesCompat.getFont(context.getApplicationContext(), R.font.opendyslexic);
         }
 
         for (String face : faces) {

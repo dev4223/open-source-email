@@ -157,7 +157,7 @@ public class DnsHelper {
                         }
 
                         if (ex == null) {
-                            //ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                            //ConnectivityManager cm = getSystemService(context, ConnectivityManager.class);
                             //Network active = (cm == null ? null : cm.getActiveNetwork());
                             //LinkProperties props = (active == null ? null : cm.getLinkProperties(active));
                             //Log.i("DNS private=" + (props == null ? null : props.isPrivateDnsActive()));
@@ -199,7 +199,10 @@ public class DnsHelper {
                     } else if (record instanceof TXTRecord) {
                         TXTRecord txt = (TXTRecord) record;
                         for (Object content : txt.getStrings())
-                            result.add(new DnsRecord(content.toString(), 0));
+                            if (result.size() > 0)
+                                result.get(0).name += content.toString();
+                            else
+                                result.add(new DnsRecord(content.toString(), 0));
                     } else
                         throw new IllegalArgumentException(record.getClass().getName());
                 }
@@ -212,7 +215,7 @@ public class DnsHelper {
     }
 
     private static String getDnsServer(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null)
             return DEFAULT_DNS;
 
