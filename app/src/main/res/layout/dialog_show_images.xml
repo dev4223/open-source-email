@@ -45,7 +45,6 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="italic"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/ivInfo"
             app:layout_constraintStart_toEndOf="@id/ivTracking"
             app:layout_constraintTop_toBottomOf="@id/tvMessage" />
 

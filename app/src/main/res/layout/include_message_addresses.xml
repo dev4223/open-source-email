@@ -442,7 +442,7 @@
             tvCcTitle,tvBccTitle,
             tvIdentityTitle,
             tvSentTitle,tvStoredTitle,
-            tvSizeExTitle,tvLanguageTitle,tvThreadTitle" />
+            tvLanguageTitle,tvThreadTitle" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"

@@ -802,20 +802,6 @@ public class FragmentCompose extends FragmentBase {
                         translated = null;
                     }
 
-                if (replaced != null) {
-                    StyleHelper.TranslatedSpan[] nc =
-                            text.getSpans(replaced, replaced + 1, StyleHelper.TranslatedSpan.class);
-                    if (nc != null)
-                        for (StyleHelper.TranslatedSpan p : nc) {
-                            int start = text.getSpanStart(p);
-                            int end = text.getSpanEnd(p);
-                            text.delete(start, end);
-                            text.removeSpan(p);
-                        }
-
-                    replaced = null;
-                }
-
                 if (lp != null)
                     TextUtils.dumpSpans(text, lp, "---after>");
             }
