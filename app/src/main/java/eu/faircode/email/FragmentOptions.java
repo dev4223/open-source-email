@@ -19,11 +19,8 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -33,7 +30,6 @@ import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.RelativeSizeSpan;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -51,6 +47,7 @@ import androidx.cursoradapter.widget.CursorAdapter;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -140,14 +137,14 @@ public class FragmentOptions extends FragmentBase {
             "nav_categories", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
             "indentation", "date", "date_fixed", "date_bold", "threading", "threading_unread",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
-            "avatars", "bimi", "gravatars", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
+            "avatars", "bimi", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
             "authentication", "authentication_indicator",
             "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients",
             "font_size_sender", "sender_ellipsize",
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines",
             "message_zoom", "overview_mode", "override_width", "addresses", "button_extra", "attachments_alt", "thumbnails",
-            "contrast", "display_font", "monospaced_pre",
+            "contrast", "hyphenation", "display_font", "monospaced_pre",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_color", "group_category",
@@ -155,7 +152,8 @@ public class FragmentOptions extends FragmentBase {
             "swipe_reply",
             "language_detection",
             "quick_filter", "quick_scroll",
-            "experiments", "debug", "log_level", "test1", "test2", "test3", "test4", "test5", "webview_legacy",
+            "experiments", "debug", "log_level", "test1", "test2", "test3", "test4", "test5",
+            "webview_legacy", "browser_zoom", "show_recent",
             "biometrics",
             "default_light"
     };
@@ -220,19 +218,11 @@ public class FragmentOptions extends FragmentBase {
             }
         });
 
-        addKeyPressedListener(new ActivityBase.IKeyPressedListener() {
+        getParentFragmentManager().setFragmentResultListener("options:tab", this, new FragmentResultListener() {
             @Override
-            public boolean onKeyPressed(KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onBackPressed() {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    onExit();
-                    return true;
-                } else
-                    return false;
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                int page = result.getInt("page");
+                pager.setCurrentItem(page);
             }
         });
 
@@ -264,11 +254,6 @@ public class FragmentOptions extends FragmentBase {
                 pager.setCurrentItem(index);
             getActivity().getIntent().removeExtra("tab");
         }
-    }
-
-    @Override
-    protected void finish() {
-        onExit();
     }
 
     @Override
@@ -461,40 +446,6 @@ public class FragmentOptions extends FragmentBase {
         });
 
         super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        try {
-            switch (requestCode) {
-                case ActivitySetup.REQUEST_STILL:
-                    if (resultCode == Activity.RESULT_OK)
-                        pager.setCurrentItem(0);
-                    else
-                        super.finish();
-                    break;
-            }
-        } catch (Throwable ex) {
-            Log.e(ex);
-        }
-    }
-
-    private void onExit() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean setup_reminder = prefs.getBoolean("setup_reminder", true);
-
-        boolean hasPermissions = hasPermission(Manifest.permission.READ_CONTACTS);
-        boolean isIgnoring = !Boolean.FALSE.equals(Helper.isIgnoringOptimizations(getContext()));
-
-        if (!setup_reminder || (hasPermissions && isIgnoring))
-            super.finish();
-        else {
-            FragmentDialogStill fragment = new FragmentDialogStill();
-            fragment.setTargetFragment(this, ActivitySetup.REQUEST_STILL);
-            fragment.show(getParentFragmentManager(), "setup:still");
-        }
     }
 
     static void reset(Context context, String[] options, Runnable confirmed) {

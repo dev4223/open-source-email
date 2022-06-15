@@ -63,16 +63,15 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class FragmentOptionsPrivacy extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private ImageButton ibHelp;
     private SwitchCompat swConfirmLinks;
     private SwitchCompat swCheckLinksDbl;
-    private SwitchCompat swBrowseLinks;
     private SwitchCompat swConfirmImages;
     private SwitchCompat swAskImages;
     private SwitchCompat swHtmlImages;
     private SwitchCompat swConfirmHtml;
     private SwitchCompat swAskHtml;
     private SwitchCompat swDisableTracking;
-    private SwitchCompat swHideTimeZone;
     private Button btnPin;
     private Button btnBiometrics;
     private Spinner spBiometricsTimeout;
@@ -82,6 +81,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private SwitchCompat swClientId;
     private TextView tvClientId;
     private ImageButton ibClientId;
+    private SwitchCompat swHideTimeZone;
     private SwitchCompat swDisplayHidden;
     private SwitchCompat swIncognitoKeyboard;
     private ImageButton ibIncognitoKeyboard;
@@ -106,11 +106,12 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private final static int BIP39_WORDS = 6;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "confirm_links", "check_links_dbl", "browse_links",
+            "confirm_links", "check_links_dbl",
             "confirm_images", "ask_images", "html_always_images", "confirm_html", "ask_html",
-            "disable_tracking", "hide_timezone",
+            "disable_tracking",
             "pin", "biometrics", "biometrics_timeout", "autolock", "autolock_nav",
-            "client_id", "display_hidden", "incognito_keyboard", "secure",
+            "client_id", "hide_timezone",
+            "display_hidden", "incognito_keyboard", "secure",
             "generic_ua", "safe_browsing", "load_emoji",
             "disconnect_auto_update", "disconnect_links", "disconnect_images",
             "wipe_mnemonic"
@@ -126,16 +127,15 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
         // Get controls
 
+        ibHelp = view.findViewById(R.id.ibHelp);
         swConfirmLinks = view.findViewById(R.id.swConfirmLinks);
         swCheckLinksDbl = view.findViewById(R.id.swCheckLinksDbl);
-        swBrowseLinks = view.findViewById(R.id.swBrowseLinks);
         swConfirmImages = view.findViewById(R.id.swConfirmImages);
         swAskImages = view.findViewById(R.id.swAskImages);
         swHtmlImages = view.findViewById(R.id.swHtmlImages);
         swConfirmHtml = view.findViewById(R.id.swConfirmHtml);
         swAskHtml = view.findViewById(R.id.swAskHtml);
         swDisableTracking = view.findViewById(R.id.swDisableTracking);
-        swHideTimeZone = view.findViewById(R.id.swHideTimeZone);
         btnPin = view.findViewById(R.id.btnPin);
         btnBiometrics = view.findViewById(R.id.btnBiometrics);
         spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
@@ -145,6 +145,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swClientId = view.findViewById(R.id.swClientId);
         tvClientId = view.findViewById(R.id.tvClientId);
         ibClientId = view.findViewById(R.id.ibClientId);
+        swHideTimeZone = view.findViewById(R.id.swHideTimeZone);
         swDisplayHidden = view.findViewById(R.id.swDisplayHidden);
         swIncognitoKeyboard = view.findViewById(R.id.swIncognitoKeyboard);
         ibIncognitoKeyboard = view.findViewById(R.id.ibIncognitoKeyboard);
@@ -172,12 +173,18 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
+        ibHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext(), "Options:privacy"), false);
+            }
+        });
+
         swConfirmLinks.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("confirm_links", checked).apply();
                 swCheckLinksDbl.setEnabled(checked);
-                swBrowseLinks.setEnabled(!checked);
             }
         });
 
@@ -185,13 +192,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("check_links_dbl", checked).apply();
-            }
-        });
-
-        swBrowseLinks.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("browse_links", checked).apply();
             }
         });
 
@@ -239,13 +239,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
-        swHideTimeZone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("hide_timezone", checked).apply();
-            }
-        });
-
         btnPin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -259,29 +252,30 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             public void onClick(View v) {
                 final boolean biometrics = prefs.getBoolean("biometrics", false);
 
-                Helper.authenticate(getActivity(), getViewLifecycleOwner(), biometrics, new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            boolean pro = ActivityBilling.isPro(getContext());
-                            if (pro) {
-                                SharedPreferences.Editor editor = prefs.edit();
-                                if (!biometrics)
-                                    editor.remove("pin");
-                                editor.putBoolean("biometrics", !biometrics);
-                                editor.apply();
-                            } else
-                                startActivity(new Intent(getContext(), ActivityBilling.class));
-                        } catch (Throwable ex) {
-                            Log.w(ex);
-                        }
-                    }
-                }, new Runnable() {
-                    @Override
-                    public void run() {
-                        // Do nothing
-                    }
-                });
+                Helper.authenticate(getActivity(), getViewLifecycleOwner(), biometrics,
+                        new RunnableEx("auth:setup") {
+                            @Override
+                            public void delegate() {
+                                try {
+                                    boolean pro = ActivityBilling.isPro(getContext());
+                                    if (pro) {
+                                        SharedPreferences.Editor editor = prefs.edit();
+                                        if (!biometrics)
+                                            editor.remove("pin");
+                                        editor.putBoolean("biometrics", !biometrics);
+                                        editor.apply();
+                                    } else
+                                        startActivity(new Intent(getContext(), ActivityBilling.class));
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+                            }
+                        }, new RunnableEx("auth:nothing") {
+                            @Override
+                            public void delegate() {
+                                // Do nothing
+                            }
+                        });
             }
         });
 
@@ -326,6 +320,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             @Override
             public void onClick(View v) {
                 Helper.view(v.getContext(), Uri.parse(Helper.ID_COMMAND_URI), true);
+            }
+        });
+
+        swHideTimeZone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("hide_timezone", checked).apply();
             }
         });
 
@@ -379,7 +380,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
-        grpSafeBrowsing.setEnabled(WebViewEx.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE));
+        grpSafeBrowsing.setEnabled(WebViewEx.isFeatureSupported(getContext(), WebViewFeature.SAFE_BROWSING_ENABLE));
 
         swLoadEmoji.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -473,7 +474,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
                     ClipData clip = ClipData.newPlainText(getString(R.string.app_name), mnemonic);
                     cbm.setPrimaryClip(clip);
-                    ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+                        ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
 
                 } else {
                     prefs.edit().remove("wipe_mnemonic").apply();
@@ -492,6 +495,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             sb.append(value);
         }
         tvClientId.setText(sb);
+        swDisconnectImages.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 
@@ -506,8 +510,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            setOptions();
+        setOptions();
     }
 
     @Override
@@ -526,13 +529,14 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     }
 
     private void setOptions() {
+        if (getContext() == null)
+            return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         swConfirmLinks.setChecked(prefs.getBoolean("confirm_links", true));
         swCheckLinksDbl.setChecked(prefs.getBoolean("check_links_dbl", BuildConfig.PLAY_STORE_RELEASE));
         swCheckLinksDbl.setEnabled(swConfirmLinks.isChecked());
-        swBrowseLinks.setChecked(prefs.getBoolean("browse_links", false));
-        swBrowseLinks.setEnabled(!swConfirmLinks.isChecked());
         swConfirmImages.setChecked(prefs.getBoolean("confirm_images", true));
         swAskImages.setChecked(prefs.getBoolean("ask_images", true));
         swAskImages.setEnabled(swConfirmImages.isChecked());
@@ -541,7 +545,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAskHtml.setChecked(prefs.getBoolean("ask_html", true));
         swAskHtml.setEnabled(swConfirmHtml.isChecked());
         swDisableTracking.setChecked(prefs.getBoolean("disable_tracking", true));
-        swHideTimeZone.setChecked(prefs.getBoolean("hide_timezone", true));
 
         String pin = prefs.getString("pin", null);
         btnPin.setCompoundDrawablesRelativeWithIntrinsicBounds(
@@ -565,6 +568,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAutoLockNav.setChecked(prefs.getBoolean("autolock_nav", false));
 
         swClientId.setChecked(prefs.getBoolean("client_id", true));
+        swHideTimeZone.setChecked(prefs.getBoolean("hide_timezone", true));
         swDisplayHidden.setChecked(prefs.getBoolean("display_hidden", false));
         swIncognitoKeyboard.setChecked(prefs.getBoolean("incognito_keyboard", false));
         swSecure.setChecked(prefs.getBoolean("secure", false));

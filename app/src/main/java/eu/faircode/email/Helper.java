@@ -38,6 +38,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -54,6 +55,8 @@ import android.os.LocaleList;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.StatFs;
+import android.os.storage.StorageManager;
+import android.provider.Browser;
 import android.provider.Settings;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
@@ -97,10 +100,11 @@ import androidx.biometric.BiometricPrompt;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.browser.customtabs.CustomTabsServiceConnection;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
@@ -117,6 +121,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.openintents.openpgp.util.OpenPgpApi;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -161,6 +166,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 public class Helper {
+    private static Integer targetSdk = null;
     private static Boolean hasWebView = null;
     private static Boolean hasPlayStore = null;
     private static Boolean hasValidFingerprint = null;
@@ -173,9 +179,12 @@ public class Helper {
     static final int AUTOLOCK_GRACE = 7; // seconds
     static final long PIN_FAILURE_DELAY = 3; // seconds
 
+    static final String PGP_OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
     static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
 
+    static final String PACKAGE_CHROME = "com.android.chrome";
+    static final String PACKAGE_WEBVIEW = "https://play.google.com/store/apps/details?id=com.google.android.webview";
     static final String PRIVACY_URI = "https://email.faircode.eu/privacy/";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
     static final String SUPPORT_URI = "https://contact.faircode.eu/";
@@ -184,7 +193,6 @@ public class Helper {
     static final String ID_COMMAND_URI = "https://datatracker.ietf.org/doc/html/rfc2971#section-3.1";
     static final String AUTH_RESULTS_URI = "https://datatracker.ietf.org/doc/html/rfc7601";
     static final String FAVICON_PRIVACY_URI = "https://en.wikipedia.org/wiki/Favicon";
-    static final String GRAVATAR_PRIVACY_URI = "https://en.wikipedia.org/wiki/Gravatar";
     static final String LICENSE_URI = "https://www.gnu.org/licenses/gpl-3.0.html";
     static final String DONTKILL_URI = "https://dontkillmyapp.com/";
     static final String URI_SUPPORT_RESET_OPEN = "https://support.google.com/pixelphone/answer/6271667";
@@ -387,6 +395,14 @@ public class Helper {
         return true;
     }
 
+    static String[] getDesiredPermissions(Context context) {
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.READ_CONTACTS);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+        return permissions.toArray(new String[0]);
+    }
+
     static String[] getOAuthPermissions() {
         List<String> permissions = new ArrayList<>();
         //permissions.add(Manifest.permission.READ_CONTACTS); // profile
@@ -395,7 +411,7 @@ public class Helper {
         return permissions.toArray(new String[0]);
     }
 
-    static boolean hasCustomTabs(Context context, Uri uri) {
+    private static boolean hasCustomTabs(Context context, Uri uri, String pkg) {
         String scheme = (uri == null ? null : uri.getScheme());
         if (!"http".equals(scheme) && !"https".equals(scheme))
             return false;
@@ -408,6 +424,8 @@ public class Helper {
             Intent intent = new Intent();
             intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
             intent.setPackage(info.activityInfo.packageName);
+            if (pkg != null && !pkg.equals(info.activityInfo.packageName))
+                continue;
             if (pm.resolveService(intent, 0) != null)
                 return true;
         }
@@ -425,7 +443,8 @@ public class Helper {
         try {
             PackageManager pm = context.getPackageManager();
             if (pm.hasSystemFeature(PackageManager.FEATURE_WEBVIEW)) {
-                new WebView(context);
+                WebView view = new WebView(context);
+                view.setOverScrollMode(View.OVER_SCROLL_NEVER);
                 return true;
             } else
                 return false;
@@ -437,6 +456,25 @@ public class Helper {
                     at eu.faircode.email.ApplicationEx.onCreate(SourceFile:110)
                     at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1014)
                     at android.app.ActivityThread.handleBindApplication(ActivityThread.java:4751)
+
+                    Chromium WebView package does not exist
+                    android.webkit.WebViewFactory$MissingWebViewPackageException: Failed to load WebView provider: No WebView installed
+                        at android.webkit.WebViewFactory.getWebViewContextAndSetProvider(WebViewFactory.java:428)
+                        at android.webkit.WebViewFactory.getProviderClass(WebViewFactory.java:493)
+                        at android.webkit.WebViewFactory.getProvider(WebViewFactory.java:348)
+                        at android.webkit.WebView.getFactory(WebView.java:2594)
+                        at android.webkit.WebView.ensureProviderCreated(WebView.java:2588)
+                        at android.webkit.WebView.setOverScrollMode(WebView.java:2656)
+                        at android.view.View.<init>(View.java:5325)
+                        at android.view.View.<init>(View.java:5466)
+                        at android.view.ViewGroup.<init>(ViewGroup.java:702)
+                        at android.widget.AbsoluteLayout.<init>(AbsoluteLayout.java:56)
+                        at android.webkit.WebView.<init>(WebView.java:421)
+                        at android.webkit.WebView.<init>(WebView.java:363)
+                        at android.webkit.WebView.<init>(WebView.java:345)
+                        at android.webkit.WebView.<init>(WebView.java:332)
+                        at android.webkit.WebView.<init>(WebView.java:322)
+                        at eu.faircode.email.WebViewEx.<init>(SourceFile:1)
              */
             return false;
         }
@@ -534,7 +572,7 @@ public class Helper {
 
     static String getOpenKeychainPackage(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
+        return prefs.getString("openpgp_provider", Helper.PGP_OPENKEYCHAIN_PACKAGE);
     }
 
     static boolean isOpenKeychainInstalled(Context context) {
@@ -786,8 +824,12 @@ public class Helper {
             return;
         }
 
-        boolean has = hasCustomTabs(context, uri);
-        Log.i("View=" + uri + " browse=" + browse + " task=" + task + " has=" + has);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String open_with_pkg = prefs.getString("open_with_pkg", null);
+
+        boolean has = hasCustomTabs(context, uri, open_with_pkg);
+
+        Log.i("View=" + uri + " browse=" + browse + " task=" + task + " pkg=" + open_with_pkg + " has=" + has);
 
         if (browse || !has) {
             try {
@@ -798,12 +840,14 @@ public class Helper {
                     view.setDataAndType(uri, mimeType);
                 if (task)
                     view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                if (UriHelper.isHyperLink(uri) &&
+                        open_with_pkg != null && isInstalled(context, open_with_pkg))
+                    view.setPackage(open_with_pkg);
                 context.startActivity(view);
             } catch (Throwable ex) {
                 reportNoViewer(context, uri, ex);
             }
         } else {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean navbar_colorize = prefs.getBoolean("navbar_colorize", false);
             int colorPrimary = resolveColor(context, R.attr.colorPrimary);
             int colorPrimaryDark = resolveColor(context, R.attr.colorPrimaryDark);
@@ -825,7 +869,31 @@ public class Helper {
                     .setStartAnimations(context, R.anim.activity_open_enter, R.anim.activity_open_exit)
                     .setExitAnimations(context, R.anim.activity_close_enter, R.anim.activity_close_exit);
 
+            Locale locale = Locale.getDefault();
+            Locale slocale = Resources.getSystem().getConfiguration().locale;
+
+            List<String> languages = new ArrayList<>();
+            languages.add(locale.toLanguageTag() + ";q=1.0");
+            if (!TextUtils.isEmpty(locale.getLanguage()))
+                languages.add(locale.getLanguage() + ";q=0.9");
+            if (!slocale.equals(locale)) {
+                languages.add(slocale.toLanguageTag() + ";q=0.8");
+                if (!TextUtils.isEmpty(slocale.getLanguage()))
+                    languages.add(slocale.getLanguage() + ";q=0.7");
+            }
+            languages.add("*;q=0.5");
+            Log.i("MMM " + TextUtils.join(", ", languages));
+
+            Bundle headers = new Bundle();
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+            headers.putString("Accept-Language", TextUtils.join(", ", languages));
+
             CustomTabsIntent customTabsIntent = builder.build();
+            customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
+
+            if (open_with_pkg != null && isInstalled(context, open_with_pkg))
+                customTabsIntent.intent.setPackage(open_with_pkg);
+
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (Throwable ex) {
@@ -834,29 +902,15 @@ public class Helper {
         }
     }
 
-    static void customTabsWarmup(Context context) {
+    static boolean customTabsWarmup(Context context) {
         if (context == null)
-            return;
+            return false;
 
         try {
-            CustomTabsClient.bindCustomTabsService(context, "com.android.chrome", new CustomTabsServiceConnection() {
-                @Override
-                public void onCustomTabsServiceConnected(@NonNull ComponentName name, @NonNull CustomTabsClient client) {
-                    Log.i("Warming up custom tabs");
-                    try {
-                        client.warmup(0);
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    // Do nothing
-                }
-            });
+            return CustomTabsClient.connectAndInitialize(context, PACKAGE_CHROME);
         } catch (Throwable ex) {
             Log.w(ex);
+            return false;
         }
     }
 
@@ -908,7 +962,7 @@ public class Helper {
                 .build();
     }
 
-    static Uri getSupportUri(Context context) {
+    static Uri getSupportUri(Context context, String reference) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String language = prefs.getString("language", null);
         Locale slocale = Resources.getSystem().getConfiguration().locale;
@@ -920,10 +974,11 @@ public class Helper {
                 .appendQueryParameter("locale", slocale.toString())
                 .appendQueryParameter("language", language == null ? "" : language)
                 .appendQueryParameter("installed", Helper.hasValidFingerprint(context) ? "" : "Other")
+                .appendQueryParameter("reference", reference)
                 .build();
     }
 
-    static Intent getIntentIssue(Context context) {
+    static Intent getIntentIssue(Context context, String reference) {
         if (ActivityBilling.isPro(context)) {
             String version = BuildConfig.VERSION_NAME + BuildConfig.REVISION + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
@@ -966,7 +1021,7 @@ public class Helper {
             return intent;
         } else {
             if (Helper.hasValidFingerprint(context))
-                return new Intent(Intent.ACTION_VIEW, getSupportUri(context));
+                return new Intent(Intent.ACTION_VIEW, getSupportUri(context, reference));
             else
                 return new Intent(Intent.ACTION_VIEW, Uri.parse(XDA_URI));
         }
@@ -986,6 +1041,19 @@ public class Helper {
             Log.e(ex);
         }
         return 0;
+    }
+
+    static int getTargetSdk(Context context) {
+        if (targetSdk == null)
+            try {
+                PackageManager pm = context.getPackageManager();
+                ApplicationInfo ai = pm.getApplicationInfo(BuildConfig.APPLICATION_ID, 0);
+                targetSdk = ai.targetSdkVersion;
+            } catch (Throwable ex) {
+                Log.e(ex);
+                targetSdk = Build.VERSION.SDK_INT;
+            }
+        return targetSdk;
     }
 
     static boolean isSupportedDevice() {
@@ -1200,10 +1268,17 @@ public class Helper {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
                 .setView(dview)
+                .setNeutralButton(R.string.menu_faq, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Uri uri = Helper.getSupportUri(context, "Report:viewer");
+                        view(context, uri, true);
+                    }
+                })
                 .setNegativeButton(android.R.string.cancel, null);
 
         if (hasPlayStore(context) && !TextUtils.isEmpty(extension)) {
-            builder.setNeutralButton(R.string.title_no_viewer_search, new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(R.string.title_no_viewer_search, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     try {
@@ -1226,7 +1301,7 @@ public class Helper {
 
     static void excludeFromRecents(Context context) {
         try {
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
             if (am == null)
                 return;
 
@@ -1295,7 +1370,8 @@ public class Helper {
                         SelectionTracker.class.isAssignableFrom(type) ||
                         SelectionTracker.SelectionPredicate.class.isAssignableFrom(type) ||
                         PagerAdapter.class.isAssignableFrom(type) ||
-                        RecyclerView.Adapter.class.isAssignableFrom(type))
+                        RecyclerView.Adapter.class.isAssignableFrom(type) ||
+                        TwoStateOwner.class.isAssignableFrom(type))
                     try {
                         Log.i("Clearing " + fname);
 
@@ -1424,6 +1500,7 @@ public class Helper {
     }
 
     static boolean isDarkTheme(Context context) {
+        // R.attr.isLightTheme
         TypedValue tv = new TypedValue();
         context.getTheme().resolveAttribute(R.attr.themeName, tv, true);
         return (tv.string != null && !"light".contentEquals(tv.string));
@@ -1431,8 +1508,7 @@ public class Helper {
 
     static void showKeyboard(final View view) {
         final Context context = view.getContext();
-        InputMethodManager imm =
-                (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = Helper.getSystemService(context, InputMethodManager.class);
         if (imm == null)
             return;
 
@@ -1451,8 +1527,7 @@ public class Helper {
 
     static void hideKeyboard(final View view) {
         final Context context = view.getContext();
-        InputMethodManager imm =
-                (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = Helper.getSystemService(context, InputMethodManager.class);
         if (imm == null)
             return;
 
@@ -1461,6 +1536,25 @@ public class Helper {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         } catch (Throwable ex) {
             Log.e(ex);
+        }
+    }
+
+    static boolean isKeyboardVisible(final View view) {
+        try {
+            if (view == null)
+                return false;
+            View root = view.getRootView();
+            if (root == null)
+                return false;
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(root);
+            if (insets == null)
+                return false;
+            boolean visible = insets.isVisible(WindowInsetsCompat.Type.ime());
+            Log.i("isKeyboardVisible=" + visible);
+            return visible;
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return false;
         }
     }
 
@@ -1594,6 +1688,14 @@ public class Helper {
             return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
         else
             return DateUtils.getRelativeTimeSpanString(context, millis);
+    }
+
+    static String formatDuration(long ms) {
+        int days = (int) (ms / (24 * 3600 * 1000L));
+        ms = ms % (24 * 3600 * 1000L);
+        long seconds = ms / 1000;
+        ms = ms % 1000;
+        return (days > 0 ? days + " " : "") + DateUtils.formatElapsedTime(seconds) + "." + ms;
     }
 
     static String formatNumber(Integer number, long max, NumberFormat nf) {
@@ -1862,6 +1964,10 @@ public class Helper {
         };
     }
 
+    static boolean isDot(char c) {
+        return (c == '.' /* Latin */ || c == '。' /* Chinese */);
+    }
+
     // Files
 
     static String sanitizeFilename(String name) {
@@ -1889,6 +1995,14 @@ public class Helper {
         String extension = Helper.getExtension(filename);
         if (extension != null) {
             extension = extension.toLowerCase(Locale.ROOT);
+
+            if (extension.endsWith(")")) {
+                int p = extension.lastIndexOf('(');
+                if (p > 0 && p < extension.length() - 1)
+                    if (TextUtils.isDigitsOnly(extension.substring(p + 1, extension.length() - 1)))
+                        extension = extension.substring(0, p).trim();
+            }
+
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         }
 
@@ -2014,13 +2128,26 @@ public class Helper {
         return stats.getTotalBytes();
     }
 
-    static long getSize(File dir) {
+    static long getCacheQuota(Context context) {
+        // https://developer.android.com/reference/android/content/Context#getCacheDir()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            try {
+                StorageManager sm = Helper.getSystemService(context, StorageManager.class);
+                File cache = context.getCacheDir();
+                return sm.getCacheQuotaBytes(sm.getUuidForPath(cache));
+            } catch (IOException ex) {
+                Log.w(ex);
+            }
+        return 0;
+    }
+
+    static long getSizeUsed(File dir) {
         long size = 0;
         File[] listed = dir.listFiles();
         if (listed != null)
             for (File file : listed)
                 if (file.isDirectory())
-                    size += getSize(file);
+                    size += getSizeUsed(file);
                 else
                     size += file.length();
         return size;
@@ -2046,7 +2173,7 @@ public class Helper {
             urlConnection.setReadTimeout(timeout);
             urlConnection.setConnectTimeout(timeout);
             urlConnection.setInstanceFollowRedirects(true);
-            urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+            ConnectionHelper.setUserAgent(context, urlConnection);
             urlConnection.connect();
 
             try {
@@ -2080,6 +2207,22 @@ public class Helper {
                 urlConnection.disconnect();
                 throw ex;
             }
+        }
+    }
+
+    static class ByteArrayInOutStream extends ByteArrayOutputStream {
+        public ByteArrayInOutStream() {
+            super();
+        }
+
+        public ByteArrayInOutStream(int size) {
+            super(size);
+        }
+
+        public ByteArrayInputStream getInputStream() {
+            ByteArrayInputStream in = new ByteArrayInputStream(this.buf, 0, this.count);
+            this.buf = null;
+            return in;
         }
     }
 
@@ -2259,9 +2402,9 @@ public class Helper {
                             }
 
                             if (!isCancelled(errorCode))
-                                ApplicationEx.getMainHandler().post(new Runnable() {
+                                ApplicationEx.getMainHandler().post(new RunnableEx("auth:error") {
                                     @Override
-                                    public void run() {
+                                    public void delegate() {
                                         ToastEx.makeText(activity,
                                                 "Error " + errorCode + ": " + errString,
                                                 Toast.LENGTH_LONG).show();
@@ -2293,7 +2436,7 @@ public class Helper {
 
                         private boolean isHardwareFailure(int errorCode) {
                             return (errorCode == BiometricPrompt.ERROR_HW_UNAVAILABLE ||
-                                    errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS ||
+                                    errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS || // No fingerprints enrolled.
                                     errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
                                     errorCode == BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL);
                         }
@@ -2301,9 +2444,9 @@ public class Helper {
 
             prompt.authenticate(info.build());
 
-            final Runnable cancelPrompt = new Runnable() {
+            final Runnable cancelPrompt = new RunnableEx("auth:cancelprompt") {
                 @Override
-                public void run() {
+                public void delegate() {
                     try {
                         prompt.cancelAuthentication();
                     } catch (Throwable ex) {
@@ -2318,7 +2461,12 @@ public class Helper {
                 @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
                 public void onDestroy() {
                     Log.i("Authenticate destroyed");
-                    ApplicationEx.getMainHandler().post(cancelPrompt);
+                    ApplicationEx.getMainHandler().removeCallbacks(cancelPrompt);
+                    try {
+                        prompt.cancelAuthentication();
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
                     owner.getLifecycle().removeObserver(this);
                 }
             });
@@ -2618,7 +2766,7 @@ public class Helper {
     }
 
     static void clearAll(Context context) {
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         am.clearApplicationUserData();
     }
 }

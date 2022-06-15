@@ -9,7 +9,6 @@
     <string name="app_exit">Ketuk \'Kembali\' untuk keluar</string>
     <string name="app_cake">Sisa ruang penyimpanan tidak mencukupi</string>
     <string name="app_updated">Pembaharuan terakhir: %1$s</string>
-    <string name="channel_service">Menerima</string>
     <string name="channel_send">Kirim</string>
     <string name="channel_notification">Surel</string>
     <string name="channel_progress">Pekembangan</string>
@@ -117,7 +116,6 @@ Memblokir domain pengirim menggunakan aturan saring, yang merupakan fitur pro.  
     <string name="title_setup_analytics">FairEmail tidak menampilkan iklan dan tidak melacak atau menganalisis kebiasaan anda. Penangkap gangguan digunakan untuk melaporkan gangguan dan dimatikan secara bawaan.</string>
     <string name="title_setup_quick_accounts">Tambah atau ganti akun</string>
     <string name="title_setup_quick_support">Beberapa layanan email mempersulit penambahan akun. Mohon jangan menyalahkan FairEmail untuk ini, tetapi mintalah dukungan sebagai gantinya.</string>
-    <string name="title_setup_quick_hint">Pengaturan cepat akan mengambil informasi konfigurasi dari autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_patience">Harap bersabar &#8230;</string>
     <string name="title_setup_quick_imap">Server IMAP untuk menerima pesan</string>
     <string name="title_setup_quick_smtp">Server SMTP untuk mengirim pesan</string>
@@ -140,7 +138,6 @@ Memblokir domain pengirim menggunakan aturan saring, yang merupakan fitur pro.  
     <string name="title_setup_gmail_rationale">Mohon berikan izin untuk memilih akun dan membaca nama Anda.</string>
     <string name="title_setup_gmail_permissions">Google akan meminta izin untuk membaca, menulis, mengirim dan menghapus semua email Anda secara permanen. FairEmail tidak akan pernah menghapus pesan tanpa persetujuan tegas dari Anda.</string>
     <string name="title_setup_gmail_drafts">Jika folder draf tidak dapat diakses oleh IMAP, hal ini dapat diperbaiki pada pengaturan label Gmail.</string>
-    <string name="title_setup_gmail_password">Saya ingin mengotorisasi akun dengan kata sandi</string>
     <string name="title_setup_office_auth">Kesalahan \'AUTHENTICATE Failed\' bisa disebabkan oleh IMAP/SMTP yang dinon-aktifkan oleh administrator sistem.</string>
     <string name="title_setup_oauth_rationale">Izinkan akses ke akun %1$s Anda</string>
     <string name="title_setup_oauth_updated">Ulang kembali otorisasi akun</string>
@@ -363,9 +360,9 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_color_stripe">Tampilkan garis warna</string>
     <string name="title_advanced_color_stripe_wide">Gunakan garis warna lebar</string>
     <string name="title_advanced_avatars">Tampilkan kontak foto</string>
-    <string name="title_advanced_gravatars">Tampilkan Gravatar</string>
     <string name="title_advanced_bimi_unverified">Pengirim belum di verifikasi</string>
     <string name="title_advanced_bimi_verified">Pengirim terverifikasi</string>
+    <string name="title_advanced_gravatars">Tampilkan Gravatar</string>
     <string name="title_advanced_favicons">Tampilkan favicon</string>
     <string name="title_advanced_generated_icons">Tampilkan ikon yang dibuat</string>
     <string name="title_advanced_identicons">Tampilkan ikon identitas</string>
@@ -458,10 +455,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_default_snooze">Waktu tunda/jeda bawaan</string>
     <string name="title_advanced_notifications">Kelola pemberitahuan</string>
     <string name="title_advanced_notifications_default">Standar Pemberitahuan</string>
-    <string name="title_advanced_notifications_service">Terima saluran</string>
     <string name="title_advanced_notifications_newest_first">Menampilkan pemberitahuan terbaru terlebih dahulu</string>
-    <string name="title_advanced_notifications_background">Gunakan layanan latar belakang untuk menyinkronkan pesan</string>
-    <string name="title_advanced_notifications_background_hint">Layanan latar belakang dapat dihentikan oleh Android kapan saja, tetapi tidak memerlukan pemberitahuan pada bilah status.</string>
     <string name="title_advanced_badge">Tampilkan ikon peluncur dengan jumlah pesan baru</string>
     <string name="title_advanced_unseen_ignored">Biarkan jumlah pesan baru sesuai dengan jumlah pemberitahuan</string>
     <string name="title_advanced_notify_background">Tampilkan pemberitahuan hanya saat di latar belakang</string>
@@ -491,9 +485,10 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_light">Pakai lampu pemberitahuan</string>
     <string name="title_advanced_sound">Pilih suara pemberitahuan</string>
     <string name="title_advanced_notify_screen_on">Perlahan hidupkan layar untuk pemberitahuan pesan baru</string>
+    <string name="title_advanced_notifications_background">Gunakan layanan latar belakang untuk menyinkronkan pesan</string>
+    <string name="title_advanced_notifications_background_hint">Layanan latar belakang dapat dihentikan oleh Android kapan saja, tetapi tidak memerlukan pemberitahuan pada bilah status.</string>
     <string name="title_advanced_confirm_links">Minta konfirmasi ketika membuka tautan</string>
     <string name="title_advanced_check_links_dbl">Periksa daftar blokir domain untuk tautan yang mencurigakan</string>
-    <string name="title_advanced_browse_links">Delegasikan ketika membuka tautan ke sistem Android</string>
     <string name="title_advanced_confirm_images">Tampilkan tanpa gambar sebagai bawaan</string>
     <string name="title_advanced_ask_images">Minta konfirmasi ketika menampilkan gambar</string>
     <string name="title_advanced_confirm_html">Tampilkan pesan yang diformat ulang secara standar</string>
@@ -585,7 +580,6 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_advanced_metered_warning">Menonaktifkan opsi ini akan menonaktifkan menerima dan mengirim pesan ketika memakai koneksi internet seluler</string>
     <string name="title_advanced_rlah_hint">Dengan asumsi tidak ada roaming di Uni Eropa</string>
     <string name="title_advanced_usage_hint">Akan meningkatkan penggunaan baterai, dan penyimpanan data</string>
-    <string name="title_advanced_tcp_keep_alive_hint">Mengaktifkan ini dapat menyebabkan masalah koneksi pada beberapa perangkat</string>
     <string name="title_advanced_validate_hint">Ini dapat mengakibatkan pesan tidak tersinkronasi, contohnya ketika menggunakan VPN, tetapi juga dalam situasi lain</string>
     <string name="title_advanced_timeout_hint">Pengaturan batas waktu baca/tulis akan digandakan. Nilai yang lebih tinggi akan menghasilkan lebih banyak penggunaan baterai.</string>
     <string name="title_advanced_ssl_harden_hint">Mengaktifkan ini akan menonaktifkan protokol dan cipher SSL yang lemah, yang biasanya menyebabkan masalah koneksi</string>
@@ -599,7 +593,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_advanced_split_min_hint">Keadaan ini ditujukan untuk perangkat yang bisa dilipat</string>
     <string name="title_advanced_threading_hint">Pesan grup terkait satu sama lain</string>
     <string name="title_advanced_highlight_hint">Warna aksen untuk tema ini akan digunakan untuk menyorot</string>
-    <string name="title_advanced_gravatars_hint">Mungkin ada risiko privasi</string>
+    <string name="title_advanced_privacy_risk">Mungkin ada risiko privasi</string>
     <string name="title_advanced_name_email_hint">Nama akan ditampilkan jika tersedia</string>
     <string name="title_advanced_preview_hint">Hanya tersedia jika teks pesan sudah diunduh</string>
     <string name="title_advanced_preview_lines_hint">%s total karakter maksimum</string>
@@ -913,6 +907,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_button_search">Cari di dalam pesan</string>
     <string name="title_button_search_text">Cari dalam teks pesan</string>
     <string name="title_configure_buttons">Pengaturan tombol</string>
+    <string name="title_quick_actions_snooze">Tunda</string>
     <string name="title_trash">Sampah</string>
     <string name="title_copy">Salin &#8230;</string>
     <string name="title_copy_to">Salin ke &#8230;</string>
@@ -942,7 +937,6 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_reply_hard_bounce">Kirim pantauan keras</string>
     <string name="title_reply_template">Balas dengan template</string>
     <string name="title_move_undo">Sedang dipindahkan ke %1$s (%2$d)</string>
-    <string name="title_open_with">Buka dengan</string>
     <string name="title_authentication_failed">%1$s gagal otentikasi</string>
     <string name="title_on_blocklist">Pada daftar blokir spam</string>
     <string name="title_receipt_subject">Bukti telah dibaca: %1$s</string>
@@ -1184,6 +1178,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_search_device">Penelusuran di perangkat</string>
     <string name="title_search_server">Penelusuran di server</string>
     <string name="title_search_in">Pencarian di</string>
+    <string name="title_search_sender">Telusuri berdasarkan pengirim</string>
     <string name="title_sort_on">Urutkan berdasarkan</string>
     <string name="title_sort_on_time">Waktu</string>
     <string name="title_sort_on_unread">Belum dibaca</string>

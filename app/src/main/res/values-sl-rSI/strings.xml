@@ -4,7 +4,6 @@
     <string name="app_changelog">Dnevnik sprememb</string>
     <string name="app_welcome">FairEmail je odprtokodni program za e-pošto, ki se osredotoča na zasebnost in varnost.  Zaradi tega lahko nekatere značilnosti delujejo drugače, kot ste navajeni.</string>
     <string name="app_exit">Za izhod še enkrat pritisnite \'Nazaj\'.</string>
-    <string name="channel_service">Prejemanje</string>
     <string name="channel_send">Pošlji</string>
     <string name="channel_update">Posodobitve</string>
     <string name="channel_warning">Opozorila</string>
@@ -108,7 +107,6 @@
     <string name="title_setup">Nastavitve</string>
     <string name="title_setup_help">Pomoč</string>
     <string name="title_setup_quick">Hitra nastavitev</string>
-    <string name="title_setup_quick_hint">Hitra nastavitev bo podatke o nastavitvah pridobila iz autoconfig.thunderbird.net.</string>
     <string name="title_setup_quick_imap">Strežnik IMAP za prejemanje sporočil</string>
     <string name="title_setup_quick_smtp">Strežnik SMTP za pošiljanje sporočil</string>
     <string name="title_setup_wizard">Čarovnik</string>
@@ -311,7 +309,6 @@
     <string name="title_advanced_light">Uporabi lučko za obvestila</string>
     <string name="title_advanced_sound">Izberi zvok obvestila</string>
     <string name="title_advanced_confirm_links">Potrdi odpiranje povezav</string>
-    <string name="title_advanced_browse_links">Za odpiranje povezav pooblasti Android</string>
     <string name="title_advanced_ask_images">Potrdi prikaz slik</string>
     <string name="title_advanced_confirm_html">Privzeto prikaži preoblikovana sporočila</string>
     <string name="title_advanced_hide_timezone">Pošiljaj sporočila brez podatkov o časovnem pasu</string>
@@ -367,7 +364,7 @@
     <string name="title_advanced_navbar_colorize_hint">Delovanje tega je odvisno od različice in izvedbe Androida.</string>
     <string name="title_advanced_threading_hint">Združi sporočila, ki so med seboj povezana.</string>
     <string name="title_advanced_highlight_hint">Odtenek barve teme se bo uporabil za poudarjanje.</string>
-    <string name="title_advanced_gravatars_hint">Vklop te možnosti lahko ogrozi zasebnost.</string>
+    <string name="title_advanced_privacy_risk">Vklop te možnosti lahko ogrozi zasebnost.</string>
     <string name="title_advanced_preview_hint">Na voljo samo, če je bilo besedilo sporočila prejeto.</string>
     <string name="title_advanced_preview_issue">Pomikanje je lahko počasno zaradi hrošča v nekaterih različicah Androida, kadar je število vrstic večje od ena.</string>
     <string name="title_advanced_inline_hint">Slike v besedilu so vključene v sporočilo.</string>
@@ -571,6 +568,7 @@
     <string name="title_download_all">Prejmi vse</string>
     <string name="title_save_all">Shrani vse</string>
     <string name="title_save_eml">Shrani datoteko izvornega sporočila</string>
+    <string name="title_quick_actions_snooze">Dremež</string>
     <string name="title_trash">Smeti</string>
     <string name="title_copy">Kopiraj &#8230;</string>
     <string name="title_copy_to">Kopiraj v &#8230;</string>
@@ -593,7 +591,6 @@
     <string name="title_reply_list">Odgovori seznamu</string>
     <string name="title_reply_receipt">Pošlji potrdilo o branju</string>
     <string name="title_reply_template">Odgovori s predlogo</string>
-    <string name="title_open_with">Odpri s/z</string>
     <string name="title_authentication_failed">Overitev %1$s je spodletela.</string>
     <string name="title_receipt_subject">Potrdilo o branju: %1$s</string>
     <string name="title_receipt_text">To potrdilo o branju potrjuje samo, da je bilo sporočilo prikazano.  Ni nobenega zagotovila, da je prejemnik prebral vsebino sporočila.</string>
@@ -765,6 +762,7 @@
     <string name="title_search_device">Išči na napravi</string>
     <string name="title_search_server">Išči na strežniku</string>
     <string name="title_search_in">Išči v</string>
+    <string name="title_search_sender">Išči pošiljatelja</string>
     <string name="title_sort_on">Razvrsti po</string>
     <string name="title_sort_on_time">Času</string>
     <string name="title_sort_on_unread">Neprebrano</string>

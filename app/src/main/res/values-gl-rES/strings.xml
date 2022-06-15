@@ -10,7 +10,6 @@
     <string name="app_cake">Non hai espazo abondo</string>
     <string name="app_updated">Última actualización: %1$s</string>
     <string name="app_download">Descargado desde: %1$s</string>
-    <string name="channel_service">Recibir</string>
     <string name="channel_send">Enviar</string>
     <string name="channel_notification">Correo</string>
     <string name="channel_progress">Progreso</string>
@@ -127,7 +126,6 @@
     <string name="title_setup_analytics">FairEmail non amosa anuncios e non segue nen analiza a súa actividade. Bugsnag se emprega para os informes de fallos, e está desactivado por defecto.</string>
     <string name="title_setup_quick_accounts">Engadir ou cambiar contas</string>
     <string name="title_setup_quick_support">Algúns provedores fan difícil engadir unha conta. Por favor, non culpe a FairEmail por isto, e no seu lugar solicite axuda.</string>
-    <string name="title_setup_quick_hint">A configuración rápida collerá a información de configuración de autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_patience">Por favor, sexa paciente &#8230;</string>
     <string name="title_setup_quick_imap">Servidor IMAP para recibir mensaxes</string>
     <string name="title_setup_quick_smtp">Servidor SMTP para enviar mensaxes</string>
@@ -150,7 +148,6 @@
     <string name="title_setup_gmail_rationale">Por favor, conceda permisos para seleccionar unha conta e ler o seu nome</string>
     <string name="title_setup_gmail_permissions">Google pedirá permisos para ler, redactar, enviar e borrar permanentemente todo o seu correo. FairEmail nunca eliminará as súas mensaxes sen o seu consentimento explícito.</string>
     <string name="title_setup_gmail_drafts">Se o cartafol de borradores non é accesible por IMAP, isto pódese solucionar na configuración de etiquetas de Gmail</string>
-    <string name="title_setup_gmail_password">Quero autorizar unha conta con un contrasinal</string>
     <string name="title_setup_office_auth">O erro \'AUTHENTICATE failed\' pode estar causado porque IMAP/SMTP estea desactivado polo administrador do sistema</string>
     <string name="title_setup_oauth_rationale">Autorizar o acceso á súa conta %1$s</string>
     <string name="title_setup_oauth_updated">A autorización da conta foi actualizada</string>
@@ -389,10 +386,10 @@
     <string name="title_advanced_color_stripe">Mostrar a banda de cor</string>
     <string name="title_advanced_color_stripe_wide">Usar barra de cor longa</string>
     <string name="title_advanced_avatars">Mostrar as fotos dos contactos</string>
-    <string name="title_advanced_gravatars">Mostrar Gravatars</string>
-    <string name="title_advanced_libravatars">Mostrar Libravatars</string>
     <string name="title_advanced_bimi_unverified">Remitente non verificado</string>
     <string name="title_advanced_bimi_verified">Remitente verificado</string>
+    <string name="title_advanced_gravatars">Mostrar Gravatars</string>
+    <string name="title_advanced_libravatars">Mostrar Libravatars</string>
     <string name="title_advanced_favicons">Mostrar favicons</string>
     <string name="title_advanced_favicons_partial">Inspeccionar so os primeiros %1$s da páxina web</string>
     <string name="title_advanced_generated_icons">Mostrar iconas xeradas</string>
@@ -490,10 +487,7 @@
     <string name="title_advanced_default_snooze">Tempo predeterminado do adiamento/retardo</string>
     <string name="title_advanced_notifications">Xestionar notificacións</string>
     <string name="title_advanced_notifications_default">Canal por omisión</string>
-    <string name="title_advanced_notifications_service">Canal de recepción</string>
     <string name="title_advanced_notifications_newest_first">Amosar as notificacións novas primeiro</string>
-    <string name="title_advanced_notifications_background">Usar o servizo de fondo para sincronizar as mensaxes</string>
-    <string name="title_advanced_notifications_background_hint">Un servizo de fondo pode ser detido por Android en calquera momento, pero non require unha notificación na barra de estado</string>
     <string name="title_advanced_badge">Mostrar a icona de lanzamento co número de novas mensaxes</string>
     <string name="title_advanced_unseen_ignored">Facer que o número de novas mensaxes sexa o mesmo que o de notificacións</string>
     <string name="title_advanced_notify_background">Mostrar só as notificacións cando a aplicación estea de fondo</string>
@@ -523,9 +517,10 @@
     <string name="title_advanced_light">Usar a luz de notificación</string>
     <string name="title_advanced_sound">Seleccionar son de notificación</string>
     <string name="title_advanced_notify_screen_on">Acender brevemente a pantalla coas notificacións de nova mensaxe</string>
+    <string name="title_advanced_notifications_background">Usar o servizo de fondo para sincronizar as mensaxes</string>
+    <string name="title_advanced_notifications_background_hint">Un servizo de fondo pode ser detido por Android en calquera momento, pero non require unha notificación na barra de estado</string>
     <string name="title_advanced_confirm_links">Confirmar a apertura de ligazóns</string>
     <string name="title_advanced_check_links_dbl">Usa as listas de bloqueo de dominios cas ligazóns sospeitosas</string>
-    <string name="title_advanced_browse_links">Delegar a apertura de ligazóns a Android</string>
     <string name="title_advanced_confirm_images">Non mostrar imaxes por defecto</string>
     <string name="title_advanced_ask_images">Confirmar a mostra de imaxes</string>
     <string name="title_advanced_confirm_html">Mostrar por defecto as mensaxes reformatadas</string>
@@ -624,7 +619,6 @@
     <string name="title_advanced_rlah_hint">Asúmese que non hai roaming na U.E.</string>
     <string name="title_advanced_usage_hint">Isto incrementará o uso da batería, dos datos e do espazo de almacenamiento</string>
     <string name="title_advanced_plain_hint">Habilitar isto limitará o uso de datos, pero as mensaxes sairán sen o formatado</string>
-    <string name="title_advanced_tcp_keep_alive_hint">Activar isto podería causar problemas de conexión nalgúns dispositivos</string>
     <string name="title_advanced_validate_hint">Isto podería facer que non se sincronicen as mensaxes, por exemplo cando se use unha VPN, e tamén noutras situacións</string>
     <string name="title_advanced_timeout_hint">Axustarase o tempo límite de lectura/escritura ao dobre do tempo límite de conexión. Valores máis altos resultarán nun maior uso da batería.</string>
     <string name="title_advanced_cert_strict_hint">Desactivar isto suavizará a comprobación dos certificados dos servidores</string>
@@ -639,7 +633,7 @@
     <string name="title_advanced_split_min_hint">Isto está pensado para aparellos pregables</string>
     <string name="title_advanced_threading_hint">Agrupar mensaxes relacionadas</string>
     <string name="title_advanced_highlight_hint">A cor de resalto do tema será empregada para salientar</string>
-    <string name="title_advanced_gravatars_hint">Podería haber un risco de privacidade</string>
+    <string name="title_advanced_privacy_risk">Podería haber un risco de privacidade</string>
     <string name="title_advanced_name_email_hint">Os nomes so se mostran cando estean dispoñibles</string>
     <string name="title_advanced_preview_hint">Soamente estará dispoñible cando o texto da mensaxe estea baixado</string>
     <string name="title_advanced_preview_lines_hint">Maximo de %s caracteres en total</string>
@@ -965,6 +959,7 @@
     <string name="title_button_search">Buscar en mensaxes</string>
     <string name="title_button_search_text">Buscar no texto da mensaxe</string>
     <string name="title_configure_buttons">Configurar botóns &#8230;</string>
+    <string name="title_quick_actions_snooze">Adiar</string>
     <string name="title_trash">Lixo</string>
     <string name="title_copy">Copiar &#8230;</string>
     <string name="title_copy_to">Copiar a &#8230;</string>
@@ -995,7 +990,6 @@
     <string name="title_reply_hard_bounce">Enviar unha notificación de rexeitamento</string>
     <string name="title_reply_template">Responder cun patrón</string>
     <string name="title_move_undo">Movendo a %1$s (%2$d)</string>
-    <string name="title_open_with">Abrir con</string>
     <string name="title_authentication_failed">Erro na autenticación %1$s</string>
     <string name="title_on_blocklist">Na lista de bloqueo de spam</string>
     <string name="title_receipt_subject">Acuse de recibo: %1$s</string>
@@ -1245,6 +1239,7 @@
     <string name="title_search_device">Buscar en dispositivo</string>
     <string name="title_search_server">Buscar en servidor</string>
     <string name="title_search_in">Buscar en</string>
+    <string name="title_search_sender">Procurar remitente</string>
     <string name="title_sort_on">Ordenar por</string>
     <string name="title_sort_on_time">Data</string>
     <string name="title_sort_on_unread">Sen ler</string>

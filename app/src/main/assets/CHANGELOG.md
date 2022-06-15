@@ -2,7 +2,251 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
+### [Juratyrant](https://en.wikipedia.org/wiki/Juratyrant)
+
+### 1.1919 - 2022-06-15
+
+* Fixed fragment back
+* Small improvements and minor bug fixes
+* Updated AndroidX
+
+### 1.1918 - 2022-06-15
+
+* Added browser selection to open link dialog
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1917 - 2022-06-14
+
+* Fixed moving to selected folder
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1916 - 2022-06-14
+
+* Added option to suppress new message notifications when calling
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1915 - 2022-06-13
+
+* Fixed initializing option values
+
+### 1.1914 - 2022-06-13
+
+* Added option for automatic hyphenation
+* Improved Android 13 compatibility
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1913 - 2022-06-12
+
+* Fixed asking for permissions on Android 12 and before
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1912 - 2022-06-11
+
+* Targetting SDK 33 (Android 13)
+* Small improvements and minor bug fixes
+* Updated AndroidX Webkit
+* Updated translations
+
+### 1.1911 - 2022-06-11
+
+* Added encoding (character set) override option
+* Added UTF-16 endianness detection
+* Small improvements and minor bug fixes
+* Updated AndroidX and material design library
+* Updated translations
+
+### 1.1910 - 2022-06-10
+
+* Fixed dark theme / original message view on Android 12 and before
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1909 - 2022-06-10
+
+* Fixed dark theme / original message view on Android 13
+* Updated translations
+
+### 1.1908 - 2022-06-09
+
+* Added searching for text in drafts
+* Added OAuth for Gmail POP3 accounts
+* Improved Android 13 compatibility (notification permissions)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1907 - 2022-06-07
+
+* Fixed deleted POP3 messages reappearing
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1906 - 2022-06-06
+
+* Added POP3 swipe action to report spam / block sender
+* Added POP3 report spam / block sender for multiple selected messages
+* Added check to prevent blocking self
+* Added suffix guessing on adding attachments
+* Fixed startup issue for some devices / Android versions
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1905 - 2022-06-03
+
+* Added print selected text
+* Added quick actions unread and permanent deletion
+* Added Turkish and Indonesian to DeepL languages
+* Added auto fixing filename suffix on adding image attachments
+* Improved insert link dialog
+* Small improvements and minor bug fixes
+* Updated translations
+
+### [Itemirus](https://en.wikipedia.org/wiki/Itemirus)
+
+### 1.1904 - 2022-05-30
+
+* Fixed duplicate archived Gmail drafts
+
+### 1.1903 - 2022-05-30
+
+* Fixed archiving/trashing Gmail drafts
+* Auto block sender on moving (as opposed to reporting) messages to spam
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1902 - 2022-05-29
+
+* Fixed memory leak in some scenarios
+* Fixed persistent loading spinner in some situations
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.1901 - 2022-05-27
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1900 - 2022-05-25
+
+* Fixed mini gallery not showing in some cases
+* Fixed folder sync in some cases
+* Fixed displaying/editing lists in some cases
+* Updated privacy policy
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1899 - 2022-05-18
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1898 - 2022-05-15
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1897 - 2022-05-14
+
+* Added configurable quick actions
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1896 - 2022-05-13
+
+* Prevent blocking self (report spam)
+* Preliminary Android 13 support (photo picker)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1895 - 2022-05-12
+
+* Added quick mark as read button
+* Added send option to disable forwarding as new conversation thread
+* Small improvements and minor bug fixes
+* Updated AndroidX / material design library
+* Updated translations
+
+### 1.1894 - 2022-05-11
+
+* Fixed widgets for older Android versions
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated translations
+
+### 1.1893 - 2022-05-10
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1892 - 2022-05-07
+
+* Added optional day/night mode for widgets
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1891b - 2022-05-05
+
+* Added avatars option to message list widget
+* Added option to use blocklists for POP3
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1891a - 2022-05-03
+
+* Fixed unified folders nav menu message count
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1890 - 2022-05-03
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1889 - 2022-05-02
+
+* Added translate all button
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1888 - 2022-05-01
+
+* Added quick actions for selected messages
+* Added widget option to disable separator lines
+* Added widget highlight color selection
+* Added search for sender for single selected message
+* Small improvements and minor bug fixes
+* Updated translations
+
 ### [Hulsanpes](https://en.wikipedia.org/wiki/Hulsanpes)
+
+### 1.1887 - 2022-04-29
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1886 - 2022-04-28
+
+* Added option to auto save after entering a dot
+* Added LanguageTool support (long press the 'Save' button)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1885 - 2022-04-26
+
+* Fixed saving drafts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1884 - 2022-04-26
+
+* Added option to highlight unread messages in the message list widget
+* Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.1883 - 2022-04-25
 
@@ -92,7 +336,7 @@
 
 ### 1.1869 - 2022-04-07
 
-* Added [DeepL HTML support](https://www.deepl.com/docs-api/handling-html-(beta)/)
+* Added DeepL HTML support
 * Fixed inline image handling for external drafts
 * Small improvements and minor bug fixes
 * Updated translations
@@ -100,7 +344,7 @@
 ### 1.1868 - 2022-04-06
 
 * Small improvements and minor bug fixes
-* Updated [Public Suffix List](https://publicsuffix.org/)
+* Updated Public Suffix List
 * Updated build tools
 * Updated translations
 
@@ -145,7 +389,7 @@
 * Added managing filter rules to the navigation menu
 * Small improvements and minor bug fixes
 * Updated AndroidX
-* Updated [Public Suffix List](https://publicsuffix.org/)
+* Updated Public Suffix List
 * Updated translations
 
 ### 1.1860 - 2022-03-23
@@ -186,17 +430,16 @@
 
 * Added option to show contents of zipped attachments (enabled by default)
 * Added option to sort reply templates by frequency of use
-* Added basic [DMARC](https://en.wikipedia.org/wiki/DMARC) report viewer
-* Enabled [sqlite analyze](https://sqlite.org/lang_analyze.html)
+* Added basic DMARC report viewer
+* Enabled sqlite analyze
 * Small improvements and minor bug fixes
 * Updated translations
 
 ### 1.1854 - 2022-03-09
 
-* Added [Libravatar](https://www.libravatar.org/) support
-* Added some more [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word lists
-* Added [CSS inherit](https://developer.mozilla.org/en-US/docs/Web/CSS/inherit) support
-* Targeting [Android 12L](https://developer.android.com/about/versions/12/12L) (SDK 32)
+* Added some more BIP39 word lists
+* Added CSS inherit support
+* Targeting Android 12L (SDK 32)
 * Small improvements and minor bug fixes
 * Updated translations
 
@@ -283,7 +526,7 @@
 ### 1.1841 - 2022-02-19
 
 * Improved plain text only check
-* Updated [Public Suffix List](https://publicsuffix.org/)
+* Updated Public Suffix List
 * Preliminary Android 13 support
 * Small improvements and minor bug fixes
 * Updated translations
@@ -308,7 +551,7 @@
 ### 1.1837 - 2022-02-14
 
 * Added menu item to show plain text part
-* Added [AMP](https://amp.dev/about/email/) support
+* Added AMP email support
 * Small improvements and minor bug fixes
 * Updated translations
 
@@ -549,7 +792,6 @@
 
 * Play store only release
 * Fixed removing inline images on replying/forwarding
-* Changes: [see here](https://github.com/M66B/FairEmail/compare/1.1796...1.1798?w=1)
 
 ### 1.1797 - 2021-12-27
 

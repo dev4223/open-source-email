@@ -37,6 +37,7 @@ import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.FolderClosedIOException;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -58,6 +59,8 @@ import java.util.Objects;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import inet.ipaddr.IPAddressString;
 
 public class ConnectionHelper {
     static final List<String> PREF_NETWORK = Collections.unmodifiableList(Arrays.asList(
@@ -558,23 +561,8 @@ public class ConnectionHelper {
 
     static boolean inSubnet(final String ip, final String net, final int prefix) {
         try {
-            byte[] _ip = InetAddress.getByName(ip).getAddress();
-            byte[] _net = InetAddress.getByName(net).getAddress();
-
-            if (_ip.length != _net.length)
-                return false;
-
-            int i = 0;
-            int p = prefix;
-            while (p >= 8) {
-                if (_ip[i] != _net[i])
-                    return false;
-                ++i;
-                p -= 8;
-            }
-
-            int m = (0xFF00 >> p) & 0xFF;
-            return (_ip[i] & m) == (_net[i] & m);
+            return new IPAddressString(net + "/" + prefix).getAddress()
+                    .contains(new IPAddressString(ip).getAddress());
         } catch (Throwable ex) {
             Log.w(ex);
             return false;
@@ -635,5 +623,39 @@ public class ConnectionHelper {
                 }
         }
         return result;
+    }
+
+    static void setUserAgent(Context context, HttpURLConnection connection) {
+        connection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+
+        if (BuildConfig.DEBUG) {
+            // https://web.dev/migrate-to-ua-ch/
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean generic_ua = prefs.getBoolean("generic_ua", false);
+
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA
+            connection.setRequestProperty("Sec-CH-UA", "\"Chromium\""); // No WebView API yet
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Mobile
+            connection.setRequestProperty("Sec-CH-UA-Mobile", "?1");
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Platform
+            connection.setRequestProperty("Sec-CH-UA-Platform", "\"Android\"");
+
+            if (!generic_ua) {
+                String release = Build.VERSION.RELEASE;
+                if (release == null)
+                    release = "";
+                release = release.replace("\"", "'");
+
+                String model = Build.MODEL;
+                if (model == null)
+                    model = "";
+                model = model.replace("\"", "'");
+
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Platform-Version
+                connection.setRequestProperty("Sec-CH-UA-Platform-Version", "\"" + release + "\"");
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Model
+                connection.setRequestProperty("Sec-CH-UA-Model", "\"" + model + "\"");
+            }
+        }
     }
 }

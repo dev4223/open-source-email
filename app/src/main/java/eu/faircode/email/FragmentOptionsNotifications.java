@@ -52,12 +52,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
-import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
 import java.util.List;
 
 public class FragmentOptionsNotifications extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private ImageButton ibHelp;
     private Button btnManage;
     private ImageButton ibClear;
     private Button btnManageDefault;
@@ -65,7 +65,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private Button btnManageService;
     private ImageView ivChannelService;
     private ImageButton ibWhy;
-    private FixedTextView tvNotifySeparate;
+    private TextView tvNotifySeparate;
     private SwitchCompat swNewestFirst;
     private SwitchCompat swBackground;
 
@@ -90,6 +90,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private SwitchCompat swUnseenIgnored;
     private SwitchCompat swNotifyBackgroundOnly;
     private SwitchCompat swNotifyKnownOnly;
+    private SwitchCompat swNotifySuppressInCall;
     private TextView tvNotifyKnownPro;
     private SwitchCompat swNotifySummary;
     private SwitchCompat swNotifyRemove;
@@ -110,22 +111,22 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private TextView tvNoChannels;
 
     private Group grpChannel;
-    private Group grpNotification;
+    private Group grpProperties;
+    private Group grpBackground;
 
     private final static String[] RESET_OPTIONS = new String[]{
             "notify_newest_first",
-            "background_service",
             "notify_trash", "notify_junk", "notify_block_sender", "notify_archive", "notify_move",
             "notify_reply", "notify_reply_direct",
             "notify_flag", "notify_seen", "notify_hide", "notify_snooze",
             "light", "sound", "notify_screen_on",
             "badge", "unseen_ignored",
-            "notify_background_only", "notify_known", "notify_summary", "notify_remove", "notify_clear",
+            "notify_background_only", "notify_known", "notify_suppress_in_call", "notify_summary", "notify_remove", "notify_clear",
             "notify_subtext", "notify_preview", "notify_preview_all", "notify_preview_only", "notify_transliterate",
             "wearable_preview",
             "notify_messaging",
             "biometrics_notify",
-            "alert_once"
+            "background_service", "alert_once"
     };
 
     @Override
@@ -138,6 +139,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
         // Get controls
 
+        ibHelp = view.findViewById(R.id.ibHelp);
         btnManage = view.findViewById(R.id.btnManage);
         ibClear = view.findViewById(R.id.ibClear);
         btnManageDefault = view.findViewById(R.id.btnManageDefault);
@@ -170,6 +172,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swUnseenIgnored = view.findViewById(R.id.swUnseenIgnored);
         swNotifyBackgroundOnly = view.findViewById(R.id.swNotifyBackgroundOnly);
         swNotifyKnownOnly = view.findViewById(R.id.swNotifyKnownOnly);
+        swNotifySuppressInCall = view.findViewById(R.id.swNotifySuppressInCall);
         tvNotifyKnownPro = view.findViewById(R.id.tvNotifyKnownPro);
         swNotifySummary = view.findViewById(R.id.swNotifySummary);
         swNotifyRemove = view.findViewById(R.id.swNotifyRemove);
@@ -190,7 +193,8 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         tvNoChannels = view.findViewById(R.id.tvNoChannels);
 
         grpChannel = view.findViewById(R.id.grpChannel);
-        grpNotification = view.findViewById(R.id.grpNotification);
+        grpProperties = view.findViewById(R.id.grpProperties);
+        grpBackground = view.findViewById(R.id.grpBackground);
 
         setOptions();
 
@@ -199,6 +203,13 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         PackageManager pm = getContext().getPackageManager();
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean debug = prefs.getBoolean("debug", false);
+
+        ibHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext(), "Options:notifications"), false);
+            }
+        });
 
         final Intent manage = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra("app_package", getContext().getPackageName())
@@ -457,6 +468,13 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             }
         });
 
+        swNotifySuppressInCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("notify_suppress_in_call", checked).apply();
+            }
+        });
+
         swNotifySummary.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -578,7 +596,10 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         tvNoChannels.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? View.VISIBLE : View.GONE);
 
         grpChannel.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? View.VISIBLE : View.GONE);
-        grpNotification.setVisibility(
+        grpProperties.setVisibility(
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.O || BuildConfig.DEBUG
+                        ? View.VISIBLE : View.GONE);
+        grpBackground.setVisibility(
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.O || BuildConfig.DEBUG
                         ? View.VISIBLE : View.GONE);
 
@@ -616,8 +637,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            setOptions();
+        setOptions();
     }
 
     @Override
@@ -636,6 +656,9 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     }
 
     private void setOptions() {
+        if (getContext() == null)
+            return;
+
         boolean pro = ActivityBilling.isPro(getContext());
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -660,6 +683,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swUnseenIgnored.setChecked(prefs.getBoolean("unseen_ignored", false));
         swNotifyBackgroundOnly.setChecked(prefs.getBoolean("notify_background_only", false));
         swNotifyKnownOnly.setChecked(prefs.getBoolean("notify_known", false));
+        swNotifySuppressInCall.setChecked(prefs.getBoolean("notify_suppress_in_call", false));
         swNotifySummary.setChecked(prefs.getBoolean("notify_summary", false));
         swNotifyRemove.setChecked(prefs.getBoolean("notify_remove", true));
         swNotifyClear.setChecked(prefs.getBoolean("notify_clear", false));
@@ -721,9 +745,14 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         if (uri == null) // silent sound
             prefs.edit().putString("sound", "").apply();
         else {
-            if ("content".equals(uri.getScheme()))
+            if ("content".equals(uri.getScheme())) {
+                try {
+                    getContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
                 prefs.edit().putString("sound", uri.toString()).apply();
-            else
+            } else
                 prefs.edit().remove("sound").apply();
         }
     }

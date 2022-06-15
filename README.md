@@ -39,6 +39,11 @@ FairEmail might be for you if you value your privacy.
     - date, size and subject will be always shown in header detail info, even when choosing the option to hide the header detail infos on opening the email 
 
 ***
+<br>
+
+**FairEmail has been restored to the Play Store with help from Google's privacy and policy department. Please [see here](https://faircode.eu/faq.html) for what happened.**
+
+<br>
 
 ## Main features
 

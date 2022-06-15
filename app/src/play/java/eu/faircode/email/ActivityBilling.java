@@ -68,8 +68,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public class ActivityBilling extends ActivityBase implements PurchasesUpdatedListener, FragmentManager.OnBackStackChangedListener {
+public class ActivityBilling extends ActivityBase implements
+        BillingClientStateListener, SkuDetailsResponseListener, PurchasesResponseListener, PurchasesUpdatedListener,
+        FragmentManager.OnBackStackChangedListener {
     private boolean standalone = false;
+    private int backoff = 4; // seconds
     private BillingClient billingClient = null;
     private List<IBillingListener> listeners = new ArrayList<>();
 
@@ -78,7 +81,6 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
     static final String ACTION_PURCHASE_ERROR = BuildConfig.APPLICATION_ID + ".ACTION_PURCHASE_ERROR";
 
     private static final String SKU_TEST = "android.test.purchased";
-    private static final long IAB_CONNECTED_CHECK = 10 * 1000L;
     private static final long MAX_SKU_CACHE_DURATION = 24 * 3600 * 1000L; // milliseconds
     private static final long MAX_SKU_NOACK_DURATION = 24 * 3600 * 1000L; // milliseconds
 
@@ -107,24 +109,11 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
 
         if (Helper.isPlayStoreInstall() || isTesting(this)) {
             Log.i("IAB start");
-            billingClient = BillingClient.newBuilder(this)
+            billingClient = BillingClient.newBuilder(getApplicationContext())
                     .enablePendingPurchases()
                     .setListener(this)
                     .build();
-            billingClient.startConnection(billingClientStateListener);
-
-            getMainHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        boolean connected = (billingClient != null &&
-                                billingClient.getConnectionState() == BillingClient.ConnectionState.CONNECTED);
-                        EntityLog.log(ActivityBilling.this, "IAB check connected=" + connected);
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                    }
-                }
-            }, IAB_CONNECTED_CHECK);
+            billingClient.startConnection(this);
         }
     }
 
@@ -303,7 +292,7 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
     private void onPurchaseError(Intent intent) {
         String message = intent.getStringExtra("message");
         boolean play = Helper.hasPlayStore(this);
-        Uri uri = Helper.getSupportUri(this);
+        Uri uri = Helper.getSupportUri(this, "Purchase:error");
         if (!TextUtils.isEmpty(message))
             uri = uri
                     .buildUpon()
@@ -312,42 +301,40 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
         Helper.view(this, uri, true);
     }
 
-    private BillingClientStateListener billingClientStateListener = new BillingClientStateListener() {
-        private int backoff = 4; // seconds
-
-        @Override
-        public void onBillingSetupFinished(BillingResult result) {
-            if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                for (IBillingListener listener : listeners)
-                    listener.onConnected();
-
-                backoff = 4;
-                queryPurchases();
-            } else
-                reportError(result, "IAB connected");
-        }
-
-        @Override
-        public void onBillingServiceDisconnected() {
+    @Override
+    public void onBillingSetupFinished(BillingResult result) {
+        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+            EntityLog.log(this, "IAB connected");
             for (IBillingListener listener : listeners)
-                listener.onDisconnected();
+                listener.onConnected();
 
-            backoff *= 2;
-            retry(backoff);
-        }
-    };
+            backoff = 4;
+            queryPurchases();
+        } else
+            reportError(result, "IAB connected");
+    }
+
+    @Override
+    public void onBillingServiceDisconnected() {
+        EntityLog.log(this, "IAB disconnected");
+        for (IBillingListener listener : listeners)
+            listener.onDisconnected();
+
+        backoff *= 2;
+        retry(backoff);
+    }
 
     private void retry(int backoff) {
         Log.i("IAB connect retry in " + backoff + " s");
 
-        getMainHandler().postDelayed(new Runnable() {
+        getMainHandler().postDelayed(new RunnableEx("IAB retry") {
             @Override
-            public void run() {
+            public void delegate() {
                 try {
                     boolean ready = billingClient.isReady();
                     Log.i("IAB ready=" + ready);
                     if (!ready)
-                        billingClient.startConnection(billingClientStateListener);
+                        billingClient.startConnection(ActivityBilling.this);
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
@@ -365,16 +352,15 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
     }
 
     private void queryPurchases() {
-        billingClient.queryPurchasesAsync(BillingClient.SkuType.INAPP, new PurchasesResponseListener() {
-            @Override
-            public void onQueryPurchasesResponse(@NonNull BillingResult result, @NonNull List<Purchase> list) {
-                if (result.getResponseCode() == BillingClient.BillingResponseCode.OK)
-                    checkPurchases(list);
-                else
-                    reportError(result, "IAB query purchases");
+        billingClient.queryPurchasesAsync(BillingClient.SkuType.INAPP, this);
+    }
 
-            }
-        });
+    @Override
+    public void onQueryPurchasesResponse(@NonNull BillingResult result, @NonNull List<Purchase> list) {
+        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK)
+            checkPurchases(list);
+        else
+            reportError(result, "IAB query purchases");
     }
 
     interface IBillingListener {
@@ -490,20 +476,19 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
         SkuDetailsParams.Builder builder = SkuDetailsParams.newBuilder();
         builder.setSkusList(query);
         builder.setType(BillingClient.SkuType.INAPP);
-        billingClient.querySkuDetailsAsync(builder.build(),
-                new SkuDetailsResponseListener() {
-                    @Override
-                    public void onSkuDetailsResponse(@NonNull BillingResult result, List<SkuDetails> skuDetailsList) {
-                        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                            for (SkuDetails skuDetail : skuDetailsList) {
-                                Log.i("IAB SKU detail=" + skuDetail);
-                                for (IBillingListener listener : listeners)
-                                    listener.onSkuDetails(skuDetail.getSku(), skuDetail.getPrice());
-                            }
-                        } else
-                            reportError(result, "IAB query SKUs");
-                    }
-                });
+        billingClient.querySkuDetailsAsync(builder.build(), this);
+    }
+
+    @Override
+    public void onSkuDetailsResponse(@NonNull BillingResult result, List<SkuDetails> skuDetailsList) {
+        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+            for (SkuDetails skuDetail : skuDetailsList) {
+                Log.i("IAB SKU detail=" + skuDetail);
+                for (IBillingListener listener : listeners)
+                    listener.onSkuDetails(skuDetail.getSku(), skuDetail.getPrice());
+            }
+        } else
+            reportError(result, "IAB query SKUs");
     }
 
     private void consumePurchase(final Purchase purchase) {
@@ -548,9 +533,9 @@ public class ActivityBilling extends ActivityBase implements PurchasesUpdatedLis
                         WidgetUnified.updateData(ActivityBilling.this);
                     } else {
                         if (retry < 3) {
-                            new Handler().postDelayed(new Runnable() {
+                            new Handler().postDelayed(new RunnableEx("IAB ack retry") {
                                 @Override
-                                public void run() {
+                                public void delegate() {
                                     acknowledgePurchase(purchase, retry + 1);
                                 }
                             }, (retry + 1) * 10 * 1000L);

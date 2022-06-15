@@ -51,7 +51,8 @@ public class WorkerCleanup extends Worker {
     private static final int CLEANUP_INTERVAL = 4; // hours
     private static final long KEEP_FILES_DURATION = 3600 * 1000L; // milliseconds
     private static final long KEEP_IMAGES_DURATION = 3 * 24 * 3600 * 1000L; // milliseconds
-    private static final long KEEP_CONTACTS_DURATION = 180 * 24 * 3600 * 1000L; // milliseconds
+    private static final long KEEP_CONTACTS_DURATION = 365 * 24 * 3600 * 1000L; // milliseconds
+    private static final int KEEP_CONTACTS_COUNT = 10000;
 
     private static Semaphore semaphore = new Semaphore(1);
 
@@ -83,7 +84,7 @@ public class WorkerCleanup extends Worker {
 
         long now = new Date().getTime();
         long last_cleanup = prefs.getLong("last_cleanup", 0);
-        if (last_cleanup + CLEANUP_INTERVAL * 3600 * 1000L > now) {
+        if (last_cleanup + 2 * CLEANUP_INTERVAL * 3600 * 1000L > now) {
             Log.i("Skip cleanup last=" + new Date(last_cleanup));
             return;
         }
@@ -206,8 +207,8 @@ public class WorkerCleanup extends Worker {
             File[] revision = new File(context.getFilesDir(), "revision").listFiles();
             File[] references = new File(context.getFilesDir(), "references").listFiles();
             File[] encryption = new File(context.getFilesDir(), "encryption").listFiles();
-            File[] photos = new File(context.getCacheDir(), "photo").listFiles();
-            File[] calendars = new File(context.getCacheDir(), "calendar").listFiles();
+            File[] photos = new File(context.getFilesDir(), "photo").listFiles();
+            File[] calendars = new File(context.getFilesDir(), "calendar").listFiles();
 
             if (messages != null)
                 files.addAll(Arrays.asList(messages));
@@ -292,7 +293,7 @@ public class WorkerCleanup extends Worker {
 
             // Cleanup cached images
             Log.i("Cleanup cached image files");
-            File[] images = new File(context.getCacheDir(), "images").listFiles();
+            File[] images = new File(context.getFilesDir(), "images").listFiles();
             if (images != null)
                 for (File file : images)
                     if (manual || file.lastModified() + KEEP_FILES_DURATION < now)
@@ -311,7 +312,7 @@ public class WorkerCleanup extends Worker {
                         }
 
             // Cleanup shared files
-            File[] shared = new File(context.getCacheDir(), "shared").listFiles();
+            File[] shared = new File(context.getFilesDir(), "shared").listFiles();
             if (shared != null)
                 for (File file : shared)
                     if (manual || file.lastModified() + KEEP_FILES_DURATION < now) {
@@ -349,9 +350,11 @@ public class WorkerCleanup extends Worker {
             Log.i("Cleanup contacts");
             try {
                 db.beginTransaction();
-                int contacts = db.contact().deleteContacts(now - KEEP_CONTACTS_DURATION);
+                int contacts = db.contact().countContacts();
+                int deleted = (contacts < KEEP_CONTACTS_COUNT ? 0 :
+                        db.contact().deleteContacts(now - KEEP_CONTACTS_DURATION));
                 db.setTransactionSuccessful();
-                Log.i("Deleted contacts=" + contacts);
+                Log.i("Contacts=" + contacts + " deleted=" + deleted);
             } finally {
                 db.endTransaction();
             }

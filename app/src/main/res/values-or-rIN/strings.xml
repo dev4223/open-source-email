@@ -8,7 +8,6 @@
     <string name="app_exit">ପ୍ରସ୍ଥାନ କରିବା ପାଇଁ ପୁଣି \'ବ୍ୟାକ୍\' ଯାଆନ୍ତୁ</string>
     <string name="app_updated">ଗତ ଅପଡେଟ୍: %1$s</string>
     <string name="app_download">ଏଠାରୁ ଡାଉନଲୋଡ୍ ହୋଇଛି: %1$s</string>
-    <string name="channel_service">ପ୍ରାପ୍ତ କରନ୍ତୁ</string>
     <string name="channel_send">ପଠାନ୍ତୁ</string>
     <string name="channel_notification">ଇମେଲ୍</string>
     <string name="channel_progress">ପ୍ରଗତି</string>
@@ -57,6 +56,7 @@
     <string name="menu_pro">ପ୍ରୋ ବୈଶିଷ୍ଟ୍ୟଗୁଡ଼ିକ</string>
     <string name="menu_rate">ଏହି ଆପକୁ ମୂଲ୍ୟାଙ୍କନ କରନ୍ତୁ</string>
     <string name="title_welcome">ସ୍ୱାଗତ</string>
+    <string name="title_license">ଖୋଲା-ଉତ୍ସ ଲାଇସେନ୍ସ</string>
     <string name="title_contributors">ଯୋଗଦାନକାରୀ</string>
     <string name="title_agree">ମୁଁ ସହମତ</string>
     <string name="title_disagree">ମୁଁ ସହମତ ନୁହେଁ</string>
@@ -145,7 +145,7 @@
     <string name="title_setup_theme_reverse">ରଙ୍ଗ ଗୁଡ଼ିକ ଅଦଳବଦଳ କରନ୍ତୁ</string>
     <string name="title_setup_theme_light">ହାଲୁକା</string>
     <string name="title_setup_theme_dark">ଗାଢ଼</string>
-    <string name="title_setup_theme_system">ସିଷ୍ଟମକୁ ଅନୁସରଣ କରନ୍ତୁ</string>
+    <string name="title_setup_theme_system">ସିଷ୍ଟମ୍ କୁ ଅନୁସରଣ କରିବା</string>
     <string name="title_setup_theme_black_background">କଳା ପୃଷ୍ଠପଟ</string>
     <string name="title_setup_theme_html_light">ମୂଳ ବାର୍ତ୍ତା ଦର୍ଶନ ପାଇଁ ହାଲୁକା ପୃଷ୍ଠପଟ</string>
     <string name="title_setup_theme_composer_light">ବାର୍ତ୍ତା ସମ୍ପାଦକ ପାଇଁ ହାଲୁକା ପୃଷ୍ଠପଟ</string>
@@ -160,6 +160,8 @@
     <string name="title_setup_reset_links">ଲିଙ୍କଗୁଡ଼ିକ ନିଶ୍ଚିତ କରନ୍ତୁ</string>
     <string name="title_check_gmail_oauth">ଆପଣଙ୍କ Gmail ଆକାଉଣ୍ଟସବୁ ୩୦ ମଇ, ୨୦୨୨ ପରେ କାର୍ଯ୍ୟ ଜାରି ରଖିବ</string>
     <string name="title_check_gmail_password">ଆପଣଙ୍କର କିଛିଟା Gmail ଆକାଉଣ୍ଟ୍ ୩୦ ମଇ, ୨୦୨୨ ପରେ କାମ କରିବା ବନ୍ଦ କରିପାରେ</string>
+    <string name="title_check_outlook_oauth">ଆପଣଙ୍କ Outlook ଆକାଉଣ୍ଟସବୁ ୧ ଅକ୍ଟୋବର, ୨୦୨୨ ପରେ କାର୍ଯ୍ୟ ଜାରି ରଖିବ</string>
+    <string name="title_check_outlook_password">ଆପଣଙ୍କର କିଛିଟା Outlook ଆକାଉଣ୍ଟ୍ ୧ ଅକ୍ଟୋବର, ୨୦୨୨ ପରେ କାମ କରିବା ବନ୍ଦ କରିପାରେ</string>
     <string name="title_advanced_hint_title">ଅଧିକ ବିକଶିତ ବିକଳ୍ପଗୁଡ଼ିକ</string>
     <string name="title_advanced_hint_remark">        ବିକଳ୍ପଗୁଡ଼ିକ ଟ୍ୟାବ୍ ଅନୁଯାୟୀ ବର୍ଗୀକୃତ, ବିଭାଗରେ ବିଭକ୍ତ, ରୂପ କିମ୍ୱା ବ୍ୟବହାର ଅନୁଯାୟୀ ସଂଗଠିତ ହୋଇଅଛି, ଏବଂ ସନ୍ଧାନଯୋଗ୍ୟ ଅଟେ।
     </string>
@@ -209,7 +211,8 @@
     <string name="title_advanced_tabular_dividers">ଟାବୁଲାର୍ ଶୈଳୀ ବ୍ୟବହାର କଲାବେଳେ ଡିଭାଇଡର୍ ଲାଇନ୍ ବ୍ୟବହାର କରିବା</string>
     <string name="title_advanced_date_header">ତାରିଖ ଅନୁଯାୟୀ ଗୋଷ୍ଠୀ ପ୍ରସ୍ତୁତ କରନ୍ତୁ</string>
     <string name="title_advanced_color_stripe_wide">ପ୍ରଶସ୍ତ ରଙ୍ଗ ଷ୍ଟ୍ରାଇପ୍ ବ୍ୟବହାର କରନ୍ତୁ</string>
-    <string name="title_advanced_libravatars">ଲିବ୍ରଅବତାରଗୁଡ଼ିକ ଦେଖାନ୍ତୁ</string>
+    <string name="title_advanced_gravatars">ଗ୍ରାଵତାରସବୁ ଦେଖାଅ</string>
+    <string name="title_advanced_libravatars">ଲିବ୍ରାଵତାରସବୁ ଦେଖାଅ</string>
     <string name="title_advanced_favicons_partial">ୱେବ୍ ପୃଷ୍ଠାର କେବଳ ପ୍ରଥମ %1$s ସ୍କେନ୍ କରନ୍ତୁ</string>
     <string name="title_advanced_name_email">ନା‍ଁ ଓ ଇମେଲ୍ ଠିକଣା ଦେଖାଅ</string>
     <string name="title_advanced_highlight_subject">ବିଷୟକୁ ହାଇଲାଇଟ୍ କରନ୍ତୁ</string>
@@ -234,6 +237,7 @@
     <string name="title_advanced_folder_nav">ଗୋଟେ ବାର୍ତ୍ତା ତାଲିକାରୁ ସର୍ବଦା ଫୋଲ୍ଡର ତାଲିକାକୁ ଫେରିବା</string>
     <string name="title_advanced_swipe_reply">ପ୍ରତ୍ୟୁତ୍ତର ଦେବା ପାଇଁ ସମ୍ପ୍ରସାରିତ ବାର୍ତ୍ତାଗୁଡ଼ିକ ଡାହାଣକୁ ସ୍ଵାଇପ୍ କରନ୍ତୁ</string>
     <string name="title_advanced_default_snooze">ଡିଫଲ୍ଟ ସ୍ନୁଜ୍/ବିଳମ୍ବ ସମୟ</string>
+    <string name="title_advanced_notify_suppress_in_call">କଲ୍ ବେଳେ ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକ ଦମନ କରିବା</string>
     <string name="title_advanced_notify_preview_all">ସମସ୍ତ ପାଠ୍ୟକୁ ପୂର୍ବାବଲୋକନ କରନ୍ତୁ</string>
     <string name="title_advanced_notify_action_trash">ଆବର୍ଜନା</string>
     <string name="title_advanced_notify_action_delete">ବିଲୋପ</string>
@@ -280,6 +284,7 @@
     <string name="title_advanced_override_width_hint">ଏହା ବାର୍ତ୍ତାଗୁଡ଼ିକୁ ସଂକୀର୍ଣ୍ଣ କରିପାରେ, କିନ୍ତୁ ଅଦ୍ଭୁତ ଦେଖାଯାଏ</string>
     <string name="title_advanced_expandall_hint">ଏକାଧିକ ବାର୍ତ୍ତା ସମ୍ପ୍ରସାରଣ ହୋଇଥିବା ବେଳେ ଉତ୍ତର ବଟନ୍ ଦେଖାଯିବ ନାହିଁ କାରଣ ବଟନ୍ କେଉଁ ବାର୍ତ୍ତା ପାଇଁ ପ୍ରଯୁଜ୍ୟ ତାହା ଅସ୍ପଷ୍ଟ ଅଟେ</string>
     <string name="title_advanced_display_autolock_nav_hint">%1$d ସେକେଣ୍ଡର ଅନୁଗ୍ରହ ସମୟ ରହିବ</string>
+    <string name="title_advanced_notify_suppress_hint">ଦମନ ହୋଇଥିବା ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକ ପରେ ଆଉ ଦେଖାଯିବ ନାହିଁ</string>
     <string name="title_advanced_move_hint">ଆକାଉଣ୍ଟ୍ ସେଟିଂସରେ ଲକ୍ଷ୍ୟସ୍ଥଳ ଫୋଲ୍ଡର୍ ବିନ୍ୟାସ କରାଯାଇପାରିବ</string>
     <string name="title_advanced_notify_no_grouping">ଏହି ଆଣ୍ଡ୍ରଏଡ୍ ସଂସ୍କରଣ ବିଜ୍ଞପ୍ତି ଗୋଷ୍ଠୀକରଣକୁ ସମର୍ଥନ କରେନାହିଁ</string>
     <string name="title_advanced_english_hint">ଏହା ଆପ୍ କୁ ପୁନଃଆରମ୍ଭ କରିବ</string>
@@ -386,6 +391,7 @@
     <string name="title_raw_send_message">ବାର୍ତ୍ତା</string>
     <string name="title_raw_send_thread">ବାର୍ତ୍ତାଳାପ</string>
     <string name="title_auto_confirm">କିଛି ସେକେଣ୍ଡ ପରେ ସ୍ୱତଃସ୍ପୃତ ଭାବେ ନିଶ୍ଚିତ କରିବା</string>
+    <string name="title_quick_actions_snooze">ସ୍ନୁଜ୍</string>
     <string name="title_trash">ଆବର୍ଜନା ପାତ୍ର</string>
     <string name="title_delete">ବିଲୋପ</string>
     <string name="title_delete_all">ସବୁ ବିଲୋପ କରନ୍ତୁ</string>
@@ -522,6 +528,7 @@
     <string name="title_answer_placeholder_lastname">ପ୍ରେରକଙ୍କ ଶେଷ ନାମ</string>
     <string name="title_rule_noop">କିଛି କରନ୍ତୁନି</string>
     <string name="title_rule_hide">ଲୁଚାଅ</string>
+    <string name="title_rule_ignore">ବିଜ୍ଞପ୍ତି ଦମନ</string>
     <string name="title_rule_snooze">ସ୍ନୁଜ୍</string>
     <string name="title_rule_flag">ତାରା ଲଗାନ୍ତୁ</string>
     <string name="title_rule_move">ଘୁଞ୍ଚାନ୍ତୁ</string>
@@ -574,6 +581,7 @@
     <string name="title_legend_p">ପୂର୍ବବର୍ତ୍ତୀ</string>
     <string name="title_legend_r">ପ୍ରତ୍ୟୁତ୍ତର</string>
     <string name="title_hint_message_junk">ଏଇ ବାର୍ତ୍ତାଗୁଡ଼ିକ ଇମେଲ୍ ସର୍ଭରର ସ୍ପାମ୍ ଫୋଲ୍ଡରରେ ଅଛି। ଅବଶ୍ୟ, ଆପ୍ ସ୍ପାମ୍ ବାର୍ତ୍ତାଗୁଡ଼ିକୁ ଆପଣଙ୍କ ପାଖକୁ ପଠାଯିବାରୁ ତ ରୋକିପାରିବ ନାହିଁ।</string>
+    <string name="title_hint_contact_actions">ବିକଳ୍ପ ପାଇଁ ଲମ୍ବା ସ୍ପର୍ଶ କରନ୍ତୁ</string>
     <string name="title_remark_owner"><a href="https://ipinfo.io/">ipinfo.io</a>ରୁ ସୂଚନା ଆଦୟ କରାଯିବ</string>
     <string name="title_updated">ସଂସ୍କରଣ %1$s କୁ ଅପଡେଟ୍ ଉପଲବ୍ଧ ଅଛି</string>
     <string name="title_undo">ପୂର୍ବବତ୍</string>
@@ -604,7 +612,9 @@
     <string name="title_widget_account_all">ସମସ୍ତ</string>
     <string name="title_widget_font_size">ପାଠ୍ୟ ଆକାର</string>
     <string name="title_widget_padding">ପ୍ୟାଡିଂ ଆକାର</string>
+    <string name="title_widget_avatars">ସମ୍ପର୍କ ଅବତାରସବୁ ଦେଖାଅ</string>
     <string name="title_widget_background">ପୃଷ୍ଠପଟ ରଙ୍ଗ</string>
+    <string name="title_widget_day_night">ସିଷ୍ଟମର ଗାଢ଼ ଥିମକୁ ଅନୁସରଣ କରିବା</string>
     <string name="title_accessibility_collapsed">ସଙ୍କୁଚିତ ହୋଇଅଛି</string>
     <string name="title_accessibility_expanded">ପ୍ରସାରିତ ହୋଇଅଛି</string>
     <string name="title_accessibility_seen">ପଠିତ</string>

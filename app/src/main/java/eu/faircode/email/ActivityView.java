@@ -54,6 +54,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -61,6 +62,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.app.NotificationCompat;
+import androidx.core.util.Consumer;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -74,6 +76,10 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter;
+import androidx.window.layout.DisplayFeature;
+import androidx.window.layout.WindowInfoTracker;
+import androidx.window.layout.WindowLayoutInfo;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -103,6 +109,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private boolean nav_options;
     private int colorDrawerScrim;
 
+    private WindowInfoTrackerCallbackAdapter infoTracker;
     private int layoutId;
     private View view;
 
@@ -218,6 +225,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         if (nav_expanded && nav_pinned && !canExpandAndPin())
             nav_pinned = false;
 
+        infoTracker = new WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(this));
+
         Configuration config = getResources().getConfiguration();
         boolean portrait2 = prefs.getBoolean("portrait2", false);
         boolean portrait2c = prefs.getBoolean("portrait2c", false);
@@ -290,6 +299,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.app_name, R.string.app_name) {
             public void onDrawerClosed(View view) {
                 Log.i("Drawer closed");
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return;
+
                 owner.stop();
 
                 drawerLayout.setDrawerLockMode(LOCK_MODE_UNLOCKED);
@@ -302,6 +314,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 super.onDrawerOpened(drawerView);
 
                 Log.i("Drawer opened");
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return;
+
                 owner.start();
 
                 if (nav_pinned) {
@@ -317,6 +332,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                 if (BuildConfig.DEBUG)
                     Log.i("Drawer slide=" + slideOffset);
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return;
 
                 if (slideOffset > 0)
                     owner.start();
@@ -679,6 +696,16 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         getSupportFragmentManager().addOnBackStackChangedListener(this);
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (Helper.isKeyboardVisible(view))
+                    Helper.hideKeyboard(view);
+                else
+                    onExit();
+            }
+        });
+
         // Initialize
 
         if (content_pane != null) {
@@ -856,7 +883,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             @Override
             public Boolean call() {
                 CoalMine.check();
-                return true;
+                return BuildConfig.DEBUG;
             }
         }).setExternal(true));
 
@@ -1015,8 +1042,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        infoTracker.addWindowLayoutInfoListener(this, Runnable::run, layoutStateChangeCallback);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        infoTracker.removeWindowLayoutInfoListener(layoutStateChangeCallback);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        ServiceSynchronize.state(this, true);
 
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         IntentFilter iff = new IntentFilter();
@@ -1037,14 +1077,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         if (open)
             owner.start();
 
-        ServiceSynchronize.state(this, true);
-
         checkUpdate(false);
         checkIntent();
     }
 
     @Override
     protected void onPause() {
+        ServiceSynchronize.state(this, false);
         super.onPause();
 
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
@@ -1052,8 +1091,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         Log.i("Drawer pause");
         owner.stop();
-
-        ServiceSynchronize.state(this, false);
     }
 
     @Override
@@ -1061,6 +1098,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.unregisterReceiver(creceiver);
         super.onDestroy();
+        infoTracker = null;
     }
 
     @Override
@@ -1215,8 +1253,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         return (getDrawerWidthPinned() >= dp200);
     }
 
-    @Override
-    public void onBackPressed() {
+    private void onExit() {
         int count = getSupportFragmentManager().getBackStackEntryCount();
         if (!nav_pinned &&
                 drawerLayout.isDrawerOpen(drawerContainer) &&
@@ -1224,15 +1261,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             drawerLayout.closeDrawer(drawerContainer);
         else {
             if (exit || count > 1)
-                super.onBackPressed();
-            else if (!backHandled()) {
+                performBack();
+            else {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityView.this);
                 boolean double_back = prefs.getBoolean("double_back", false);
                 if (searching || !double_back)
-                    super.onBackPressed();
+                    performBack();
                 else {
                     exit = true;
-                    ToastEx.makeText(this, R.string.app_exit, Toast.LENGTH_SHORT).show();
+                    ToastEx.makeText(ActivityView.this, R.string.app_exit, Toast.LENGTH_SHORT).show();
                     getMainHandler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -1246,6 +1283,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     @Override
     public void onBackStackChanged() {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            return;
+
         int count = getSupportFragmentManager().getBackStackEntryCount();
         if (count == 0)
             finish();
@@ -1278,7 +1318,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     public boolean onOptionsItemSelected(MenuItem item) {
         if (drawerToggle.onOptionsItemSelected(item)) {
             if (nav_pinned)
-                onBackPressed();
+                onExit();
             else {
                 int count = getSupportFragmentManager().getBackStackEntryCount();
                 if (count == 1 && drawerLayout.isLocked(drawerContainer))
@@ -1409,7 +1449,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         new SimpleTask<Long>() {
             @Override
             protected Long onExecute(Context context, Bundle args) throws Throwable {
-                File file = new File(context.getCacheDir(), "crash.log");
+                File file = new File(context.getFilesDir(), "crash.log");
                 if (file.exists()) {
                     StringBuilder sb = new StringBuilder();
                     try {
@@ -1480,7 +1520,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     urlConnection.setReadTimeout(UPDATE_TIMEOUT);
                     urlConnection.setConnectTimeout(UPDATE_TIMEOUT);
                     urlConnection.setDoOutput(false);
-                    urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+                    ConnectionHelper.setUserAgent(context, urlConnection);
                     urlConnection.connect();
 
                     int status = urlConnection.getResponseCode();
@@ -1608,9 +1648,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                 try {
                     NotificationManager nm =
-                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    nm.notify(NotificationHelper.NOTIFICATION_UPDATE,
-                            builder.build());
+                            Helper.getSystemService(ActivityView.this, NotificationManager.class);
+                    if (NotificationHelper.areNotificationsEnabled(nm))
+                        nm.notify(NotificationHelper.NOTIFICATION_UPDATE,
+                                builder.build());
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
@@ -1902,7 +1943,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuIssue() {
-        startActivity(Helper.getIntentIssue(this));
+        startActivity(Helper.getIntentIssue(this, "View:issue"));
     }
 
     private void onMenuPrivacy() {
@@ -2223,4 +2264,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     .create();
         }
     }
+
+    private final Consumer<WindowLayoutInfo> layoutStateChangeCallback = new Consumer<WindowLayoutInfo>() {
+        @Override
+        public void accept(WindowLayoutInfo info) {
+            List<DisplayFeature> features = info.getDisplayFeatures();
+            Log.i("Display features=" + features.size());
+            for (DisplayFeature feature : features)
+                EntityLog.log(ActivityView.this, "Display feature bounds=" + feature.getBounds());
+        }
+    };
 }

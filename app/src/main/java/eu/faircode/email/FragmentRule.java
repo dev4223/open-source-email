@@ -623,6 +623,7 @@ public class FragmentRule extends FragmentBase {
         spIdent.setOnItemSelectedListener(onItemSelectedListener);
         spAnswer.setOnItemSelectedListener(onItemSelectedListener);
 
+        cbResend.setEnabled(false);
         etTo.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -649,6 +650,7 @@ public class FragmentRule extends FragmentBase {
             }
         });
 
+        cbAttached.setEnabled(protocol == EntityAccount.TYPE_IMAP);
         cbResend.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -657,7 +659,7 @@ public class FragmentRule extends FragmentBase {
                 cbAnswerSubject.setEnabled(!checked);
                 cbOriginalText.setEnabled(!checked);
                 cbWithAttachments.setEnabled(!checked);
-                cbAttached.setEnabled(false);
+                cbAttached.setEnabled(!checked && protocol == EntityAccount.TYPE_IMAP);
             }
         });
 
@@ -1639,9 +1641,18 @@ public class FragmentRule extends FragmentBase {
                 @Override
                 public void onClick(View v) {
                     new SimpleTask<Integer>() {
+                        private Toast toast = null;
+
                         @Override
                         protected void onPreExecute(Bundle args) {
-                            ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+                            toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
+                            toast.show();
+                        }
+
+                        @Override
+                        protected void onPostExecute(Bundle args) {
+                            if (toast != null)
+                                toast.cancel();
                         }
 
                         @Override

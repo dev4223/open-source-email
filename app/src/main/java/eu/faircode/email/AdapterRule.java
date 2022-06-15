@@ -347,9 +347,18 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     args.putLong("id", rule.id);
 
                     new SimpleTask<Integer>() {
+                        private Toast toast = null;
+
                         @Override
                         protected void onPreExecute(Bundle args) {
-                            ToastEx.makeText(context, R.string.title_executing, Toast.LENGTH_LONG).show();
+                            toast = ToastEx.makeText(context, R.string.title_executing, Toast.LENGTH_LONG);
+                            toast.show();
+                        }
+
+                        @Override
+                        protected void onPostExecute(Bundle args) {
+                            if (toast != null)
+                                toast.cancel();
                         }
 
                         @Override
@@ -400,6 +409,14 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                             ToastEx.makeText(context,
                                     context.getString(R.string.title_rule_applied, applied),
                                     Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        protected void onDestroyed(Bundle args) {
+                            if (toast != null) {
+                                toast.cancel();
+                                toast = null;
+                            }
                         }
 
                         @Override

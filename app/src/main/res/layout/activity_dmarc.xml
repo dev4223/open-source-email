@@ -37,7 +37,7 @@
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="12dp">
 
-                    <eu.faircode.email.FixedTextView
+                    <TextView
                         android:id="@+id/tvDmarc"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

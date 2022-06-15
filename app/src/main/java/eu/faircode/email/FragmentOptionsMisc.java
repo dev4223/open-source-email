@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionGroupInfo;
@@ -69,7 +70,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
-import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
@@ -85,6 +85,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 
 import io.requery.android.database.sqlite.SQLiteDatabase;
@@ -93,6 +94,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private boolean resumed = false;
     private List<Pair<String, String>> languages = new ArrayList<>();
 
+    private ImageButton ibHelp;
     private SwitchCompat swPowerMenu;
     private SwitchCompat swExternalSearch;
     private SwitchCompat swSortAnswers;
@@ -108,7 +110,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvFtsIndexed;
     private TextView tvFtsPro;
     private Spinner spLanguage;
-    private ImageButton ibResetLanguage;
     private SwitchCompat swDeepL;
     private ImageButton ibDeepL;
     private TextView tvSdcard;
@@ -158,6 +159,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swUndoManager;
     private SwitchCompat swWebViewLegacy;
     private SwitchCompat swBrowserZoom;
+    private SwitchCompat swShowRecent;
     private SwitchCompat swModSeq;
     private SwitchCompat swUid;
     private SwitchCompat swExpunge;
@@ -180,6 +182,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvMemoryClass;
     private TextView tvMemoryUsage;
     private TextView tvStorageUsage;
+    private TextView tvCacheUsage;
     private TextView tvContactInfo;
     private TextView tvSuffixes;
     private TextView tvAndroidId;
@@ -188,8 +191,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Button btnGC;
     private Button btnCharsets;
     private Button btnFontMap;
-    private Button btnCiphers;
     private Button btnFiles;
+    private Button btnUris;
     private Button btnAllPermissions;
     private TextView tvPermissions;
 
@@ -211,7 +214,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "test2", "test3", "test4", "test5",
             "work_manager", // "external_storage",
             "query_threads", "wal", "sqlite_checkpoints", "sqlite_analyze", "sqlite_cache",
-            "chunk_size", "thread_range", "undo_manager", "webview_legacy", "browser_zoom",
+            "chunk_size", "thread_range", "undo_manager", "webview_legacy", "browser_zoom", "show_recent",
             "use_modseq", "uid_command", "perform_expunge", "uid_expunge",
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop",
             "keep_alive_poll", "empty_pool", "idle_done", "logarithmic_backoff",
@@ -242,8 +245,9 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Locale slocale = Resources.getSystem().getConfiguration().locale;
         for (String tag : getResources().getAssets().getLocales())
-            languages.add(new Pair<>(tag, Locale.forLanguageTag(tag).getDisplayName()));
+            languages.add(new Pair<>(tag, Locale.forLanguageTag(tag).getDisplayName(slocale)));
 
         Collections.sort(languages, new Comparator<Pair<String, String>>() {
             @Override
@@ -263,6 +267,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         // Get controls
 
+        ibHelp = view.findViewById(R.id.ibHelp);
         swPowerMenu = view.findViewById(R.id.swPowerMenu);
         swExternalSearch = view.findViewById(R.id.swExternalSearch);
         swSortAnswers = view.findViewById(R.id.swSortAnswers);
@@ -278,7 +283,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvFtsIndexed = view.findViewById(R.id.tvFtsIndexed);
         tvFtsPro = view.findViewById(R.id.tvFtsPro);
         spLanguage = view.findViewById(R.id.spLanguage);
-        ibResetLanguage = view.findViewById(R.id.ibResetLanguage);
         swDeepL = view.findViewById(R.id.swDeepL);
         ibDeepL = view.findViewById(R.id.ibDeepL);
         tvSdcard = view.findViewById(R.id.tvSdcard);
@@ -328,6 +332,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swUndoManager = view.findViewById(R.id.swUndoManager);
         swWebViewLegacy = view.findViewById(R.id.swWebViewLegacy);
         swBrowserZoom = view.findViewById(R.id.swBrowserZoom);
+        swShowRecent = view.findViewById(R.id.swShowRecent);
         swModSeq = view.findViewById(R.id.swModSeq);
         swUid = view.findViewById(R.id.swUid);
         swExpunge = view.findViewById(R.id.swExpunge);
@@ -350,6 +355,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvMemoryClass = view.findViewById(R.id.tvMemoryClass);
         tvMemoryUsage = view.findViewById(R.id.tvMemoryUsage);
         tvStorageUsage = view.findViewById(R.id.tvStorageUsage);
+        tvCacheUsage = view.findViewById(R.id.tvCacheUsage);
         tvContactInfo = view.findViewById(R.id.tvContactInfo);
         tvSuffixes = view.findViewById(R.id.tvSuffixes);
         tvAndroidId = view.findViewById(R.id.tvAndroidId);
@@ -358,8 +364,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         btnGC = view.findViewById(R.id.btnGC);
         btnCharsets = view.findViewById(R.id.btnCharsets);
         btnFontMap = view.findViewById(R.id.btnFontMap);
-        btnCiphers = view.findViewById(R.id.btnCiphers);
         btnFiles = view.findViewById(R.id.btnFiles);
+        btnUris = view.findViewById(R.id.btnUris);
         btnAllPermissions = view.findViewById(R.id.btnAllPermissions);
         tvPermissions = view.findViewById(R.id.tvPermissions);
 
@@ -372,6 +378,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         // Wire controls
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        ibHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext(), "Options:misc"), false);
+            }
+        });
 
         swPowerMenu.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -509,57 +522,26 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         spLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                if (position == 0)
-                    onNothingSelected(adapterView);
-                else {
-                    String tag = languages.get(position - 1).first;
-                    if (tag.equals(spLanguage.getTag()))
-                        return;
+                String current = prefs.getString("language", null);
+                String selected = (position == 0 ? null : languages.get(position - 1).first);
+                if (Objects.equals(current, selected))
+                    return;
 
-                    new AlertDialog.Builder(view.getContext())
-                            .setIcon(R.drawable.twotone_help_24)
-                            .setTitle(languages.get(position - 1).second)
-                            .setMessage(R.string.title_advanced_english_hint)
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    prefs.edit().putString("language", tag).commit(); // apply won't work here
-                                }
-                            })
-                            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // Do nothing
-                                }
-                            })
-                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                @Override
-                                public void onDismiss(DialogInterface dialog) {
-                                    setOptions();
-                                }
-                            })
-                            .show();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                prefs.edit().remove("language").commit(); // apply won't work here
-            }
-        });
-
-        ibResetLanguage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Locale system = Resources.getSystem().getConfiguration().locale;
-                new AlertDialog.Builder(v.getContext())
+                String title = (position == 0
+                        ? getString(R.string.title_advanced_language_system)
+                        : languages.get(position - 1).second);
+                new AlertDialog.Builder(adapterView.getContext())
                         .setIcon(R.drawable.twotone_help_24)
-                        .setTitle(system.getDisplayName(system))
-                        .setMessage(Helper.getString(v.getContext(), system, R.string.title_advanced_english_hint))
+                        .setTitle(title)
+                        .setMessage(R.string.title_advanced_english_hint)
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                prefs.edit().remove("language").commit(); // apply won't work here
+                                // apply won't work here
+                                if (selected == null)
+                                    prefs.edit().remove("language").commit();
+                                else
+                                    prefs.edit().putString("language", selected).commit();
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -575,6 +557,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                             }
                         })
                         .show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("language").commit();
             }
         });
 
@@ -607,7 +594,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                 swCheckWeekly.setEnabled(checked);
                 if (!checked) {
                     NotificationManager nm =
-                            (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                            Helper.getSystemService(getContext(), NotificationManager.class);
                     nm.cancel(NotificationHelper.NOTIFICATION_UPDATE);
                 }
             }
@@ -790,7 +777,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                                     @Override
                                     protected void onPostExecute(Bundle args) {
                                         prefs.edit().remove("debug").apply();
-                                        ToastEx.makeText(v.getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
                                     }
 
                                     @Override
@@ -829,6 +815,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
                                     @Override
                                     protected void onExecuted(Bundle args, Void data) {
+                                        ToastEx.makeText(v.getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
                                         ServiceSynchronize.reload(v.getContext(), null, true, "repair");
                                     }
 
@@ -1034,6 +1021,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swWebViewLegacy.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         swWebViewLegacy.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1046,6 +1034,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("browser_zoom", checked).apply();
+            }
+        });
+
+        swShowRecent.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("show_recent", checked).apply();
             }
         });
 
@@ -1273,23 +1268,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        btnCiphers.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(getContext())
-                        .setIcon(R.drawable.twotone_info_24)
-                        .setTitle(R.string.title_advanced_ciphers)
-                        .setMessage(Log.getCiphers())
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // Do nothing
-                            }
-                        })
-                        .show();
-            }
-        });
-
         final String title = getString(R.string.title_advanced_files, Helper.humanReadableByteCount(MIN_FILE_SIZE));
         btnFiles.setText(title);
 
@@ -1389,6 +1367,35 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentOptionsMisc.this, new Bundle(), "setup:files");
+            }
+        });
+
+        btnUris.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                List<UriPermission> permissions = v.getContext().getContentResolver().getPersistedUriPermissions();
+                for (UriPermission permission : permissions) {
+                    ssb.append(permission.getUri().toString());
+                    ssb.append('\u00a0');
+                    if (permission.isReadPermission())
+                        ssb.append("r");
+                    if (permission.isWritePermission())
+                        ssb.append("w");
+                    ssb.append('\n');
+                }
+
+                new AlertDialog.Builder(v.getContext())
+                        .setIcon(R.drawable.twotone_info_24)
+                        .setTitle(R.string.title_advanced_all_permissions)
+                        .setMessage(ssb)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Do nothing
+                            }
+                        })
+                        .show();
             }
         });
 
@@ -1516,7 +1523,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         if (!Helper.isPlayStoreInstall() &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager nm = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManager nm =
+                    Helper.getSystemService(getContext(), NotificationManager.class);
 
             NotificationChannel notification = nm.getNotificationChannel("update");
             if (notification != null) {
@@ -1550,11 +1558,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-            setOptions();
-            if ("last_cleanup".equals(key))
-                setLastCleanup(prefs.getLong(key, -1));
-        }
+        if ("last_cleanup".equals(key))
+            setLastCleanup(prefs.getLong(key, -1));
+
+        setOptions();
     }
 
     @Override
@@ -1602,6 +1609,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                                 editor.remove(key);
                             }
 
+                        if (BuildConfig.DEBUG) {
+                            editor.remove("gmail_checked");
+                            editor.remove("outlook_checked");
+                        }
+
                         editor.apply();
 
                         ToastEx.makeText(context, R.string.title_setup_done, Toast.LENGTH_LONG).show();
@@ -1613,22 +1625,31 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private void onCleanup() {
         new SimpleTask<Void>() {
+            private Toast toast = null;
+
             @Override
             protected void onPreExecute(Bundle args) {
                 btnCleanup.setEnabled(false);
-                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+                toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
+                toast.show();
             }
 
             @Override
             protected void onPostExecute(Bundle args) {
                 btnCleanup.setEnabled(true);
-                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                if (toast != null)
+                    toast.cancel();
             }
 
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 WorkerCleanup.cleanup(context, true);
                 return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -1639,9 +1660,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     }
 
     private void setOptions() {
+        if (getContext() == null)
+            return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        ActivityManager am = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = Helper.getSystemService(getContext(), ActivityManager.class);
         int class_mb = am.getMemoryClass();
         int class_large_mb = am.getLargeMemoryClass();
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -1675,8 +1699,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             if (lang.first.equals(language))
                 selected = pos + 1;
         }
-
-        spLanguage.setTag(language);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, android.R.id.text1, display);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -1738,6 +1760,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swUndoManager.setChecked(prefs.getBoolean("undo_manager", false));
         swWebViewLegacy.setChecked(prefs.getBoolean("webview_legacy", false));
         swBrowserZoom.setChecked(prefs.getBoolean("browser_zoom", false));
+        swShowRecent.setChecked(prefs.getBoolean("show_recent", false));
         swModSeq.setChecked(prefs.getBoolean("use_modseq", true));
         swUid.setChecked(prefs.getBoolean("uid_command", false));
         swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
@@ -1802,7 +1825,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
             new SimpleTask<StorageData>() {
                 @Override
-                protected StorageData onExecute(Context context, Bundle args) throws Throwable {
+                protected StorageData onExecute(Context context, Bundle args) {
                     StorageData data = new StorageData();
                     Runtime rt = Runtime.getRuntime();
                     data.hused = rt.totalMemory() - rt.freeMemory();
@@ -1810,7 +1833,9 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     data.nheap = Debug.getNativeHeapAllocatedSize();
                     data.available = Helper.getAvailableStorageSpace();
                     data.total = Helper.getTotalStorageSpace();
-                    data.used = Helper.getSize(context.getFilesDir());
+                    data.used = Helper.getSizeUsed(context.getFilesDir());
+                    data.cache_used = Helper.getSizeUsed(context.getCacheDir());
+                    data.cache_quota = Helper.getCacheQuota(context);
                     return data;
                 }
 
@@ -1825,6 +1850,9 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                             Helper.humanReadableByteCount(data.total - data.available),
                             Helper.humanReadableByteCount(data.total),
                             Helper.humanReadableByteCount(data.used)));
+                    tvCacheUsage.setText(getString(R.string.title_advanced_cache_usage,
+                            Helper.humanReadableByteCount(data.cache_used),
+                            Helper.humanReadableByteCount(data.cache_quota)));
 
                     getView().postDelayed(new Runnable() {
                         @Override
@@ -1845,6 +1873,9 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     }
 
     private void setLastCleanup(long time) {
+        if (getContext() == null)
+            return;
+
         java.text.DateFormat DTF = Helper.getDateTimeInstance(getContext());
         tvLastCleanup.setText(
                 getString(R.string.title_advanced_last_cleanup,
@@ -1980,5 +2011,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         private long available;
         private long total;
         private long used;
+        private long cache_used;
+        private long cache_quota;
     }
 }

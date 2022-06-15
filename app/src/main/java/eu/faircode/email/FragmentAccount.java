@@ -38,7 +38,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,6 +55,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
@@ -117,6 +117,7 @@ public class FragmentAccount extends FragmentBase {
     private TextView tvLeave;
     private CheckBox cbPrimary;
     private CheckBox cbNotify;
+    private TextView tvNotifyRemark;
     private TextView tvNotifyPro;
     private CheckBox cbBrowse;
     private CheckBox cbAutoSeen;
@@ -226,6 +227,7 @@ public class FragmentAccount extends FragmentBase {
         tvLeave = view.findViewById(R.id.tvLeave);
         cbPrimary = view.findViewById(R.id.cbPrimary);
         cbNotify = view.findViewById(R.id.cbNotify);
+        tvNotifyRemark = view.findViewById(R.id.tvNotifyRemark);
         tvNotifyPro = view.findViewById(R.id.tvNotifyPro);
         cbBrowse = view.findViewById(R.id.cbBrowse);
         cbAutoSeen = view.findViewById(R.id.cbAutoSeen);
@@ -459,8 +461,16 @@ public class FragmentAccount extends FragmentBase {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Helper.hide(cbNotify);
+            Helper.hide(tvNotifyRemark);
             Helper.hide(view.findViewById(R.id.tvNotifyPro));
         }
+
+        tvNotifyRemark.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), 145);
+            }
+        });
 
         Helper.linkPro(tvNotifyPro);
 
@@ -480,16 +490,13 @@ public class FragmentAccount extends FragmentBase {
             }
         });
 
-        addKeyPressedListener(new ActivityBase.IKeyPressedListener() {
+        setBackPressedCallback(new OnBackPressedCallback(true) {
             @Override
-            public boolean onKeyPressed(KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onBackPressed() {
-                onSave(true);
-                return true;
+            public void handleOnBackPressed() {
+                if (Helper.isKeyboardVisible(view))
+                    Helper.hideKeyboard(view);
+                else
+                    onSave(true);
             }
         });
 
@@ -504,7 +511,7 @@ public class FragmentAccount extends FragmentBase {
         btnSupport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext()), false);
+                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext(), "Account:support"), false);
             }
         });
 
@@ -1167,8 +1174,8 @@ public class FragmentAccount extends FragmentBase {
                     db.beginTransaction();
 
                     if (account != null && !account.password.equals(password)) {
-                        String domain = UriHelper.getParentDomain(context, account.host);
-                        String match = (Objects.equals(account.host, domain) ? account.host : "%." + domain);
+                        String root = UriHelper.getRootDomain(context, account.host);
+                        String match = (root == null || root.equals(account.host) ? account.host : "%." + root);
                         int count = db.identity().setIdentityPassword(account.id, account.user, password, auth, match);
                         Log.i("Updated passwords=" + count + " match=" + match);
                     }
@@ -1373,9 +1380,9 @@ public class FragmentAccount extends FragmentBase {
                     if (context != null)
                         WidgetUnified.updateData(context); // Update color stripe
 
-                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                        getParentFragmentManager().popBackStack();
+                    finish();
 
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                         boolean saved = args.getBoolean("saved");
                         if (saved && cbIdentity.isChecked()) {
                             Bundle aargs = new Bundle();
@@ -1652,7 +1659,10 @@ public class FragmentAccount extends FragmentBase {
                                         fragment = new FragmentGmail();
                                     else if (auth == AUTH_TYPE_OAUTH)
                                         fragment = new FragmentOAuth();
-                                    else {
+                                    else if (auth == AUTH_TYPE_PASSWORD) {
+                                        onPassword();
+                                        return;
+                                    } else {
                                         Log.e("Unknown auth=" + auth);
                                         return;
                                     }
@@ -1676,7 +1686,8 @@ public class FragmentAccount extends FragmentBase {
 
                                         fragment.setArguments(aargs);
 
-                                        getParentFragmentManager().popBackStack();
+                                        finish();
+
                                         FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
                                         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("quick");
                                         fragmentTransaction.commit();
@@ -1813,8 +1824,8 @@ public class FragmentAccount extends FragmentBase {
                             onSave(false);
                         else
                             onCheck();
-                    } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                        getParentFragmentManager().popBackStack();
+                    } else
+                        finish();
                     break;
                 case REQUEST_DELETE:
                     if (resultCode == RESULT_OK)
@@ -1851,8 +1862,7 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                    getParentFragmentManager().popBackStack();
+                finish();
             }
 
             @Override

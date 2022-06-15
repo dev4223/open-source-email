@@ -114,6 +114,9 @@ public class ApplicationEx extends Application
                 " process=" + android.os.Process.myPid());
         Log.logMemory(this, "App");
 
+        if (BuildConfig.DEBUG)
+            UriHelper.test(this);
+
         CoalMine.install(this);
 
         registerActivityLifecycleCallbacks(lifecycleCallbacks);
@@ -315,7 +318,6 @@ public class ApplicationEx extends Application
         Log.logMemory(this, "Trim memory level=" + level);
         Map<String, String> crumb = new HashMap<>();
         crumb.put("level", Integer.toString(level));
-        crumb.put("free", Integer.toString(Log.getFreeMemMb()));
         Log.breadcrumb("trim", crumb);
         super.onTrimMemory(level);
     }
@@ -615,6 +617,16 @@ public class ApplicationEx extends Application
             boolean cards = prefs.getBoolean("cards", true);
             if (!cards)
                 editor.remove("view_padding");
+        } else if (version < 1888) {
+            int class_min_difference = prefs.getInt("class_min_difference", 50);
+            if (class_min_difference == 0)
+                editor.putBoolean("classification", false);
+        } else if (version < 1918) {
+            if (prefs.contains("browse_links")) {
+                boolean browse_links = prefs.getBoolean("browse_links", false);
+                editor.remove("browse_links")
+                        .putBoolean("open_with_tabs", !browse_links);
+            }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
@@ -773,7 +785,6 @@ public class ApplicationEx extends Application
         public void onActivityDestroyed(@NonNull Activity activity) {
             log(activity, "onActivityDestroyed");
             Helper.clearViews(activity);
-
         }
 
         @Override

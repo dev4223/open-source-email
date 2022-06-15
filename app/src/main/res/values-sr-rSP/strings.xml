@@ -4,7 +4,6 @@
     <string name="app_changelog">Дневник измена</string>
     <string name="app_welcome">FairEmail е-мејл апликација отвореног кода са фокусом на приватност и безбедност. Могуће је да ће из ових разлога неке функционалности бити другачије него што сте навикли.</string>
     <string name="app_exit">За излаз још једном притисните „назад“</string>
-    <string name="channel_service">Примање</string>
     <string name="channel_send">Пошаљи</string>
     <string name="channel_update">Ажурирања</string>
     <string name="channel_warning">Упозорења</string>
@@ -95,7 +94,6 @@
     <string name="title_setup">Поставке</string>
     <string name="title_setup_help">Помоћ</string>
     <string name="title_setup_quick">Брзо подешавање</string>
-    <string name="title_setup_quick_hint">Брзо подешавање ће скинути конфигурационе информације са autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">IMAP сервер за примање порука</string>
     <string name="title_setup_quick_smtp">SMTP сервер за слање порука</string>
     <string name="title_setup_wizard">Чаробњак</string>
@@ -471,6 +469,7 @@
     <string name="title_download_all">Преузми све</string>
     <string name="title_save_all">Сачувај све</string>
     <string name="title_save_eml">Сачувај фајл сирове поруке</string>
+    <string name="title_quick_actions_snooze">Одложи</string>
     <string name="title_trash">Отпад</string>
     <string name="title_copy">Копирај &#8230;</string>
     <string name="title_copy_to">Копирај у &#8230;</string>
@@ -491,7 +490,6 @@
     <string name="title_reply">Одговори</string>
     <string name="title_reply_to_sender">Одговори пошиљаоцу</string>
     <string name="title_reply_to_all">Одговори свима</string>
-    <string name="title_open_with">Отворите помоћу</string>
     <string name="title_authentication_failed">%1$s неуспела провера идентитета</string>
     <string name="title_receipt_subject">Потврда о пријему: %1$s</string>
     <string name="title_receipt_text">Ова потврда о пријему само потврђује да је порука приказана. Нема гаранција да ли је прималац прочитао садржај поруке.</string>
@@ -633,6 +631,7 @@
     <string name="title_search_device">Претражи на уређају</string>
     <string name="title_search_server">Претражи на серверу</string>
     <string name="title_search_in">Претражи у</string>
+    <string name="title_search_sender">Претражи пошиљаоца</string>
     <string name="title_sort_on">Сортирај по</string>
     <string name="title_sort_on_time">Времену</string>
     <string name="title_sort_on_unread">Непрочитаним</string>

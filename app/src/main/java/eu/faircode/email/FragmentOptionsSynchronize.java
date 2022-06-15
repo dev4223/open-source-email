@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
@@ -46,7 +47,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class FragmentOptionsSynchronize extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private ImageButton ibHelp;
     private SwitchCompat swEnabled;
     private SwitchCompat swOptimize;
     private ImageButton ibOptimizeInfo;
@@ -76,6 +77,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     private CheckBox[] cbDay;
     private TextView tvScheduleIgnore;
     private ImageButton ibSchedules;
+    private Button btnBlockedSenders;
 
     private SwitchCompat swQuickSyncImap;
     private SwitchCompat swQuickSyncPop;
@@ -102,6 +104,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     private SwitchCompat swCheckMx;
     private SwitchCompat swCheckBlocklist;
     private SwitchCompat swUseBlocklist;
+    private SwitchCompat swUseBlocklistPop;
     private RecyclerView rvBlocklist;
     private AdapterBlocklist badapter;
 
@@ -115,7 +118,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             "sync_nodate", "sync_unseen", "sync_flagged", "delete_unseen", "sync_kept",
             "gmail_thread_id", "outlook_thread_id", "subject_threading",
             "sync_folders", "sync_folders_poll", "sync_shared_folders", "subscriptions",
-            "check_authentication", "check_tls", "check_reply_domain", "check_mx", "check_blocklist", "use_blocklist",
+            "check_authentication", "check_tls", "check_reply_domain", "check_mx",
+            "check_blocklist", "use_blocklist", "use_blocklist_pop",
             "tune_keep_alive"
     };
 
@@ -129,6 +133,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
         // Get controls
 
+        ibHelp = view.findViewById(R.id.ibHelp);
         swEnabled = view.findViewById(R.id.swEnabled);
         swOptimize = view.findViewById(R.id.swOptimize);
         ibOptimizeInfo = view.findViewById(R.id.ibOptimizeInfo);
@@ -151,6 +156,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         };
         tvScheduleIgnore = view.findViewById(R.id.tvScheduleIgnore);
         ibSchedules = view.findViewById(R.id.ibSchedules);
+        btnBlockedSenders = view.findViewById(R.id.btnBlockedSenders);
 
         swQuickSyncImap = view.findViewById(R.id.swQuickSyncImap);
         swQuickSyncPop = view.findViewById(R.id.swQuickSyncPop);
@@ -177,6 +183,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         swCheckMx = view.findViewById(R.id.swCheckMx);
         swCheckBlocklist = view.findViewById(R.id.swCheckBlocklist);
         swUseBlocklist = view.findViewById(R.id.swUseBlocklist);
+        swUseBlocklistPop = view.findViewById(R.id.swUseBlocklistPop);
         rvBlocklist = view.findViewById(R.id.rvBlocklist);
 
         grpExempted = view.findViewById(R.id.grpExempted);
@@ -186,6 +193,13 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         // Wire controls
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        ibHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Helper.getSupportUri(v.getContext(), "Options:sync"), false);
+            }
+        });
 
         swEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -294,6 +308,15 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             @Override
             public void onClick(View v) {
                 Helper.viewFAQ(v.getContext(), 78);
+            }
+        });
+
+        btnBlockedSenders.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_MANAGE_LOCAL_CONTACTS)
+                        .putExtra("junk", true));
             }
         });
 
@@ -454,6 +477,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("check_blocklist", checked).apply();
                 swUseBlocklist.setEnabled(checked);
+                swUseBlocklistPop.setEnabled(checked);
             }
         });
 
@@ -461,6 +485,13 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("use_blocklist", checked).apply();
+            }
+        });
+
+        swUseBlocklistPop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("use_blocklist_pop", checked).apply();
             }
         });
 
@@ -498,8 +529,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            setOptions();
+        setOptions();
     }
 
     @Override
@@ -524,6 +554,9 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     }
 
     private void setOptions() {
+        if (getContext() == null)
+            return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean pro = ActivityBilling.isPro(getContext());
 
@@ -575,6 +608,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         swCheckBlocklist.setChecked(prefs.getBoolean("check_blocklist", false));
         swUseBlocklist.setChecked(prefs.getBoolean("use_blocklist", false));
         swUseBlocklist.setEnabled(swCheckBlocklist.isChecked());
+        swUseBlocklistPop.setChecked(prefs.getBoolean("use_blocklist_pop", false));
+        swUseBlocklistPop.setEnabled(swCheckBlocklist.isChecked());
     }
 
     private String formatHour(Context context, int minutes) {

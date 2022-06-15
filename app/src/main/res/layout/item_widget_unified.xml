@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/llMessage"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/llMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -16,6 +16,17 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="3dp"
             android:background="@color/grey" />
+
+        <ImageView
+            android:id="@+id/avatar"
+            android:layout_width="36dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="3dp"
+            android:adjustViewBounds="true"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:scaleType="fitCenter"
+            android:src="@mipmap/ic_launcher" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,7 +49,7 @@
                     android:maxLines="1"
                     android:text="From"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textColor="@color/colorWidgetForeground" />
+                    android:textColor="?android:textColorPrimary" />
 
                 <TextView
                     android:id="@+id/tvTime"
@@ -48,7 +59,7 @@
                     android:maxLines="1"
                     android:text="12:34"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textColor="@color/colorWidgetForeground" />
+                    android:textColor="?android:textColorPrimary" />
             </LinearLayout>
 
             <LinearLayout
@@ -65,7 +76,7 @@
                     android:maxLines="1"
                     android:text="Subject"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textColor="@color/colorWidgetForeground" />
+                    android:textColor="?android:textColorPrimary" />
 
                 <TextView
                     android:id="@+id/tvAccount"
@@ -75,7 +86,7 @@
                     android:maxLines="1"
                     android:text="Account"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textColor="@color/colorWidgetForeground" />
+                    android:textColor="?android:textColorPrimary" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

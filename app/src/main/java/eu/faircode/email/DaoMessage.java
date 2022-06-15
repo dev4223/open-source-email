@@ -607,8 +607,9 @@ public interface DaoMessage {
             " AND (NOT :flagged OR message.ui_flagged)" +
             " GROUP BY account.id" +
             ", CASE WHEN message.thread IS NULL OR NOT :threading THEN message.id ELSE message.thread END" +
-            " ORDER BY message.received DESC")
-    List<TupleMessageWidget> getWidgetUnified(Long account, Long folder, boolean threading, boolean unseen, boolean flagged);
+            " ORDER BY message.received DESC" +
+            " LIMIT :limit")
+    List<TupleMessageWidget> getWidgetUnified(Long account, Long folder, boolean threading, boolean unseen, boolean flagged, int limit);
 
     @Query("SELECT uid FROM message" +
             " WHERE folder = :folder" +
@@ -637,7 +638,7 @@ public interface DaoMessage {
             " AND NOT uid IS NULL")
     List<Long> getBusyUids(long folder, long time);
 
-    @Query("SELECT id, uidl, msgid FROM message" +
+    @Query("SELECT id, uidl, msgid, thread, ui_hide, ui_busy FROM message" +
             " WHERE folder = :folder")
     List<TupleUidl> getUidls(long folder);
 
@@ -719,6 +720,9 @@ public interface DaoMessage {
     @Query("UPDATE message SET subject = :subject WHERE id = :id AND NOT (subject IS :subject)")
     int setMessageSubject(long id, String subject);
 
+    @Query("UPDATE message SET recent = :recent WHERE id = :id AND NOT (recent IS :recent)")
+    int setMessageRecent(long id, boolean recent);
+
     @Query("UPDATE message SET seen = :seen WHERE id = :id AND NOT (seen IS :seen)")
     int setMessageSeen(long id, boolean seen);
 
@@ -754,6 +758,16 @@ public interface DaoMessage {
 
     @Query("UPDATE message SET ui_hide = :ui_hide WHERE id = :id AND NOT (ui_hide IS :ui_hide)")
     int setMessageUiHide(long id, Boolean ui_hide);
+
+    @Transaction
+    @Query("UPDATE message SET ui_hide = 1" +
+            " WHERE folder = :folder" +
+            " AND id NOT IN (" +
+            "    SELECT id FROM message" +
+            "    WHERE folder = :folder" +
+            "    ORDER BY received DESC" +
+            "    LIMIT :keep)")
+    int setMessagesUiHide(long folder, int keep);
 
     @Query("UPDATE message SET ui_ignored = :ui_ignored WHERE id = :id AND NOT (ui_ignored IS :ui_ignored)")
     int setMessageUiIgnored(long id, boolean ui_ignored);
@@ -963,4 +977,14 @@ public interface DaoMessage {
             " AND stored < :sync_time" + // moved, browsed
             " AND ui_snoozed IS NULL")
     int deleteMessagesBefore(long folder, long sync_time, long keep_time, boolean unseen);
+
+    @Transaction
+    @Query("DELETE FROM message" +
+            " WHERE folder = :folder" +
+            " AND id NOT IN (" +
+            "    SELECT id FROM message" +
+            "    WHERE folder = :folder" +
+            "    ORDER BY received DESC" +
+            "    LIMIT :keep)")
+    int deleteMessagesKeep(long folder, int keep);
 }

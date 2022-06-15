@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.text.Editable;
@@ -31,6 +32,7 @@ import android.text.NoCopySpan;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.AlignmentSpan;
 import android.text.style.BackgroundColorSpan;
@@ -64,10 +66,8 @@ import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class StyleHelper {
     private static final List<Class> CLEAR_STYLES = Collections.unmodifiableList(Arrays.asList(
@@ -77,12 +77,13 @@ public class StyleHelper {
             BackgroundColorSpan.class,
             ForegroundColorSpan.class,
             AlignmentSpan.class,
-            BulletSpan.class,
+            BulletSpanEx.class, NumberSpan.class,
             QuoteSpan.class, IndentSpan.class,
             StrikethroughSpan.class,
             URLSpan.class,
             TypefaceSpan.class, CustomTypefaceSpan.class,
-            TranslatedSpan.class
+            MarkSpan.class,
+            InsertedSpan.class
     ));
 
     static boolean apply(int action, LifecycleOwner owner, View anchor, EditText etBody, Object... args) {
@@ -712,38 +713,26 @@ public class StyleHelper {
                 Log.breadcrumb("style", "action", "link");
 
                 String url = (String) args[0];
+                String title = (String) args[1];
 
-                List<CharacterStyle> spans = new ArrayList<>();
-                Map<CharacterStyle, Pair<Integer, Integer>> ranges = new HashMap<>();
-                Map<CharacterStyle, Integer> flags = new HashMap<>();
-                for (CharacterStyle span : edit.getSpans(start, end, CharacterStyle.class)) {
-                    if (!(span instanceof URLSpan)) {
-                        spans.add(span);
-                        ranges.put(span, new Pair<>(edit.getSpanStart(span), edit.getSpanEnd(span)));
-                        flags.put(span, edit.getSpanFlags(span));
-                    }
+                URLSpan[] spans = edit.getSpans(start, end, URLSpan.class);
+                for (URLSpan span : spans)
                     edit.removeSpan(span);
+
+                if (!TextUtils.isEmpty(url)) {
+                    if (TextUtils.isEmpty(title))
+                        title = url;
+
+                    if (start == end)
+                        edit.insert(start, title);
+                    else if (!title.equals(edit.subSequence(start, end).toString()))
+                        edit.replace(start, end, title);
+
+                    edit.setSpan(new URLSpan(url), start, start + title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
-
-                if (url != null) {
-                    int e = end;
-                    if (start == end) {
-                        etBody.getText().insert(start, url);
-                        e += url.length();
-                    }
-
-                    edit.setSpan(new URLSpan(url), start, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-
-                // Restore other spans
-                for (CharacterStyle span : spans)
-                    edit.setSpan(span,
-                            ranges.get(span).first,
-                            ranges.get(span).second,
-                            flags.get(span));
 
                 etBody.setText(edit);
-                etBody.setSelection(end, end);
+                etBody.setSelection(start + title.length());
 
                 return true;
             } else if (action == R.id.menu_clear) {
@@ -956,13 +945,26 @@ public class StyleHelper {
         }
     }
 
-    static void markAsTranslated(Editable text, int start, int end) {
-        for (TranslatedSpan span : text.getSpans(0, text.length(), TranslatedSpan.class))
+    static void markAsInserted(Editable text, int start, int end) {
+        for (InsertedSpan span : text.getSpans(0, text.length(), InsertedSpan.class))
             text.removeSpan(span);
-        text.setSpan(new TranslatedSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (start >= 0 && start < end && end <= text.length())
+            text.setSpan(new InsertedSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
-    static class TranslatedSpan implements NoCopySpan {
+    static class InsertedSpan implements NoCopySpan {
+    }
+
+    static class MarkSpan extends BackgroundColorSpan {
+        public MarkSpan() {
+            super(Color.YELLOW);
+        }
+
+        @Override
+        public void updateDrawState(@NonNull TextPaint textPaint) {
+            super.updateDrawState(textPaint);
+            textPaint.setColor(Color.BLACK);
+        }
     }
 
     static String getFamily(String family) {

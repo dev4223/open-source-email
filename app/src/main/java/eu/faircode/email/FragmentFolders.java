@@ -77,7 +77,6 @@ import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterOutputStream;
@@ -605,12 +604,21 @@ public class FragmentFolders extends FragmentBase {
         SearchView searchView = (SearchView) menuSearch.getActionView();
         searchView.setQueryHint(getString(R.string.title_search));
 
-        if (TextUtils.isEmpty(searching))
-            menuSearch.collapseActionView();
-        else {
-            menuSearch.expandActionView();
-            searchView.setQuery(searching, true);
-        }
+        final String search = searching;
+        view.post(new RunnableEx("folders:search") {
+            @Override
+            public void delegate() {
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                    return;
+
+                if (TextUtils.isEmpty(search))
+                    menuSearch.collapseActionView();
+                else {
+                    menuSearch.expandActionView();
+                    searchView.setQuery(search, true);
+                }
+            }
+        });
 
         getViewLifecycleOwner().getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
@@ -623,7 +631,7 @@ public class FragmentFolders extends FragmentBase {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (getView() != null) {
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                     searching = newText;
                     adapter.search(newText);
                 }
@@ -632,8 +640,10 @@ public class FragmentFolders extends FragmentBase {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searching = query;
-                adapter.search(query);
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                    searching = query;
+                    adapter.search(query);
+                }
                 return true;
             }
         });
@@ -728,6 +738,9 @@ public class FragmentFolders extends FragmentBase {
     }
 
     private void onMenuSearch() {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            return;
+
         Bundle args = new Bundle();
         args.putLong("account", account);
 
@@ -849,6 +862,7 @@ public class FragmentFolders extends FragmentBase {
                     return;
 
                 args.putString("name", account.name);
+                args.putBoolean("primary", account.primary);
 
                 FragmentDialogEditName fragment = new FragmentDialogEditName();
                 fragment.setArguments(args);
@@ -906,14 +920,18 @@ public class FragmentFolders extends FragmentBase {
 
     private void onDeleteLocal(Bundle args) {
         new SimpleTask<Void>() {
+            private Toast toast = null;
+
             @Override
             protected void onPreExecute(Bundle args) {
-                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+                toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
+                toast.show();
             }
 
             @Override
             protected void onPostExecute(Bundle args) {
-                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                if (toast != null)
+                    toast.cancel();
             }
 
             @Override
@@ -962,6 +980,11 @@ public class FragmentFolders extends FragmentBase {
                 WorkerCleanup.cleanup(context, false);
 
                 return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -1062,9 +1085,18 @@ public class FragmentFolders extends FragmentBase {
 
     private void onExecuteRules(Bundle args) {
         new SimpleTask<Integer>() {
+            private Toast toast = null;
+
             @Override
             protected void onPreExecute(Bundle args) {
-                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+                toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
+                toast.show();
+            }
+
+            @Override
+            protected void onPostExecute(Bundle args) {
+                if (toast != null)
+                    toast.cancel();
             }
 
             @Override
@@ -1149,14 +1181,18 @@ public class FragmentFolders extends FragmentBase {
         args.putParcelable("uri", uri);
 
         new SimpleTask<Void>() {
+            private Toast toast = null;
+
             @Override
             protected void onPreExecute(Bundle args) {
-                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+                toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
+                toast.show();
             }
 
             @Override
             protected void onPostExecute(Bundle args) {
-                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                if (toast != null)
+                    toast.cancel();
             }
 
             @Override
@@ -1209,7 +1245,8 @@ public class FragmentFolders extends FragmentBase {
                                 builder.setProgress(ids.size(), i, false);
                                 Notification notification = builder.build();
                                 notification.flags |= Notification.FLAG_NO_CLEAR;
-                                nm.notify("export", NotificationHelper.NOTIFICATION_TAGGED, notification);
+                                if (NotificationHelper.areNotificationsEnabled(nm))
+                                    nm.notify("export", NotificationHelper.NOTIFICATION_TAGGED, notification);
                             }
 
                             long id = ids.get(i);
@@ -1300,6 +1337,11 @@ public class FragmentFolders extends FragmentBase {
             }
 
             @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
             protected void onException(Bundle args, Throwable ex) {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -1312,12 +1354,28 @@ public class FragmentFolders extends FragmentBase {
             protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
                 String name = args.getString("name");
+                boolean primary = args.getBoolean("primary");
 
                 if (TextUtils.isEmpty(name))
                     return null;
 
                 DB db = DB.getInstance(context);
-                db.account().setAccountName(id, name);
+                try {
+                    db.beginTransaction();
+
+                    EntityAccount account = db.account().getAccount(id);
+                    if (account == null)
+                        return null;
+
+                    db.account().setAccountName(account.id, name);
+                    if (primary)
+                        db.account().resetPrimary();
+                    db.account().setAccountPrimary(account.id, primary);
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
 
                 return null;
             }

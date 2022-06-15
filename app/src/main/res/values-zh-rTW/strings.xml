@@ -10,7 +10,6 @@
     <string name="app_cake">剩餘儲存空間不足</string>
     <string name="app_updated">最近更新於: %1$s</string>
     <string name="app_download">下載自：%1$s</string>
-    <string name="channel_service">接收</string>
     <string name="channel_send">寄送</string>
     <string name="channel_notification">電子郵件</string>
     <string name="channel_progress">進度</string>
@@ -124,7 +123,6 @@
     <string name="title_setup_analytics">FairEmail 不顯示廣告，也不會追蹤或分析您的行為。Bugsnag 用於回報錯誤，且於預設情況下處於停用狀態。</string>
     <string name="title_setup_quick_accounts">新增或變更帳戶</string>
     <string name="title_setup_quick_support">有些電子郵件供應商的作法讓新增帳戶成為一件難事。請不要因此責怪 FairEmail，應轉而尋求支援。</string>
-    <string name="title_setup_quick_hint">快速設置將會透過 autoconfig.thunderbird.net 取得配置資訊</string>
     <string name="title_setup_quick_patience">請耐心等待 &#8230;</string>
     <string name="title_setup_quick_imap">用於接收訊息的 IMAP 伺服器</string>
     <string name="title_setup_quick_smtp">用於傳送訊息的 SMTP 伺服器</string>
@@ -147,7 +145,6 @@
     <string name="title_setup_gmail_rationale">請授予權限以選擇帳戶並讀取您的姓名</string>
     <string name="title_setup_gmail_permissions">Google 會請求權限以讀取、撰寫、傳送及永久刪除您的電子郵件。FairEmail 永遠不會在您未予明確同意的前提下刪除您的訊息。</string>
     <string name="title_setup_gmail_drafts">如遇草稿資料夾無法透過 IMAP 存取的情況，可於 Gmail 標籤設定中獲得修復</string>
-    <string name="title_setup_gmail_password">我想要使用密碼來授權帳戶</string>
     <string name="title_setup_office_auth">“驗證失敗”錯誤可能是由系統管理員停用 IMAP/SMTP 所致</string>
     <string name="title_setup_oauth_rationale">授權存取您的 %1$s 帳戶</string>
     <string name="title_setup_oauth_update">重新授權現有帳戶 (否則請新建帳戶)</string>
@@ -392,9 +389,9 @@
     <string name="title_advanced_color_stripe">顯示彩色條紋</string>
     <string name="title_advanced_color_stripe_wide">使用寬幅彩色條紋</string>
     <string name="title_advanced_avatars">顯示聯絡人照片</string>
-    <string name="title_advanced_gravatars">顯示 Gravatars</string>
     <string name="title_advanced_bimi_unverified">未經驗證的寄件者</string>
     <string name="title_advanced_bimi_verified">已經驗證的寄件者</string>
+    <string name="title_advanced_gravatars">顯示 Gravatars</string>
     <string name="title_advanced_favicons">顯示網站圖示</string>
     <string name="title_advanced_generated_icons">顯示依程式設定生成的圖示</string>
     <string name="title_advanced_identicons">顯示 identicons</string>
@@ -487,10 +484,7 @@
     <string name="title_advanced_default_snooze">預設延後/延遲時間</string>
     <string name="title_advanced_notifications">管理通知</string>
     <string name="title_advanced_notifications_default">預設頻道</string>
-    <string name="title_advanced_notifications_service">接收頻道</string>
     <string name="title_advanced_notifications_newest_first">優先顯示最新通知</string>
-    <string name="title_advanced_notifications_background">使用背景服務同步訊息</string>
-    <string name="title_advanced_notifications_background_hint">無狀態列通知的背景服務可隨時被 Android 停止</string>
     <string name="title_advanced_badge">顯示附有新訊息計數的主畫面應用程式圖示</string>
     <string name="title_advanced_unseen_ignored">讓新訊息計數匹配通知數</string>
     <string name="title_advanced_notify_background">僅在於背景中執行時才顯示通知</string>
@@ -520,9 +514,10 @@
     <string name="title_advanced_light">使用通知指示燈</string>
     <string name="title_advanced_sound">選擇通知音效</string>
     <string name="title_advanced_notify_screen_on">為新訊息通知而暫時開啟螢幕</string>
+    <string name="title_advanced_notifications_background">使用背景服務同步訊息</string>
+    <string name="title_advanced_notifications_background_hint">無狀態列通知的背景服務可隨時被 Android 停止</string>
     <string name="title_advanced_confirm_links">開啟超連結前確認</string>
     <string name="title_advanced_check_links_dbl">檢查可疑連結有否出現於網域封鎖清單中</string>
-    <string name="title_advanced_browse_links">將連結開啟處理交由 Android 進行</string>
     <string name="title_advanced_confirm_images">預設不顯示圖片</string>
     <string name="title_advanced_ask_images">顯示圖片前確認</string>
     <string name="title_advanced_confirm_html">預設顯示經過重排的訊息</string>
@@ -617,7 +612,6 @@
     <string name="title_advanced_metered_warning">停用此選項也將停用在使用行動網路連線期間的訊息接收和傳送。</string>
     <string name="title_advanced_rlah_hint">假設在歐盟境內沒有漫遊費</string>
     <string name="title_advanced_usage_hint">這將增加電池、數據和儲存空間的用量</string>
-    <string name="title_advanced_tcp_keep_alive_hint">在一些裝置上啟用此選項可能導致連線問題</string>
     <string name="title_advanced_validate_hint">這可能導致訊息不同步，例如在使用 VPN 時，或是在其他情況下</string>
     <string name="title_advanced_timeout_hint">讀/寫時限將被設定為連線時限的兩倍。更大的值將產生更高的電量消耗。</string>
     <string name="title_advanced_ssl_harden_hint">啟用此選項將停用弱 SSL 協定和加密方法，這可能導致連線問題</string>
@@ -631,7 +625,7 @@
     <string name="title_advanced_split_min_hint">這個條件是爲可摺叠設備而設的</string>
     <string name="title_advanced_threading_hint">將彼此相關的訊息分組</string>
     <string name="title_advanced_highlight_hint">主題的強調色將用於突出顯示</string>
-    <string name="title_advanced_gravatars_hint">可能存在隱私風險</string>
+    <string name="title_advanced_privacy_risk">可能存在隱私風險</string>
     <string name="title_advanced_name_email_hint">姓名僅於可用時顯示</string>
     <string name="title_advanced_preview_hint">僅在訊息本文被下載後可用</string>
     <string name="title_advanced_preview_lines_hint">總計最多 %s 字元</string>
@@ -954,6 +948,7 @@
     <string name="title_button_search">在訊息中搜尋</string>
     <string name="title_button_search_text">在訊息本文中搜尋</string>
     <string name="title_configure_buttons">配置按鈕 &#8230;</string>
+    <string name="title_quick_actions_snooze">延後</string>
     <string name="title_trash">垃圾桶</string>
     <string name="title_copy">複製 &#8230;</string>
     <string name="title_copy_to">複製到 &#8230;</string>
@@ -984,7 +979,6 @@
     <string name="title_reply_hard_bounce">發出“強制退信”</string>
     <string name="title_reply_template">以模板回覆</string>
     <string name="title_move_undo">正在移動至 %1$s (%2$d)</string>
-    <string name="title_open_with">開啟方式</string>
     <string name="title_authentication_failed">%1$s 驗證失敗</string>
     <string name="title_on_blocklist">在垃圾郵件封鎖清單中</string>
     <string name="title_receipt_subject">已讀回條: %1$s</string>
@@ -1229,6 +1223,7 @@
     <string name="title_search_device">在裝置上搜尋</string>
     <string name="title_search_server">在伺服器上搜尋</string>
     <string name="title_search_in">搜尋</string>
+    <string name="title_search_sender">搜尋寄件者</string>
     <string name="title_sort_on">排序</string>
     <string name="title_sort_on_time">時間</string>
     <string name="title_sort_on_unread">未讀取</string>

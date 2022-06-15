@@ -21,6 +21,8 @@ package eu.faircode.email;
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -54,6 +56,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -211,8 +214,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         menus.add(new NavMenuItem(R.drawable.twotone_close_24, R.string.title_setup_close, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer, false);
-                onBackPressed();
+                onMenuClose();
             }
         }).setColor(colorWarning).setSeparated());
 
@@ -312,6 +314,16 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         adapter.set(menus, true);
 
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (Helper.isKeyboardVisible(view))
+                    Helper.hideKeyboard(view);
+                else
+                    onExit();
+            }
+        });
 
         if (getSupportFragmentManager().getFragments().size() == 0) {
             Intent intent = getIntent();
@@ -419,12 +431,29 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
-    @Override
-    public void onBackPressed() {
+    public void onExit() {
         if (drawerLayout.isDrawerOpen(drawerContainer))
             drawerLayout.closeDrawer(drawerContainer);
-        else
-            super.onBackPressed();
+        else {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean setup_reminder = prefs.getBoolean("setup_reminder", true);
+
+            boolean hasContactPermissions =
+                    hasPermission(android.Manifest.permission.READ_CONTACTS);
+            boolean hasNotificationPermissions =
+                    (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                            hasPermission(Manifest.permission.POST_NOTIFICATIONS));
+            boolean isIgnoring = !Boolean.FALSE.equals(Helper.isIgnoringOptimizations(this));
+
+            if (!setup_reminder ||
+                    (hasContactPermissions && hasNotificationPermissions && isIgnoring))
+                performBack();
+            else {
+                FragmentDialogPermissions fragment = new FragmentDialogPermissions();
+                fragment.setTargetActivity(this, REQUEST_STILL);
+                fragment.show(getSupportFragmentManager(), "setup:still");
+            }
+        }
     }
 
     @Override
@@ -445,6 +474,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     public boolean onOptionsItemSelected(MenuItem item) {
         if (drawerToggle.onOptionsItemSelected(item))
             return true;
+
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_close)
+            onMenuClose();
 
         return super.onOptionsItemSelected(item);
     }
@@ -471,10 +504,23 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     if (resultCode == RESULT_OK && data != null)
                         handleImportProviders(data);
                     break;
+                case ActivitySetup.REQUEST_STILL:
+                    if (resultCode == Activity.RESULT_OK) {
+                        Bundle result = new Bundle();
+                        result.putInt("page", 0);
+                        getSupportFragmentManager().setFragmentResult("options:tab", result);
+                    } else
+                        performBack();
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
         }
+    }
+
+    private void onMenuClose() {
+        drawerLayout.closeDrawer(drawerContainer, false);
+        onExit();
     }
 
     private void onMenuExport() {
@@ -568,7 +614,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuIssue() {
-        startActivity(Helper.getIntentIssue(this));
+        startActivity(Helper.getIntentIssue(this, "Setup:issue"));
     }
 
     private void onMenuPrivacy() {
@@ -590,9 +636,18 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         args.putString("password", this.password);
 
         new SimpleTask<Void>() {
+            private Toast toast = null;
+
             @Override
             protected void onPreExecute(Bundle args) {
-                ToastEx.makeText(ActivitySetup.this, R.string.title_executing, Toast.LENGTH_LONG).show();
+                toast = ToastEx.makeText(ActivitySetup.this, R.string.title_executing, Toast.LENGTH_LONG);
+                toast.show();
+            }
+
+            @Override
+            protected void onPostExecute(Bundle args) {
+                if (toast != null)
+                    toast.cancel();
             }
 
             @Override
@@ -770,6 +825,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             @Override
             protected void onExecuted(Bundle args, Void data) {
                 ToastEx.makeText(ActivitySetup.this, R.string.title_setup_exported, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onDestroyed(Bundle args) {
+                if (toast != null) {
+                    toast.cancel();
+                    toast = null;
+                }
             }
 
             @Override
@@ -1551,6 +1614,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
                     // DecoderException: unable to decode base64 string: invalid characters encountered in base64 data
+                    if (ex instanceof DecoderException)
+                        ex = new Throwable("Are you trying to import a PGP key as an S/MIME key?", ex);
                     boolean expected =
                             (ex instanceof IllegalArgumentException ||
                                     ex instanceof FileNotFoundException ||

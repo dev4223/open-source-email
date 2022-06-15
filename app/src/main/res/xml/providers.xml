@@ -16,10 +16,10 @@
             host="smtp.gmail.com"
             port="465"
             starttls="false" />
-        <!--pop
+        <pop
             host="pop.gmail.com"
             port="995"
-            starttls="false" /-->
+            starttls="false" />
         <oauth
             askAccount="true"
             authorizationEndpoint="https://accounts.google.com/o/oauth2/auth"
@@ -458,8 +458,8 @@
             starttls="false" />
         <smtp
             host="smtp.web.de"
-            port="587"
-            starttls="true" />
+            port="465"
+            starttls="false" />
     </provider>
     <provider
         name="Telstra"
@@ -492,7 +492,7 @@
     <provider
         name="Ionos (1und1)"
         appPassword="true"
-        documentation="Für Ionos müssen Sie ein App-Passwort anstelle Ihres normalen Kontopassworts verwenden, &lt;a href=&quot;https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/&quot;&gt;siehe hier&lt;/a&gt;."
+        documentation="Für Ionos müssen Sie ein E-Mail-Passwort anstelle Ihres normalen Kontopassworts verwenden, &lt;a href=&quot;https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/&quot;&gt;siehe hier&lt;/a&gt;."
         domain="ionos\\.de,ionos\\.com,online\\.de"
         keepalive="12"
         link="https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop-und-smtp/">
@@ -508,7 +508,7 @@
     <provider
         name="Ionos.com"
         appPassword="true"
-        documentation="For Ionos you need to use an app password instead of your normal account password, please  &lt;a href=&quot;https://www.ionos.com/help/email/troubleshooting-mail-basicmail-business/changing-a-11-ionos-email-account-password/&quot;&gt;see here&lt;/a&gt;."
+        documentation="For Ionos you need to use an email password instead of your normal account password, please &lt;a href=&quot;https://www.ionos.com/help/email/troubleshooting-mail-basicmail-business/changing-a-11-ionos-email-account-password/&quot;&gt;see here&lt;/a&gt;."
         keepalive="12"
         link="https://www.ionos.com/help/email/general-topics/settings-for-your-email-programs-imap-pop3/">
         <imap
@@ -517,6 +517,35 @@
             starttls="false" />
         <smtp
             host="smtp.ionos.com"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Ionos.co.uk"
+        appPassword="true"
+        documentation="For Ionos you need to use an email password instead of your normal account password, please &lt;a href=&quot;https://www.ionos.co.uk/help/email/troubleshooting-mail-basicmail-business/changing-a-11-ionos-email-account-password/&quot;&gt;see here&lt;/a&gt;."
+        keepalive="12"
+        link="https://www.ionos.co.uk/help/email/general-topics/settings-for-your-email-programs-imap-pop3/">
+        <imap
+            host="imap.ionos.co.uk"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.ionos.co.uk"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Ionos.fr"
+        appPassword="true"
+        keepalive="12"
+        link="https://www.ionos.fr/assistance/email/sujets-generaux/parametres-pour-les-programmes-de-messagerie/">
+        <imap
+            host="imap.ionos.fr"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.ionos.fr"
             port="465"
             starttls="false" />
     </provider>
@@ -1019,6 +1048,7 @@
     </provider>
     <provider
         name="Laposte.net"
+        documentation="19 avril 2022 La Posté a désactivé l'accès externe en raison de problèmes techniques. Veuillez consulter le site Web de La Poste pour plus d'informations."
         domain="laposte\\.net"
         link="https://www.laposte.fr/votre-vie-digitale/conseils-pratiques/configuration-webmail-laposte.net">
         <imap
@@ -1620,5 +1650,65 @@
             host="secure.iljmail.com"
             port="587"
             starttls="true" />
+    </provider>
+    <provider
+        name="NIC/gov.in"
+        domain="nic\\.in,.*\\.nic\\.in">
+        <imap
+            host="imap.mail.gov.in"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mail.gov.in"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Cytanet"
+        domain="cablenet\\.com\\.cy"
+        link="https://www.eworkswsi.com.cy/eworkswsi-cyprus-internet-marketing-blog/using-your-own-smtp-server-with-a-cytanet-e-mail-account-in-cyprus-1">
+        <imap
+            host="mail.cytanet.com.cy"
+            port="143"
+            starttls="true" />
+        <smtp
+            host="mail-out.cytanet.com.cy"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Plusnet"
+        domain=".*\\.plus\\.com"
+        link="https://www.plus.net/help/email-guides/how-to-set-up-plusnet-email/">
+        <imap
+            host="imap.plus.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="relay.plus.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider name="Netbeat">
+        <imap
+            host="mail.netbeat.de"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.netbeat.de"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Email.it"
+        link="https://assistenza.email.it/configurazione-caselle-email-it.php">
+        <imap
+            host="in.email.it"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="out.email.it"
+            port="465"
+            starttls="false" />
     </provider>
 </providers>

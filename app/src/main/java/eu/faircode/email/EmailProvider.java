@@ -322,9 +322,10 @@ public class EmailProvider implements Parcelable {
     }
 
     static EmailProvider getProvider(Context context, String id) throws FileNotFoundException {
-        for (EmailProvider provider : loadProfiles(context))
-            if (id.equals(provider.id))
-                return provider;
+        if (id != null)
+            for (EmailProvider provider : loadProfiles(context))
+                if (id.equals(provider.id))
+                    return provider;
 
         throw new FileNotFoundException("provider id=" + id);
     }
@@ -413,9 +414,9 @@ public class EmailProvider implements Parcelable {
                                     break;
                                 }
 
-                        String mxparent = UriHelper.getParentDomain(context, target);
-                        String pdomain = UriHelper.getParentDomain(context, provider.imap.host);
-                        if (mxparent.equalsIgnoreCase(pdomain)) {
+                        String mxroot = UriHelper.getRootDomain(context, target);
+                        String proot = UriHelper.getRootDomain(context, provider.imap.host);
+                        if (mxroot != null && mxroot.equalsIgnoreCase(proot)) {
                             EntityLog.log(context, "From MX host=" + provider.imap.host);
                             candidates.add(provider);
                             break;
@@ -426,6 +427,8 @@ public class EmailProvider implements Parcelable {
                         candidates.addAll(_fromDomain(context, target, email, discover));
                         int dot = target.indexOf('.');
                         target = target.substring(dot + 1);
+                        if (UriHelper.isTld(context, target))
+                            break;
                     }
                 }
 
@@ -594,7 +597,7 @@ public class EmailProvider implements Parcelable {
             request.setReadTimeout(ISPDB_TIMEOUT);
             request.setConnectTimeout(ISPDB_TIMEOUT);
             request.setDoInput(true);
-            request.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
+            ConnectionHelper.setUserAgent(context, request);
             request.connect();
 
             int status = request.getResponseCode();

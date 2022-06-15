@@ -181,6 +181,7 @@ public class EntityOperation {
                 // 0: target folder
                 // 1: mark seen
                 // 2: auto classified
+                // 3: no block sender
 
                 // Parameters out:
                 // 0: target folder
@@ -211,6 +212,16 @@ public class EntityOperation {
                 if (source == null || target == null || source.id.equals(target.id))
                     return;
 
+                if (EntityFolder.JUNK.equals(target.type) &&
+                        Objects.equals(source.account, target.account) &&
+                        (jargs.opt(3) == null || !jargs.optBoolean(3))) {
+                    jargs.remove(3);
+                    EntityLog.log(context, "Auto block sender=" + MessageHelper.formatAddresses(message.from));
+                    EntityContact.update(context,
+                            message.account, message.identity, message.from,
+                            EntityContact.TYPE_JUNK, message.received);
+                }
+
                 if (EntityFolder.DRAFTS.equals(source.type) &&
                         EntityFolder.TRASH.equals(target.type))
                     autoread = true;
@@ -233,9 +244,9 @@ public class EntityOperation {
                 if (autoread || autounflag || reset_importance)
                     for (EntityMessage similar : db.message().getMessagesBySimilarity(message.account, message.id, message.msgid)) {
                         if (autoread)
-                            db.message().setMessageUiSeen(similar.id, true);
+                            queue(context, similar, SEEN, true);
                         if (autounflag)
-                            db.message().setMessageUiFlagged(similar.id, false, null);
+                            queue(context, similar, FLAG, false);
                         if (reset_importance) {
                             db.message().setMessageImportance(similar.id, null);
                             queue(context, similar, KEYWORD, MessageHelper.FLAG_LOW_IMPORTANCE, false);
@@ -500,7 +511,6 @@ public class EntityOperation {
         crumb.put("folder", op.account + ":" + op.folder);
         if (op.message != null)
             crumb.put("message", Long.toString(op.message));
-        crumb.put("free", Integer.toString(Log.getFreeMemMb()));
         Log.breadcrumb("queued", crumb);
     }
 
@@ -630,6 +640,12 @@ public class EntityOperation {
                 if (m != null)
                     db.message().setMessageUiFlagged(m.id, m.flagged, m.color);
             }
+        }
+
+        if (MOVE.equals(name)) {
+            int count = db.operation().deleteOperation(folder, PURGE);
+            if (count > 0)
+                sync(context, folder, false);
         }
 
         if (MOVE.equals(name) ||

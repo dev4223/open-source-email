@@ -120,8 +120,11 @@ public interface DaoFolder {
             " GROUP BY folder.id")
     LiveData<List<TupleFolderEx>> liveUnified(String type);
 
-    @Query("SELECT account, id AS folder, unified, sync_state FROM folder" +
-            " WHERE sync_state IS NOT NULL" +
+    @Query("SELECT folder.account, folder.id AS folder, unified, sync_state" +
+            " FROM folder" +
+            " JOIN account ON account.id = folder.account" +
+            " WHERE account.`synchronize`" +
+            " AND sync_state IS NOT NULL" +
             " AND folder.type <> '" + EntityFolder.OUTBOX + "'")
     LiveData<List<TupleFolderSync>> liveSynchronizing();
 
@@ -178,6 +181,7 @@ public interface DaoFolder {
     List<EntityFolder> getChildFolders(long parent);
 
     @Query("SELECT folder.type" +
+            ", COUNT(DISTINCT folder.id) AS folders" +
             ", COUNT(message.id) AS messages" +
             ", SUM(CASE WHEN NOT message.ui_seen THEN 1 ELSE 0 END) AS unseen" +
             ", CASE WHEN folder.account IS NULL THEN folder.sync_state ELSE NULL END AS sync_state" +
@@ -272,6 +276,11 @@ public interface DaoFolder {
 
     @Query("UPDATE folder SET total = :total WHERE id = :id AND NOT (total IS :total)")
     int setFolderTotal(long id, Integer total);
+
+    @Query("UPDATE folder SET total = :total, last_sync = :last_sync" +
+            " WHERE id = :id" +
+            " AND NOT (total IS :total AND last_sync IS :last_sync)")
+    int setFolderTotal(long id, Integer total, Long last_sync);
 
     @Query("UPDATE folder SET error = :error WHERE id = :id AND NOT (error IS :error)")
     int setFolderError(long id, String error);

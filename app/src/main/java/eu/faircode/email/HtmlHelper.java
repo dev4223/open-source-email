@@ -150,6 +150,7 @@ public class HtmlHelper {
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
     private static final String LINE = "----------------------------------------";
+    private static final String W3NS = /* http/https */ "://www.w3.org/";
 
     private static final HashMap<String, Integer> x11ColorMap = new HashMap<>();
 
@@ -1268,15 +1269,22 @@ public class HtmlHelper {
 
         // Lists
         for (Element e : document.select("ol,ul,blockquote")) {
+            Element parent = e.parent();
             if (view) {
-                Element parent = e.parent();
                 if ("blockquote".equals(e.tagName()) || parent == null ||
-                        !("ol".equals(parent.tagName()) || "ul".equals(parent.tagName()))) {
+                        !("li".equals(parent.tagName()) ||
+                                "ol".equals(parent.tagName()) ||
+                                "ul".equals(parent.tagName()))) {
                     if (!"false".equals(e.attr("x-line-before")))
                         e.attr("x-line-before", "true");
                     if (!"false".equals(e.attr("x-line-after")))
                         e.attr("x-line-after", "true");
                 }
+
+                // Unflatten list for viewing
+                if ((parent != null && "li".equals(parent.tagName())) &&
+                        ("ol".equals(e.tagName()) || "ul".equals(e.tagName())))
+                    e.attr("x-list-level", "false");
             } else {
                 if (!BuildConfig.DEBUG) {
                     String style = e.attr("style");
@@ -1293,6 +1301,20 @@ public class HtmlHelper {
                         li.removeAttr("dir");
                     }
                     e.attr("dir", rtl > ltr ? "rtl" : "ltr");
+                }
+
+                // Flatten list for editor
+                if (parent != null && "li".equals(parent.tagName())) {
+                    List<Node> children = parent.childNodes();
+                    for (Node child : children) {
+                        child.remove();
+                        if (child instanceof Element &&
+                                "ol".equals(child.nodeName()) || "ul".equals(child.nodeName()))
+                            parent.before(child);
+                        else
+                            parent.before(parent.shallowClone().appendChild(child));
+                    }
+                    parent.remove();
                 }
             }
         }
@@ -1564,23 +1586,27 @@ public class HtmlHelper {
         // <o:p>&nbsp;</o:p></span>
 
         // Default XHTML namespace: http://www.w3.org/1999/xhtml
+        // https://developer.mozilla.org/en-US/docs/Related/IMSC/Namespaces
 
         String ns = null;
         for (Element h : parsed.select("html"))
             for (Attribute a : h.attributes()) {
                 String key = a.getKey();
-                String value = a.getValue();
-                if (value != null &&
-                        key.startsWith("xmlns:") &&
-                        value.startsWith("http://www.w3.org/")) {
+                String value = a.getValue().toLowerCase(Locale.ROOT);
+                if ("xmlns".equals(key) && value.contains(W3NS)) {
+                    ns = key;
+                    break;
+                } else if (key.startsWith("xmlns:") && value.contains(W3NS)) {
                     ns = key.split(":")[1];
                     break;
                 }
             }
+
         for (Element e : parsed.select("*")) {
             String tag = e.tagName();
             if (tag.contains(":")) {
-                boolean show = ("body".equals(tag) || ns == null || tag.startsWith(ns));
+                boolean show = (ns == null || tag.startsWith(ns) ||
+                        tag.startsWith("html:") || tag.startsWith("body:"));
                 if (display_hidden || show) {
                     String[] nstag = tag.split(":");
                     e.tagName(nstag[nstag.length > 1 ? 1 : 0]);
@@ -1593,6 +1619,17 @@ public class HtmlHelper {
                 } else {
                     e.remove();
                     Log.i("Removed tag=" + tag);
+                }
+            } else if (!"html".equals(tag) && !"body".equals(tag)) {
+                String xmlns = e.attr("xmlns").toLowerCase(Locale.ROOT);
+                if (!TextUtils.isEmpty(xmlns) && !xmlns.contains(W3NS)) {
+                    if (display_hidden) {
+                        String style = e.attr("style");
+                        e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
+                    } else {
+                        e.remove();
+                        Log.i("Removed tag=" + tag + " xmlns=" + xmlns);
+                    }
                 }
             }
         }
@@ -2149,7 +2186,7 @@ public class HtmlHelper {
 
     static void removeTrackingPixels(Context context, Document document) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean disconnect_images = prefs.getBoolean("disconnect_images", false);
+        boolean disconnect_images = (prefs.getBoolean("disconnect_images", false) && BuildConfig.DEBUG);
 
         Drawable d = context.getDrawable(R.drawable.twotone_my_location_24);
         d.setTint(Helper.resolveColor(context, R.attr.colorWarning));
@@ -3226,8 +3263,16 @@ public class HtmlHelper {
                         switch (tag) {
                             case "a":
                                 String href = element.attr("href");
-                                if (!TextUtils.isEmpty(href))
+                                if (!TextUtils.isEmpty(href)) {
+                                    if (false && BuildConfig.DEBUG) {
+                                        Uri uri = UriHelper.guessScheme(Uri.parse(href));
+                                        if (UriHelper.isHyperLink(uri))
+                                            ssb.append("\uD83D\uDD17"); // 🔗
+                                        // Unicode 6.0, supported since Android 4.1
+                                        // https://developer.android.com/guide/topics/resources/internationalization
+                                    }
                                     setSpan(ssb, new URLSpan(href), start, ssb.length());
+                                }
                                 break;
                             case "big":
                                 setSpan(ssb, new RelativeSizeSpan(FONT_LARGE), start, ssb.length());
@@ -3351,7 +3396,8 @@ public class HtmlHelper {
                                 Element parent = element.parent();
                                 while (parent != null) {
                                     if ("ol".equals(parent.tagName()) || "ul".equals(parent.tagName())) {
-                                        level++;
+                                        if (!"false".equals(parent.attr("x-list-level")))
+                                            level++;
                                         if (list == null)
                                             list = parent;
                                         if (TextUtils.isEmpty(ltype))
@@ -3394,7 +3440,7 @@ public class HtmlHelper {
 
                                 break;
                             case "mark":
-                                setSpan(ssb, new MarkSpan(), start, ssb.length());
+                                setSpan(ssb, new StyleHelper.MarkSpan(), start, ssb.length());
                                 break;
                             case "pre":
                             case "tt":
@@ -3582,6 +3628,7 @@ public class HtmlHelper {
                 .removeAttr("x-tracking")
                 .removeAttr("x-border")
                 .removeAttr("x-list-style")
+                .removeAttr("x-list-level")
                 .removeAttr("x-plain")
                 .remove("x-keep-line");
     }
@@ -3609,6 +3656,11 @@ public class HtmlHelper {
         String html = converter.toHtml(spanned, TO_HTML_PARAGRAPH_LINES_INDIVIDUAL);
 
         Document doc = JsoupEx.parse(html);
+
+        if (doc.head().select("meta[name=viewport]").first() == null)
+            doc.head().prependElement("meta")
+                    .attr("name", "viewport")
+                    .attr("content", "width=device-width, initial-scale=1.0");
 
         for (Element span : doc.select("span")) {
             if (span.attr("dir").equals("rtl")) {
@@ -3674,6 +3726,14 @@ public class HtmlHelper {
                 li.removeAttr("dir");
             }
             e.attr("dir", rtl > ltr ? "rtl" : "ltr");
+
+            Element parent = e.parent();
+            Element prev = e.previousElementSibling();
+            if (parent != null && !"li".equals(parent.tagName()) &&
+                    prev != null && "li".equals(prev.tagName())) {
+                e.remove();
+                prev.appendChild(e);
+            }
         }
 
         for (Element quote : doc.select("blockquote")) {

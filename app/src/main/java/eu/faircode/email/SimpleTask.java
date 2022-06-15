@@ -36,6 +36,7 @@ import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -155,15 +156,23 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
             public void onDestroy() {
                 EntityLog.log(context, EntityLog.Type.Debug, "Owner gone task=" + name);
                 destroyed = true;
+                onDestroyed(args);
                 owner.getLifecycle().removeObserver(this);
             }
         };
 
-        int themeId = FragmentDialogTheme.getTheme(context);
-        if (themedContext == null || SimpleTask.themeId != themeId) {
-            SimpleTask.themeId = themeId;
-            themedContext = new ContextThemeWrapper(context.getApplicationContext(), themeId);
-        }
+        Context tcontext;
+        if (context instanceof ActivityBase) {
+            int themeId = ((ActivityBase) context).getThemeId();
+            if (themeId == 0)
+                themeId = context.getApplicationInfo().theme;
+            if (SimpleTask.themedContext == null || SimpleTask.themeId != themeId) {
+                SimpleTask.themeId = themeId;
+                SimpleTask.themedContext = new ContextThemeWrapper(context.getApplicationContext(), themeId);
+            }
+            tcontext = SimpleTask.themedContext;
+        } else
+            tcontext = context.getApplicationContext();
 
         future = getExecutor(context).submit(new Runnable() {
             private Object data;
@@ -179,7 +188,7 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
                     if (log)
                         Log.i("Executing task=" + name);
                     long start = new Date().getTime();
-                    data = onExecute(themedContext, args);
+                    data = onExecute(tcontext, args);
                     elapsed = new Date().getTime() - start;
                     if (log)
                         Log.i("Executed task=" + name + " elapsed=" + elapsed + " ms");
@@ -218,6 +227,7 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
                                         state = owner.getLifecycle().getCurrentState();
                                         if (state.equals(Lifecycle.State.DESTROYED)) {
                                             Log.i("Destroyed task " + name);
+                                            onDestroyed(args);
                                             owner.getLifecycle().removeObserver(this);
                                             cleanup(context);
                                         } else if (state.isAtLeast(Lifecycle.State.RESUMED)) {
@@ -234,6 +244,25 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
                     }
 
                     private void deliver() {
+                        if ("androidx.fragment.app.FragmentViewLifecycleOwner".equals(owner.getClass().getName()))
+                            try {
+                                Field mFragment = owner.getClass().getDeclaredField("mFragment");
+                                mFragment.setAccessible(true);
+                                Fragment fragment = (Fragment) mFragment.get(owner);
+                                if (fragment != null &&
+                                        (fragment.getContext() == null || fragment.getActivity() == null)) {
+                                    // Since deliver is executed for resumed fragments only, this should never happen
+                                    Log.e("Fragment without activity" +
+                                            " task=" + name +
+                                            " context=" + (fragment.getContext() != null) +
+                                            " activity=" + (fragment.getActivity() != null) +
+                                            " fragment=" + fragment.getClass().getName() +
+                                            " lifecycle=" + owner.getLifecycle().getCurrentState());
+                                    return;
+                                }
+                            } catch (Throwable ex) {
+                                Log.w(ex);
+                            }
                         try {
                             onPostExecute(args);
                         } catch (Throwable ex) {
@@ -318,8 +347,12 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
 
         int executing = getCount();
         Log.i("Remaining tasks=" + executing + "/" + tasks.size());
-        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-        lbm.sendBroadcast(new Intent(ACTION_TASK_COUNT).putExtra("count", executing));
+        if (context == null)
+            Log.e("Context is null");
+        else {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+            lbm.sendBroadcast(new Intent(ACTION_TASK_COUNT).putExtra("count", executing));
+        }
     }
 
     protected void onPreExecute(Bundle args) {
@@ -353,6 +386,9 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     protected abstract void onException(Bundle args, Throwable ex);
 
     protected void onPostExecute(Bundle args) {
+    }
+
+    protected void onDestroyed(Bundle args) {
     }
 
     @Override

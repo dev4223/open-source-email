@@ -198,6 +198,8 @@ public class EntityMessage implements Serializable {
     @NonNull
     public Long stored = new Date().getTime();
     @NonNull
+    public Boolean recent = false;
+    @NonNull
     public Boolean seen = false;
     @NonNull
     public Boolean answered = false;
@@ -263,6 +265,22 @@ public class EntityMessage implements Serializable {
 
     boolean hasAlt() {
         return (this.plain_only != null && (this.plain_only & 0x80) != 0);
+    }
+
+    boolean fromSelf(List<TupleIdentityEx> identities) {
+        List<Address> senders = new ArrayList<>();
+        if (from != null)
+            senders.addAll(Arrays.asList(from));
+        if (reply != null)
+            senders.addAll(Arrays.asList(reply));
+
+        if (identities != null)
+            for (TupleIdentityEx identity : identities)
+                for (Address sender : senders)
+                    if (identity.self && identity.similarAddress(sender))
+                        return true;
+
+        return false;
     }
 
     boolean replySelf(List<TupleIdentityEx> identities, long account) {
@@ -337,11 +355,11 @@ public class EntityMessage implements Serializable {
     }
 
     String[] checkFromDomain(Context context) {
-        return MessageHelper.equalDomain(context, from, smtp_from);
+        return MessageHelper.equalRootDomain(context, from, smtp_from);
     }
 
     String[] checkReplyDomain(Context context) {
-        return MessageHelper.equalDomain(context, reply, from);
+        return MessageHelper.equalRootDomain(context, reply, from);
     }
 
     static String getSubject(Context context, String language, String subject, boolean forward) {
@@ -656,6 +674,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.sent, other.sent) &&
                     this.received.equals(other.received) &&
                     this.stored.equals(other.stored) &&
+                    this.recent.equals(other.recent) &&
                     this.seen.equals(other.seen) &&
                     this.answered.equals(other.answered) &&
                     this.flagged.equals(other.flagged) &&

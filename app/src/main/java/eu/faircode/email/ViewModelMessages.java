@@ -211,6 +211,16 @@ public class ViewModelMessages extends ViewModel {
         }
 
         owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            public void onPaused() {
+                Log.i("Paused model=" + viewType + " last=" + last);
+            }
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            public void onResumed() {
+                Log.i("Resumed model=" + viewType + " last=" + last);
+            }
+
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
                 Log.i("Destroy model=" + viewType);
@@ -475,6 +485,16 @@ public class ViewModelMessages extends ViewModel {
         }.execute(context, owner, new Bundle(), "model:ids");
     }
 
+    void cleanup() {
+        dump();
+        for (AdapterMessage.ViewType viewType : new ArrayList<>(models.keySet())) {
+            if (viewType != last && !models.get(viewType).list.hasObservers()) {
+                Log.i("Cleanup model viewType=" + viewType);
+                models.remove(viewType);
+            }
+        }
+    }
+
     private class Args {
         private long account;
         private String type;
@@ -605,8 +625,10 @@ public class ViewModelMessages extends ViewModel {
                 owner.getLifecycle().addObserver(new LifecycleObserver() {
                     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
                     public void onDestroyed() {
-                        boundary.destroy(state);
-                        boundary = null;
+                        if (boundary != null) {
+                            boundary.destroy(state);
+                            boundary = null;
+                        }
                         owner.getLifecycle().removeObserver(this);
                     }
                 });
