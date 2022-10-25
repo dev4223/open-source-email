@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
+import static android.app.Activity.RESULT_FIRST_USER;
 import static android.app.Activity.RESULT_OK;
 import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
@@ -97,6 +98,7 @@ import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -131,6 +133,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.view.MenuCompat;
 import androidx.core.view.MenuItemCompat;
@@ -247,7 +250,6 @@ import java.util.function.Consumer;
 import javax.mail.Address;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -257,7 +259,8 @@ import me.everything.android.ui.overscroll.IOverScrollUpdateListener;
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator;
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter;
 
-public class FragmentMessages extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class FragmentMessages extends FragmentBase
+        implements SharedPreferences.OnSharedPreferenceChangeListener, FragmentManager.OnBackStackChangedListener {
     private ViewGroup view;
     private SwipeRefreshLayoutEx swipeRefresh;
     private TextView tvAirplane;
@@ -339,6 +342,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private boolean dividers;
     private boolean category;
     private boolean date;
+    private boolean date_week;
     private boolean date_fixed;
     private boolean date_bold;
     private boolean threading;
@@ -428,9 +432,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static final int REQUEST_BUTTONS = 24;
     private static final int REQUEST_ALL_READ = 25;
     private static final int REQUEST_SAVE_SEARCH = 26;
-    private static final int REQUEST_DELETE_SEARCH = 27;
-    private static final int REQUEST_QUICK_ACTIONS = 28;
-    static final int REQUEST_BLOCK_SENDERS = 29;
+    private static final int REQUEST_QUICK_ACTIONS = 27;
+    static final int REQUEST_BLOCK_SENDERS = 28;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
@@ -443,7 +446,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             "time", "unread", "starred", "priority"
     ));
 
-    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "messages");
+    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "messages");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -480,6 +483,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         dividers = prefs.getBoolean("dividers", true);
         category = prefs.getBoolean("group_category", false);
         date = prefs.getBoolean("date", true);
+        date_week = prefs.getBoolean("date_week", false);
         date_fixed = (!date && prefs.getBoolean("date_fixed", false));
         date_bold = prefs.getBoolean("date_bold", false);
         threading = (prefs.getBoolean("threading", true) ||
@@ -519,17 +523,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             setTitle(server ? R.string.title_search_server : R.string.title_search_device);
         }
 
-        if (viewType != AdapterMessage.ViewType.THREAD && EntityFolder.ARCHIVE.equals(type))
+        if (viewType != AdapterMessage.ViewType.THREAD &&
+                (EntityFolder.ARCHIVE.equals(type) || viewType == AdapterMessage.ViewType.SEARCH))
             filter_archive = false;
 
-        if (viewType != AdapterMessage.ViewType.THREAD)
-            getParentFragmentManager().setFragmentResultListener("message.selected", this, new FragmentResultListener() {
-                @Override
-                public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
-                    long id = result.getLong("id", -1);
-                    iProperties.setValue("selected", id, true);
-                }
-            });
+        try {
+            FragmentManager fm = getParentFragmentManager();
+            if (viewType != AdapterMessage.ViewType.THREAD)
+                fm.setFragmentResultListener("message.selected", this, new FragmentResultListener() {
+                    @Override
+                    public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                        long id = result.getLong("id", -1);
+                        iProperties.setValue("selected", id, true);
+                    }
+                });
+            fm.addOnBackStackChangedListener(this);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     @Override
@@ -617,7 +628,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(android.provider.Settings.ACTION_AIRPLANE_MODE_SETTINGS)
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 v.getContext().startActivity(intent);
             }
         });
@@ -752,6 +763,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                      */
                     Log.w(ex);
                 }
+            }
+
+            @Override
+            public void onItemsAdded(@NonNull RecyclerView recyclerView, int positionStart, int itemCount) {
+                iProperties.layoutChanged();
+            }
+
+            @Override
+            public void onItemsRemoved(@NonNull RecyclerView recyclerView, int positionStart, int itemCount) {
+                iProperties.layoutChanged();
             }
         };
         rvMessage.setLayoutManager(llm);
@@ -928,8 +949,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     cal1.setTimeInMillis(message.received);
                     int year0 = cal0.get(Calendar.YEAR);
                     int year1 = cal1.get(Calendar.YEAR);
-                    int day0 = cal0.get(Calendar.DAY_OF_YEAR);
-                    int day1 = cal1.get(Calendar.DAY_OF_YEAR);
+                    int day0 = cal0.get(date_week ? Calendar.WEEK_OF_YEAR : Calendar.DAY_OF_YEAR);
+                    int day1 = cal1.get(date_week ? Calendar.WEEK_OF_YEAR : Calendar.DAY_OF_YEAR);
                     if (year0 == year1 && day0 == day1)
                         dh = false;
                 }
@@ -962,7 +983,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         vSeparator.setVisibility(View.GONE);
                     }
 
-                    tvDate.setText(getRelativeDate(message.received, parent.getContext()));
+                    tvDate.setText(date_week
+                            ? getWeek(message.received, parent.getContext())
+                            : getRelativeDate(message.received, parent.getContext()));
 
                     view.setContentDescription(tvDate.getText().toString());
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
@@ -998,23 +1021,95 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             DAY_IN_MILLIS, 0);
                 return (rtime == null ? "" : rtime.toString());
             }
+
+            @NonNull
+            String getWeek(long time, Context context) {
+                StringBuilder sb = new StringBuilder();
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(time);
+                sb.append(cal.get(Calendar.YEAR)).append("-W").append(cal.get(Calendar.WEEK_OF_YEAR));
+                cal.set(Calendar.DAY_OF_WEEK, 1);
+                sb.append(' ').append(Helper.getDateInstance(context).format(cal.getTimeInMillis()));
+                return sb.toString();
+            }
         };
         rvMessage.addItemDecoration(dateDecorator);
+
+        rvMessage.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            private final GestureDetector gestureDetector =
+                    new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+                        @Override
+                        public void onLongPress(@NonNull MotionEvent e) {
+                            if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                                return;
+
+                            int x = Math.round(e.getX());
+                            int y = Math.round(e.getY());
+
+                            Rect rect = new Rect();
+                            for (int i = 0; i < rvMessage.getChildCount(); i++) {
+                                View child = rvMessage.getChildAt(i);
+                                if (child == null)
+                                    continue;
+
+                                dateDecorator.getItemOffsets(rect, child, rvMessage, null);
+                                if (rect.height() == 0)
+                                    continue;
+
+                                rect.set(child.getLeft(), child.getTop() - rect.top, child.getRight(), child.getTop());
+                                if (!rect.contains(x, y))
+                                    continue;
+
+                                int pos = rvMessage.getChildAdapterPosition(child);
+                                if (pos == NO_POSITION)
+                                    continue;
+
+                                TupleMessageEx message = adapter.getItemAtPosition(pos);
+                                if (message == null)
+                                    continue;
+
+                                Calendar cal = Calendar.getInstance();
+                                cal.setTimeInMillis(message.received);
+                                cal.set(Calendar.HOUR_OF_DAY, 0);
+                                cal.set(Calendar.MINUTE, 0);
+                                cal.set(Calendar.SECOND, 0);
+                                cal.set(Calendar.MILLISECOND, 0);
+
+                                cal.add(Calendar.DATE, 1);
+                                long to = cal.getTimeInMillis();
+
+                                cal.add(Calendar.DATE, date_week ? -7 : -1);
+                                long from = cal.getTimeInMillis();
+
+                                onMenuSelect(from, to, true);
+                                return;
+                            }
+                        }
+                    });
+
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                gestureDetector.onTouchEvent(e);
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+            }
+        });
 
         rvMessage.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
                 if (dy != 0) {
-                    boolean down = (dy > 0 && rv.canScrollVertically(RecyclerView.FOCUS_DOWN));
+                    boolean down = (dy > 0 && rv.canScrollVertically(1));
                     if (scrolling != down) {
                         scrolling = down;
-                        if (!accessibility &&
-                                (viewType == AdapterMessage.ViewType.UNIFIED ||
-                                        viewType == AdapterMessage.ViewType.FOLDER))
-                            if (down)
-                                fabCompose.hide();
-                            else
-                                fabCompose.show();
+                        updateCompose();
                         updateExpanded();
                     }
                 }
@@ -1023,6 +1118,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
+        boolean large_buttons = prefs.getBoolean("large_buttons", false);
         boolean outbox = EntityFolder.OUTBOX.equals(type);
         boolean ascending = prefs.getBoolean(getSortOrder(getContext(), viewType, type), outbox);
         boolean filter_duplicates = prefs.getBoolean("filter_duplicates", true);
@@ -1033,7 +1129,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         adapter = new AdapterMessage(
                 this, type, found, searched, viewType,
-                compact, zoom, sort, ascending,
+                compact, zoom, large_buttons, sort, ascending,
                 filter_duplicates, filter_trash,
                 iProperties);
         if (viewType == AdapterMessage.ViewType.THREAD)
@@ -1263,11 +1359,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             private void onActionSnooze() {
+                Long time = null;
+                List<TupleMessageEx> list = adapter.getCurrentList();
+                if (list != null)
+                    for (TupleMessageEx message : list)
+                        if (message != null && message.ui_snoozed != null) {
+                            if (time == null || message.ui_snoozed < time || message.id.equals(id))
+                                time = message.ui_snoozed;
+                            if (message.id.equals(id))
+                                break;
+                        }
+
                 Bundle args = new Bundle();
                 args.putString("title", getString(R.string.title_snooze));
                 args.putLong("account", account);
                 args.putString("thread", thread);
                 args.putLong("id", id);
+                if (time != null)
+                    args.putLong("time", time);
                 args.putBoolean("finish", true);
 
                 FragmentDialogDuration fragment = new FragmentDialogDuration();
@@ -1427,10 +1536,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (result == null)
                     return;
 
-                if (result.accounts.size() == 1) {
-                    for (EntityAccount account : result.accounts.keySet())
-                        onActionMoveSelectionAccount(account.id, false, result.folders);
-                } else {
+                if (result.account != null)
+                    onActionMoveSelectionAccount(result.account.id, false, result.folders);
+                else {
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(v.getContext(), getViewLifecycleOwner(), ibMove);
 
                     int order = 0;
@@ -1558,6 +1666,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     private void searchAccount(long account) {
                         Bundle aargs = new Bundle();
+                        aargs.putInt("icon", R.drawable.twotone_search_24);
                         aargs.putString("title", getString(R.string.title_search_in));
                         aargs.putLong("account", account);
                         aargs.putLongArray("disabled", new long[]{});
@@ -1901,6 +2010,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 triggered = true;
 
                                 Bundle args = new Bundle();
+                                args.putInt("icon", R.drawable.twotone_drive_file_move_24);
                                 args.putString("title", getString(R.string.title_move_to_folder));
                                 args.putLong("account", account);
                                 args.putString("thread", thread);
@@ -1942,7 +2052,30 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     @Override
     public void onDestroy() {
+        try {
+            FragmentManager fm = getParentFragmentManager();
+            fm.removeOnBackStackChangedListener(this);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
         super.onDestroy();
+    }
+
+    @Override
+    public void onBackStackChanged() {
+        if (viewType == AdapterMessage.ViewType.THREAD)
+            return;
+
+        FragmentActivity activity = getActivity();
+        FragmentManager fm = getParentFragmentManager();
+        int count = fm.getBackStackEntryCount();
+        boolean split = (activity instanceof ActivityView &&
+                ((ActivityView) activity).isSplit() &&
+                count > 0 && "thread".equals(fm.getBackStackEntryAt(count - 1).getName()));
+        List<Long> ids = values.get("selected");
+        if (ids != null)
+            for (long id : ids)
+                iProperties.setValue("split", id, split);
     }
 
     private void scrollToVisibleItem(LinearLayoutManager llm, boolean bottom) {
@@ -2079,7 +2212,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private AdapterMessage.IProperties iProperties = new AdapterMessage.IProperties() {
         @Override
         public void setValue(String key, String value) {
-            kv.put(key, value);
+            if (value == null)
+                kv.remove(key);
+            else
+                kv.put(key, value);
         }
 
         @Override
@@ -2093,7 +2229,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             } else
                 values.get(name).remove(id);
 
-            if ("selected".equals(name) && enabled) {
+            if ("split".equals(name) || ("selected".equals(name) && enabled)) {
                 if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     return;
 
@@ -2103,7 +2239,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (pos != NO_POSITION)
                     changed.add(pos);
 
-                for (Long other : new ArrayList<>(values.get("selected")))
+                for (Long other : new ArrayList<>(values.get(name)))
                     if (!other.equals(id)) {
                         values.get(name).remove(other);
 
@@ -2118,6 +2254,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         try {
                             if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                                 return;
+                            if (rvMessage.isComputingLayout())
+                                Log.e("isComputingLayout");
                             for (Integer pos : changed)
                                 adapter.notifyItemChanged(pos);
                         } catch (Throwable ex) {
@@ -2126,11 +2264,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 });
             }
+        }
 
-            if ("headers".equals(name)) {
-                scrolling = false;
-                updateExpanded();
-            }
+        @Override
+        public String getValue(String key) {
+            return kv.get(key);
         }
 
         @Override
@@ -2166,6 +2304,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         try {
                             if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                                 return;
+                            if (rvMessage.isComputingLayout())
+                                Log.e("isComputingLayout");
                             adapter.notifyItemChanged(p);
                         } catch (Throwable ex) {
                             Log.e(ex);
@@ -2192,8 +2332,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 try {
                                     if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                                         return;
-                                    if (adapter != null)
-                                        adapter.notifyItemChanged(pos);
+                                    if (rvMessage.isComputingLayout())
+                                        Log.e("isComputingLayout");
+                                    adapter.notifyItemChanged(pos);
                                 } catch (Throwable ex) {
                                     Log.e(ex);
                                     /*
@@ -2210,9 +2351,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
             }
 
-            if (value)
-                scrolling = false;
-
+            scrolling = false;
             updateExpanded();
             if (value)
                 handleExpand(message.id);
@@ -2413,6 +2552,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         @Override
+        public void layoutChanged() {
+            rvMessage.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (scrolling &&
+                                rvMessage != null &&
+                                !rvMessage.canScrollVertically(-1)) {
+                            scrolling = false;
+                            updateCompose();
+                            updateExpanded();
+                        }
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                }
+            });
+        }
+
+        @Override
         public void refresh() {
             rvMessage.post(new Runnable() {
                 @Override
@@ -2420,6 +2579,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     try {
                         if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                             return;
+                        if (rvMessage.isComputingLayout())
+                            Log.e("isComputingLayout");
                         rvMessage.setItemViewCacheSize(0);
                         rvMessage.getRecycledViewPool().clear();
                         rvMessage.setItemViewCacheSize(ITEM_CACHE_SIZE);
@@ -2614,7 +2775,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (EntityMessage.SWIPE_ACTION_ASK.equals(action))
                 icon = R.drawable.twotone_help_24;
             else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
-                icon = (message.ui_seen ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24);
+                icon = (message.unseen > 0 ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24);
             else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
                 icon = (message.ui_flagged ? R.drawable.twotone_star_border_24 : R.drawable.baseline_star_24);
             else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
@@ -2638,7 +2799,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             else
                 icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
 
-            Drawable d = context.getDrawable(icon).mutate();
+            Drawable d = ContextCompat.getDrawable(context, icon).mutate();
             d.setTint(Helper.resolveColor(context, android.R.attr.textColorSecondary));
 
             int half = rect.width() / 2;
@@ -2691,89 +2852,106 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-            int pos = viewHolder.getAdapterPosition();
-            if (pos == NO_POSITION) {
-                adapter.notifyDataSetChanged();
-                return;
-            }
-
-            TupleMessageEx message = getMessage(pos);
-            if (message == null) {
-                adapter.notifyDataSetChanged();
-                return;
-            }
-
-            boolean expanded = iProperties.getValue("expanded", message.id);
-
-            if (expanded && swipe_reply) {
-                adapter.notifyItemChanged(pos);
-                onMenuReply(message, "reply", null);
-                return;
-            }
-
-            if (EntityFolder.OUTBOX.equals(message.folderType)) {
-                ActivityCompose.undoSend(message.id, getContext(), getViewLifecycleOwner(), getParentFragmentManager());
-                return;
-            }
-
-            TupleAccountSwipes swipes = accountSwipes.get(message.account);
-            if (swipes == null) {
-                adapter.notifyDataSetChanged();
-                return;
-            }
-
-            if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
-                if (swipes.swipe_right == null)
-                    swipes.swipe_right = EntityMessage.SWIPE_ACTION_SEEN;
-                if (swipes.swipe_left == null)
-                    swipes.swipe_left = EntityMessage.SWIPE_ACTION_DELETE;
-            }
-
-            Long action = (direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
-            String actionType = (direction == ItemTouchHelper.LEFT ? swipes.left_type : swipes.right_type);
-            if (action == null) {
-                adapter.notifyDataSetChanged();
-                return;
-            }
-
-            if (message.uid == null &&
-                    message.accountProtocol == EntityAccount.TYPE_IMAP &&
-                    EntityFolder.DRAFTS.equals(message.folderType) &&
-                    EntityFolder.TRASH.equals(actionType)) {
-                action = EntityMessage.SWIPE_ACTION_DELETE;
-                actionType = null;
-            }
-
-            Log.i("Swiped dir=" + direction + " message=" + message.id);
-
-            if (EntityMessage.SWIPE_ACTION_ASK.equals(action)) {
-                adapter.notifyItemChanged(pos);
-                onSwipeAsk(message, viewHolder);
-            } else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
-                onActionSeenSelection(!message.ui_seen, message.id, false);
-            else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
-                onActionFlagSelection(!message.ui_flagged, Color.TRANSPARENT, message.id, false);
-            else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
-                if (ActivityBilling.isPro(getContext()))
-                    onActionSnooze(message);
-                else {
-                    adapter.notifyItemChanged(pos);
-                    startActivity(new Intent(getContext(), ActivityBilling.class));
+            try {
+                int pos = viewHolder.getAdapterPosition();
+                if (pos == NO_POSITION) {
+                    redraw(NO_POSITION);
+                    return;
                 }
-            else if (EntityMessage.SWIPE_ACTION_HIDE.equals(action))
-                onActionHide(message);
-            else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action)) {
-                adapter.notifyItemChanged(pos);
-                onSwipeMove(message);
-            } else if (EntityMessage.SWIPE_ACTION_JUNK.equals(action)) {
-                adapter.notifyItemChanged(pos);
-                onSwipeJunk(message);
-            } else if (EntityMessage.SWIPE_ACTION_DELETE.equals(action) ||
-                    (action.equals(message.folder) && EntityFolder.TRASH.equals(message.folderType)) ||
-                    (EntityFolder.TRASH.equals(actionType) && EntityFolder.JUNK.equals(message.folderType)))
-                onSwipeDelete(message, pos);
-            else
-                swipeFolder(message, action);
+
+                TupleMessageEx message = getMessage(pos);
+                if (message == null) {
+                    redraw(NO_POSITION);
+                    return;
+                }
+
+                boolean expanded = iProperties.getValue("expanded", message.id);
+
+                if (expanded && swipe_reply) {
+                    redraw(pos);
+                    onMenuReply(message, "reply", null);
+                    return;
+                }
+
+                if (EntityFolder.OUTBOX.equals(message.folderType)) {
+                    ActivityCompose.undoSend(message.id, getContext(), getViewLifecycleOwner(), getParentFragmentManager());
+                    return;
+                }
+
+                TupleAccountSwipes swipes = accountSwipes.get(message.account);
+                if (swipes == null) {
+                    redraw(NO_POSITION);
+                    return;
+                }
+
+                if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
+                    if (swipes.swipe_right == null)
+                        swipes.swipe_right = EntityMessage.SWIPE_ACTION_SEEN;
+                    if (swipes.swipe_left == null)
+                        swipes.swipe_left = EntityMessage.SWIPE_ACTION_DELETE;
+                }
+
+                Long action = (direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
+                String actionType = (direction == ItemTouchHelper.LEFT ? swipes.left_type : swipes.right_type);
+                if (action == null) {
+                    redraw(NO_POSITION);
+                    return;
+                }
+
+                if (message.uid == null &&
+                        message.accountProtocol == EntityAccount.TYPE_IMAP &&
+                        EntityFolder.DRAFTS.equals(message.folderType) &&
+                        EntityFolder.TRASH.equals(actionType)) {
+                    action = EntityMessage.SWIPE_ACTION_DELETE;
+                    actionType = null;
+                }
+
+                Log.i("Swiped dir=" + direction +
+                        " action=" + action +
+                        " type=" + actionType +
+                        " message=" + message.id +
+                        " folder=" + message.folderType);
+
+                if (EntityMessage.SWIPE_ACTION_ASK.equals(action)) {
+                    redraw(pos);
+                    onSwipeAsk(message, viewHolder);
+                } else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
+                    onActionSeenSelection(message.unseen > 0, message.id, false);
+                else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
+                    onActionFlagSelection(!message.ui_flagged, Color.TRANSPARENT, message.id, false);
+                else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
+                    if (ActivityBilling.isPro(getContext()))
+                        onActionSnooze(message);
+                    else {
+                        redraw(pos);
+                        startActivity(new Intent(getContext(), ActivityBilling.class));
+                    }
+                else if (EntityMessage.SWIPE_ACTION_HIDE.equals(action))
+                    onActionHide(message);
+                else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action)) {
+                    redraw(pos);
+                    onSwipeMove(message);
+                } else if (EntityMessage.SWIPE_ACTION_JUNK.equals(action)) {
+                    redraw(pos);
+                    onSwipeJunk(message);
+                } else if (EntityMessage.SWIPE_ACTION_DELETE.equals(action) ||
+                        (action.equals(message.folder) && EntityFolder.TRASH.equals(message.folderType)) ||
+                        (EntityFolder.TRASH.equals(actionType) && EntityFolder.JUNK.equals(message.folderType)))
+                    onSwipeDelete(message, pos);
+                else
+                    swipeFolder(message, action);
+            } catch (Throwable ex) {
+                Log.e(ex);
+                /*
+                    java.lang.IllegalStateException: Cannot call this method while RecyclerView is computing a layout or scrolling ...
+                            at androidx.recyclerview.widget.RecyclerView.assertNotInLayoutOrScroll(RecyclerView:3185)
+                            at androidx.recyclerview.widget.RecyclerView$RecyclerViewDataObserver.onItemRangeChanged(RecyclerView:5712)
+                            at androidx.recyclerview.widget.RecyclerView$AdapterDataObservable.notifyItemRangeChanged(RecyclerView:12674)
+                            at androidx.recyclerview.widget.RecyclerView$AdapterDataObservable.notifyItemRangeChanged(RecyclerView:12664)
+                            at androidx.recyclerview.widget.RecyclerView$Adapter.notifyItemChanged(RecyclerView:7599)
+                            at eu.faircode.email.FragmentMessages$60.onSwiped(FragmentMessages:2818)
+                 */
+            }
         }
 
         private TupleMessageEx getMessage(int pos) {
@@ -2797,6 +2975,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return null;
 
             return message;
+        }
+
+        private void redraw(int pos) {
+            rvMessage.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                            return;
+                        if (rvMessage.isComputingLayout())
+                            Log.e("isComputingLayout");
+                        if (pos == NO_POSITION)
+                            adapter.notifyDataSetChanged();
+                        else
+                            adapter.notifyItemChanged(pos);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                }
+            });
         }
 
         private void onSwipeAsk(final @NonNull TupleMessageEx message, @NonNull RecyclerView.ViewHolder viewHolder) {
@@ -2876,6 +3074,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 args.putLong("account", message.account);
                                 args.putString("thread", message.thread);
                                 args.putLong("id", message.id);
+                                if (message.ui_snoozed != null)
+                                    args.putLong("time", message.ui_snoozed);
                                 args.putBoolean("finish", false);
 
                                 FragmentDialogDuration fragment = new FragmentDialogDuration();
@@ -2908,6 +3108,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         private void onSwipeMove(final @NonNull TupleMessageEx message) {
             Bundle args = new Bundle();
+            args.putInt("icon", R.drawable.twotone_drive_file_move_24);
             args.putString("title", getString(R.string.title_move_to_folder));
             args.putLong("account", message.account);
             args.putLongArray("disabled", new long[]{message.folder});
@@ -2975,7 +3176,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             if (pos != NO_POSITION)
-                adapter.notifyItemChanged(pos);
+                redraw(pos);
 
             FragmentDialogAsk ask = new FragmentDialogAsk();
             ask.setArguments(args);
@@ -3133,10 +3334,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (context == null)
                     return;
 
-                final Address[] to =
-                        message.replySelf(data.identities, message.account)
-                                ? message.to
-                                : (message.reply == null || message.reply.length == 0 ? message.from : message.reply);
+                boolean replySelf = message.replySelf(data.identities, message.account);
+                final Address[] to = replySelf
+                        ? message.to
+                        : (message.reply == null || message.reply.length == 0 ? message.from : message.reply);
 
                 Address[] recipients = message.getAllRecipients(data.identities, message.account);
 
@@ -3182,9 +3383,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 popupMenu.getMenu().findItem(R.id.menu_resend).setEnabled(canResend);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !ActivityBilling.isPro(context));
 
-                popupMenu.getMenu().findItem(R.id.menu_reply_to_sender).setEnabled(message.content);
+                popupMenu.getMenu().findItem(R.id.menu_reply_to_sender)
+                        .setTitle(getString(replySelf ? R.string.title_reply_to_recipient : R.string.title_reply_to_sender))
+                        .setEnabled(message.content);
+
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(message.content);
+                popupMenu.getMenu().findItem(R.id.menu_forward_raw)
+                        .setEnabled(message.uid != null)
+                        .setVisible(Boolean.TRUE.equals(message.raw) || message.accountProtocol == EntityAccount.TYPE_IMAP);
                 popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setEnabled(message.content);
 
@@ -3243,6 +3450,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         } else if (itemId == R.id.menu_forward) {
                             onMenuReply(message, "forward");
                             return true;
+                        } else if (itemId == R.id.menu_forward_raw) {
+                            onActionRaw(message.id);
+                            return true;
                         } else if (itemId == R.id.menu_resend) {
                             onMenuResend(message);
                             return true;
@@ -3274,7 +3484,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onMenuReply(TupleMessageEx message, String action, CharSequence selected) {
-        Intent reply = new Intent(getContext(), ActivityCompose.class)
+        final Context context = getContext();
+        if (context == null)
+            return;
+        Intent reply = new Intent(context, ActivityCompose.class)
                 .putExtra("action", action)
                 .putExtra("reference", message.id)
                 .putExtra("selected", selected);
@@ -3555,7 +3768,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             onActionSetImportanceSelection(EntityMessage.PRIORITIY_HIGH, false);
                             return true;
                         } else if (itemId == R.string.title_raw_send) {
-                            onActionRaw();
+                            onActionRaw(null);
                             return true;
                         } else if (itemId == R.string.title_folder_inbox) {
                             onActionMoveSelection(EntityFolder.INBOX, false);
@@ -3881,12 +4094,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "messages:set:importance");
     }
 
-    private void onActionRaw() {
+    private void onActionRaw(Long id) {
         Bundle args = new Bundle();
-        args.putLongArray("ids", getSelection());
+        args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
         args.putBoolean("threads", false);
 
-        if (selectionTracker != null)
+        if (id == null && selectionTracker != null)
             selectionTracker.clearSelection();
 
         FragmentDialogForwardRaw ask = new FragmentDialogForwardRaw();
@@ -4055,6 +4268,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void onActionMoveSelectionAccount(long account, boolean copy, List<Long> disabled) {
         Bundle args = new Bundle();
+        args.putInt("icon", copy ? R.drawable.twotone_file_copy_24 : R.drawable.twotone_drive_file_move_24);
         args.putString("title", getString(copy ? R.string.title_copy_to : R.string.title_move_to_folder));
         args.putLong("account", account);
         args.putBoolean("copy", copy);
@@ -4432,7 +4646,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 positions.remove(id);
                                 attachments.remove(id);
                             }
-                            updateExpanded();
                         }
                     }
                 });
@@ -4503,12 +4716,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         // Restart spinner
         swipeRefresh.resetRefreshing();
 
-        if (!checkDoze())
-            if (!checkReporting())
-                if (!checkReview())
-                    if (!checkFingerprint())
-                        if (!checkGmail())
-                            checkOutlook();
+        if (!checkRedmiNote())
+            if (!checkDoze())
+                if (!checkReporting())
+                    if (!checkReview())
+                        if (!checkFingerprint())
+                            if (!checkGmail())
+                                checkOutlook();
 
         prefs.registerOnSharedPreferenceChangeListener(this);
         onSharedPreferenceChanged(prefs, "pro");
@@ -4616,6 +4830,30 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private void updateAirplaneMode(boolean on) {
         on = on && !ConnectionHelper.getNetworkState(getContext()).isConnected();
         grpAirplane.setVisibility(on ? View.VISIBLE : View.GONE);
+    }
+
+    private boolean checkRedmiNote() {
+        if (!Helper.isRedmiNote())
+            return false;
+
+        final Context context = getContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean redmi_note = prefs.getBoolean("redmi_note", false);
+        if (!redmi_note)
+            return false;
+
+        final Snackbar snackbar = Snackbar.make(view, R.string.app_data_loss, Snackbar.LENGTH_INDEFINITE)
+                .setGestureInsetBottomIgnored(true);
+        snackbar.setAction(R.string.title_info, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                prefs.edit().putBoolean("redmi_note", false).apply();
+                Helper.view(v.getContext(), Uri.parse("https://github.com/M66B/FairEmail/blob/master/FAQ.md#redmi"), false);
+            }
+        });
+        snackbar.show();
+
+        return true;
     }
 
     private boolean checkDoze() {
@@ -4772,6 +5010,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         cal.set(Calendar.MONTH, Calendar.MAY);
         cal.set(Calendar.YEAR, 2022);
 
+        long now = new Date().getTime();
+        if (now < cal.getTimeInMillis() - 30 * 24 * 3600 * 1000L)
+            return false; // Not yet
+
         if (Helper.getInstallTime(context) > cal.getTimeInMillis()) {
             prefs.edit().putBoolean("gmail_checked", true).apply();
             return false;
@@ -4779,7 +5021,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         cal.add(Calendar.MONTH, 2);
 
-        long now = new Date().getTime();
         if (now > cal.getTimeInMillis()) {
             prefs.edit().putBoolean("gmail_checked", true).apply();
             return false;
@@ -4841,9 +5082,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private boolean checkOutlook() {
-        if (!BuildConfig.DEBUG)
-            return false;
-
         final Context context = getContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         if (prefs.getBoolean("outlook_checked", false))
@@ -4858,6 +5096,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         cal.set(Calendar.MONTH, Calendar.OCTOBER);
         cal.set(Calendar.YEAR, 2022);
 
+        long now = new Date().getTime();
+        if (now < cal.getTimeInMillis() - 30 * 24 * 3600 * 1000L)
+            return false; // Not yet
+
         if (Helper.getInstallTime(context) > cal.getTimeInMillis()) {
             prefs.edit().putBoolean("outlook_checked", true).apply();
             return false;
@@ -4865,7 +5107,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         cal.add(Calendar.MONTH, 2);
 
-        long now = new Date().getTime();
         if (now > cal.getTimeInMillis()) {
             prefs.edit().putBoolean("outlook_checked", true).apply();
             return false;
@@ -4932,223 +5173,235 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_messages, menu);
+        try {
+            inflater.inflate(R.menu.menu_messages, menu);
 
-        final Context context = getContext();
-        PopupMenuLifecycle.insertIcons(context, menu, false);
+            final Context context = getContext();
+            PopupMenuLifecycle.insertIcons(context, menu, false);
 
-        LayoutInflater infl = LayoutInflater.from(context);
-        ImageButton ib = (ImageButton) infl.inflate(R.layout.action_button, null);
-        ib.setId(View.generateViewId());
-        ib.setImageResource(R.drawable.twotone_folder_24);
-        ib.setContentDescription(getString(R.string.title_legend_section_folders));
-        ib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onMenuFolders(primary);
-            }
-        });
-        ib.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                FragmentDialogSelectAccount fragment = new FragmentDialogSelectAccount();
-                fragment.setArguments(new Bundle());
-                fragment.setTargetFragment(FragmentMessages.this, REQUEST_ACCOUNT);
-                fragment.show(getParentFragmentManager(), "messages:accounts");
-                return true;
-            }
-        });
-        menu.findItem(R.id.menu_folders).setActionView(ib);
+            LayoutInflater infl = LayoutInflater.from(context);
+            ImageButton ib = (ImageButton) infl.inflate(R.layout.action_button, null);
+            ib.setId(View.generateViewId());
+            ib.setImageResource(R.drawable.twotone_folder_24);
+            ib.setContentDescription(getString(R.string.title_legend_section_folders));
+            ib.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onMenuFolders(primary);
+                }
+            });
+            ib.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    FragmentDialogSelectAccount fragment = new FragmentDialogSelectAccount();
+                    fragment.setArguments(new Bundle());
+                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_ACCOUNT);
+                    fragment.show(getParentFragmentManager(), "messages:accounts");
+                    return true;
+                }
+            });
+            menu.findItem(R.id.menu_folders).setActionView(ib);
 
-        MenuCompat.setGroupDividerEnabled(menu, true);
+            MenuCompat.setGroupDividerEnabled(menu, true);
 
-        super.onCreateOptionsMenu(menu, inflater);
+            super.onCreateOptionsMenu(menu, inflater);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        boolean drafts = EntityFolder.DRAFTS.equals(type);
-        boolean outbox = EntityFolder.OUTBOX.equals(type);
-        boolean sent = EntityFolder.SENT.equals(type);
+        try {
+            boolean drafts = EntityFolder.DRAFTS.equals(type);
+            boolean outbox = EntityFolder.OUTBOX.equals(type);
+            boolean sent = EntityFolder.SENT.equals(type);
 
-        final Context context = getContext();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String sort = prefs.getString(getSort(context, viewType, type), "time");
-        boolean ascending = prefs.getBoolean(getSortOrder(context, viewType, type), outbox);
-        boolean filter_seen = prefs.getBoolean(getFilter(context, "seen", viewType, type), false);
-        boolean filter_unflagged = prefs.getBoolean(getFilter(context, "unflagged", viewType, type), false);
-        boolean filter_unknown = prefs.getBoolean(getFilter(context, "unknown", viewType, type), false);
-        boolean filter_snoozed = prefs.getBoolean(getFilter(context, "snoozed", viewType, type), true);
-        boolean filter_deleted = prefs.getBoolean(getFilter(context, "deleted", viewType, type), false);
-        boolean filter_duplicates = prefs.getBoolean("filter_duplicates", true);
-        boolean filter_trash = prefs.getBoolean("filter_trash", false);
-        boolean language_detection = prefs.getBoolean("language_detection", false);
-        String filter_language = prefs.getString("filter_language", null);
-        boolean perform_expunge = prefs.getBoolean("perform_expunge", true);
-        boolean compact = prefs.getBoolean("compact", false);
-        boolean confirm_links = prefs.getBoolean("confirm_links", true);
-        int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
-        int padding = prefs.getInt("view_padding", compact || !cards ? 0 : 1);
-        boolean quick_filter = prefs.getBoolean("quick_filter", false);
+            final Context context = getContext();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String sort = prefs.getString(getSort(context, viewType, type), "time");
+            boolean ascending = prefs.getBoolean(getSortOrder(context, viewType, type), outbox);
+            boolean filter_seen = prefs.getBoolean(getFilter(context, "seen", viewType, type), false);
+            boolean filter_unflagged = prefs.getBoolean(getFilter(context, "unflagged", viewType, type), false);
+            boolean filter_unknown = prefs.getBoolean(getFilter(context, "unknown", viewType, type), false);
+            boolean filter_snoozed = prefs.getBoolean(getFilter(context, "snoozed", viewType, type), true);
+            boolean filter_deleted = prefs.getBoolean(getFilter(context, "deleted", viewType, type), false);
+            boolean filter_duplicates = prefs.getBoolean("filter_duplicates", true);
+            boolean filter_trash = prefs.getBoolean("filter_trash", false);
+            boolean language_detection = prefs.getBoolean("language_detection", false);
+            String filter_language = prefs.getString("filter_language", null);
+            boolean perform_expunge = prefs.getBoolean("perform_expunge", true);
+            boolean large_buttons = prefs.getBoolean("large_buttons", false);
+            boolean compact = prefs.getBoolean("compact", false);
+            boolean confirm_links = prefs.getBoolean("confirm_links", true);
+            int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
+            int padding = prefs.getInt("view_padding", compact || !cards ? 0 : 1);
+            boolean quick_filter = prefs.getBoolean("quick_filter", false);
 
-        boolean folder =
-                (viewType == AdapterMessage.ViewType.UNIFIED ||
-                        (viewType == AdapterMessage.ViewType.FOLDER && !outbox));
+            boolean folder =
+                    (viewType == AdapterMessage.ViewType.UNIFIED ||
+                            (viewType == AdapterMessage.ViewType.FOLDER && !outbox));
 
-        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown ||
-                (language_detection && !TextUtils.isEmpty(filter_language)));
-        int filterColor = Helper.resolveColor(context, R.attr.colorAccent);
-        float filterLighten = 0.7f - (float) ColorUtils.calculateLuminance(filterColor);
-        if (filterLighten > 0)
-            filterColor = ColorUtils.blendARGB(filterColor, Color.WHITE, filterLighten);
-        MenuItem menuFilter = menu.findItem(R.id.menu_filter);
-        menuFilter.setShowAsAction(folder && filter_active
-                ? MenuItem.SHOW_AS_ACTION_ALWAYS
-                : MenuItem.SHOW_AS_ACTION_NEVER);
-        MenuItemCompat.setIconTintList(menuFilter, folder && filter_active
-                ? ColorStateList.valueOf(filterColor) : null);
-        menuFilter.setIcon(folder && filter_active ? R.drawable.twotone_filter_alt_24 : R.drawable.twotone_filter_list_24);
+            boolean filter_active = (filter_seen || filter_unflagged || filter_unknown ||
+                    (language_detection && !TextUtils.isEmpty(filter_language)));
+            int filterColor = Helper.resolveColor(context, R.attr.colorAccent);
+            float filterLighten = 0.7f - (float) ColorUtils.calculateLuminance(filterColor);
+            if (filterLighten > 0)
+                filterColor = ColorUtils.blendARGB(filterColor, Color.WHITE, filterLighten);
+            MenuItem menuFilter = menu.findItem(R.id.menu_filter);
+            menuFilter.setShowAsAction(folder && filter_active
+                    ? MenuItem.SHOW_AS_ACTION_ALWAYS
+                    : MenuItem.SHOW_AS_ACTION_NEVER);
+            MenuItemCompat.setIconTintList(menuFilter, folder && filter_active
+                    ? ColorStateList.valueOf(filterColor) : null);
+            menuFilter.setIcon(folder && filter_active ? R.drawable.twotone_filter_alt_24 : R.drawable.twotone_filter_list_24);
 
-        MenuItem menuSearch = menu.findItem(R.id.menu_search);
-        menuSearch.setVisible(folder);
+            MenuItem menuSearch = menu.findItem(R.id.menu_search);
+            menuSearch.setVisible(folder);
 
-        menu.findItem(R.id.menu_save_search).setVisible(
-                viewType == AdapterMessage.ViewType.SEARCH &&
-                        criteria != null && criteria.id < 0);
-        menu.findItem(R.id.menu_delete_search).setVisible(
-                viewType == AdapterMessage.ViewType.SEARCH &&
-                        criteria != null && criteria.id >= 0);
+            menu.findItem(R.id.menu_save_search).setVisible(
+                    viewType == AdapterMessage.ViewType.SEARCH &&
+                            criteria != null && criteria.id == null);
+            menu.findItem(R.id.menu_edit_search).setVisible(
+                    viewType == AdapterMessage.ViewType.SEARCH &&
+                            criteria != null && criteria.id != null);
 
-        menu.findItem(R.id.menu_folders).setVisible(
-                viewType == AdapterMessage.ViewType.UNIFIED &&
-                        type == null && primary >= 0);
-        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
-        ib.setImageResource(connected
-                ? R.drawable.twotone_folder_special_24 : R.drawable.twotone_folder_24);
+            menu.findItem(R.id.menu_folders).setVisible(
+                    viewType == AdapterMessage.ViewType.UNIFIED &&
+                            type == null && primary >= 0);
+            ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
+            ib.setImageResource(connected
+                    ? R.drawable.twotone_folder_special_24 : R.drawable.twotone_folder_24);
 
-        menu.findItem(R.id.menu_sort_on).setVisible(viewType != AdapterMessage.ViewType.SEARCH);
+            menu.findItem(R.id.menu_sort_on).setVisible(viewType != AdapterMessage.ViewType.SEARCH);
 
-        if (viewType == AdapterMessage.ViewType.THREAD) {
-            menu.findItem(R.id.menu_sort_on_time).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_unread).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_priority).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_starred).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_sender).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_subject).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_size).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_attachments).setVisible(false);
-            menu.findItem(R.id.menu_sort_on_snoozed).setVisible(false);
+            if (viewType == AdapterMessage.ViewType.THREAD) {
+                menu.findItem(R.id.menu_sort_on_time).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_unread).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_priority).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_starred).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_sender).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_subject).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_size).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_attachments).setVisible(false);
+                menu.findItem(R.id.menu_sort_on_snoozed).setVisible(false);
+            }
+
+            boolean unselected = (selectionTracker == null || !selectionTracker.hasSelection());
+            menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) && folder && unselected);
+            menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) && folder && unselected);
+
+            if ("time".equals(sort))
+                menu.findItem(R.id.menu_sort_on_time).setChecked(true);
+            else if ("unread".equals(sort))
+                menu.findItem(R.id.menu_sort_on_unread).setChecked(true);
+            else if ("starred".equals(sort))
+                menu.findItem(R.id.menu_sort_on_starred).setChecked(true);
+            else if ("priority".equals(sort))
+                menu.findItem(R.id.menu_sort_on_priority).setChecked(true);
+            else if ("sender".equals(sort))
+                menu.findItem(R.id.menu_sort_on_sender).setChecked(true);
+            else if ("subject".equals(sort))
+                menu.findItem(R.id.menu_sort_on_subject).setChecked(true);
+            else if ("size".equals(sort))
+                menu.findItem(R.id.menu_sort_on_size).setChecked(true);
+            else if ("attachments".equals(sort))
+                menu.findItem(R.id.menu_sort_on_attachments).setChecked(true);
+            else if ("snoozed".equals(sort))
+                menu.findItem(R.id.menu_sort_on_snoozed).setChecked(true);
+            menu.findItem(R.id.menu_ascending).setChecked(ascending);
+
+            menu.findItem(R.id.menu_filter).setVisible(viewType != AdapterMessage.ViewType.SEARCH && !outbox);
+            menu.findItem(R.id.menu_filter_seen).setVisible(folder);
+            menu.findItem(R.id.menu_filter_unflagged).setVisible(folder);
+            menu.findItem(R.id.menu_filter_unknown).setVisible(folder && !drafts && !sent);
+            menu.findItem(R.id.menu_filter_snoozed).setVisible(folder && !drafts);
+            menu.findItem(R.id.menu_filter_deleted).setVisible(folder && !perform_expunge);
+            menu.findItem(R.id.menu_filter_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
+            menu.findItem(R.id.menu_filter_trash).setVisible(viewType == AdapterMessage.ViewType.THREAD);
+
+            menu.findItem(R.id.menu_filter_seen).setChecked(filter_seen);
+            menu.findItem(R.id.menu_filter_unflagged).setChecked(filter_unflagged);
+            menu.findItem(R.id.menu_filter_unknown).setChecked(filter_unknown);
+            menu.findItem(R.id.menu_filter_snoozed).setChecked(filter_snoozed);
+            menu.findItem(R.id.menu_filter_deleted).setChecked(filter_deleted);
+            menu.findItem(R.id.menu_filter_language).setVisible(language_detection && folder);
+            menu.findItem(R.id.menu_filter_duplicates).setChecked(filter_duplicates);
+            menu.findItem(R.id.menu_filter_trash).setChecked(filter_trash);
+
+            SpannableStringBuilder ssbZoom = new SpannableStringBuilder(getString(R.string.title_zoom));
+            ssbZoom.append(' ');
+            for (int i = 0; i <= zoom; i++)
+                ssbZoom.append('+');
+
+            SpannableStringBuilder ssbPadding = new SpannableStringBuilder(getString(R.string.title_padding));
+            ssbPadding.append(' ');
+            for (int i = 0; i <= padding; i++)
+                ssbPadding.append('+');
+
+            menu.findItem(R.id.menu_zoom).setTitle(ssbZoom);
+            PopupMenuLifecycle.insertIcon(context, menu.findItem(R.id.menu_zoom), false);
+
+            menu.findItem(R.id.menu_padding).setTitle(ssbPadding);
+            PopupMenuLifecycle.insertIcon(context, menu.findItem(R.id.menu_padding), false);
+
+            menu.findItem(R.id.menu_large_buttons)
+                    .setChecked(large_buttons)
+                    .setVisible(viewType == AdapterMessage.ViewType.THREAD);
+
+            menu.findItem(R.id.menu_compact).setChecked(compact);
+            menu.findItem(R.id.menu_theme).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
+
+            menu.findItem(R.id.menu_confirm_links)
+                    .setChecked(confirm_links)
+                    .setVisible(viewType == AdapterMessage.ViewType.THREAD);
+
+            menu.findItem(R.id.menu_select_all).setVisible(folder);
+            menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
+            menu.findItem(R.id.menu_mark_all_read).setVisible(folder);
+
+            menu.findItem(R.id.menu_view_thread).setVisible(viewType == AdapterMessage.ViewType.THREAD && !threading);
+
+            MenuItem menuSync = menu.findItem(R.id.menu_sync);
+            if (lastSync == null)
+                menuSync.setVisible(false);
+            else {
+                CharSequence title = DateUtils.getRelativeTimeSpanString(
+                        lastSync,
+                        new Date().getTime(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                        DateUtils.FORMAT_ABBREV_RELATIVE);
+                menuSync.setTitle(title)
+                        .setVisible(true);
+                PopupMenuLifecycle.insertIcon(context, menuSync, false);
+            }
+
+            menu.findItem(R.id.menu_sync_more).setVisible(folder);
+            menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
+            menu.findItem(R.id.menu_force_send).setVisible(outbox);
+
+            menu.findItem(R.id.menu_edit_properties).setVisible(viewType == AdapterMessage.ViewType.FOLDER && !outbox);
+
+            // In some cases onPrepareOptionsMenu can be called before onCreateView
+            if (ibSeen == null)
+                ibSeen = view.findViewById(R.id.ibSeen);
+            if (ibUnflagged == null)
+                ibUnflagged = view.findViewById(R.id.ibUnflagged);
+            if (ibSnoozed == null)
+                ibSnoozed = view.findViewById(R.id.ibSnoozed);
+
+            ibSeen.setImageResource(filter_seen ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24);
+            ibUnflagged.setImageResource(filter_unflagged ? R.drawable.twotone_star_border_24 : R.drawable.baseline_star_24);
+            ibSnoozed.setImageResource(filter_snoozed ? R.drawable.twotone_visibility_off_24 : R.drawable.twotone_visibility_24);
+
+            ibSeen.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
+            ibUnflagged.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
+            ibSnoozed.setVisibility(quick_filter && folder && !drafts ? View.VISIBLE : View.GONE);
+
+            super.onPrepareOptionsMenu(menu);
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
-
-        boolean unselected = (selectionTracker == null || !selectionTracker.hasSelection());
-        menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) && folder && unselected);
-        menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) && folder && unselected);
-
-        if ("time".equals(sort))
-            menu.findItem(R.id.menu_sort_on_time).setChecked(true);
-        else if ("unread".equals(sort))
-            menu.findItem(R.id.menu_sort_on_unread).setChecked(true);
-        else if ("starred".equals(sort))
-            menu.findItem(R.id.menu_sort_on_starred).setChecked(true);
-        else if ("priority".equals(sort))
-            menu.findItem(R.id.menu_sort_on_priority).setChecked(true);
-        else if ("sender".equals(sort))
-            menu.findItem(R.id.menu_sort_on_sender).setChecked(true);
-        else if ("subject".equals(sort))
-            menu.findItem(R.id.menu_sort_on_subject).setChecked(true);
-        else if ("size".equals(sort))
-            menu.findItem(R.id.menu_sort_on_size).setChecked(true);
-        else if ("attachments".equals(sort))
-            menu.findItem(R.id.menu_sort_on_attachments).setChecked(true);
-        else if ("snoozed".equals(sort))
-            menu.findItem(R.id.menu_sort_on_snoozed).setChecked(true);
-        menu.findItem(R.id.menu_ascending).setChecked(ascending);
-
-        menu.findItem(R.id.menu_filter).setVisible(viewType != AdapterMessage.ViewType.SEARCH && !outbox);
-        menu.findItem(R.id.menu_filter_seen).setVisible(folder);
-        menu.findItem(R.id.menu_filter_unflagged).setVisible(folder);
-        menu.findItem(R.id.menu_filter_unknown).setVisible(folder && !drafts && !sent);
-        menu.findItem(R.id.menu_filter_snoozed).setVisible(folder && !drafts);
-        menu.findItem(R.id.menu_filter_deleted).setVisible(folder && !perform_expunge);
-        menu.findItem(R.id.menu_filter_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
-        menu.findItem(R.id.menu_filter_trash).setVisible(viewType == AdapterMessage.ViewType.THREAD);
-
-        menu.findItem(R.id.menu_filter_seen).setChecked(filter_seen);
-        menu.findItem(R.id.menu_filter_unflagged).setChecked(filter_unflagged);
-        menu.findItem(R.id.menu_filter_unknown).setChecked(filter_unknown);
-        menu.findItem(R.id.menu_filter_snoozed).setChecked(filter_snoozed);
-        menu.findItem(R.id.menu_filter_deleted).setChecked(filter_deleted);
-        menu.findItem(R.id.menu_filter_language).setVisible(language_detection && folder);
-        menu.findItem(R.id.menu_filter_duplicates).setChecked(filter_duplicates);
-        menu.findItem(R.id.menu_filter_trash).setChecked(filter_trash);
-
-        SpannableStringBuilder ssbZoom = new SpannableStringBuilder(getString(R.string.title_zoom));
-        ssbZoom.append(' ');
-        for (int i = 0; i <= zoom; i++)
-            ssbZoom.append('+');
-
-        SpannableStringBuilder ssbPadding = new SpannableStringBuilder(getString(R.string.title_padding));
-        ssbPadding.append(' ');
-        for (int i = 0; i <= padding; i++)
-            ssbPadding.append('+');
-
-        menu.findItem(R.id.menu_compact).setChecked(compact);
-
-        menu.findItem(R.id.menu_zoom).setTitle(ssbZoom);
-        PopupMenuLifecycle.insertIcon(context, menu.findItem(R.id.menu_zoom), false);
-
-        menu.findItem(R.id.menu_padding).setTitle(ssbPadding);
-        PopupMenuLifecycle.insertIcon(context, menu.findItem(R.id.menu_padding), false);
-
-        menu.findItem(R.id.menu_theme).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
-
-        menu.findItem(R.id.menu_confirm_links)
-                .setChecked(confirm_links)
-                .setVisible(viewType == AdapterMessage.ViewType.THREAD);
-
-        menu.findItem(R.id.menu_select_all).setVisible(folder);
-        menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
-        menu.findItem(R.id.menu_mark_all_read).setVisible(folder);
-
-        menu.findItem(R.id.menu_view_thread).setVisible(viewType == AdapterMessage.ViewType.THREAD && !threading);
-
-        MenuItem menuSync = menu.findItem(R.id.menu_sync);
-        if (lastSync == null)
-            menuSync.setVisible(false);
-        else {
-            CharSequence title = DateUtils.getRelativeTimeSpanString(
-                    lastSync,
-                    new Date().getTime(),
-                    DateUtils.MINUTE_IN_MILLIS,
-                    DateUtils.FORMAT_ABBREV_RELATIVE);
-            menuSync.setTitle(title)
-                    .setVisible(true);
-            PopupMenuLifecycle.insertIcon(context, menuSync, false);
-        }
-
-        menu.findItem(R.id.menu_sync_more).setVisible(folder);
-        menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
-        menu.findItem(R.id.menu_force_send).setVisible(outbox);
-
-        menu.findItem(R.id.menu_edit_properties).setVisible(viewType == AdapterMessage.ViewType.FOLDER && !outbox);
-
-        // In some cases onPrepareOptionsMenu can be called before onCreateView
-        if (ibSeen == null)
-            ibSeen = view.findViewById(R.id.ibSeen);
-        if (ibUnflagged == null)
-            ibUnflagged = view.findViewById(R.id.ibUnflagged);
-        if (ibSnoozed == null)
-            ibSnoozed = view.findViewById(R.id.ibSnoozed);
-
-        ibSeen.setImageResource(filter_seen ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24);
-        ibUnflagged.setImageResource(filter_unflagged ? R.drawable.twotone_star_border_24 : R.drawable.baseline_star_24);
-        ibSnoozed.setImageResource(filter_snoozed ? R.drawable.twotone_visibility_off_24 : R.drawable.twotone_visibility_24);
-
-        ibSeen.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
-        ibUnflagged.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
-        ibSnoozed.setVisibility(quick_filter && folder && !drafts ? View.VISIBLE : View.GONE);
-
-        super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -5157,11 +5410,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (itemId == R.id.menu_search) {
             onMenuSearch();
             return true;
-        } else if (itemId == R.id.menu_save_search) {
+        } else if (itemId == R.id.menu_save_search || itemId == R.id.menu_edit_search) {
             onMenuSaveSearch();
-            return true;
-        } else if (itemId == R.id.menu_delete_search) {
-            onMenuDeleteSearch();
             return true;
         } else if (itemId == R.id.menu_folders) { // Obsolete
             onMenuFolders(primary);
@@ -5241,6 +5491,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         } else if (itemId == R.id.menu_padding) {
             onMenuPadding();
             return true;
+        } else if (itemId == R.id.menu_large_buttons) {
+            onMenuLargeButtons();
+            return true;
         } else if (itemId == R.id.menu_compact) {
             onMenuCompact();
             return true;
@@ -5251,7 +5504,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             onMenuConfirmLinks();
             return true;
         } else if (itemId == R.id.menu_select_all || itemId == R.id.menu_select_found) {
-            onMenuSelectAll();
+            onMenuSelect(0, Long.MAX_VALUE, false);
             return true;
         } else if (itemId == R.id.menu_mark_all_read) {
             onMenuMarkAllRead();
@@ -5299,22 +5552,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fragment.setArguments(args);
         fragment.setTargetFragment(this, REQUEST_SAVE_SEARCH);
         fragment.show(getParentFragmentManager(), "search:save");
-    }
-
-    private void onMenuDeleteSearch() {
-        if (criteria == null)
-            return;
-
-        Bundle args = new Bundle();
-        args.putString("question", getString(R.string.title_search_delete));
-        args.putString("remark", criteria.getTitle(getContext()));
-        args.putLong("id", criteria.id);
-        args.putBoolean("warning", true);
-
-        FragmentDialogAsk ask = new FragmentDialogAsk();
-        ask.setArguments(args);
-        ask.setTargetFragment(FragmentMessages.this, REQUEST_DELETE_SEARCH);
-        ask.show(getParentFragmentManager(), "swipe:delete");
     }
 
     private void onMenuFolders(long account) {
@@ -5556,6 +5793,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         invalidateOptionsMenu();
     }
 
+    private void onMenuLargeButtons() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean large_buttons = !prefs.getBoolean("large_buttons", false);
+        prefs.edit().putBoolean("large_buttons", large_buttons).apply();
+        adapter.setLargeButtons(large_buttons);
+    }
+
     private void onMenuCompact() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean compact = !prefs.getBoolean("compact", false);
@@ -5592,9 +5836,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         positions.clear();
     }
 
-    private void onMenuSelectAll() {
+    private void onMenuSelect(long from, long to, boolean extend) {
         ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
-        model.getIds(getContext(), getViewLifecycleOwner(), new Observer<List<Long>>() {
+        model.getIds(getContext(), getViewLifecycleOwner(), from, to, new Observer<List<Long>>() {
             @Override
             public void onChanged(List<Long> ids) {
                 view.post(new Runnable() {
@@ -5603,9 +5847,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         try {
                             if (selectionTracker == null)
                                 return;
-                            selectionTracker.clearSelection();
+                            if (!extend)
+                                selectionTracker.clearSelection();
                             for (long id : ids)
-                                selectionTracker.select(id);
+                                if (extend) {
+                                    if (selectionTracker.isSelected(id))
+                                        selectionTracker.deselect(id);
+                                    else
+                                        selectionTracker.select(id);
+                                } else
+                                    selectionTracker.select(id);
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
@@ -5700,16 +5951,28 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 BoundaryCallbackMessages.SearchCriteria criteria =
                         (BoundaryCallbackMessages.SearchCriteria) args.getSerializable("criteria");
 
-                EntitySearch search = new EntitySearch();
+                DB db = DB.getInstance(context);
+
+                EntitySearch search = null;
+                if (criteria.id != null)
+                    search = db.search().getSearch(criteria.id);
+                if (search == null)
+                    search = new EntitySearch();
+
+                int order = args.getInt("order");
+
                 search.name = args.getString("name");
+                search.order = (order < 0 ? null : order);
                 search.color = args.getInt("color", Color.TRANSPARENT);
                 search.data = criteria.toJson().toString();
 
                 if (search.color == Color.TRANSPARENT)
                     search.color = null;
 
-                DB db = DB.getInstance(context);
-                search.id = db.search().insertSearch(search);
+                if (search.id == null)
+                    search.id = db.search().insertSearch(search);
+                else
+                    db.search().updateSearch(search);
 
                 return null;
             }
@@ -5730,10 +5993,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         new SimpleTask<Void>() {
             @Override
             protected Void onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
+                BoundaryCallbackMessages.SearchCriteria criteria =
+                        (BoundaryCallbackMessages.SearchCriteria) args.getSerializable("criteria");
 
                 DB db = DB.getInstance(context);
-                db.search().deleteSearch(id);
+                db.search().deleteSearch(criteria.id);
 
                 return null;
             }
@@ -5914,7 +6178,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             tvSelectedCount.setText(NF.format(count));
             if (count > (BuildConfig.DEBUG ? 10 : MAX_MORE)) {
                 int ts = Math.round(tvSelectedCount.getTextSize());
-                Drawable w = context.getDrawable(R.drawable.twotone_warning_24);
+                Drawable w = ContextCompat.getDrawable(context, R.drawable.twotone_warning_24);
                 w.setBounds(0, 0, ts, ts);
                 w.setTint(tvSelectedCount.getCurrentTextColor());
                 tvSelectedCount.setCompoundDrawablesRelative(null, null, w, null);
@@ -5952,6 +6216,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     boolean more_delete = prefs.getBoolean("more_delete", false);
                     boolean more_move = prefs.getBoolean("more_move", true);
 
+                    boolean inTrash = EntityFolder.TRASH.equals(type);
+                    boolean inJunk = EntityFolder.JUNK.equals(type);
+
                     int count = 0;
 
                     boolean move = (more_move && count < MAX_QUICK_ACTIONS && result.canMove());
@@ -5965,6 +6232,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     boolean trash = (more_trash && count < MAX_QUICK_ACTIONS && result.canTrash());
                     if (trash)
                         count++;
+
+                    if (!delete && !trash && (inTrash || inJunk) &&
+                            more_trash && count < MAX_QUICK_ACTIONS && result.canDelete()) {
+                        delete = true;
+                        count++;
+                    }
 
                     boolean junk = (more_junk && count < MAX_QUICK_ACTIONS && result.canJunk());
                     if (junk)
@@ -6008,6 +6281,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (seen)
                         count++;
 
+                    ibInbox.setImageResource(inJunk ? R.drawable.twotone_report_off_24 : R.drawable.twotone_inbox_24);
+
                     ibBatchSeen.setVisibility(seen ? View.VISIBLE : View.GONE);
                     ibBatchUnseen.setVisibility(unseen ? View.VISIBLE : View.GONE);
                     ibBatchSnooze.setVisibility(snooze ? View.VISIBLE : View.GONE);
@@ -6029,7 +6304,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 protected void onException(Bundle args, Throwable ex) {
                     Log.unexpectedError(getParentFragmentManager(), ex);
                 }
-            }.setExecutor(executor).execute(this, args, "quickactions");
+            }.setExecutor(executor).setId("messages:" + FragmentMessages.this.hashCode()).execute(this, args, "quickactions");
         } else {
             fabMore.hide();
             tvSelectedCount.setVisibility(View.GONE);
@@ -6126,13 +6401,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     });
                     snackbar.show();
                 } else {
-                    Bundle args = new Bundle();
-                    args.putString("error", Log.formatThrowable(ex, false));
+                    if (viewType == AdapterMessage.ViewType.SEARCH && !server)
+                        Log.unexpectedError(getParentFragmentManager(), ex);
+                    else {
+                        Bundle args = new Bundle();
+                        args.putString("error", Log.formatThrowable(ex, false));
 
-                    FragmentDialogBoundaryError fragment = new FragmentDialogBoundaryError();
-                    fragment.setArguments(args);
-                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_BOUNDARY_RETRY);
-                    fragment.show(getParentFragmentManager(), "boundary:error");
+                        FragmentDialogBoundaryError fragment = new FragmentDialogBoundaryError();
+                        fragment.setArguments(args);
+                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_BOUNDARY_RETRY);
+                        fragment.show(getParentFragmentManager(), "boundary:error");
+                    }
                 }
         }
     };
@@ -6143,9 +6422,25 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (messages == null)
                 return;
 
+            if (viewType != AdapterMessage.ViewType.SEARCH)
+                setCount(messages.size() <= 1 ? null : NF.format(messages.size()));
+
             if (viewType == AdapterMessage.ViewType.THREAD) {
                 if (handleThreadActions(messages, null, null))
                     return;
+
+                List<Long> ids = values.get("expanded");
+                if (ids != null)
+                    for (long id : new ArrayList<>(ids)) {
+                        boolean found = false;
+                        for (TupleMessageEx message : messages)
+                            if (message != null && Objects.equals(message.id, id)) {
+                                found = true;
+                                break;
+                            }
+                        if (!found)
+                            ids.remove(id);
+                    }
             } else {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                 boolean autoscroll = prefs.getBoolean("autoscroll", false);
@@ -6380,8 +6675,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
 
                 if (expand != null &&
-                        (expand.content || unmetered || (expand.size != null && expand.size < download)))
+                        (expand.content || unmetered || (expand.size != null && expand.size < download))) {
                     iProperties.setExpanded(expand, true, false);
+                    for (int pos = 0; pos < messages.size(); pos++) {
+                        TupleMessageEx message = messages.get(pos);
+                        if (message == expand) {
+                            adapter.gotoPos(pos);
+                            break;
+                        }
+                    }
+                }
             }
 
             // Auto expand all seen messages
@@ -6563,6 +6866,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         return false;
+    }
+
+    private void updateCompose() {
+        if (!accessibility &&
+                (viewType == AdapterMessage.ViewType.UNIFIED ||
+                        viewType == AdapterMessage.ViewType.FOLDER))
+            if (scrolling)
+                fabCompose.hide();
+            else
+                fabCompose.show();
     }
 
     private void updateExpanded() {
@@ -7124,6 +7437,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     EntityAttachment.SMIME_SIGNED_DATA
             });
             db.message().setMessageEncrypt(message.id, message.ui_encrypt);
+            db.message().setMessageRaw(message.id, false);
             db.message().setMessageRevision(message.id, null);
             db.message().setMessageStored(message.id, new Date().getTime());
 
@@ -7156,6 +7470,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void endSearch() {
+        if (etSearch == null)
+            return;
+
         Helper.hideKeyboard(etSearch);
         etSearch.setVisibility(View.GONE);
         clearSearch();
@@ -7415,7 +7732,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             handleExit();
-            finish();
+
+            FragmentActivity activity = getActivity();
+            if (activity instanceof ActivityBase)
+                ((ActivityBase) activity).onBackPressedFragment();
+            else
+                finish();
         }
     };
 
@@ -7471,6 +7793,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         create.addCategory(Intent.CATEGORY_OPENABLE);
+        create.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         create.setType("*/*");
         create.putExtra(Intent.EXTRA_TITLE, name);
         Helper.openAdvanced(create);
@@ -7688,9 +8011,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 case REQUEST_SAVE_SEARCH:
                     if (resultCode == RESULT_OK && data != null)
                         onSaveSearch(data.getBundleExtra("args"));
-                    break;
-                case REQUEST_DELETE_SEARCH:
-                    if (resultCode == RESULT_OK && data != null)
+                    else if (resultCode == RESULT_FIRST_USER && data != null)
                         onDeleteSearch(data.getBundleExtra("args"));
                     break;
                 case REQUEST_QUICK_ACTIONS:
@@ -7813,9 +8134,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 OutputStream out = null;
                 boolean inline = false;
 
-                File tmp = new File(context.getFilesDir(), "encryption");
-                if (!tmp.exists())
-                    tmp.mkdir();
+                File tmp = Helper.ensureExists(new File(context.getFilesDir(), "encryption"));
                 File plain = new File(tmp, message.id + ".pgp_out");
 
                 // Find encrypted data
@@ -7964,7 +8283,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 } else {
                                     // Decode message
                                     MessageHelper.MessageParts parts;
-                                    Properties props = MessageHelper.getSessionProperties();
+                                    Properties props = MessageHelper.getSessionProperties(true);
                                     Session isession = Session.getInstance(props, null);
                                     MimeMessage imessage;
                                     try (InputStream fis = new FileInputStream(plain)) {
@@ -7976,8 +8295,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     String protect_subject = parts.getProtectedSubject();
 
                                     // Write decrypted body
+                                    boolean debug = prefs.getBoolean("debug", false);
                                     boolean download_plain = prefs.getBoolean("download_plain", false);
                                     String html = parts.getHtml(context, download_plain);
+
+                                    if (html == null && debug) {
+                                        int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
+                                        SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                                        MessageHelper.getStructure(imessage, ssb, 0, textColorLink);
+                                        html = HtmlHelper.toHtml(ssb, context);
+                                    }
+
                                     Helper.writeText(message.getFile(context), html);
                                     Log.i("pgp html=" + (html == null ? null : html.length()));
 
@@ -8015,22 +8343,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             }
                                         }
 
-                                        boolean debug = prefs.getBoolean("debug", false);
-                                        if (debug) {
-                                            EntityAttachment eml = new EntityAttachment();
-                                            eml.message = id;
-                                            eml.sequence = remotes.size() + 1;
-                                            eml.name = "body.eml";
-                                            eml.type = "message/rfc822";
-                                            eml.disposition = Part.ATTACHMENT;
-                                            eml.size = null;
-                                            eml.progress = 0;
-                                            eml.id = db.attachment().insertAttachment(eml);
-                                            File file = eml.getFile(context);
-                                            Helper.copy(plain, file);
-                                            db.attachment().setDownloaded(eml.id, file.length());
-                                        }
-
                                         checkPep(message, remotes, context);
 
                                         encrypt = parts.getEncryption();
@@ -8039,11 +8351,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         db.message().setMessageStored(message.id, new Date().getTime());
                                         db.message().setMessageFts(message.id, false);
 
-                                        if (BuildConfig.DEBUG) {
-                                            File raw = message.getRawFile(context);
-                                            Helper.copy(plain, raw);
-                                            db.message().setMessageRaw(message.id, true);
-                                        }
+                                        File raw = message.getRawFile(context);
+                                        Helper.copy(plain, raw);
+                                        db.message().setMessageRaw(message.id, true);
 
                                         db.setTransactionSuccessful();
                                     } catch (SQLiteConstraintException ex) {
@@ -8318,11 +8628,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             for (EntityCertificate ec : ecs)
                                                 local.add(ec.getCertificate());
 
+                                            // TODO: check digitalSignature/nonRepudiation key usage
+                                            // https://datatracker.ietf.org/doc/html/rfc3850#section-4.4.2
+
                                             for (X509Certificate c : certs) {
                                                 boolean[] usage = c.getKeyUsage();
-                                                boolean root = (usage != null && usage[5]);
+                                                boolean keyCertSign = (usage != null && usage.length > 5 && usage[5]);
                                                 boolean selfSigned = c.getIssuerX500Principal().equals(c.getSubjectX500Principal());
-                                                if (root && !selfSigned && ks.getCertificateAlias(c) == null) {
+                                                if (keyCertSign && !selfSigned && ks.getCertificateAlias(c) == null) {
                                                     boolean found = false;
                                                     String issuer = (c.getIssuerDN() == null ? "" : c.getIssuerDN().getName());
                                                     EntityCertificate record = EntityCertificate.from(c, true, issuer);
@@ -8424,7 +8737,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (chain == null || chain.length == 0)
                         throw new IllegalArgumentException("Public key missing");
 
-                    // Get encrypted message
+                    // Get last encrypted message
                     File input = null;
                     List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                     for (EntityAttachment attachment : attachments)
@@ -8432,7 +8745,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             if (!attachment.available)
                                 throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
                             input = attachment.getFile(context);
-                            break;
                         }
 
                     if (input == null)
@@ -8678,16 +8990,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 boolean duplicate = args.getBoolean("duplicate");
 
                 // Decode message
-                Properties props = MessageHelper.getSessionProperties();
+                Properties props = MessageHelper.getSessionProperties(true);
                 Session isession = Session.getInstance(props, null);
                 MimeMessage imessage = new MimeMessage(isession, is);
                 MessageHelper helper = new MessageHelper(imessage, context);
                 MessageHelper.MessageParts parts = helper.getMessageParts();
+                String protect_subject = parts.getProtectedSubject();
 
                 // Write decrypted body
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean debug = prefs.getBoolean("debug", false);
                 boolean download_plain = prefs.getBoolean("download_plain", false);
                 String html = parts.getHtml(context, download_plain);
+
+                if (html == null && debug) {
+                    int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
+                    SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                    MessageHelper.getStructure(imessage, ssb, 0, textColorLink);
+                    html = HtmlHelper.toHtml(ssb, context);
+                }
+
                 Helper.writeText(message.getFile(context), html);
                 Log.i("s/mime html=" + (html == null ? null : html.length()));
 
@@ -8698,6 +9020,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
+
+                    if (protect_subject != null)
+                        db.message().setMessageSubject(message.id, protect_subject);
 
                     db.message().setMessageContent(message.id,
                             true,
@@ -8713,23 +9038,38 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     });
 
                     // Add decrypted attachments
+                    boolean signedData = false;
                     List<EntityAttachment> remotes = parts.getAttachments();
                     for (int index = 0; index < remotes.size(); index++) {
                         EntityAttachment remote = remotes.get(index);
                         remote.message = message.id;
                         remote.sequence = index + 1;
                         remote.id = db.attachment().insertAttachment(remote);
+                        Log.i("s/mime attachment=" + remote);
+
                         try {
                             parts.downloadAttachment(context, index, remote);
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
-                        Log.i("s/mime attachment=" + remote);
+
+                        if (!parts.hasBody() && remotes.size() == 1 &&
+                                ("application/pkcs7-mime".equals(remote.type) ||
+                                        "application/x-pkcs7-mime".equals(remote.type)))
+                            try (FileInputStream fos = new FileInputStream(remote.getFile(context))) {
+                                new CMSSignedData(fos).getSignedContent().getContent();
+                                signedData = true;
+                                remote.encryption = EntityAttachment.SMIME_SIGNED_DATA;
+                                db.attachment().setEncryption(remote.id, remote.encryption);
+                            } catch (Throwable ex) {
+                                Log.w(ex);
+                            }
                     }
 
                     checkPep(message, remotes, context);
 
-                    db.message().setMessageEncrypt(message.id, parts.getEncryption());
+                    db.message().setMessageEncrypt(message.id,
+                            signedData ? EntityMessage.SMIME_SIGNONLY : parts.getEncryption());
                     db.message().setMessageStored(message.id, new Date().getTime());
                     db.message().setMessageFts(message.id, false);
 
@@ -8754,12 +9094,28 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     try {
                         X509Certificate cert = (X509Certificate) c;
                         boolean[] usage = cert.getKeyUsage();
-                        boolean keyCertSign = (usage != null && usage[5]);
+                        boolean digitalSignature = (usage != null && usage.length > 0 && usage[0]);
+                        boolean nonRepudiation = (usage != null && usage.length > 1 && usage[1]);
+                        boolean keyEncipherment = (usage != null && usage.length > 2 && usage[2]);
+                        boolean dataEncipherment = (usage != null && usage.length > 3 && usage[4]);
+                        boolean keyAgreement = (usage != null && usage.length > 4 && usage[4]);
+                        boolean keyCertSign = (usage != null && usage.length > 5 && usage[5]);
+                        boolean cRLSign = (usage != null && usage.length > 6 && usage[6]);
+                        boolean encipherOnly = (usage != null && usage.length > 7 && usage[7]);
+                        boolean decipherOnly = (usage != null && usage.length > 8 && usage[8]);
                         boolean selfSigned = cert.getIssuerX500Principal().equals(cert.getSubjectX500Principal());
                         EntityCertificate record = EntityCertificate.from(cert, null);
                         trace.add(record.subject +
                                 " (" + (selfSigned ? "selfSigned" : cert.getIssuerX500Principal()) + ")" +
+                                (digitalSignature ? " (digitalSignature)" : "") +
+                                (nonRepudiation ? " (nonRepudiation)" : "") +
+                                (keyEncipherment ? " (keyEncipherment)" : "") +
+                                (dataEncipherment ? " (dataEncipherment)" : "") +
+                                (keyAgreement ? " (keyAgreement)" : "") +
                                 (keyCertSign ? " (keyCertSign)" : "") +
+                                (cRLSign ? " (cRLSign)" : "") +
+                                (encipherOnly ? " (encipherOnly)" : "") +
+                                (decipherOnly ? " (decipherOnly)" : "") +
                                 (ks != null && ks.getCertificateAlias(cert) != null ? " (Android)" : ""));
                     } catch (Throwable ex) {
                         Log.e(ex);
@@ -8775,7 +9131,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         for (EntityAttachment remote : remotes)
             if ("message/rfc822".equals(remote.getMimeType()))
                 try {
-                    Properties props = MessageHelper.getSessionProperties();
+                    Properties props = MessageHelper.getSessionProperties(true);
                     Session isession = Session.getInstance(props, null);
 
                     MimeMessage imessage;
@@ -9416,7 +9772,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                     HttpURLConnection connection = null;
                                     try {
-                                        connection = Helper.openUrlRedirect(context, src, timeout);
+                                        connection = ConnectionHelper.openConnectionUnsafe(context, src, timeout, timeout);
                                         Helper.copy(connection.getInputStream(), os);
                                     } finally {
                                         if (connection != null)
@@ -9684,11 +10040,32 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static void search(
             final Context context, final LifecycleOwner owner, final FragmentManager manager,
             long account, long folder, boolean server, BoundaryCallbackMessages.SearchCriteria criteria) {
+        if (criteria.onServer()) {
+            if (account > 0 && folder > 0)
+                server = true;
+            else {
+                ToastEx.makeText(context, R.string.title_complex_search, Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
         if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             manager.popBackStack("search", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         if (manager.isDestroyed())
             return;
+
+        DB db = DB.getInstance(context);
+        db.getQueryExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    db.message().resetSearch();
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+        });
 
         Bundle args = new Bundle();
         args.putLong("account", account);
@@ -9807,6 +10184,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Boolean leave_deleted;
         boolean read_only;
         List<Long> folders;
+        EntityAccount account;
         Map<EntityAccount, Boolean> accounts;
         EntityAccount copyto;
 
@@ -9990,6 +10368,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (result.hasArchive == null) result.hasArchive = false;
             if (result.hasTrash == null) result.hasTrash = false;
             if (result.hasJunk == null) result.hasJunk = false;
+
+            if (!result.hasPop && accounts.size() == 1)
+                result.account = accounts.values().iterator().next();
 
             result.accounts = new LinkedHashMap<>();
             if (!result.hasPop) {
@@ -10243,12 +10624,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             String error = getArguments().getString("error");
 
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_boundary_error, null);
+            final Context context = getContext();
+            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_boundary_error, null);
             TextView tvError = dview.findViewById(R.id.tvError);
 
             tvError.setText(error);
 
-            return new AlertDialog.Builder(getContext())
+            return new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(R.string.title_boundary_retry, new DialogInterface.OnClickListener() {
                         @Override
@@ -10311,20 +10693,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             Drawable source = null;
             if (sources.size() == 1) {
-                source = context.getDrawable(EntityFolder.getIcon(sources.get(0)));
+                source = ContextCompat.getDrawable(context, EntityFolder.getIcon(sources.get(0)));
                 if (source != null)
                     source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
                 if (sourceColor == null)
                     sourceColor = EntityFolder.getDefaultColor(sources.get(0), context);
             } else {
-                source = context.getDrawable(R.drawable.twotone_folders_24);
+                source = ContextCompat.getDrawable(context, R.drawable.twotone_folders_24);
                 source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
                 sourceColor = null;
             }
 
             Drawable target = null;
             if (targets.size() == 1) {
-                target = context.getDrawable(EntityFolder.getIcon(targets.get(0)));
+                target = ContextCompat.getDrawable(context, EntityFolder.getIcon(targets.get(0)));
                 if (target != null)
                     target.setBounds(0, 0, target.getIntrinsicWidth(), target.getIntrinsicHeight());
                 if (targetColor == null)
@@ -10387,6 +10769,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             final Context context = getContext();
             View dview = LayoutInflater.from(context).inflate(R.layout.dialog_save_search, null);
             EditText etName = dview.findViewById(R.id.etName);
+            EditText etOrder = dview.findViewById(R.id.etOrder);
             btnColor = dview.findViewById(R.id.btnColor);
 
             btnColor.setOnClickListener(new View.OnClickListener() {
@@ -10406,15 +10789,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
             });
 
-            etName.setText(criteria.getTitle(context));
-            btnColor.setColor(Color.TRANSPARENT);
+            etName.setText(criteria.name == null ? criteria.getTitle(context) : criteria.name);
+            etOrder.setText(criteria.order == null ? null : Integer.toString(criteria.order));
+            btnColor.setColor(criteria.color);
 
-            return new AlertDialog.Builder(context)
+            AlertDialog.Builder dialog = new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(R.string.title_save, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            String order = etOrder.getText().toString();
                             args.putString("name", etName.getText().toString());
+                            args.putInt("order",
+                                    !TextUtils.isEmpty(order) && TextUtils.isDigitsOnly(order)
+                                            ? Integer.parseInt(order) : -1);
                             args.putInt("color", btnColor.getColor());
                             sendResult(Activity.RESULT_OK);
                         }
@@ -10424,8 +10812,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         public void onClick(DialogInterface dialogInterface, int i) {
                             sendResult(Activity.RESULT_CANCELED);
                         }
-                    })
-                    .create();
+                    });
+
+            if (criteria.id != null)
+                dialog.setNeutralButton(R.string.title_delete, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        sendResult(Activity.RESULT_FIRST_USER);
+                    }
+                });
+
+            return dialog.create();
         }
 
         @Override

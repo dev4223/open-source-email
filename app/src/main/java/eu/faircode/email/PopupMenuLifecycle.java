@@ -117,7 +117,6 @@ public class PopupMenuLifecycle extends PopupMenu {
 
     static void insertIcon(Context context, MenuItem menuItem, boolean submenu) {
         Drawable icon = menuItem.getIcon();
-
         if (icon == null)
             icon = new ColorDrawable(Color.TRANSPARENT);
         else {

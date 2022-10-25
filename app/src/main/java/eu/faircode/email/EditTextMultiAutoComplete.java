@@ -47,6 +47,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatMultiAutoCompleteTextView;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.preference.PreferenceManager;
 
@@ -72,7 +73,7 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
     private Tokenizer tokenizer;
     private Map<String, Integer> encryption = new ConcurrentHashMap<>();
 
-    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "chips");
+    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "chips");
 
     private static int[] icons = new int[]{
             R.drawable.twotone_vpn_key_24_p,
@@ -122,14 +123,25 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
 
             @Override
             public void afterTextChanged(Editable edit) {
-                if (backspace != null) {
-                    ClipImageSpan[] spans = edit.getSpans(backspace, backspace, ClipImageSpan.class);
-                    if (spans.length == 1) {
-                        int start = edit.getSpanStart(spans[0]);
-                        int end = edit.getSpanEnd(spans[0]);
-                        edit.delete(start, end);
-                    }
-                }
+                if (backspace != null)
+                    post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (edit == null || backspace == null || !hasFocus())
+                                    return;
+                                ClipImageSpan[] spans = edit.getSpans(backspace, backspace, ClipImageSpan.class);
+                                if (spans.length == 1) {
+                                    int start = edit.getSpanStart(spans[0]);
+                                    int end = edit.getSpanEnd(spans[0]);
+                                    if (backspace > start)
+                                        edit.delete(start, end);
+                                }
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+                    });
 
                 post(update);
             }
@@ -348,7 +360,7 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                                             }
                                         });
                                     } else if (has != 0) {
-                                        cd.setCloseIcon(context.getDrawable(icons[has - 1]));
+                                        cd.setCloseIcon(ContextCompat.getDrawable(context, icons[has - 1]));
                                         cd.setCloseIconVisible(true);
                                     }
 
@@ -360,6 +372,7 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                                     if (kar == ',' &&
                                             (i + 1 == edit.length() || edit.charAt(i + 1) != ' '))
                                         edit.insert(++i, " ");
+
                                     added = true;
                                 }
                             }
@@ -373,8 +386,10 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                 for (ClipImageSpan span : tbd)
                     edit.removeSpan(span);
 
-                if (tbd.size() > 0 || added)
-                    invalidate();
+                if (tbd.size() > 0 || added) {
+                    setText(edit);
+                    setSelection(selStart, selEnd);
+                }
             } catch (Throwable ex) {
                 Log.e(ex);
             }

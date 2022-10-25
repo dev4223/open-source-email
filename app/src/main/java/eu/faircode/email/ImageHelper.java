@@ -38,9 +38,6 @@ import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -53,6 +50,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.preference.PreferenceManager;
@@ -285,6 +283,11 @@ class ImageHelper {
     @NonNull
     static Bitmap renderSvg(InputStream is, int fillColor, int scaleToPixels) throws IOException {
         try {
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=455100
+            // https://bug1105796.bmoattachments.org/attachment.cgi?id=8529795
+            // https://github.com/BigBadaboom/androidsvg/issues/122#issuecomment-361902061
+            SVG.setInternalEntitiesEnabled(false);
+
             SVG svg = SVG.getFromInputStream(is);
             float w = svg.getDocumentWidth();
             float h = svg.getDocumentHeight();
@@ -326,7 +329,7 @@ class ImageHelper {
 
         try {
             if (TextUtils.isEmpty(source)) {
-                Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                 d.setBounds(0, 0, px, px);
                 return d;
             }
@@ -344,12 +347,12 @@ class ImageHelper {
                 EntityAttachment attachment = db.attachment().getAttachment(id, cid);
                 if (attachment == null) {
                     Log.i("Image not found CID=" + cid);
-                    Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                     d.setBounds(0, 0, px, px);
                     return d;
                 } else if (!attachment.available) {
                     Log.i("Image not available CID=" + cid);
-                    Drawable d = context.getDrawable(R.drawable.twotone_photo_library_24);
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_photo_library_24);
                     d.setBounds(0, 0, px, px);
                     return d;
                 } else {
@@ -365,7 +368,7 @@ class ImageHelper {
                             return d;
                         } catch (IOException ex) {
                             Log.w(ex);
-                            Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                            Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                             d.setBounds(0, 0, px, px);
                             return d;
                         }
@@ -376,7 +379,7 @@ class ImageHelper {
                                 scaleToPixels);
                         if (bm == null) {
                             Log.i("Image not decodable CID=" + cid);
-                            Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                            Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                             d.setBounds(0, 0, px, px);
                             return d;
                         } else {
@@ -408,7 +411,7 @@ class ImageHelper {
                     return d;
                 } catch (IllegalArgumentException ex) {
                     Log.i(ex);
-                    Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                     d.setBounds(0, 0, px, px);
                     return d;
                 }
@@ -437,7 +440,7 @@ class ImageHelper {
                 } catch (Throwable ex) {
                     // FileNotFound, Security
                     Log.w(ex);
-                    Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
                     d.setBounds(0, 0, px, px);
                     return d;
                 }
@@ -445,7 +448,7 @@ class ImageHelper {
             if (!show) {
                 // Show placeholder icon
                 int resid = (embedded || data ? R.drawable.twotone_photo_library_24 : R.drawable.twotone_image_24);
-                Drawable d = context.getDrawable(resid);
+                Drawable d = ContextCompat.getDrawable(context, resid);
                 d.setBounds(0, 0, px, px);
                 return d;
             }
@@ -455,7 +458,7 @@ class ImageHelper {
             if (cached != null || view == null) {
                 if (view == null)
                     if (cached == null) {
-                        Drawable d = context.getDrawable(R.drawable.twotone_hourglass_top_24);
+                        Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_hourglass_top_24);
                         d.setBounds(0, 0, px, px);
                         return d;
                     } else
@@ -466,34 +469,13 @@ class ImageHelper {
             }
 
             final LevelListDrawable lld = new LevelListDrawable();
-            Drawable wait = context.getDrawable(R.drawable.twotone_hourglass_top_24);
+            Drawable wait = ContextCompat.getDrawable(context, R.drawable.twotone_hourglass_top_24);
             lld.addLevel(1, 1, wait);
             lld.setBounds(0, 0, px, px);
             lld.setLevel(1);
 
-            boolean slow = false;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                try {
-                    // 2G GSM ~14.4 Kbps
-                    // G GPRS ~26.8 Kbps
-                    // E EDGE ~108.8 Kbps
-                    // 3G UMTS ~128 Kbps
-                    // H HSPA ~3.6 Mbps
-                    // H+ HSPA+ ~14.4 Mbps-23.0 Mbps
-                    // 4G LTE ~50 Mbps
-                    // 4G LTE-A ~500 Mbps
-                    ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
-                    Network active = (cm == null ? null : cm.getActiveNetwork());
-                    NetworkCapabilities caps = (active == null ? null : cm.getNetworkCapabilities(active));
-                    if (caps != null) {
-                        int kbps = caps.getLinkDownstreamBandwidthKbps();
-                        slow = (kbps < SLOW_CONNECTION);
-                    }
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-
-            ExecutorService executor = (slow ? executor_1 : executor_n);
+            Integer kbps = ConnectionHelper.getLinkDownstreamBandwidthKbps(context);
+            ExecutorService executor = (kbps != null && kbps < SLOW_CONNECTION ? executor_1 : executor_n);
 
             executor.submit(new Runnable() {
                 @Override
@@ -517,7 +499,7 @@ class ImageHelper {
                         int resid = (ex instanceof IOException && !(ex instanceof FileNotFoundException)
                                 ? R.drawable.twotone_cloud_off_24
                                 : R.drawable.twotone_broken_image_24);
-                        Drawable d = context.getDrawable(resid);
+                        Drawable d = ContextCompat.getDrawable(context, resid);
                         d.setBounds(0, 0, px, px);
                         post(d, source);
                     }
@@ -553,7 +535,7 @@ class ImageHelper {
         } catch (Throwable ex) {
             Log.e(ex);
 
-            Drawable d = context.getDrawable(R.drawable.twotone_broken_image_24);
+            Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
             d.setBounds(0, 0, px, px);
             return d;
         }
@@ -605,11 +587,11 @@ class ImageHelper {
 
         d.setBounds(0, 0, w, h);
 
-        if (view instanceof TextView) {
-            int tc = ((TextView) view).getCurrentTextColor();
-            int bg = ColorUtils.setAlphaComponent(tc, Math.round(255 * 0.05f));
-            d.setColorFilter(bg, PorterDuff.Mode.DST_OVER);
-        }
+        //if (view instanceof TextView) {
+        //    int tc = ((TextView) view).getCurrentTextColor();
+        //    int bg = ColorUtils.setAlphaComponent(tc, Math.round(255 * 0.05f));
+        //    d.setColorFilter(bg, PorterDuff.Mode.DST_OVER);
+        //}
     }
 
     static String getDataUriType(String source) {
@@ -686,7 +668,7 @@ class ImageHelper {
         Bitmap bm;
         HttpURLConnection urlConnection = null;
         try {
-            urlConnection = Helper.openUrlRedirect(context, source, timeout);
+            urlConnection = ConnectionHelper.openConnectionUnsafe(context, source, timeout, timeout);
 
             if (id > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 File file = getCacheFile(context, id, source, ".blob");
@@ -798,9 +780,7 @@ class ImageHelper {
 
     @NonNull
     static File getCacheFile(Context context, long id, String source, String extension) {
-        File dir = new File(context.getFilesDir(), "images");
-        if (!dir.exists())
-            dir.mkdir();
+        File dir = Helper.ensureExists(new File(context.getFilesDir(), "images"));
         return new File(dir, id + "_" + Math.abs(source.hashCode()) + extension);
     }
 

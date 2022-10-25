@@ -23,6 +23,9 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,7 +34,6 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.ArrowKeyMovementMethod;
-import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -47,6 +49,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -62,23 +65,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 
 import javax.mail.Flags;
 import javax.mail.Folder;
-import javax.mail.Header;
 import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.Part;
 import javax.mail.Session;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMessage;
 
 public class ActivityEML extends ActivityBase {
@@ -189,10 +182,7 @@ public class ActivityEML extends ActivityBase {
                         if (uri == null)
                             throw new FileNotFoundException();
 
-                        File dir = new File(context.getFilesDir(), "shared");
-                        if (!dir.exists())
-                            dir.mkdir();
-
+                        File dir = Helper.ensureExists(new File(context.getFilesDir(), "shared"));
                         File file = new File(dir, "email.eml");
 
                         Helper.copy(context, uri, file);
@@ -268,7 +258,7 @@ public class ActivityEML extends ActivityBase {
                     if (is == null)
                         throw new FileNotFoundException(uri.toString());
 
-                    Properties props = MessageHelper.getSessionProperties();
+                    Properties props = MessageHelper.getSessionProperties(true);
                     Session isession = Session.getInstance(props, null);
                     MimeMessage imessage = new MimeMessage(isession, is);
 
@@ -292,11 +282,33 @@ public class ActivityEML extends ActivityBase {
                         result.body = HtmlHelper.fromDocument(context, document, new HtmlHelper.ImageGetterEx() {
                             @Override
                             public Drawable getDrawable(Element img) {
-                                Drawable d;
-                                if (TextUtils.isEmpty(img.attr("x-tracking")))
-                                    d = context.getDrawable(R.drawable.twotone_image_24);
-                                else {
-                                    d = context.getDrawable(R.drawable.twotone_my_location_24);
+                                Drawable d = null;
+                                if (TextUtils.isEmpty(img.attr("x-tracking"))) {
+                                    String src = img.attr("src");
+                                    if (src.startsWith("cid:")) {
+                                        String cid = "<" + src.substring(4) + ">";
+                                        Integer w = Helper.parseInt(img.attr("width"));
+                                        Integer h = Helper.parseInt(img.attr("height"));
+                                        Resources res = context.getResources();
+                                        int scaleToPixels = res.getDisplayMetrics().widthPixels;
+                                        for (MessageHelper.AttachmentPart apart : result.parts.getAttachmentParts())
+                                            if (cid.equals(apart.attachment.cid)) {
+                                                try {
+                                                    Bitmap bm = ImageHelper.getScaledBitmap(apart.part.getInputStream(), src, apart.attachment.type, scaleToPixels);
+                                                    d = new BitmapDrawable(res, bm);
+                                                    d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
+                                                    ImageHelper.fitDrawable(d, w == null ? 0 : w, h == null ? 0 : h, 1.0f, tvBody);
+                                                } catch (Throwable ex) {
+                                                    Log.e(ex);
+                                                }
+                                                break;
+                                            }
+                                        if (d == null)
+                                            d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
+                                    } else
+                                        d = ContextCompat.getDrawable(context, R.drawable.twotone_image_24);
+                                } else {
+                                    d = ContextCompat.getDrawable(context, R.drawable.twotone_my_location_24);
                                     d.setTint(Helper.resolveColor(context, R.attr.colorWarning));
                                 }
                                 d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
@@ -307,7 +319,7 @@ public class ActivityEML extends ActivityBase {
 
                     int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
                     SpannableStringBuilder ssb = new SpannableStringBuilderEx();
-                    getStructure(imessage, ssb, 0, textColorLink);
+                    MessageHelper.getStructure(imessage, ssb, 0, textColorLink);
                     result.structure = ssb;
 
                     result.headers = HtmlHelper.highlightHeaders(context, helper.getHeaders(), false);
@@ -375,6 +387,7 @@ public class ActivityEML extends ActivityBase {
 
                                 Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                                 create.addCategory(Intent.CATEGORY_OPENABLE);
+                                create.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                                 create.setType(apart.attachment.getMimeType());
                                 if (!TextUtils.isEmpty(apart.attachment.name))
                                     create.putExtra(Intent.EXTRA_TITLE, apart.attachment.name);
@@ -400,109 +413,6 @@ public class ActivityEML extends ActivityBase {
                     ((NoStreamException) ex).report(ActivityEML.this);
                 else
                     Log.unexpectedError(getSupportFragmentManager(), ex, false);
-            }
-
-            private void getStructure(Part part, SpannableStringBuilder ssb, int level, int textColorLink) {
-                try {
-                    Enumeration<Header> headers;
-                    if (level == 0) {
-                        List<Header> h = new ArrayList<>();
-
-                        String[] cte = part.getHeader("Content-Transfer-Encoding");
-                        if (cte != null)
-                            for (String header : cte)
-                                h.add(new Header("Content-Transfer-Encoding", header));
-
-                        String[] ct = part.getHeader("Content-Type");
-                        if (ct == null)
-                            h.add(new Header("Content-Type", "text/plain"));
-                        else
-                            for (String header : ct)
-                                h.add(new Header("Content-Type", header));
-
-                        headers = new Enumeration<Header>() {
-                            private int index = -1;
-
-                            @Override
-                            public boolean hasMoreElements() {
-                                return (index + 1 < h.size());
-                            }
-
-                            @Override
-                            public Header nextElement() {
-                                return h.get(++index);
-                            }
-                        };
-                    } else
-                        headers = part.getAllHeaders();
-
-                    while (headers.hasMoreElements()) {
-                        Header header = headers.nextElement();
-                        for (int i = 0; i < level; i++)
-                            ssb.append("  ");
-                        int start = ssb.length();
-                        ssb.append(header.getName());
-                        ssb.setSpan(new ForegroundColorSpan(textColorLink), start, ssb.length(), 0);
-                        ssb.append(": ").append(header.getValue()).append('\n');
-                    }
-
-                    for (int i = 0; i < level; i++)
-                        ssb.append("  ");
-                    int size = part.getSize();
-                    ssb.append("Size: ")
-                            .append(size > 0 ? Helper.humanReadableByteCount(size) : "?")
-                            .append('\n');
-
-                    if (BuildConfig.DEBUG &&
-                            !part.isMimeType("multipart/*")) {
-                        Object content = part.getContent();
-                        if (content instanceof String) {
-                            String text = (String) content;
-
-                            String charset;
-                            try {
-                                ContentType ct = new ContentType(part.getContentType());
-                                charset = ct.getParameter("charset");
-                            } catch (Throwable ignored) {
-                                charset = null;
-                            }
-                            if (charset == null)
-                                charset = StandardCharsets.ISO_8859_1.name();
-
-                            Charset cs = Charset.forName(charset);
-                            Charset detected = CharsetHelper.detect(text, cs);
-                            boolean isUtf8 = CharsetHelper.isUTF8(text.getBytes(cs));
-                            boolean isUtf16 = CharsetHelper.isUTF16(text.getBytes(cs));
-                            boolean isW1252 = !Objects.equals(text, CharsetHelper.utf8toW1252(text));
-
-                            for (int i = 0; i < level; i++)
-                                ssb.append("  ");
-
-                            ssb.append("Detected: ")
-                                    .append(detected == null ? "?" : detected.toString())
-                                    .append(" isUTF8=").append(Boolean.toString(isUtf8))
-                                    .append(" isUTF16=").append(Boolean.toString(isUtf16))
-                                    .append(" isW1252=").append(Boolean.toString(isW1252))
-                                    .append('\n');
-                        }
-                    }
-
-                    ssb.append('\n');
-
-                    if (part.isMimeType("multipart/*")) {
-                        Multipart multipart = (Multipart) part.getContent();
-                        for (int i = 0; i < multipart.getCount(); i++)
-                            try {
-                                getStructure(multipart.getBodyPart(i), ssb, level + 1, textColorLink);
-                            } catch (Throwable ex) {
-                                Log.w(ex);
-                                ssb.append(ex.toString()).append('\n');
-                            }
-                    }
-                } catch (Throwable ex) {
-                    Log.w(ex);
-                    ssb.append(ex.toString()).append('\n');
-                }
             }
         }.execute(this, args, "eml:decode");
     }
@@ -663,12 +573,12 @@ public class ActivityEML extends ActivityBase {
                     if (is == null)
                         throw new FileNotFoundException(uri.toString());
 
-                    Properties props = MessageHelper.getSessionProperties();
+                    Properties props = MessageHelper.getSessionProperties(true);
                     Session isession = Session.getInstance(props, null);
                     MimeMessage imessage = new MimeMessage(isession, is);
 
                     try (EmailService iservice = new EmailService(
-                            context, account.getProtocol(), account.realm, account.encryption, account.insecure, true)) {
+                            context, account.getProtocol(), account.realm, account.encryption, account.insecure, account.unicode, true)) {
                         iservice.setPartialFetch(account.partial_fetch);
                         iservice.setIgnoreBodyStructureSize(account.ignore_size);
                         iservice.connect(account);

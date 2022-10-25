@@ -60,7 +60,7 @@ FairEmail might be for you if you value your privacy.
 * Common text style options (size, color, lists, etc)
 * Battery friendly
 * Low data usage
-* Small (~25 MB)
+* Small (<25 MB)
 * Material design (including dark/black theme)
 * Maintained and supported
 
@@ -184,6 +184,8 @@ for more information.
 ## Compatibility
 
 FairEmail requires at least Android 5 Lollipop.
+
+FairEmail is supported on smartphones and tablets only, and for example not on E Ink devices.
 
 Individual message notifications are available on Android 7 Nougat and later only
 because earlier Android versions do not support notification grouping.

@@ -194,7 +194,7 @@
                     android:layout_marginTop="12dp"
                     android:drawableEnd="@drawable/twotone_open_in_new_12"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?android:attr/textColorLink"
+                    app:drawableTint="?android:attr/textColorLink"
                     android:text="@string/title_advanced_notify_separate_hint"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?android:attr/textColorLink"
@@ -212,6 +212,17 @@
                     app:layout_constraintTop_toBottomOf="@id/tvNotifySeparate"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNotifySummary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_notify_summary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNewestFirst"
+                    app:switchPadding="12dp" />
+
                 <TextView
                     android:id="@+id/tvNotifyActions"
                     android:layout_width="0dp"
@@ -223,7 +234,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNewestFirst" />
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySummary" />
 
                 <CheckBox
                     android:id="@+id/cbNotifyActionTrash"
@@ -447,7 +458,7 @@
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/twotone_warning_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorWarning"
+                    app:drawableTint="?attr/colorWarning"
                     android:gravity="center"
                     android:text="@string/title_setup_advanced"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -549,29 +560,29 @@
                     app:layout_constraintTop_toBottomOf="@id/tvNotifyKnownPro"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNotifySuppressInCar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_notify_suppress_in_car"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySuppressInCall"
+                    app:switchPadding="12dp" />
+
                 <TextView
-                    android:id="@+id/tvNotifySuppressHint"
+                    android:id="@+id/tvNotifySuppressInCarHint"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:layout_marginEnd="48dp"
-                    android:text="@string/title_advanced_notify_suppress_hint"
+                    android:text="@string/title_advanced_notify_car_hint"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNotifySuppressInCall" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swNotifySummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/title_advanced_notify_summary"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvNotifySuppressHint"
-                    app:switchPadding="12dp" />
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySuppressInCar" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swNotifyRemove"
@@ -582,7 +593,7 @@
                     android:text="@string/title_advanced_notify_remove"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNotifySummary"
+                    app:layout_constraintTop_toBottomOf="@id/tvNotifySuppressInCarHint"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -827,6 +838,40 @@
                     app:switchPadding="12dp" />
 
                 <TextView
+                    android:id="@+id/tvTiles"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_tiles"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swAlertOnce" />
+
+                <ImageButton
+                    android:id="@+id/ibTileSync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/tile_synchronize"
+                    android:tooltipText="@string/tile_synchronize"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvTiles"
+                    app:srcCompat="@drawable/twotone_sync_24" />
+
+                <ImageButton
+                    android:id="@+id/ibTileUnseen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:contentDescription="@string/tile_unseen"
+                    android:tooltipText="@string/tile_unseen"
+                    app:layout_constraintStart_toEndOf="@id/ibTileSync"
+                    app:layout_constraintTop_toBottomOf="@id/tvTiles"
+                    app:srcCompat="@drawable/twotone_mail_outline_24" />
+
+                <TextView
                     android:id="@+id/tvNoGrouping"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -837,7 +882,7 @@
                     android:textStyle="italic"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swAlertOnce" />
+                    app:layout_constraintTop_toBottomOf="@id/ibTileSync" />
 
                 <TextView
                     android:id="@+id/tvNoChannels"
@@ -857,6 +902,12 @@
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     app:constraint_referenced_ids="swBackground,tvBackgroundHint" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpTiles"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="tvTiles,ibTileSync,ibTileUnseen" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>

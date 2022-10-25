@@ -159,6 +159,18 @@
                     app:layout_constraintTop_toBottomOf="@id/swDate" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swDateWeek"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_date_week"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvDateHint"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swDateFixed"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -167,7 +179,7 @@
                     android:text="@string/title_advanced_date_fixed"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvDateHint"
+                    app:layout_constraintTop_toBottomOf="@id/swDateWeek"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -827,10 +839,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableEnd="@drawable/twotone_open_in_new_12"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_privacy_risk"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?attr/colorWarning"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swBimi" />
 
@@ -842,10 +854,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableStart="@drawable/twotone_check_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorControlNormal"
                     android:text="@string/title_advanced_bimi_unverified"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
+                    app:drawableTint="?attr/colorControlNormal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvBimiHint" />
 
@@ -857,10 +869,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableStart="@drawable/twotone_done_all_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorVerified"
                     android:text="@string/title_advanced_bimi_verified"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
+                    app:drawableTint="?attr/colorVerified"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvBimiUnverified" />
 
@@ -893,10 +905,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_marginTop="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_privacy_risk"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?attr/colorWarning"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swGravatars" />
 
@@ -908,10 +920,10 @@
                     android:layout_marginTop="12dp"
                     android:drawableEnd="@drawable/twotone_open_in_new_12"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?android:attr/textColorLink"
                     android:text="@string/title_privacy_policy"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?android:attr/textColorLink"
+                    app:drawableTint="?android:attr/textColorLink"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvGravatarsHint" />
 
@@ -932,10 +944,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_marginTop="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_privacy_risk"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?attr/colorWarning"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swLibravatars" />
 
@@ -947,10 +959,10 @@
                     android:layout_marginTop="12dp"
                     android:drawableEnd="@drawable/twotone_open_in_new_12"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?android:attr/textColorLink"
                     android:text="@string/title_privacy_policy"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?android:attr/textColorLink"
+                    app:drawableTint="?android:attr/textColorLink"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvLibravatarsHint" />
 
@@ -973,10 +985,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableEnd="@drawable/twotone_open_in_new_12"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_privacy_risk"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="?attr/colorWarning"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swFavicons" />
 
@@ -1872,15 +1884,26 @@
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/twotone_warning_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:gravity="center"
                     android:text="@string/title_advanced_advanced"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="?attr/colorWarning"
                     android:textStyle="bold"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swListCount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_list_count"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvAdvanced"
+                    app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swBundledFonts"
@@ -1891,7 +1914,7 @@
                     android:text="@string/title_advanced_bundled_fonts"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvAdvanced"
+                    app:layout_constraintTop_toBottomOf="@id/swListCount"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1899,6 +1922,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:checked="true"
                     android:text="@string/title_advanced_parse_classes"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -1922,7 +1946,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:enabled="true"
                     android:text="@string/title_advanced_background_color"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -1934,7 +1957,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:enabled="true"
+                    android:checked="true"
                     android:text="@string/title_advanced_text_color"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -1946,7 +1969,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:enabled="true"
+                    android:checked="true"
                     android:text="@string/title_advanced_text_size"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -1958,7 +1981,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:enabled="true"
+                    android:checked="true"
                     android:text="@string/title_advanced_text_font"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -1970,11 +1993,22 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:enabled="true"
+                    android:checked="true"
                     android:text="@string/title_advanced_text_align"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swTextFont"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swTextTitles"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_text_titles"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swTextAlign"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1985,11 +2019,11 @@
                     android:checked="true"
                     android:drawableStart="@drawable/twotone_flag_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorWarning"
                     android:text="@string/title_advanced_authentication"
+                    app:drawableTint="?attr/colorWarning"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swTextAlign"
+                    app:layout_constraintTop_toBottomOf="@id/swTextTitles"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -2024,10 +2058,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableStart="@drawable/twotone_gpp_maybe_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorControlNormal"
                     android:text="@string/title_advanced_authentication_some"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
+                    app:drawableTint="?attr/colorControlNormal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swAuthenticationIndicator" />
 
@@ -2039,10 +2073,10 @@
                     android:layout_marginTop="6dp"
                     android:drawableStart="@drawable/twotone_gpp_good_24"
                     android:drawablePadding="6dp"
-                    android:drawableTint="?attr/colorVerified"
                     android:text="@string/title_advanced_authentication_all"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
+                    app:drawableTint="?attr/colorVerified"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvAuthSome" />
             </androidx.constraintlayout.widget.ConstraintLayout>

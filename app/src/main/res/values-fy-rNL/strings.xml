@@ -134,7 +134,6 @@
     <string name="title_setup_pop3">POP3 akkount</string>
     <string name="title_setup_gmail_rationale">Jou asjebleaft tagongsrjochten om in akkount te selektearjen en jo namme te lêzen</string>
     <string name="title_setup_gmail_permissions">Google sil om tagongsrjochten freegje om al dien email te lêzen, te komponearjen, te ferstjoeren en te wiskjen. FairEmail sil jo berjochten nea wiskje sûnder dien eksplisite tastimming.</string>
-    <string name="title_setup_gmail_drafts">As de map ûntwerpen net tagonklik is troch IMAP, kin dit wurde fêst yn \'e ynstellings fan it label fan Gmail</string>
     <string name="title_setup_office_auth">De flater \'AUTHENTICATE is mislearre\' kin wurde feroarsake troch IMAP / SMTP te wurden útskeakele troch de systeembehearder</string>
     <string name="title_setup_oauth_rationale">Autorisearje tagong ta jo %1$s akkount</string>
     <string name="title_setup_oauth_updated">Akkountautorisaasje is bywurke</string>
@@ -180,7 +179,6 @@
     <string name="title_setup_password_repeat">Werhelje wachtwurd</string>
     <string name="title_setup_password_missing">Wachtwurd ûntbrekt</string>
     <string name="title_setup_password_different">Wachtwurden komme net oerien</string>
-    <string name="title_setup_password_invalid">Wachtwurd ûnjildich</string>
     <string name="title_setup_exported">Ynstellings eksporteare</string>
     <string name="title_setup_imported">Ynstellings ymporteare</string>
     <string name="title_setup_import_invalid">Unjildich ynstellingsbestân</string>
@@ -545,7 +543,6 @@
     <string name="title_advanced_sender_regex">Regex om oerien te nimmen mei brûkersnamme fan ynkommende emailadressen</string>
     <string name="title_identity_reply_to">Antwurdzje op adres</string>
     <string name="title_identity_internal">Ynterne domeinnammen (komma skieden)</string>
-    <string name="title_identity_unicode">Brûk Unicode-ferfier</string>
     <string name="title_identity_unicode_remark">De measte servers stypje dit net</string>
     <string name="title_identity_max_size">Maksimum berjochtengrutte (MB)</string>
     <string name="title_identity_receipt">Freegje levering / lêsbewiis standert oan</string>
@@ -573,7 +570,6 @@
     <string name="title_custom">Oanpast</string>
     <string name="title_host">Hostnamme</string>
     <string name="title_encryption">Fersifering</string>
-    <string name="title_encryption_none">Gjin</string>
     <string name="title_allow_insecure">Unfeilige ferbiningen tastean</string>
     <string name="title_insecure_remark">Unfeilige ferbiningen moatte allinich wurde tastien op fertroude netwurken en nea op iepenbiere netwurken</string>
     <string name="title_port">Poartenûmer</string>
@@ -893,6 +889,7 @@
     <string name="title_style_size_small">Lyts</string>
     <string name="title_style_size_medium">Medium</string>
     <string name="title_style_size_large">Grutte</string>
+    <string name="title_style_size_xlarge">Ekstra grut</string>
     <string name="title_style_align">Rjochtsje</string>
     <string name="title_style_align_start">Start</string>
     <string name="title_style_align_center">Sintrum</string>
@@ -1027,6 +1024,9 @@
     <string name="title_search_server">Sykje op server</string>
     <string name="title_search_in">Sykje yn</string>
     <string name="title_search_sender">Sykje nei stjoerder</string>
+    <string name="title_save_search_name">Namme</string>
+    <string name="title_save_search_order">Sekwinsje</string>
+    <string name="title_save_search_color">Kleur</string>
     <string name="title_sort_on">Sortearje op</string>
     <string name="title_sort_on_time">Tiid</string>
     <string name="title_sort_on_unread">Net lêzen</string>
@@ -1059,6 +1059,7 @@
     <string name="title_edit_signature">Hântekening bewurkje</string>
     <string name="title_edit_signature_text">Hantekeningstekst</string>
     <string name="title_edit_signature_image">Ofbylding ynfoegje</string>
+    <string name="title_answer_define_name">Namme</string>
     <string name="title_answer_caption">Sjabloan bewurkje</string>
     <string name="title_answer_reply">Antwurd sjabloan</string>
     <string name="title_answer_name">Sjabloanamme</string>
@@ -1341,7 +1342,6 @@
     <string name="title_boundary_retry">Besykje opnij</string>
     <string name="title_unexpected_error">Net ferwachte flater</string>
     <string name="title_log">Lochboek</string>
-    <string name="title_auto_scroll">Auto skowe</string>
     <string name="title_log_clear">Wiskje</string>
     <string name="title_rules_search_hint">Sykje namme as tastân</string>
     <string name="title_rules_export">Eksportregels</string>
@@ -1404,6 +1404,7 @@
     <string-array name="pollIntervalNames">
         <item>Altyd</item>
         <item>Elke 5 minuten</item>
+        <item>Elke 10 minuten</item>
         <item>Elke 15 minuten</item>
         <item>Elke 30 minuten</item>
         <item>Elk oere</item>
@@ -1447,6 +1448,7 @@
         <item>Gean nei folgjende petear</item>
     </string-array>
     <string-array name="resizeNames">
+        <item>Tiny</item>
         <item>Extra small</item>
         <item>Lyts</item>
         <item>Medium</item>

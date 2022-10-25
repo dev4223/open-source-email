@@ -53,8 +53,7 @@ import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
-import android.text.style.SubscriptSpan;
-import android.text.style.SuperscriptSpan;
+import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Base64;
@@ -63,7 +62,9 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.util.PatternsCompat;
 import androidx.preference.PreferenceManager;
@@ -108,6 +109,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URI;
 import java.text.DateFormat;
+import java.text.Normalizer;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -129,8 +131,12 @@ import javax.mail.internet.MimeUtility;
 public class HtmlHelper {
     static final int PREVIEW_SIZE = 500; // characters
 
-    static final float FONT_SMALL = 0.8f;
-    static final float FONT_LARGE = 1.25f;
+    // https://drafts.csswg.org/css-fonts/#absolute-size-mapping
+    static final float FONT_XSMALL = 0.6f; // 10px=0.625
+    static final float FONT_SMALL = 0.8f; // 13px=0.8125
+    // 16 px
+    static final float FONT_LARGE = 1.25f; // 20px=1.2
+    static final float FONT_XLARGE = 1.50f; // 24px=1.5
 
     static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
     static final int MAX_SHARE_TEXT_SIZE = 50 * 1024; // characters
@@ -140,12 +146,12 @@ public class HtmlHelper {
     private static final int DEFAULT_FONT_SIZE_PT = 12; // points
     private static final int GRAY_THRESHOLD = Math.round(255 * 0.2f);
     private static final int COLOR_THRESHOLD = Math.round(255 * 0.1f);
-    private static final float MIN_LUMINANCE = 0.7f;
-    private static final float MIN_LUMINANCE_DARK = 0.1f;
+    private static final float MIN_LUMINANCE_VIEW = 0.7f;
+    private static final float MIN_LUMINANCE_COMPOSE = 0.85f;
     private static final int TAB_SIZE = 4;
     private static final int MAX_ALT = 250;
     private static final int MAX_AUTO_LINK = 250;
-    private static final int MAX_FORMAT_TEXT_SIZE = 200 * 1024; // characters
+    private static final int MAX_FORMAT_TEXT_SIZE = 100 * 1024; // characters
     private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
@@ -342,41 +348,71 @@ public class HtmlHelper {
         x11ColorMap.put("yellowgreen", 0x9ACD32);
     }
 
-    // http://www.alanwood.net/demos/wingdings.html
-    static int[] WINGDING_TO_UNICODE = {
-            0x0020, 0x1F589, 0x2702, 0x2701, 0x1F453, 0x1F56D, 0x1F56E, 0x1F56F,
-            0x1F57F, 0x2706, 0x1F582, 0x1F583, 0x1F4EA, 0x1F4EB, 0x1F4EC, 0x1F4ED,
-            0x1F4C1, 0x1F4C2, 0x1F4C4, 0x1F5CF, 0x1F5D0, 0x1F5C4, 0x231B, 0x1F5AE,
-            0x1F5B0, 0x1F5B2, 0x1F5B3, 0x1F5B4, 0x1F5AB, 0x1F5AC, 0x2707, 0x270D,
-            0x1F58E, 0x270C, 0x1F44C, 0x1F44D, 0x1F44E, 0x261C, 0x261E, 0x261D,
-            0x261F, 0x1F590, 0x263A, 0x1F610, 0x2639, 0x1F4A3, 0x2620, 0x1F3F3,
-            0x1F3F1, 0x2708, 0x263C, 0x1F4A7, 0x2744, 0x1F546, 0x271E, 0x1F548,
-            0x2720, 0x2721, 0x262A, 0x262F, 0x0950, 0x2638, 0x2648, 0x2649,
-            0x264A, 0x264B, 0x264C, 0x264D, 0x264E, 0x264F, 0x2650, 0x2651,
-            0x2652, 0x2653, 0x1F670, 0x1F675, 0x25CF, 0x1F53E, 0x25A0, 0x25A1,
-            0x1F790, 0x2751, 0x2752, 0x2B27, 0x29EB, 0x25C6, 0x2756, 0x2B25,
-            0x2327, 0x2BB9, 0x2318, 0x1F3F5, 0x1F3F6, 0x1F676, 0x1F677, 0x003F,
-            0x24EA, 0x2460, 0x2461, 0x2462, 0x2463, 0x2464, 0x2465, 0x2466,
-            0x2467, 0x2468, 0x2469, 0x24FF, 0x2776, 0x2777, 0x2778, 0x2779,
-            0x277A, 0x277B, 0x277C, 0x277D, 0x277E, 0x277F, 0x1F662, 0x1F660,
-            0x1F661, 0x1F663, 0x1F65E, 0x1F65C, 0x1F65D, 0x1F65F, 0x00B7, 0x2022,
-            0x25AA, 0x26AA, 0x1F786, 0x1F788, 0x25C9, 0x25CE, 0x1F53F, 0x25AA,
-            0x25FB, 0x1F7C2, 0x2726, 0x2605, 0x2736, 0x2734, 0x2739, 0x2735,
-            0x2BD0, 0x2316, 0x27E1, 0x2311, 0x2BD1, 0x272A, 0x2730, 0x1F550,
-            0x1F551, 0x1F552, 0x1F553, 0x1F554, 0x1F555, 0x1F556, 0x1F557, 0x1F558,
-            0x1F559, 0x1F55A, 0x1F55B, 0x2BB0, 0x2BB1, 0x2BB2, 0x2BB3, 0x2BB4,
-            0x2BB5, 0x2BB6, 0x2BB7, 0x1F66A, 0x1F66B, 0x1F655, 0x1F654, 0x1F657,
-            0x1F656, 0x1F650, 0x1F651, 0x1F652, 0x1F653, 0x232B, 0x2326, 0x2B98,
-            0x2B9A, 0x2B99, 0x2B9B, 0x2B88, 0x2B8A, 0x2B89, 0x2B8B, 0x1F868,
-            0x1F86A, 0x1F869, 0x1F86B, 0x1F86C, 0x1F86D, 0x1F86F, 0x1F86E, 0x1F878,
-            0x1F87A, 0x1F879, 0x1F87B, 0x1F87C, 0x1F87D, 0x1F87F, 0x1F87E, 0x21E6,
-            0x21E8, 0x21E7, 0x21E9, 0x2B04, 0x21F3, 0x2B00, 0x2B01, 0x2B03,
-            0x2B02, 0x1F8AC, 0x1F8AD, 0x1F5F6, 0x2714, 0x1F5F7, 0x1F5F9, 0x0077
-    };
-
     private static final List<String> TRACKING_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "www.google-analytics.com"
     ));
+
+    static Map<Integer, Integer> MAP_WINGDINGS;
+
+    static {
+        // http://www.alanwood.net/demos/wingdings.html
+        // https://unicode.org/L2/L2011/11052r-wingding.pdf
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(37, 0x1F514); // Bell
+        map.put(39, 0x1F56F); // Candle
+        map.put(44, 0x1F4EA); // Closed mailbox with lowered flag
+        map.put(45, 0x1F4EB); // Closed mailbox with raised flag
+        map.put(46, 0x1F4EC); // Open mailbox with raised flag
+        map.put(47, 0x1F4ED); // Open mailbox with lowered flag
+        map.put(48, 0x1F4C1); // Folder
+        map.put(49, 0x1F4C2); // Open folder
+        map.put(53, 0x1F5C4); // File cabinet
+        map.put(54, 0x231B); // Hourglass
+        map.put(57, 0x1F5B2); // Trackball
+        map.put(58, 0x1F5A5); // Computer
+        map.put(65, 0x270C); // Victory hand
+        map.put(66, 0x1F44C); // OK hand
+        map.put(67, 0x1F44D); // Thumb up
+        map.put(68, 0x1F44E); // Thumb down
+        map.put(69, 0x1F448); // Pointing left
+        map.put(70, 0x1F449); // Pointing right
+        map.put(71, 0x261D); // Pointing up
+        map.put(72, 0x1F447); // Pointing down
+        map.put(73, 0x1F590); // Raised hand
+        map.put(74, 0x1F642); // Smiling face
+        map.put(75, 0x1F610); // Neutral face
+        map.put(76, 0x1F641); // Frowning face
+        map.put(77, 0x1F4A3); // Bomb
+        map.put(83, 0x1F4A7); // Droplet
+        map.put(84, 0x2744); // Snowflake
+        map.put(94, 0x2648); // Aries
+        map.put(95, 0x2649); // Taurus
+        map.put(96, 0x264A); // Gemini
+        map.put(97, 0x264B); // Cancer
+        map.put(98, 0x264C); // Leo
+        map.put(99, 0x264D); // Virgo
+        map.put(100, 0x264E); // Libra
+        map.put(101, 0x264F); // Scorpio
+        map.put(102, 0x2650); // Sagittarius
+        map.put(103, 0x2651); // Capricorn
+        map.put(104, 0x2652); // Aquarius
+        map.put(105, 0x2653); // Pisces
+        map.put(183, 0x1F550); // Clock 1
+        map.put(184, 0x1F551); // Clock 2
+        map.put(185, 0x1F552); // Clock 3
+        map.put(186, 0x1F553); // Clock 4
+        map.put(187, 0x1F554); // Clock 5
+        map.put(188, 0x1F555); // Clock 6
+        map.put(189, 0x1F556); // Clock 7
+        map.put(190, 0x1F557); // Clock 8
+        map.put(191, 0x1F558); // Clock 9
+        map.put(192, 0x1F559); // Clock 10
+        map.put(193, 0x1F55A); // Clock 11
+        map.put(194, 0x1F55B); // Clock 12
+        map.put(251, 0x274C); // Red cross
+        map.put(252, 0x2705); // Green check
+        MAP_WINGDINGS = Collections.unmodifiableMap(map);
+    }
 
     static Document sanitizeCompose(Context context, String html, boolean show_images) {
         try {
@@ -424,6 +460,7 @@ public class HtmlHelper {
         boolean text_size = (!view || prefs.getBoolean("text_size", true));
         boolean text_font = (!view || prefs.getBoolean("text_font", true));
         boolean text_align = prefs.getBoolean("text_align", true);
+        boolean text_titles = prefs.getBoolean("text_titles", false);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
         boolean parse_classes = prefs.getBoolean("parse_classes", true);
@@ -509,6 +546,8 @@ public class HtmlHelper {
                 .addAttributes("td", "height")
                 .addAttributes("tr", "width")
                 .addAttributes("tr", "height")
+                .addAttributes(":all", "title")
+                .addAttributes("blockquote", "type")
                 .removeAttributes("td", "colspan", "rowspan", "width")
                 .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
@@ -533,7 +572,6 @@ public class HtmlHelper {
 
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/font
         for (Element font : document.select("font")) {
-            // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/font
             String style = font.attr("style");
             String color = font.attr("color").trim();
             String size = font.attr("size").trim();
@@ -565,12 +603,18 @@ public class HtmlHelper {
                             size = "larger";
                         else
                             throw new NumberFormatException("size=" + size);
-                    } else if (s < 3)
-                        size = "small";
-                    else if (s > 3)
-                        size = "large";
-                    else
-                        size = "medium";
+                    } else {
+                        if (s < 2)
+                            size = "x-small";
+                        else if (s < 3)
+                            size = "small";
+                        else if (s > 4)
+                            size = "x-large";
+                        else if (s > 3)
+                            size = "large";
+                        else
+                            size = "medium";
+                    }
                     sb.append("font-size:").append(size).append(";");
                 } catch (NumberFormatException ex) {
                     Log.i(ex);
@@ -711,12 +755,12 @@ public class HtmlHelper {
                                             e = e.parent();
                                 }
 
-                                if (!view && dark &&
+                                if (!view &&
                                         color != null && (bg == null || bg == Color.TRANSPARENT)) {
                                     // Special case:
-                                    //   external draft / dark background / very dark/light font
+                                    //   external draft: very dark/light font
                                     double lum = ColorUtils.calculateLuminance(color);
-                                    if (lum < MIN_LUMINANCE_DARK || lum > 1 - MIN_LUMINANCE_DARK)
+                                    if (dark ? lum < 1 - MIN_LUMINANCE_COMPOSE : lum > MIN_LUMINANCE_COMPOSE)
                                         color = null;
                                 }
 
@@ -727,7 +771,7 @@ public class HtmlHelper {
                                     // Background color was suppressed because "no color"
                                     if (color != null) {
                                         double lum = ColorUtils.calculateLuminance(color);
-                                        if (dark ? lum < MIN_LUMINANCE : lum > 1 - MIN_LUMINANCE)
+                                        if (dark ? lum < 1 - MIN_LUMINANCE_VIEW : lum > MIN_LUMINANCE_VIEW)
                                             color = textColorPrimary;
                                     }
                                 }
@@ -813,9 +857,9 @@ public class HtmlHelper {
                                 } else {
                                     if (!view) {
                                         if (fsize < 1)
-                                            fsize = FONT_SMALL;
+                                            fsize = (fsize < FONT_SMALL ? FONT_XSMALL : FONT_SMALL);
                                         else if (fsize > 1)
-                                            fsize = FONT_LARGE;
+                                            fsize = (fsize > FONT_LARGE ? FONT_XLARGE : FONT_LARGE);
                                     }
                                     element.attr("x-font-size", Float.toString(fsize));
                                     element.attr("x-font-size-rel", Float.toString(fsize / current));
@@ -1031,6 +1075,18 @@ public class HtmlHelper {
                 element.attr("x-block", "true");
         }
 
+        // Insert titles
+        if (text_titles)
+            for (Element e : document.select("[title]")) {
+                String title = e.attr("title");
+                if (TextUtils.isEmpty(title))
+                    continue;
+                if ("img".equals(e.tagName()) &&
+                        title.equals(e.attr("alt")))
+                    continue;
+                e.prependChild(document.createElement("span").text("{" + title + "}"));
+            }
+
         // Replace headings
         Elements hs = document.select("h1,h2,h3,h4,h5,h6");
         hs.attr("x-line-before", "true");
@@ -1151,13 +1207,6 @@ public class HtmlHelper {
         // Abbreviations
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/abbr
         document.select("abbr").tagName("u");
-
-        // Subscript/Superscript
-        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sub
-        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sup
-        if (!view)
-            for (Element subp : document.select("sub,sup"))
-                subp.tagName("small");
 
         // Tables
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
@@ -1609,8 +1658,11 @@ public class HtmlHelper {
                         tag.startsWith("html:") || tag.startsWith("body:"));
                 if (display_hidden || show) {
                     String[] nstag = tag.split(":");
-                    e.tagName(nstag[nstag.length > 1 ? 1 : 0]);
-                    Log.i("Updated tag=" + tag + " to=" + e.tagName());
+                    String t = nstag[nstag.length > 1 ? 1 : 0];
+                    if (!TextUtils.isEmpty(t)) {
+                        e.tagName(t);
+                        Log.i("Updated tag=" + tag + " to=" + t);
+                    }
 
                     if (!show) {
                         String style = e.attr("style");
@@ -1872,15 +1924,17 @@ public class HtmlHelper {
         switch (value) {
             case "xx-small":
             case "x-small":
+                return FONT_XSMALL;
             case "small":
                 return FONT_SMALL;
             case "medium":
                 return 1.0f;
             case "large":
+                return FONT_LARGE;
             case "x-large":
             case "xx-large":
             case "xxx-large":
-                return FONT_LARGE;
+                return FONT_XLARGE;
         }
 
         // Relative
@@ -2046,7 +2100,7 @@ public class HtmlHelper {
         if (r == g && r == b && (dark ? 255 - r : r) * a < GRAY_THRESHOLD)
             color = textColorPrimary;
 
-        return adjustLuminance(color, dark, MIN_LUMINANCE);
+        return adjustLuminance(color, dark, MIN_LUMINANCE_VIEW);
     }
 
     static int adjustLuminance(int color, boolean dark, float min) {
@@ -2188,7 +2242,7 @@ public class HtmlHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean disconnect_images = (prefs.getBoolean("disconnect_images", false) && BuildConfig.DEBUG);
 
-        Drawable d = context.getDrawable(R.drawable.twotone_my_location_24);
+        Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_my_location_24);
         d.setTint(Helper.resolveColor(context, R.attr.colorWarning));
         Bitmap bm = Bitmap.createBitmap(d.getIntrinsicWidth(), d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bm);
@@ -2366,10 +2420,47 @@ public class HtmlHelper {
         StringBuilder sb = new StringBuilder();
         sb.append("<style type=\"text/css\">");
         for (String tag : tags)
-            sb.append(tag).append("{width: auto !important; min-width: 0 !important;max-width: 100% !important;}");
+            sb.append(tag).append("{width: auto !important; min-width: 0 !important; max-width: 100% !important; overflow: auto !important;}");
         sb.append("</style>");
 
         document.select("head").append(sb.toString());
+    }
+
+    static boolean hasColorScheme(Document document, String name) {
+        List<CSSStyleSheet> sheets = parseStyles(document.head().select("style"));
+        for (CSSStyleSheet sheet : sheets)
+            if (sheet.getCssRules() != null) {
+                for (int i = 0; i < sheet.getCssRules().getLength(); i++) {
+                    CSSRule rule = sheet.getCssRules().item(i);
+                    if (rule instanceof CSSMediaRuleImpl) {
+                        MediaList list = ((CSSMediaRuleImpl) rule).getMedia();
+                        String media = (list == null ? null : list.getMediaText());
+                        if (media != null &&
+                                media.toLowerCase(Locale.ROOT).contains("prefers-color-scheme") &&
+                                media.toLowerCase(Locale.ROOT).contains(name)) {
+                            Log.i("@media=" + media);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+        return false;
+    }
+
+    static void fakeDark(Document document) {
+        // https://issuetracker.google.com/issues/237785596
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/filter-function/invert
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/filter-function/hue-rotate
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
+        // https://developer.android.com/reference/android/webkit/WebSettings#setAlgorithmicDarkeningAllowed(boolean)
+
+        if (true || hasColorScheme(document, "dark"))
+            return;
+
+        document.head().appendElement("style").html(
+                "body { filter: invert(100%) hue-rotate(180deg) !important; background: black !important; }" +
+                        "img { filter: invert(100%) hue-rotate(180deg) !important; }");
     }
 
     static String getLanguage(Context context, String subject, String text) {
@@ -2459,6 +2550,10 @@ public class HtmlHelper {
 
     static boolean hasBorder(Element e) {
         if ("true".equals(e.attr("x-border")))
+            return true;
+
+        // https://groups.google.com/g/mozilla.support.thunderbird/c/rwLNk3MU3Gs?pli=1
+        if ("cite".equals(e.attr("type")))
             return true;
 
         String style = e.attr("style");
@@ -2553,6 +2648,49 @@ public class HtmlHelper {
                 if ("blockquote".equals(node.nodeName()))
                     level--;
 
+                return FilterResult.CONTINUE;
+            }
+        });
+    }
+
+    static void removeSignatures(Document d) {
+        d.body().filter(new NodeFilter() {
+            private boolean remove = false;
+            private boolean noremove = false;
+
+            @Override
+            public FilterResult head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode tnode = (TextNode) node;
+                    String text = tnode.getWholeText()
+                            .replaceAll("[\r\n]+$", "")
+                            .replaceAll("^[\r\n]+", "");
+                    if ("-- ".equals(text)) {
+                        if (tnode.getWholeText().endsWith("\n"))
+                            remove = true;
+                        else {
+                            Node next = node.nextSibling();
+                            if (next == null) {
+                                Node parent = node.parent();
+                                if (parent != null)
+                                    next = parent.nextSibling();
+                            }
+                            if (next != null && "br".equals(next.nodeName()))
+                                remove = true;
+                        }
+                    }
+                } else if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (remove && "blockquote".equals(element.tagName()))
+                        noremove = true;
+                }
+
+                return (remove && !noremove
+                        ? FilterResult.REMOVE : FilterResult.CONTINUE);
+            }
+
+            @Override
+            public FilterResult tail(Node node, int depth) {
                 return FilterResult.CONTINUE;
             }
         });
@@ -2699,7 +2837,7 @@ public class HtmlHelper {
 
             MailDateFormat mdf = new MailDateFormat();
             ByteArrayInputStream bis = new ByteArrayInputStream(headers.getBytes());
-            InternetHeaders iheaders = new InternetHeaders(bis);
+            InternetHeaders iheaders = new InternetHeaders(bis, true);
 
             String dh = iheaders.getHeader("Date", null);
             Date tx = null;
@@ -2735,7 +2873,7 @@ public class HtmlHelper {
                     ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
 
                     if (blocklist && i == received.length - 1) {
-                        Drawable d = context.getDrawable(R.drawable.twotone_flag_24);
+                        Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_flag_24);
 
                         int iconSize = context.getResources().getDimensionPixelSize(R.dimen.menu_item_icon_size);
                         d.setBounds(0, 0, iconSize, iconSize);
@@ -2796,52 +2934,76 @@ public class HtmlHelper {
         return ssb;
     }
 
-    static Document highlightSearched(Context context, Document document, String searched) {
-        String find = searched.toLowerCase();
+    static Document highlightSearched(Context context, Document document, String query) {
         int color = Helper.resolveColor(context, R.attr.colorHighlight);
+        query = Normalizer.normalize(query, Normalizer.Form.NFKD)
+                .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 
-        NodeTraversor.traverse(new NodeVisitor() {
-            @Override
-            public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    TextNode tnode = (TextNode) node;
-                    String text = tnode.getWholeText();
+        // TODO: fix highlighting pre processed text
 
-                    int start = text.toLowerCase().indexOf(find);
-                    if (start < 0)
-                        return;
+        List<String> word = new ArrayList<>();
+        List<String> plus = new ArrayList<>();
+        for (String w : query.trim().split("\\s+"))
+            if (w.length() > 1 && (w.startsWith("+") || w.startsWith("-"))) {
+                if (w.startsWith("+"))
+                    plus.add(w.substring(1));
+            } else
+                word.add(w);
 
-                    int prev = 0;
-                    Element holder = document.createElement("span");
+        int flags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
+        List<Pattern> pat = new ArrayList<>();
+        pat.add(Pattern.compile(".*?\\b(" + TextUtils.join("\\s+", word) + ")\\b.*?", flags));
+        for (String w : plus)
+            pat.add(Pattern.compile(".*?\\b(" + w + ")\\b.*?", flags));
 
-                    while (start >= 0) {
-                        if (start > prev)
-                            holder.appendText(text.substring(prev, start));
+        for (Pattern p : pat)
+            NodeTraversor.traverse(new NodeVisitor() {
+                @Override
+                public void head(Node node, int depth) {
+                    if (node instanceof TextNode)
+                        try {
+                            TextNode tnode = (TextNode) node;
+                            String text = Normalizer.normalize(tnode.getWholeText(), Normalizer.Form.NFKD)
+                                    .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 
-                        Element span = document.createElement("span");
-                        span.attr("style", mergeStyles(
-                                span.attr("style"),
-                                "font-size:larger; background-color:" + encodeWebColor(color)
-                        ));
-                        span.text(text.substring(start, start + find.length()));
-                        holder.appendChild(span);
+                            Matcher result = p.matcher(text);
 
-                        prev = start + find.length();
-                        start = text.toLowerCase().indexOf(find, prev);
-                    }
+                            int prev = 0;
+                            Element holder = document.createElement("span");
+                            while (result.find()) {
+                                int start = result.start(1);
+                                int end = result.end(1);
 
-                    if (prev < text.length())
-                        holder.appendText(text.substring(prev));
+                                holder.appendText(text.substring(prev, start));
 
-                    tnode.before(holder);
-                    tnode.text("");
+                                Element span = document.createElement("span");
+                                span.attr("style", mergeStyles(
+                                        span.attr("style"),
+                                        "font-size:larger; background-color:" + encodeWebColor(color)
+                                ));
+                                span.text(text.substring(start, end));
+                                holder.appendChild(span);
+
+                                prev = end;
+                            }
+
+                            if (prev == 0) // No matches
+                                return;
+
+                            if (prev < text.length())
+                                holder.appendText(text.substring(prev));
+
+                            tnode.before(holder);
+                            tnode.text("");
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
                 }
-            }
 
-            @Override
-            public void tail(Node node, int depth) {
-            }
-        }, document);
+                @Override
+                public void tail(Node node, int depth) {
+                }
+            }, document);
 
         return document;
     }
@@ -3100,6 +3262,7 @@ public class HtmlHelper {
         NodeTraversor.traverse(new NodeVisitor() {
             private Element element;
             private TextNode tnode;
+            private Typeface wingdings = null;
 
             @Override
             public void head(Node node, int depth) {
@@ -3174,14 +3337,28 @@ public class HtmlHelper {
                                     break;
                                 case "font-family":
                                     if ("wingdings".equalsIgnoreCase(value)) {
+                                        if (wingdings == null)
+                                            wingdings = ResourcesCompat.getFont(context.getApplicationContext(), R.font.wingdings);
+
+                                        int from = start;
                                         for (int i = start; i < ssb.length(); i++) {
                                             int kar = ssb.charAt(i);
-                                            if (kar >= 0x20 && kar < 0x20 + WINGDING_TO_UNICODE.length) {
-                                                int codepoint = WINGDING_TO_UNICODE[kar - 0x20];
+                                            if (MAP_WINGDINGS.containsKey(kar)) {
+                                                if (from < i) {
+                                                    TypefaceSpan span = new CustomTypefaceSpan("wingdings", wingdings);
+                                                    setSpan(ssb, span, from, i);
+                                                }
+                                                int codepoint = MAP_WINGDINGS.get(kar);
                                                 String replacement = new String(Character.toChars(codepoint));
-                                                if (replacement.length() == 1)
-                                                    ssb.replace(i, i + 1, replacement);
+                                                ssb.replace(i, i + 1, replacement);
+                                                i += replacement.length() - 1;
+                                                from = i + 1;
                                             }
+                                        }
+
+                                        if (from < ssb.length()) {
+                                            TypefaceSpan span = new CustomTypefaceSpan("wingdings", wingdings);
+                                            setSpan(ssb, span, from, ssb.length());
                                         }
                                     } else
                                         setSpan(ssb, StyleHelper.getTypefaceSpan(value, context), start, ssb.length());
@@ -3376,7 +3553,7 @@ public class HtmlHelper {
                                 String src = element.attr("src");
                                 if (!TextUtils.isEmpty(src)) {
                                     Drawable d = (imageGetter == null
-                                            ? context.getDrawable(R.drawable.twotone_broken_image_24)
+                                            ? ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24)
                                             : imageGetter.getDrawable(element));
                                     ssb.insert(start, "\uFFFC"); // Object replacement character
                                     setSpan(ssb, new ImageSpanEx(d, element), start, start + 1);
@@ -3466,12 +3643,10 @@ public class HtmlHelper {
                                 // Do nothing
                                 break;
                             case "sub":
-                                setSpan(ssb, new SubscriptSpan(), start, ssb.length());
-                                setSpan(ssb, new RelativeSizeSpan(FONT_SMALL), start, ssb.length());
+                                setSpan(ssb, new SubscriptSpanEx(), start, ssb.length());
                                 break;
                             case "sup":
-                                setSpan(ssb, new SuperscriptSpan(), start, ssb.length());
-                                setSpan(ssb, new RelativeSizeSpan(FONT_SMALL), start, ssb.length());
+                                setSpan(ssb, new SuperscriptSpanEx(), start, ssb.length());
                                 break;
                             case "table":
                             case "thead":
@@ -3690,17 +3865,6 @@ public class HtmlHelper {
                 String value = param.substring(semi + 1).trim();
 
                 switch (key) {
-                    case "font-size":
-                        // @Google: why convert size to and from in a different way?
-                        String v = value.replace(',', '.');
-                        Float size = getFontSize(v, 1.0f);
-                        if (size != null) {
-                            if (size < 1.0f)
-                                span.tagName("small");
-                            else if (size > 1.0f)
-                                span.tagName("big");
-                        }
-                        break;
                     case "text-align":
                         sb.append(" display:block;");
                         // fall through

@@ -100,6 +100,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private boolean subscriptions;
 
     private int dp3;
+    private int dp6;
     private int dp12;
     private float textSize;
     private int colorStripeWidth;
@@ -116,7 +117,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     private NumberFormat NF = NumberFormat.getNumberInstance();
 
-    private static final int DENSE_ITEMS_THRESHOLD = 50;
+    private static final int DENSE_ITEMS_THRESHOLD_FEW = 10;
+    private static final int DENSE_ITEMS_THRESHOLD_MANY = 50;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
@@ -237,7 +239,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             boolean hide_seen = (account < 0 && !primary &&
                     folder.hide_seen && folder.unseen + folder.childs_unseen == 0);
 
-            int p = (show_compact && all.size() < DENSE_ITEMS_THRESHOLD ? dp3 : 0);
+            int p = 0;
+            if (show_compact)
+                if (all.size() < DENSE_ITEMS_THRESHOLD_FEW)
+                    p = dp6;
+                else if (all.size() < DENSE_ITEMS_THRESHOLD_MANY)
+                    p = dp3;
             view.setPadding(p, p, p, p);
             view.setActivated(folder.tbc != null || folder.rename != null || folder.tbd != null);
             view.setAlpha(folder.hide || hide_seen || disabled ? Helper.LOW_LIGHT : 1.0f);
@@ -364,7 +371,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 if (account < 0 && !primary)
                     tvType.setText(folder.accountName);
                 else
-                    tvType.setText(EntityFolder.localizeType(context, folder.type));
+                    tvType.setText(EntityFolder.localizeType(context, folder.type) +
+                            (folder.inherited_type == null || !(BuildConfig.DEBUG || EntityFolder.SENT.equals(folder.inherited_type))
+                                    ? ""
+                                    : "/" + EntityFolder.localizeType(context, folder.inherited_type)));
 
                 tvTotal.setText(folder.total == null ? null : NF.format(folder.total));
 
@@ -659,7 +669,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 submenu.add(Menu.FIRST, R.string.title_synchronize_batch_disable, 3, R.string.title_synchronize_batch_disable);
                 submenu.add(Menu.FIRST, R.string.title_notify_batch_enable, 4, R.string.title_notify_batch_enable);
                 submenu.add(Menu.FIRST, R.string.title_notify_batch_disable, 5, R.string.title_notify_batch_disable);
-                submenu.add(Menu.FIRST, R.string.title_synchronize_more, 6, R.string.title_synchronize_more);
+                submenu.add(Menu.FIRST, R.string.title_navigation_folder, 6, R.string.title_navigation_folder);
+                submenu.add(Menu.FIRST, R.string.title_navigation_folder_hide, 7, R.string.title_navigation_folder_hide);
+                submenu.add(Menu.FIRST, R.string.title_synchronize_more, 8, R.string.title_synchronize_more);
             }
 
             if (folder.account != null && folder.accountProtocol == EntityAccount.TYPE_IMAP)
@@ -691,6 +703,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             return true;
                         } else if (itemId == R.string.title_notify_batch_disable) {
                             onActionEnableNotify(false);
+                            return true;
+                        } else if (itemId == R.string.title_navigation_folder) {
+                            onActionEnableNavigationMenu(true);
+                            return true;
+                        } else if (itemId == R.string.title_navigation_folder_hide) {
+                            onActionEnableNavigationMenu(false);
                             return true;
                         } else if (itemId == R.string.title_synchronize_more) {
                             onActionSyncMore(true);
@@ -918,6 +936,42 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     }.execute(context, owner, args, "enable");
                 }
 
+                private void onActionEnableNavigationMenu(boolean enabled) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", folder.id);
+                    args.putBoolean("enabled", enabled);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) throws Throwable {
+                            long id = args.getLong("id");
+                            boolean enabled = args.getBoolean("enabled");
+
+                            DB db = DB.getInstance(context);
+                            try {
+                                db.beginTransaction();
+                                List<EntityFolder> childs = db.folder().getChildFolders(id);
+                                if (childs == null)
+                                    return null;
+
+                                for (EntityFolder child : childs)
+                                    db.folder().setFolderNavigation(child.id, enabled);
+
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "enable");
+                }
+
                 private void onActionSyncMore(boolean children) {
                     Bundle args = new Bundle();
                     args.putLong("folder", folder.id);
@@ -1095,6 +1149,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 }
 
                 private void onActionExportMessages() {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    prefs.edit().putBoolean("debug", false).apply();
+
                     String filename = Helper.sanitizeFilename(
                             folder.accountName.replace(" ", "_") + "_" +
                                     folder.getDisplayName(context).replace(" ", "_") + "_" +
@@ -1102,6 +1159,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     intent.setType("*/*");
                     intent.putExtra(Intent.EXTRA_TITLE, filename);
                     Helper.openAdvanced(intent);
@@ -1219,6 +1277,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         this.sort_unread_atop = prefs.getBoolean("sort_unread_atop", false);
 
         this.dp3 = Helper.dp2pixels(context, 3);
+        this.dp6 = Helper.dp2pixels(context, 6);
         this.dp12 = Helper.dp2pixels(context, 12);
         this.textSize = Helper.getTextSize(context, zoom);
         boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);

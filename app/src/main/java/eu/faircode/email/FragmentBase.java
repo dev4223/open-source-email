@@ -22,6 +22,7 @@ package eu.faircode.email;
 import static android.app.ActionBar.DISPLAY_SHOW_CUSTOM;
 import static android.app.Activity.RESULT_OK;
 
+import android.app.Activity;
 import android.app.RecoverableSecurityException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,6 +30,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
@@ -38,6 +41,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,6 +66,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,6 +78,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FragmentBase extends Fragment {
+    private CharSequence count = null;
     private CharSequence title = null;
     private CharSequence subtitle = " ";
     private boolean finish = false;
@@ -79,6 +86,8 @@ public class FragmentBase extends Fragment {
 
     private int scrollToResid = 0;
     private int scrollToOffset = 0;
+
+    private Integer orientation = null;
 
     private static final int REQUEST_ATTACHMENT = 51;
     private static final int REQUEST_ATTACHMENTS = 52;
@@ -97,6 +106,11 @@ public class FragmentBase extends Fragment {
             return null;
     }
 
+    protected void setCount(String count) {
+        this.count = count;
+        updateSubtitle();
+    }
+
     protected void setTitle(int resid) {
         setTitle(getString(resid));
     }
@@ -113,6 +127,12 @@ public class FragmentBase extends Fragment {
     protected void setSubtitle(CharSequence subtitle) {
         this.subtitle = subtitle;
         updateSubtitle();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        onPrepareOptionsMenu(menu);
     }
 
     void invalidateOptionsMenu() {
@@ -393,7 +413,20 @@ public class FragmentBase extends Fragment {
     @Override
     public void onDestroy() {
         Log.i("Destroy " + this);
+        if (orientation != null) {
+            Activity activity = getActivity();
+            if (activity != null)
+                activity.setRequestedOrientation(orientation);
+        }
         super.onDestroy();
+    }
+
+    protected void lockOrientation() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            orientation = activity.getRequestedOrientation();
+            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+        }
     }
 
     @Override
@@ -410,9 +443,18 @@ public class FragmentBase extends Fragment {
                     actionbar.setTitle(title == null ? getString(R.string.app_name) : title);
                     actionbar.setSubtitle(subtitle);
                 } else {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+                    boolean list_count = prefs.getBoolean("list_count", false);
+
                     View custom = actionbar.getCustomView();
+                    TextView tvCount = custom.findViewById(R.id.count);
                     TextView tvTitle = custom.findViewById(R.id.title);
                     TextView tvSubtitle = custom.findViewById(R.id.subtitle);
+                    if (tvCount != null) {
+                        tvCount.setText(count);
+                        tvCount.setVisibility(!list_count || TextUtils.isEmpty(count)
+                                ? View.GONE : View.VISIBLE);
+                    }
                     if (tvTitle != null)
                         tvTitle.setText(title == null ? getString(R.string.app_name) : title);
                     if (tvSubtitle != null)
@@ -479,6 +521,7 @@ public class FragmentBase extends Fragment {
 
         Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         create.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         create.setType(intent.getStringExtra("type"));
         create.putExtra(Intent.EXTRA_TITLE, intent.getStringExtra("name"));
         Helper.openAdvanced(create);

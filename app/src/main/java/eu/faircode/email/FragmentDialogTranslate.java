@@ -52,6 +52,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
 import org.jsoup.nodes.Document;
@@ -153,10 +154,10 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
 
             private View _getView(int position, View view) {
                 DeepL.Language language = getItem(position);
-                if (language != null) {
+                if (language != null && language.icon != null && language.name != null) {
                     TextView tv = view.findViewById(android.R.id.text1);
 
-                    Drawable icon = context.getDrawable(language.icon);
+                    Drawable icon = ContextCompat.getDrawable(context, language.icon);
                     int iconSize = context.getResources()
                             .getDimensionPixelSize(R.dimen.menu_item_icon_size);
                     icon.setBounds(0, 0, iconSize, iconSize);
@@ -348,6 +349,11 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
         File file = EntityMessage.getFile(context, id);
         String html = Helper.readText(file);
         Document d = HtmlHelper.sanitizeCompose(context, html, false);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean remove_signatures = prefs.getBoolean("remove_signatures", false);
+        if (remove_signatures)
+            HtmlHelper.removeSignatures(d);
 
         d.select("blockquote").remove();
 

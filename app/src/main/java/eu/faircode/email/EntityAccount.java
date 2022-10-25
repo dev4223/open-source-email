@@ -130,6 +130,8 @@ public class EntityAccount extends EntityOrder implements Serializable {
     @NonNull
     public Integer poll_interval = DEFAULT_KEEP_ALIVE_INTERVAL;
     @NonNull
+    public Boolean keep_alive_noop = false;
+    @NonNull
     public Boolean keep_alive_ok = false;
     @NonNull
     public Integer keep_alive_failed = 0;
@@ -144,6 +146,8 @@ public class EntityAccount extends EntityOrder implements Serializable {
     @NonNull
     public Boolean use_received = false; // Received header
     public String prefix; // namespace, obsolete
+    @NonNull
+    public Boolean unicode = false;
 
     public String conditions;
 
@@ -303,10 +307,12 @@ public class EntityAccount extends EntityOrder implements Serializable {
         json.put("move_to", move_to);
 
         json.put("poll_interval", poll_interval);
+        json.put("keep_alive_noop", keep_alive_noop);
         json.put("partial_fetch", partial_fetch);
         json.put("ignore_size", ignore_size);
         json.put("use_date", use_date);
         json.put("use_received", use_received);
+        json.put("unicode", unicode);
         json.put("conditions", conditions);
         // not prefix
         // not created
@@ -391,11 +397,13 @@ public class EntityAccount extends EntityOrder implements Serializable {
             account.move_to = json.getLong("move_to");
 
         account.poll_interval = json.getInt("poll_interval");
+        account.keep_alive_noop = json.optBoolean("keep_alive_noop");
 
         account.partial_fetch = json.optBoolean("partial_fetch", true);
         account.ignore_size = json.optBoolean("ignore_size", false);
         account.use_date = json.optBoolean("use_date", false);
         account.use_received = json.optBoolean("use_received", false);
+        account.unicode = json.optBoolean("unicode", false);
         account.conditions = json.optString("conditions", null);
 
         return account;
@@ -434,6 +442,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
                     this.ignore_size == other.ignore_size &&
                     this.use_date == other.use_date &&
                     this.use_received == other.use_received &&
+                    this.unicode == other.unicode &&
                     Objects.equals(this.conditions, other.conditions) &&
                     Objects.equals(this.quota_usage, other.quota_usage) &&
                     Objects.equals(this.quota_limit, other.quota_limit) &&

@@ -80,13 +80,11 @@ import java.util.concurrent.Future;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLProtocolException;
-import javax.net.ssl.SSLSession;
 
 public class ContactInfo {
     private String email;
@@ -116,6 +114,13 @@ public class ContactInfo {
     private static final long CACHE_CONTACT_DURATION = 2 * 60 * 1000L; // milliseconds
     private static final long CACHE_FAVICON_DURATION = 2 * 7 * 24 * 60 * 60 * 1000L; // milliseconds
     private static final float MIN_FAVICON_LUMINANCE = 0.2f;
+
+    // https://realfavicongenerator.net/faq
+    private static final String[] FIXED_FAVICONS = new String[]{
+            "apple-touch-icon.png", // 57x57
+            "apple-touch-icon-precomposed.png", // 57x57
+            "favicon.ico"
+    };
 
     // https://css-tricks.com/prefetching-preloading-prebrowsing/
     // https://developer.mozilla.org/en-US/docs/Web/Performance/dns-prefetch
@@ -175,15 +180,17 @@ public class ContactInfo {
         long now = new Date().getTime();
 
         // Favicons
-        Log.i("Cleanup favicons");
-        File[] favicons = new File(context.getFilesDir(), "favicons").listFiles();
-        if (favicons != null)
-            for (File file : favicons)
-                if (file.lastModified() + CACHE_FAVICON_DURATION < now) {
-                    Log.i("Deleting " + file);
-                    if (!file.delete())
-                        Log.w("Error deleting " + file);
-                }
+        Log.i("Cleanup avatars");
+        for (String type : new String[]{"favicons", "generated"}) {
+            File[] favicons = new File(context.getFilesDir(), type).listFiles();
+            if (favicons != null)
+                for (File file : favicons)
+                    if (file.lastModified() + CACHE_FAVICON_DURATION < now) {
+                        Log.i("Deleting " + file);
+                        if (!file.delete())
+                            Log.w("Error deleting " + file);
+                    }
+        }
     }
 
     static void clearCache(Context context) {
@@ -198,20 +205,22 @@ public class ContactInfo {
         if (!files)
             return;
 
-        final File dir = new File(context.getFilesDir(), "favicons");
-        executorFavicon.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    File[] favicons = dir.listFiles();
-                    if (favicons != null)
-                        for (File favicon : favicons)
-                            favicon.delete();
-                } catch (Throwable ex) {
-                    Log.w(ex);
+        for (String type : new String[]{"favicons", "generated"}) {
+            final File dir = new File(context.getFilesDir(), type);
+            executorFavicon.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        File[] favicons = dir.listFiles();
+                        if (favicons != null)
+                            for (File favicon : favicons)
+                                favicon.delete();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     @NonNull
@@ -256,6 +265,8 @@ public class ContactInfo {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean avatars = prefs.getBoolean("avatars", true);
+        boolean prefer_contact = prefs.getBoolean("prefer_contact", false);
+        boolean distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
         boolean bimi = prefs.getBoolean("bimi", false);
         boolean gravatars = (prefs.getBoolean("gravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
         boolean libravatars = (prefs.getBoolean("libravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
@@ -266,6 +277,7 @@ public class ContactInfo {
 
         // Contact photo
         if (!TextUtils.isEmpty(info.email) &&
+                (avatars || prefer_contact || distinguish_contacts) &&
                 Helper.hasPermission(context, Manifest.permission.READ_CONTACTS)) {
             ContentResolver resolver = context.getContentResolver();
             Uri uri = Uri.withAppendedPath(
@@ -308,7 +320,8 @@ public class ContactInfo {
 
         // Favicon
         if (info.bitmap == null &&
-                !EntityFolder.JUNK.equals(folderType) && (bimi || gravatars || libravatars || favicons)) {
+                (bimi || gravatars || libravatars || favicons) &&
+                !EntityFolder.JUNK.equals(folderType)) {
             String d = UriHelper.getEmailDomain(info.email);
             if (d != null) {
                 // Prevent using Doodles
@@ -327,9 +340,7 @@ public class ContactInfo {
                 final String domain = d.toLowerCase(Locale.ROOT);
                 final String email = info.email.toLowerCase(Locale.ROOT);
 
-                File dir = new File(context.getFilesDir(), "favicons");
-                if (!dir.exists())
-                    dir.mkdir();
+                File dir = Helper.ensureExists(new File(context.getFilesDir(), "favicons"));
 
                 try {
                     // check cache
@@ -386,9 +397,10 @@ public class ContactInfo {
 
                         if (favicons) {
                             String host = domain;
+                            if (!host.startsWith("www."))
+                                host = "www." + host;
                             while (host.indexOf('.') > 0) {
                                 final URL base = new URL("https://" + host);
-                                final URL www = new URL("https://www." + host);
 
                                 futures.add(executorFavicon.submit(new Callable<Favicon>() {
                                     @Override
@@ -397,35 +409,23 @@ public class ContactInfo {
                                     }
                                 }));
 
-                                futures.add(executorFavicon.submit(new Callable<Favicon>() {
-                                    @Override
-                                    public Favicon call() throws Exception {
-                                        return parseFavicon(www, scaleToPixels, context);
-                                    }
-                                }));
-
                                 int dot = host.indexOf('.');
                                 host = host.substring(dot + 1);
                             }
 
                             host = domain;
+                            if (!host.startsWith("www."))
+                                host = "www." + host;
                             while (host.indexOf('.') > 0) {
                                 final URL base = new URL("https://" + host);
-                                final URL www = new URL("https://www." + host);
 
-                                futures.add(executorFavicon.submit(new Callable<Favicon>() {
-                                    @Override
-                                    public Favicon call() throws Exception {
-                                        return getFavicon(new URL(base, "favicon.ico"), null, scaleToPixels, context);
-                                    }
-                                }));
-
-                                futures.add(executorFavicon.submit(new Callable<Favicon>() {
-                                    @Override
-                                    public Favicon call() throws Exception {
-                                        return getFavicon(new URL(www, "favicon.ico"), null, scaleToPixels, context);
-                                    }
-                                }));
+                                for (String name : FIXED_FAVICONS)
+                                    futures.add(executorFavicon.submit(new Callable<Favicon>() {
+                                        @Override
+                                        public Favicon call() throws Exception {
+                                            return getFavicon(new URL(base, name), null, scaleToPixels, context);
+                                        }
+                                    }));
 
                                 int dot = host.indexOf('.');
                                 host = host.substring(dot + 1);
@@ -508,9 +508,20 @@ public class ContactInfo {
 
         // Generated
         boolean identicon = false;
-        if (info.bitmap == null && generated) {
-            int dp = Helper.dp2pixels(context, GENERATED_ICON_SIZE);
-            if (!TextUtils.isEmpty(info.email)) {
+        if (info.bitmap == null && generated && !TextUtils.isEmpty(info.email)) {
+            File dir = Helper.ensureExists(new File(context.getFilesDir(), "generated"));
+            File[] files = dir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File file, String name) {
+                    return name.startsWith(info.email);
+                }
+            });
+            if (files != null && files.length == 1) {
+                Log.i("Generated from cache=" + files[0].getName());
+                info.bitmap = BitmapFactory.decodeFile(files[0].getAbsolutePath());
+                info.type = Helper.getExtension(files[0].getName());
+            } else {
+                int dp = Helper.dp2pixels(context, GENERATED_ICON_SIZE);
                 if (identicons) {
                     identicon = true;
                     info.bitmap = ImageHelper.generateIdenticon(
@@ -521,6 +532,15 @@ public class ContactInfo {
                             info.email, address.getPersonal(), dp, context);
                     info.type = "letter";
                 }
+
+                // Add to cache
+                File output = new File(dir, info.email + "." + info.type);
+                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(output))) {
+                    info.bitmap.compress(Bitmap.CompressFormat.PNG, 90, os);
+                } catch (IOException ex) {
+                    Log.e(ex);
+                }
+                Log.i("Generated to cache=" + output.getName());
             }
         }
 
@@ -552,19 +572,8 @@ public class ContactInfo {
         boolean favicons_partial = prefs.getBoolean("favicons_partial", true);
 
         Log.i("PARSE favicon " + base);
-        HttpsURLConnection connection = (HttpsURLConnection) base.openConnection();
-        connection.setRequestMethod("GET");
-        connection.setReadTimeout(FAVICON_READ_TIMEOUT);
-        connection.setConnectTimeout(FAVICON_CONNECT_TIMEOUT);
-        connection.setInstanceFollowRedirects(true);
-        connection.setHostnameVerifier(new HostnameVerifier() {
-            @Override
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        });
-        ConnectionHelper.setUserAgent(context, connection);
-        connection.connect();
+        HttpURLConnection connection = ConnectionHelper
+                .openConnectionUnsafe(context, base, FAVICON_CONNECT_TIMEOUT, FAVICON_READ_TIMEOUT);
 
         Document doc;
         try {
@@ -840,19 +849,8 @@ public class ContactInfo {
         if (!"https".equals(url.getProtocol()))
             throw new FileNotFoundException(url.toString());
 
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.setReadTimeout(FAVICON_READ_TIMEOUT);
-        connection.setConnectTimeout(FAVICON_CONNECT_TIMEOUT);
-        connection.setInstanceFollowRedirects(true);
-        connection.setHostnameVerifier(new HostnameVerifier() {
-            @Override
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        });
-        ConnectionHelper.setUserAgent(context, connection);
-        connection.connect();
+        HttpURLConnection connection = ConnectionHelper
+                .openConnectionUnsafe(context, url, FAVICON_CONNECT_TIMEOUT, FAVICON_READ_TIMEOUT);
 
         try {
             int status = connection.getResponseCode();

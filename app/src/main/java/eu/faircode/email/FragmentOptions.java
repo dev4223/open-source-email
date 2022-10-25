@@ -43,6 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.cursoradapter.widget.CursorAdapter;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
@@ -135,7 +136,7 @@ public class FragmentOptions extends FragmentBase {
             "portrait2", "portrait2c", "portrait_min_size", "landscape", "landscape_min_size",
             "column_width",
             "nav_categories", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
-            "indentation", "date", "date_fixed", "date_bold", "threading", "threading_unread",
+            "indentation", "date", "date_week", "date_fixed", "date_bold", "threading", "threading_unread",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
             "avatars", "bimi", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
             "authentication", "authentication_indicator",
@@ -145,7 +146,8 @@ public class FragmentOptions extends FragmentBase {
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines",
             "message_zoom", "overview_mode", "override_width", "addresses", "button_extra", "attachments_alt", "thumbnails",
             "contrast", "hyphenation", "display_font", "monospaced_pre",
-            "background_color", "text_color", "text_size", "text_font", "text_align", "text_separators",
+            "list_count", "bundled_fonts", "parse_classes",
+            "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_color", "group_category",
             "autoscroll", "swipenav", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
@@ -153,9 +155,11 @@ public class FragmentOptions extends FragmentBase {
             "language_detection",
             "quick_filter", "quick_scroll",
             "experiments", "debug", "log_level", "test1", "test2", "test3", "test4", "test5",
-            "webview_legacy", "browser_zoom", "show_recent",
+            "webview_legacy", "browser_zoom", "fake_dark",
+            "show_recent",
             "biometrics",
-            "default_light"
+            "default_light",
+            "vt_enabled", "vt_apikey"
     };
 
     @Override
@@ -237,7 +241,7 @@ public class FragmentOptions extends FragmentBase {
         final Context context = getContext();
         int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            Drawable d = context.getDrawable(PAGE_ICONS[i]);
+            Drawable d = ContextCompat.getDrawable(context, PAGE_ICONS[i]);
             d.setColorFilter(colorAccent, PorterDuff.Mode.SRC_ATOP);
             SpannableStringBuilder title = new SpannableStringBuilderEx(getString(PAGE_TITLES[i]));
             if (i > 0)
@@ -282,6 +286,8 @@ public class FragmentOptions extends FragmentBase {
 
                     pager.setCurrentItem(tab);
                     FragmentBase fragment = (FragmentBase) adapter.instantiateItem(pager, tab);
+                    if (fragment instanceof FragmentSetup)
+                        ((FragmentSetup) fragment).prepareSearch();
                     fragment.scrollTo(resid, -48);
                     menuSearch.collapseActionView();
 

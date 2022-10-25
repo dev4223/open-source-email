@@ -265,6 +265,11 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
 
         visible = true;
 
+        if (!(this instanceof ActivityMain)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            prefs.edit().putString("last_activity", this.getClass().getName()).apply();
+        }
+
         boolean contacts = hasPermission(Manifest.permission.READ_CONTACTS);
         if (this.contacts != contacts &&
                 !this.getClass().equals(ActivitySetup.class) &&
@@ -475,7 +480,8 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                 else {
                     ArrayList<Uri> processed = new ArrayList<>();
                     for (Uri uri : uris)
-                        processed.add(processUri(uri));
+                        if (uri != null)
+                            processed.add(processUri(uri));
                     intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, processed);
                 }
             } else {
@@ -505,10 +511,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             if (TextUtils.isEmpty(fname))
                 return uri;
 
-            File dir = new File(getFilesDir(), "shared");
-            if (!dir.exists())
-                dir.mkdir();
-
+            File dir = Helper.ensureExists(new File(getFilesDir(), "shared"));
             File file = new File(dir, fname);
 
             Log.i("Copying shared file to " + file);
@@ -534,7 +537,16 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         } catch (Throwable ex) {
             if (this instanceof ActivityMain)
                 throw ex;
-            Helper.reportNoViewer(this, intent, ex);
+            if (intent.getPackage() == null)
+                Helper.reportNoViewer(this, intent, ex);
+            else {
+                intent.setPackage(null);
+                try {
+                    super.startActivity(intent);
+                } catch (Throwable exex) {
+                    Helper.reportNoViewer(this, intent, exex);
+                }
+            }
         }
     }
 
@@ -545,7 +557,16 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             Log.logExtras(intent);
             super.startActivityForResult(intent, requestCode);
         } catch (Throwable ex) {
-            Helper.reportNoViewer(this, intent, ex);
+            if (intent.getPackage() == null)
+                Helper.reportNoViewer(this, intent, ex);
+            else {
+                intent.setPackage(null);
+                try {
+                    super.startActivityForResult(intent, requestCode);
+                } catch (Throwable exex) {
+                    Helper.reportNoViewer(this, intent, exex);
+                }
+            }
         }
     }
 
@@ -760,6 +781,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
 
     public void performBack() {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            // https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/app/Activity.java#3896
             ActionBar ab = getSupportActionBar();
             if (ab != null && ab.collapseActionView())
                 return;
@@ -768,6 +790,36 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                 return;
         }
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        try {
+            super.onBackPressed();
+        } catch (Throwable ex) {
+            Log.w(ex);
+            /*
+                java.lang.NullPointerException: Attempt to invoke virtual method 'android.os.Handler android.app.FragmentHostCallback.getHandler()' on a null object reference
+                        at android.app.FragmentManagerImpl.ensureExecReady(FragmentManager.java:2008)
+                        at android.app.FragmentManagerImpl.execPendingActions(FragmentManager.java:2061)
+                        at android.app.FragmentManagerImpl.popBackStackImmediate(FragmentManager.java:874)
+                        at android.app.FragmentManagerImpl.popBackStackImmediate(FragmentManager.java:835)
+                        at android.app.Activity.onBackPressed(Activity.java:3963)
+                        at androidx.activity.ComponentActivity.access$001(Unknown)
+                        at androidx.activity.ComponentActivity$1.run(SourceFile:1)
+                        at androidx.activity.OnBackPressedDispatcher.onBackPressed(SourceFile:8)
+                        at androidx.activity.f.run(Unknown:2)
+                        at androidx.activity.g.onBackInvoked(Unknown:2)
+                        at android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper.lambda$onBackInvoked$3$android-window-WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper(WindowOnBackInvokedDispatcher.java:267)
+                        at android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper$$ExternalSyntheticLambda0.run(Unknown:2)
+                        at android.os.Handler.handleCallback(Handler.java:942)
+                        at android.os.Handler.dispatchMessage(Handler.java:99)
+             */
+        }
+    }
+
+    public void onBackPressedFragment() {
+        performBack();
     }
 
     @Override

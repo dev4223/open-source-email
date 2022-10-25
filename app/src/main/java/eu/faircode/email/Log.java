@@ -32,12 +32,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.CursorWindowAllocationException;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteFullException;
 import android.graphics.Point;
 import android.graphics.Typeface;
@@ -52,6 +56,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.DeadSystemException;
 import android.os.Debug;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.LocaleList;
 import android.os.OperationCanceledException;
@@ -59,8 +64,10 @@ import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
+import android.os.ext.SdkExtensions;
 import android.provider.Settings;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
@@ -80,6 +87,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
+import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
 import com.bugsnag.android.BreadcrumbType;
@@ -139,6 +147,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -158,8 +167,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import io.requery.android.database.CursorWindowAllocationException;
-
 public class Log {
     private static Context ctx;
 
@@ -167,6 +174,37 @@ public class Log {
     private static final long MAX_LOG_SIZE = 8 * 1024 * 1024L;
     private static final int MAX_CRASH_REPORTS = (BuildConfig.TEST_RELEASE ? 50 : 5);
     private static final String TAG = "fairemail";
+
+    // https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html
+    // https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html
+    private static final List<String> NETWORK_PROPS = Collections.unmodifiableList(Arrays.asList(
+            "java.net.preferIPv4Stack",
+            "java.net.preferIPv6Addresses",
+            "http.proxyHost",
+            "http.proxyPort",
+            "http.nonProxyHosts",
+            "https.proxyHost",
+            "https.proxyPort",
+            //"ftp.proxyHost",
+            //"ftp.proxyPort",
+            //"ftp.nonProxyHosts",
+            "socksProxyHost",
+            "socksProxyPort",
+            "socksProxyVersion",
+            "java.net.socks.username",
+            //"java.net.socks.password",
+            "http.agent",
+            "http.keepalive",
+            "http.maxConnections",
+            "http.maxRedirects",
+            "http.auth.digest.validateServer",
+            "http.auth.digest.validateProxy",
+            "http.auth.digest.cnonceRepeat",
+            "http.auth.ntlm.domain",
+            "jdk.https.negotiate.cbt",
+            "networkaddress.cache.ttl",
+            "networkaddress.cache.negative.ttl"
+    ));
 
     static final String TOKEN_REFRESH_REQUIRED =
             "Token refresh required. Is there a VPN based app running?";
@@ -369,6 +407,7 @@ public class Log {
             // https://docs.bugsnag.com/platforms/android/sdk/
             com.bugsnag.android.Configuration config =
                     new com.bugsnag.android.Configuration("9d2d57476a0614974449a3ec33f2604a");
+            config.setTelemetry(Collections.emptySet());
 
             if (BuildConfig.DEBUG)
                 config.setReleaseStage("debug");
@@ -606,6 +645,8 @@ public class Log {
                         Object element = Array.get(v, i);
                         if (element instanceof Long)
                             elements[i] = element + " (0x" + Long.toHexString((Long) element) + ")";
+                        else if (element instanceof Spanned)
+                            elements[i] = "<redacted>";
                         else
                             elements[i] = (element == null ? "<null>" : printableString(element.toString()));
                     }
@@ -615,6 +656,8 @@ public class Log {
                     value = "[" + value + "]";
                 } else if (v instanceof Long)
                     value = v + " (0x" + Long.toHexString((Long) v) + ")";
+                else if (v instanceof Spanned)
+                    value = "<redacted>";
                 else if (v instanceof Bundle)
                     value = "{" + TextUtils.join(" ", getExtras((Bundle) v)) + "}";
 
@@ -733,6 +776,16 @@ public class Log {
                 android.app.RemoteServiceException: Bad notification for startForeground: java.util.ConcurrentModificationException
                   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2204)
             */
+            return false;
+
+        if ("android.app.RemoteServiceException$CannotDeliverBroadcastException".equals(ex.getClass().getName()))
+            /*
+                android.app.RemoteServiceException$CannotDeliverBroadcastException: can't deliver broadcast
+                    at android.app.ActivityThread.throwRemoteServiceException(ActivityThread.java:2180)
+                    at android.app.ActivityThread.access$3000(ActivityThread.java:324)
+                    at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2435)
+                    at android.os.Handler.dispatchMessage(Handler.java:106)
+             */
             return false;
 
         if ("android.view.WindowManager$BadTokenException".equals(ex.getClass().getName()))
@@ -1438,7 +1491,38 @@ public class Log {
 
         for (StackTraceElement ste : stack) {
             String clazz = ste.getClassName();
-            if (clazz != null && clazz.startsWith("org.chromium.net."))
+            if (clazz != null && clazz.startsWith("org.chromium."))
+                /*
+                    android.content.res.Resources$NotFoundException:
+                      at android.content.res.ResourcesImpl.getValue (ResourcesImpl.java:225)
+                      at android.content.res.Resources.getInteger (Resources.java:1192)
+                      at org.chromium.ui.base.DeviceFormFactor.a (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:105)
+                      at y8.onCreateActionMode (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:744)
+                      at px.onCreateActionMode (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:36)
+                      at com.android.internal.policy.DecorView$ActionModeCallback2Wrapper.onCreateActionMode (DecorView.java:2722)
+                      at com.android.internal.policy.DecorView.startActionMode (DecorView.java:926)
+                      at com.android.internal.policy.DecorView.startActionModeForChild (DecorView.java:882)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.ViewGroup.startActionModeForChild (ViewGroup.java:1035)
+                      at android.view.View.startActionMode (View.java:7654)
+                      at org.chromium.content.browser.selection.SelectionPopupControllerImpl.B (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:31)
+                      at uh0.a (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:1605)
+                      at Kk0.i (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:259)
+                      at B6.run (chromium-TrichromeWebViewGoogle6432.aab-stable-500512534:454)
+                      at android.os.Handler.handleCallback (Handler.java:938)
+                 */
                 return false;
         }
 
@@ -1471,6 +1555,27 @@ public class Log {
                   at com.android.internal.widget.FloatingToolbar$FloatingToolbarPopup$2.onClick(FloatingToolbar.java:423)
                   at android.view.View.performClick(View.java:6320)
                   at android.view.View$PerformClick.run(View.java:25087)
+             */
+            return false;
+
+        if (ex instanceof NullPointerException &&
+                ex.getMessage() != null &&
+                ex.getMessage().contains("com.android.server.job.controllers.JobStatus"))
+            /*
+                java.lang.RuntimeException: java.lang.NullPointerException: Attempt to invoke virtual method 'int com.android.server.job.controllers.JobStatus.getUid()' on a null object reference
+                    at android.app.job.JobService$JobHandler.handleMessage(JobService.java:139)
+                    at android.os.Handler.dispatchMessage(Handler.java:102)
+                    at android.os.Looper.loop(Looper.java:148)
+                    at android.app.ActivityThread.main(ActivityThread.java:5525)
+                    at java.lang.reflect.Method.invoke(Native Method)
+                    at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:730)
+                    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:620)
+                Caused by: java.lang.NullPointerException: Attempt to invoke virtual method 'int com.android.server.job.controllers.JobStatus.getUid()' on a null object reference
+                    at android.os.Parcel.readException(Parcel.java:1605)
+                    at android.os.Parcel.readException(Parcel.java:1552)
+                    at android.app.job.IJobCallback$Stub$Proxy.acknowledgeStopMessage(IJobCallback.java:144)
+                    at android.app.job.JobService$JobHandler.ackStopMessage(JobService.java:183)
+                    at android.app.job.JobService$JobHandler.handleMessage(JobService.java:136)
              */
             return false;
 
@@ -1810,6 +1915,9 @@ public class Log {
 
         ContentResolver resolver = context.getContentResolver();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean main_log = prefs.getBoolean("main_log", true);
+        boolean protocol = prefs.getBoolean("protocol", false);
+        int level = prefs.getInt("log_level", Log.getDefaultLogLevel());
         long last_cleanup = prefs.getLong("last_cleanup", 0);
 
         PackageManager pm = context.getPackageManager();
@@ -1836,8 +1944,10 @@ public class Log {
 
         sb.append(String.format("Installer: %s\r\n", installer));
         sb.append(String.format("Installed: %s\r\n", new Date(Helper.getInstallTime(context))));
+        sb.append(String.format("Updated: %s\r\n", new Date(Helper.getUpdateTime(context))));
         sb.append(String.format("Last cleanup: %s\r\n", new Date(last_cleanup)));
         sb.append(String.format("Now: %s\r\n", new Date()));
+        sb.append(String.format("Zone: %s\r\n", TimeZone.getDefault().getID()));
 
         sb.append("\r\n");
 
@@ -1862,7 +1972,33 @@ public class Log {
             sb.append(String.format("SoC: %s/%s\r\n", Build.SOC_MANUFACTURER, Build.SOC_MODEL));
         sb.append(String.format("OS version: %s\r\n", osVersion));
         sb.append(String.format("uid: %d\r\n", android.os.Process.myUid()));
+        sb.append(String.format("Log main: %b protocol: %b level: %d=%b\r\n",
+                main_log, protocol, level, level <= android.util.Log.INFO));
         sb.append("\r\n");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                // https://developer.android.com/reference/android/app/ApplicationExitInfo
+                boolean exits = false;
+                long from = new Date().getTime() - 30 * 24 * 3600 * 1000L;
+                ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
+                List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(
+                        context.getPackageName(), 0, 100);
+                for (ApplicationExitInfo info : infos)
+                    if (info.getTimestamp() > from &&
+                            info.getImportance() >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_GONE) {
+                        exits = true;
+                        sb.append(String.format("%s: %s\r\n",
+                                new Date(info.getTimestamp()),
+                                Helper.getExitReason(info.getReason())));
+                    }
+                if (!exits)
+                    sb.append("No crashes\r\n");
+                sb.append("\r\n");
+            } catch (Throwable ex) {
+                sb.append(ex).append("\r\n");
+            }
+        }
 
         int[] contacts = ContactInfo.getStats();
         sb.append(String.format("Contact lookup: %d cached: %d\r\n",
@@ -1986,6 +2122,15 @@ public class Log {
 
         sb.append(String.format("Darken support: %b\r\n",
                 WebViewEx.isFeatureSupported(context, WebViewFeature.ALGORITHMIC_DARKENING)));
+        try {
+            PackageInfo pkg = WebViewCompat.getCurrentWebViewPackage(context);
+            sb.append(String.format("WebView %d/%s %s\r\n",
+                    pkg == null ? -1 : pkg.versionCode,
+                    pkg == null ? null : pkg.versionName,
+                    pkg == null || pkg.versionCode / 100000 < 5005 ? "!!!" : ""));
+        } catch (Throwable ex) {
+            sb.append(ex).append("\r\n");
+        }
 
         sb.append("\r\n");
 
@@ -2131,15 +2276,35 @@ public class Log {
                 boolean ng = Helper.isInstalled(context, "eu.faircode.netguard");
                 boolean tc = Helper.isInstalled(context, "net.kollnig.missioncontrol");
 
+                Integer bucket = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                    try {
+                        UsageStatsManager usm = Helper.getSystemService(context, UsageStatsManager.class);
+                        bucket = usm.getAppStandbyBucket();
+                    } catch (Throwable ignored) {
+                    }
+
+                Integer filter = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
+                    filter = nm.getCurrentInterruptionFilter();
+                }
+
                 size += write(os, "enabled=" + enabled + (enabled ? "" : " !!!") +
                         " interval=" + pollInterval + "\r\n" +
                         "metered=" + metered + (metered ? "" : " !!!") +
-                        " restricted=" + ds + ("enabled".equals(ds) ? " !!!" : "") +
+                        " saving=" + ds + ("enabled".equals(ds) ? " !!!" : "") +
                         " vpn=" + vpn + (vpn ? " !!!" : "") +
                         " ng=" + ng + " tc=" + tc + "\r\n" +
                         "optimizing=" + (ignoring == null ? null : !ignoring) + (Boolean.FALSE.equals(ignoring) ? " !!!" : "") +
+                        " bucket=" + (bucket == null ? null :
+                        Helper.getStandbyBucketName(bucket) +
+                                (bucket > UsageStatsManager.STANDBY_BUCKET_ACTIVE ? " !!!" : "")) +
                         " canSchedule=" + canSchedule + (canSchedule ? "" : " !!!") +
-                        " auto_optimize=" + auto_optimize + (auto_optimize ? " !!!" : "") + "\r\n" +
+                        " auto_optimize=" + auto_optimize + (auto_optimize ? " !!!" : "") +
+                        " notifications=" + (filter == null ? null :
+                        Helper.getInterruptionFilter(filter) +
+                                (filter == NotificationManager.INTERRUPTION_FILTER_ALL ? "" : "!!!")) + "\r\n" +
                         "accounts=" + accounts.size() +
                         " folders=" + db.folder().countTotal() +
                         " messages=" + db.message().countTotal() +
@@ -2195,7 +2360,7 @@ public class Log {
                                 " ondemand=" + account.ondemand +
                                 " msgs=" + content + "/" + messages +
                                 " ops=" + db.operation().getOperationCount(account.id) +
-                                " ischedule=" + ignore_schedule + (ignore_schedule ? " !!!" : "") +
+                                " schedule=" + (!ignore_schedule) + (ignore_schedule ? " !!!" : "") +
                                 " unmetered=" + unmetered + (unmetered ? " !!!" : "") +
                                 " " + account.state +
                                 (account.last_connected == null ? "" : " " + dtf.format(account.last_connected)) +
@@ -2208,7 +2373,8 @@ public class Log {
                             if (folder.synchronize) {
                                 int unseen = db.message().countUnseen(folder.id);
                                 int notifying = db.message().countNotifying(folder.id);
-                                size += write(os, "- " + folder.name + " " + folder.type +
+                                size += write(os, "- " + folder.name + " " +
+                                        folder.type + (folder.inherited_type == null ? "" : "/" + folder.inherited_type) +
                                         (folder.unified ? " unified" : "") +
                                         (folder.notify ? " notify" : "") +
                                         " poll=" + folder.poll + "/" + folder.poll_factor +
@@ -2282,6 +2448,7 @@ public class Log {
                                 Collections.sort(folders, folders.get(0).getComparator(context));
                             for (EntityFolder folder : folders) {
                                 JSONObject jfolder = folder.toJSON();
+                                jfolder.put("inherited_type", folder.inherited_type);
                                 jfolder.put("level", folder.level);
                                 jfolder.put("total", folder.total);
                                 jfolder.put("initialize", folder.initialize);
@@ -2590,37 +2757,21 @@ public class Log {
                             paused, (paused ? "!!!" : "")));
                 }
 
-                String name;
                 int filter = nm.getCurrentInterruptionFilter();
-                switch (filter) {
-                    case NotificationManager.INTERRUPTION_FILTER_UNKNOWN:
-                        name = "Unknown";
-                        break;
-                    case NotificationManager.INTERRUPTION_FILTER_ALL:
-                        name = "All";
-                        break;
-                    case NotificationManager.INTERRUPTION_FILTER_PRIORITY:
-                        name = "Priority";
-                        break;
-                    case NotificationManager.INTERRUPTION_FILTER_NONE:
-                        name = "None";
-                        break;
-                    case NotificationManager.INTERRUPTION_FILTER_ALARMS:
-                        name = "Alarms";
-                        break;
-                    default:
-                        name = Integer.toString(filter);
-                }
-
                 size += write(os, String.format("Interruption filter allow=%s %s\r\n\r\n",
-                        name, (filter == NotificationManager.INTERRUPTION_FILTER_ALL ? "" : "!!!")));
+                        Helper.getInterruptionFilter(filter),
+                        (filter == NotificationManager.INTERRUPTION_FILTER_ALL ? "" : "!!!")));
+
+                size += write(os, String.format("InCall=%b DND=%b\r\n\r\n",
+                        MediaPlayerHelper.isInCall(context),
+                        MediaPlayerHelper.isDnd(context)));
 
                 for (NotificationChannel channel : nm.getNotificationChannels())
                     try {
                         JSONObject jchannel = NotificationHelper.channelToJSON(channel);
                         size += write(os, jchannel.toString(2) + "\r\n\r\n");
                     } catch (JSONException ex) {
-                        size += write(os, ex.toString() + "\r\n");
+                        size += write(os, ex + "\r\n");
                     }
 
                 size += write(os,
@@ -2637,6 +2788,11 @@ public class Log {
                                 Notification.VISIBILITY_PRIVATE,
                                 Notification.VISIBILITY_PUBLIC,
                                 Notification.VISIBILITY_SECRET));
+                size += write(os, String.format("Interruption filter\r\n"));
+                size += write(os, String.format("- All: no notifications are suppressed.\r\n"));
+                size += write(os, String.format("- Priority: all notifications are suppressed except those that match the priority criteria. Some audio streams are muted.\r\n"));
+                size += write(os, String.format("- None: all notifications are suppressed and all audio streams (except those used for phone calls) and vibrations are muted.\r\n"));
+                size += write(os, String.format("- Alarm: all notifications except those of category alarm are suppressed. Some audio streams are muted.\r\n"));
             }
 
             db.attachment().setDownloaded(attachment.id, size);
@@ -2678,6 +2834,47 @@ public class Log {
                     size += write(os, String.format("%s\r\n", ex));
                 }
                 size += write(os, "\r\n");
+
+                for (String prop : NETWORK_PROPS)
+                    size += write(os, prop + "=" + System.getProperty(prop) + "\r\n");
+                size += write(os, "\r\n");
+
+                ApplicationInfo ai = context.getApplicationInfo();
+                if (ai != null)
+                    size += write(os, String.format("Source: %s\r\n public: %s\r\n",
+                            ai.sourceDir, ai.publicSourceDir));
+                size += write(os, String.format("Files: %s\r\n  external: %s\r\n  storage: %s\r\n",
+                        context.getFilesDir(), context.getExternalFilesDir(null),
+                        Environment.getExternalStorageDirectory()));
+                size += write(os, String.format("Cache: %s\r\n  external: %s\n",
+                        context.getCacheDir(), context.getExternalCacheDir()));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    size += write(os, String.format("Data: %s\r\n", context.getDataDir().getAbsolutePath()));
+                size += write(os, String.format("Database: %s\r\n",
+                        context.getDatabasePath(DB.DB_NAME)));
+
+                try (Cursor cursor = SQLiteDatabase.create(null).rawQuery(
+                        "SELECT sqlite_version() AS sqlite_version", null)) {
+                    if (cursor.moveToNext())
+                        size += write(os, String.format("sqlite: %s\r\n", cursor.getString(0)));
+                }
+                try {
+                    TupleFtsStats stats = db.message().getFts();
+                    size += write(os, String.format("fts: %d/%d %s\r\n", stats.fts, stats.total,
+                            Helper.humanReadableByteCount(Fts4DbHelper.size(context))));
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+
+                size += write(os, "\r\n");
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Map<Integer, Integer> exts = SdkExtensions.getAllExtensionVersions();
+                    for (Integer ext : exts.keySet())
+                        size += write(os, String.format("Extension %d / %d\r\n", ext, exts.get(ext)));
+                    if (exts.size() > 0)
+                        size += write(os, "\r\n");
+                }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     try {
@@ -2736,13 +2933,13 @@ public class Log {
                         // https://developer.android.com/reference/android/app/ApplicationExitInfo
                         ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
                         List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(
-                                context.getPackageName(), 0, 20);
+                                context.getPackageName(), 0, 100);
                         for (ApplicationExitInfo info : infos)
-                            size += write(os, String.format("%s: %s %s/%s reason=%d status=%d importance=%d\r\n",
+                            size += write(os, String.format("%s: %s %s/%s reason=%s status=%d importance=%d\r\n",
                                     new Date(info.getTimestamp()), info.getDescription(),
                                     Helper.humanReadableByteCount(info.getPss() * 1024L),
                                     Helper.humanReadableByteCount(info.getRss() * 1024L),
-                                    info.getReason(), info.getStatus(), info.getReason()));
+                                    Helper.getExitReason(info.getReason()), info.getStatus(), info.getImportance()));
                     } catch (Throwable ex) {
                         size += write(os, String.format("%s\r\n", ex));
                     }
@@ -2759,7 +2956,7 @@ public class Log {
                             events.getNextEvent(event);
                             size += write(os, String.format("%s %s %s b=%d s=%d\r\n",
                                     new Date(event.getTimeStamp()),
-                                    getEventType(event.getEventType()),
+                                    Helper.getEventType(event.getEventType()),
                                     event.getClassName(),
                                     event.getAppStandbyBucket(),
                                     event.getShortcutId()));
@@ -2793,43 +2990,6 @@ public class Log {
             db.attachment().setDownloaded(attachment.id, size);
         } catch (Throwable ex) {
             Log.e(ex);
-        }
-    }
-
-    private static String getEventType(int type) {
-        switch (type) {
-            case UsageEvents.Event.ACTIVITY_PAUSED:
-                return "Activity/paused";
-            case UsageEvents.Event.ACTIVITY_RESUMED:
-                return "Activity/resumed";
-            case UsageEvents.Event.ACTIVITY_STOPPED:
-                return "Activity/stopped";
-            case UsageEvents.Event.CONFIGURATION_CHANGE:
-                return "Configuration/change";
-            case UsageEvents.Event.DEVICE_SHUTDOWN:
-                return "Device/shutdown";
-            case UsageEvents.Event.DEVICE_STARTUP:
-                return "Device/startup";
-            case UsageEvents.Event.FOREGROUND_SERVICE_START:
-                return "Foreground/start";
-            case UsageEvents.Event.FOREGROUND_SERVICE_STOP:
-                return "Foreground/stop";
-            case UsageEvents.Event.KEYGUARD_HIDDEN:
-                return "Keyguard/hidden";
-            case UsageEvents.Event.KEYGUARD_SHOWN:
-                return "Keyguard/shown";
-            case UsageEvents.Event.SCREEN_INTERACTIVE:
-                return "Screen/interactive";
-            case UsageEvents.Event.SCREEN_NON_INTERACTIVE:
-                return "Screen/non-interactive";
-            case UsageEvents.Event.SHORTCUT_INVOCATION:
-                return "Shortcut/invocation";
-            case UsageEvents.Event.STANDBY_BUCKET_CHANGED:
-                return "Bucket/changed";
-            case UsageEvents.Event.USER_INTERACTION:
-                return "User/interaction";
-            default:
-                return Integer.toString(type);
         }
     }
 

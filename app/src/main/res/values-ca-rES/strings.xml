@@ -116,7 +116,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_pop3">Compte POP3</string>
     <string name="title_setup_gmail_rationale">Doneu permís per seleccionar un compte i llegir el vostre nom</string>
     <string name="title_setup_gmail_permissions">Google sol·licitarà permisos per llegir, compondre, enviar i suprimir tot el vostre correu electrònic. FairEmail mai suprimirà els vostres missatges sense el vostre consentiment explícit.</string>
-    <string name="title_setup_gmail_drafts">Si IMAP no pot accedir a la carpeta d\'esborranys, es pot solucionar a la configuració de l\'etiqueta de Gmail</string>
     <string name="title_setup_office_auth">L\'error \"AUTHENTICATE failed\" es pot produir perquè l\'administrador del sistema hagi deshabilitat IMAP/SMTP</string>
     <string name="title_setup_oauth_rationale">Autoritza accés al seu compte %1$s</string>
     <string name="title_setup_oauth_authorize">Autoritzar</string>
@@ -152,7 +151,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_password_repeat">Repeteix la contrasenya</string>
     <string name="title_setup_password_missing">Falta la contrasenya</string>
     <string name="title_setup_password_different">Les contrasenyes no coincideixen</string>
-    <string name="title_setup_password_invalid">Contrasenya invàlida</string>
     <string name="title_setup_exported">Configuració exportada</string>
     <string name="title_setup_imported">Configuració importada</string>
     <string name="title_setup_import_invalid">El fitxer de configuració no és vàlid</string>
@@ -469,7 +467,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_custom">Personalitzat</string>
     <string name="title_host">Nom del servidor</string>
     <string name="title_encryption">Xifratge</string>
-    <string name="title_encryption_none">Cap</string>
     <string name="title_allow_insecure">Permet connexions no segures</string>
     <string name="title_insecure_remark">Les connexions insegures només s’han de permetre en xarxes de confiança i mai en xarxes públiques</string>
     <string name="title_port">Número de port</string>
@@ -722,6 +719,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_style_size_small">Petit</string>
     <string name="title_style_size_medium">Mitjà</string>
     <string name="title_style_size_large">Gran</string>
+    <string name="title_style_size_xlarge">Extra gran</string>
     <string name="title_style_align">Alineació</string>
     <string name="title_style_align_start">Comença</string>
     <string name="title_style_align_center">Centre</string>
@@ -823,6 +821,9 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_search_server">Cerca en el servidor remot</string>
     <string name="title_search_in">Cerca en</string>
     <string name="title_search_sender">Cerca correu</string>
+    <string name="title_save_search_name">Nom</string>
+    <string name="title_save_search_order">Ordre</string>
+    <string name="title_save_search_color">Color</string>
     <string name="title_sort_on">Ordena per</string>
     <string name="title_sort_on_time">Data</string>
     <string name="title_sort_on_unread">Sense llegir</string>
@@ -855,6 +856,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_edit_signature">Edita la signatura</string>
     <string name="title_edit_signature_text">Text de signatura</string>
     <string name="title_edit_signature_image">Insereix imatge</string>
+    <string name="title_answer_define_name">Nom</string>
     <string name="title_answer_caption">Editar la plantilla</string>
     <string name="title_answer_reply">Respondre plantilla</string>
     <string name="title_answer_name">Nom de la plantilla</string>
@@ -1096,7 +1098,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_boundary_retry">Prova de nou</string>
     <string name="title_unexpected_error">S\'ha produït un error inesperat</string>
     <string name="title_log">Registres</string>
-    <string name="title_auto_scroll">Desplaçament automàtic</string>
     <string name="title_log_clear">Netejar</string>
     <string name="title_rules_export">Exporta regles</string>
     <string name="title_rules_import">Importa regles</string>
@@ -1150,6 +1151,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
         <item>Cada 5 minuts</item>
+        <item>Cada 10 minuts</item>
         <item>Cada 15 minuts</item>
         <item>Cada 30 minuts</item>
         <item>Cada hora</item>
@@ -1193,6 +1195,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
         <item>Següent conversa</item>
     </string-array>
     <string-array name="resizeNames">
+        <item>Tiny</item>
         <item>Extra small</item>
         <item>Petit</item>
         <item>Mitjà</item>

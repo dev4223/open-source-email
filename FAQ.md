@@ -1,21 +1,24 @@
 <a name="top"></a>
 # FairEmail support
 
-&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md)
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fgithub.com%2FM66B%2FFairEmail%2Fblob%2Fmaster%2FFAQ.md)
 
-If you have a question, please check the following frequently asked questions first.
-[At the bottom](#user-content-get-support),
+&#x1F1EC;&#x1F1E7; If you have a question, please check the following frequently asked questions first.
+[At the bottom](#user-content-quick-support),
 you can find out how to ask other questions, request features, and report bugs.
 You will receive an answer in your own language.
 
-Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die folgenden häufig gestellten Fragen.
-[Unten](#user-content-get-support) erfahren Sie, wie Sie andere Fragen stellen, Funktionen anfordern und Fehler melden können.
+&#x1F1E9;&#x1F1EA; Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die folgenden häufig gestellten Fragen.
+[Unten](#user-content-quick-support) erfahren Sie, wie Sie andere Fragen stellen, Funktionen anfordern und Fehler melden können.
 Sie erhalten eine Antwort in Ihrer eigenen Sprache.
 
-Si vous avez une question, veuillez d'abord vérifier les questions fréquemment posées suivantes.
-[En bas](#user-content-get-support), vous pouvez découvrir comment poser d'autres questions, demander des fonctionnalités et signaler des bogues.
+&#x1F1EB;&#x1F1F7; Si vous avez une question, veuillez d'abord vérifier les questions fréquemment posées suivantes.
+[En bas](#user-content-quick-support), vous pouvez découvrir comment poser d'autres questions, demander des fonctionnalités et signaler des bogues.
 Vous recevrez une réponse dans votre propre langue.
 
+## Tutorials
+
+Please [see here](https://github.com/M66B/FairEmail/tree/master/tutorials) for tutorials &#x1F4D6;.
 
 ## Index
 
@@ -54,11 +57,12 @@ For authorizing:
 * Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
 * Web.de: please check if [IMAP is enabled](https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html)
 * Web.de: with two factor authentication you'll need to use [an app password](https://web.de/email/sicherheit/zwei-faktor-authentifizierung/)
-* GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html))
-* GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html))
+* GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html)). Reportedly, you need to do this on a desktop computer.
+* GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html)). Not that enabling two-factor authentication does not automatically enable IMAP.
 * T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
 * Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/) (German) and not your account password
 * Yandex: please check if [IMAP is enabled](https://yandex.com/support/mail/mail-clients/others.html)
+* Comcast/Xfinity: please check if [third part email access](https://www.xfinity.com/support/articles/third-party-email-access) is enabled
 
 Please see [here](#user-content-faq22) for common error messages and solutions.
 
@@ -116,42 +120,82 @@ Related questions:
 * Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
 * A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.
 * A [bug in Crowdin](https://crowdin.com/messages/536694) blocks updating FAQ.md (this text) for translation.
-* Search suggestions causes the keyboard losing focus on Android 12L
+* Search suggestions causes the keyboard losing focus on Android 12L.
+* [A bug](https://techcommunity.microsoft.com/t5/outlook/outlook-office-365-imap-idle-is-broken/m-p/3616242) in the Outlook IMAP server causes delayed new message notifications.
+
+<a name="redmi"></a>
+<a name="oneplus"></a>
+<a name="oppo"></a>
+
+<br />
+
+**Xiaomi Redmi / OnePlus / Oppo**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23redmi)
+
+On some Xiaomi Redmi (Note) devices, some OnePlus devices with Android 12 and some Oppo devices with Android 12 the database occasionally gets corrupted, resulting in total data loss
+(on the device only, unless you are using a POP3 account with the option *Leave messages on server* disabled).
+
+The cause of this problem are disk I/O errors due to an Android bug (more likely) or maybe a hardware issue (less likely),
+please [see here](https://www.sqlite.org/rescode.html#ioerr_write).
+
+"*This error might result from a hardware malfunction or because a filesystem came unmounted while the file was open.*"
+
+This can't be fixed by the app and should be fixed by manufacturer of the device.
+
+**Please do not blame the app for this!**
+
+For the record the stack trace:
+
+```
+android.database.sqlite.SQLiteDiskIOException: disk I/O error (code 778)
+	at io.requery.android.database.sqlite.SQLiteConnection.nativeExecute(SourceFile:-2)
+	at io.requery.android.database.sqlite.SQLiteConnection.execute(SQLiteConnection:595)
+	at io.requery.android.database.sqlite.SQLiteSession.endTransactionUnchecked(SQLiteSession:447)
+	at io.requery.android.database.sqlite.SQLiteSession.endTransaction(SQLiteSession:411)
+	at io.requery.android.database.sqlite.SQLiteDatabase.endTransaction(SQLiteDatabase:551)
+	at androidx.room.RoomDatabase.internalEndTransaction(RoomDatabase:594)
+	at androidx.room.RoomDatabase.endTransaction(RoomDatabase:584)
+```
+
+The cause might be [changes in Android 7 Nougat](https://ericsink.com/entries/sqlite_android_n.html), which is why sqlite isn't bundled anymore since version 1.1970.
 
 <h2><a name="planned-features"></a>Planned features</h2>
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-planned-features)
 
-* ~~Synchronize on demand (manual)~~
-* ~~Semi-automatic encryption~~
-* ~~Copy message~~
-* ~~Colored stars~~
-* ~~Notification settings per folder~~
-* ~~Select local images for signatures~~ (this will not be added because it requires image file management and because images are not shown by default in most email clients anyway)
-* ~~Show messages matched by a rule~~
-* ~~[ManageSieve](https://tools.ietf.org/html/rfc5804)~~ (there are no maintained Java libraries with a suitable license and without dependencies and besides that, FairEmail has its own filter rules)
-* ~~Search for messages with/without attachments~~ (this cannot be added because IMAP doesn't support searching for attachments)
-* ~~Search for a folder~~ (filtering a hierarchical folder list is problematic)
-* ~~Search suggestions~~
-* ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
-* ~~Generic unified folders~~
-* ~~New per account message notification schedules~~ (implemented by adding a time condition to rules so messages can be snoozed during selected periods)
-* ~~Copy accounts and identities~~
-* ~~Pinch zoom~~ (not reliably possible in a scrolling list; the full message view can be zoomed instead)
-* ~~More compact folder view~~
-* ~~Compose lists and tables~~ (this requires a rich text editor, see [this FAQ](#user-content-faq99))
-* ~~Pinch zoom text size~~
-* ~~Display GIFs~~
-* ~~Themes~~ (a grey light and dark theme were added because this is what most people seems to want)
-* ~~Any day time condition~~ (any day doesn't really fit into the from/to date/time condition)
-* ~~Send as attachment~~
-* ~~Widget for selected account~~
-* ~~Remind to attach files~~
-* ~~Select domains to show images for~~ (this will be too complicated to use)
-* ~~Unified starred messages view~~ (there is already a special search for this)
-* ~~Move notification action~~
-* ~~S/MIME support~~
-* ~~Search for settings~~
+* &#x2714; ~~Synchronize on demand (manual)~~
+* &#x2714; ~~Semi-automatic encryption~~
+* &#x2714; ~~Copy message~~
+* &#x2714; ~~Colored stars~~
+* &#x2714; ~~Notification settings per folder~~
+* &#x2714; ~~Select local images for signatures~~
+* &#x2714; ~~Show messages matched by a rule~~
+* &#x274C; ~~[ManageSieve](https://tools.ietf.org/html/rfc5804)~~ (there are no maintained Java libraries with a suitable license and without dependencies and besides that, FairEmail has its own filter rules)
+* &#x2714; ~~Search for messages with/without attachments~~ (on-device only because IMAP doesn't support searching for attachments)
+* &#x2714; ~~Search for a folder~~
+* &#x2714; ~~Search suggestions~~
+* &#x274C; ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
+* &#x2714; ~~Generic unified folders~~
+* &#x2714; ~~New per account message notification schedules~~ (implemented by adding a time condition to rules so messages can be snoozed during selected periods)
+* &#x2714; ~~Copy accounts and identities~~
+* &#x2714; ~~Pinch zoom~~
+* &#x2714; ~~More compact folder view~~
+* &#x2714; ~~Compose lists~~
+* &#x274C; ~~Compose tables~~ (the Android editor doesn't suppor tables)
+* &#x2714; ~~Pinch zoom text size~~
+* &#x2714; ~~Display GIFs~~
+* &#x2714; ~~Themes~~
+* &#x274C; ~~Any day time condition~~ (any day doesn't really fit into the from/to date/time condition)
+* &#x2714; ~~Send as attachment~~
+* &#x2714; ~~Widget for selected account~~
+* &#x2714; ~~Remind to attach files~~
+* &#x2714; ~~Select domains to show images for~~
+* &#x2714; ~~Unified starred messages view~~ (implemented as saved search)
+* &#x2714; ~~Move notification action~~
+* &#x2714; ~~S/MIME support~~
+* &#x2714; ~~Search for settings~~
+* &#x2714; Many more ...
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -247,7 +291,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(78) How do I use schedules?](#user-content-faq78)
 * [(79) How do I use synchronize on demand (manual)?](#user-content-faq79)
 * [~~(80) How do I fix the error 'Unable to load BODYSTRUCTURE'?~~](#user-content-faq80)
-* [~~(81) Can you make the background of the original message dark in the dark theme?~~](#user-content-faq81)
+* [(81) Can you make the background of the original message view dark in dark themes?](#user-content-faq81)
 * [(82) What is a tracking image?](#user-content-faq82)
 * [(84) What are local contacts for?](#user-content-faq84)
 * [(85) Why is an identity not available?](#user-content-faq85)
@@ -280,7 +324,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(112) Which email provider do you recommend?](#user-content-faq112)
 * [(113) How does biometric authentication work?](#user-content-faq113)
 * [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
-* [(115) Can you add email address chips?](#user-content-faq115)
+* [~~(115) Can you add email address chips?~~](#user-content-faq115)
 * [~~(116) How can I show images in messages from trusted senders by default?~~](#user-content-faq116)
 * [(117) How can I restore a purchase (on another device) ?](#user-content-faq117)
 * [(118) What does 'Remove tracking parameters' exactly?](#user-content-faq118)
@@ -346,6 +390,10 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(178) Why are widgets not updating?](#user-content-faq178)
 * [(179) What are reply templates?](#user-content-faq179)
 * [(180) How do I use LanguageTool?](#user-content-faq180)
+* [(181) How do I use VirusTotal?](#user-content-faq181)
+* [(182) How can I select how a link should be opened?](#user-content-faq182)
+* [(183) How do I use Send?](#user-content-faq183)
+* [(184) How do I password protect content?](#user-content-faq184)
 
 [I have another question.](#user-content-get-support)
 
@@ -738,11 +786,13 @@ Note that this will result in extra internet traffic.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq8)
 
+Firstly, Exchange *protocol* is not the same as Exchange *server* or Exchange *account*.
+
 The Microsoft Exchange Web Services (EWS) protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
-Microsoft stopped updating the EWS libraries [in 2018](https://github.com/OfficeDev/ews-java-api).
+Microsoft stopped updating the EWS libraries [in 2016](https://github.com/OfficeDev/ews-java-api).
 So, it makes little sense to add this protocol anymore.
 
-You can use a Microsoft Exchange account if it is accessible via IMAP, which is mostly the case.
+You can use a Microsoft Exchange account if it is accessible via IMAP, which is almost always the case because all Exchange servers support the standard IMAP protocol.
 See [here](https://support.office.com/en-us/article/what-is-a-microsoft-exchange-account-47f000aa-c2bf-48ac-9bc2-83e5c6036793) for more information.
 
 Note that the desciption of FairEmail starts with the remark
@@ -846,22 +896,24 @@ Signing in short:
 * **Incoming** messages are verified with the **public key** of the sender
 
 To sign/encrypt a message, just select the appropriate method in the send dialog.
-You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
+The simplest way to show the send dialog (again) is to long press the *Send* button in the bottom action bar.
+It might be necessary to disable signing/encryption with the padlock icon in the top action bar first, to prevent the select key dialog, etc. from being in the way.
+The encryption method will be remembered for the selected identity (at the top of the message editor).
 
 To verify a signature or to decrypt a received message, open the message and just tap the gesture or padlock icon just below the message action bar.
 
-The first time you send a signed/encrypted message you might be asked for a sign key.
+The first time you send a signed/encrypted message, you might be asked for a sign key.
 FairEmail will automatically store the selected sign key in the used identity for the next time.
 If you need to reset the sign key, just save the identity or long press the identity in the list of identities and select *Reset sign key*.
 The selected sign key is visible in the list of identities.
 If need to select a key on a case by case basis, you can create multiple identities for the same account with the same email address.
 
-In the encryption settings you can select the default encryption method (PGP or S/MIME),
+In the encryption settings, you can select the default encryption method (PGP or S/MIME),
 enable *Sign by default*, *Encrypt by default* and *Automatically decrypt messages*,
 but be aware that automatic decryption is not possible if user interaction is required, like selecting a key or reading a security token.
 
 The to be encrypted message text/attachments and the decrypted message text/attachments are stored locally only and will never be added to the remote server.
-If you want to undo decryption, you can use the *resync* menu item in the three-dots menu of the message action bar.
+If you want to undo decryption, you can tap on the "close" padlock icon.
 
 <br />
 
@@ -900,11 +952,16 @@ All key handling is delegated to the OpenKey chain app for security reasons. Thi
 Inline encrypted PGP in received messages is supported, but inline PGP signatures and inline PGP in outgoing messages is not supported,
 see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
 
+If you wish to verify a signature manually, check *Show inline attachments* and save the files *content.asc* (the signed content) and *signature.asc* (the digital signature).
+Install [GnuPG](https://www.gnupg.org/) on your preferred operating system and execute this command:
+
+```gpg --verify signature.asc.pgp content.asc```
+
 Signed-only or encrypted-only messages are not a good idea, please see here about why not:
 
-* [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
-* [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
-* [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
+* [OpenPGP Considerations Part I](https://www.openkeychain.org/openpgp-considerations-part-i)
+* [OpenPGP Considerations Part II](https://www.openkeychain.org/openpgp-considerations-part-ii)
+* [OpenPGP Considerations Part III Autocrypt](https://www.openkeychain.org/openpgp-considerations-part-iii-autocrypt)
 
 Signed-only messages are supported, encrypted-only messages are not supported.
 
@@ -966,6 +1023,7 @@ Common errors:
 * *Private key does not match any encryption keys*: the selected key cannot be used to decrypt the message, probably because it is the incorrect key
 * *No private key*: no certificate was selected or no certificate was available in the Android keystore
 * *Memory allocation failed*: Android supports keys up to 4096 bits only (Android [issue 199605614](https://issuetracker.google.com/issues/199605614))
+* *message-digest attribute value does not match calculated value*: the signature doesn't match the message, possible because the message was changed.
 
 In case the certificate chain is incorrect, you can tap on the little info button to show the all certificates.
 After the certificate details the issuer or "selfSign" is shown.
@@ -1083,23 +1141,34 @@ Since version 1.1315 it is possible to use search expressions like this:
 apple +banana -cherry ?nuts
 ```
 
-This will result in searching like this:
+This will result in searching in the subject or text (only) like this:
 
 ```
 ("apple" AND "banana" AND NOT "cherry") OR "nuts"
 ```
 
-Search expressions can be used for searching on the device via the search index and for searching on the email server,
-but not for searching on the device without search index for performance reasons.
+Since version 1.1980 it is possible to use these prefixes as a search expression:
+
+```
+from:<email address>
+to:<email address>
+cc:<email address>
+bcc:<email address>
+keyword:<keyword>
+```
+
+There should be no space between the prefix and the search term, which will be applied as an AND-condition.
+
+Only AND conditions (+) and NOT conditions (-) can be used for on-device searching (since version 1.1981).
+If you try to use other search expressions, you get the error *Select a folder for a complex search*,
+which means that a folder in an account's folder list must be selected in order to perform the search on the server.
 
 Since version 1.1733 it is possible to save searches, which means that a named entry in the navigation menu will be created to repeat the same search later.
 You can save a search after searching by tapping on the save button in the top action bar.
 After repeating a search there will be a delete button at the same place to delete a saved search again.
 A saved search might be useful to quickly search for starred messages, or for messages from a specific email address, etc.
 
-Searching on the device is a free feature, using the search index and searching on the server is a pro feature.
-Note that you can download as many messages to your device as you like.
-The easiest way is to use the menu item *Fetch more messages* in the three-dots menu of the start screen.
+Using the search index is a pro feature.
 
 <br />
 
@@ -1233,11 +1302,11 @@ See also [this FAQ](#user-content-faq15).
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq19)
 
-First of all, **FairEmail is basically free to use** and only some advanced features need to be purchased.
+**FairEmail is basically free to use** and only some advanced features need to be purchased.
 
-Zuerst, **FairEmail ist grundsätzlich kostenlos** und nur einige erweiterte Funktionen müssen gekauft werden.
+**FairEmail ist grundsätzlich kostenlos** und nur einige erweiterte Funktionen müssen gekauft werden.
 
-Tout d'abord, **FairEmail est au fond gratuit** et seulement quelques fonctionnalités avancées doivent être achetés.
+**FairEmail est au fond gratuit** et seulement quelques fonctionnalités avancées doivent être achetés.
 
 Please see the Play store description of the app or [see here](https://email.faircode.eu/#pro) for a complete list of pro features.
 
@@ -1254,7 +1323,7 @@ Also note that most free apps will appear not to be sustainable in the end, wher
 and that free apps may have a catch, like sending privacy sensitive information to the internet.
 There are no privacy violating ads in the app either.
 
-I have been working on FairEmail almost every day for more than three years, so I think the price is more than reasonable.
+I have been working on FairEmail almost every day for more than four years, so I think the price is more than reasonable.
 For this reason there won't be discounts either.
 
 <br />
@@ -1348,7 +1417,7 @@ Some devices have a firewall, which you can access like this:
 
 Android *Settings, Data usage, Three-dots overflow menu, Data usage control*
 
-The error *... Connection refused ...* means that the email server
+The error *... Connection refused ...* (ECONNREFUSED) means that the email server
 or something between the email server and the app, like a firewall, actively refused the connection.
 
 The error *... Network unreachable ...* means that the email server was not reachable via the current internet connection,
@@ -1389,6 +1458,8 @@ The error *... NO mailbox selected READ-ONLY ...* indicates [this Zimbra problem
 
 The Outlook specific error *... Command Error. 10 ...* probably means that the OAuth token expired or was invalidated.
 Authenticating the account again with the quick setup wizard will probably resolve this condition.
+Another possible cause is a bug in an older Exchange version, please [see here](https://bugzilla.mozilla.org/show_bug.cgi?id=886261).
+In this case the system administrator needs to update the server software.
 
 Please [see here](#user-content-faq4) for the errors *... Untrusted ... not in certificate ...*, *... Invalid security certificate (Can't verify identity of server) ...* or *... Trust anchor for certification path not found ...*
 
@@ -1436,7 +1507,8 @@ Too large messages and triggering the spam filter of an email server are the mos
 * *550 We're sorry, but we can't send your email. Either the subject matter, a link, or an attachment potentially contains spam, or phishing or malware.* means that the email provider considers an outgoing message as harmful.
 * *550 ...*, [see here](https://www.crazydomains.com.au/help/550-blocked-error-explained/) for a list of possible causes
 * *571 5.7.1 Message contains spam or virus or sender is blocked ...* means that the email server considered an outgoing message as spam. This probably means that the spam filters of the email server are too strict. You'll need to contact the email provider for support on this.
-* *451 4.7.0 Temporary server error. Please try again later. PRX4 ...*: please [see here](https://www.limilabs.com/blog/office365-temporary-server-error-please-try-again-later-prx4) or [see here](https://judeperera.wordpress.com/2019/10/11/fixing-451-4-7-0-temporary-server-error-please-try-again-later-prx4/).
+* *451 4.7.0 Temporary server error. Please try again later. PRX4 ...* indicates a server configuration problem, please [see here](https://www.limilabs.com/blog/office365-temporary-server-error-please-try-again-later-prx4) or [see here](https://judeperera.wordpress.com/2019/10/11/fixing-451-4-7-0-temporary-server-error-please-try-again-later-prx4/).
+* *451 4.7.0 Temporary server error. Please try again later. PRX5 ...* indicates a server configuration problem, please [see here](https://www.limilabs.com/qa/4471/451-4-7-0-temporary-server-error-please-try-again-later-prx5)
 * *571 5.7.1 Relay access denied*: please double check the username and email address in the advanced identity settings (via the manual setup).
 * Please [see here](https://support.google.com/a/answer/3726730) for more information and other SMTP error codes
 
@@ -1764,8 +1836,6 @@ this is even less secure because Google is involved too without providing much b
 
 You can show images and original messages by default for trusted senders on a case-by-case basis by checking *Do not ask this again for ...*.
 
-If you want to reset the default *Open with* apps, please [see here](https://support.google.com/pixelphone/answer/6271667).
-
 <br />
 
 <a name="faq36"></a>
@@ -1777,8 +1847,15 @@ Short version: AES 256 bit
 
 Long version:
 
-* The 256 bit key is generated with *PBKDF2WithHmacSHA1* using a 128 bit secure random salt and 65536 iterations
-* The cipher is *AES/CBC/PKCS5Padding*
+*Before version 1.1987*
+
+* A 256 bit key is derived with *PBKDF2WithHmacSHA1* using a 128 bit secure random salt and 65536 iterations
+* The used cipher is *AES/CBC/PKCS5Padding*
+
+*Since version 1.1987*
+
+* A 256 bit key is derived with *PBKDF2WithHmacSHA512* using a 128 bit secure random salt and 120000 iterations
+* The used cipher is *AES/GCM/NoPadding*
 
 <br />
 
@@ -1811,14 +1888,15 @@ The real battery usage can be seen by navigating to this screen:
 
 Alternatively: tap on the *App settings* button in the main settings screen of the app and tap on *Battery*.
 
-As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby* for one account with a stable network connection.
-If this isn't the case, please turn on *Auto optimize* in the receive settings.
+As a rule of thumb, the battery usage should be below or in any case not be much higher than *Mobile network standby* for one account with a stable network connection.
+If this isn't the case, please turn on *Auto optimize* in the receive settings tab page.
 If this doesn't help, please [ask for support](https://contact.faircode.eu/?product=fairemailsupport).
 
-It is inevitable that synchronizing messages will use battery power because it requires network access and accessing the messages database.
+It is inevitable that synchronizing messages will use battery power because it requires network access and accessing the messages' database.
+Since the app needs to wait for responses of the email server, which requires the processor (CPU) to be active, slower email servers will result in more battery usage.
 
-If you are comparing the battery usage of FairEmail with another email client, please make sure the other email client is setup similarly.
-For example comparing always sync (push messages) and (infrequent) periodic checking for new messages is not a fair comparison.
+If you are comparing the battery usage of FairEmail with another email client, please make sure the other email client is set up similarly.
+For example, comparing always sync (push messages) and (infrequent) periodic checking for new messages is not a fair comparison.
 
 Reconnecting to an email server will use extra battery power, so an unstable internet connection will result in extra battery usage.
 Also, some email servers prematurely terminate idle connections, while [the standard](https://tools.ietf.org/html/rfc2177) says that an idle connection should be kept open for 29 minutes.
@@ -1841,41 +1919,42 @@ You could for example initially synchronize messages for a large number of days 
 reduce the number of days to synchronize messages, but leave the number of days to keep messages.
 After decreasing the number of days to keep messages, you might want to run the cleanup in the miscellaneous settings to remove old files.
 
-In the receive settings you can enable to always synchronize starred messages,
+In the receive settings tab page you can enable to always synchronize starred messages,
 which will allow you to keep older messages around while synchronizing messages for a limited number of days.
 
 Disabling the folder option *Automatically download message texts and attachments*
 will result in less network traffic and thus less battery usage.
-You could disable this option for example for the sent folder and the archive.
+You could disable this option, for example for the sent folder and the archive.
 
 Synchronizing messages at night is mostly not useful, so you can save on battery usage by not synchronizing at night.
-In the settings you can select a schedule for message synchronization (this is a pro feature).
+In the settings, you can select a schedule for message synchronization (this is a pro feature).
 
 FairEmail will by default synchronize the folder list on each connection.
-Since folders are mostly not created, renamed and deleted very often, you can save some network and battery usage by disabling this in the receive settings.
+Since folders are mostly not created, renamed and deleted very often, you can save some network and battery usage by disabling this in the receive settings tab page.
 
 FairEmail will by default check if old messages were deleted from the server on each connection.
-If you don't mind that old messages that were delete from the server are still visible in FairEmail, you can save some network and battery usage by disabling this in the receive settings.
+If you don't mind that old messages that were deleted from the server are still visible in FairEmail,
+you can save some network and battery usage by disabling this in the receive settings tab page.
 
 Some providers don't follow the IMAP standard and [don't keep connections open](https://datatracker.ietf.org/doc/html/rfc3501#section-5.4) long enough, forcing FairEmail to reconnect often, causing extra battery usage.
-You can inspect the *Log* via the main navigation menu to check if there are frequent reconnects (connection closed/reset, read/write error/timeout, etc).
-You can workaround this by lowering the keep-alive interval in the advanced account settings to for example 9 or 15 minutes.
+You can inspect the *Log* via the main navigation menu to check if there are frequent reconnects (connection closed/reset, read/write error/timeout, etc.).
+You can work around this by lowering the keep-alive interval in the advanced account settings to for example 9 or 15 minutes.
 Note that battery optimizations need to be disabled in setup step 3 to reliably keep connections alive.
 
 Some providers send every two minutes something like '*Still here*' resulting in network traffic and your device to wake up and causing unnecessary extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if your provider is doing this.
 If your provider is using [Dovecot](https://www.dovecot.org/) as IMAP server,
 you could ask your provider to change the [imap_idle_notify_interval](https://wiki.dovecot.org/Timeouts) setting to a higher value or better yet, to disable this.
-If your provider is not able or willing to change/disable this, you should consider to switch to periodically instead of continuous synchronization.
-You can change this in the receive settings.
+If your provider is not able or willing to change/disable this, you should consider switching to periodically instead of continuous synchronization.
+You can change this in the receive settings tab page.
 
-If you got the message *This provider does not support push messages* while configuring an account,
+If you got the message, *This provider does not support push messages* while configuring an account,
 consider switching to a modern provider which supports push messages (IMAP IDLE) to reduce battery usage.
 
 If your device has an [AMOLED](https://en.wikipedia.org/wiki/AMOLED) screen,
 you can save battery usage while viewing messages by switching to the black theme.
 
-If auto optimize in the receive settings is enabled,
+If auto optimize in the receive settings tab page is enabled,
 an account will automatically be switched to periodically checking for new messages when the email server:
 
 * Says '*Still here*' within 3 minutes
@@ -1938,7 +2017,7 @@ The error '*Handshake failed SSL handshake terminated ... SSLV3_ALERT_HANDSHAKE_
 can be caused by [this Android 7.0 bug](https://issuetracker.google.com/issues/37122132). This can unfortunately not be fixed by FairEmail.
 
 The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION or SSLV3_ALERT_HANDSHAKE_FAILURE ...*'
-might be caused by enabling hardening connections in the connection settings
+might be caused by enabling **hardening connections**, or requiring TLS 1.3 in the connection settings
 or by Android not supporting older protocols anymore, like SSLv3.
 
 Android 8 Oreo and later [do not support](https://developer.android.com/about/versions/oreo/android-8.0-changes#security-all) SSLv3 anymore.
@@ -2264,7 +2343,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the add contact button in the message composer to insert a contact group? (since version 1.1721)
 * Did you know that you can long press the image action to show the image dialog, even if it was disabled? (since version 1.1772)
 * Did you know that you can long press the "] \[" button to fit original messages to the screen width? (this might result in "thin" messages)
-* Did you know that you can long press on the save drafts button for a grammar, style, and spell check?
+* Did you know that you can long press on the save drafts button for a grammar, style, and spell check via [LanguageTools](https://languagetool.org/)?
 
 <br />
 
@@ -2498,6 +2577,7 @@ You can use multiple rules, possibly with a *stop processing*, for an *or* or a 
 
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression).
 Please see [here](https://developer.android.com/reference/java/util/regex/Pattern) for the documentation of Java regular expressions.
+Note that you need to match the complete text from the first to the last character.
 You can test a regex [here](https://regexr.com/).
 
 Note that a regular expression supports an *or* operator, so if you want to match multiple senders, you can do this:
@@ -2535,6 +2615,17 @@ and to set up auto deletion for the trash folder in the folder properties (long 
 If you want to forward a message, consider to use a *move* action instead.
 This will be more reliable than forwarding because forwarded messages might be considered as spam.
 
+<br>
+
+A *move* action can optionally create subfolders (since version 1.1966) to move messages to, for which you can use the following placeholders:
+
+```
+$week$
+$month$
+$year$
+$domain$
+```
+
 <br />
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
@@ -2545,7 +2636,7 @@ Some common header conditions (regex):
 
 * *.&ast;Auto-Submitted:.&ast;* [RFC3834](https://tools.ietf.org/html/rfc3834)
 * *.&ast;List-Unsubscribe:.&ast;* [RFC3834](https://datatracker.ietf.org/doc/html/rfc2369)
-* *.&ast;Content-Type: multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
+* *.&ast;Content-Type:.&ast;multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
 
 To match *set* IMAP flags (keywords) via a header condition (since version 1.1777):
 
@@ -2575,6 +2666,10 @@ $$replydomain$
 $$nofrom$ (since version 1.1791)
 $$multifrom$ (since version 1.1791)
 $$automatic$ (since version 1.1862)
+$$lowpriority$ (since version 1.1958)
+$$highpriority$ (since version 1.1958)
+$$signed$ (since version 1.1981)
+$$encrypted$ (since version 1.1981)
 ```
 
 Note that *regex* should be disable and that there should be no white space.
@@ -2774,7 +2869,7 @@ To set the poll interval:
 (adb shell) adb shell am start-foreground-service -a eu.faircode.email.INTERVAL --ei minutes nnn
 ```
 
-Where *nnn* is one of 0, 15, 30, 60, 120, 240, 480, 1440. A value of 0 means push messages.
+Where *nnn* is one of 0, 5, 15, 30, 60, 120, 240, 480, 1440. A value of 0 means push messages.
 
 You can automatically send commands with for example [Tasker](https://tasker.joaoapps.com/userguide/en/intents.html):
 
@@ -2829,12 +2924,15 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 <br />
 
 <a name="faq81"></a>
-**~~(81) Can you make the background of the original message dark in the dark theme?~~**
+**(81) Can you make the background of the original message view dark in dark themes?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq81)
 
-~~The original message is shown as the sender has sent it, including all colors.~~
-~~Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.~~
+The original message view will use a dark background when using a dark theme for Android version 10 and later.
+
+For Android before version 10 Google removed this feature from the [Android System WebView](https://play.google.com/store/apps/details?id=com.google.android.webview),
+even though it worked fine in most cases.
+Please see [this issue](https://issuetracker.google.com/issues/237785596) (requires a Google account login) requesting to restore this feature again for more information.
 
 <br />
 
@@ -2934,7 +3032,7 @@ To authorize a Yahoo/AT&T, AOL, or Sky account you need to use an app password i
 For instructions about how to create an app password, please see here:
 
 * [for Yahoo/AT&T](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)
-* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password)
+* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password) **Important**: app password generation is broken, [frustrating many people](https://aol.uservoice.com/forums/912886-aol-mail/suggestions/45235399-i-wanted-to-generate-a-third-party-app-password-bu) because this means you can use the AOL app and the browser only.
 * [for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)
 
 Please see [this FAQ](#user-content-faq111) about OAuth support.
@@ -3021,6 +3119,13 @@ Note that the POP3 protocol gives access to the inbox only. So, it is won't be p
 Note that you should not delete spam messages, also not from the spam folder,
 because the email server uses the messages in the spam folder to "learn" what spam messages are.
 
+If you are wondering why a message was moved into the spam folder, these are all possible reasons:
+
+* The email server of your email provider moved the message into the spam folder. The app can't undo this automatically because this can result in an endless loop.
+* The message classifier (miscellaneous settings tab page) moved the message into the spam folder.
+* A filter rule (navigation menu = left side menu of the start screen), for example a block domain name rule, moved the message into the spam folder.
+* An email address or a network address is on a block list (receive settings tab page).
+
 If you receive a lot of spam messages in your inbox, the best you can do is to contact the email provider to ask if spam filtering can be improved.
 
 Also, FairEmail can show a small red warning flag
@@ -3062,7 +3167,8 @@ Please be aware that removing the storage space will inevitably result in proble
 When needed you can save (raw) messages via the three-dots menu just above the message text
 and save attachments by tapping on the floppy icon.
 
-If you need to save on storage space, you can limit the number of days messages are being synchronized and kept for.
+If you need to save on storage space, you can limit the number of days messages are being synchronized and kept on your device
+and disable downloading and storing of message texts and attachments (which means only message headers will be stored).
 You can change these settings by long pressing a folder in the folder list and selecting *Edit properties*.
 
 <br />
@@ -3210,6 +3316,7 @@ Note that only [JPEG](https://en.wikipedia.org/wiki/JPEG) and [PNG](https://en.w
 * Error reporting is optional and opt-in
 * Error reporting can be enabled/disabled via the *miscellaneous* settings tab page
 * Error reports will automatically be sent anonymously to [Bugsnag](https://www.bugsnag.com/)
+* [Telemetry](https://docs.bugsnag.com/platforms/android/configuration-options/#telemetry) is always disabled
 * Bugsnag for Android is [open source](https://github.com/bugsnag/bugsnag-android)
 * See [here](https://docs.bugsnag.com/platforms/android/automatically-captured-data/) about what data will be sent in case of errors
 * See [here](https://docs.bugsnag.com/legal/privacy-policy/) for the privacy policy of Bugsnag
@@ -3349,10 +3456,11 @@ Disabling *Partial fetch* will result in more memory usage.
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq111)
 
 OAuth for Gmail is supported via the quick setup wizard.
-The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts.
-OAuth for non on-device accounts is not supported
-because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this.
-You can read more about this [here](https://www.theregister.com/2019/02/11/google_gmail_developer/).
+~~The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts.~~
+~~OAuth for non on-device accounts is not supported~~
+~~because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this.~~
+~~Since FairEmail is basically offered free of charge, it is not an option to pay such an amount annually for a security audit.~~
+~~You can read more about this [here](https://www.theregister.com/2019/02/11/google_gmail_developer/).~~
 
 OAuth for Outlook/Office 365, Yahoo, Mail.ru and Yandex is supported via the quick setup wizard.
 
@@ -3427,19 +3535,19 @@ Moreover, setting up an account/identity with the quick setup wizard is simple, 
 <br />
 
 <a name="faq115"></a>
-**(115) Can you add email address chips?**
+**~~(115) Can you add email address chips?~~**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq115)
 
-Email address [chips](https://material.io/design/components/chips.html) look nice, but cannot be edited,
-which is quite inconvenient when you made a typo in an email address.
+~~Email address [chips](https://material.io/design/components/chips.html) look nice, but cannot be edited,~~
+~~which is quite inconvenient when you made a typo in an email address.~~
 
-Note that FairEmail will select the address only when long pressing an address, which makes it easy to delete an address.
+~~Note that FairEmail will select the address only when long pressing an address, which makes it easy to delete an address.~~
 
-Chips are not suitable for showing in a list
-and since the message header in a list should look similar to the message header of the message view it is not an option to use chips for viewing messages.
+~~Chips are not suitable for showing in a list~~
+~~and since the message header in a list should look similar to the message header of the message view it is not an option to use chips for viewing messages.~~
 
-Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f471b882ec87d5a5a5015).
+~~Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f471b882ec87d5a5a5015).~~
 
 <br />
 
@@ -3468,7 +3576,7 @@ You can select the account in the Play store app by tapping on the avatar at the
 Google manages all purchases, so as a developer I have little control over purchases.
 So, basically the only thing I can do, is give some advice:
 
-* Make sure you have an active, working internet connection
+* Make sure you have an active, working internet connection, and turn off any VPN based app because it might prevent the Play store from checking purchases
 * Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
 * Make sure you installed FairEmail via the right Google account if you configured multiple Google accounts on your device (you might need to reinstall the app)
 * Make sure the Play store app is up to date, please [see here](https://support.google.com/googleplay/answer/1050566?hl=en)
@@ -3490,6 +3598,8 @@ Note that:
 * Play Store purchases cannot be used without the Play Store app/services
 * Play Store purchases cannot be transferred to another account
 * You can't restore purchases with [microG](https://microg.org/)
+
+Please [see here](https://support.google.com/googleplay/answer/4646404) about how to add, remove, or edit your Google Play payment method.
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
 
@@ -3633,7 +3743,7 @@ Remarks:
 * The original attachments are sent as they are, unless attachments are being added or removed
 * Default CC and BCC addresses will not be applied
 * Read and delivery receipts will be requested when enabled, they could go to the original sender or to you
-* The email server might refuse resent messages
+* The email server might refuse or incorrectly process resent messages
 * DKIM, SPF and DMARC will likely fail, often causing resent messages to be considered as spam
 
 <br />
@@ -3659,6 +3769,13 @@ Note that the email server needs to support IMAP flags (keywords) for this featu
 
 Filter rules will be applied to the received receipt, so it is possible to move/archive the receipt.
 See [this FAQ](#user-content-faq71) for a header condition to recognize receipts.
+
+<br />
+
+*Block toolbar (version 1.1967+)*
+
+When enabled in the three-dots overflow menu of the message editor,
+a toolbar to perform operations (align text, insert list, indent text, insert blockquote) on a block of text (consecutive non-empty lines) will be shown.
 
 <br />
 
@@ -3900,10 +4017,12 @@ Note that FairEmail does support replying to calendar invites (a pro feature) an
 
 The confusing Microsoft specific server error *User is authenticated but not connected* might occur if:
 
-* External access was administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules) about how an administrator can enable it again
-* SMTP was administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission) about how an administrator can enable it again
+* External access is administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules) about how an administrator can enable it again
+* SMTP is administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission) about how an administrator can enable it again
+* Required server components are disabled, please see [this article](https://learn.microsoft.com/en-us/exchange/troubleshoot/user-and-shared-mailboxes/pop3-imap-owa-activesync-office-365) about enabling IMAP, MAPI, etc.
 * Push messages are enabled for too many folders: see [this FAQ](#user-content-faq23) for more information and a workaround
 * There were too many login attempts in a too short time, for example by using multiple email clients at the same time
+* An ad blocker or DNS changer is being used
 * There is a problem with the Exchange server license: it might be expired or for another server edition
 * An alias email address is being used as username instead of the primary email address
 * An incorrect login scheme is being used for a shared mailbox: the right scheme is *username@domain\SharedMailboxAlias*
@@ -4025,13 +4144,20 @@ Voice notes will automatically be attached.
 
 Account:
 
-* Enable *Separate notifications* in the advanced account settings (Settings, tap Manual setup, tap Accounts, tap account, tap Advanced)
-* Long press the account in the account list (Settings, tap Manual setup, tap Accounts) and select *Edit notification channel* to change the notification sound
+* Version 1.1927-: enable *Separate notifications* in the advanced account settings
+* Version 1.1927+: long press the account in the account list and select *Create notification channel*
+* Long press the account in the account list and select *Edit notification channel* to change the notification sound
+
+To go to the account list: navigation menu (left side menu), tap *Settings*, tap *Manual setup and account options* and tap *Accounts*.<br>
+To go to the advanced account settings from the account list: tap on the account and tap on *Advanced*.
 
 Folder:
 
+* Long press the folder in the folder list and select *Notify on new messages*
 * Long press the folder in the folder list and select *Create notification channel*
 * Long press the folder in the folder list and select *Edit notification channel* to change the notification sound
+
+To go to the folder list: tap on the account name in the navigation menu (left side menu).
 
 Sender:
 
@@ -4098,6 +4224,13 @@ Please [see here](https://github.com/M66B/FairEmail/blob/master/README.md#user-c
 and [see here](#user-content-faq173) for the differences between the different release types.
 
 If you have a problem with the F-Droid build, please check if there is a newer GitHub version first.
+
+You can see the source of the app in *About* of the navigation menu (left side menu),
+either *Play store*, *GitHub*, *F-Droid*, or *?* (for example in the case of a custom build).
+
+[IzzyOnDroid](https://apt.izzysoft.de/fdroid/) hosts the GitHub release of the app.
+[Aurora Store](https://f-droid.org/packages/com.aurora.store/) hosts the Play store version of the app,
+even though the Aurora Store app was downloaded from F-Droid.
 
 <br />
 
@@ -4463,6 +4596,8 @@ because Google rejected the application of FairEmail for this reason:
 At this time, we are only accepting apps within the Media, short form Messaging,
 or categories supported by the Android for Cars App Library.*
 
+Also, not all Android Auto versions support this (as installed in the car).
+
 **Use of this feature with the Github version is expressly at your own risk!**
 
 For notification (messaging) support you'll need to enable the following notification options:
@@ -4646,11 +4781,18 @@ Related questions:
 * The Play store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
 * The Play store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
 * The Play Store version does not support Gravatars/Libravatars due to Play Store policies
-* The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently
+* The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently, but updates need to be installed manually
 * The GitHub version has some different links, some more options (like sharing the HTML of a message) and some different default values (more geared to advanced users)
+* The GitHub version can be installed as an update over the Play store version, whereas the F-Droid build can't (see below for more details)
 * The F-Droid build does not support OAuth, see [this FAQ](#user-content-faq147) about why not
 * The F-Droid build does not include [Google Play Billing](https://developer.android.com/google/play/billing/integrate), so Play store purchases cannot be reused
-* The F-Droid build is supported only if the version number is the same as the the version number of the latest GitHub version, see also [this FAQ](#user-content-faq147)
+* The F-Droid build is supported only if the version number is the same as the version number of the latest GitHub version, see also [this FAQ](#user-content-faq147)
+
+The Play store and GitHub version are signed with the [same digital signature](https://github.com/M66B/FairEmail#user-content-downloads) (security certificate).
+The F-Droid build is signed by the F-Droid organization with a different digital key.
+This means you can't update the F-Droid build with the Play store or GitHub version or the other way around without reinstalling.
+However, it is possible to install the GitHub version over the Play store version,
+and the Play store app will do the same, when auto updating isn't disabled for the app in the app description.
 
 <br />
 
@@ -4726,6 +4868,8 @@ Received: brown.elm.relay.mailchannels.net (brown.elm.relay.mailchannels.net. [2
 	for <test@example.org> (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
 ```
 
+The feature depends on the header *Authentication-Results*, which the receiving email server should add.
+
 <br />
 
 <a name="faq177"></a>
@@ -4780,10 +4924,116 @@ Templates can have the following options:
 <a name="faq180"></a>
 **(180) How do I use LanguageTool?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq180)
+
+LanguageTool integration needs to be enabled in the miscellaneous settings.
+
 After writing some text, you can long press on the save draft button to perform a grammar, style, and spell check via [LanguageTool](https://languagetool.org/).
 Texts with suggestions will be marked and if you tap on a marked suggestion,
 it will be shown by the keyboard if the keyboard supports this,
 else you can double tap or long press the marked text to show suggestions.
+
+Since version 1.1974 there is an option to check paragraphs after a new line.
+
+The suboption *Use formal form* can be enabled to let LanguageTool suggest more formal text (business, legal, etc).
+
+<br />
+
+<a name="faq181"></a>
+**(181) How do I use VirusTotal?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq181)
+
+VirusTotal integration needs to be enabled in the miscellaneous settings and an API key needs to be entered.
+To get an API key, you'll need to sign up via the [VirusTotal website](https://www.virustotal.com/).
+
+When integration is enabled and an API key is available, a *scan* icon button will be shown for each attachment.
+Tapping on the scan button will calculate the SHA-256 hash of the attachment and lookup the file via the VirusTotal API.
+If the file is known by VirusTotal, the number of virus scanners considering the file as malicious will be shown.
+If the file isn't known by VirusTotal, an upload button will be shown to upload the file for analysis by VirusTotal.
+
+This feature was added in version 1.1942 and is available in non Play store versions of the app only.
+
+<br />
+
+
+<a name="faq182"></a>
+**(182) How can I select how a link should be opened?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq182)
+
+When clicking on a link, a confirmation dialog will be shown. You can select how to open a link below *Open with*.
+The available browser(s) will be listed and if a browser supports [Custom Tabs](https://developer.chrome.com/docs/android/custom-tabs/), it will be listed twice,
+once with an "open external" icon (the browser will be started standalone, independent of the app)
+and once without this icon (the browser will be started embedded as "Custom Tab", dependent of the app).
+In addition, *Select app* will be listed, which means that the link will be handed over to Android, which will select how to open the link.
+In most cases, this will be with the default browser, which you can select in the Android settings.
+If there is choice, Android will ask you how to open the link. You can select *Always* or *Just Once*.
+If you want to reset *Always*, please [see here](https://support.google.com/pixelphone/answer/6271667) about how to.
+Note that Android will always use the default browser as selected in the Android settings and therefore will never ask which browser to use.
+
+If you ticked *Do not ask this again for [domain name]*, you can undo this by using the *Reset questions* button in the miscellaneous settings tab page of the app.
+
+If you disabled confirming links, you can enable this (temporarily) again in the privacy settings tab page of the app (*Confirm opening links*: off).
+
+Note that you might need to enable confirming links and reset questions to show the link confirmation dialog again.
+
+Please see [this FAQ](#user-content-faq35) on why you should be careful when opening links.
+
+<br />
+
+<a name="faq183"></a>
+**(183) How do I use Send?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq183)
+
+[Send](https://github.com/timvisee/send) is designed as temporary end-to-end encrypted file storage.
+Only people with a link to a file can download and decrypt a file.
+See for some more information [Wikipedia](https://en.wikipedia.org/wiki/Firefox_Send).
+
+Send integration needs to be enabled in the miscellaneous settings.
+
+Optionally, you can change the host address of the Send server.
+Please [see here](https://github.com/timvisee/send-instances) for a list of public instances.
+
+To upload a file and insert a link, you can use the insert link button in the message editor.
+
+Send is only available in non-Play Store versions of the app (since version 1.1947).
+
+<br />
+
+<a name="faq184"></a>
+**(184) How do I password protect content?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq184)
+
+Password protected content is a simple, yet secure form of end-to-end encryption that requires no configuration.
+
+How to use: select some text by long pressing it, and in the style toolbar at the bottom tap on the *<ins>A</ins>*-button and select *Password protect* in the pop-up menu.
+This will replace the selected content with a link that the recipient can click to decrypt the content on a dedicated static web page.
+
+Password protected content is sent as a [URI fragment](https://en.wikipedia.org/wiki/URI_fragment) and decrypted in the browser with JavaScript.
+In other words, protected content is never stored on or seen by third party servers.
+Since version 1.1990 received protected content will be decrypted by the app, with as fallback decryption in the browser for other email clients.
+
+Password protected content is encrypted with [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) / [GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
+with a 256 bits key derived with [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) / [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithms)-512 with 120,000 iterations.
+With a sufficiently long/complex password, which is communicated to the recipient securely, this is considered safe in 2022 and for the foreseeable future.
+
+Due to [length limitations](https://stackoverflow.com/a/417184/1794097) of [URL](https://en.wikipedia.org/wiki/URL)s and
+Android [binder limitations](https://developer.android.com/reference/android/os/TransactionTooLargeException),
+the maximum content size is 1,500 bytes, which includes [HTML](https://en.wikipedia.org/wiki/HTML) formatting tags.
+Images will be replaced with placeholders to reduce the content size, but other formatting, like bold, italic, links, etc., will be retained.
+If the content is too long, there will be a popup *Text too long*.
+
+The content size limit is also why complete messages (possibly including a long reply chain) cannot be password protected.
+You can use [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) or [S/MIME](https://en.wikipedia.org/wiki/S/MIME) encryption for this (see [this FAQ](#user-content-faq12)).
+
+[Cross-site scripting](https://en.wikipedia.org/wiki/Cross-site_scripting) is prevented by using [DOMPurify](https://github.com/cure53/DOMPurify) (Apache License Version 2.0).
+
+Protected content is only available in non-Play Store versions of the app (since version 1.1985).
+
+Sending protected content is a pro feature, decrypting protected content is a free feature.
 
 <br />
 
@@ -4797,16 +5047,20 @@ Only the latest Play store version and latest GitHub release are supported.
 The F-Droid build is supported only if the version number is the same as the version number of the latest GitHub release.
 This also means that downgrading is not supported.
 
-There is no support on things that are not directly related to FairEmail.
+There is no support for things that are not directly related to FairEmail.
 
 There is no support on building and developing things by yourself.
+
+A change will be considered only if more than a few people ask for it.
+Changes in the past resulted too often in lots of complaints of other people.
+You can ask for support for changes [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168).
 
 Requested features should:
 
 * be useful to most people
 * not complicate the usage of FairEmail
-* fit within the philosophy of FairEmail (privacy oriented, security minded)
-* comply with common standards (IMAP, SMTP, etc)
+* fit within the philosophy of FairEmail (privacy-oriented, security-minded)
+* comply with common standards (IMAP, SMTP, etc.)
 * comply with the [Core app quality guidelines](https://developer.android.com/docs/quality-guidelines/core-app-quality)
 
 A feature will be considered useful to most people if more than 0.1% of the users request a feature, which in practice means about 500 people.
@@ -4816,14 +5070,22 @@ This is also to keep maintenance and support in the long term feasible.
 
 Note that there are already more features and options in FairEmail than in any other Android email client.
 
-If you have a question, want to request a feature or report a bug, **please use [this form](https://contact.faircode.eu/?product=fairemailsupport)**.
+<a name="quick-support"></a>
 
-Wenn Sie eine Frage haben, eine Funktion anfordern oder einen Fehler melden möchten, **verwenden Sie bitte [dieses Formular](https://contact.faircode.eu/?product=fairemailsupport)**.
+<br />
 
-Si vous avez une question, souhaitez demander une fonctionnalité ou signaler un bogue, **veuillez utiliser [ce formulaire](https://contact.faircode.eu/?product=fairemailsupport)**.
+&#x1F6DF; &#x1F6DF; &#x1F6DF; &#x1F6DF; &#x1F6DF;
+
+&#x1F1EC;&#x1F1E7; If you have a question, want to request a feature or report a bug, **please use [this form](https://contact.faircode.eu/?product=fairemailsupport)**.
+
+&#x1F1E9;&#x1F1EA; Wenn Sie eine Frage haben, eine Funktion anfordern oder einen Fehler melden möchten, **verwenden Sie bitte [dieses Formular](https://contact.faircode.eu/?product=fairemailsupport)**.
+
+&#x1F1EB;&#x1F1F7; Si vous avez une question, souhaitez demander une fonctionnalité ou signaler un bogue, **veuillez utiliser [ce formulaire](https://contact.faircode.eu/?product=fairemailsupport)**.
+
+<br />
 
 GitHub issues are disabled due to frequent misusage.
 
 <br />
 
-Copyright &copy; 2018-2021 Marcel Bokhorst.
+Copyright &copy; 2018-2022 Marcel Bokhorst.

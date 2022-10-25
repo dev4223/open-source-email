@@ -168,7 +168,6 @@
     <string name="title_setup_gmail_support">Autorizacija Google računa funkcionirat će u Play Store i GitHub verziji samo zato što Android provjerava digitalni potpis programa</string>
     <string name="title_setup_gmail_rationale">Molimo dajte dopuštenje za izbor računa i čitanje vašeg imena</string>
     <string name="title_setup_gmail_permissions">Google će tražiti dopuštenja za čitanje, sastavljanje, slanje i trajno brisanje sve vaše e-pošte. FairEmail nikada neće izbrisati vaše poruke bez vašeg izričitog pristanka.</string>
-    <string name="title_setup_gmail_drafts">Ako preko IMAP mapa skica nije dostupna, to se može popraviti u postavkama Gmail oznake</string>
     <string name="title_setup_gmail_password">Želim autorizirati račun lozinkom umjesto računa na uređaju</string>
     <string name="title_setup_office_auth">Greška \'AUTHENTICATE failed\' se može pojaviti ako je IMAP/SMTP isključen od strane administratora</string>
     <string name="title_setup_oauth_rationale">Autorizirajte pristup vašem %1$s računu</string>
@@ -238,7 +237,6 @@
     <string name="title_setup_password_repeat">Ponovite lozinku</string>
     <string name="title_setup_password_missing">Nedostaje lozinka</string>
     <string name="title_setup_password_different">Lozinke se ne podudaraju</string>
-    <string name="title_setup_password_invalid">Neispravna lozinka</string>
     <string name="title_setup_import_accounts">Uvezi račune i identitete</string>
     <string name="title_setup_import_delete">Ukloni prvo postojeće račune</string>
     <string name="title_setup_import_rules">Uvezi pravila filtriranja</string>
@@ -405,7 +403,6 @@
     <string name="title_advanced_two_col">Koristi dva stupca</string>
     <string name="title_advanced_min_screen_size">Najmanja veličina zaslona za dijeljenje zaslona</string>
     <string name="title_advanced_close_pane">Sažmi redak ili stupac prilikom zatvaranja razgovora</string>
-    <string name="title_advanced_column_width">Širina stupca poruke: %1$s %%</string>
     <string name="title_advanced_nav_options">Prikaži opcije navigacijskog izbornika</string>
     <string name="title_advanced_nav_categories">Prikaži kategorije računa u navigacijskom izborniku</string>
     <string name="title_advanced_nav_pin">Prikvači navigacijski izbornik</string>
@@ -664,7 +661,6 @@
     <string name="title_advanced_folder_nav_hint">Ovo će uvijek, s popisa poruka, vratiti na popis mapa povezanog računa</string>
     <string name="title_advanced_suggest_names_hint">Ako je onemogućeno, pri odabiru kontakata koristit će se samo adrese e-pošte</string>
     <string name="title_advanced_suggest_local_hint">Pored kontakata koje pruža Android. Podaci za kontakte bit će pohranjeni za novoprimljene ili primljene poruke samo ako su omogućene.</string>
-    <string name="title_advanced_auto_identity_hint">Ovo će odabrati posljednji korišteni identitet za prvog primatelja novih poruka</string>
     <string name="title_advanced_send_reminders_hint">Pokaži upozorenje kada je tekst poruke ili predmet prazan ili kada prilog možda nedostaje</string>
     <string name="title_advanced_reply_move_hint">Poslužitelj e-pošte i dalje može dodati poruke u mapu poslanih poruka</string>
     <string name="title_advanced_usenet_hint">Umetni \'--\' između teksta i potpisa</string>
@@ -752,7 +748,6 @@
     <string name="title_advanced_sender_regex">Regex će odgovarati korisničkom imenu za dolazne adrese e-pošte</string>
     <string name="title_identity_reply_to">Odgovor na adresu</string>
     <string name="title_identity_internal">Interni nazivi domena (odvojeni zarezom)</string>
-    <string name="title_identity_unicode">Koristi Unicode način transporta</string>
     <string name="title_identity_unicode_remark">Većina poslužitelja to ne podržava</string>
     <string name="title_identity_max_size">Maksimalna veličina poruke (MB)</string>
     <string name="title_identity_receipt">Zatražite potvrdu isporuke/čitanja standardno</string>
@@ -783,7 +778,6 @@
     <string name="title_custom">Prilagođeno</string>
     <string name="title_host">Naziv računala</string>
     <string name="title_encryption">Šifriranje</string>
-    <string name="title_encryption_none">Nijedan</string>
     <string name="title_allow_insecure">Dopustiti nesigurne veze</string>
     <string name="title_insecure_remark">Nesigurne veze trebaju biti dopuštene samo na pouzdanim mrežama, a nikad na javnim mrežama</string>
     <string name="title_notify_remark">Ovo možete omogućiti za obavijesti specifične za račun</string>
@@ -1164,9 +1158,11 @@
     <string name="title_style_italic">Kurziv</string>
     <string name="title_style_underline">Naglasi</string>
     <string name="title_style_size">Veličina</string>
+    <string name="title_style_size_xsmall">Vrlo mala</string>
     <string name="title_style_size_small">Maleno</string>
     <string name="title_style_size_medium">Srednje</string>
     <string name="title_style_size_large">Veliko</string>
+    <string name="title_style_size_xlarge">Extra veliko</string>
     <string name="title_style_align">Poravnaj</string>
     <string name="title_style_align_start">Početak</string>
     <string name="title_style_align_center">Sredina</string>
@@ -1330,6 +1326,9 @@
     <string name="title_search_in">Traži u</string>
     <string name="title_search_sender">Traži pošiljatelja</string>
     <string name="title_search_delete">Izbriši spremljenu pretragu?</string>
+    <string name="title_save_search_name">Ime</string>
+    <string name="title_save_search_order">Redoslijed</string>
+    <string name="title_save_search_color">Boja</string>
     <string name="title_sort_on">Poredaj na</string>
     <string name="title_sort_on_time">Vrijeme</string>
     <string name="title_sort_on_unread">Nepročitano</string>
@@ -1369,6 +1368,7 @@
     <string name="title_edit_signature_image_hint">        Prilikom slanja poruke, slika se kopira u poruku s odabranog mjesta.
         Dakle, ne brišite slikovnu datoteku!
     </string>
+    <string name="title_answer_define_name">Ime</string>
     <string name="title_answer_caption">Uredi predložak</string>
     <string name="title_answer_reply">Predložak odgovora</string>
     <string name="title_answer_name">Naziv predloška</string>
@@ -1585,7 +1585,6 @@
     <string name="title_hint_folder_actions">Dugo pritisnite mapu za opcije, poput dodavanja mape navigacijskom izborniku za brzi pristup</string>
     <string name="title_hint_folder_sync">Da biste ograničili korištenje baterije i mreže prema zadanim postavkama neće se sve mape i sve poruke biti sinkronizirane</string>
     <string name="title_hint_airplane">Zrakoplovni račin rada je uključen</string>
-    <string name="title_hint_notification">Obavijesti su onemogućene</string>
     <string name="title_hint_support">Ako imate pitanje ili problem, upotrijebite izbornik za podršku da biste dobili pomoć</string>
     <string name="title_hint_message_actions">Prijeđite prstom ulijevo za otpad; Prstom povucite udesno za arhivu (ako dostupno); Akcije prelaska prstom možete konfigurirati u postavkama računa</string>
     <string name="title_hint_message_selection">Dugo pritisnite poruku za početak odabiranja više poruka; Držite i prelazite prstom prema gore ili dolje da biste odabrali više poruka</string>
@@ -1690,7 +1689,6 @@
     <string name="title_boundary_retry">Pokušaj ponovno</string>
     <string name="title_unexpected_error">Neočekivana greška</string>
     <string name="title_log">Zapisnik</string>
-    <string name="title_auto_scroll">Automatsko pomicanje</string>
     <string name="title_log_clear">Izbriši</string>
     <string name="title_rules_search_hint">Traži ime ili uvjet</string>
     <string name="title_rules_export">Izvoz pravila</string>
@@ -1762,6 +1760,7 @@
     <string-array name="pollIntervalNames">
         <item>Uvijek</item>
         <item>Svakih 5 minuta</item>
+        <item>Svakih 10 minuta</item>
         <item>Svakih 15 minuta</item>
         <item>Svakih 30 minuta</item>
         <item>Svaki sat</item>
@@ -1805,6 +1804,7 @@
         <item>Pređi na sljedeći razgovor</item>
     </string-array>
     <string-array name="resizeNames">
+        <item>Sićušna</item>
         <item>Vrlo mala</item>
         <item>Maleno</item>
         <item>Srednje</item>

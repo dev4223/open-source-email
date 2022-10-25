@@ -45,6 +45,7 @@ public class TupleMessageEx extends EntityMessage {
     public Integer folderColor;
     public String folderDisplay;
     public String folderType;
+    public String folderInheritedType;
     public boolean folderUnified;
     public boolean folderReadOnly;
     public String identityName;
@@ -113,7 +114,7 @@ public class TupleMessageEx extends EntityMessage {
                 else if (prefs.contains(keyColor2))
                     color.add(prefs.getInt(keyColor2, Color.GRAY));
                 else
-                    color.add(null);
+                    color.add(TupleKeyword.getDefaultKeywordColor(context, keyword));
 
                 String keyTitle = "kwtitle." + keyword;
                 String def = TupleKeyword.getDefaultKeywordAlias(context, keyword);
@@ -150,6 +151,7 @@ public class TupleMessageEx extends EntityMessage {
                     this.folderName.equals(other.folderName) &&
                     Objects.equals(this.folderDisplay, other.folderDisplay) &&
                     this.folderType.equals(other.folderType) &&
+                    Objects.equals(this.folderInheritedType, other.folderInheritedType) &&
                     this.folderUnified == other.folderUnified &&
                     this.folderReadOnly == other.folderReadOnly &&
                     Objects.equals(this.identityName, other.identityName) &&

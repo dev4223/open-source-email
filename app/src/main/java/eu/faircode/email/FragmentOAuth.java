@@ -21,7 +21,6 @@ package eu.faircode.email;
 
 import static android.app.Activity.RESULT_OK;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
-import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -29,7 +28,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -43,6 +45,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -51,6 +54,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
@@ -102,6 +106,7 @@ public class FragmentOAuth extends FragmentBase {
     private String personal;
     private String address;
     private boolean pop;
+    private boolean recent;
     private boolean update;
 
     private ViewGroup view;
@@ -114,14 +119,15 @@ public class FragmentOAuth extends FragmentBase {
     private EditText etTenant;
     private CheckBox cbInboundOnly;
     private CheckBox cbPop;
+    private CheckBox cbRecent;
     private CheckBox cbUpdate;
     private Button btnOAuth;
     private ContentLoadingProgressBar pbOAuth;
     private TextView tvConfiguring;
     private TextView tvGmailHint;
+    private TextView tvGmailLoginHint;
 
     private TextView tvError;
-    private TextView tvGmailDraftsHint;
     private TextView tvOfficeAuthHint;
     private Button btnSupport;
     private Button btnHelp;
@@ -145,7 +151,10 @@ public class FragmentOAuth extends FragmentBase {
         personal = args.getString("personal");
         address = args.getString("address");
         pop = args.getBoolean("pop", false);
+        recent = args.getBoolean("recent", false);
         update = args.getBoolean("update", true);
+
+        lockOrientation();
     }
 
     @Override
@@ -165,14 +174,15 @@ public class FragmentOAuth extends FragmentBase {
         etTenant = view.findViewById(R.id.etTenant);
         cbInboundOnly = view.findViewById(R.id.cbInboundOnly);
         cbPop = view.findViewById(R.id.cbPop);
+        cbRecent = view.findViewById(R.id.cbRecent);
         cbUpdate = view.findViewById(R.id.cbUpdate);
         btnOAuth = view.findViewById(R.id.btnOAuth);
         pbOAuth = view.findViewById(R.id.pbOAuth);
         tvConfiguring = view.findViewById(R.id.tvConfiguring);
         tvGmailHint = view.findViewById(R.id.tvGmailHint);
+        tvGmailLoginHint = view.findViewById(R.id.tvGmailLoginHint);
 
         tvError = view.findViewById(R.id.tvError);
-        tvGmailDraftsHint = view.findViewById(R.id.tvGmailDraftsHint);
         tvOfficeAuthHint = view.findViewById(R.id.tvOfficeAuthHint);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnHelp = view.findViewById(R.id.btnHelp);
@@ -190,6 +200,40 @@ public class FragmentOAuth extends FragmentBase {
                 Helper.view(v.getContext(), Uri.parse(privacy), false);
             }
         });
+
+        cbPop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                cbRecent.setVisibility(checked && "gmail".equals(id) ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        if ("gmail".equals(id)) {
+            // https://developers.google.com/identity/branding-guidelines
+            final Context context = getContext();
+            final boolean dark = Helper.isDarkTheme(context);
+            int dp12 = Helper.dp2pixels(context, 12);
+            int dp24 = Helper.dp2pixels(context, 24);
+            Drawable g = ContextCompat.getDrawable(context, R.drawable.google_logo);
+            g.setBounds(0, 0, g.getIntrinsicWidth(), g.getIntrinsicHeight());
+            btnOAuth.setCompoundDrawablesRelative(g, null, null, null);
+            btnOAuth.setCompoundDrawablePadding(dp24);
+            btnOAuth.setText(R.string.title_setup_google_sign_in);
+            btnOAuth.setTextColor(new ColorStateList(
+                    new int[][]{
+                            new int[]{android.R.attr.state_enabled},
+                            new int[]{-android.R.attr.state_enabled},
+                    },
+                    new int[]{
+                            dark ? Color.WHITE : Color.DKGRAY, // 0xff444444
+                            Color.LTGRAY // 0xffcccccc
+                    }
+            ));
+            btnOAuth.setBackground(ContextCompat.getDrawable(context, dark
+                    ? R.drawable.google_signin_background_dark
+                    : R.drawable.google_signin_background_light));
+            btnOAuth.setPaddingRelative(dp12, 0, dp12, 0);
+        }
 
         btnOAuth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -223,9 +267,11 @@ public class FragmentOAuth extends FragmentBase {
         etEmail.setVisibility(askAccount ? View.VISIBLE : View.GONE);
         grpTenant.setVisibility(askTenant ? View.VISIBLE : View.GONE);
         cbPop.setVisibility(pop ? View.VISIBLE : View.GONE);
+        cbRecent.setVisibility(View.GONE);
         pbOAuth.setVisibility(View.GONE);
         tvConfiguring.setVisibility(View.GONE);
         tvGmailHint.setVisibility("gmail".equals(id) ? View.VISIBLE : View.GONE);
+        tvGmailLoginHint.setVisibility("gmail".equals(id) ? View.VISIBLE : View.GONE);
         hideError();
 
         etName.setText(personal);
@@ -233,6 +279,7 @@ public class FragmentOAuth extends FragmentBase {
         etTenant.setText(null);
         cbInboundOnly.setChecked(false);
         cbPop.setChecked(false);
+        cbRecent.setChecked(false);
         cbUpdate.setChecked(update);
 
         return view;
@@ -289,6 +336,7 @@ public class FragmentOAuth extends FragmentBase {
             etTenant.setEnabled(false);
             cbInboundOnly.setEnabled(false);
             cbPop.setEnabled(false);
+            cbRecent.setEnabled(false);
             cbUpdate.setEnabled(false);
             btnOAuth.setEnabled(false);
             pbOAuth.setVisibility(View.VISIBLE);
@@ -335,7 +383,13 @@ public class FragmentOAuth extends FragmentBase {
 
             AppAuthConfiguration appAuthConfig = new AppAuthConfiguration.Builder()
                     .setBrowserMatcher(new BrowserMatcher() {
+                        // https://github.com/openid/AppAuth-Android/issues/116
                         final BrowserMatcher SBROWSER = new VersionedBrowserMatcher(
+                                Browsers.SBrowser.PACKAGE_NAME,
+                                Browsers.SBrowser.SIGNATURE_SET,
+                                false,
+                                VersionRange.atMost("5.3"));
+                        final BrowserMatcher SBROWSER_TAB = new VersionedBrowserMatcher(
                                 Browsers.SBrowser.PACKAGE_NAME,
                                 Browsers.SBrowser.SIGNATURE_SET,
                                 true,
@@ -343,8 +397,7 @@ public class FragmentOAuth extends FragmentBase {
 
                         @Override
                         public boolean matches(@NonNull BrowserDescriptor descriptor) {
-                            boolean accept =
-                                    (!SBROWSER.matches(descriptor) && !descriptor.useCustomTab);
+                            boolean accept = !(SBROWSER.matches(descriptor) || SBROWSER_TAB.matches(descriptor));
                             EntityLog.log(context,
                                     "Browser=" + descriptor.packageName +
                                             ":" + descriptor.version +
@@ -380,12 +433,20 @@ public class FragmentOAuth extends FragmentBase {
                     ? new LinkedHashMap<>()
                     : provider.oauth.parameters);
 
+            String clientId = provider.oauth.clientId;
+            Uri redirectUri = Uri.parse(provider.oauth.redirectUri);
+            if ("gmail".equals(id) && BuildConfig.DEBUG) {
+                clientId = "803253368361-hr8kelm53hqodj7c6brdjeb2ctn5jg3p.apps.googleusercontent.com";
+                redirectUri = Uri.parse("eu.faircode.email.debug:/");
+            }
+
+            // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
             AuthorizationRequest.Builder authRequestBuilder =
                     new AuthorizationRequest.Builder(
                             serviceConfig,
-                            provider.oauth.clientId,
+                            clientId,
                             ResponseTypeValues.CODE,
-                            Uri.parse(provider.oauth.redirectUri))
+                            redirectUri)
                             .setScopes(provider.oauth.scopes)
                             .setState(provider.id)
                             .setAdditionalParameters(params);
@@ -432,11 +493,17 @@ public class FragmentOAuth extends FragmentBase {
             etTenant.setEnabled(true);
             cbInboundOnly.setEnabled(true);
             cbPop.setEnabled(true);
+            cbRecent.setEnabled(true);
             cbUpdate.setEnabled(true);
 
             AuthorizationResponse auth = AuthorizationResponse.fromIntent(data);
-            if (auth == null)
-                throw AuthorizationException.fromIntent(data);
+            if (auth == null) {
+                AuthorizationException ex = AuthorizationException.fromIntent(data);
+                if (ex == null)
+                    throw new IllegalArgumentException("No response data");
+                else
+                    throw ex;
+            }
 
             final EmailProvider provider = EmailProvider.getProvider(getContext(), auth.state);
 
@@ -520,6 +587,7 @@ public class FragmentOAuth extends FragmentBase {
         args.putString("address", etEmail.getText().toString().trim());
         args.putBoolean("inbound_only", cbInboundOnly.isChecked());
         args.putBoolean("pop", cbPop.isChecked());
+        args.putBoolean("recent", cbRecent.isChecked());
         args.putBoolean("update", cbUpdate.isChecked());
 
         new SimpleTask<Void>() {
@@ -545,6 +613,7 @@ public class FragmentOAuth extends FragmentBase {
                 String address = args.getString("address");
                 boolean inbound_only = args.getBoolean("inbound_only");
                 boolean pop = args.getBoolean("pop");
+                boolean recent = args.getBoolean("recent");
 
                 EmailProvider provider = EmailProvider.getProvider(context, id);
                 if (provider.pop == null)
@@ -577,7 +646,7 @@ public class FragmentOAuth extends FragmentBase {
                 List<String> usernames = new ArrayList<>();
                 usernames.add(sharedname == null ? username : sharedname);
 
-                if (token != null && sharedname == null) {
+                if (token != null && sharedname == null && !"gmail".equals(id)) {
                     // https://docs.microsoft.com/en-us/azure/active-directory/develop/access-tokens
                     String[] segments = token.split("\\.");
                     if (segments.length > 1)
@@ -665,7 +734,7 @@ public class FragmentOAuth extends FragmentBase {
                         EntityLog.log(context, "Trying username=" + alt);
                         try {
                             try (EmailService aservice = new EmailService(
-                                    context, aprotocol, null, aencryption, false,
+                                    context, aprotocol, null, aencryption, false, false,
                                     EmailService.PURPOSE_CHECK, true)) {
                                 aservice.connect(
                                         inbound.host, inbound.port,
@@ -674,7 +743,7 @@ public class FragmentOAuth extends FragmentBase {
                                         null, null);
                             }
                             try (EmailService iservice = new EmailService(
-                                    context, iprotocol, null, iencryption, false,
+                                    context, iprotocol, null, iencryption, false, false,
                                     EmailService.PURPOSE_CHECK, true)) {
                                 iservice.connect(
                                         provider.smtp.host, provider.smtp.port,
@@ -727,7 +796,10 @@ public class FragmentOAuth extends FragmentBase {
                 if (ani == null || !ani.isConnected())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
-                Log.i("OAuth username=" + username);
+                if (pop && recent && "gmail".equals(id))
+                    username = "recent:" + username;
+
+                Log.i("OAuth username=" + username + " shared=" + sharedname);
                 for (Pair<String, String> identity : identities)
                     Log.i("OAuth identity=" + identity.first + "/" + identity.second);
 
@@ -735,7 +807,7 @@ public class FragmentOAuth extends FragmentBase {
 
                 Log.i("OAuth checking IMAP/POP3 provider=" + provider.id);
                 try (EmailService aservice = new EmailService(
-                        context, aprotocol, null, aencryption, false,
+                        context, aprotocol, null, aencryption, false, false,
                         EmailService.PURPOSE_CHECK, true)) {
                     aservice.connect(
                             inbound.host, inbound.port,
@@ -754,7 +826,7 @@ public class FragmentOAuth extends FragmentBase {
                     Log.i("OAuth checking SMTP provider=" + provider.id);
 
                     try (EmailService iservice = new EmailService(
-                            context, iprotocol, null, iencryption, false,
+                            context, iprotocol, null, iencryption, false, false,
                             EmailService.PURPOSE_CHECK, true)) {
                         iservice.connect(
                                 provider.smtp.host, provider.smtp.port,
@@ -774,10 +846,7 @@ public class FragmentOAuth extends FragmentBase {
                     db.beginTransaction();
 
                     if (args.getBoolean("update")) {
-                        List<EntityAccount> accounts =
-                                db.account().getAccounts(username,
-                                        protocol,
-                                        new int[]{AUTH_TYPE_OAUTH, AUTH_TYPE_PASSWORD});
+                        List<EntityAccount> accounts = db.account().getAccounts(sharedname == null ? username : sharedname, protocol);
                         if (accounts != null && accounts.size() == 1)
                             update = accounts.get(0);
                     }
@@ -807,6 +876,7 @@ public class FragmentOAuth extends FragmentBase {
 
                         if (provider.keepalive > 0)
                             account.poll_interval = provider.keepalive;
+                        account.keep_alive_noop = provider.noop;
 
                         account.partial_fetch = provider.partial;
 
@@ -876,8 +946,8 @@ public class FragmentOAuth extends FragmentBase {
                         args.putLong("account", update.id);
                         EntityLog.log(context, "OAuth update account=" + update.name);
                         db.account().setAccountSynchronize(update.id, true);
-                        db.account().setAccountPassword(update.id, state, AUTH_TYPE_OAUTH);
-                        db.identity().setIdentityPassword(update.id, update.user, state, update.auth_type, AUTH_TYPE_OAUTH);
+                        db.account().setAccountPassword(update.id, state, AUTH_TYPE_OAUTH, provider.id);
+                        db.identity().setIdentityPassword(update.id, username, state, update.auth_type, AUTH_TYPE_OAUTH, provider.id);
                     }
 
                     db.setTransactionSuccessful();
@@ -885,12 +955,8 @@ public class FragmentOAuth extends FragmentBase {
                     db.endTransaction();
                 }
 
-                if (update == null)
-                    ServiceSynchronize.eval(context, "OAuth");
-                else {
-                    args.putBoolean("updated", true);
-                    ServiceSynchronize.reload(context, update.id, true, "OAuth");
-                }
+                ServiceSynchronize.eval(context, "OAuth");
+                args.putBoolean("updated", update != null);
 
                 return null;
             }
@@ -924,6 +990,7 @@ public class FragmentOAuth extends FragmentBase {
         etTenant.setEnabled(true);
         cbInboundOnly.setEnabled(true);
         cbPop.setEnabled(true);
+        cbRecent.setEnabled(true);
         cbUpdate.setEnabled(true);
         btnOAuth.setEnabled(true);
         pbOAuth.setVisibility(View.GONE);
@@ -941,9 +1008,6 @@ public class FragmentOAuth extends FragmentBase {
             tvError.setText(Log.formatThrowable(ex, false));
 
         grpError.setVisibility(View.VISIBLE);
-
-        if ("gmail".equals(id))
-            tvGmailDraftsHint.setVisibility(View.VISIBLE);
 
         if ("office365".equals(id) || "outlook".equals(id)) {
             if (ex instanceof AuthenticationFailedException)
@@ -965,6 +1029,7 @@ public class FragmentOAuth extends FragmentBase {
         etTenant.setEnabled(true);
         cbInboundOnly.setEnabled(true);
         cbPop.setEnabled(true);
+        cbRecent.setEnabled(true);
         cbUpdate.setEnabled(true);
         btnOAuth.setEnabled(true);
         pbOAuth.setVisibility(View.GONE);
@@ -982,7 +1047,6 @@ public class FragmentOAuth extends FragmentBase {
     private void hideError() {
         btnHelp.setVisibility(View.GONE);
         grpError.setVisibility(View.GONE);
-        tvGmailDraftsHint.setVisibility(View.GONE);
         tvOfficeAuthHint.setVisibility(View.GONE);
     }
 }

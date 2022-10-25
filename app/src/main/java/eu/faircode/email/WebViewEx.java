@@ -43,12 +43,15 @@ import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import java.util.Objects;
+
 public class WebViewEx extends WebView implements DownloadListener, View.OnLongClickListener {
     private int height;
     private int maxHeight;
     private boolean legacy;
     private IWebView intf;
     private Runnable onPageLoaded;
+    private String hash;
 
     private static String userAgent = null;
 
@@ -121,7 +124,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
         // https://developer.android.com/reference/android/webkit/WebSettings#setAlgorithmicDarkeningAllowed(boolean)
         // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
         boolean canDarken = WebViewEx.isFeatureSupported(context, WebViewFeature.ALGORITHMIC_DARKENING);
-        if (canDarken)
+        if (canDarken && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, dark && !force_light);
         setBackgroundColor(canDarken && dark && !force_light ? Color.TRANSPARENT : Color.WHITE);
 
@@ -220,6 +223,21 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     }
 
     @Override
+    public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
+        try {
+            // Prevent flickering
+            String h = (data == null ? null : Helper.md5(data.getBytes()));
+            if (Objects.equals(hash, h))
+                return;
+            this.hash = h;
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
+
+        super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
+    }
+
+    @Override
     public void setMinimumHeight(int minHeight) {
         super.setMinimumHeight(minHeight);
         Log.i("Set min height=" + minHeight);
@@ -227,13 +245,15 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // Unable to create layer for WebViewEx, size 1088x16384 max size 16383 color type 4 has context 1)
+        int limitHeight = MeasureSpec.makeMeasureSpec(16000, MeasureSpec.AT_MOST);
         if (legacy) {
             if (height > getMinimumHeight())
                 super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
             else
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec); // Unspecified
+                super.onMeasure(widthMeasureSpec, limitHeight);
         } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            super.onMeasure(widthMeasureSpec, limitHeight);
         }
 
         int mh = getMeasuredHeight();
@@ -295,7 +315,20 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
             clampedY = true;
         }
 
-        Log.i("onOverScrolled clamped=" + clampedY + " new=" + newScrollY + " dy=" + deltaY);
+        Log.i("onOverScrolled" +
+                " clampedY=" + clampedY +
+                " scrollY=" + scrollY +
+                " deltaY=" + deltaY +
+                " RangeY=" + scrollRangeY +
+                " maxY=" + maxOverScrollY +
+                " newY=" + (scrollY + deltaY) + "/" + newScrollY +
+                " dy=" + deltaY +
+                " top=" + top +
+                " bottom=" + bottom);
+
+        if (Math.abs(deltaY) > bottom - top)
+            deltaY = (deltaY > 0 ? 1 : -1) * (bottom - top);
+
         intf.onOverScrolled(scrollX, scrollY, deltaX, deltaY, clampedX, clampedY);
 
         return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
@@ -355,7 +388,16 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     }
 
     public static boolean isFeatureSupported(Context context, String feature) {
-        if (WebViewFeature.ALGORITHMIC_DARKENING.equals(feature))
+        if (WebViewFeature.ALGORITHMIC_DARKENING.equals(feature)) {
+            if (BuildConfig.DEBUG) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean fake_dark = prefs.getBoolean("fake_dark", false);
+                if (fake_dark)
+                    return false;
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+                return false;
+
             try {
                 PackageInfo pkg = WebViewCompat.getCurrentWebViewPackage(context);
                 if (pkg != null && pkg.versionCode / 100000 < 5005) // Version 102.*
@@ -363,6 +405,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
             } catch (Throwable ex) {
                 Log.e(ex);
             }
+        }
 
         try {
             return WebViewFeature.isFeatureSupported(feature);

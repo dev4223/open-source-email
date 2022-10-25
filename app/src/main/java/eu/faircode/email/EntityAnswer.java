@@ -48,7 +48,9 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.text.Collator;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -56,6 +58,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -74,6 +77,8 @@ public class EntityAnswer implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     public Long id;
+    @NonNull
+    public String uuid = UUID.randomUUID().toString();
     @NonNull
     public String name;
     public String group;
@@ -96,11 +101,13 @@ public class EntityAnswer implements Serializable {
     public Integer applied = 0;
     public Long last_applied;
 
-    String getHtml(Address[] address) {
-        return replacePlaceholders(text, address);
+    private static final String PREF_PLACEHOLDER = "answer.value.";
+
+    String getHtml(Context context, Address[] address) {
+        return replacePlaceholders(context, text, address);
     }
 
-    static String replacePlaceholders(String text, Address[] address) {
+    static String replacePlaceholders(Context context, String text, Address[] address) {
         String fullName = null;
         String email = null;
         if (address != null && address.length > 0) {
@@ -165,12 +172,87 @@ public class EntityAnswer implements Serializable {
             }
         }
 
+        first = Helper.trim(first, ".");
+        last = Helper.trim(last, ".");
+
         text = text.replace("$name$", fullName == null ? "" : Html.escapeHtml(fullName));
         text = text.replace("$firstname$", first == null ? "" : Html.escapeHtml(first));
         text = text.replace("$lastname$", last == null ? "" : Html.escapeHtml(last));
         text = text.replace("$email$", email == null ? "" : Html.escapeHtml(email));
 
+        int s = text.indexOf("$date");
+        while (s >= 0) {
+            int e = text.indexOf('$', s + 5);
+            if (e < 0)
+                break;
+
+            Calendar c = null;
+            String v = text.substring(s + 5, e);
+            if (v.startsWith("-") || v.startsWith("+")) {
+                Integer days = Helper.parseInt(v.substring(1));
+                if (days != null && days >= 0 && days < 10 * 365) {
+                    c = Calendar.getInstance();
+                    c.add(Calendar.DATE, days * (v.startsWith("-") ? -1 : 1));
+                }
+            } else if (TextUtils.isEmpty(v))
+                c = Calendar.getInstance();
+
+            if (c == null)
+                s = text.indexOf("$date", e + 1);
+            else {
+                v = Html.escapeHtml(SimpleDateFormat.getDateInstance(SimpleDateFormat.LONG).format(c.getTime()));
+                text = text.substring(0, s) + v + text.substring(e + 1);
+                s = text.indexOf("$date", s + v.length());
+            }
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        for (String key : prefs.getAll().keySet())
+            if (key.startsWith(PREF_PLACEHOLDER)) {
+                String name = key.substring(PREF_PLACEHOLDER.length());
+                String value = prefs.getString(key, null);
+
+                String[] lines = (value == null ? new String[0] : value.split("\n"));
+                for (int i = 0; i < lines.length; i++)
+                    lines[i] = Html.escapeHtml(lines[i]);
+
+                text = text.replace("$" + name + "$", TextUtils.join("<br>", lines));
+            }
+
         return text;
+    }
+
+    static void setCustomPlaceholder(Context context, String name, String value) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        if (TextUtils.isEmpty(value))
+            prefs.edit().remove(EntityAnswer.PREF_PLACEHOLDER + name).apply();
+        else
+            prefs.edit().putString(EntityAnswer.PREF_PLACEHOLDER + name, value).apply();
+    }
+
+    static String getCustomPlaceholder(Context context, String name) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(EntityAnswer.PREF_PLACEHOLDER + name, null);
+    }
+
+    static List<String> getCustomPlaceholders(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        List<String> names = new ArrayList<>();
+        for (String key : prefs.getAll().keySet())
+            if (key.startsWith(EntityAnswer.PREF_PLACEHOLDER))
+                names.add(key.substring(EntityAnswer.PREF_PLACEHOLDER.length()));
+
+        final Collator collator = Collator.getInstance(Locale.getDefault());
+        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
+        Collections.sort(names, new Comparator<String>() {
+            @Override
+            public int compare(String n1, String n2) {
+                return collator.compare(n1, n2);
+            }
+        });
+
+        return names;
     }
 
     static void fillMenu(Menu main, boolean compose, List<EntityAnswer> answers, Context context) {
@@ -336,7 +418,7 @@ public class EntityAnswer implements Serializable {
                     ssb.append(p.link).append("\n\n");
 
                 profiles.add(999, profiles.size(), profiles.size() + 1, p.name +
-                        (p.appPassword ? "+" : ""))
+                                (p.appPassword ? "+" : ""))
                         .setIntent(new Intent().putExtra("config", ssb));
             }
         }
@@ -374,6 +456,7 @@ public class EntityAnswer implements Serializable {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("id", id);
+        json.put("uuid", uuid);
         json.put("name", name);
         json.put("group", group);
         json.put("standard", standard);
@@ -392,6 +475,8 @@ public class EntityAnswer implements Serializable {
     public static EntityAnswer fromJSON(JSONObject json) throws JSONException {
         EntityAnswer answer = new EntityAnswer();
         answer.id = json.getLong("id");
+        if (json.has("uuid"))
+            answer.uuid = json.getString("uuid");
         answer.name = json.getString("name");
         answer.group = json.optString("group");
         if (TextUtils.isEmpty(answer.group))
@@ -415,7 +500,8 @@ public class EntityAnswer implements Serializable {
     public boolean equals(Object obj) {
         if (obj instanceof EntityAnswer) {
             EntityAnswer other = (EntityAnswer) obj;
-            return (this.name.equals(other.name) &&
+            return (Objects.equals(this.uuid, other.uuid) &&
+                    this.name.equals(other.name) &&
                     Objects.equals(this.group, other.group) &&
                     this.standard.equals(other.standard) &&
                     this.receipt.equals(other.receipt) &&

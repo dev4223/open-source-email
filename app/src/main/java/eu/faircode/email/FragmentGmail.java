@@ -23,7 +23,6 @@ import static android.accounts.AccountManager.newChooseAccountIntent;
 import static android.app.Activity.RESULT_OK;
 import static eu.faircode.email.GmailState.TYPE_GOOGLE;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
-import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.Manifest;
 import android.accounts.Account;
@@ -86,6 +85,7 @@ public class FragmentGmail extends FragmentBase {
     private Button btnSelect;
     private ContentLoadingProgressBar pbSelect;
 
+    private TextView tvOnDevice;
     private TextView tvAppPassword;
 
     private TextView tvError;
@@ -106,6 +106,8 @@ public class FragmentGmail extends FragmentBase {
         pop = args.getBoolean("pop", false);
         recent = args.getBoolean("recent", false);
         update = args.getBoolean("update", true);
+
+        lockOrientation();
     }
 
     @Override
@@ -129,6 +131,7 @@ public class FragmentGmail extends FragmentBase {
         btnSelect = view.findViewById(R.id.btnSelect);
         pbSelect = view.findViewById(R.id.pbSelect);
 
+        tvOnDevice = view.findViewById(R.id.tvOnDevice);
         tvAppPassword = view.findViewById(R.id.tvAppPassword);
 
         tvError = view.findViewById(R.id.tvError);
@@ -200,6 +203,14 @@ public class FragmentGmail extends FragmentBase {
             }
         });
 
+        tvOnDevice.setPaintFlags(tvOnDevice.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        tvOnDevice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), 111);
+            }
+        });
+
         tvAppPassword.setPaintFlags(tvAppPassword.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         tvAppPassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -219,8 +230,8 @@ public class FragmentGmail extends FragmentBase {
         Helper.setViewsEnabled(view, false);
         tvTitle.setText(getString(R.string.title_setup_oauth_rationale, "Gmail"));
         etName.setText(personal);
-        cbPop.setChecked(pop);
-        cbRecent.setChecked(recent);
+        cbPop.setChecked(false);
+        cbRecent.setChecked(false);
         cbRecent.setVisibility(pop ? View.VISIBLE : View.GONE);
         cbUpdate.setChecked(update);
         pbSelect.setVisibility(View.GONE);
@@ -444,14 +455,14 @@ public class FragmentGmail extends FragmentBase {
                 int at = user.indexOf('@');
                 String username = user.substring(0, at);
 
-                if (pop && recent)
-                    user = "recent:" + user;
-
                 EmailProvider provider = EmailProvider
                         .fromDomain(context, "gmail.com", EmailProvider.Discover.ALL)
                         .get(0);
                 if (provider.pop == null)
                     pop = false;
+
+                if (pop && recent)
+                    user = "recent:" + user;
 
                 List<EntityFolder> folders;
 
@@ -459,7 +470,7 @@ public class FragmentGmail extends FragmentBase {
                 String aprotocol = (pop ? (inbound.starttls ? "pop3" : "pop3s") : (inbound.starttls ? "imap" : "imaps"));
                 int aencryption = (inbound.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
                 try (EmailService aservice = new EmailService(
-                        context, aprotocol, null, aencryption, false,
+                        context, aprotocol, null, aencryption, false, false,
                         EmailService.PURPOSE_CHECK, true)) {
                     aservice.connect(
                             inbound.host, inbound.port,
@@ -477,7 +488,7 @@ public class FragmentGmail extends FragmentBase {
                 String iprotocol = (provider.smtp.starttls ? "smtp" : "smtps");
                 int iencryption = (provider.smtp.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
                 try (EmailService iservice = new EmailService(
-                        context, iprotocol, null, iencryption, false,
+                        context, iprotocol, null, iencryption, false, false,
                         EmailService.PURPOSE_CHECK, true)) {
                     iservice.connect(
                             provider.smtp.host, provider.smtp.port,
@@ -494,10 +505,7 @@ public class FragmentGmail extends FragmentBase {
                     db.beginTransaction();
 
                     if (args.getBoolean("update")) {
-                        List<EntityAccount> accounts =
-                                db.account().getAccounts(user,
-                                        protocol,
-                                        new int[]{AUTH_TYPE_GMAIL, AUTH_TYPE_PASSWORD});
+                        List<EntityAccount> accounts = db.account().getAccounts(user, protocol);
                         if (accounts != null && accounts.size() == 1)
                             update = accounts.get(0);
                     }
@@ -521,8 +529,11 @@ public class FragmentGmail extends FragmentBase {
                         account.synchronize = true;
                         account.primary = (primary == null);
 
-                        if (pop)
+                        if (pop) {
+                            // https://support.google.com/mail/answer/7104828
+                            account.leave_on_device = true;
                             account.max_messages = EntityAccount.DEFAULT_MAX_MESSAGES;
+                        }
 
                         account.created = new Date().getTime();
                         account.last_connected = account.created;
@@ -583,8 +594,8 @@ public class FragmentGmail extends FragmentBase {
                         args.putLong("account", update.id);
                         EntityLog.log(context, "Gmail update account=" + update.name);
                         db.account().setAccountSynchronize(update.id, true);
-                        db.account().setAccountPassword(update.id, password, AUTH_TYPE_GMAIL);
-                        db.identity().setIdentityPassword(update.id, update.user, password, update.auth_type, AUTH_TYPE_GMAIL);
+                        db.account().setAccountPassword(update.id, password, AUTH_TYPE_GMAIL, null);
+                        db.identity().setIdentityPassword(update.id, update.user, password, update.auth_type, AUTH_TYPE_GMAIL, null);
                     }
 
                     db.setTransactionSuccessful();
@@ -592,12 +603,8 @@ public class FragmentGmail extends FragmentBase {
                     db.endTransaction();
                 }
 
-                if (update == null)
-                    ServiceSynchronize.eval(context, "Gmail");
-                else {
-                    args.putBoolean("updated", true);
-                    ServiceSynchronize.reload(context, update.id, true, "Gmail");
-                }
+                ServiceSynchronize.eval(context, "Gmail");
+                args.putBoolean("updated", update != null);
 
                 return null;
             }

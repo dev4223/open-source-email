@@ -78,7 +78,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     private PowerManager.WakeLock wlOutbox;
     private List<Long> handling = new ArrayList<>();
 
-    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
+    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
 
     private static final int RETRY_MAX = 3;
     private static final int CONNECTIVITY_DELAY = 5000; // milliseconds
@@ -272,7 +272,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     private static PendingIntent getPendingIntent(Context context) {
         Intent intent = new Intent(context, ActivityView.class);
         intent.setAction("outbox");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntentCompat.getActivity(
                 context, ActivityView.PI_OUTBOX, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
@@ -352,8 +352,9 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     };
 
     private void processOperations(List<EntityOperation> ops) {
+        long start = new Date().getTime();
         try {
-            wlOutbox.acquire();
+            wlOutbox.acquire(Helper.WAKELOCK_MAX);
 
             DB db = DB.getInstance(this);
             EntityFolder outbox = db.folder().getOutbox();
@@ -464,7 +465,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 db.folder().setFolderSyncState(outbox.id, null);
             }
         } finally {
-            wlOutbox.release();
+            if (wlOutbox.isHeld())
+                wlOutbox.release();
+            else
+                Log.i("send release elapse=" + (new Date().getTime() - start));
         }
     }
 
@@ -500,6 +504,8 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             }
 
             db.setTransactionSuccessful();
+        } catch (IllegalArgumentException ex) {
+            Log.w(ex);
         } finally {
             db.endTransaction();
         }
@@ -527,20 +533,22 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean reply_move = prefs.getBoolean("reply_move", false);
+        boolean reply_move_inbox = prefs.getBoolean("reply_move_inbox", true);
         boolean protocol = prefs.getBoolean("protocol", false);
         boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.DEBUG);
 
         if (message.identity == null)
             throw new IllegalArgumentException("Send without identity");
+        if (!message.content)
+            throw new IllegalArgumentException("Message body missing");
+
+        EntityAccount account = db.account().getAccount(message.account);
 
         EntityIdentity ident = db.identity().getIdentity(message.identity);
         if (ident == null)
             throw new IllegalArgumentException("Identity not found");
         if (!ident.synchronize)
             throw new IllegalArgumentException("Identity is disabled");
-
-        if (!message.content)
-            throw new IllegalArgumentException("Message body missing");
 
         // Update message ID
         if (message.from != null && message.from.length > 0) {
@@ -555,10 +563,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         db.message().setMessageSent(message.id, message.sent);
 
         // Create message
-        Properties props = MessageHelper.getSessionProperties();
-        // https://javaee.github.io/javamail/docs/api/javax/mail/internet/package-summary.html
-        if (ident.unicode)
-            props.put("mail.mime.allowutf8", "true");
+        Properties props = MessageHelper.getSessionProperties(ident.unicode);
         Session isession = Session.getInstance(props, null);
         MimeMessage imessage = MessageHelper.from(this, message, ident, isession, true);
 
@@ -566,24 +571,21 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         Long sid = null;
         EntityFolder sent = null;
 
-        if (reply_move && !TextUtils.isEmpty(message.inreplyto))
-            for (String inreplyto : message.inreplyto.split(" ")) {
-                List<EntityMessage> replied = db.message().getMessagesByMsgId(message.account, inreplyto);
-                if (replied != null)
-                    for (EntityMessage m : replied)
-                        if (!m.ui_hide) {
-                            EntityFolder folder = db.folder().getFolder(m.folder);
-                            if (folder != null &&
-                                    (EntityFolder.INBOX.equals(folder.type) ||
-                                            EntityFolder.ARCHIVE.equals(folder.type) ||
-                                            EntityFolder.USER.equals(folder.type))) {
-                                sent = folder;
-                                break;
-                            }
+        if (reply_move && !TextUtils.isEmpty(message.inreplyto)) {
+            List<EntityMessage> replied = db.message().getMessagesByMsgId(message.account, message.inreplyto);
+            if (replied != null)
+                for (EntityMessage m : replied)
+                    if (!m.ui_hide) {
+                        EntityFolder folder = db.folder().getFolder(m.folder);
+                        if (folder != null &&
+                                ((EntityFolder.INBOX.equals(folder.type) && reply_move_inbox) ||
+                                        EntityFolder.ARCHIVE.equals(folder.type) ||
+                                        EntityFolder.USER.equals(folder.type))) {
+                            sent = folder;
+                            break;
                         }
-                if (sent != null)
-                    break;
-            }
+                    }
+        }
 
         if (sent == null)
             sent = db.folder().getFolderByType(message.account, EntityFolder.SENT);
@@ -617,7 +619,8 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
 
                 message.id = null;
                 message.folder = sent.id;
-                message.identity = null;
+                if (account != null && account.protocol == EntityAccount.TYPE_IMAP)
+                    message.identity = null;
                 message.from = helper.getFrom();
                 message.cc = helper.getCc();
                 message.bcc = helper.getBcc();
@@ -670,10 +673,11 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         long start, end;
         Long max_size = null;
         EmailService iservice = new EmailService(
-                this, ident.getProtocol(), ident.realm, ident.encryption, ident.insecure, debug);
+                this, ident.getProtocol(), ident.realm, ident.encryption, ident.insecure, ident.unicode, debug);
         try {
             iservice.setUseIp(ident.use_ip, ident.ehlo);
-            iservice.setUnicode(ident.unicode);
+            if (!message.isSigned() && !message.isEncrypted())
+                iservice.set8BitMime(ident.octetmime);
 
             // 0=Read receipt
             // 1=Delivery receipt
@@ -807,12 +811,11 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             }
 
             // Mark replied
-            if (message.inreplyto != null)
-                for (String inreplyto : message.inreplyto.split(" ")) {
-                    List<EntityMessage> replieds = db.message().getMessagesByMsgId(message.account, inreplyto);
-                    for (EntityMessage replied : replieds)
-                        EntityOperation.queue(this, replied, EntityOperation.ANSWERED, true);
-                }
+            if (message.inreplyto != null) {
+                List<EntityMessage> replieds = db.message().getMessagesByMsgId(message.account, message.inreplyto);
+                for (EntityMessage replied : replieds)
+                    EntityOperation.queue(this, replied, EntityOperation.ANSWERED, true);
+            }
 
             // Mark forwarded
             if (message.wasforwardedfrom != null) {

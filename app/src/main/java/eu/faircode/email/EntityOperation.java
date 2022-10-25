@@ -23,6 +23,7 @@ import static androidx.room.ForeignKey.CASCADE;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteConstraintException;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -136,7 +137,7 @@ public class EntityOperation {
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean auto_important = prefs.getBoolean("auto_important", false);
-                if (auto_important) {
+                if (auto_important && jargs.optBoolean(2, true)) {
                     db.message().setMessageImportance(message.id, flagged ? EntityMessage.PRIORITIY_HIGH : null);
                     queue(context, message, KEYWORD, MessageHelper.FLAG_LOW_IMPORTANCE, false);
                     queue(context, message, KEYWORD, MessageHelper.FLAG_HIGH_IMPORTANCE, true);
@@ -168,6 +169,20 @@ public class EntityOperation {
 
                 message.keywords = keywords.toArray(new String[0]);
                 db.message().setMessageKeywords(message.id, DB.Converters.fromStringArray(message.keywords));
+
+                if (set) {
+                    EntityFolder folder = db.folder().getFolder(message.folder);
+                    if (folder != null) {
+                        List<String> fkeywords = new ArrayList<>();
+                        if (folder.keywords != null)
+                            fkeywords.addAll(Arrays.asList(folder.keywords));
+                        if (!fkeywords.contains(keyword))
+                            fkeywords.add(keyword);
+                        Collections.sort(fkeywords);
+                        db.folder().setFolderKeywords(folder.id,
+                                DB.Converters.fromStringArray(fkeywords.toArray(new String[0])));
+                    }
+                }
 
             } else if (LABEL.equals(name)) {
                 String label = jargs.getString(0);
@@ -257,18 +272,39 @@ public class EntityOperation {
                 if (message.ui_found)
                     db.message().setMessageFound(message.id, false);
 
+                boolean premove = true;
                 if (source.account.equals(target.account)) {
                     EntityAccount account = db.account().getAccount(message.account);
-                    if ((account != null && !account.isGmail()) ||
-                            !EntityFolder.ARCHIVE.equals(source.type) ||
-                            EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type))
+                    if (account != null && account.isGmail()) {
+                        if (EntityFolder.ARCHIVE.equals(source.type) &&
+                                !(EntityFolder.SENT.equals(target.type) ||
+                                        EntityFolder.TRASH.equals(target.type) ||
+                                        EntityFolder.JUNK.equals(target.type)))
+                            name = COPY;
+                        else {
+                            Log.i("Move: hide source=" + message.id);
+                            if (!message.ui_deleted)
+                                db.message().setMessageUiHide(message.id, true);
+                        }
+
+                        if (!TextUtils.isEmpty(message.msgid) && !TextUtils.isEmpty(message.hash) &&
+                                (EntityFolder.SENT.equals(target.type) ||
+                                        EntityFolder.TRASH.equals(target.type) ||
+                                        EntityFolder.JUNK.equals(target.type))) {
+                            EntityMessage archived = db.message().getMessage(message.account, EntityFolder.ARCHIVE, message.msgid);
+                            if (archived != null && message.hash.equals(archived.hash)) {
+                                Log.i("Move: hide archived=" + archived.id);
+                                db.message().setMessageUiHide(archived.id, true);
+                            }
+                        }
+
+                        if (EntityFolder.DRAFTS.equals(source.type) || EntityFolder.DRAFTS.equals(target.type))
+                            premove = false;
+                    } else {
+                        Log.i("Move: hide other=" + message.id);
                         if (!message.ui_deleted)
                             db.message().setMessageUiHide(message.id, true);
-
-                    if (account != null && account.isGmail() &&
-                            EntityFolder.ARCHIVE.equals(source.type) &&
-                            !(EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type)))
-                        name = COPY;
+                    }
                 }
 
                 if (message.ui_snoozed != null &&
@@ -296,9 +332,10 @@ public class EntityOperation {
 
                 // Create copy without uid in target folder
                 // Message with same msgid can be in archive
-                if (message.uid != null &&
+                if (premove &&
+                        message.uid != null &&
                         !TextUtils.isEmpty(message.msgid) &&
-                        db.message().countMessageByMsgId(target.id, message.msgid) == 0) {
+                        db.message().countMessageByMsgId(target.id, message.msgid, false) == 0) {
                     File msource = message.getFile(context);
 
                     // Copy message to target folder
@@ -469,6 +506,9 @@ public class EntityOperation {
 
         } catch (JSONException ex) {
             Log.e(ex);
+        } catch (SQLiteConstraintException ex) {
+            Log.w(ex);
+            // folder or message gone
         }
     }
 
@@ -627,7 +667,8 @@ public class EntityOperation {
         EntityLog.log(context, "Cleanup op=" + id + "/" + name + " folder=" + folder + " message=" + message);
 
         if (message != null) {
-            db.message().setMessageUiHide(message, false);
+            if (MOVE.equals(name) || DELETE.equals(name))
+                db.message().setMessageUiHide(message, false);
 
             if (SEEN.equals(name)) {
                 EntityMessage m = db.message().getMessage(message);

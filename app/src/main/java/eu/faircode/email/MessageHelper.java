@@ -26,7 +26,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.system.ErrnoException;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -107,6 +109,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.activation.FileTypeMap;
 import javax.mail.Address;
@@ -136,6 +139,7 @@ import javax.mail.internet.ParseException;
 
 import biweekly.Biweekly;
 import biweekly.ICalendar;
+import biweekly.property.Method;
 
 public class MessageHelper {
     private boolean ensuredEnvelope = false;
@@ -198,6 +202,7 @@ public class MessageHelper {
     static final String FLAG_NOT_DELIVERED = "$NotDelivered";
     static final String FLAG_DISPLAYED = "$Displayed";
     static final String FLAG_NOT_DISPLAYED = "$NotDisplayed";
+    static final String FLAG_COMPLAINT = "Complaint";
     static final String FLAG_LOW_IMPORTANCE = "$LowImportance";
     static final String FLAG_HIGH_IMPORTANCE = "$HighImportance";
 
@@ -245,8 +250,8 @@ public class MessageHelper {
         System.setProperty("mail.mime.encodefilename", "false");
         System.setProperty("mail.mime.decodeparameters", "true");
         System.setProperty("mail.mime.encodeparameters", "true");
-        System.setProperty("mail.mime.allowutf8", "false"); // InternetAddress, MimeBodyPart, MimeUtility
-        System.setProperty("mail.mime.cachemultipart", "false");
+        System.setProperty("mail.mime.allowutf8", "false"); // InternetAddress, (MimeBodyPart: session), MimeUtility
+        System.setProperty("mail.mime.cachemultipart", "true");
 
         // https://docs.oracle.com/javaee/6/api/javax/mail/internet/MimeMultipart.html
         System.setProperty("mail.mime.multipart.ignoremissingboundaryparameter", "true"); // default true, javax.mail.internet.ParseException: In parameter list
@@ -266,11 +271,12 @@ public class MessageHelper {
         System.setProperty("fairemail.uid_command", Boolean.toString(uid_command));
     }
 
-    static Properties getSessionProperties() {
+    static Properties getSessionProperties(boolean unicode) {
         Properties props = new Properties();
 
         // MIME
-        props.put("mail.mime.allowutf8", "false"); // SMTPTransport, MimeMessage
+        // https://javaee.github.io/javamail/docs/api/javax/mail/internet/package-summary.html
+        props.put("mail.mime.allowutf8", Boolean.toString(unicode)); // SMTPTransport, MimeMessage
         props.put("mail.mime.address.strict", "false");
 
         return props;
@@ -282,7 +288,7 @@ public class MessageHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         int receipt_type = prefs.getInt("receipt_type", 2);
         boolean receipt_legacy = prefs.getBoolean("receipt_legacy", false);
-        boolean hide_timezone = prefs.getBoolean("hide_timezone", true);
+        boolean hide_timezone = prefs.getBoolean("hide_timezone", false);
         boolean autocrypt = prefs.getBoolean("autocrypt", true);
         boolean mutual = prefs.getBoolean("autocrypt_mutual", true);
         boolean encrypt_subject = prefs.getBoolean("encrypt_subject", false);
@@ -379,7 +385,7 @@ public class MessageHelper {
         } else {
             // https://datatracker.ietf.org/doc/html/rfc2822#section-3.6.6
             ByteArrayInputStream bis = new ByteArrayInputStream(message.headers.getBytes());
-            List<Header> headers = Collections.list(new InternetHeaders(bis).getAllHeaders());
+            List<Header> headers = Collections.list(new InternetHeaders(bis, identity != null && identity.unicode).getAllHeaders());
 
             for (Header header : headers)
                 try {
@@ -438,6 +444,7 @@ public class MessageHelper {
             //   identically to the "To:", "Cc:", and "Bcc:" fields respectively,
             //   except that they indicate the recipients of the resent message, not
             //   the recipients of the original message.
+            // https://www.rfc-editor.org/rfc/rfc5322#appendix-A.3
             if (message.to != null && message.to.length > 0)
                 imessage.addHeader("Resent-To", InternetAddress.toString(message.to));
 
@@ -922,104 +929,110 @@ public class MessageHelper {
         // Build html body
         Document document = JsoupEx.parse(message.getFile(context));
 
+        boolean resend = false;
         if (message.headers != null && Boolean.TRUE.equals(message.resend)) {
             Element body = document.body();
             if (body.children().size() == 1) {
                 // Restore original body
                 Element ref = body.children().get(0);
-                body.replaceWith(ref.tagName("body").removeAttr("fairemail"));
+                if ("reference".equals(ref.attr("fairemail"))) {
+                    body.replaceWith(ref.tagName("body").removeAttr("fairemail"));
+                    resend = true;
+                }
             }
         }
 
-        // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang
-        if (message.language != null)
-            document.body().attr("lang", message.language);
+        if (!resend) {
+            // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang
+            if (message.language != null)
+                document.body().attr("lang", message.language);
 
-        // When sending message
-        if (identity != null && send) {
-            if (auto_link) {
-                HtmlHelper.guessSchemes(document);
-                HtmlHelper.autoLink(document, true);
-            }
-
-            if (!TextUtils.isEmpty(compose_font)) {
-                List<Node> childs = new ArrayList<>();
-                for (Node child : document.body().childNodes())
-                    if (TextUtils.isEmpty(child.attr("fairemail"))) {
-                        childs.add(child);
-                        child.remove();
-                    } else
-                        break;
-
-                Element div = document.createElement("div").attr("style",
-                        "font-family:" + StyleHelper.getFamily(compose_font));
-                for (Node child : childs)
-                    div.appendChild(child);
-                document.body().prependChild(div);
-            }
-
-            document.select("div[fairemail=signature]").removeAttr("fairemail");
-            document.select("div[fairemail=reference]").removeAttr("fairemail");
-
-            Elements reply = document.select("div[fairemail=reply]");
-            if (message.isPlainOnly())
-                reply.select("strong").tagName("span");
-            reply.removeAttr("fairemail");
-
-            DB db = DB.getInstance(context);
-            try {
-                db.beginTransaction();
-
-                for (Element img : document.select("img")) {
-                    String source = img.attr("src");
-                    if (!source.startsWith("content:"))
-                        continue;
-
-                    Uri uri = Uri.parse(source);
-                    DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
-                    if (dfile == null)
-                        continue;
-
-                    String name = dfile.getName();
-                    String type = dfile.getType();
-
-                    if (TextUtils.isEmpty(name))
-                        name = uri.getLastPathSegment();
-                    if (TextUtils.isEmpty(type))
-                        type = "image/*";
-
-                    String cid = BuildConfig.APPLICATION_ID + ".content." + Math.abs(source.hashCode());
-                    String acid = "<" + cid + ">";
-
-                    if (db.attachment().getAttachment(message.id, acid) == null) {
-                        EntityAttachment attachment = new EntityAttachment();
-                        attachment.message = message.id;
-                        attachment.sequence = db.attachment().getAttachmentSequence(message.id) + 1;
-                        attachment.name = name;
-                        attachment.type = type;
-                        attachment.disposition = Part.INLINE;
-                        attachment.cid = acid;
-                        attachment.related = true;
-                        attachment.size = null;
-                        attachment.progress = 0;
-                        attachment.id = db.attachment().insertAttachment(attachment);
-
-                        attachment.size = Helper.copy(context, uri, attachment.getFile(context));
-                        attachment.progress = null;
-                        attachment.available = true;
-                        db.attachment().setDownloaded(attachment.id, attachment.size);
-
-                        attachments.add(attachment);
-                    }
-
-                    img.attr("src", "cid:" + cid);
+            // When sending message
+            if (identity != null && send) {
+                if (auto_link) {
+                    HtmlHelper.guessSchemes(document);
+                    HtmlHelper.autoLink(document, true);
                 }
 
-                db.setTransactionSuccessful();
-            } catch (Throwable ex) {
-                Log.w(ex);
-            } finally {
-                db.endTransaction();
+                if (!TextUtils.isEmpty(compose_font)) {
+                    List<Node> childs = new ArrayList<>();
+                    for (Node child : document.body().childNodes())
+                        if (TextUtils.isEmpty(child.attr("fairemail"))) {
+                            childs.add(child);
+                            child.remove();
+                        } else
+                            break;
+
+                    Element div = document.createElement("div").attr("style",
+                            "font-family:" + StyleHelper.getFamily(compose_font));
+                    for (Node child : childs)
+                        div.appendChild(child);
+                    document.body().prependChild(div);
+                }
+
+                document.select("div[fairemail=signature]").removeAttr("fairemail");
+                document.select("div[fairemail=reference]").removeAttr("fairemail");
+
+                Elements reply = document.select("div[fairemail=reply]");
+                if (message.isPlainOnly())
+                    reply.select("strong").tagName("span");
+                reply.removeAttr("fairemail");
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    for (Element img : document.select("img")) {
+                        String source = img.attr("src");
+                        if (!source.startsWith("content:"))
+                            continue;
+
+                        Uri uri = Uri.parse(source);
+                        DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
+                        if (dfile == null)
+                            continue;
+
+                        String name = dfile.getName();
+                        String type = dfile.getType();
+
+                        if (TextUtils.isEmpty(name))
+                            name = uri.getLastPathSegment();
+                        if (TextUtils.isEmpty(type))
+                            type = "image/*";
+
+                        String cid = BuildConfig.APPLICATION_ID + ".content." + Math.abs(source.hashCode());
+                        String acid = "<" + cid + ">";
+
+                        if (db.attachment().getAttachment(message.id, acid) == null) {
+                            EntityAttachment attachment = new EntityAttachment();
+                            attachment.message = message.id;
+                            attachment.sequence = db.attachment().getAttachmentSequence(message.id) + 1;
+                            attachment.name = name;
+                            attachment.type = type;
+                            attachment.disposition = Part.INLINE;
+                            attachment.cid = acid;
+                            attachment.related = true;
+                            attachment.size = null;
+                            attachment.progress = 0;
+                            attachment.id = db.attachment().insertAttachment(attachment);
+
+                            attachment.size = Helper.copy(context, uri, attachment.getFile(context));
+                            attachment.progress = null;
+                            attachment.available = true;
+                            db.attachment().setDownloaded(attachment.id, attachment.size);
+
+                            attachments.add(attachment);
+                        }
+
+                        img.attr("src", "cid:" + cid);
+                    }
+
+                    db.setTransactionSuccessful();
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                } finally {
+                    db.endTransaction();
+                }
             }
         }
 
@@ -1082,6 +1095,22 @@ public class MessageHelper {
         altMultiPart.addBodyPart(plainPart);
         altMultiPart.addBodyPart(htmlPart);
 
+        for (EntityAttachment attachment : attachments)
+            if (attachment.available &&
+                    "text/calendar".equals(attachment.type)) {
+                File file = attachment.getFile(context);
+                ICalendar icalendar = Biweekly.parse(file).first();
+                Method method = (icalendar == null ? null : icalendar.getMethod());
+                if (method != null && method.isReply()) {
+                    // https://www.rfc-editor.org/rfc/rfc6047#section-2.4
+                    BodyPart calPart = new MimeBodyPart();
+                    calPart.setContent(icalendar.write(), attachment.type + ";" +
+                            " method=" + method.getValue() + ";" +
+                            " charset=UTF-8;");
+                    altMultiPart.addBodyPart(calPart);
+                }
+            }
+
         int availableAttachments = 0;
         boolean hasInline = false;
         for (EntityAttachment attachment : attachments)
@@ -1128,17 +1157,7 @@ public class MessageHelper {
                         public String getContentType(File file) {
                             // https://tools.ietf.org/html/rfc6047
                             if ("text/calendar".equals(attachment.type))
-                                try {
-                                    ICalendar icalendar = Biweekly.parse(file).first();
-                                    if (icalendar != null &&
-                                            icalendar.getMethod() != null &&
-                                            icalendar.getMethod().isReply())
-                                        return "text/calendar" +
-                                                "; method=REPLY" +
-                                                "; charset=" + Charset.defaultCharset().name();
-                                } catch (IOException ex) {
-                                    Log.e(ex);
-                                }
+                                return attachment.type + "; charset=UTF-8;";
 
                             return attachment.type;
                         }
@@ -1265,22 +1284,20 @@ public class MessageHelper {
 
         List<String> result = new ArrayList<>();
         String refs = imessage.getHeader("References", null);
-        if (refs != null)
-            result.addAll(Arrays.asList(getReferences(refs)));
+        result.addAll(getReferences(refs));
 
         // Merge references of reported message for threading
         InternetHeaders iheaders = getReportHeaders();
         if (iheaders != null) {
             String arefs = iheaders.getHeader("References", null);
-            if (arefs != null)
-                for (String ref : getReferences(arefs))
-                    if (!result.contains(ref)) {
-                        Log.i("rfc822 ref=" + ref);
-                        result.add(ref);
-                    }
+            for (String ref : getReferences(arefs))
+                if (!result.contains(ref)) {
+                    Log.i("rfc822 ref=" + ref);
+                    result.add(ref);
+                }
 
             String amsgid = iheaders.getHeader("Message-Id", null);
-            if (amsgid != null) {
+            if (!TextUtils.isEmpty(amsgid)) {
                 String msgid = MimeUtility.unfold(amsgid);
                 if (!result.contains(msgid)) {
                     Log.i("rfc822 id=" + msgid);
@@ -1292,8 +1309,17 @@ public class MessageHelper {
         return result.toArray(new String[0]);
     }
 
-    private String[] getReferences(String header) {
-        return MimeUtility.unfold(header).split("[,\\s]+");
+    private List<String> getReferences(String header) {
+        List<String> result = new ArrayList<>();
+        if (header == null)
+            return result;
+        header = MimeUtility.unfold(header);
+        if (TextUtils.isEmpty(header))
+            return result;
+        for (String ref : header.split("[,\\s]+"))
+            if (!result.contains(ref))
+                result.add(ref);
+        return result;
     }
 
     String getDeliveredTo() throws MessagingException {
@@ -1314,7 +1340,7 @@ public class MessageHelper {
 
     String getInReplyTo() throws MessagingException {
         String[] a = getInReplyTos();
-        return (a.length == 0 ? null : TextUtils.join(" ", a));
+        return (a.length < 1 ? null : a[0]);
     }
 
     String[] getInReplyTos() throws MessagingException {
@@ -1323,15 +1349,14 @@ public class MessageHelper {
         List<String> result = new ArrayList<>();
 
         String header = imessage.getHeader("In-Reply-To", null);
-        if (header != null)
-            result.addAll(Arrays.asList(getReferences(header)));
+        result.addAll(getReferences(header));
 
         if (result.size() == 0) {
             // Use reported message ID as synthetic in-reply-to
             InternetHeaders iheaders = getReportHeaders();
             if (iheaders != null) {
                 header = iheaders.getHeader("Message-Id", null);
-                if (header != null) {
+                if (!TextUtils.isEmpty(header)) {
                     result.add(header);
                     Log.i("rfc822 id=" + header);
                 }
@@ -1349,15 +1374,16 @@ public class MessageHelper {
                 ContentType ct = new ContentType(imessage.getContentType());
                 String reportType = ct.getParameter("report-type");
                 if ("delivery-status".equalsIgnoreCase(reportType) ||
-                        "disposition-notification".equalsIgnoreCase(reportType)) {
+                        "disposition-notification".equalsIgnoreCase(reportType) ||
+                        "feedback-report".equalsIgnoreCase(reportType)) {
                     MessageParts parts = new MessageParts();
                     getMessageParts(null, imessage, parts, null);
                     for (AttachmentPart apart : parts.attachments)
                         if ("text/rfc822-headers".equalsIgnoreCase(apart.attachment.type)) {
-                            reportHeaders = new InternetHeaders(apart.part.getInputStream());
+                            reportHeaders = new InternetHeaders(apart.part.getInputStream(), true);
                             break;
                         } else if ("message/rfc822".equalsIgnoreCase(apart.attachment.type)) {
-                            Properties props = MessageHelper.getSessionProperties();
+                            Properties props = MessageHelper.getSessionProperties(true);
                             Session isession = Session.getInstance(props, null);
                             MimeMessage amessage = new MimeMessage(isession, apart.part.getInputStream());
                             reportHeaders = amessage.getHeaders();
@@ -1530,7 +1556,8 @@ public class MessageHelper {
         DB db = DB.getInstance(context);
 
         List<String> all = new ArrayList<>(refs);
-        all.add(msgid);
+        if (!TextUtils.isEmpty(msgid))
+            all.add(msgid);
 
         int thread_range = prefs.getInt("thread_range", MessageHelper.DEFAULT_THREAD_RANGE);
         int range = (int) Math.pow(2, thread_range);
@@ -2718,7 +2745,7 @@ public class MessageHelper {
         }
     }
 
-    enum AddressFormat {NAME_ONLY, EMAIL_ONLY, NAME_EMAIL}
+    enum AddressFormat {NAME_ONLY, EMAIL_ONLY, NAME_EMAIL, EMAIL_NAME}
 
     static AddressFormat getAddressFormat(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -2789,6 +2816,8 @@ public class MessageHelper {
 
                     if (format == AddressFormat.NAME_EMAIL && !TextUtils.isEmpty(email))
                         formatted.add(personal + " <" + email + ">");
+                    else if (format == AddressFormat.EMAIL_NAME && !TextUtils.isEmpty(email))
+                        formatted.add("<" + email + "> " + personal);
                     else
                         formatted.add(personal);
                 }
@@ -2877,6 +2906,11 @@ public class MessageHelper {
                 try {
                     byte[] b1 = decodeWord(p1.text, p1.encoding, p1.charset);
                     byte[] b2 = decodeWord(p2.text, p2.encoding, p2.charset);
+                    if (CharsetHelper.isValid(b1, p1.charset) && CharsetHelper.isValid(b2, p2.charset)) {
+                        p++;
+                        continue;
+                    }
+
                     byte[] b = new byte[b1.length + b2.length];
                     System.arraycopy(b1, 0, b, 0, b1.length);
                     System.arraycopy(b2, 0, b, b1.length, b2.length);
@@ -2979,7 +3013,9 @@ public class MessageHelper {
 
         boolean isReport() {
             String ct = contentType.getBaseType();
-            return Report.isDeliveryStatus(ct) || Report.isDispositionNotification(ct);
+            return (Report.isDeliveryStatus(ct) ||
+                    Report.isDispositionNotification(ct) ||
+                    Report.isFeedbackReport(ct));
         }
     }
 
@@ -3167,8 +3203,40 @@ public class MessageHelper {
                         result = Helper.readStream((InputStream) content,
                                 cs == null ? StandardCharsets.ISO_8859_1 : cs);
                     } else {
-                        Log.e(content.getClass().getName());
-                        result = content.toString();
+                        result = null;
+
+                        StringBuilder m = new StringBuilder();
+                        if (content instanceof Multipart) {
+                            m.append("multipart");
+                            Multipart mp = (Multipart) content;
+                            for (int i = 0; i < mp.getCount(); i++) {
+                                BodyPart bp = mp.getBodyPart(i);
+                                try {
+                                    ContentType ct = new ContentType(bp.getContentType());
+                                    if (h.contentType.match(ct)) {
+                                        String _charset = ct.getParameter("charset");
+                                        Charset _cs = (TextUtils.isEmpty(_charset)
+                                                ? StandardCharsets.ISO_8859_1
+                                                : Charset.forName(_charset));
+                                        result = Helper.readStream(bp.getInputStream(), _cs);
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+                                m.append(" [").append(bp.getContentType()).append("]");
+                            }
+                        } else
+                            m.append(content.getClass().getName());
+
+                        String msg = "Expected " + h.contentType + " got " + m + " result=" + (result != null);
+
+                        if (result == null) {
+                            Log.e(msg);
+                            warnings.add(msg);
+                            result = Helper.readStream(h.part.getInputStream(),
+                                    cs == null ? StandardCharsets.ISO_8859_1 : cs);
+                        } else
+                            Log.w(msg);
                     }
                 } catch (DecodingException ex) {
                     Log.e(ex);
@@ -3360,6 +3428,11 @@ public class MessageHelper {
                     if (report.isDispositionNotification() && !report.isMdnDisplayed()) {
                         if (report.disposition != null)
                             w.append(report.disposition);
+                    }
+
+                    if (report.isFeedbackReport()) {
+                        if (!TextUtils.isEmpty(report.feedback))
+                            w.append(report.feedback);
                     }
 
                     if (w.length() > 0)
@@ -3568,7 +3641,7 @@ public class MessageHelper {
 
                 if ("message/rfc822".equals(local.type))
                     try (FileInputStream fis = new FileInputStream(local.getFile(context))) {
-                        Properties props = MessageHelper.getSessionProperties();
+                        Properties props = MessageHelper.getSessionProperties(true);
                         Session isession = Session.getInstance(props, null);
                         MimeMessage imessage = new MimeMessage(isession, fis);
                         MessageHelper helper = new MessageHelper(imessage, context);
@@ -4010,8 +4083,17 @@ public class MessageHelper {
         }
 
         String getWarnings(String existing) {
-            if (existing != null)
-                warnings.add(0, existing);
+            if (existing != null) {
+                boolean exists = false;
+                for (String warning : warnings)
+                    if (existing.equals(warning)) {
+                        exists = true;
+                        break;
+                    }
+                if (!exists)
+                    warnings.add(0, existing);
+            }
+
             if (warnings.size() == 0)
                 return null;
             else
@@ -4042,6 +4124,10 @@ public class MessageHelper {
 
                 if (part.isMimeType("multipart/mixed")) {
                     Object content = part.getContent();
+
+                    if (content instanceof String)
+                        content = tryParseMultipart((String) content, part.getContentType());
+
                     if (content instanceof Multipart) {
                         Multipart mp = (Multipart) content;
                         for (int i = 0; i < mp.getCount(); i++) {
@@ -4065,6 +4151,10 @@ public class MessageHelper {
                             "application/pkcs7-signature".equals(protocol) ||
                             "application/x-pkcs7-signature".equals(protocol)) {
                         Object content = part.getContent();
+
+                        if (content instanceof String)
+                            content = tryParseMultipart((String) content, part.getContentType());
+
                         if (content instanceof Multipart) {
                             Multipart multipart = (Multipart) content;
                             if (multipart.getCount() == 2) {
@@ -4111,6 +4201,10 @@ public class MessageHelper {
                     String protocol = ct.getParameter("protocol");
                     if ("application/pgp-encrypted".equals(protocol) || protocol == null) {
                         Object content = part.getContent();
+
+                        if (content instanceof String)
+                            content = tryParseMultipart((String) content, part.getContentType());
+
                         if (content instanceof Multipart) {
                             Multipart multipart = (Multipart) content;
                             if (multipart.getCount() == 2) {
@@ -4192,9 +4286,10 @@ public class MessageHelper {
         try {
             Log.d("Part class=" + part.getClass() + " type=" + part.getContentType());
 
-            // https://github.com/autocrypt/protected-headers
             try {
                 ContentType ct = new ContentType(part.getContentType());
+
+                // https://github.com/autocrypt/protected-headers
                 if ("v1".equals(ct.getParameter("protected-headers"))) {
                     String[] subject = part.getHeader("subject");
                     if (subject != null && subject.length != 0) {
@@ -4202,6 +4297,19 @@ public class MessageHelper {
                         parts.protected_subject = decodeMime(subject[0]);
                     }
                 }
+
+                // https://en.wikipedia.org/wiki/MIME#Multipart_subtypes
+                if ("multipart".equals(ct.getPrimaryType()) &&
+                        !("mixed".equalsIgnoreCase(ct.getSubType()) ||
+                                "alternative".equalsIgnoreCase(ct.getSubType()) ||
+                                "related".equalsIgnoreCase(ct.getSubType()) ||
+                                "report".equalsIgnoreCase(ct.getSubType()) ||
+                                "parallel".equalsIgnoreCase(ct.getSubType()) ||
+                                "digest".equalsIgnoreCase(ct.getSubType()) ||
+                                "appledouble".equalsIgnoreCase(ct.getSubType()) ||
+                                "voice-message".equalsIgnoreCase(ct.getSubType())))
+                    // voice-message: https://www.rfc-editor.org/rfc/rfc3458.txt
+                    Log.e(part.getContentType());
             } catch (Throwable ex) {
                 Log.e(ex);
             }
@@ -4209,8 +4317,12 @@ public class MessageHelper {
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart;
                 Object content = part.getContent(); // Should always be Multipart
+
+                if (content instanceof String)
+                    content = tryParseMultipart((String) content, part.getContentType());
+
                 if (content instanceof Multipart) {
-                    multipart = (Multipart) part.getContent();
+                    multipart = (Multipart) content;
                     int count = multipart.getCount();
                     for (int i = 0; i < count; i++)
                         try {
@@ -4294,7 +4406,9 @@ public class MessageHelper {
                     !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename)) {
                 parts.text.add(new PartHolder(part, contentType));
             } else {
-                if (Report.isDeliveryStatus(ct) || Report.isDispositionNotification(ct))
+                if (Report.isDeliveryStatus(ct) ||
+                        Report.isDispositionNotification(ct) ||
+                        Report.isFeedbackReport(ct))
                     parts.extra.add(new PartHolder(part, contentType));
 
                 AttachmentPart apart = new AttachmentPart();
@@ -4363,6 +4477,35 @@ public class MessageHelper {
         }
     }
 
+    private Object tryParseMultipart(String text, String contentType) {
+        try {
+            return new MimeMultipart(new DataSource() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return new ByteArrayInputStream(text.getBytes(StandardCharsets.ISO_8859_1));
+                }
+
+                @Override
+                public OutputStream getOutputStream() throws IOException {
+                    return null;
+                }
+
+                @Override
+                public String getContentType() {
+                    return contentType;
+                }
+
+                @Override
+                public String getName() {
+                    return "String";
+                }
+            });
+        } catch (MessagingException ex) {
+            Log.e(ex);
+            return text;
+        }
+    }
+
     private void ensureEnvelope() throws MessagingException {
         _ensureMessage(false, false);
     }
@@ -4428,7 +4571,7 @@ public class MessageHelper {
                     if (bis.available() == 0)
                         throw new IOException("NIL");
 
-                    Properties props = MessageHelper.getSessionProperties();
+                    Properties props = MessageHelper.getSessionProperties(true);
                     Session isession = Session.getInstance(props, null);
 
                     Log.w("Decoding raw message");
@@ -4517,18 +4660,64 @@ public class MessageHelper {
         return email;
     }
 
+    static String sanitizeName(String name) {
+        if (!BuildConfig.DEBUG)
+            return name;
+
+        // https://www.w3.org/TR/xml-entity-names/1D4.html
+        // https://www.utf8-chartable.de/unicode-utf8-table.pl?start=119808
+
+        StringBuilder sb = new StringBuilder();
+
+        int k = 0;
+        while (k < name.length()) {
+            int cp = name.codePointAt(k);
+
+            if (cp >= 0x1D400 && cp <= 0x1D419) // MATHEMATICAL BOLD CAPITAL A-Z
+                sb.append((char) (cp - 0x1D400 + 65));
+            else if (cp >= 0x1D41A && cp <= 0x1D433) // MATHEMATICAL BOLD SMALL A-Z
+                sb.append((char) (cp - 0x1D41A + 97));
+            else if (cp >= 0x1D434 && cp <= 0x1D44D) // MATHEMATICAL ITALIC CAPITAL A-Z
+                sb.append((char) (cp - 0x1D434 + 65));
+            else if (cp >= 0x1D44E && cp <= 0x1D467) // MATHEMATICAL ITALIC SMALL A-Z
+                sb.append((char) (cp - 0x1D44E + 97));
+            else if (cp >= 0x1D468 && cp <= 0x1D481) // MATHEMATICAL BOLD ITALIC CAPITAL A-Z
+                sb.append((char) (cp - 0x1D468 + 65));
+            else if (cp >= 0x1D482 && cp <= 0x1D49B) // MATHEMATICAL BOLD ITALIC SMALL A-Z
+                sb.append((char) (cp - 0x1D482 + 97));
+            else if (cp >= 0x1D49C && cp <= 0x1D4B5) // MATHEMATICAL SCRIPT CAPITAL A-Z
+                sb.append((char) (cp - 0x1D49C + 65));
+            else if (cp >= 0x1D4B6 && cp <= 0x1D4CF) // MATHEMATICAL SCRIPT SMALL A-Z
+                sb.append((char) (cp - 0x1D4B6 + 97));
+            else if (cp >= 0x1D4D0 && cp <= 0x1D4E9) // MATHEMATICAL BOLD SCRIPT CAPITAL A-Z
+                sb.append((char) (cp - 0x1D4D0 + 65));
+            else if (cp >= 0x1D4EA && cp <= 0x1D4FF) // MATHEMATICAL BOLD SCRIPT SMALL A-Z
+                sb.append((char) (cp - 0x1D4EA + 97));
+            else
+                sb.appendCodePoint(cp);
+
+            k += Character.charCount(cp);
+        }
+        return sb.toString();
+    }
+
     static InternetAddress[] parseAddresses(Context context, String text) throws AddressException {
         if (TextUtils.isEmpty(text))
             return null;
 
         int skip = 0;
+        boolean quoted = false;
         StringBuilder sb = new StringBuilder();
         int len = text.length();
         for (int i = 0; i < len; i++) {
             char kar = text.charAt(i);
-            if (kar == '(' && text.indexOf(')', i) > 0)
+
+            if (kar == '"' && (quoted || text.indexOf('"', i + 1) > 0))
+                quoted = !quoted;
+
+            if (!quoted && kar == '(' && text.indexOf(')', i) > 0)
                 skip++;
-            else if (kar == ')' && skip > 0)
+            else if (!quoted && kar == ')' && skip > 0)
                 skip--;
             else if (skip == 0)
                 sb.append(kar);
@@ -4564,6 +4753,110 @@ public class MessageHelper {
 
         return result.toArray(new InternetAddress[0]);
     }
+
+    static void getStructure(Part part, SpannableStringBuilder ssb, int level, int textColorLink) {
+        try {
+            Enumeration<Header> headers;
+            if (level == 0) {
+                List<Header> h = new ArrayList<>();
+
+                String[] cte = part.getHeader("Content-Transfer-Encoding");
+                if (cte != null)
+                    for (String header : cte)
+                        h.add(new Header("Content-Transfer-Encoding", header));
+
+                String[] ct = part.getHeader("Content-Type");
+                if (ct == null)
+                    h.add(new Header("Content-Type", "text/plain"));
+                else
+                    for (String header : ct)
+                        h.add(new Header("Content-Type", header));
+
+                headers = new Enumeration<Header>() {
+                    private int index = -1;
+
+                    @Override
+                    public boolean hasMoreElements() {
+                        return (index + 1 < h.size());
+                    }
+
+                    @Override
+                    public Header nextElement() {
+                        return h.get(++index);
+                    }
+                };
+            } else
+                headers = part.getAllHeaders();
+
+            while (headers.hasMoreElements()) {
+                Header header = headers.nextElement();
+                for (int i = 0; i < level; i++)
+                    ssb.append("  ");
+                int start = ssb.length();
+                ssb.append(header.getName());
+                ssb.setSpan(new ForegroundColorSpan(textColorLink), start, ssb.length(), 0);
+                ssb.append(": ").append(header.getValue()).append('\n');
+            }
+
+            for (int i = 0; i < level; i++)
+                ssb.append("  ");
+            int size = part.getSize();
+            ssb.append("Size: ")
+                    .append(size > 0 ? Helper.humanReadableByteCount(size) : "?")
+                    .append('\n');
+
+            if (BuildConfig.DEBUG &&
+                    !part.isMimeType("multipart/*")) {
+                Object content = part.getContent();
+                if (content instanceof String) {
+                    String text = (String) content;
+
+                    String charset;
+                    try {
+                        ContentType ct = new ContentType(part.getContentType());
+                        charset = ct.getParameter("charset");
+                    } catch (Throwable ignored) {
+                        charset = null;
+                    }
+                    if (charset == null)
+                        charset = StandardCharsets.ISO_8859_1.name();
+
+                    Charset cs = Charset.forName(charset);
+                    Charset detected = CharsetHelper.detect(text, cs);
+                    boolean isUtf8 = CharsetHelper.isUTF8(text.getBytes(cs));
+                    boolean isUtf16 = CharsetHelper.isUTF16(text.getBytes(cs));
+                    boolean isW1252 = !Objects.equals(text, CharsetHelper.utf8toW1252(text));
+
+                    for (int i = 0; i < level; i++)
+                        ssb.append("  ");
+
+                    ssb.append("Detected: ")
+                            .append(detected == null ? "?" : detected.toString())
+                            .append(" isUTF8=").append(Boolean.toString(isUtf8))
+                            .append(" isUTF16=").append(Boolean.toString(isUtf16))
+                            .append(" isW1252=").append(Boolean.toString(isW1252))
+                            .append('\n');
+                }
+            }
+
+            ssb.append('\n');
+
+            if (part.isMimeType("multipart/*")) {
+                Multipart multipart = (Multipart) part.getContent();
+                for (int i = 0; i < multipart.getCount(); i++)
+                    try {
+                        getStructure(multipart.getBodyPart(i), ssb, level + 1, textColorLink);
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                        ssb.append(ex.toString()).append('\n');
+                    }
+            }
+        } catch (Throwable ex) {
+            Log.w(ex);
+            ssb.append(ex.toString()).append('\n');
+        }
+    }
+
 
     static boolean isRemoved(Throwable ex) {
         while (ex != null) {
@@ -4703,6 +4996,7 @@ public class MessageHelper {
         String diagnostic;
         String disposition;
         String refid;
+        String feedback;
         String html;
 
         Report(String type, String content) {
@@ -4712,7 +5006,7 @@ public class MessageHelper {
             content = content.replaceAll("(\\r?\\n)+", "\n");
             ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes());
             try {
-                Enumeration<Header> headers = new InternetHeaders(bis).getAllHeaders();
+                Enumeration<Header> headers = new InternetHeaders(bis, true).getAllHeaders();
                 while (headers.hasMoreElements()) {
                     Header header = headers.nextElement();
                     String name = header.getName();
@@ -4762,6 +5056,15 @@ public class MessageHelper {
                                 this.refid = value;
                                 break;
                         }
+                    } else if (isFeedbackReport(type)) {
+                        // https://datatracker.ietf.org/doc/html/rfc5965
+                        feedback = "complaint";
+                        switch (name) {
+                            case "Feedback-Type":
+                                // abuse, fraud, other, virus
+                                feedback = value;
+                                break;
+                        }
                     }
                 }
             } catch (Throwable ex) {
@@ -4778,6 +5081,10 @@ public class MessageHelper {
 
         boolean isDispositionNotification() {
             return isDispositionNotification(type);
+        }
+
+        boolean isFeedbackReport() {
+            return isFeedbackReport(type);
         }
 
         boolean isDelivered() {
@@ -4838,6 +5145,10 @@ public class MessageHelper {
 
         static boolean isDispositionNotification(String type) {
             return "message/disposition-notification".equalsIgnoreCase(type);
+        }
+
+        static boolean isFeedbackReport(String type) {
+            return "message/feedback-report".equalsIgnoreCase(type);
         }
     }
 }

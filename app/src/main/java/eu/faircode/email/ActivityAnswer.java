@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class ActivityAnswer extends ActivityBase {
-    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "answer");
+    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "answer");
 
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -83,7 +83,7 @@ public class ActivityAnswer extends ActivityBase {
                     }
                 });
 
-                String html = answer.getHtml(null);
+                String html = answer.getHtml(context, null);
                 String text = HtmlHelper.getText(context, html);
 
                 ClipboardManager cbm = Helper.getSystemService(ActivityAnswer.this, ClipboardManager.class);

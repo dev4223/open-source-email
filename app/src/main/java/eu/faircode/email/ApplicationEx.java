@@ -41,6 +41,8 @@ import android.webkit.CookieManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 import androidx.emoji2.text.DefaultEmojiCompatConfig;
 import androidx.emoji2.text.EmojiCompat;
 import androidx.emoji2.text.FontRequestEmojiCompatConfig;
@@ -63,6 +65,9 @@ public class ApplicationEx extends Application
     }
 
     static Context getLocalizedContext(Context context) {
+        if (BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && false)
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList());
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (prefs.contains("english")) {
@@ -168,7 +173,7 @@ public class ApplicationEx extends Application
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final boolean crash_reports = prefs.getBoolean("crash_reports", false);
         final boolean leak_canary = prefs.getBoolean("leak_canary", false);
-        final boolean load_emoji = prefs.getBoolean("load_emoji", BuildConfig.PLAY_STORE_RELEASE);
+        final boolean load_emoji = prefs.getBoolean("load_emoji", false);
 
         prev = Thread.getDefaultUncaughtExceptionHandler();
 
@@ -213,6 +218,7 @@ public class ApplicationEx extends Application
         if (Helper.hasWebView(this))
             CookieManager.getInstance().setAcceptCookie(false);
 
+        // https://issuetracker.google.com/issues/233525229
         Log.i("Load emoji=" + load_emoji);
         if (!load_emoji)
             try {
@@ -294,7 +300,7 @@ public class ApplicationEx extends Application
                 case "language": // misc
                 case "wal": // misc
                     // Should be excluded for import
-                    restart(this);
+                    restart(this, key);
                     break;
                 case "debug":
                 case "log_level":
@@ -306,7 +312,8 @@ public class ApplicationEx extends Application
         }
     }
 
-    static void restart(Context context) {
+    static void restart(Context context, String reason) {
+        Log.i("Restart because " + reason);
         Intent intent = new Intent(context, ActivityMain.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(intent);
@@ -627,7 +634,32 @@ public class ApplicationEx extends Application
                 editor.remove("browse_links")
                         .putBoolean("open_with_tabs", !browse_links);
             }
-        }
+        } else if (version < 1927) {
+            if (!prefs.contains("auto_identity"))
+                editor.putBoolean("auto_identity", true);
+        } else if (version < 1931)
+            editor.remove("button_force_light").remove("fake_dark");
+        else if (version < 1933) {
+            editor.putBoolean("lt_enabled", true);
+            if (prefs.contains("disable_top")) {
+                editor.putBoolean("use_top", !prefs.getBoolean("disable_top", false));
+                editor.remove("disable_top");
+            }
+        } else if (version < 1947)
+            editor.putBoolean("accept_unsupported", true);
+        else if (version < 1951) {
+            if (prefs.contains("open_unsafe"))
+                editor.putBoolean("open_safe", !prefs.getBoolean("open_unsafe", true));
+        } else if (version < 1955) {
+            if (!prefs.contains("doubletap"))
+                editor.putBoolean("doubletap", true);
+        } else if (version < 1960)
+            editor.remove("sqlite_auto_vacuum");
+        else if (version < 1961) {
+            if (!prefs.contains("photo_picker"))
+                editor.putBoolean("photo_picker", true);
+        } else if (version < 1966)
+            editor.remove("hide_timezone");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");

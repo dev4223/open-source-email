@@ -8,6 +8,10 @@
         <menu>
             <group android:id="@+id/group_style_size">
                 <item
+                    android:id="@+id/menu_style_size_xsmall"
+                    android:title="@string/title_style_size_xsmall" />
+
+                <item
                     android:id="@+id/menu_style_size_small"
                     android:title="@string/title_style_size_small" />
 
@@ -18,6 +22,10 @@
                 <item
                     android:id="@+id/menu_style_size_large"
                     android:title="@string/title_style_size_large" />
+
+                <item
+                    android:id="@+id/menu_style_size_xlarge"
+                    android:title="@string/title_style_size_xlarge" />
             </group>
         </menu>
     </item>
@@ -105,19 +113,10 @@
         </menu>
     </item>
 
-    <group
-        android:id="@+id/group_style_blockquote"
-        android:orderInCategory="7">
-        <item
-            android:id="@+id/menu_style_blockquote"
-            android:icon="@drawable/twotone_format_quote_24"
-            android:title="@string/title_style_blockquote" />
-    </group>
-
     <item
         android:id="@+id/menu_style_indentation"
         android:icon="@drawable/twotone_format_indent_increase_24"
-        android:orderInCategory="8"
+        android:orderInCategory="7"
         android:title="@string/title_style_indentation">
         <menu>
             <group android:id="@+id/group_style_indentation">
@@ -134,6 +133,15 @@
     </item>
 
     <group
+        android:id="@+id/group_style_blockquote"
+        android:orderInCategory="8">
+        <item
+            android:id="@+id/menu_style_blockquote"
+            android:icon="@drawable/twotone_format_quote_24"
+            android:title="@string/title_style_blockquote" />
+    </group>
+
+    <group
         android:id="@+id/group_style_mark"
         android:orderInCategory="9">
         <item
@@ -143,8 +151,26 @@
     </group>
 
     <group
-        android:id="@+id/group_style_strikethrough"
+        android:id="@+id/group_style_subscript"
         android:orderInCategory="10">
+        <item
+            android:id="@+id/menu_style_subscript"
+            android:icon="@drawable/twotone_subscript_24"
+            android:title="@string/title_style_subscript" />
+    </group>
+
+    <group
+        android:id="@+id/group_style_superscript"
+        android:orderInCategory="11">
+        <item
+            android:id="@+id/menu_style_superscript"
+            android:icon="@drawable/twotone_superscript_24"
+            android:title="@string/title_style_superscript" />
+    </group>
+
+    <group
+        android:id="@+id/group_style_strikethrough"
+        android:orderInCategory="12">
         <item
             android:id="@+id/menu_style_strikethrough"
             android:icon="@drawable/twotone_format_strikethrough_24"
@@ -152,17 +178,26 @@
     </group>
 
     <group
+        android:id="@+id/group_style_password"
+        android:orderInCategory="13">
+        <item
+            android:id="@+id/menu_style_password"
+            android:icon="@drawable/twotone_lock_24"
+            android:title="@string/title_style_protect" />
+    </group>
+
+    <group
         android:id="@+id/group_style_code"
-        android:orderInCategory="11">
+        android:orderInCategory="14">
         <item
             android:id="@+id/menu_style_code"
-            android:icon="@drawable/baseline_code_24"
+            android:icon="@drawable/twotone_code_24"
             android:title="@string/title_style_code" />
     </group>
 
     <group
         android:id="@+id/group_style_clear"
-        android:orderInCategory="12">
+        android:orderInCategory="15">
         <item
             android:id="@+id/menu_style_clear"
             android:icon="@drawable/twotone_format_clear_24"

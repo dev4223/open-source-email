@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.annotation.TargetApi;
@@ -51,9 +52,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -201,6 +204,8 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             ivSync.setImageResource(account.synchronize ? R.drawable.twotone_sync_24 : R.drawable.twotone_sync_disabled_24);
             ivSync.setContentDescription(context.getString(account.synchronize ? R.string.title_legend_synchronize_on : R.string.title_legend_synchronize_off));
 
+            ivOAuth.setImageDrawable(ContextCompat.getDrawable(context, account.auth_type == AUTH_TYPE_GMAIL
+                    ? R.drawable.twotone_android_24 : R.drawable.twotone_security_24));
             ivOAuth.setVisibility(
                     settings && account.auth_type != AUTH_TYPE_PASSWORD ? View.VISIBLE : View.GONE);
             ivPrimary.setVisibility(account.primary ? View.VISIBLE : View.GONE);
@@ -380,28 +385,34 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
             popupMenu.getMenu().add(Menu.NONE, 0, order++, ss).setEnabled(false);
 
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_enabled, order++, R.string.title_enabled)
-                    .setCheckable(true).setChecked(account.synchronize);
+            if (settings)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_enabled, order++, R.string.title_enabled)
+                        .setCheckable(true).setChecked(account.synchronize);
             popupMenu.getMenu().add(Menu.NONE, R.string.title_primary, order++, R.string.title_primary)
                     .setCheckable(true).setChecked(account.primary);
 
-            if (account.notify &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 String channelId = EntityAccount.getNotificationChannelId(account.id);
                 NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
                 NotificationChannel channel = nm.getNotificationChannel(channelId);
-                if (channel != null)
+                if (channel == null)
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_create_channel, order++, R.string.title_create_channel);
+                else {
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_channel, order++, R.string.title_edit_channel);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_channel, order++, R.string.title_delete_channel);
+                }
             }
+
+            if (settings)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_properties, order++, R.string.title_edit_properties);
 
             if (account.protocol == EntityAccount.TYPE_IMAP && settings)
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_copy, order++, R.string.title_copy);
 
-            if (settings)
+            if (settings) {
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, order++, R.string.title_delete);
-
-            if (settings)
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_log, order++, R.string.title_log);
+            }
 
             if (debug)
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_reset, order++, R.string.title_reset);
@@ -416,8 +427,20 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                     } else if (itemId == R.string.title_primary) {
                         onActionPrimary(!item.isChecked());
                         return true;
+                    } else if (itemId == R.string.title_create_channel) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            onActionCreateChannel();
+                        return true;
                     } else if (itemId == R.string.title_edit_channel) {
-                        onActionEditChannel();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            onActionEditChannel();
+                        return true;
+                    } else if (itemId == R.string.title_delete_channel) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            onActionDeleteChannel();
+                        return true;
+                    } else if (itemId == R.string.title_edit_properties) {
+                        ViewHolder.this.onClick(view);
                         return true;
                     } else if (itemId == R.string.title_copy) {
                         onActionCopy();
@@ -510,6 +533,41 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 }
 
                 @TargetApi(Build.VERSION_CODES.O)
+                private void onActionCreateChannel() {
+                    if (!ActivityBilling.isPro(context)) {
+                        context.startActivity(new Intent(context, ActivityBilling.class));
+                        return;
+                    }
+
+                    account.createNotificationChannel(context);
+
+                    Bundle args = new Bundle();
+                    args.putLong("id", account.id);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+
+                            DB db = DB.getInstance(context);
+                            db.account().setAccountNotify(id, true);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Void data) {
+                            onActionEditChannel();
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "create:channel");
+                }
+
+                @TargetApi(Build.VERSION_CODES.O)
                 private void onActionEditChannel() {
                     Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                             .putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName())
@@ -519,6 +577,34 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                     } catch (Throwable ex) {
                         Helper.reportNoViewer(context, intent, ex);
                     }
+                }
+
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                private void onActionDeleteChannel() {
+                    Bundle args = new Bundle();
+                    args.putLong("id", account.id);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+
+                            DB db = DB.getInstance(context);
+                            db.account().setAccountNotify(id, false);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Void data) {
+                            account.deleteNotificationChannel(context);
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "create:channel");
                 }
 
                 private void onActionCopy() {

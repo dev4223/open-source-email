@@ -6,7 +6,9 @@
         android:icon="@drawable/twotone_help_24"
         android:title=""
         app:showAsAction="always" />
-    <item android:title="@string/title_answer_placeholder">
+    <item
+        android:id="@+id/menu_placeholders"
+        android:title="@string/title_answer_placeholder">
         <menu>
             <item
                 android:id="@+id/menu_placeholder_name"
@@ -20,6 +22,9 @@
             <item
                 android:id="@+id/menu_placeholder_lastname"
                 android:title="@string/title_answer_placeholder_lastname" />
+            <item
+                android:id="@+id/menu_placeholder_date"
+                android:title="@string/title_answer_placeholder_date" />
         </menu>
     </item>
 </menu>

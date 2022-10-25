@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scroll"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="24dp"
@@ -43,6 +44,7 @@
             android:maxLines="2"
             android:text="Link title"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textIsSelectable="true"
             android:textStyle="italic"
             app:layout_constraintEnd_toStartOf="@+id/ibDifferent"
             app:layout_constraintStart_toStartOf="parent"
@@ -210,9 +212,11 @@
 
         <Spinner
             android:id="@+id/spOpenWith"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
+            android:minHeight="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvOpenWith" />
 
@@ -306,6 +310,29 @@
             app:layout_constraintTop_toBottomOf="@id/tvHost" />
 
         <Button
+            android:id="@+id/btnWhois"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawableEnd="@drawable/twotone_domain_24"
+            android:drawablePadding="6dp"
+            android:text="@string/title_whois"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvOwner" />
+
+        <eu.faircode.email.ContentLoadingProgressBar
+            android:id="@+id/pbWhois"
+            style="@style/Base.Widget.AppCompat.ProgressBar"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            android:indeterminate="true"
+            app:layout_constraintBottom_toBottomOf="@id/btnWhois"
+            app:layout_constraintStart_toEndOf="@id/btnWhois"
+            app:layout_constraintTop_toTopOf="@id/btnWhois" />
+
+        <Button
             android:id="@+id/btnSettings"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
@@ -315,7 +342,7 @@
             android:drawablePadding="6dp"
             android:text="@string/title_setup"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvOwner" />
+            app:layout_constraintTop_toBottomOf="@id/btnWhois" />
 
         <Button
             android:id="@+id/btnDefault"
@@ -336,12 +363,12 @@
             android:layout_marginTop="12dp"
             android:drawableEnd="@drawable/twotone_open_in_new_12"
             android:drawablePadding="6dp"
-            android:drawableTint="?android:attr/textColorLink"
             android:focusable="false"
             android:text="@string/title_reset_open"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="?android:attr/textColorLink"
             android:textIsSelectable="true"
+            app:drawableTint="?android:attr/textColorLink"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnDefault" />
 

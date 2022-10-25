@@ -36,6 +36,7 @@ import androidx.preference.PreferenceManager;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.FolderClosedIOException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
@@ -44,7 +45,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -57,14 +61,19 @@ import java.util.Locale;
 import java.util.Objects;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import inet.ipaddr.IPAddressString;
 
 public class ConnectionHelper {
+    static final int MAX_REDIRECTS = 5; // https://www.freesoft.org/CIE/RFC/1945/46.htm
+
     static final List<String> PREF_NETWORK = Collections.unmodifiableList(Arrays.asList(
-            "metered", "roaming", "rlah", "require_validated", "vpn_only" // update network state
+            "metered", "roaming", "rlah", "require_validated", "require_validated_captive", "vpn_only" // update network state
     ));
 
     // Roam like at home
@@ -243,6 +252,7 @@ public class ConnectionHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean standalone_vpn = prefs.getBoolean("standalone_vpn", false);
         boolean require_validated = prefs.getBoolean("require_validated", false);
+        boolean require_validated_captive = prefs.getBoolean("require_validated_captive", true);
         boolean vpn_only = prefs.getBoolean("vpn_only", false);
 
         ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
@@ -290,10 +300,11 @@ public class ConnectionHelper {
                 Log.i("isMetered: no internet");
                 return null;
             }
-            if (require_validated &&
+            boolean captive = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
+            if ((require_validated || (require_validated_captive && captive)) &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                     !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-                Log.i("isMetered: not validated");
+                Log.i("isMetered: not validated captive=" + captive);
                 return null;
             }
         }
@@ -656,6 +667,104 @@ public class ConnectionHelper {
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Model
                 connection.setRequestProperty("Sec-CH-UA-Model", "\"" + model + "\"");
             }
+        }
+    }
+
+    static HttpURLConnection openConnectionUnsafe(Context context, String source, int ctimeout, int rtimeout) throws IOException {
+        return openConnectionUnsafe(context, new URL(source), ctimeout, rtimeout);
+    }
+
+    static HttpURLConnection openConnectionUnsafe(Context context, URL url, int ctimeout, int rtimeout) throws IOException {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean open_safe = prefs.getBoolean("open_safe", false);
+
+        int redirects = 0;
+        while (true) {
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setDoOutput(false);
+            urlConnection.setReadTimeout(rtimeout);
+            urlConnection.setConnectTimeout(ctimeout);
+            urlConnection.setInstanceFollowRedirects(true);
+
+            if (urlConnection instanceof HttpsURLConnection) {
+                if (!open_safe)
+                    ((HttpsURLConnection) urlConnection).setHostnameVerifier(new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    });
+            } else {
+                if (open_safe)
+                    throw new IOException("https required url=" + url);
+            }
+
+            ConnectionHelper.setUserAgent(context, urlConnection);
+            urlConnection.connect();
+
+            try {
+                int status = urlConnection.getResponseCode();
+
+                if (!open_safe &&
+                        (status == HttpURLConnection.HTTP_MOVED_PERM ||
+                                status == HttpURLConnection.HTTP_MOVED_TEMP ||
+                                status == HttpURLConnection.HTTP_SEE_OTHER ||
+                                status == 307 /* Temporary redirect */ ||
+                                status == 308 /* Permanent redirect */)) {
+                    if (++redirects > MAX_REDIRECTS)
+                        throw new IOException("Too many redirects");
+
+                    String header = urlConnection.getHeaderField("Location");
+                    if (header == null)
+                        throw new IOException("Location header missing");
+
+                    String location = URLDecoder.decode(header, StandardCharsets.UTF_8.name());
+                    url = new URL(url, location);
+                    Log.i("Redirect #" + redirects + " to " + url);
+
+                    urlConnection.disconnect();
+                    continue;
+                }
+
+                if (status == HttpURLConnection.HTTP_NOT_FOUND)
+                    throw new FileNotFoundException("Error " + status + ": " + urlConnection.getResponseMessage());
+                if (status != HttpURLConnection.HTTP_OK)
+                    throw new IOException("Error " + status + ": " + urlConnection.getResponseMessage());
+
+                return urlConnection;
+            } catch (IOException ex) {
+                urlConnection.disconnect();
+                throw ex;
+            }
+        }
+    }
+
+    static Integer getLinkDownstreamBandwidthKbps(Context context) {
+        // 2G GSM ~14.4 Kbps
+        // G GPRS ~26.8 Kbps
+        // E EDGE ~108.8 Kbps
+        // 3G UMTS ~128 Kbps
+        // H HSPA ~3.6 Mbps
+        // H+ HSPA+ ~14.4 Mbps-23.0 Mbps
+        // 4G LTE ~50 Mbps
+        // 4G LTE-A ~500 Mbps
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return null;
+        try {
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+            if (cm == null)
+                return null;
+            Network active = cm.getActiveNetwork();
+            if (active == null)
+                return null;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+            if (caps == null)
+                return null;
+            return caps.getLinkDownstreamBandwidthKbps();
+        } catch (Throwable ex) {
+            Log.w(ex);
+            return null;
         }
     }
 }

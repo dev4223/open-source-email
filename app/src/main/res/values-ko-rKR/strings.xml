@@ -4,6 +4,7 @@
     <string name="app_changelog">변경 로그</string>
     <string name="app_welcome">FairEmail은 프라이버시와 보안을 위한 오픈 소스 이메일 앱입니다. 그렇기에 몇몇 기능은 당신이 지금까지 써왔던 것과 조금 다르게 작동할 수 있습니다.</string>
     <string name="app_limitations">예를 들어, 안전하지 않은 요소를 제거하고 가독성을 향상시키기 위해 기본적으로 메시지 형식이 다시 지정되며 안전을 위해 링크 열기를 확인해야 합니다. 원하는 경우 둘 다 비활성화할 수 있습니다.</string>
+    <string name="app_data_loss">모든 데이터가 손실됩니다</string>
     <string name="app_continue">그냥 진행하기</string>
     <string name="app_exit">나가려면 뒤로 버튼을 한번 더 누르세요</string>
     <string name="app_cake">저장 공간 부족</string>
@@ -68,6 +69,12 @@
     <plurals name="title_ask_block_sender">
         <item quantity="other">%1$s 메시지를 보낸 이를 차단하겠습니까?</item>
     </plurals>
+    <plurals name="title_hours">
+        <item quantity="other">%1$s시간</item>
+    </plurals>
+    <plurals name="title_days">
+        <item quantity="other">%1$s일</item>
+    </plurals>
     <string name="title_junk_filter">로컬 스팸 필터 사용</string>
     <string name="title_junk_filter_hint">배터리 사용량이 증가할 수 있으며 스팸 메일로 잘못 인식할 수도 있습니다.</string>
     <string name="title_junk_blocklist">스팸 차단 목록 사용</string>
@@ -126,6 +133,7 @@
     <string name="title_setup_quick_smtp">메시지를 발신할 SMTP 서버</string>
     <string name="title_setup_quick_certificates">서버 인증서</string>
     <string name="title_setup_wizard">마법사</string>
+    <string name="title_setup_wizard_tutorials">튜토리얼</string>
     <string name="title_setup_wizard_multiple">마법사는 여러 계정을 설정하기 위해 여려번 사용할 수 있습니다.</string>
     <string name="title_setup_wizard_new">새 이메일 주소 받기</string>
     <string name="title_setup_manual">수동 설정 및 계정 설정</string>
@@ -136,19 +144,20 @@
     <string name="title_setup_account_identity_hint">이름, 색상, 및 밀기 동작은 계정 설정에서 구성하실 수 있고, ID 설정에서 서명을 구성할 수 있습니다</string>
     <string name="title_setup_accounts">계정</string>
     <string name="title_setup_identities">ID</string>
+    <string name="title_setup_google_sign_in">Google 로그인</string>
     <string name="title_setup_other">기타 제공업체</string>
     <string name="title_setup_pop3">POP3 계정</string>
     <string name="title_setup_oauth_permission">이메일 공급자가 Play 스토어 및 Github 버전의 OAuth만 승인했습니다</string>
     <string name="title_setup_gmail_support">Android에서는 디지털 앱 서명을 확인하므로 Google 계정 인증은 Play 스토어 및 Github 버전에서만 동작합니다</string>
     <string name="title_setup_gmail_rationale">계정을 설정하고 이름을 읽기 위해 권한을 허용해 주세요</string>
     <string name="title_setup_gmail_permissions">Google은 이메일 읽기, 쓰기, 보내기 및 영구 삭제 권한을 요구합니다. FairEmail은 당신의 허락 없이는 절대로 이메일을 삭제하지 않습니다.</string>
-    <string name="title_setup_gmail_drafts">IMAP으로 임시보관함을 접근할 수 없다면, 이는 Gmail 라벨 설정에서 수정할 수 있습니다.</string>
     <string name="title_setup_oauth_updated">계정 인증이 갱신되었습니다</string>
     <string name="title_setup_oauth_authorize">인증</string>
     <string name="title_setup_select_account">계정 선택</string>
     <string name="title_setup_instructions">설정 방법</string>
     <string name="title_setup_no_settings">\'%1$s\' 도메인에 대한 설정을 찾을 수 없음</string>
     <string name="title_setup_no_inbox">받은 편지함을 찾을 수 없음</string>
+    <string name="title_setup_quick_success">계정을 성공적으로 추가했습니다</string>
     <string name="title_setup_manage">관리</string>
     <string name="title_setup_grant">권한 허용</string>
     <string name="title_setup_grant_again">필요한 권한 허용하기</string>
@@ -162,9 +171,12 @@
     <string name="title_setup_doze">배터리 최적화 비활성화</string>
     <string name="title_setup_doze_explanation">앱이 백그라운드에서도 안정적으로 메일을 수신 및 발신하려면 이 앱에 대한 배터리 최적화 기능을 꺼야 합니다</string>
     <string name="title_setup_doze_why">왜 배터리 최적화를 꺼야 하나요?</string>
+    <string name="title_setup_doze_battery">배터리 사용량이 많습니까?</string>
     <string name="title_setup_doze_stopped">동기화가 중단되었습니까?</string>
     <string name="title_setup_doze_device">이 기기에 필요한 작업으로 예상됩니다</string>
     <string name="title_setup_alarm_12">앱이 작동하지 않습니다</string>
+    <string name="title_setup_data">데이터 절약 모드를 사용합니다</string>
+    <string name="title_setup_advanced_options">고급 설정 표시</string>
     <string name="title_setup_inbox">받은편지함으로 이동</string>
     <string name="title_setup_go">시작</string>
     <string name="title_setup_to_do">할 일</string>
@@ -181,7 +193,6 @@
     <string name="title_setup_password_repeat">비밀번호 재입력</string>
     <string name="title_setup_password_missing">비밀번호 누락</string>
     <string name="title_setup_password_different">비밀번호가 일치하지 않습니다</string>
-    <string name="title_setup_password_invalid">유효하지 않은 비밀번호</string>
     <string name="title_setup_import_accounts">ID 및 계정 가져오기</string>
     <string name="title_setup_import_delete">기존 계정을 먼저 삭제하십시오</string>
     <string name="title_setup_import_rules">필터 규칙 가져오기</string>
@@ -194,6 +205,7 @@
     <string name="title_importing_account">계정 %1$s</string>
     <string name="title_importing_identity">ID %1$s</string>
     <string name="title_importing_exists">건너뜀: 이미 존재</string>
+    <string name="title_importing_wizard">재인증을 위해 마법사 다시 실행하기</string>
     <string name="title_setup_reorder_accounts">계정 정렬</string>
     <string name="title_setup_reorder_folders">폴더 정렬</string>
     <string name="title_reset_order">정렬 초기화</string>
@@ -216,6 +228,8 @@
     <string name="title_setup_theme_dark">어둡게</string>
     <string name="title_setup_theme_system">시스템 설정</string>
     <string name="title_setup_theme_black_background">검정 배경</string>
+    <string name="title_setup_theme_html_light">원본 메시지 보기에 밝은 배경색 사용</string>
+    <string name="title_setup_theme_composer_light">메시지 편집기에 밝은 배경색 사용</string>
     <string name="title_setup_theme_you_hint">Material You 색상은 Android 배경화면 및 스타일 설정에서 지정할 수 있습니다</string>
     <string name="title_setup_theme_system_hint">Android가 지원하는 경우 주간/야간 모드에 따라 테마가 밝게/어둡게로 자동 전환됩니다.</string>
     <string name="title_setup_theme_more_colors">다른 색으로 설정하고 싶습니다</string>
@@ -227,6 +241,8 @@
     <string name="title_setup_reset_full">원본 메시지 보기</string>
     <string name="title_setup_reset_images">사진 표시</string>
     <string name="title_setup_reset_links">확인 링크</string>
+    <string name="title_check_gmail_oauth">Gmail 계정이 2022년 5월 30일 이후에도 계속 작동할 예정입니다</string>
+    <string name="title_check_gmail_password">일부 Gmail 계정이 2022년 5월 30일 이후 정지될 수 있습니다</string>
     <string name="title_check_outlook_oauth">Outlook 계정이 2022년 10월 1일 이후에도 계속 작동할 예정입니다</string>
     <string name="title_check_outlook_password">일부 Outlook 계정이 2022년 10월 1일 이후 정지될 수 있습니다</string>
     <string name="title_advanced_hint_title">고급 설정 더보기</string>
@@ -240,8 +256,10 @@
     <string name="title_advanced_section_encryption">암호화</string>
     <string name="title_advanced_section_notifications">알림</string>
     <string name="title_advanced_section_misc">기타</string>
+    <string name="title_advanced_receive">모든 계정의 메시지 수신</string>
     <string name="title_advanced_when">일시</string>
     <string name="title_advanced_optimize">자동으로 최적화</string>
+    <string name="title_advanced_always">이 계정들의 메시지를 항상 수신</string>
     <string name="title_advanced_schedule">일정</string>
     <string name="title_advanced_advanced">고급</string>
     <string name="title_advanced_quick_sync">빠른 동기화</string>
@@ -249,8 +267,10 @@
     <string name="title_advanced_unseen">모든 읽지 않은 메시지</string>
     <string name="title_advanced_flagged">모든 즐겨찾기 메시지</string>
     <string name="title_advanced_delete_unseen">오래된 읽지 않은 메시지 삭제</string>
+    <string name="title_advanced_kept_removed">오래된 메시지가 서버에서 제거되었는지 확인</string>
     <string name="title_advanced_subject_threading">발신자 및 주제로 메시지 묶기</string>
     <string name="title_advanced_sync_folders">동기화 폴더 목록</string>
+    <string name="title_advanced_sync_folders_poll">폴더 목록을 동적으로 동기화</string>
     <string name="title_advanced_sync_shared_folders">동기화 공유 폴더 목록</string>
     <string name="title_advanced_check_authentication">메시지 인증 확인하기</string>
     <string name="title_advanced_use_blocklist_pop3">차단 목록의 도메인에서 온 메시지 건너뛰기 (POP3 전용)</string>
@@ -283,6 +303,7 @@
     <string name="title_advanced_timeout">연결 제한 시간 (초)</string>
     <string name="title_advanced_prefer_ip4">IPv6보다 IPv4 우선</string>
     <string name="title_advanced_ssl_harden">강화된 SSL 연결</string>
+    <string name="title_advanced_ssl_harden_strict">TLS 1.3 필요</string>
     <string name="title_advanced_cert_strict">엄격한 인증서 확인</string>
     <string name="title_advanced_manage_connectivity">연결 관리</string>
     <string name="title_advanced_caption_general">일반</string>
@@ -299,22 +320,27 @@
     <string name="title_advanced_two_col">2열로 표시</string>
     <string name="title_advanced_min_screen_size">화면 분할 시 최소 화면 크기</string>
     <string name="title_advanced_close_pane">대화 상자를 닫을 때 행 또는 열 축소</string>
-    <string name="title_advanced_column_width">메시지 열 너비: %1$s %%</string>
-    <string name="title_advanced_nav_pinned_count">고정된 내비게이션 메뉴에 읽지 않은 메시지 수 표시</string>
+    <string name="title_advanced_nav_options">탐색 메뉴 설정 표시</string>
+    <string name="title_advanced_nav_pin">탐색 메뉴 고정</string>
+    <string name="title_advanced_nav_hide_title">탐색 메뉴 설정을 숨길까요?</string>
+    <string name="title_advanced_nav_pinned_count">고정된 탐색 메뉴에 읽지 않은 메시지 수 표시</string>
     <string name="title_advanced_startup">시작 화면을 표시합니다</string>
     <string name="title_advanced_tabular_dividers">태블릿 스타일 사용 중 구분선 표시</string>
     <string name="title_advanced_date_header">날짜로 묶기</string>
     <string name="title_advanced_date_fixed">상단 헤더에서 수정일 표시</string>
     <string name="title_advanced_date_bold">날짜를 굵게 표시</string>
     <string name="title_advanced_threading">대화 스레딩</string>
+    <string name="title_advanced_avatars">연락처 사진 표시</string>
     <string name="title_advanced_bimi_unverified">확인되지 않은 발신자</string>
     <string name="title_advanced_bimi_verified">확인된 발신자</string>
     <string name="title_advanced_gravatars">그라바타 표시</string>
     <string name="title_advanced_libravatars">리브라바타 표시</string>
     <string name="title_advanced_favicons">파비콘 표시</string>
     <string name="title_advanced_favicons_partial">웹 페이지의 첫 %1$s만 스캔</string>
+    <string name="title_advanced_generated_icons">생성된 아이콘 표시</string>
     <string name="title_advanced_identicons">아이덴티콘 표시</string>
     <string name="title_advanced_circular">둥근 아이콘 표시</string>
+    <string name="title_advanced_color_saturation">채도: %1$s %%</string>
     <string name="title_advanced_color_value">밝기: %1$s %%</string>
     <string name="title_advanced_highlight_subject">제목 강조</string>
     <string name="title_advanced_highlight_color">강조 색</string>
@@ -335,6 +361,7 @@
     <string name="title_advanced_text_size">글씨 크기 사용</string>
     <string name="title_advanced_text_font">글꼴 사용</string>
     <string name="title_advanced_text_align">글자 정렬 사용</string>
+    <string name="title_advanced_text_titles">{HTML titles} 표시</string>
     <string name="title_advanced_text_separators">구분선 사용</string>
     <string name="title_advanced_collapse_quotes">인용한 텍스트 접기</string>
     <string name="title_advanced_image_placeholders">사진 자리표시자 표시</string>
@@ -367,7 +394,7 @@
     <string name="title_advanced_notifications">알림 관리</string>
     <string name="title_advanced_notifications_default">기본 채널</string>
     <string name="title_advanced_notifications_newest_first">새 알림을 먼저 표시</string>
-    <string name="title_advanced_notify_suppress_in_call">통화 중 알림 차단</string>
+    <string name="title_advanced_notify_suppress_in_car">Android Auto에 연결되면 알림 미루기</string>
     <string name="title_advanced_notify_actions">알림 동작</string>
     <string name="title_advanced_notify_action_trash">삭제</string>
     <string name="title_advanced_notify_action_delete">제거</string>
@@ -420,6 +447,7 @@
     <string name="title_advanced_preview_issue">2줄 이상인 경우 일부 Android 버전의 버그로 인해 스크롤이 느려질 수 있습니다</string>
     <string name="compressed">파일 %2$s개 또는 %3$s 이상이 포함된 압축 파일(%1$s)의 내용은 표시되지 않습니다</string>
     <string name="title_advanced_notify_action_hint">최대 3개의 동작이 표시됩니다</string>
+    <string name="title_advanced_notify_car_hint">\'연결\'이란 지도나 내비게이션을 표시하는 상태임을 의미합니다</string>
     <string name="title_advanced_never_favorite">즐겨찾기 등록 차단</string>
     <string name="title_advanced_edit_name">이름 수정</string>
     <string name="title_select">&#8230; 선택</string>
@@ -441,7 +469,6 @@
     <string name="title_custom">사용자 지정</string>
     <string name="title_host">호스트명</string>
     <string name="title_encryption">암호화</string>
-    <string name="title_encryption_none">없음</string>
     <string name="title_port">포트 번호</string>
     <string name="title_user">사용자명</string>
     <string name="title_password">비밀번호</string>
@@ -607,9 +634,11 @@
     <string name="title_style_italic">기울임꼴</string>
     <string name="title_style_underline">밑줄</string>
     <string name="title_style_size">크기</string>
+    <string name="title_style_size_xsmall">매우 작게</string>
     <string name="title_style_size_small">작게</string>
     <string name="title_style_size_medium">보통</string>
     <string name="title_style_size_large">크게</string>
+    <string name="title_style_size_xlarge">매우 크게</string>
     <string name="title_style_align">정렬</string>
     <string name="title_style_align_start">시작</string>
     <string name="title_style_align_center">가운데</string>
@@ -629,6 +658,8 @@
     <string name="title_style_link_title">제목</string>
     <string name="title_style_link_metadata">제목 가져오기</string>
     <string name="title_style_link_metadata_remark">입력한 주소의 제목을 가져옵니다</string>
+    <string name="title_style_link_send_dlimit">다운로드 제한 (%1$s)</string>
+    <string name="title_style_link_send_tlimit">기간 제한 (%1$s)</string>
     <string name="title_add_image">사진 추가</string>
     <string name="title_add_image_inline">삽입</string>
     <string name="title_add_image_attach">첨부</string>
@@ -683,6 +714,9 @@
     <string name="title_search_flag_invite">초대</string>
     <string name="title_search_flag_size">크기 &gt; %1$s</string>
     <string name="title_search_in">검색 위치</string>
+    <string name="title_save_search_name">이름</string>
+    <string name="title_save_search_order">정렬</string>
+    <string name="title_save_search_color">색상</string>
     <string name="title_sort_on">정렬 기준</string>
     <string name="title_sort_on_time">시간</string>
     <string name="title_sort_on_unread">읽지 않음</string>
@@ -718,6 +752,7 @@
     <string name="title_edit_signature_image_hint">        메시지를 보낼 때 선택한 위치에서 메시지로 이미지가 복사됩니다.
         그러니 이미지 파일을 지우지 마십시오!
     </string>
+    <string name="title_answer_define_name">이름</string>
     <string name="title_answer_caption">템플릿 수정</string>
     <string name="title_answer_reply">답장 템플릿</string>
     <string name="title_answer_name">템플릿명</string>
@@ -857,7 +892,6 @@
     <string name="title_legend_r">답장</string>
     <string name="title_legend_s">선택/선택 해제</string>
     <string name="title_legend_t">글자에 포커스</string>
-    <string name="title_hint_notification">알림이 꺼졌습니다</string>
     <string name="title_hint_message_junk">이 메시지들은 이메일 서버의 스팸함에 들어 있습니다. 본 앱에서 스팸 수신 자체를 막지는 못합니다.</string>
     <string name="title_hint_important">중요</string>
     <string name="title_open_link">링크 열기</string>
@@ -871,6 +905,7 @@
     <string name="title_yes">네</string>
     <string name="title_no">아니오</string>
     <string name="title_later">나중에</string>
+    <string name="title_paste_plain">일반 텍스트로 붙여넣기</string>
     <string name="title_undo">되돌리기</string>
     <string name="title_redo">재실행</string>
     <string name="title_add">추가</string>
@@ -922,7 +957,6 @@
     <string name="title_boundary_retry">재시도</string>
     <string name="title_unexpected_error">예기치 않은 오류</string>
     <string name="title_log">기록</string>
-    <string name="title_auto_scroll">자동 스크롤</string>
     <string name="title_log_clear">지우기</string>
     <string name="title_rules_export">규칙 내보내기</string>
     <string name="title_rules_import">규칙 불러오기</string>
@@ -942,6 +976,7 @@
     <string name="title_widget_avatars">연락처 아바타 표시</string>
     <string name="title_widget_background">배경 색</string>
     <string name="title_widget_day_night">시스템의 어두운 테마 설정 사용</string>
+    <string name="title_compat_dark">Google은 Android 10 이전 버전에서 다크 모드를 제거했습니다</string>
     <string name="title_accessibility_collapsed">접음</string>
     <string name="title_accessibility_expanded">펼침</string>
     <string name="title_accessibility_seen">읽음</string>
@@ -974,6 +1009,7 @@
     <string-array name="pollIntervalNames">
         <item>항상</item>
         <item>매 5분</item>
+        <item>매 10분</item>
         <item>매 15분</item>
         <item>매 30분</item>
         <item>매시간</item>
@@ -1017,6 +1053,7 @@
         <item>Go to next conversation</item>
     </string-array>
     <string-array name="resizeNames">
+        <item>Tiny</item>
         <item>매우 작게</item>
         <item>작게</item>
         <item>보통</item>

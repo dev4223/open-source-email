@@ -63,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class FragmentOptionsPrivacy extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private View view;
     private ImageButton ibHelp;
     private SwitchCompat swConfirmLinks;
     private SwitchCompat swCheckLinksDbl;
@@ -123,7 +124,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         setSubtitle(R.string.title_setup);
         setHasOptionsMenu(true);
 
-        View view = inflater.inflate(R.layout.fragment_options_privacy, container, false);
+        view = inflater.inflate(R.layout.fragment_options_privacy, container, false);
 
         // Get controls
 
@@ -183,7 +184,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swConfirmLinks.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("confirm_links", checked).apply();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("confirm_links", checked);
+                if (!checked)
+                    for (String key : prefs.getAll().keySet())
+                        if (key.endsWith(".confirm_link"))
+                            editor.remove(key);
+                editor.apply();
                 swCheckLinksDbl.setEnabled(checked);
             }
         });
@@ -206,7 +213,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAskImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("ask_images", checked).apply();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("ask_images", checked);
+                if (!checked)
+                    for (String key : prefs.getAll().keySet())
+                        if (key.endsWith(".show_images"))
+                            editor.remove(key);
+                editor.apply();
             }
         });
 
@@ -228,7 +241,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAskHtml.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("ask_html", checked).apply();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("ask_html", checked);
+                if (!checked)
+                    for (String key : prefs.getAll().keySet())
+                        if (key.endsWith(".show_full"))
+                            editor.remove(key);
+                editor.apply();
             }
         });
 
@@ -529,7 +548,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     }
 
     private void setOptions() {
-        if (getContext() == null)
+        if (view == null || getContext() == null)
             return;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -568,7 +587,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAutoLockNav.setChecked(prefs.getBoolean("autolock_nav", false));
 
         swClientId.setChecked(prefs.getBoolean("client_id", true));
-        swHideTimeZone.setChecked(prefs.getBoolean("hide_timezone", true));
+        swHideTimeZone.setChecked(prefs.getBoolean("hide_timezone", false));
         swDisplayHidden.setChecked(prefs.getBoolean("display_hidden", false));
         swIncognitoKeyboard.setChecked(prefs.getBoolean("incognito_keyboard", false));
         swSecure.setChecked(prefs.getBoolean("secure", false));
@@ -576,7 +595,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         tvGenericUserAgent.setText(WebViewEx.getUserAgent(getContext()));
         swGenericUserAgent.setChecked(prefs.getBoolean("generic_ua", false));
         swSafeBrowsing.setChecked(prefs.getBoolean("safe_browsing", false));
-        swLoadEmoji.setChecked(prefs.getBoolean("load_emoji", BuildConfig.PLAY_STORE_RELEASE));
+        swLoadEmoji.setChecked(prefs.getBoolean("load_emoji", false));
 
         long time = prefs.getLong("disconnect_last", -1);
         DateFormat DF = SimpleDateFormat.getDateTimeInstance();

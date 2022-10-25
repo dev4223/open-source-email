@@ -23,26 +23,28 @@
         <oauth
             askAccount="true"
             authorizationEndpoint="https://accounts.google.com/o/oauth2/auth"
-            clientId=""
-            clientSecret=""
-            enabled="false"
+            clientId="803253368361-11ias0ee6bqhvdi4f21fs1lh7fsb0il2.apps.googleusercontent.com"
+            enabled="true"
             privacy="https://policies.google.com/privacy"
             prompt="consent"
-            redirectUri="https://oauth.faircode.eu/"
+            redirectUri="eu.faircode.email:/"
             scopes="https://mail.google.com/"
             tokenEndpoint="https://oauth2.googleapis.com/token">
-            <!-- promp=consent offline access -->
+            <!-- https://developers.google.com/identity/protocols/oauth2/native-app -->
+            <!-- https://github.com/openid/AppAuth-Android/blob/master/app/README-Google.md -->
             <parameter
                 key="access_type"
                 value="offline" />
         </oauth>
-        <!-- https://email.faircode.eu/.well-known/assetlinks.json -->
+        <!-- https://oauth.faircode.eu/.well-known/assetlinks.json -->
+        <!-- https://developer.android.com/training/app-links/verify-site-associations -->
         <!-- /opt/android-studio/jre/bin/keytool -keystore ~/.android/debug.keystore -list -v -->
     </provider>
     <provider
         name="Outlook"
         domain="outlook\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        noop="true"
         order="2"
         partial="false"
         useip="false">
@@ -59,6 +61,7 @@
         name="Live"
         domain="live\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        noop="true"
         order="3"
         partial="false"
         useip="false">
@@ -75,6 +78,7 @@
         name="Hotmail"
         domain="hotmail\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        noop="true"
         order="4"
         partial="false"
         useip="false">
@@ -105,6 +109,7 @@
         description="Outlook/Office 365"
         id="office365"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        noop="true"
         order="5"
         partial="false"
         useip="false">
@@ -141,6 +146,7 @@
         description="Outlook"
         id="outlook"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        noop="true"
         order="5"
         partial="false"
         useip="false">
@@ -208,7 +214,8 @@
         domain="yahoo\\..*"
         id="yahoo"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88"
-        order="7">
+        order="7"
+        partial="false">
         <imap
             host="imap.mail.yahoo.com"
             port="993"
@@ -877,7 +884,8 @@
     </provider>
     <provider
         name="Hetzner Online"
-        link="https://wiki.hetzner.de/index.php/KonsoleH:Email-Konto_einrichten/en">
+        link="https://wiki.hetzner.de/index.php/KonsoleH:Email-Konto_einrichten/en"
+        mx=".*your-server\\.de">
         <imap
             host="mail.your-server.de"
             port="993"
@@ -1294,6 +1302,36 @@
         <!-- Unusual, but no STARTTLS at port 587 -->
     </provider>
     <provider
+        name="Spectrum"
+        appPassword="true"
+        domain="brighthouse\\.com,bak\\.rr\\.com,bham\\.rr\\.com,cfl\\.rr\\.com,emore\\.rr\\.com,eufala\\.rr\\.com,indy\\.rr\\.com,mi\\.rr\\.com,panhandle\\.rr\\.com,tampabay\\.rr\\.com"
+        link="https://www.spectrum.net/support/internet/spectrum-email-server-settings/">
+        <imap
+            host="mail.brighthouse.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.brighthouse.com"
+            port="587"
+            starttls="false" />
+        <!-- Unusual, but no STARTTLS at port 587 -->
+    </provider>
+    <provider
+        name="TWC"
+        appPassword="true"
+        domain=".*\\.rr\\.com"
+        link="https://www.spectrum.net/support/internet/spectrum-email-server-settings/">
+        <imap
+            host="mail.twc.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.twc.com"
+            port="587"
+            starttls="false" />
+        <!-- Unusual, but no STARTTLS at port 587 -->
+    </provider>
+    <provider
         name="Tin.it"
         domain="tim\\.it"
         link="https://assistenzatecnica.tim.it/at/portals/mini.portal?_nfpb=true&amp;_pageLabel=null&amp;nodeId=/AT_REPOSITORY/302010&amp;radice=help_virgilio">
@@ -1372,6 +1410,7 @@
     </provider>
     <provider
         name="Xfinity/Comcast"
+        documentation="Please check if &lt;a href=&quot;https://www.xfinity.com/support/articles/third-party-email-access&quot;&gt;third party email access&lt;/a&gt; is enabled"
         domain="comcast\\.net"
         link="https://www.xfinity.com/support/articles/email-client-programs-with-xfinity-email">
         <imap
@@ -1710,5 +1749,31 @@
             host="out.email.it"
             port="465"
             starttls="false" />
+    </provider>
+    <provider
+        name="SBCGlobal"
+        domain="ameritech\\.net,att\\.net,bellsouth\\.net,flash\\.net,nvbell\\.net,pacbell\\.net,prodigy\\.net,sbcglobal\\.net,snet\\.net,swbell\\.net,wans\\.net"
+        link="https://www.sbcglobal-help.com/access-sbcglobal-net-email-settings/">
+        <imap
+            host="imap.mail.att.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mail.att.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="PenTeleData"
+        domain="ptd\\.net"
+        link="https://www.ptd.net/support/email-communication/how-setup-your-email/smartphone-imap">
+        <imap
+            host="promail.ptd.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="promail.ptd.net"
+            port="587"
+            starttls="true" />
     </provider>
 </providers>

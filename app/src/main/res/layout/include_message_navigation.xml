@@ -50,7 +50,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="3dp"
-            app:constraint_referenced_ids="vwEmpty,ibMore,ibInbox,ibJunk,ibTrash,ibArchive,ibMove,ibCopy,ibKeywords,ibLabels,ibNotes,ibAnswer,ibSeen,ibHide,ibImportance,ibTranslate,ibForceLight,ibSearch,ibSearchText,ibEvent,ibShare,ibPin,ibPrint,ibHeaders,ibUnsubscribe,ibRule,ibUndo"
+            app:constraint_referenced_ids="vwEmpty,ibMore,ibInbox,ibJunk,ibTrash,ibArchive,ibMove,ibCopy,ibKeywords,ibLabels,ibNotes,ibSeen,ibHide,ibImportance,ibTranslate,ibForceLight,ibSearch,ibSearchText,ibEvent,ibShare,ibPin,ibPrint,ibHeaders,ibRaw,ibUnsubscribe,ibRule,ibAnswer,ibUndo"
             app:flow_horizontalBias="0"
             app:flow_horizontalGap="3dp"
             app:flow_horizontalStyle="packed"
@@ -189,18 +189,6 @@
             android:padding="6dp"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/twotone_label_24"
-            tools:ignore="MissingConstraints" />
-
-        <ImageButton
-            android:id="@+id/ibAnswer"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/title_reply"
-            android:padding="6dp"
-            android:scaleType="fitCenter"
-            android:tooltipText="@string/title_reply"
-            app:srcCompat="@drawable/twotone_reply_24"
             tools:ignore="MissingConstraints" />
 
         <ImageButton
@@ -344,7 +332,19 @@
             android:padding="6dp"
             android:scaleType="fitCenter"
             android:tooltipText="@string/title_show_headers"
-            app:srcCompat="@drawable/baseline_code_24"
+            app:srcCompat="@drawable/twotone_code_24"
+            tools:ignore="MissingConstraints" />
+
+        <ImageButton
+            android:id="@+id/ibRaw"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/title_raw_save"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:tooltipText="@string/title_raw_save"
+            app:srcCompat="@drawable/twotone_save_alt_24"
             tools:ignore="MissingConstraints" />
 
         <ImageButton
@@ -357,6 +357,18 @@
             android:scaleType="fitCenter"
             android:tooltipText="@string/title_legend_show_unsubscribe"
             app:srcCompat="@drawable/twotone_unsubscribe_24"
+            tools:ignore="MissingConstraints" />
+
+        <ImageButton
+            android:id="@+id/ibAnswer"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/title_reply"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:tooltipText="@string/title_reply"
+            app:srcCompat="@drawable/twotone_reply_24"
             tools:ignore="MissingConstraints" />
 
         <ImageButton
@@ -443,6 +455,19 @@
             app:tint="?attr/colorAccent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/buttons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:flow_horizontalBias="0"
+        app:flow_horizontalGap="6dp"
+        app:flow_horizontalStyle="packed"
+        app:flow_verticalGap="6dp"
+        app:flow_wrapMode="chain"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/workaround" />
+
     <TextView
         android:id="@+id/tvReformatted"
         android:layout_width="0dp"
@@ -453,7 +478,20 @@
         android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/workaround" />
+        app:layout_constraintTop_toBottomOf="@id/buttons" />
+
+    <TextView
+        android:id="@+id/tvDecrypt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingVertical="6dp"
+        android:text="@string/title_padlock"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvReformatted" />
 
     <View
         android:id="@+id/vSeparatorBottom"
@@ -476,5 +514,5 @@
         android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvReformatted" />
+        app:layout_constraintTop_toBottomOf="@id/tvDecrypt" />
 </androidx.constraintlayout.widget.ConstraintLayout>

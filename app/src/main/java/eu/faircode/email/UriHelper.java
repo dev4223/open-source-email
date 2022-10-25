@@ -26,11 +26,15 @@ import android.util.Base64;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
+import androidx.core.net.MailTo;
 import androidx.core.util.PatternsCompat;
+
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.IDN;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -70,7 +74,21 @@ public class UriHelper {
 
             "zanpid", // Zanox (Awin)
 
-            "kclickid" // https://support.freespee.com/hc/en-us/articles/202577831-Kenshoo-integration
+            "kclickid", // https://support.freespee.com/hc/en-us/articles/202577831-Kenshoo-integration
+
+            // https://github.com/brave/brave-core/blob/master/browser/net/brave_site_hacks_network_delegate_helper.cc
+            "oly_anon_id", "oly_enc_id", // https://training.omeda.com/knowledge-base/olytics-product-outline/
+            "_openstat", // https://yandex.com/support/direct/statistics/url-tags.html
+            "vero_conv", "vero_id", // https://help.getvero.com/cloud/articles/what-is-vero_id/
+            "wickedid", // https://help.wickedreports.com/how-to-manually-tag-a-facebook-ad-with-wickedid
+            "yclid", // https://ads-help.yahoo.co.jp/yahooads/ss/articledetail?lan=en&aid=20442
+            "__s", // https://ads-help.yahoo.co.jp/yahooads/ss/articledetail?lan=en&aid=20442
+            "rb_clickid", // Russian
+            "s_cid", // https://help.goacoustic.com/hc/en-us/articles/360043311613-Track-lead-sources
+            "ml_subscriber", "ml_subscriber_hash", // https://www.mailerlite.com/help/how-to-integrate-your-forms-to-a-wix-website
+            "twclid", // https://business.twitter.com/en/blog/performance-advertising-on-twitter.html
+            "gbraid", "wbraid", // https://support.google.com/google-ads/answer/10417364
+            "_hsenc", "__hssc", "__hstc", "__hsfp", "hsCtaTracking" // https://knowledge.hubspot.com/reports/what-cookies-does-hubspot-set-in-a-visitor-s-browser
     ));
 
     // https://github.com/snarfed/granary/blob/master/granary/facebook.py#L1789
@@ -217,11 +235,22 @@ public class UriHelper {
                 String line;
                 while ((line = br.readLine()) != null) {
                     line = line.trim();
+
                     if (TextUtils.isEmpty(line))
                         continue;
+
                     if (line.startsWith("//"))
                         continue;
+
                     suffixList.add(line);
+
+                    try {
+                        String ascii = IDN.toASCII(line, IDN.ALLOW_UNASSIGNED);
+                        if (!line.equals(ascii))
+                            suffixList.add(line);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
                 }
                 Log.i(SUFFIX_LIST_NAME + "=" + suffixList.size());
             } catch (Throwable ex) {
@@ -279,6 +308,40 @@ public class UriHelper {
             Uri result = Uri.parse(uri.getQueryParameter("url"));
             changed = (result != null);
             url = (result == null ? uri : result);
+        } else if (uri.getPath() != null &&
+                uri.getPath().startsWith("/track/click") &&
+                uri.getQueryParameter("p") != null) {
+            try {
+                // Mandrill
+                String p = new String(Base64.decode(uri.getQueryParameter("p"), Base64.URL_SAFE));
+                JSONObject json = new JSONObject(p);
+                json = new JSONObject(json.getString("p"));
+                Uri result = Uri.parse(json.getString("url"));
+                changed = (result != null);
+                url = (result == null ? uri : result);
+            } catch (Throwable ex) {
+                Log.i(ex);
+                url = uri;
+            }
+        } else if (uri.getHost() != null && uri.getHost().endsWith(".awstrack.me")) {
+            // https://docs.aws.amazon.com/ses/latest/dg/configure-custom-open-click-domains.html
+            String path = uri.getPath();
+            int s = path.indexOf('/', 1);
+            Uri result = (s > 0 ? Uri.parse(path.substring(s + 1)) : null);
+            changed = (result != null);
+            url = (result == null ? uri : result);
+        } else if (uri.getHost() != null && uri.getHost().equals("go.dhlparcel.nl")) {
+            try {
+                String path = uri.getPath();
+                int s = path.lastIndexOf('/');
+                String b = (s > 0 ? new String(Base64.decode(path.substring(s + 1), Base64.URL_SAFE)) : null);
+                Uri result = (b == null ? null : Uri.parse(b));
+                changed = (result != null);
+                url = (result == null ? uri : result);
+            } catch (Throwable ex) {
+                Log.i(ex);
+                url = uri;
+            }
         } else if (uri.getQueryParameterNames().size() == 1) {
             // Sophos Email Appliance
             Uri result = null;
@@ -286,7 +349,7 @@ public class UriHelper {
             String key = uri.getQueryParameterNames().iterator().next();
             if (TextUtils.isEmpty(uri.getQueryParameter(key)))
                 try {
-                    String data = new String(Base64.decode(key, Base64.DEFAULT));
+                    String data = new String(Base64.decode(key, Base64.URL_SAFE));
                     int v = data.indexOf("ver=");
                     int u = data.indexOf("&&url=");
                     if (v == 0 && u > 0)
@@ -297,10 +360,22 @@ public class UriHelper {
 
             changed = (result != null);
             url = (result == null ? uri : result);
+        } else if (uri.getQueryParameter("redirectUrl") != null) {
+            // https://.../link-tracker?redirectUrl=<base64>&sig=...&iat=...&a=...&account=...&email=...&s=...&i=...
+            try {
+                byte[] bytes = Base64.decode(uri.getQueryParameter("redirectUrl"), Base64.URL_SAFE);
+                String u = URLDecoder.decode(new String(bytes), StandardCharsets.UTF_8.name());
+                Uri result = Uri.parse(u);
+                changed = (result != null);
+                url = (result == null ? uri : result);
+            } catch (Throwable ex) {
+                Log.i(ex);
+                url = uri;
+            }
         } else
             url = uri;
 
-        if (url.isOpaque())
+        if (url.isOpaque() || !isHyperLink(url))
             return uri;
 
         Uri.Builder builder = url.buildUpon();
@@ -364,12 +439,32 @@ public class UriHelper {
     }
 
     static boolean isSecure(Uri uri) {
-        return (!uri.isOpaque() && "https".equals(uri.getScheme()));
+        return (!uri.isOpaque() && "https".equalsIgnoreCase(uri.getScheme()));
     }
 
     static boolean isHyperLink(Uri uri) {
         return (!uri.isOpaque() &&
-                ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())));
+                ("http".equalsIgnoreCase(uri.getScheme()) ||
+                        "https".equalsIgnoreCase(uri.getScheme())));
+    }
+
+    static Uri fix(Uri uri) {
+        if ("HTTP".equals(uri.getScheme()) || "HTTPS".equals(uri.getScheme())) {
+            String u = uri.toString();
+            int semi = u.indexOf(':');
+            if (semi > 0)
+                return Uri.parse(u.substring(0, semi).toLowerCase(Locale.ROOT) + u.substring(semi));
+        }
+
+        return uri;
+    }
+
+    static String getHost(Uri uri) {
+        if ("mailto".equalsIgnoreCase(uri.getScheme())) {
+            MailTo email = MailTo.parse(uri.toString());
+            return getEmailDomain(email.getTo());
+        } else
+            return uri.getHost();
     }
 
     static void test(Context context) {

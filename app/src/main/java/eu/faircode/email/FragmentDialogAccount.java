@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import static android.app.Activity.RESULT_OK;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -41,6 +42,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -68,8 +70,8 @@ public class FragmentDialogAccount extends FragmentDialogBase {
         final Button btnAccount = dview.findViewById(R.id.btnAccount);
         final Button btnGmail = dview.findViewById(R.id.btnGmail);
 
-        final Drawable check = context.getDrawable(R.drawable.twotone_check_24);
-        final Drawable close = context.getDrawable(R.drawable.twotone_close_24);
+        final Drawable check = ContextCompat.getDrawable(context, R.drawable.twotone_check_24);
+        final Drawable close = ContextCompat.getDrawable(context, R.drawable.twotone_close_24);
 
         check.setBounds(0, 0, check.getIntrinsicWidth(), check.getIntrinsicHeight());
         close.setBounds(0, 0, close.getIntrinsicWidth(), close.getIntrinsicHeight());
@@ -165,9 +167,9 @@ public class FragmentDialogAccount extends FragmentDialogBase {
             public void onChanged(EntityAccount account) {
                 tvName.setText(account.name);
                 ibEditName.setEnabled(true);
-                btnGmail.setVisibility(
-                        hasGmail && account.auth_type == AUTH_TYPE_GMAIL
-                                ? View.VISIBLE : View.GONE);
+                boolean isGmail = (account.auth_type == AUTH_TYPE_GMAIL ||
+                        (account.auth_type == AUTH_TYPE_OAUTH && "gmail".equals(account.provider)));
+                btnGmail.setVisibility(hasGmail && isGmail ? View.VISIBLE : View.GONE);
             }
         });
 

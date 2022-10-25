@@ -30,7 +30,7 @@
             android:layout_marginTop="6dp"
             android:drawableEnd="@drawable/twotone_open_in_new_12"
             android:drawablePadding="6dp"
-            android:drawableTint="?android:attr/textColorLink"
+            app:drawableTint="?android:attr/textColorLink"
             android:text="@string/title_privacy_policy"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="?android:attr/textColorLink"
@@ -148,6 +148,7 @@
             android:id="@+id/tvSelectHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="@string/title_setup_gmail_permissions"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textStyle="italic|bold"
@@ -155,18 +156,35 @@
             app:layout_constraintTop_toBottomOf="@id/btnSelect" />
 
         <TextView
-            android:id="@+id/tvAppPassword"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvOnDevice"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:drawableEnd="@drawable/twotone_open_in_new_24"
             android:drawablePadding="6dp"
-            android:drawableTint="?android:attr/textColorLink"
+            app:drawableTint="?android:attr/textColorLink"
+            android:text="@string/title_setup_gmail_on_device"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?android:attr/textColorLink"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSelectHint" />
+
+        <TextView
+            android:id="@+id/tvAppPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawableEnd="@drawable/twotone_open_in_new_24"
+            android:drawablePadding="6dp"
+            app:drawableTint="?android:attr/textColorLink"
             android:text="@string/title_setup_gmail_password"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="?android:attr/textColorLink"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvSelectHint" />
+            app:layout_constraintTop_toBottomOf="@id/tvOnDevice" />
 
         <TextView
             android:id="@+id/tvErrorTitle"
@@ -191,17 +209,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvErrorTitle" />
 
-        <TextView
-            android:id="@+id/tvDraftsHint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/title_setup_gmail_drafts"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textStyle="italic"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvError" />
-
         <Button
             android:id="@+id/btnSupport"
             android:layout_width="wrap_content"
@@ -210,17 +217,17 @@
             android:backgroundTint="?attr/colorInfoBackground"
             android:drawableEnd="@drawable/twotone_support_24"
             android:drawablePadding="6dp"
-            android:drawableTint="?attr/colorInfoForeground"
+            app:drawableTint="?attr/colorInfoForeground"
             android:text="@string/menu_faq"
             android:textColor="?attr/colorInfoForeground"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDraftsHint" />
+            app:layout_constraintTop_toBottomOf="@id/tvError" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/grpError"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:constraint_referenced_ids="tvErrorTitle,tvError,tvDraftsHint,btnSupport" />
+            app:constraint_referenced_ids="tvErrorTitle,tvError,btnSupport" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </eu.faircode.email.ScrollViewEx>

@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class FragmentOptionsSynchronize extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private View view;
     private ImageButton ibHelp;
     private SwitchCompat swEnabled;
     private SwitchCompat swOptimize;
@@ -129,7 +130,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         setSubtitle(R.string.title_setup);
         setHasOptionsMenu(true);
 
-        View view = inflater.inflate(R.layout.fragment_options_synchronize, container, false);
+        view = inflater.inflate(R.layout.fragment_options_synchronize, container, false);
 
         // Get controls
 
@@ -478,6 +479,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
                 prefs.edit().putBoolean("check_blocklist", checked).apply();
                 swUseBlocklist.setEnabled(checked);
                 swUseBlocklistPop.setEnabled(checked);
+                rvBlocklist.setAlpha(checked ? 1.0f : Helper.LOW_LIGHT);
             }
         });
 
@@ -554,7 +556,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     }
 
     private void setOptions() {
-        if (getContext() == null)
+        if (view == null || getContext() == null)
             return;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -610,6 +612,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         swUseBlocklist.setEnabled(swCheckBlocklist.isChecked());
         swUseBlocklistPop.setChecked(prefs.getBoolean("use_blocklist_pop", false));
         swUseBlocklistPop.setEnabled(swCheckBlocklist.isChecked());
+        rvBlocklist.setAlpha(swCheckBlocklist.isChecked() ? 1.0f : Helper.LOW_LIGHT);
     }
 
     private String formatHour(Context context, int minutes) {
@@ -701,6 +704,11 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
                     protected Void onExecute(Context context, Bundle args) {
                         long id = args.getLong("id");
                         boolean exempted = args.getBoolean("exempted");
+
+                        if (exempted) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                            prefs.edit().remove("auto_optimize").apply();
+                        }
 
                         DB db = DB.getInstance(context);
                         db.account().setAccountPollExempted(id, exempted);

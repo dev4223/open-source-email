@@ -41,15 +41,19 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Pair;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -94,6 +98,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -101,6 +106,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.KeySpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -134,9 +140,6 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private boolean import_answers;
     private boolean import_settings;
 
-    private static final int KEY_ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 256;
-
     static final int REQUEST_SOUND_INBOUND = 1;
     static final int REQUEST_SOUND_OUTBOUND = 2;
     static final int REQUEST_EXPORT = 3;
@@ -146,8 +149,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     static final int REQUEST_IMPORT_CERTIFICATE = 7;
     static final int REQUEST_OAUTH = 8;
     static final int REQUEST_STILL = 9;
-    static final int REQUEST_DELETE_ACCOUNT = 10;
-    static final int REQUEST_IMPORT_PROVIDERS = 11;
+    static final int REQUEST_SELECT_IDENTITY = 10;
+    static final int REQUEST_EDIT_SIGNATURE = 11;
+    static final int REQUEST_DELETE_ACCOUNT = 12;
+    static final int REQUEST_IMPORT_PROVIDERS = 13;
 
     static final int PI_MISC = 1;
 
@@ -162,6 +167,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     static final String ACTION_MANAGE_LOCAL_CONTACTS = BuildConfig.APPLICATION_ID + ".MANAGE_LOCAL_CONTACTS";
     static final String ACTION_MANAGE_CERTIFICATES = BuildConfig.APPLICATION_ID + ".MANAGE_CERTIFICATES";
     static final String ACTION_IMPORT_CERTIFICATE = BuildConfig.APPLICATION_ID + ".IMPORT_CERTIFICATE";
+    static final String ACTION_SETUP_REORDER = BuildConfig.APPLICATION_ID + ".SETUP_REORDER";
     static final String ACTION_SETUP_MORE = BuildConfig.APPLICATION_ID + ".SETUP_MORE";
 
     @Override
@@ -238,7 +244,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer);
-                onMenuOrder(R.string.title_setup_reorder_accounts, EntityAccount.class);
+                onMenuOrder(R.string.title_setup_reorder_accounts, EntityAccount.class.getName());
             }
         }));
 
@@ -246,7 +252,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer);
-                onMenuOrder(R.string.title_setup_reorder_folders, TupleFolderSort.class);
+                onMenuOrder(R.string.title_setup_reorder_folders, TupleFolderSort.class.getName());
             }
         }).setSeparated());
 
@@ -414,6 +420,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         iff.addAction(ACTION_MANAGE_LOCAL_CONTACTS);
         iff.addAction(ACTION_MANAGE_CERTIFICATES);
         iff.addAction(ACTION_IMPORT_CERTIFICATE);
+        iff.addAction(ACTION_SETUP_REORDER);
         iff.addAction(ACTION_SETUP_MORE);
         lbm.registerReceiver(receiver, iff);
     }
@@ -435,6 +442,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         if (drawerLayout.isDrawerOpen(drawerContainer))
             drawerLayout.closeDrawer(drawerContainer);
         else {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+                performBack();
+                return;
+            }
+
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             boolean setup_reminder = prefs.getBoolean("setup_reminder", true);
 
@@ -460,9 +472,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     public void onBackStackChanged() {
         int count = getSupportFragmentManager().getBackStackEntryCount();
         if (count == 0) {
-            if (hasAccount)
+            if (hasAccount) {
                 startActivity(new Intent(this, ActivityView.class));
-            finish();
+                finishAndRemoveTask();
+            } else
+                finish();
         } else {
             if (drawerLayout.isDrawerOpen(drawerContainer))
                 drawerLayout.closeDrawer(drawerContainer);
@@ -550,13 +564,13 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         }
     }
 
-    private void onMenuOrder(int title, Class clazz) {
+    private void onMenuOrder(int title, String className) {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("order", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         Bundle args = new Bundle();
         args.putInt("title", title);
-        args.putString("class", clazz.getName());
+        args.putString("class", className);
 
         FragmentOrder fragment = new FragmentOrder();
         fragment.setArguments(args);
@@ -709,8 +723,39 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         }
 
                         JSONArray jrules = new JSONArray();
-                        for (EntityRule rule : db.rule().getRules(folder.id))
+                        for (EntityRule rule : db.rule().getRules(folder.id)) {
+                            try {
+                                JSONObject jaction = new JSONObject(rule.action);
+                                int type = jaction.getInt("type");
+                                switch (type) {
+                                    case EntityRule.TYPE_MOVE:
+                                    case EntityRule.TYPE_COPY:
+                                        long target = jaction.optLong("target", -1L);
+                                        EntityFolder f = db.folder().getFolder(target);
+                                        EntityAccount a = (f == null ? null : db.account().getAccount(f.account));
+                                        if (a != null)
+                                            jaction.put("targetAccountUuid", a.uuid);
+                                        if (f != null)
+                                            jaction.put("targetFolderName", f.name);
+                                        break;
+                                    case EntityRule.TYPE_ANSWER:
+                                        long identity = jaction.optLong("identity", -1L);
+                                        long answer = jaction.optLong("answer", -1L);
+                                        EntityIdentity i = db.identity().getIdentity(identity);
+                                        EntityAnswer t = db.answer().getAnswer(answer);
+                                        if (i != null)
+                                            jaction.put("identityUuid", i.uuid);
+                                        if (t != null)
+                                            jaction.put("answerUuid", t.uuid);
+                                        break;
+                                }
+                                rule.action = jaction.toString();
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+
                             jrules.put(rule.toJSON());
+                        }
                         jfolder.put("rules", jrules);
 
                         jfolders.put(jfolder);
@@ -801,12 +846,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         random.nextBytes(salt);
 
                         // https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#Cipher
-                        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-                        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_ITERATIONS, KEY_LENGTH);
+                        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+                        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 120000, 256);
                         SecretKey secret = keyFactory.generateSecret(keySpec);
-                        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
                         cipher.init(Cipher.ENCRYPT_MODE, secret);
 
+                        raw.write("___FairEmail___".getBytes(StandardCharsets.US_ASCII));
+                        raw.write(1); // version
                         raw.write(salt);
                         raw.write(cipher.getIV());
 
@@ -870,9 +917,28 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         TextView tvLog = dview.findViewById(R.id.tvLog);
         tvLog.setText(null);
 
+        Map<String, Object> defer = Collections.synchronizedMap(new HashMap<>());
+
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dview)
                 .setPositiveButton(android.R.string.ok, null)
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialogInterface) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(dview.getContext());
+                        SharedPreferences.Editor editor = prefs.edit();
+
+                        for (String key : defer.keySet()) {
+                            Object value = defer.get(key);
+                            if (value instanceof Boolean)
+                                editor.putBoolean(key, (Boolean) value);
+                            else if (value instanceof String)
+                                editor.putString(key, (String) value);
+                        }
+
+                        editor.apply();
+                    }
+                })
                 .show();
 
         Button ok = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -934,16 +1000,36 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         in = raw;
                     else {
                         byte[] salt = new byte[16];
-                        byte[] prefix = new byte[16];
                         Helper.readBuffer(raw, salt);
-                        Helper.readBuffer(raw, prefix);
 
-                        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-                        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_ITERATIONS, KEY_LENGTH);
+                        int version = 0;
+                        String magic = new String(salt, 0, 15, StandardCharsets.US_ASCII);
+                        if ("___FairEmail___".equals(magic)) {
+                            version = salt[15];
+                            Helper.readBuffer(raw, salt);
+                        }
+
+                        int ivLen = (version == 0 ? 16 : 12);
+                        String derivation = (version == 0 ? "PBKDF2WithHmacSHA1" : "PBKDF2WithHmacSHA512");
+                        int iterations = (version == 0 ? 65536 : 120000);
+                        int keyLen = 256;
+                        String transformation = (version == 0 ? "AES/CBC/PKCS5Padding" : "AES/GCM/NoPadding");
+                        Log.i("Import version=" + version +
+                                " ivLen=" + ivLen +
+                                " derivation=" + derivation +
+                                " iterations=" + iterations +
+                                " keyLen=" + keyLen +
+                                " transformation=" + transformation);
+
+                        byte[] iv = new byte[ivLen];
+                        Helper.readBuffer(raw, iv);
+
+                        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(derivation);
+                        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
                         SecretKey secret = keyFactory.generateSecret(keySpec);
-                        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                        IvParameterSpec iv = new IvParameterSpec(prefix);
-                        cipher.init(Cipher.DECRYPT_MODE, secret, iv);
+                        Cipher cipher = Cipher.getInstance(transformation);
+                        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+                        cipher.init(Cipher.DECRYPT_MODE, secret, ivSpec);
 
                         in = new CipherInputStream(raw, cipher);
                     }
@@ -983,6 +1069,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                             EntityAnswer answer = EntityAnswer.fromJSON(janswer);
                             long id = answer.id;
                             answer.id = null;
+
+                            EntityAnswer existing = db.answer().getAnswerByUUID(answer.uuid);
+                            if (existing != null)
+                                db.answer().deleteAnswer(existing.id);
 
                             answer.id = db.answer().insertAnswer(answer);
                             xAnswer.put(id, answer.id);
@@ -1056,17 +1146,22 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                 account.deleteNotificationChannel(context);
 
                                 if (account.notify)
-                                    if (jaccount.has("channel")) {
-                                        NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
-                                        nm.createNotificationChannelGroup(group);
+                                    if (jaccount.has("channel"))
+                                        try {
+                                            NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
+                                            nm.createNotificationChannelGroup(group);
 
-                                        JSONObject jchannel = (JSONObject) jaccount.get("channel");
-                                        jchannel.put("id", EntityAccount.getNotificationChannelId(account.id));
-                                        jchannel.put("group", group.getId());
-                                        nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
+                                            JSONObject jchannel = (JSONObject) jaccount.get("channel");
+                                            jchannel.put("id", EntityAccount.getNotificationChannelId(account.id));
+                                            jchannel.put("group", group.getId());
+                                            nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
 
-                                        Log.i("Imported account channel=" + jchannel);
-                                    } else
+                                            Log.i("Imported account channel=" + jchannel);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                            account.createNotificationChannel(context);
+                                        }
+                                    else
                                         account.createNotificationChannel(context);
                             }
 
@@ -1108,17 +1203,20 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                     String channelId = EntityFolder.getNotificationChannelId(folder.id);
                                     nm.deleteNotificationChannel(channelId);
 
-                                    if (jfolder.has("channel")) {
-                                        NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
-                                        nm.createNotificationChannelGroup(group);
+                                    if (jfolder.has("channel"))
+                                        try {
+                                            NotificationChannelGroup group = new NotificationChannelGroup("group." + account.id, account.name);
+                                            nm.createNotificationChannelGroup(group);
 
-                                        JSONObject jchannel = (JSONObject) jfolder.get("channel");
-                                        jchannel.put("id", channelId);
-                                        jchannel.put("group", group.getId());
-                                        nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
+                                            JSONObject jchannel = (JSONObject) jfolder.get("channel");
+                                            jchannel.put("id", channelId);
+                                            jchannel.put("group", group.getId());
+                                            nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
 
-                                        Log.i("Imported folder channel=" + jchannel);
-                                    }
+                                            Log.i("Imported folder channel=" + jchannel);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                        }
                                 }
 
                                 if (jfolder.has("rules")) {
@@ -1165,17 +1263,48 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                     switch (type) {
                                         case EntityRule.TYPE_MOVE:
                                         case EntityRule.TYPE_COPY:
+                                            String targetAccountUuid = jaction.optString("targetAccountUuid");
+                                            String targetFolderName = jaction.optString("targetFolderName");
+                                            if (!TextUtils.isEmpty(targetAccountUuid) && !TextUtils.isEmpty(targetFolderName)) {
+                                                EntityAccount a = db.account().getAccountByUUID(targetAccountUuid);
+                                                if (a != null) {
+                                                    EntityFolder f = db.folder().getFolderByName(a.id, targetFolderName);
+                                                    if (f != null) {
+                                                        jaction.put("target", f.id);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+
+                                            // Legacy
                                             long target = jaction.getLong("target");
-                                            Log.i("XLAT target " + target + " > " + xFolder.get(target));
-                                            jaction.put("target", xFolder.get(target));
+                                            Long tid = xFolder.get(target);
+                                            Log.i("XLAT target " + target + " > " + tid);
+                                            if (tid != null)
+                                                jaction.put("target", tid);
                                             break;
                                         case EntityRule.TYPE_ANSWER:
+                                            String identityUuid = jaction.optString("identityUuid");
+                                            String answerUuid = jaction.optString("answerUuid");
+                                            if (!TextUtils.isEmpty(identityUuid) && !TextUtils.isEmpty(answerUuid)) {
+                                                EntityIdentity i = db.identity().getIdentityByUUID(identityUuid);
+                                                EntityAnswer a = db.answer().getAnswerByUUID(answerUuid);
+                                                if (i != null && a != null) {
+                                                    jaction.put("identity", i.id);
+                                                    jaction.put("answer", a.id);
+                                                    break;
+                                                }
+                                            }
+
+                                            // Legacy
                                             long identity = jaction.getLong("identity");
                                             long answer = jaction.getLong("answer");
-                                            Log.i("XLAT identity " + identity + " > " + xIdentity.get(identity));
-                                            Log.i("XLAT answer " + answer + " > " + xAnswer.get(answer));
-                                            jaction.put("identity", xIdentity.get(identity));
-                                            jaction.put("answer", xAnswer.get(answer));
+                                            Long iid = xIdentity.get(identity);
+                                            Long aid = xAnswer.get(answer);
+                                            Log.i("XLAT identity " + identity + " > " + iid);
+                                            Log.i("XLAT answer " + answer + " > " + aid);
+                                            jaction.put("identity", iid);
+                                            jaction.put("answer", aid);
                                             break;
                                     }
 
@@ -1217,6 +1346,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                             if ("pro".equals(key) && !BuildConfig.DEBUG)
                                 continue;
 
+                            if ("accept_unsupported".equals(key))
+                                continue;
+
                             if ("biometrics".equals(key) || "pin".equals(key))
                                 continue;
 
@@ -1232,10 +1364,16 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                             // Prevent restart
                             if ("secure".equals(key) ||
+                                    "load_emoji".equals(key) ||
                                     "shortcuts".equals(key) ||
                                     "language".equals(key) ||
                                     "wal".equals(key))
                                 continue;
+
+                            if ("theme".equals(key) || "beige".equals(key)) {
+                                defer.put(key, jsetting.get("value"));
+                                continue;
+                            }
 
                             if (key != null && key.startsWith("widget."))
                                 continue;
@@ -1245,6 +1383,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                 Helper.enableComponent(context, ActivitySearch.class, external_search);
                                 continue;
                             }
+
+                            if ("external_storage".equals(key))
+                                continue;
 
                             Object value = jsetting.get("value");
                             String type = jsetting.optString("type");
@@ -1293,16 +1434,19 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             if (jimport.has("channels")) {
                                 JSONArray jchannels = jimport.getJSONArray("channels");
-                                for (int i = 0; i < jchannels.length(); i++) {
-                                    JSONObject jchannel = (JSONObject) jchannels.get(i);
+                                for (int i = 0; i < jchannels.length(); i++)
+                                    try {
+                                        JSONObject jchannel = (JSONObject) jchannels.get(i);
 
-                                    String channelId = jchannel.getString("id");
-                                    nm.deleteNotificationChannel(channelId);
+                                        String channelId = jchannel.getString("id");
+                                        nm.deleteNotificationChannel(channelId);
 
-                                    nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
+                                        nm.createNotificationChannel(NotificationHelper.channelFromJSON(context, jchannel));
 
-                                    Log.i("Imported contact channel=" + jchannel);
-                                }
+                                        Log.i("Imported contact channel=" + jchannel);
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                    }
                             }
                         }
                     }
@@ -1328,7 +1472,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     ((NoStreamException) ex).report(ActivitySetup.this);
                 else {
                     SpannableStringBuilder ssb = new SpannableStringBuilder();
-                    if (ex.getCause() instanceof BadPaddingException)
+                    if (ex.getCause() instanceof BadPaddingException /* GCM: AEADBadTagException */)
                         ssb.append(getString(R.string.title_setup_password_invalid));
                     else if (ex instanceof IOException && ex.getCause() instanceof IllegalBlockSizeException)
                         ssb.append(getString(R.string.title_setup_import_invalid));
@@ -1752,6 +1896,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private void onImportCertificate(Intent intent) {
         Intent open = new Intent(Intent.ACTION_GET_CONTENT);
         open.addCategory(Intent.CATEGORY_OPENABLE);
+        open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         open.setType("*/*");
         if (open.resolveActivity(getPackageManager()) == null)  // system whitelisted
             ToastEx.makeText(this, R.string.title_no_saf, Toast.LENGTH_LONG).show();
@@ -1766,6 +1911,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private static Intent getIntentExport() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_TITLE, "fairemail_" +
                 new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".backup");
@@ -1776,18 +1922,19 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private static Intent getIntentImport() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setType("*/*");
         return intent;
     }
 
     public static class FragmentDialogExport extends FragmentDialogBase {
-        private TextInputLayout etPassword1;
-        private TextInputLayout etPassword2;
+        private TextInputLayout tilPassword1;
+        private TextInputLayout tilPassword2;
 
         @Override
         public void onSaveInstanceState(@NonNull Bundle outState) {
-            outState.putString("fair:password1", etPassword1 == null ? null : etPassword1.getEditText().getText().toString());
-            outState.putString("fair:password2", etPassword2 == null ? null : etPassword2.getEditText().getText().toString());
+            outState.putString("fair:password1", tilPassword1 == null ? null : tilPassword1.getEditText().getText().toString());
+            outState.putString("fair:password2", tilPassword2 == null ? null : tilPassword2.getEditText().getText().toString());
             super.onSaveInstanceState(outState);
         }
 
@@ -1796,35 +1943,23 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             Context context = getContext();
             View dview = LayoutInflater.from(context).inflate(R.layout.dialog_export, null);
-            etPassword1 = dview.findViewById(R.id.tilPassword1);
-            etPassword2 = dview.findViewById(R.id.tilPassword2);
+            tilPassword1 = dview.findViewById(R.id.tilPassword1);
+            tilPassword2 = dview.findViewById(R.id.tilPassword2);
 
             if (savedInstanceState != null) {
-                etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
-                etPassword2.getEditText().setText(savedInstanceState.getString("fair:password2"));
+                tilPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
+                tilPassword2.getEditText().setText(savedInstanceState.getString("fair:password2"));
             }
 
             Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    .setPositiveButton(R.string.title_save_file, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String password1 = etPassword1.getEditText().getText().toString();
-                            String password2 = etPassword2.getEditText().getText().toString();
-
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                            boolean debug = prefs.getBoolean("debug", false);
-
-                            if (TextUtils.isEmpty(password1) && !(debug || BuildConfig.DEBUG))
-                                ToastEx.makeText(context, R.string.title_setup_password_missing, Toast.LENGTH_LONG).show();
-                            else {
-                                if (password1.equals(password2)) {
-                                    ((ActivitySetup) getActivity()).password = password1;
-                                    getActivity().startActivityForResult(
-                                            Helper.getChooser(context, getIntentExport()), REQUEST_EXPORT);
-                                } else
-                                    ToastEx.makeText(context, R.string.title_setup_password_different, Toast.LENGTH_LONG).show();
-                            }
+                            ((ActivitySetup) getActivity()).password =
+                                    tilPassword1.getEditText().getText().toString();
+                            getActivity().startActivityForResult(
+                                    Helper.getChooser(context, getIntentExport()), REQUEST_EXPORT);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -1834,14 +1969,61 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
             return dialog;
         }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean debug = (BuildConfig.DEBUG || prefs.getBoolean("debug", false));
+
+            Button btnOk = ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE);
+
+            TextWatcher w = new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Do nothing
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Do nothing
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String p1 = tilPassword1.getEditText().getText().toString();
+                    String p2 = tilPassword2.getEditText().getText().toString();
+                    btnOk.setEnabled((debug || !TextUtils.isEmpty(p1)) && p1.equals(p2));
+                    tilPassword2.setHint(!TextUtils.isEmpty(p2) && !p2.equals(p1)
+                            ? R.string.title_setup_password_different
+                            : R.string.title_setup_password_repeat);
+                }
+            };
+
+            tilPassword1.getEditText().addTextChangedListener(w);
+            tilPassword2.getEditText().addTextChangedListener(w);
+            w.afterTextChanged(null);
+
+            tilPassword2.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        btnOk.performClick();
+                        return true;
+                    } else
+                        return false;
+                }
+            });
+        }
     }
 
     public static class FragmentDialogImport extends FragmentDialogBase {
-        private TextInputLayout etPassword1;
+        private TextInputLayout tilPassword1;
 
         @Override
         public void onSaveInstanceState(@NonNull Bundle outState) {
-            outState.putString("fair:password1", etPassword1 == null ? null : etPassword1.getEditText().getText().toString());
+            outState.putString("fair:password1", tilPassword1 == null ? null : tilPassword1.getEditText().getText().toString());
             super.onSaveInstanceState(outState);
         }
 
@@ -1850,7 +2032,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             Context context = getContext();
             View dview = LayoutInflater.from(context).inflate(R.layout.dialog_import, null);
-            etPassword1 = dview.findViewById(R.id.tilPassword1);
+            tilPassword1 = dview.findViewById(R.id.tilPassword1);
             CheckBox cbAccounts = dview.findViewById(R.id.cbAccounts);
             CheckBox cbDelete = dview.findViewById(R.id.cbDelete);
             CheckBox cbRules = dview.findViewById(R.id.cbRules);
@@ -1867,14 +2049,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             });
 
             if (savedInstanceState != null)
-                etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
+                tilPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
 
             Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    .setPositiveButton(R.string.title_add_image_select, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String password1 = etPassword1.getEditText().getText().toString();
+                            String password1 = tilPassword1.getEditText().getText().toString();
 
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                             boolean debug = prefs.getBoolean("debug", false);
@@ -1901,6 +2083,24 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
             return dialog;
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            Button btnOk = ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE);
+
+            tilPassword1.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        btnOk.performClick();
+                        return true;
+                    } else
+                        return false;
+                }
+            });
         }
     }
 
@@ -1931,6 +2131,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     onManageCertificates(intent);
                 else if (ACTION_IMPORT_CERTIFICATE.equals(action))
                     onImportCertificate(intent);
+                else if (ACTION_SETUP_REORDER.equals(action))
+                    onMenuOrder(R.string.title_setup_reorder_accounts, intent.getStringExtra("className"));
                 else if (ACTION_SETUP_MORE.equals(action))
                     onSetupMore(intent);
             }

@@ -104,6 +104,7 @@ public class EmailService implements AutoCloseable {
     private boolean insecure;
     private int purpose;
     private boolean ssl_harden;
+    private boolean ssl_harden_strict;
     private boolean cert_strict;
     private boolean useip;
     private String ehlo;
@@ -149,9 +150,16 @@ public class EmailService implements AutoCloseable {
             "SSLv2", "SSLv3", "TLSv1", "TLSv1.1"
     ));
 
+    private static final List<String> SSL_PROTOCOL_BLACKLIST_STRICT = Collections.unmodifiableList(Arrays.asList(
+            "SSLv2", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"
+    ));
+
     // https://developer.android.com/reference/javax/net/ssl/SSLSocket.html#cipher-suites
     private static final Pattern SSL_CIPHER_BLACKLIST =
             Pattern.compile(".*(_DES|DH_|DSS|EXPORT|MD5|NULL|RC4|TLS_FALLBACK_SCSV).*");
+
+    private static final Pattern SSL_CIPHER_BLACKLIST_STRICT =
+            Pattern.compile("(.*(_DES|DH_|DSS|EXPORT|MD5|NULL|RC4|TLS_FALLBACK_SCSV|RSA).*)|(.*SHA$)");
 
     // TLS_FALLBACK_SCSV https://tools.ietf.org/html/rfc7507
     // TLS_EMPTY_RENEGOTIATION_INFO_SCSV https://tools.ietf.org/html/rfc5746
@@ -160,18 +168,18 @@ public class EmailService implements AutoCloseable {
         // Prevent instantiation
     }
 
-    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean debug) throws NoSuchProviderException {
-        this(context, protocol, realm, encryption, insecure, PURPOSE_USE, debug);
+    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean unicode, boolean debug) throws NoSuchProviderException {
+        this(context, protocol, realm, encryption, insecure, unicode, PURPOSE_USE, debug);
     }
 
-    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, int purpose, boolean debug) throws NoSuchProviderException {
+    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean unicode, int purpose, boolean debug) throws NoSuchProviderException {
         this.context = context.getApplicationContext();
         this.protocol = protocol;
         this.insecure = insecure;
         this.purpose = purpose;
         this.debug = debug;
 
-        properties = MessageHelper.getSessionProperties();
+        properties = MessageHelper.getSessionProperties(unicode);
 
         long now = new Date().getTime();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -183,6 +191,7 @@ public class EmailService implements AutoCloseable {
         this.log = prefs.getBoolean("protocol", false);
         this.level = prefs.getInt("log_level", Log.getDefaultLogLevel());
         this.ssl_harden = prefs.getBoolean("ssl_harden", false);
+        this.ssl_harden_strict = prefs.getBoolean("ssl_harden_strict", false);
         this.cert_strict = prefs.getBoolean("cert_strict", !BuildConfig.PLAY_STORE_RELEASE);
 
         boolean auth_plain = prefs.getBoolean("auth_plain", true);
@@ -190,12 +199,14 @@ public class EmailService implements AutoCloseable {
         boolean auth_ntlm = prefs.getBoolean("auth_ntlm", true);
         boolean auth_sasl = prefs.getBoolean("auth_sasl", true);
         boolean auth_apop = prefs.getBoolean("auth_apop", false);
+        boolean use_top = prefs.getBoolean("use_top", true);
         Log.i("Authenticate" +
                 " plain=" + auth_plain +
                 " login=" + auth_login +
                 " ntlm=" + auth_ntlm +
                 " sasl=" + auth_sasl +
-                " apop=" + auth_apop);
+                " apop=" + auth_apop +
+                " use_top=" + use_top);
 
         properties.put("mail.event.scope", "folder");
         properties.put("mail.event.executor", executor);
@@ -208,6 +219,8 @@ public class EmailService implements AutoCloseable {
             properties.put("mail." + protocol + ".auth.ntlm.disable", "true");
         if (auth_apop)
             properties.put("mail." + protocol + ".apop.enable", "true");
+        if (!use_top)
+            properties.put("mail." + protocol + ".disabletop", "true");
 
         // SASL is attempted before other authentication methods
         properties.put("mail." + protocol + ".sasl.enable", Boolean.toString(auth_sasl));
@@ -311,8 +324,13 @@ public class EmailService implements AutoCloseable {
         properties.put("mail." + protocol + ".rsetbeforequit", Boolean.toString(keep));
     }
 
-    void setUnicode(boolean value) {
-        properties.put("mail.mime.allowutf8", Boolean.toString(value));
+    void set8BitMime(boolean value) {
+        // https://datatracker.ietf.org/doc/html/rfc6532
+        properties.put("mail." + protocol + ".allow8bitmime", Boolean.toString(value));
+    }
+
+    void setRestartIdleInterval(int seconds) {
+        properties.put("mail." + protocol + ".restartidleinterval", Integer.toString(seconds));
     }
 
     // https://tools.ietf.org/html/rfc3461
@@ -331,15 +349,15 @@ public class EmailService implements AutoCloseable {
     public void connect(EntityAccount account) throws MessagingException {
         connect(
                 account.host, account.port,
-                account.auth_type, account.provider, account.poll_interval,
+                account.auth_type, account.provider,
                 account.user, account.password,
                 new ServiceAuthenticator.IAuthenticated() {
                     @Override
                     public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
                         account.password = newPassword;
-                        int accounts = db.account().setAccountPassword(account.id, account.password, account.auth_type);
-                        int identities = db.identity().setIdentityPassword(account.id, account.user, account.password, account.auth_type, account.auth_type);
+                        int accounts = db.account().setAccountPassword(account.id, account.password, account.auth_type, account.provider);
+                        int identities = db.identity().setIdentityPassword(account.id, account.user, account.password, account.auth_type, account.auth_type, account.provider);
                         EntityLog.log(context, EntityLog.Type.Account, account,
                                 "token refreshed=" + accounts + "/" + identities);
                     }
@@ -350,7 +368,7 @@ public class EmailService implements AutoCloseable {
     public void connect(EntityIdentity identity) throws MessagingException {
         connect(
                 identity.host, identity.port,
-                identity.auth_type, identity.provider, 0,
+                identity.auth_type, identity.provider,
                 identity.user, identity.password,
                 new ServiceAuthenticator.IAuthenticated() {
                     @Override
@@ -371,12 +389,12 @@ public class EmailService implements AutoCloseable {
             int auth, String provider,
             String user, String password,
             String certificate, String fingerprint) throws MessagingException {
-        connect(host, port, auth, provider, 0, user, password, null, certificate, fingerprint);
+        connect(host, port, auth, provider, user, password, null, certificate, fingerprint);
     }
 
     private void connect(
             String host, int port,
-            int auth, String provider, int keep_alive,
+            int auth, String provider,
             String user, String password,
             ServiceAuthenticator.IAuthenticated intf,
             String certificate, String fingerprint) throws MessagingException {
@@ -412,7 +430,7 @@ public class EmailService implements AutoCloseable {
                 }
             }
 
-            factory = new SSLSocketFactoryService(host, insecure, ssl_harden, cert_strict, key, chain, fingerprint);
+            factory = new SSLSocketFactoryService(host, insecure, ssl_harden, ssl_harden_strict, cert_strict, key, chain, fingerprint);
             properties.put("mail." + protocol + ".ssl.socketFactory", factory);
             properties.put("mail." + protocol + ".socketFactory.fallback", "false");
             properties.put("mail." + protocol + ".ssl.checkserveridentity", "false");
@@ -424,8 +442,7 @@ public class EmailService implements AutoCloseable {
         }
 
         properties.put("mail." + protocol + ".forcepasswordrefresh", "true");
-        authenticator = new ServiceAuthenticator(context,
-                auth, provider, keep_alive, user, password, intf);
+        authenticator = new ServiceAuthenticator(context, auth, provider, user, password, intf);
 
         if ("imap.wp.pl".equals(host))
             properties.put("mail.idledone", "false");
@@ -459,6 +476,8 @@ public class EmailService implements AutoCloseable {
 
             if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OAUTH) {
                 try {
+                    EntityLog.log(context, EntityLog.Type.Debug,
+                            ex + "\n" + android.util.Log.getStackTraceString(ex));
                     authenticator.refreshToken(true);
                     connect(host, port, auth, user, factory);
                 } catch (Exception ex1) {
@@ -511,6 +530,11 @@ public class EmailService implements AutoCloseable {
     private void connect(
             String host, int port, int auth, String user,
             SSLSocketFactoryService factory) throws MessagingException {
+        Map<String, String> crumb = new HashMap<>();
+        crumb.put("host", host);
+        crumb.put("port", Integer.toString(port));
+        crumb.put("auth", Integer.toString(auth));
+
         InetAddress main = null;
         boolean require_id = (purpose == PURPOSE_CHECK &&
                 auth == AUTH_TYPE_OAUTH &&
@@ -554,10 +578,17 @@ public class EmailService implements AutoCloseable {
                     }
             }
 
+            Log.breadcrumb("Connecting", crumb);
             _connect(main, port, require_id, user, factory);
+            Log.breadcrumb("Connected", crumb);
         } catch (UnknownHostException ex) {
+            crumb.put("exception", ex + "\n" + android.util.Log.getStackTraceString(ex));
+            Log.breadcrumb("Connection failed", crumb);
             throw new MessagingException(ex.getMessage(), ex);
         } catch (MessagingException ex) {
+            crumb.put("exception", ex + "\n" + android.util.Log.getStackTraceString(ex));
+            Log.breadcrumb("Connection failed", crumb);
+
             /*
                 com.sun.mail.util.MailConnectException: Couldn't connect to host, port: 74.125.140.108, 993; timeout 20000;
                   nested exception is:
@@ -871,8 +902,8 @@ public class EmailService implements AutoCloseable {
             return false;
     }
 
-    public void check() {
-        authenticator.checkToken();
+    public Long getAccessTokenExpirationTime() {
+        return authenticator.getAccessTokenExpirationTime();
     }
 
     public boolean isOpen() {
@@ -937,15 +968,17 @@ public class EmailService implements AutoCloseable {
         private String server;
         private boolean secure;
         private boolean ssl_harden;
+        private boolean ssl_harden_strict;
         private boolean cert_strict;
         private String trustedFingerprint;
         private SSLSocketFactory factory;
         private X509Certificate certificate;
 
-        SSLSocketFactoryService(String host, boolean insecure, boolean ssl_harden, boolean cert_strict, PrivateKey key, X509Certificate[] chain, String fingerprint) throws GeneralSecurityException {
+        SSLSocketFactoryService(String host, boolean insecure, boolean ssl_harden, boolean ssl_harden_strict, boolean cert_strict, PrivateKey key, X509Certificate[] chain, String fingerprint) throws GeneralSecurityException {
             this.server = host;
             this.secure = !insecure;
             this.ssl_harden = ssl_harden;
+            this.ssl_harden_strict = ssl_harden_strict;
             this.cert_strict = cert_strict;
             this.trustedFingerprint = fingerprint;
 
@@ -1142,6 +1175,27 @@ public class EmailService implements AutoCloseable {
                     List<String> ciphers = new ArrayList<>();
                     ciphers.addAll(Arrays.asList(sslSocket.getSupportedCipherSuites()));
                     ciphers.remove("TLS_FALLBACK_SCSV");
+                    sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
+                } else if (ssl_harden && ssl_harden_strict &&
+                        !BuildConfig.PLAY_STORE_RELEASE &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Protocols
+                    List<String> protocols = new ArrayList<>();
+                    for (String protocol : sslSocket.getEnabledProtocols())
+                        if (SSL_PROTOCOL_BLACKLIST_STRICT.contains(protocol))
+                            Log.i("SSL disabling protocol=" + protocol);
+                        else
+                            protocols.add(protocol);
+                    sslSocket.setEnabledProtocols(protocols.toArray(new String[0]));
+
+                    // Ciphers
+                    List<String> ciphers = new ArrayList<>();
+                    for (String cipher : sslSocket.getEnabledCipherSuites()) {
+                        if (SSL_CIPHER_BLACKLIST_STRICT.matcher(cipher).matches())
+                            Log.i("SSL disabling cipher=" + cipher);
+                        else
+                            ciphers.add(cipher);
+                    }
                     sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
                 } else if (ssl_harden) {
                     // Protocols

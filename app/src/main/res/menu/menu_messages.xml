@@ -15,8 +15,8 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/menu_delete_search"
-        android:icon="@drawable/twotone_delete_24"
+        android:id="@+id/menu_edit_search"
+        android:icon="@drawable/twotone_edit_24"
         android:title="@string/title_delete"
         app:showAsAction="always" />
 
@@ -145,6 +145,13 @@
             android:id="@+id/menu_padding"
             android:icon="@drawable/twotone_fullscreen_24"
             android:title="@string/title_padding"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/menu_large_buttons"
+            android:checkable="true"
+            android:icon="@drawable/twotone_smart_button_24"
+            android:title="@string/title_large_buttons"
             app:showAsAction="never" />
 
         <item

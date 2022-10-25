@@ -77,6 +77,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
     public String name;
     @NonNull
     public String type;
+    public String inherited_type;
     @NonNull
     public Integer level = 0; // obsolete
     @NonNull
@@ -91,6 +92,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
     public Integer poll_count = 0;
     @NonNull
     public Boolean download = true;
+    @NonNull
+    public Boolean auto_classify; // Obsolete
     @NonNull
     public Boolean auto_classify_source = false;
     @NonNull
@@ -258,8 +261,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
     private static final List<Boolean> SYSTEM_FOLDER_DOWNLOAD = Collections.unmodifiableList(Arrays.asList(
             true, // inbox
             true, // drafts
-            false, // sent
-            false, // archive
+            true, // sent
+            true, // archive
             false, // trash
             false // junk
     )); // MUST match SYSTEM_FOLDER_SYNC
@@ -304,6 +307,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
             // und deren Absender nicht in Ihrem Adressbuch oder auf Ihrer Erwünschtliste stehen.
             synchronize = true;
             unified = true;
+            notify = true;
         }
     }
 

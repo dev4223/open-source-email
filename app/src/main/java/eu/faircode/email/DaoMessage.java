@@ -49,7 +49,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
-            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
+            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
             ", '[' || group_concat(message.`to`, ',') || ']' AS recipients" +
@@ -128,7 +128,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
-            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
+            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, f.inherited_type AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
             ", '[' || group_concat(message.`to`, ',') || ']' AS recipients" +
@@ -200,7 +200,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
-            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
+            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", message.`to` AS recipients" +
@@ -290,11 +290,16 @@ public interface DaoMessage {
             " AND NOT ui_hide")
     LiveData<List<EntityMessage>> liveUnreadThread(long account, String thread);
 
-    @Query("SELECT SUM(fts) AS fts, COUNT(*) AS total FROM message" +
+    static String FTS_STATS = "SELECT SUM(fts) AS fts, COUNT(*) AS total FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
             " WHERE content" +
-            " AND folder.type <> '" + EntityFolder.OUTBOX + "'")
+            " AND folder.type <> '" + EntityFolder.OUTBOX + "'";
+
+    @Query(FTS_STATS)
     LiveData<TupleFtsStats> liveFts();
+
+    @Query(FTS_STATS)
+    TupleFtsStats getFts();
 
     @Query("SELECT COUNT(*) FROM message" +
             " WHERE id IN (:ids)" +
@@ -336,15 +341,15 @@ public interface DaoMessage {
     Cursor getMessageFts();
 
     @Query("SELECT message.id, account, thread, (:find IS NULL" +
-            " OR (:senders AND `from` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:recipients AND `to` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:recipients AND `cc` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:recipients AND `bcc` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:subject AND `subject` LIKE :find COLLATE NOCASE)" + // unsuitable index
-            " OR (:keywords AND `keywords` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:message AND `preview` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:notes AND `notes` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (:headers AND `headers` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:senders AND `from` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:recipients AND `to` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:recipients AND `cc` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:recipients AND `bcc` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:subject AND `subject` LIKE :find COLLATE NOCASE)" + // unsuitable index
+            //" OR (:keywords AND `keywords` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:message AND `preview` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:notes AND `notes` LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (:headers AND `headers` LIKE :find COLLATE NOCASE)" + // no index
             " OR (attachment.name LIKE :find COLLATE NOCASE)" + // no index
             " OR (attachment.type LIKE :find COLLATE NOCASE)) AS matched" + // no index
             " FROM message" +
@@ -364,11 +369,11 @@ public interface DaoMessage {
             " AND (:before IS NULL OR received < :before)" +
             " AND NOT message.folder IN (:exclude)" +
             " GROUP BY message.id" +
-            " ORDER BY matched DESC, received DESC" +
+            " ORDER BY received DESC" +
             " LIMIT :limit OFFSET :offset")
     List<TupleMatch> matchMessages(
             Long account, Long folder, long[] exclude, String find,
-            boolean senders, boolean recipients, boolean subject, boolean keywords, boolean message, boolean notes, boolean headers,
+            //boolean senders, boolean recipients, boolean subject, boolean keywords, boolean message, boolean notes, boolean headers,
             boolean unseen, boolean flagged, boolean hidden, boolean encrypted, boolean with_attachments, boolean with_notes,
             int type_count, String[] types,
             Integer size,
@@ -417,6 +422,13 @@ public interface DaoMessage {
             " AND msgid = :msgid")
     List<EntityMessage> getMessagesByMsgId(long account, String msgid);
 
+    @Query("SELECT message.* FROM message" +
+            " JOIN folder ON folder.id = message.folder" +
+            " WHERE message.account = :account" +
+            " AND folder.type = :folderType" +
+            " AND message.msgid = :msgid")
+    EntityMessage getMessage(long account, String folderType, String msgid);
+
     @Query("SELECT * FROM message" +
             " WHERE account = :account" +
             " AND inreplyto = :inreplyto")
@@ -445,8 +457,9 @@ public interface DaoMessage {
 
     @Query("SELECT COUNT(*) FROM message" +
             " WHERE folder = :folder" +
-            " AND msgid = :msgid")
-    int countMessageByMsgId(long folder, String msgid);
+            " AND msgid = :msgid" +
+            " AND (:hidden OR NOT message.ui_hide)")
+    int countMessageByMsgId(long folder, String msgid, boolean hidden);
 
     @Query("SELECT COUNT(*) FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
@@ -487,7 +500,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, identity.color AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
-            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
+            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", message.`to` AS recipients" +
@@ -518,7 +531,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
-            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
+            ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", message.`to` AS recipients" +
@@ -638,7 +651,7 @@ public interface DaoMessage {
             " AND NOT uid IS NULL")
     List<Long> getBusyUids(long folder, long time);
 
-    @Query("SELECT id, uidl, msgid, thread, ui_hide, ui_busy FROM message" +
+    @Query("SELECT id, uidl, msgid, ui_hide, ui_busy, ui_flagged FROM message" +
             " WHERE folder = :folder")
     List<TupleUidl> getUidls(long folder);
 
@@ -646,6 +659,11 @@ public interface DaoMessage {
             " WHERE (:folder IS NULL OR folder = :folder)" +
             " AND NOT ui_snoozed IS NULL")
     List<EntityMessage> getSnoozed(Long folder);
+
+    @Query("SELECT COUNT(*) FROM message" +
+            " WHERE NOT ui_snoozed IS NULL" +
+            " AND ui_snoozed <> " + Long.MAX_VALUE)
+    int getSnoozedCount();
 
     @Query("SELECT id AS _id, subject AS suggestion FROM message" +
             " WHERE (:account IS NULL OR message.account = :account)" +
@@ -823,7 +841,7 @@ public interface DaoMessage {
     int setMessageContent(long id, boolean content, String language, Integer plain_only, String preview, String warning);
 
     @Query("UPDATE message" +
-            " SET notes = :notes, notes_color = :color" +
+            " SET notes = :notes, notes_color = :color, fts = 0" +
             " WHERE id = :id" +
             " AND NOT (notes IS :notes AND notes_color IS :color)")
     int setMessageNotes(long id, String notes, Integer color);

@@ -14,6 +14,8 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 import com.sun.mail.imap.IMAPNestedMessage;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -253,14 +255,21 @@ public class DataHandler /*implements Transferable*/ {
 				throw new IOException(ex);
 			}
 
-		eu.faircode.email.Log.e("DataHandler" +
+		// com.sun.mail.smtp.SMTPTransport.convertTo8Bit
+		eu.faircode.email.Log.i("DataHandler" +
 				" object=" + (object == null ? null : object.getClass().getName()) +
 				" dch=" + dch.getClass().getName() +
 				" type=" + getContentType());
 
 	    final DataContentHandler fdch = dch;
 
-	    // from bill s.
+		if (true) {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			fdch.writeTo(object, objectMimeType, bos);
+			return new ByteArrayInputStream(bos.toByteArray());
+		}
+
+		// from bill s.
 	    // ce n'est pas une pipe!
 	    //
 	    // NOTE: This block of code needs to throw exceptions, but
@@ -274,11 +283,13 @@ public class DataHandler /*implements Transferable*/ {
 		    try {
 			fdch.writeTo(object, objectMimeType, pos);
 		    } catch (IOException e) {
-
+				eu.faircode.email.Log.e(e);
 		    } finally {
 			try {
 			    pos.close();
-			} catch (IOException ie) { }
+			} catch (IOException ie) {
+				eu.faircode.email.Log.e(ie);
+			}
 		    }
 		}
 	    },

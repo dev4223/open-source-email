@@ -63,6 +63,7 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -134,6 +135,7 @@ public class FragmentFolders extends FragmentBase {
     static final int REQUEST_EXECUTE_RULES = 4;
     static final int REQUEST_EXPORT_MESSAGES = 5;
     static final int REQUEST_EDIT_ACCOUNT_NAME = 6;
+    static final int REQUEST_EDIT_ACCOUNT_COLOR = 7;
 
     private static final long EXPORT_PROGRESS_INTERVAL = 5000L; // milliseconds
 
@@ -382,7 +384,7 @@ public class FragmentFolders extends FragmentBase {
                         intent.putExtra("protocol", account.protocol);
                         intent.putExtra("auth_type", account.auth_type);
                         intent.putExtra("faq", 22);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                     }
 
@@ -680,6 +682,7 @@ public class FragmentFolders extends FragmentBase {
         boolean sort_unread_atop = prefs.getBoolean("sort_unread_atop", false);
 
         menu.findItem(R.id.menu_unified).setVisible(account < 0 || primary);
+        menu.findItem(R.id.menu_outbox).setVisible(account < 0 || primary);
         menu.findItem(R.id.menu_compact).setChecked(compact);
         menu.findItem(R.id.menu_theme).setVisible(account < 0 || primary);
         menu.findItem(R.id.menu_show_hidden).setChecked(show_hidden);
@@ -690,6 +693,7 @@ public class FragmentFolders extends FragmentBase {
         menu.findItem(R.id.menu_sort_unread_atop).setChecked(sort_unread_atop);
         menu.findItem(R.id.menu_apply_all).setVisible(account >= 0 && imap);
         menu.findItem(R.id.menu_edit_account_name).setVisible(account >= 0);
+        menu.findItem(R.id.menu_edit_account_color).setVisible(account >= 0);
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -702,6 +706,9 @@ public class FragmentFolders extends FragmentBase {
             return true;
         } else if (itemId == R.id.menu_unified) {
             onMenuUnified();
+            return true;
+        } else if (itemId == R.id.menu_outbox) {
+            onMenuOutbox();
             return true;
         } else if (itemId == R.id.menu_compact) {
             onMenuCompact();
@@ -730,6 +737,9 @@ public class FragmentFolders extends FragmentBase {
         } else if (itemId == R.id.menu_edit_account_name) {
             onMenuEditAccount();
             return true;
+        } else if (itemId == R.id.menu_edit_account_color) {
+            onMenuEditColor();
+            return true;
         } else if (itemId == R.id.menu_force_sync) {
             onMenuForceSync();
             return true;
@@ -756,6 +766,11 @@ public class FragmentFolders extends FragmentBase {
         FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("messages");
         fragmentTransaction.commit();
+    }
+
+    private void onMenuOutbox() {
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+        lbm.sendBroadcast(new Intent(ActivityView.ACTION_VIEW_OUTBOX));
     }
 
     private void onMenuCompact() {
@@ -877,6 +892,41 @@ public class FragmentFolders extends FragmentBase {
         }.execute(this, args, "account:name");
     }
 
+    private void onMenuEditColor() {
+        Bundle args = new Bundle();
+        args.putLong("id", account);
+
+        new SimpleTask<EntityAccount>() {
+            @Override
+            protected EntityAccount onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+
+                DB db = DB.getInstance(context);
+                return db.account().getAccount(id);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, EntityAccount account) {
+                if (account == null)
+                    return;
+
+                args.putInt("color", account.color == null ? Color.TRANSPARENT : account.color);
+                args.putString("title", getString(R.string.title_color));
+                args.putBoolean("reset", true);
+
+                FragmentDialogColor fragment = new FragmentDialogColor();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentFolders.this, REQUEST_EDIT_ACCOUNT_COLOR);
+                fragment.show(getParentFragmentManager(), "edit:color");
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "edit:color");
+    }
+
     private void onMenuForceSync() {
         refresh(true);
         ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
@@ -911,6 +961,10 @@ public class FragmentFolders extends FragmentBase {
                 case REQUEST_EDIT_ACCOUNT_NAME:
                     if (resultCode == RESULT_OK && data != null)
                         onEditAccountName(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_EDIT_ACCOUNT_COLOR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onEditAccountColor(data.getBundleExtra("args"));
                     break;
             }
         } catch (Throwable ex) {
@@ -1226,7 +1280,7 @@ public class FragmentFolders extends FragmentBase {
                 String PATTERN_ASCTIME = "EEE MMM d HH:mm:ss yyyy";
                 SimpleDateFormat df = new SimpleDateFormat(PATTERN_ASCTIME, Locale.US);
 
-                Properties props = MessageHelper.getSessionProperties();
+                Properties props = MessageHelper.getSessionProperties(true);
                 Session isession = Session.getInstance(props, null);
 
                 // https://www.ietf.org/rfc/rfc4155.txt (Appendix A)
@@ -1345,7 +1399,7 @@ public class FragmentFolders extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, args, "folder:export");
+        }.setKeepAwake(true).execute(this, args, "folder:export");
     }
 
     private void onEditAccountName(Bundle args) {
@@ -1385,6 +1439,33 @@ public class FragmentFolders extends FragmentBase {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "edit:name");
+    }
+
+    private void onEditAccountColor(Bundle args) {
+        if (!ActivityBilling.isPro(getContext())) {
+            startActivity(new Intent(getContext(), ActivityBilling.class));
+            return;
+        }
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                Integer color = args.getInt("color");
+
+                if (color == Color.TRANSPARENT)
+                    color = null;
+
+                DB db = DB.getInstance(context);
+                db.account().setAccountColor(id, color);
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "edit:color");
     }
 
     public static class FragmentDialogApply extends FragmentDialogBase {

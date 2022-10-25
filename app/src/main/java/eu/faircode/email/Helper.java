@@ -28,8 +28,11 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ApplicationExitInfo;
 import android.app.KeyguardManager;
+import android.app.NotificationManager;
 import android.app.UiModeManager;
+import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -52,6 +55,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.LocaleList;
+import android.os.Looper;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.StatFs;
@@ -68,6 +72,7 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.DisplayMetrics;
+import android.util.Pair;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.KeyEvent;
@@ -132,9 +137,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -145,10 +147,13 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -173,10 +178,10 @@ public class Helper {
 
     static final float LOW_LIGHT = 0.6f;
 
+    static final int WAKELOCK_MAX = 30 * 60 * 1000; // milliseconds
     static final int BUFFER_SIZE = 8192; // Same as in Files class
-    static final long MIN_REQUIRED_SPACE = 250 * 1024L * 1024L;
-    static final int MAX_REDIRECTS = 5; // https://www.freesoft.org/CIE/RFC/1945/46.htm
-    static final int AUTOLOCK_GRACE = 7; // seconds
+    static final long MIN_REQUIRED_SPACE = 100 * 1000L * 1000L;
+    static final int AUTOLOCK_GRACE = 15; // seconds
     static final long PIN_FAILURE_DELAY = 3; // seconds
 
     static final String PGP_OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
@@ -185,11 +190,13 @@ public class Helper {
 
     static final String PACKAGE_CHROME = "com.android.chrome";
     static final String PACKAGE_WEBVIEW = "https://play.google.com/store/apps/details?id=com.google.android.webview";
-    static final String PRIVACY_URI = "https://email.faircode.eu/privacy/";
+    static final String PRIVACY_URI = "https://github.com/M66B/FairEmail/blob/master/PRIVACY.md";
+    static final String TUTORIALS_URI = "https://github.com/M66B/FairEmail/tree/master/tutorials#main";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
     static final String SUPPORT_URI = "https://contact.faircode.eu/";
     static final String TEST_URI = "https://play.google.com/apps/testing/" + BuildConfig.APPLICATION_ID;
     static final String BIMI_PRIVACY_URI = "https://datatracker.ietf.org/doc/html/draft-brotman-ietf-bimi-guidance-03#section-7.4";
+    static final String LT_PRIVACY_URI = "https://languagetool.org/legal/privacy";
     static final String ID_COMMAND_URI = "https://datatracker.ietf.org/doc/html/rfc2971#section-3.1";
     static final String AUTH_RESULTS_URI = "https://datatracker.ietf.org/doc/html/rfc7601";
     static final String FAVICON_PRIVACY_URI = "https://en.wikipedia.org/wiki/Favicon";
@@ -215,6 +222,25 @@ public class Helper {
                     "[\\p{L}0-9][\\p{L}0-9\\-\\_]{0,25}" +
                     ")+"
     );
+
+    // https://support.google.com/mail/answer/6590#zippy=%2Cmessages-that-have-attachments
+    static final List<String> DANGEROUS_EXTENSIONS = Collections.unmodifiableList(Arrays.asList(
+            "ade", "adp", "apk", "appx", "appxbundle",
+            "bat",
+            "cab", "chm", "cmd", "com", "cpl",
+            "dll", "dmg",
+            "ex", "ex_", "exe",
+            "hta",
+            "ins", "isp", "iso",
+            "jar", "js", "jse",
+            "lib", "lnk",
+            "mde", "msc", "msi", "msix", "msixbundle", "msp", "mst",
+            "nsh",
+            "pif", "ps1",
+            "scr", "sct", "shb", "sys",
+            "vb", "vbe", "vbs", "vxd",
+            "wsc", "wsf", "wsh"
+    ));
 
     private static final ExecutorService executor = getBackgroundExecutor(1, "helper");
 
@@ -412,14 +438,11 @@ public class Helper {
     }
 
     private static boolean hasCustomTabs(Context context, Uri uri, String pkg) {
-        String scheme = (uri == null ? null : uri.getScheme());
-        if (!"http".equals(scheme) && !"https".equals(scheme))
-            return false;
-
         PackageManager pm = context.getPackageManager();
         Intent view = new Intent(Intent.ACTION_VIEW, uri);
 
-        List<ResolveInfo> ris = pm.queryIntentActivities(view, 0); // action whitelisted
+        int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
+        List<ResolveInfo> ris = pm.queryIntentActivities(view, flags); // action whitelisted
         for (ResolveInfo info : ris) {
             Intent intent = new Intent();
             intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
@@ -491,17 +514,22 @@ public class Helper {
     }
 
     static Boolean isIgnoringOptimizations(Context context) {
-        if (isArc())
-            return true;
+        try {
+            if (isArc())
+                return true;
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                return null;
+
+            PowerManager pm = Helper.getSystemService(context, PowerManager.class);
+            if (pm == null)
+                return null;
+
+            return pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
+        } catch (Throwable ex) {
+            Log.e(ex);
             return null;
-
-        PowerManager pm = Helper.getSystemService(context, PowerManager.class);
-        if (pm == null)
-            return null;
-
-        return pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
+        }
     }
 
     static Integer getBatteryLevel(Context context) {
@@ -659,6 +687,95 @@ public class Helper {
         }
     }
 
+    static String getEventType(int type) {
+        switch (type) {
+            case UsageEvents.Event.ACTIVITY_PAUSED:
+                return "Activity/paused";
+            case UsageEvents.Event.ACTIVITY_RESUMED:
+                return "Activity/resumed";
+            case UsageEvents.Event.ACTIVITY_STOPPED:
+                return "Activity/stopped";
+            case UsageEvents.Event.CONFIGURATION_CHANGE:
+                return "Configuration/change";
+            case UsageEvents.Event.DEVICE_SHUTDOWN:
+                return "Device/shutdown";
+            case UsageEvents.Event.DEVICE_STARTUP:
+                return "Device/startup";
+            case UsageEvents.Event.FOREGROUND_SERVICE_START:
+                return "Foreground/start";
+            case UsageEvents.Event.FOREGROUND_SERVICE_STOP:
+                return "Foreground/stop";
+            case UsageEvents.Event.KEYGUARD_HIDDEN:
+                return "Keyguard/hidden";
+            case UsageEvents.Event.KEYGUARD_SHOWN:
+                return "Keyguard/shown";
+            case UsageEvents.Event.SCREEN_INTERACTIVE:
+                return "Screen/interactive";
+            case UsageEvents.Event.SCREEN_NON_INTERACTIVE:
+                return "Screen/non-interactive";
+            case UsageEvents.Event.SHORTCUT_INVOCATION:
+                return "Shortcut/invocation";
+            case UsageEvents.Event.STANDBY_BUCKET_CHANGED:
+                return "Bucket/changed";
+            case UsageEvents.Event.USER_INTERACTION:
+                return "User/interaction";
+            default:
+                return Integer.toString(type);
+        }
+    }
+
+    static String getExitReason(int reason) {
+        switch (reason) {
+            case ApplicationExitInfo.REASON_UNKNOWN:
+                return "Unknown";
+            case ApplicationExitInfo.REASON_EXIT_SELF:
+                return "ExitSelf";
+            case ApplicationExitInfo.REASON_SIGNALED:
+                return "Signaled";
+            case ApplicationExitInfo.REASON_LOW_MEMORY:
+                return "LowMemory";
+            case ApplicationExitInfo.REASON_CRASH:
+                return "Crash";
+            case ApplicationExitInfo.REASON_CRASH_NATIVE:
+                return "CrashNative";
+            case ApplicationExitInfo.REASON_ANR:
+                return "ANR";
+            case ApplicationExitInfo.REASON_INITIALIZATION_FAILURE:
+                return "InitializationFailure";
+            case ApplicationExitInfo.REASON_PERMISSION_CHANGE:
+                return "PermissionChange";
+            case ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE:
+                return "ExcessiveResourceUsage";
+            case ApplicationExitInfo.REASON_USER_REQUESTED:
+                return "UserRequested";
+            case ApplicationExitInfo.REASON_USER_STOPPED:
+                return "UserStopped";
+            case ApplicationExitInfo.REASON_DEPENDENCY_DIED:
+                return "DependencyDied";
+            case ApplicationExitInfo.REASON_OTHER:
+                return "Other";
+            default:
+                return Integer.toString(reason);
+        }
+    }
+
+    static String getInterruptionFilter(int filter) {
+        switch (filter) {
+            case NotificationManager.INTERRUPTION_FILTER_UNKNOWN:
+                return "Unknown";
+            case NotificationManager.INTERRUPTION_FILTER_ALL:
+                return "All";
+            case NotificationManager.INTERRUPTION_FILTER_PRIORITY:
+                return "Priority";
+            case NotificationManager.INTERRUPTION_FILTER_NONE:
+                return "None";
+            case NotificationManager.INTERRUPTION_FILTER_ALARMS:
+                return "Alarms";
+            default:
+                return Integer.toString(filter);
+        }
+    }
+
     static <T extends Object> T getSystemService(Context context, Class<T> type) {
         return ContextCompat.getSystemService(context.getApplicationContext(), type);
     }
@@ -758,7 +875,8 @@ public class Helper {
             List<ResolveInfo> ris = null;
             try {
                 PackageManager pm = context.getPackageManager();
-                ris = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
+                ris = pm.queryIntentActivities(intent, flags);
                 for (ResolveInfo ri : ris) {
                     Log.i("Target=" + ri);
                     context.grantUriPermission(ri.activityInfo.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -800,7 +918,7 @@ public class Helper {
 
     static void view(Context context, Intent intent) {
         Uri uri = intent.getData();
-        if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+        if (UriHelper.isHyperLink(uri))
             view(context, intent.getData(), false);
         else
             try {
@@ -826,23 +944,57 @@ public class Helper {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String open_with_pkg = prefs.getString("open_with_pkg", null);
+        boolean open_with_tabs = prefs.getBoolean("open_with_tabs", true);
 
-        boolean has = hasCustomTabs(context, uri, open_with_pkg);
+        Log.i("View=" + uri +
+                " browse=" + browse +
+                " task=" + task +
+                " pkg=" + open_with_pkg + ":" + open_with_tabs +
+                " isHyperLink=" + UriHelper.isHyperLink(uri) +
+                " isInstalled=" + isInstalled(context, open_with_pkg) +
+                " hasCustomTabs=" + hasCustomTabs(context, uri, open_with_pkg));
 
-        Log.i("View=" + uri + " browse=" + browse + " task=" + task + " pkg=" + open_with_pkg + " has=" + has);
+        if (UriHelper.isHyperLink(uri))
+            uri = UriHelper.fix(uri);
+        else {
+            open_with_pkg = null;
+            open_with_tabs = false;
+        }
 
-        if (browse || !has) {
+        if (!"chooser".equals(open_with_pkg)) {
+            if (open_with_pkg != null && !isInstalled(context, open_with_pkg))
+                open_with_pkg = null;
+
+            if (open_with_tabs && !hasCustomTabs(context, uri, open_with_pkg))
+                open_with_tabs = false;
+        }
+
+        Intent view = new Intent(Intent.ACTION_VIEW);
+        if (mimeType == null)
+            view.setData(uri);
+        else
+            view.setDataAndType(uri, mimeType);
+        if (task)
+            view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        if ("chooser".equals(open_with_pkg) && !open_with_tabs) {
             try {
-                Intent view = new Intent(Intent.ACTION_VIEW);
-                if (mimeType == null)
-                    view.setData(uri);
-                else
-                    view.setDataAndType(uri, mimeType);
-                if (task)
-                    view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                if (UriHelper.isHyperLink(uri) &&
-                        open_with_pkg != null && isInstalled(context, open_with_pkg))
+                EntityLog.log(context, "Launching chooser uri=" + uri +
+                        " intent=" + view +
+                        " extras=" + TextUtils.join(", ", Log.getExtras(view.getExtras())));
+                Intent chooser = Intent.createChooser(view, context.getString(R.string.title_select_app));
+                context.startActivity(chooser);
+            } catch (ActivityNotFoundException ex) {
+                Log.w(ex);
+                reportNoViewer(context, uri, ex);
+            }
+        } else if (browse || !open_with_tabs) {
+            try {
+                if (!"chooser".equals(open_with_pkg))
                     view.setPackage(open_with_pkg);
+                EntityLog.log(context, "Launching view uri=" + uri +
+                        " intent=" + view +
+                        " extras=" + TextUtils.join(", ", Log.getExtras(view.getExtras())));
                 context.startActivity(view);
             } catch (Throwable ex) {
                 reportNoViewer(context, uri, ex);
@@ -882,7 +1034,6 @@ public class Helper {
                     languages.add(slocale.getLanguage() + ";q=0.7");
             }
             languages.add("*;q=0.5");
-            Log.i("MMM " + TextUtils.join(", ", languages));
 
             Bundle headers = new Bundle();
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
@@ -890,11 +1041,13 @@ public class Helper {
 
             CustomTabsIntent customTabsIntent = builder.build();
             customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
-
-            if (open_with_pkg != null && isInstalled(context, open_with_pkg))
+            if (!"chooser".equals(open_with_pkg))
                 customTabsIntent.intent.setPackage(open_with_pkg);
 
             try {
+                EntityLog.log(context, "Launching tab uri=" + uri +
+                        " intent=" + customTabsIntent.intent +
+                        " extras=" + TextUtils.join(", ", Log.getExtras(customTabsIntent.intent.getExtras())));
                 customTabsIntent.launchUrl(context, uri);
             } catch (Throwable ex) {
                 reportNoViewer(context, uri, ex);
@@ -979,7 +1132,7 @@ public class Helper {
     }
 
     static Intent getIntentIssue(Context context, String reference) {
-        if (ActivityBilling.isPro(context)) {
+        if (ActivityBilling.isPro(context) && false) {
             String version = BuildConfig.VERSION_NAME + BuildConfig.REVISION + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
@@ -1043,6 +1196,18 @@ public class Helper {
         return 0;
     }
 
+    static long getUpdateTime(Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, 0);
+            if (pi != null)
+                return pi.lastUpdateTime;
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+        return 0;
+    }
+
     static int getTargetSdk(Context context) {
         if (targetSdk == null)
             try {
@@ -1099,6 +1264,44 @@ public class Helper {
             return false;
         }
 
+        /*
+            Brand: HUAWEI
+            Manufacturer: HUAWEI
+            Model: BAH2-L09
+            Product: BAH2-L09
+            Device: HWBAH2
+            Android: 8.0.0
+
+            java.lang.ArrayIndexOutOfBoundsException: length=3; index=-1
+            at android.text.DynamicLayout.getBlockIndex(DynamicLayout.java:646)
+            at android.widget.Editor.drawHardwareAccelerated(Editor.java:1744)
+            at android.widget.Editor.onDraw(Editor.java:1713)
+            at android.widget.TextView.onDraw(TextView.java:7051)
+            at eu.faircode.email.FixedEditText.onDraw(SourceFile:1)
+            at android.view.View.draw(View.java:19314)
+            at android.view.View.updateDisplayListIfDirty(View.java:18250)
+            at android.view.View.draw(View.java:19042)
+            at android.view.ViewGroup.drawChild(ViewGroup.java:4271)
+            at android.view.ViewGroup.dispatchDraw(ViewGroup.java:4054)
+            at androidx.constraintlayout.widget.ConstraintLayout.dispatchDraw(SourceFile:5)
+            at android.view.View.updateDisplayListIfDirty(View.java:18241)
+            at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4252)
+            at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4232)
+            at android.view.View.updateDisplayListIfDirty(View.java:18209)
+            at android.view.View.draw(View.java:19042)
+            at android.view.ViewGroup.drawChild(ViewGroup.java:4271)
+            at android.view.ViewGroup.dispatchDraw(ViewGroup.java:4054)
+            at androidx.constraintlayout.widget.ConstraintLayout.dispatchDraw(SourceFile:5)
+            at android.view.View.updateDisplayListIfDirty(View.java:18241)
+            at android.view.View.draw(View.java:19042)
+            at android.view.ViewGroup.drawChild(ViewGroup.java:4271)
+            at androidx.coordinatorlayout.widget.CoordinatorLayout.drawChild(SourceFile:17)
+            at android.view.ViewGroup.dispatchDraw(ViewGroup.java:4054)
+            at android.view.View.draw(View.java:19317)
+         */
+        if ("HWBAH2".equals(Build.DEVICE))
+            return false;
+
         return true;
     }
 
@@ -1120,6 +1323,16 @@ public class Helper {
 
     static boolean isXiaomi() {
         return "Xiaomi".equalsIgnoreCase(Build.MANUFACTURER);
+    }
+
+    static boolean isRedmiNote() {
+        // Manufacturer: Xiaomi
+        // Model: Redmi Note 8 Pro
+        // Model: Redmi Note 10S
+        return isXiaomi() &&
+                !TextUtils.isEmpty(Build.MODEL) &&
+                Build.MODEL.toLowerCase(Locale.ROOT).contains("redmi") &&
+                Build.MODEL.toLowerCase(Locale.ROOT).contains("note");
     }
 
     static boolean isMeizu() {
@@ -1233,6 +1446,9 @@ public class Helper {
     }
 
     static void reportNoViewer(Context context, @NonNull Intent intent, @Nullable Throwable ex) {
+        if (context == null)
+            return;
+
         if (ex != null) {
             if (ex instanceof ActivityNotFoundException && BuildConfig.PLAY_STORE_RELEASE)
                 Log.w(ex);
@@ -1890,11 +2106,28 @@ public class Helper {
         return new ActionMode.Callback() {
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                try {
+                    int order = 1000;
+                    menu.add(Menu.CATEGORY_SECONDARY, R.string.title_select_block, order++,
+                            view.getContext().getString(R.string.title_select_block));
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
                 return true;
             }
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                try {
+                    Pair<Integer, Integer> block = StyleHelper.getParagraph(view, true);
+                    boolean ablock = (block != null &&
+                            block.first == view.getSelectionStart() &&
+                            block.second == view.getSelectionEnd());
+                    menu.findItem(R.string.title_select_block).setVisible(!ablock);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+
                 for (int i = 0; i < menu.size(); i++) {
                     MenuItem item = menu.getItem(i);
                     Intent intent = item.getIntent();
@@ -1955,6 +2188,18 @@ public class Helper {
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                if (item.getGroupId() == Menu.CATEGORY_SECONDARY)
+                    try {
+                        int id = item.getItemId();
+                        if (id == R.string.title_select_block) {
+                            Pair<Integer, Integer> block = StyleHelper.getParagraph(view, true);
+                            if (block != null)
+                                android.text.Selection.setSelection((Spannable) view.getText(), block.first, block.second);
+                            return true;
+                        }
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
                 return false;
             }
 
@@ -1968,7 +2213,43 @@ public class Helper {
         return (c == '.' /* Latin */ || c == '。' /* Chinese */);
     }
 
+    static String trim(String value, String chars) {
+        if (value == null)
+            return null;
+
+        for (Character kar : chars.toCharArray()) {
+            String k = kar.toString();
+            while (value.startsWith(k))
+                value = value.substring(1);
+            while (value.endsWith(k))
+                value = value.substring(0, value.length() - 1);
+        }
+
+        return value;
+    }
+
     // Files
+
+    static {
+        System.loadLibrary("fairemail");
+    }
+
+    public static native void sync();
+
+    private static final Map<File, Boolean> exists = new HashMap<>();
+
+    static File ensureExists(File dir) {
+        synchronized (exists) {
+            if (exists.containsKey(dir))
+                return dir;
+            exists.put(dir, true);
+        }
+
+        if (!dir.exists() && !dir.mkdirs())
+            throw new IllegalArgumentException("Failed to create=" + dir);
+
+        return dir;
+    }
 
     static String sanitizeFilename(String name) {
         if (name == null)
@@ -2118,6 +2399,18 @@ public class Helper {
         return size;
     }
 
+    static List<File> listFiles(File dir) {
+        List<File> result = new ArrayList<>();
+        File[] files = dir.listFiles();
+        if (files != null)
+            for (File file : files)
+                if (file.isDirectory())
+                    result.addAll(listFiles(file));
+                else
+                    result.add(file);
+        return result;
+    }
+
     static long getAvailableStorageSpace() {
         StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
         return stats.getAvailableBlocksLong() * stats.getBlockSizeLong();
@@ -2163,53 +2456,6 @@ public class Helper {
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.fromFile(initial));
     }
 
-    static HttpURLConnection openUrlRedirect(Context context, String source, int timeout) throws IOException {
-        int redirects = 0;
-        URL url = new URL(source);
-        while (true) {
-            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.setDoOutput(false);
-            urlConnection.setReadTimeout(timeout);
-            urlConnection.setConnectTimeout(timeout);
-            urlConnection.setInstanceFollowRedirects(true);
-            ConnectionHelper.setUserAgent(context, urlConnection);
-            urlConnection.connect();
-
-            try {
-                int status = urlConnection.getResponseCode();
-
-                if (status == HttpURLConnection.HTTP_MOVED_PERM ||
-                        status == HttpURLConnection.HTTP_MOVED_TEMP ||
-                        status == HttpURLConnection.HTTP_SEE_OTHER ||
-                        status == 307 /* Temporary redirect */ ||
-                        status == 308 /* Permanent redirect */) {
-                    if (++redirects > MAX_REDIRECTS)
-                        throw new IOException("Too many redirects");
-
-                    String header = urlConnection.getHeaderField("Location");
-                    if (header == null)
-                        throw new IOException("Location header missing");
-
-                    String location = URLDecoder.decode(header, StandardCharsets.UTF_8.name());
-                    url = new URL(url, location);
-                    Log.i("Redirect #" + redirects + " to " + url);
-
-                    urlConnection.disconnect();
-                    continue;
-                }
-
-                if (status != HttpURLConnection.HTTP_OK)
-                    throw new IOException("Error " + status + ": " + urlConnection.getResponseMessage());
-
-                return urlConnection;
-            } catch (IOException ex) {
-                urlConnection.disconnect();
-                throw ex;
-            }
-        }
-    }
-
     static class ByteArrayInOutStream extends ByteArrayOutputStream {
         public ByteArrayInOutStream() {
             super();
@@ -2224,6 +2470,10 @@ public class Helper {
             this.buf = null;
             return in;
         }
+    }
+
+    static boolean isUiThread() {
+        return (Looper.myLooper() == Looper.getMainLooper());
     }
 
     // Cryptography
@@ -2247,6 +2497,17 @@ public class Helper {
     static String sha(String digest, byte[] data) throws NoSuchAlgorithmException {
         byte[] bytes = MessageDigest.getInstance(digest).digest(data);
         return hex(bytes);
+    }
+
+    static String getHash(InputStream is, String algorithm) throws NoSuchAlgorithmException, IOException {
+        MessageDigest digest = MessageDigest.getInstance(algorithm);
+
+        int count;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        while ((count = is.read(buffer)) != -1)
+            digest.update(buffer, 0, count);
+
+        return hex(digest.digest());
     }
 
     static String hex(byte[] bytes) {
@@ -2725,6 +2986,20 @@ public class Helper {
         List<List<T>> result = new ArrayList<>(list.size() / size);
         for (int i = 0; i < list.size(); i += size)
             result.add(list.subList(i, i + size < list.size() ? i + size : list.size()));
+        return result;
+    }
+
+    static int[] toIntArray(List<Integer> list) {
+        int[] result = new int[list.size()];
+        for (int i = 0; i < list.size(); i++)
+            result[i] = list.get(i);
+        return result;
+    }
+
+    static List<Integer> fromIntArray(int[] array) {
+        List<Integer> result = new ArrayList<>();
+        for (int i = 0; i < array.length; i++)
+            result.add(array[i]);
         return result;
     }
 

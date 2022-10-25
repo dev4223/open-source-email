@@ -34,6 +34,7 @@ import android.os.Parcelable;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
 import android.util.AttributeSet;
@@ -105,18 +106,80 @@ public class EditTextCompose extends FixedEditText {
         boolean undo_manager = prefs.getBoolean("undo_manager", false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            setCustomSelectionActionModeCallback(new ActionMode.Callback() {
+                @Override
+                public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                    try {
+                        int order = 1000;
+                        menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_brackets, order++, context.getString(R.string.title_insert_brackets));
+                        menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_quotes, order++, context.getString(R.string.title_insert_quotes));
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                    int start = getSelectionStart();
+                    int end = getSelectionEnd();
+                    boolean selection = (start >= 0 && start < end);
+                    menu.findItem(R.string.title_insert_brackets).setVisible(selection);
+                    menu.findItem(R.string.title_insert_quotes).setVisible(selection);
+                    return false;
+                }
+
+                @Override
+                public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                    if (item.getGroupId() == Menu.CATEGORY_SECONDARY) {
+                        int id = item.getItemId();
+                        if (id == R.string.title_insert_brackets)
+                            return surround("(", ")");
+                        else if (id == R.string.title_insert_quotes)
+                            return surround("\"", "\"");
+                    }
+                    return false;
+                }
+
+                @Override
+                public void onDestroyActionMode(ActionMode mode) {
+                    // Do nothing
+                }
+
+                private boolean surround(String before, String after) {
+                    Editable edit = getText();
+                    int start = getSelectionStart();
+                    int end = getSelectionEnd();
+                    boolean selection = (edit != null && start >= 0 && start < end);
+                    if (selection) {
+                        int s = start - before.length();
+                        int e = end + after.length();
+                        if (s >= 0 && e < length() &&
+                                edit.subSequence(s, start).toString().equals(before) &&
+                                edit.subSequence(end, e).toString().equals(after)) {
+                            edit.delete(end, e);
+                            edit.delete(s, start);
+                        } else {
+                            edit.insert(end, after);
+                            edit.insert(start, before);
+                        }
+                    }
+                    return selection;
+                }
+            });
+
             setCustomInsertionActionModeCallback(new ActionMode.Callback() {
                 @Override
                 public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                     try {
                         int order = 1000;
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                            menu.add(Menu.CATEGORY_SECONDARY, android.R.id.pasteAsPlainText, order++, getTitle(R.string.title_paste_plain));
                         if (undo_manager && can(android.R.id.undo))
                             menu.add(Menu.CATEGORY_SECONDARY, R.string.title_undo, order++, getTitle(R.string.title_undo));
                         if (undo_manager && can(android.R.id.redo))
                             menu.add(Menu.CATEGORY_SECONDARY, R.string.title_redo, order++, getTitle(R.string.title_redo));
                         menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_line, order++, context.getString(R.string.title_insert_line));
-                        if (BuildConfig.DEBUG)
-                            menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_arrow, order++, context.getString(R.string.title_insert_arrow));
                         if (snippets != null)
                             for (EntityAnswer snippet : snippets) {
                                 menu.add(Menu.CATEGORY_SECONDARY, order, order, snippet.name).
@@ -144,14 +207,14 @@ public class EditTextCompose extends FixedEditText {
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                     if (item.getGroupId() == Menu.CATEGORY_SECONDARY) {
                         int id = item.getItemId();
-                        if (id == R.string.title_undo)
+                        if (id == android.R.id.pasteAsPlainText)
+                            return insertPlain();
+                        else if (id == R.string.title_undo)
                             return EditTextCompose.super.onTextContextMenuItem(android.R.id.undo);
                         else if (id == R.string.title_redo)
                             return EditTextCompose.super.onTextContextMenuItem(android.R.id.redo);
                         else if (id == R.string.title_insert_line)
                             return insertLine();
-                        else if (id == R.string.title_insert_arrow)
-                            return insertArrow();
                         else {
                             Intent intent = item.getIntent();
                             if (intent == null)
@@ -165,6 +228,31 @@ public class EditTextCompose extends FixedEditText {
                 @Override
                 public void onDestroyActionMode(ActionMode mode) {
                     // Do nothing
+                }
+
+                private boolean insertPlain() {
+                    ClipboardManager cbm = Helper.getSystemService(context, ClipboardManager.class);
+                    if (!cbm.hasPrimaryClip())
+                        return true;
+
+                    ClipData clip = cbm.getPrimaryClip();
+                    if (clip == null || clip.getItemCount() < 1)
+                        return true;
+
+                    ClipData.Item item = clip.getItemAt(0);
+                    if (item == null)
+                        return true;
+
+                    CharSequence text = item.getText();
+                    if (TextUtils.isEmpty(text))
+                        return true;
+
+                    int start = getSelectionStart();
+                    if (start < 0)
+                        start = 0;
+                    getText().insert(start, text.toString());
+
+                    return true;
                 }
 
                 private boolean insertLine() {
@@ -201,19 +289,6 @@ public class EditTextCompose extends FixedEditText {
                     }
                 }
 
-                private boolean insertArrow() {
-                    int start = getSelectionStart();
-                    if (start < 0)
-                        return false;
-
-                    Editable edit = getText();
-                    if (edit == null)
-                        return false;
-
-                    edit.insert(start, " \u27f6 ");
-                    return true;
-                }
-
                 private boolean insertSnippet(long id) {
                     if (snippets == null)
                         return false;
@@ -229,7 +304,7 @@ public class EditTextCompose extends FixedEditText {
 
                     for (EntityAnswer snippet : snippets)
                         if (snippet.id.equals(id)) {
-                            String html = snippet.getHtml(to);
+                            String html = snippet.getHtml(context, to);
 
                             executor.submit(new Runnable() {
                                 @Override

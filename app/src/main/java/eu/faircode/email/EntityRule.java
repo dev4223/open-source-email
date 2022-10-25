@@ -56,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
@@ -82,6 +83,8 @@ public class EntityRule {
 
     @PrimaryKey(autoGenerate = true)
     public Long id;
+    @NonNull
+    public String uuid = UUID.randomUUID().toString();
     @NonNull
     public Long folder;
     @NonNull
@@ -125,7 +128,7 @@ public class EntityRule {
 
     private static final long SEND_DELAY = 5000L; // milliseconds
 
-    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "rule");
+    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "rule");
 
     static boolean needsHeaders(EntityMessage message, List<EntityRule> rules) {
         return needs(rules, "header");
@@ -303,6 +306,18 @@ public class EntityRule {
                     } else if ("$automatic".equals(keyword)) {
                         if (!Boolean.TRUE.equals(message.auto_submitted))
                             return false;
+                    } else if ("$lowpriority".equals(keyword)) {
+                        if (!EntityMessage.PRIORITIY_LOW.equals(message.priority))
+                            return false;
+                    } else if ("$highpriority".equals(keyword)) {
+                        if (!EntityMessage.PRIORITIY_HIGH.equals(message.priority))
+                            return false;
+                    } else if ("$signed".equals(keyword)) {
+                        if (!message.isSigned())
+                            return false;
+                    } else if ("$encrypted".equals(keyword)) {
+                        if (!message.isEncrypted())
+                            return false;
                     } else {
                         List<String> keywords = new ArrayList<>();
                         keywords.addAll(Arrays.asList(message.keywords));
@@ -327,7 +342,7 @@ public class EntityRule {
                             throw new IllegalArgumentException(context.getString(R.string.title_rule_no_headers));
 
                         ByteArrayInputStream bis = new ByteArrayInputStream(message.headers.getBytes());
-                        headers = Collections.list(new InternetHeaders(bis).getAllHeaders());
+                        headers = Collections.list(new InternetHeaders(bis, true).getAllHeaders());
                     }
 
                     boolean matches = false;
@@ -344,10 +359,7 @@ public class EntityRule {
             }
 
             // Body
-            JSONObject jbody = null;
-            if (message.encrypt == null ||
-                    EntityMessage.ENCRYPT_NONE.equals(message.encrypt))
-                jbody = jcondition.optJSONObject("body");
+            JSONObject jbody = jcondition.optJSONObject("body");
             if (jbody != null) {
                 String value = jbody.getString("value");
                 boolean regex = jbody.getBoolean("regex");
@@ -366,7 +378,10 @@ public class EntityRule {
                 }
 
                 if (html == null)
-                    throw new IllegalArgumentException(context.getString(R.string.title_rule_no_body));
+                    if (message.encrypt == null || EntityMessage.ENCRYPT_NONE.equals(message.encrypt))
+                        throw new IllegalArgumentException(context.getString(R.string.title_rule_no_body));
+                    else
+                        return false;
 
                 Document d = JsoupEx.parse(html);
                 if (skip_quotes)
@@ -441,7 +456,7 @@ public class EntityRule {
 
     boolean execute(Context context, EntityMessage message) throws JSONException {
         boolean executed = _execute(context, message);
-        if (id != null && executed) {
+        if (this.id != null && executed) {
             DB db = DB.getInstance(context);
             db.rule().applyRule(id, new Date().getTime());
         }
@@ -451,7 +466,7 @@ public class EntityRule {
     private boolean _execute(Context context, EntityMessage message) throws JSONException, IllegalArgumentException {
         JSONObject jaction = new JSONObject(action);
         int type = jaction.getInt("type");
-        Log.i("Executing rule=" + type + ":" + name + " message=" + message.id);
+        EntityLog.log(context, EntityLog.Type.Rules, message, "Executing rule=" + type + ":" + name);
 
         switch (type) {
             case TYPE_NOOP:
@@ -600,18 +615,73 @@ public class EntityRule {
 
     private boolean onActionMove(Context context, EntityMessage message, JSONObject jargs) {
         long target = jargs.optLong("target", -1);
+        String create = jargs.optString("create");
         boolean seen = jargs.optBoolean("seen");
         boolean thread = jargs.optBoolean("thread");
 
         DB db = DB.getInstance(context);
+
         EntityFolder folder = db.folder().getFolder(target);
         if (folder == null)
             throw new IllegalArgumentException("Rule move to folder not found name=" + name);
 
+        if (!TextUtils.isEmpty(create)) {
+            Calendar calendar = Calendar.getInstance();
+            String year = String.format(Locale.ROOT, "%04d", calendar.get(Calendar.YEAR));
+            String month = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.MONTH) + 1);
+            String week = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.WEEK_OF_YEAR));
+
+            create = create.replace("$year$", year);
+            create = create.replace("$month$", month);
+            create = create.replace("$week$", week);
+
+            String domain = null;
+            if (message.from != null &&
+                    message.from.length > 0 &&
+                    message.from[0] instanceof InternetAddress) {
+                InternetAddress from = (InternetAddress) message.from[0];
+                domain = UriHelper.getEmailDomain(from.getAddress());
+            }
+            create = create.replace("$domain$", domain == null ? "" : domain);
+
+            String name = folder.name + (folder.separator == null ? "" : folder.separator) + create;
+            EntityFolder created = db.folder().getFolderByName(folder.account, name);
+            if (created == null) {
+                created = new EntityFolder();
+                created.tbc = true;
+                created.account = folder.account;
+                created.namespace = folder.namespace;
+                created.separator = folder.separator;
+                created.name = name;
+                created.type = EntityFolder.USER;
+                created.subscribed = true;
+                created.setProperties();
+
+                EntityAccount account = db.account().getAccount(folder.account);
+                created.setSpecials(account);
+
+                created.synchronize = folder.synchronize;
+                created.poll = folder.poll;
+                created.poll_factor = folder.poll_factor;
+                created.download = folder.download;
+                created.auto_classify_source = folder.auto_classify_source;
+                created.auto_classify_target = folder.auto_classify_target;
+                created.sync_days = folder.sync_days;
+                created.keep_days = folder.keep_days;
+                created.unified = folder.unified;
+                created.navigation = folder.navigation;
+                created.notify = folder.notify;
+
+                created.id = db.folder().insertFolder(created);
+            }
+            target = created.id;
+        }
+
         List<EntityMessage> messages = db.message().getMessagesByThread(
                 message.account, message.thread, thread ? null : message.id, message.folder);
         for (EntityMessage threaded : messages)
-            EntityOperation.queue(context, threaded, EntityOperation.MOVE, target, seen, null, true);
+            EntityOperation.queue(context, threaded, EntityOperation.MOVE, target,
+                    seen, null, true, false, !TextUtils.isEmpty(create));
 
         message.ui_hide = true;
 
@@ -674,9 +744,9 @@ public class EntityRule {
             EntityOperation.queue(context, message, EntityOperation.RAW);
         }
 
-        if (!complete) {
+        if (!complete && this.id != null) {
             EntityOperation.queue(context, message, EntityOperation.RULE, this.id);
-            return false;
+            return true;
         }
 
         executor.submit(new Runnable() {
@@ -802,7 +872,7 @@ public class EntityRule {
         if (resend)
             body = Helper.readText(message.getFile(context));
         else {
-            body = answer.getHtml(message.from);
+            body = answer.getHtml(context, message.from);
 
             if (original_text) {
                 Document msg = JsoupEx.parse(body);
@@ -893,7 +963,7 @@ public class EntityRule {
         if (message.ui_seen)
             return false;
 
-        if (!message.content) {
+        if (!message.content && this.id != null) {
             EntityOperation.queue(context, message, EntityOperation.BODY);
             EntityOperation.queue(context, message, EntityOperation.RULE, this.id);
             return true;
@@ -903,7 +973,7 @@ public class EntityRule {
             @Override
             public void run() {
                 try {
-                    if (MediaPlayerHelper.isInCall(context))
+                    if (MediaPlayerHelper.isInCall(context) || MediaPlayerHelper.isDnd(context))
                         return;
                     speak(context, EntityRule.this, message);
                 } catch (Throwable ex) {
@@ -986,7 +1056,7 @@ public class EntityRule {
         Integer color = (jargs.has("color") && !jargs.isNull("color")
                 ? jargs.getInt("color") : null);
 
-        EntityOperation.queue(context, message, EntityOperation.FLAG, true, color);
+        EntityOperation.queue(context, message, EntityOperation.FLAG, true, color, false);
 
         message.ui_flagged = true;
         message.color = color;
@@ -1161,7 +1231,8 @@ public class EntityRule {
     public boolean equals(Object obj) {
         if (obj instanceof EntityRule) {
             EntityRule other = (EntityRule) obj;
-            return this.folder.equals(other.folder) &&
+            return Objects.equals(this.uuid, other.uuid) &&
+                    this.folder.equals(other.folder) &&
                     this.name.equals(other.name) &&
                     this.order == other.order &&
                     this.enabled == other.enabled &&
@@ -1212,6 +1283,7 @@ public class EntityRule {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("id", id);
+        json.put("uuid", uuid);
         json.put("name", name);
         json.put("order", order);
         json.put("enabled", enabled);
@@ -1226,6 +1298,8 @@ public class EntityRule {
     public static EntityRule fromJSON(JSONObject json) throws JSONException {
         EntityRule rule = new EntityRule();
         // id
+        if (json.has("uuid"))
+            rule.uuid = json.getString("uuid");
         rule.name = json.getString("name");
         rule.order = json.getInt("order");
         rule.enabled = json.getBoolean("enabled");

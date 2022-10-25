@@ -42,7 +42,7 @@ public class CharsetHelper {
             "US-ASCII",
             "ISO-8859-1", "ISO-8859-2", "ISO-8859-3", "ISO-8859-7",
             "windows-1250", "windows-1251", "windows-1252", "windows-1255", "windows-1256", "windows-1257",
-            "UTF-7", "UTF-8"
+            "UTF-8"
     ));
     private static final List<String> LESS_COMMON = Collections.unmodifiableList(Arrays.asList(
             "GBK", "GB2312", "HZ-GB-2312",
@@ -50,6 +50,7 @@ public class CharsetHelper {
             "Big5", "BIG5-CP950",
             "ISO-2022-JP", "Shift_JIS",
             "cp852",
+            "KOI8-R",
             "x-binaryenc"
     ));
     private static final int MIN_W1252 = 10;
@@ -76,24 +77,23 @@ public class CharsetHelper {
     }
 
     static boolean isUTF8(byte[] octets) {
-        CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT);
-        try {
-            utf8Decoder.decode(ByteBuffer.wrap(octets));
-            return true;
-        } catch (CharacterCodingException ex) {
-            Log.w(ex);
-            return false;
-        }
+        return isValid(octets, StandardCharsets.UTF_8);
     }
 
     static boolean isUTF16(byte[] octets) {
-        CharsetDecoder utf8Decoder = StandardCharsets.UTF_16.newDecoder()
+        return isValid(octets, StandardCharsets.UTF_16);
+    }
+
+    static Boolean isValid(byte[] octets, String charset) {
+        return isValid(octets, Charset.forName(charset));
+    }
+
+    static boolean isValid(byte[] octets, Charset charset) {
+        CharsetDecoder decoder = charset.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT);
         try {
-            utf8Decoder.decode(ByteBuffer.wrap(octets));
+            decoder.decode(ByteBuffer.wrap(octets));
             return true;
         } catch (CharacterCodingException ex) {
             Log.w(ex);
@@ -244,6 +244,8 @@ public class CharsetHelper {
                 return null;
             } else if (COMMON.contains(detected.charset) || LESS_COMMON.contains(detected.charset))
                 Log.w("compact_enc_det result=" + detected);
+            else if ("UTF-7".equals(detected.charset))
+                return null;
             else if ("GB18030".equals(detected.charset)) {
                 boolean chinese = Locale.getDefault().getLanguage().equals(CHINESE);
                 // https://github.com/google/compact_enc_det/issues/8
