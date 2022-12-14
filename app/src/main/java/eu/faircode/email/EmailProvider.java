@@ -67,7 +67,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
@@ -88,6 +87,7 @@ public class EmailProvider implements Parcelable {
     public boolean partial;
     public boolean useip;
     public boolean appPassword;
+    public String maxtls;
     public String link;
     public Server imap = new Server();
     public Server smtp = new Server();
@@ -102,8 +102,6 @@ public class EmailProvider implements Parcelable {
     enum UserType {LOCAL, EMAIL, VALUE}
 
     private static List<EmailProvider> imported;
-    private static final ExecutorService executor =
-            Helper.getBackgroundExecutor(0, "provider");
 
     private static final int SCAN_TIMEOUT = 15 * 1000; // milliseconds
     private static final int ISPDB_TIMEOUT = 15 * 1000; // milliseconds
@@ -116,7 +114,11 @@ public class EmailProvider implements Parcelable {
             "tutamail.com", // tutanota
             "tuta.io", // tutanota
             "keemail.me", // tutanota
-            "ctemplar.com"
+            "ctemplar.com",
+            "cyberfear.com",
+            "skiff.com",
+            "tildamail.com",
+            "criptext.com"
     ));
 
     private EmailProvider() {
@@ -127,7 +129,7 @@ public class EmailProvider implements Parcelable {
     }
 
     static void init(Context context) {
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -177,7 +179,7 @@ public class EmailProvider implements Parcelable {
         return result;
     }
 
-    static List<EmailProvider> loadProfiles(Context context) {
+    private static List<EmailProvider> loadProfiles(Context context) {
         List<EmailProvider> result = null;
 
         try {
@@ -241,6 +243,7 @@ public class EmailProvider implements Parcelable {
                         provider.partial = getAttributeBooleanValue(xml, "partial", true);
                         provider.useip = getAttributeBooleanValue(xml, "useip", true);
                         provider.appPassword = getAttributeBooleanValue(xml, "appPassword", false);
+                        provider.maxtls = xml.getAttributeValue(null, "maxtls");
                         provider.link = xml.getAttributeValue(null, "link");
 
                         String documentation = xml.getAttributeValue(null, "documentation");
@@ -281,7 +284,6 @@ public class EmailProvider implements Parcelable {
                         provider.oauth.askAccount = getAttributeBooleanValue(xml, "askAccount", false);
                         provider.oauth.clientId = xml.getAttributeValue(null, "clientId");
                         provider.oauth.clientSecret = xml.getAttributeValue(null, "clientSecret");
-                        provider.oauth.pcke = getAttributeBooleanValue(xml, "pcke", false);
                         provider.oauth.scopes = xml.getAttributeValue(null, "scopes").split(",");
                         provider.oauth.authorizationEndpoint = xml.getAttributeValue(null, "authorizationEndpoint");
                         provider.oauth.tokenEndpoint = xml.getAttributeValue(null, "tokenEndpoint");
@@ -298,7 +300,7 @@ public class EmailProvider implements Parcelable {
                     } else
                         throw new IllegalAccessException(name);
                 } else if (eventType == XmlPullParser.END_TAG) {
-                    if ("provider".equals(xml.getName()) && provider.enabled) {
+                    if ("provider".equals(xml.getName())) {
                         result.add(provider);
                         provider = null;
                     }
@@ -313,12 +315,12 @@ public class EmailProvider implements Parcelable {
         return result;
     }
 
-    static boolean getAttributeBooleanValue(XmlPullParser parser, String name, boolean defaultValue) {
+    private static boolean getAttributeBooleanValue(XmlPullParser parser, String name, boolean defaultValue) {
         String value = parser.getAttributeValue(null, name);
         return (value == null ? defaultValue : Boolean.parseBoolean(value));
     }
 
-    static int getAttributeIntValue(XmlPullParser parser, String name, int defaultValue) {
+    private static int getAttributeIntValue(XmlPullParser parser, String name, int defaultValue) {
         String value = parser.getAttributeValue(null, name);
         return (value == null ? defaultValue : Integer.parseInt(value));
     }
@@ -330,6 +332,27 @@ public class EmailProvider implements Parcelable {
                     return provider;
 
         throw new FileNotFoundException("provider id=" + id);
+    }
+
+    static EmailProvider getProviderByHost(Context context, @NonNull String host) {
+        for (EmailProvider provider : loadProfiles(context)) {
+            if (provider.imap != null && host.equals(provider.imap.host))
+                return provider;
+            if (provider.pop != null && host.equals(provider.pop.host))
+                return provider;
+            if (provider.smtp != null && host.equals(provider.smtp.host))
+                return provider;
+        }
+
+        return null;
+    }
+
+    static List<EmailProvider> getProviders(Context context) {
+        List<EmailProvider> result = new ArrayList<>();
+        for (EmailProvider provider : loadProfiles(context))
+            if (provider.enabled)
+                result.add(provider);
+        return result;
     }
 
     @NonNull
@@ -1076,7 +1099,7 @@ public class EmailProvider implements Parcelable {
 
         private Future<Boolean> getReachable(Context context) {
             Log.i("Scanning " + this);
-            return executor.submit(new Callable<Boolean>() {
+            return Helper.getParallelExecutor().submit(new Callable<Boolean>() {
                 // Returns:
                 //   false: closed
                 //   true: listening
@@ -1306,7 +1329,6 @@ public class EmailProvider implements Parcelable {
         boolean askAccount;
         String clientId;
         String clientSecret;
-        boolean pcke;
         String[] scopes;
         String authorizationEndpoint;
         String tokenEndpoint;

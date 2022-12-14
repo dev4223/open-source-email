@@ -68,7 +68,6 @@ import net.openid.appauth.AuthorizationService;
 import net.openid.appauth.AuthorizationServiceConfiguration;
 import net.openid.appauth.ClientAuthentication;
 import net.openid.appauth.ClientSecretPost;
-import net.openid.appauth.CodeVerifierUtil;
 import net.openid.appauth.GrantTypeValues;
 import net.openid.appauth.NoClientAuthentication;
 import net.openid.appauth.ResponseTypeValues;
@@ -292,6 +291,7 @@ public class FragmentOAuth extends FragmentBase {
         try {
             switch (requestCode) {
                 case ActivitySetup.REQUEST_OAUTH:
+                    Helper.setAuthenticated(getContext());
                     if (resultCode == RESULT_OK && data != null)
                         onHandleOAuth(data);
                     else
@@ -459,9 +459,6 @@ public class FragmentOAuth extends FragmentBase {
                 else
                     authRequestBuilder.setLoginHint(address);
             }
-
-            if (provider.oauth.pcke)
-                authRequestBuilder.setCodeVerifier(CodeVerifierUtil.generateRandomCodeVerifier());
 
             if (!TextUtils.isEmpty(provider.oauth.prompt))
                 authRequestBuilder.setPrompt(provider.oauth.prompt);
@@ -1009,7 +1006,7 @@ public class FragmentOAuth extends FragmentBase {
 
         grpError.setVisibility(View.VISIBLE);
 
-        if ("office365".equals(id) || "outlook".equals(id)) {
+        if (EntityAccount.isOutlook(id)) {
             if (ex instanceof AuthenticationFailedException)
                 tvOfficeAuthHint.setVisibility(View.VISIBLE);
         }

@@ -728,6 +728,7 @@
     <string name="title_advanced_cleanup_hint">這將刪除所有臨時檔案</string>
     <string name="title_advanced_never_favorite">永不加入最愛</string>
     <string name="title_advanced_edit_name">編輯名字</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">資料夾名稱</string>
     <string name="title_advanced_swipe_actions">設定滑動動作</string>
     <string name="title_advanced_swipe_actions_hint">這將針對所有 IMAP 帳戶設定左右滑動動作</string>
     <string name="title_advanced_swipe_sensitivity">左/右滑動靈敏度</string>
@@ -756,6 +757,7 @@
     <string name="title_account_interval_hint">推送訊息用連線的刷新頻率，或新訊息的檢查頻率</string>
     <string name="title_account_partial_fetch_hint">應僅在出現訊息為空或附件損壞的情況時才停用此選項</string>
     <string name="title_color">顏色</string>
+    <string name="title_calendar">日曆</string>
     <string name="title_background">背景</string>
     <string name="title_transparent">透明</string>
     <string name="title_account_ondemand">手動同步</string>
@@ -1007,7 +1009,7 @@
     <string name="title_auto_confirm">%1秒後自動拒絕</string>
     <string name="title_buttons">選擇欲新增的按鈕</string>
     <string name="title_buttons_hint">實際可用動作取決於帳戶類型和配置</string>
-    <string name="title_button_search">在訊息中搜尋</string>
+    <string name="title_button_search_similar">搜尋相似訊息</string>
     <string name="title_button_search_text">在訊息本文中搜尋</string>
     <string name="title_configure_buttons">配置按鈕 &#8230;</string>
     <string name="title_quick_actions">選擇操作</string>
@@ -1253,8 +1255,6 @@
     <string name="title_resync">重新同步</string>
     <string name="title_charset">字元編碼</string>
     <string name="title_charset_auto">自動</string>
-    <string name="title_alternative_text">顯示純文字</string>
-    <string name="title_alternative_html">顯示 HTML</string>
     <string name="title_no_openpgp">未發現 OpenKeychain</string>
     <string name="title_user_interaction">正在轉移至 OpenKeychain</string>
     <string name="title_signed_data">驗證簽名以顯示訊息文字</string>
@@ -1701,19 +1701,21 @@
     <string name="title_widget_refresh">顯示重整訊息按鈕</string>
     <string name="title_widget_compose">顯示撰寫新訊息按鈕</string>
     <string name="title_widget_background">背景顏色</string>
-    <string name="title_accessibility_collapsed">已摺疊</string>
-    <string name="title_accessibility_expanded">已展開</string>
-    <string name="title_accessibility_seen">已讀取</string>
-    <string name="title_accessibility_unseen">未讀取</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="other">%1$d 則訊息</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">重要</string>
     <string name="title_keyword_label2">公司</string>
     <string name="title_keyword_label3">個人</string>
     <string name="title_keyword_label4">待辦</string>
     <string name="title_keyword_label5">過後</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="other">%1$d 則訊息</item>
+    </plurals>
+    <string name="title_accessibility_accounts">帳戶</string>
+    <string name="title_accessibility_folders">資料夾</string>
+    <string name="title_accessibility_collapsed">已摺疊</string>
+    <string name="title_accessibility_expanded">已展開</string>
+    <string name="title_accessibility_seen">已讀取</string>
+    <string name="title_accessibility_unseen">未讀取</string>
     <string name="title_accessibility_flagged">已加星號</string>
     <string name="title_accessibility_unflagged">未加星號</string>
     <string name="title_accessibility_collapse">摺疊</string>

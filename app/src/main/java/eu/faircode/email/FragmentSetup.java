@@ -50,6 +50,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -72,7 +74,7 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FragmentSetup extends FragmentBase {
+public class FragmentSetup extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ViewGroup view;
 
     private TextView tvWelcome;
@@ -100,6 +102,7 @@ public class FragmentSetup extends FragmentBase {
     private TextView tvFree;
     private TextView tvNoComposable;
 
+    private TextView tvCalendarPermissions;
     private TextView tvNotificationPermissions;
     private TextView tvPermissionsDone;
     private Button btnPermissions;
@@ -114,6 +117,7 @@ public class FragmentSetup extends FragmentBase {
     private Button btnBackgroundRestricted;
     private Button btnDataSaver;
     private TextView tvStamina;
+    private CheckBox cbAlways;
 
     private TextView tvBatteryUsage;
     private TextView tvSyncStopped;
@@ -124,6 +128,7 @@ public class FragmentSetup extends FragmentBase {
     private Button btnSignature;
     private Button btnReorderAccounts;
     private Button btnReorderFolders;
+    private Button btnPassword;
     private Button btnDelete;
     private Button btnApp;
     private Button btnMore;
@@ -145,6 +150,8 @@ public class FragmentSetup extends FragmentBase {
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         setSubtitle(R.string.title_setup);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         if (savedInstanceState != null)
             manual = savedInstanceState.getBoolean("fair:manual");
@@ -182,6 +189,7 @@ public class FragmentSetup extends FragmentBase {
         tvFree = view.findViewById(R.id.tvFree);
         tvNoComposable = view.findViewById(R.id.tvNoComposable);
 
+        tvCalendarPermissions = view.findViewById(R.id.tvCalendarPermissions);
         tvNotificationPermissions = view.findViewById(R.id.tvNotificationPermissions);
         tvPermissionsDone = view.findViewById(R.id.tvPermissionsDone);
         btnPermissions = view.findViewById(R.id.btnPermissions);
@@ -196,6 +204,7 @@ public class FragmentSetup extends FragmentBase {
         btnBackgroundRestricted = view.findViewById(R.id.btnBackgroundRestricted);
         btnDataSaver = view.findViewById(R.id.btnDataSaver);
         tvStamina = view.findViewById(R.id.tvStamina);
+        cbAlways = view.findViewById(R.id.cbAlways);
 
         tvBatteryUsage = view.findViewById(R.id.tvBatteryUsage);
         tvSyncStopped = view.findViewById(R.id.tvSyncStopped);
@@ -207,6 +216,7 @@ public class FragmentSetup extends FragmentBase {
         btnReorderAccounts = view.findViewById(R.id.btnReorderAccounts);
         btnReorderFolders = view.findViewById(R.id.btnReorderFolders);
         btnDelete = view.findViewById(R.id.btnDelete);
+        btnPassword = view.findViewById(R.id.btnPassword);
         btnApp = view.findViewById(R.id.btnApp);
         btnMore = view.findViewById(R.id.btnMore);
         btnSupport = view.findViewById(R.id.btnSupport);
@@ -251,7 +261,6 @@ public class FragmentSetup extends FragmentBase {
         ibWelcome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(view.getContext());
                 boolean setup_welcome = !prefs.getBoolean("setup_welcome", true);
                 prefs.edit().putBoolean("setup_welcome", setup_welcome).apply();
                 updateWelcome();
@@ -278,34 +287,28 @@ public class FragmentSetup extends FragmentBase {
 
                 Resources res = context.getResources();
                 String pkg = context.getPackageName();
-                List<EmailProvider> providers = EmailProvider.loadProfiles(context);
-
-                boolean web = BuildConfig.DEBUG;
-                for (EmailProvider provider : providers)
-                    if ("gmail".equals(provider.id) &&
-                            provider.oauth != null &&
-                            provider.oauth.enabled) {
-                        web = true;
-                        break;
-                    }
+                List<EmailProvider> providers = EmailProvider.getProviders(context);
 
                 int order = 1;
 
                 // Gmail / account manager
-                String gmail = getString(web ? R.string.title_setup_android : R.string.title_setup_oauth,
-                        getString(R.string.title_setup_gmail));
-                MenuItem item = menu.add(Menu.FIRST, R.string.title_setup_gmail, order++, gmail);
-                int resid = res.getIdentifier("provider_gmail", "drawable", pkg);
-                if (resid != 0)
-                    item.setIcon(resid);
+                {
+                    String gmail = getString(R.string.title_setup_android, getString(R.string.title_setup_gmail));
+                    SpannableString ss = new SpannableString(gmail);
+                    ss.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL), 0, ss.length(), 0);
+                    MenuItem item = menu.add(Menu.FIRST, R.string.title_setup_gmail, order++, ss);
+                    int resid = res.getIdentifier("provider_gmail", "drawable", pkg);
+                    if (resid != 0)
+                        item.setIcon(resid);
+                }
 
                 // OAuth
                 for (EmailProvider provider : providers)
                     if (provider.oauth != null &&
-                            (provider.oauth.enabled || BuildConfig.DEBUG) &&
+                            provider.oauth.enabled &&
                             !TextUtils.isEmpty(provider.oauth.clientId)) {
                         String title = getString(R.string.title_setup_oauth, provider.description);
-                        item = menu
+                        MenuItem item = menu
                                 .add(Menu.FIRST, -1, order++, title)
                                 .setIntent(new Intent(ActivitySetup.ACTION_QUICK_OAUTH)
                                         .putExtra("id", provider.id)
@@ -315,7 +318,7 @@ public class FragmentSetup extends FragmentBase {
                                         .putExtra("askTenant", provider.oauth.askTenant())
                                         .putExtra("pop", provider.pop != null));
                         // https://developers.google.com/identity/branding-guidelines
-                        resid = res.getIdentifier("provider_" + provider.id, "drawable", pkg);
+                        int resid = res.getIdentifier("provider_" + provider.id, "drawable", pkg);
                         if (resid != 0)
                             item.setIcon(resid);
                     }
@@ -328,7 +331,7 @@ public class FragmentSetup extends FragmentBase {
                         .setVisible(false);
 
                 SpannableString ss = new SpannableString(getString(R.string.title_setup_pop3));
-                ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
+                ss.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL), 0, ss.length(), 0);
                 menu.add(Menu.NONE, R.string.title_setup_pop3, order++, ss);
 
                 menu.add(Menu.NONE, R.string.menu_faq, order++, R.string.menu_faq)
@@ -589,6 +592,14 @@ public class FragmentSetup extends FragmentBase {
             }
         });
 
+        cbAlways.setChecked(ServiceSynchronize.getPollInterval(getContext()) == 0);
+        cbAlways.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton v, boolean isChecked) {
+                prefs.edit().putInt("poll_interval", isChecked ? 0 : EntityAccount.DEFAULT_POLL_INTERVAL).apply();
+            }
+        });
+
         tvBatteryUsage.setPaintFlags(tvBatteryUsage.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         tvBatteryUsage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -610,7 +621,6 @@ public class FragmentSetup extends FragmentBase {
         ibExtra.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(v.getContext());
                 boolean setup_extra = !prefs.getBoolean("setup_extra", false);
                 prefs.edit().putBoolean("setup_extra", setup_extra).apply();
                 updateExtra();
@@ -687,6 +697,19 @@ public class FragmentSetup extends FragmentBase {
         });
 
 
+        btnPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putBoolean("all", true);
+
+                FragmentDialogSelectAccount fragment = new FragmentDialogSelectAccount();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentSetup.this, ActivitySetup.REQUEST_CHANGE_PASSWORD);
+                fragment.show(getParentFragmentManager(), "setup:password");
+            }
+        });
+
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -749,6 +772,8 @@ public class FragmentSetup extends FragmentBase {
         btnIdentity.setEnabled(false);
         tvNoComposable.setVisibility(View.GONE);
 
+        tvCalendarPermissions.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
+
         tvNotificationPermissions.setVisibility(
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
                         ? View.GONE : View.VISIBLE);
@@ -766,7 +791,21 @@ public class FragmentSetup extends FragmentBase {
         grpDataSaver.setVisibility(View.GONE);
         tvStamina.setVisibility(View.GONE);
 
+        PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
+
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if ("poll_interval".equals(key))
+            cbAlways.setChecked(ServiceSynchronize.getPollInterval(getContext()) == 0);
     }
 
     @Override
@@ -995,6 +1034,10 @@ public class FragmentSetup extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         onEditIdentity(data.getExtras());
                     break;
+                case ActivitySetup.REQUEST_CHANGE_PASSWORD:
+                    if (resultCode == RESULT_OK && data != null)
+                        onChangePassword(data.getBundleExtra("args"));
+                    break;
                 case ActivitySetup.REQUEST_DELETE_ACCOUNT:
                     if (resultCode == RESULT_OK && data != null)
                         onDeleteAccount(data.getBundleExtra("args"));
@@ -1080,6 +1123,16 @@ public class FragmentSetup extends FragmentBase {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "set:signature");
+    }
+
+    private void onChangePassword(Bundle args) {
+        long account = args.getLong("account");
+        int protocol = args.getInt("protocol");
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+        lbm.sendBroadcast(
+                new Intent(ActivitySetup.ACTION_EDIT_ACCOUNT)
+                        .putExtra("id", account)
+                        .putExtra("protocol", protocol));
     }
 
     private void onDeleteAccount(Bundle args) {

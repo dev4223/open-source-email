@@ -40,7 +40,6 @@ import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.database.CursorWindowAllocationException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteFullException;
 import android.graphics.Point;
@@ -214,13 +213,15 @@ public class Log {
         boolean debug = prefs.getBoolean("debug", false);
         if (debug)
             level = android.util.Log.DEBUG;
-        else
-            level = prefs.getInt("log_level", getDefaultLogLevel());
+        else {
+            int def = (BuildConfig.DEBUG ? android.util.Log.INFO : android.util.Log.WARN);
+            level = prefs.getInt("log_level", def);
+        }
         android.util.Log.d(TAG, "Log level=" + level);
     }
 
-    public static int getDefaultLogLevel() {
-        return (BuildConfig.DEBUG ? android.util.Log.INFO : android.util.Log.WARN);
+    public static boolean isDebugLogLevel() {
+        return (level <= android.util.Log.INFO);
     }
 
     public static int d(String msg) {
@@ -360,6 +361,13 @@ public class Log {
             EntityLog.log(ctx, message);
     }
 
+    public static void persist(EntityLog.Type type, String message) {
+        if (ctx == null)
+            Log.e(message);
+        else
+            EntityLog.log(ctx, type, message);
+    }
+
     static void setCrashReporting(boolean enabled) {
         try {
             if (enabled)
@@ -435,7 +443,7 @@ public class Log {
             etypes.setAnrs(BuildConfig.DEBUG);
             etypes.setNdkCrashes(false);
             config.setEnabledErrorTypes(etypes);
-            config.setMaxBreadcrumbs(BuildConfig.PLAY_STORE_RELEASE ? 50 : 100);
+            config.setMaxBreadcrumbs(BuildConfig.PLAY_STORE_RELEASE ? 250 : 500);
 
             Set<String> ignore = new HashSet<>();
 
@@ -788,6 +796,16 @@ public class Log {
              */
             return false;
 
+        if ("android.app.RemoteServiceException$CannotPostForegroundServiceNotificationException".equals(ex.getClass().getName()))
+            /*
+                android.app.RemoteServiceException$CannotPostForegroundServiceNotificationException: Bad notification for startForeground
+                    at android.app.ActivityThread.throwRemoteServiceException(ActivityThread.java:2219)
+                    at android.app.ActivityThread.-$$Nest$mthrowRemoteServiceException(Unknown Source:0)
+                    at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2505)
+                    at android.os.Handler.dispatchMessage(Handler.java:106)
+             */
+            return false;
+
         if ("android.view.WindowManager$BadTokenException".equals(ex.getClass().getName()))
             /*
                 android.view.WindowManager$BadTokenException: Unable to add window -- token android.os.BinderProxy@e9084db is not valid; is your activity running?
@@ -1037,8 +1055,7 @@ public class Log {
                 ex.getMessage().contains("finalize"))
             return false;
 
-        if (ex instanceof CursorWindowAllocationException ||
-                "android.database.CursorWindowAllocationException".equals(ex.getClass().getName()))
+        if ("android.database.CursorWindowAllocationException".equals(ex.getClass().getName()))
             /*
                 android.database.CursorWindowAllocationException: Could not allocate CursorWindow '/data/user/0/eu.faircode.email/no_backup/androidx.work.workdb' of size 2097152 due to error -12.
                   at android.database.CursorWindow.nativeCreate(Native Method)
@@ -1056,7 +1073,8 @@ public class Log {
             return false;
 
         if (ex instanceof RuntimeException &&
-                ex.getCause() instanceof CursorWindowAllocationException)
+                ex.getCause() != null &&
+                "android.database.CursorWindowAllocationException".equals(ex.getCause().getClass().getName()))
             /*
                 java.lang.RuntimeException: Exception while computing database live data.
                   at androidx.room.RoomTrackingLiveData$1.run(SourceFile:10)
@@ -1723,6 +1741,9 @@ public class Log {
                 ex.getCause() instanceof SocketTimeoutException)
             ex = new Throwable("No response received from email server", ex);
 
+        if (ex.getMessage() != null && ex.getMessage().contains("Read timed out"))
+            ex = new Throwable("No response received from email server", ex);
+
         if (ex instanceof MessagingException &&
                 ex.getCause() instanceof UnknownHostException)
             ex = new Throwable("Email server address lookup failed", ex);
@@ -1917,7 +1938,6 @@ public class Log {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean main_log = prefs.getBoolean("main_log", true);
         boolean protocol = prefs.getBoolean("protocol", false);
-        int level = prefs.getInt("log_level", Log.getDefaultLogLevel());
         long last_cleanup = prefs.getLong("last_cleanup", 0);
 
         PackageManager pm = context.getPackageManager();
@@ -1972,8 +1992,8 @@ public class Log {
             sb.append(String.format("SoC: %s/%s\r\n", Build.SOC_MANUFACTURER, Build.SOC_MODEL));
         sb.append(String.format("OS version: %s\r\n", osVersion));
         sb.append(String.format("uid: %d\r\n", android.os.Process.myUid()));
-        sb.append(String.format("Log main: %b protocol: %b level: %d=%b\r\n",
-                main_log, protocol, level, level <= android.util.Log.INFO));
+        sb.append(String.format("Log main: %b protocol: %b debug: %b build: %b\r\n",
+                main_log, protocol, Log.isDebugLogLevel(), BuildConfig.DEBUG));
         sb.append("\r\n");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -2127,7 +2147,7 @@ public class Log {
             sb.append(String.format("WebView %d/%s %s\r\n",
                     pkg == null ? -1 : pkg.versionCode,
                     pkg == null ? null : pkg.versionName,
-                    pkg == null || pkg.versionCode / 100000 < 5005 ? "!!!" : ""));
+                    pkg == null || pkg.versionCode / 100000 < 5304 ? "!!!" : ""));
         } catch (Throwable ex) {
             sb.append(ex).append("\r\n");
         }
@@ -2609,6 +2629,8 @@ public class Log {
             }
 
             db.attachment().setDownloaded(attachment.id, size);
+            if (!BuildConfig.DEBUG)
+                attachment.zip(context);
         } catch (Throwable ex) {
             Log.e(ex);
         }
@@ -2717,6 +2739,8 @@ public class Log {
                 }
 
                 db.attachment().setDownloaded(attachment.id, size);
+                if (!BuildConfig.DEBUG)
+                    attachment.zip(context);
             } finally {
                 if (proc != null)
                     proc.destroy();
@@ -2844,7 +2868,7 @@ public class Log {
                     size += write(os, String.format("Source: %s\r\n public: %s\r\n",
                             ai.sourceDir, ai.publicSourceDir));
                 size += write(os, String.format("Files: %s\r\n  external: %s\r\n  storage: %s\r\n",
-                        context.getFilesDir(), context.getExternalFilesDir(null),
+                        context.getFilesDir(), Helper.getExternalFilesDir(context),
                         Environment.getExternalStorageDirectory()));
                 size += write(os, String.format("Cache: %s\r\n  external: %s\n",
                         context.getCacheDir(), context.getExternalCacheDir()));

@@ -189,6 +189,7 @@
     <string name="title_setup_free">このアプリは無料で使用できますか？</string>
     <string name="title_setup_permissions">アクセス権限を付与する</string>
     <string name="title_setup_permissions_remark">連絡先へのアクセスのため (オプション)</string>
+    <string name="title_setup_permissions_calendar">予定への招待を保存するため (オプション)</string>
     <string name="title_setup_permissions_explanation">連絡先を検索したり、連絡先を自動入力するには連絡先へのアクセス権限が必要です</string>
     <string name="title_setup_permissions_notify">新着メッセージの通知を表示するため (オプション)</string>
     <string name="title_setup_permissions_notify_explanation">新着メッセージの通知をステータスバーに表示するには通知の権限が必要です</string>
@@ -210,7 +211,7 @@
     <string name="title_setup_advanced_options">詳細設定を表示</string>
     <string name="title_setup_inbox">受信トレイに移動</string>
     <string name="title_setup_go">移動</string>
-    <string name="title_setup_to_do">タスク</string>
+    <string name="title_setup_to_do">未完了</string>
     <string name="title_setup_done">完了</string>
     <string name="title_setup_still">実行中です</string>
     <string name="title_setup_error">エラー</string>
@@ -239,6 +240,7 @@
     <string name="title_setup_import_rules">フィルタールールをインポート</string>
     <string name="title_setup_import_contacts">ローカルの連絡先をインポート</string>
     <string name="title_setup_import_answers">返信テンプレートをインポート</string>
+    <string name="title_setup_import_searches">保存した検索条件をインポート</string>
     <string name="title_setup_import_settings">設定をインポート</string>
     <string name="title_setup_exported">設定をエクスポートしました</string>
     <string name="title_setup_imported">設定をインポートしました</string>
@@ -330,6 +332,7 @@
     <string name="title_advanced_use_blocklist">ブロックリストにあるドメインから送信されたメッセージを迷惑メールフォルダーに移動</string>
     <string name="title_advanced_use_blocklist_pop3">ブロックリストにあるドメインから送信されたメッセージをスキップ (POP3 のみ)</string>
     <string name="title_advanced_tune_keep_alive">キープアライブ間隔を自動的に調整</string>
+    <string name="title_advanced_blocklist_warning">ブロックリストは常に完璧に迷惑メールをブロックできるわけではなく、迷惑メール以外をブロックする可能性もあります！</string>
     <string name="title_advanced_keyboard">デフォルトでキーボードを表示</string>
     <string name="title_advanced_keyboard_no_fullscreen">全画面キーボードを無効にする</string>
     <string name="title_advanced_suggest_names">サジェスト表示に名前とメールアドレスを使用</string>
@@ -573,6 +576,8 @@
     <string name="title_advanced_notifications_background">メッセージの同期にバックグラウンドサービスを使用</string>
     <string name="title_advanced_notifications_background_hint">バックグラウンドサービスは Android によって停止される可能性がありますが、ステータスバーに通知が表示されなくなります</string>
     <string name="title_advanced_confirm_links">リンクを開く前に確認</string>
+    <string name="title_advanced_sanitize_links">デフォルトでトラッキングパラメーターを削除</string>
+    <string name="title_advanced_sanitize_links_hint">リンクを確認する場合のみ</string>
     <string name="title_advanced_check_links_dbl">不審なリンクがないかドメインブロックリストを確認</string>
     <string name="title_advanced_confirm_images">デフォルトで画像を表示しない</string>
     <string name="title_advanced_ask_images">画像を表示する前に確認</string>
@@ -591,14 +596,15 @@
     <string name="title_advanced_generic_user_agent">一般的なブラウザーのユーザーエージェントを使用</string>
     <string name="title_advanced_load_emoji">Google Play 開発者サービスから更新された絵文字を読み込む</string>
     <string name="title_advanced_disconnect_auto_update">リストを自動で毎週更新</string>
-    <string name="title_advanced_disconnect_links">リストを使用して追跡リンクについて警告</string>
-    <string name="title_advanced_disconnect_images">リストを使用して追跡画像を識別</string>
+    <string name="title_advanced_disconnect_links">リストを使用してトラッキングリンクについて警告</string>
+    <string name="title_advanced_disconnect_images">リストを使用してトラッキング画像を識別</string>
     <string name="title_advanced_mnemonic">リモートでデータを削除</string>
     <string name="title_advanced_mnemonic_hint">件名に以下の単語を含むメールを受信すると、自動的にアプリのデータを削除します</string>
     <string name="title_advanced_clear_all">アプリのデータを削除</string>
     <string name="title_advanced_clear_all_remark">削除したアプリのデータは元に戻せません！</string>
     <string name="title_advanced_sign_default">デフォルトで電子署名</string>
     <string name="title_advanced_encrypt_default">デフォルトで暗号化</string>
+    <string name="title_advanced_encrypt_auto">すべての宛先の鍵が有効なときは自動で暗号化</string>
     <string name="title_advanced_auto_decrypt">メッセージを自動的に復号</string>
     <string name="title_advanced_auto_undo_decrypt">会話の終了時に復号を元に戻す</string>
     <string name="title_advanced_openpgp">OpenPGP プロバイダー</string>
@@ -632,12 +638,15 @@
     <string name="title_advanced_language_system">システム</string>
     <string name="title_advanced_lt">LanguageTool を統合</string>
     <string name="title_advanced_lt_auto">改行後に段落を確認</string>
+    <string name="title_advanced_lt_user">ユーザー名 (オプション)</string>
+    <string name="title_advanced_lt_key">API キー (オプション)</string>
     <string name="title_advanced_deepl">DeepL を統合</string>
     <string name="title_advanced_virus_total">VirusTotal を統合</string>
     <string name="title_advanced_sdcard">SD カードを使用できますか？</string>
     <string name="title_advanced_watchdog">FairEmail がアクティブか定期的に確認</string>
     <string name="title_advanced_updates">GitHub のアップデートを確認</string>
-    <string name="title_advanced_check_weekly">毎日ではなく毎週チェックする</string>
+    <string name="title_advanced_check_weekly">アップデートの確認頻度を毎日から毎週へ変更</string>
+    <string name="title_advanced_beta">BitBucket でテスト版を確認</string>
     <string name="title_advanced_changelog">更新後に更新履歴を表示</string>
     <string name="title_advanced_experiments">実験的な機能を試す</string>
     <string name="title_advanced_crash_reports">エラーレポートを送信</string>
@@ -752,6 +761,7 @@
     <string name="title_advanced_cleanup_hint">すべての一時ファイルが削除されます</string>
     <string name="title_advanced_never_favorite">お気に入りに追加しない</string>
     <string name="title_advanced_edit_name">名前を編集</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">フォルダー名</string>
     <string name="title_advanced_swipe_actions">スワイプ操作を設定</string>
     <string name="title_advanced_swipe_actions_hint">すべての IMAP アカウントの左右のスワイプ操作を設定します</string>
     <string name="title_advanced_swipe_sensitivity">左/右スワイプ感度</string>
@@ -783,6 +793,7 @@
     <string name="title_account_noop_hint">より頻繁に接続を更新しますが、バッテリー使用量が増加します</string>
     <string name="title_account_partial_fetch_hint">メッセージが空の場合や添付ファイルが破損している場合にのみ無効にする</string>
     <string name="title_color">色</string>
+    <string name="title_calendar">カレンダー</string>
     <string name="title_background">背景</string>
     <string name="title_transparent">透過</string>
     <string name="title_account_ondemand">手動で同期</string>
@@ -855,6 +866,7 @@
     <string name="title_drafts_select">メールを送信するには、アカウント設定で下書きフォルダーを選択する必要があります</string>
     <string name="title_account_auth_update">認証をアップデート</string>
     <string name="title_account_auth_password">パスワード認証に変更する</string>
+    <string name="title_change_password">パスワードを変更</string>
     <string name="title_delete_account">アカウントを削除</string>
     <string name="title_account_delete">このアカウントを完全に削除しますか？</string>
     <string name="title_identity_delete">この ID を完全に削除しますか？</string>
@@ -1017,10 +1029,12 @@
     <string name="title_editasnew">新規として編集</string>
     <string name="title_edit_notes">ローカルメモを編集</string>
     <string name="title_create_rule">ルールを作成&#8230;</string>
+    <string name="title_full_screen">全画面表示</string>
     <string name="title_force_light">ライトテーマを強制</string>
     <string name="title_share">共有</string>
     <string name="title_event">カレンダーに追加</string>
     <string name="title_pin">ショートカットを追加</string>
+    <string name="title_pin_label">ショートカットのタイトル</string>
     <string name="title_print">印刷</string>
     <string name="title_print_header">見出しを印刷</string>
     <string name="title_print_images">画像を印刷</string>
@@ -1045,7 +1059,7 @@
     <string name="title_auto_confirm">数秒後に自動で確認</string>
     <string name="title_buttons">ボタンを選択</string>
     <string name="title_buttons_hint">実際に利用可能なアクションは、アカウントの種類と構成によって異なります</string>
-    <string name="title_button_search">メッセージを検索</string>
+    <string name="title_button_search_similar">類似するメッセージを検索</string>
     <string name="title_button_search_text">本文を検索</string>
     <string name="title_configure_buttons">ボタンを設定&#8230;</string>
     <string name="title_quick_actions">アクションを選択</string>
@@ -1053,6 +1067,7 @@
     <string name="title_quick_actions_low">重要度が低い</string>
     <string name="title_quick_actions_high">重要度が高い</string>
     <string name="title_quick_actions_snooze">スヌーズする</string>
+    <string name="title_quick_actions_clear">操作後に選択を解除</string>
     <string name="title_trash">ゴミ箱</string>
     <string name="title_copy">コピー&#8230;</string>
     <string name="title_copy_to">&#8230;にコピー</string>
@@ -1211,7 +1226,7 @@
     <string name="title_style_superscript">上付き文字</string>
     <string name="title_style_strikethrough">取り消し線</string>
     <string name="title_style_protect">パスワード保護</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">保護されたコンテンツ</string>
+    <string name="title_style_protected">保護されたコンテンツ</string>
     <string name="title_style_protect_size">テキストが長すぎます</string>
     <string name="title_style_clear">書式をクリア</string>
     <string name="title_style_link">リンクを挿入</string>
@@ -1237,12 +1252,12 @@
     <string name="title_save_drafts">下書きをサーバーに保存</string>
     <string name="title_send_dialog">送信オプションを表示</string>
     <string name="title_image_dialog">画像オプションを表示</string>
-    <string name="title_block_toolbar">ブロックツールバー</string>
     <string name="title_media_toolbar">メディアツールバー</string>
     <string name="title_manage_local_contacts">ローカルの連絡先を管理</string>
     <string name="title_insert_contact_group">連絡先グループを挿入</string>
     <string name="title_insert_template">テンプレートを挿入</string>
     <string name="title_create_template">テンプレートを作成</string>
+    <string name="title_select_default_identity">デフォルトのアドレスを選択</string>
     <string name="title_translate">翻訳</string>
     <string name="title_translate_configure">設定&#8230;</string>
     <string name="title_translate_key">キーを入力</string>
@@ -1303,8 +1318,8 @@
     <string name="title_resync">再同期</string>
     <string name="title_charset">エンコード</string>
     <string name="title_charset_auto">自動</string>
-    <string name="title_alternative_text">プレーンテキストを表示</string>
-    <string name="title_alternative_html">HTML を表示</string>
+    <string name="title_alternative_text">プレーンテキストを読み込む</string>
+    <string name="title_alternative_html">HTML を読み込む</string>
     <string name="title_no_openpgp">OpenKeychain が見つかりません</string>
     <string name="title_user_interaction">OpenKeychain へ転送しています</string>
     <string name="title_padlock">鍵をタップしてメッセージを復号</string>
@@ -1370,8 +1385,8 @@
     <string name="title_search_server">サーバーを検索</string>
     <string name="title_search_in">検索場所</string>
     <string name="title_search_sender">差出人を検索</string>
-    <string name="title_search_delete">保存した検索を削除しますか？</string>
-    <string name="title_save_search">検索を保存</string>
+    <string name="title_search_delete">保存した検索条件を削除しますか？</string>
+    <string name="title_save_search">検索条件を保存</string>
     <string name="title_save_search_name">名前</string>
     <string name="title_save_search_order">順番</string>
     <string name="title_save_search_color">カラー</string>
@@ -1654,11 +1669,11 @@
     <string name="title_open_link">リンクを開く</string>
     <string name="title_image_link">画像リンク</string>
     <string name="title_different_link">タイトルとリンクアドレスが異なります</string>
-    <string name="title_tracking_link">このウェブサイトはあなたを追跡するかもしれません</string>
+    <string name="title_tracking_link">このウェブサイトはあなたをトラッキングするかもしれません</string>
     <string name="title_suspicious_link">不審なリンクです</string>
-    <string name="title_link_http">トラフィックは暗号化されません</string>
-    <string name="title_link_https">トラフィックは暗号化されます</string>
-    <string name="title_sanitize_link">追跡パラメーターを削除する</string>
+    <string name="title_link_http">トラフィックが暗号化されません</string>
+    <string name="title_link_https">トラフィック暗号化</string>
+    <string name="title_sanitize_link">トラッキングパラメーターを削除</string>
     <string name="title_insecure_link">このリンクは安全ではありません</string>
     <string name="title_check_owner">所有者を確認する</string>
     <string name="title_remark_owner">情報は <a href="https://ipinfo.io/">ipinfo.io</a> から取得されます</string>
@@ -1667,6 +1682,7 @@
     <string name="title_reset_open">デフォルトのアプリを設定またはクリア</string>
     <string name="title_select_app">アプリを選択</string>
     <string name="title_updated">バージョン %1$s へアップデートできます</string>
+    <string name="title_no_update">利用可能なアップデートはありません</string>
     <string name="title_issue">質問や問題がありますか？</string>
     <string name="title_yes">はい</string>
     <string name="title_no">いいえ</string>
@@ -1678,6 +1694,8 @@
     <string name="title_select_block">ブロックを選択</string>
     <string name="title_insert_brackets">括弧</string>
     <string name="title_insert_quotes">引用</string>
+    <string name="title_lt_add">語句を追加</string>
+    <string name="title_lt_delete">語句を削除</string>
     <string name="title_add">追加</string>
     <string name="title_browse">アプリで開く</string>
     <string name="title_info">Info</string>
@@ -1726,7 +1744,7 @@
     <string name="title_pro_one_time">%1$s (支払いは一回限り)</string>
     <string name="title_pro_no_play">Play ストアが見つかりませんでした</string>
     <string name="title_pro_info">FairEmail の開発には文字通り数千時間かかりましたが、それにもかかわらず、ほとんどの機能は無料で使用できます。
-         FairEmail はあなたのプライバシーを真剣に考え、広告を表示せず、お金を稼ぐために追跡や分析を使用しません。
+         FairEmail はあなたのプライバシーを真剣に考え、広告を表示せず、お金を稼ぐためにトラッキングやアナリティクスを使用しません。
          FairEmail を長期的に維持およびサポートするために、いくつかの便利で高度な機能を無料で使用することはできません。
          FairEmail は、これについて小さなリマインダーを表示します。これは、プロ版を購入すると削除されます。
     </string>
@@ -1779,19 +1797,24 @@
     <string name="title_widget_background">背景色</string>
     <string name="title_widget_day_night">システムのダークテーマに従う</string>
     <string name="title_compat_dark">Android 10 以前では Google によりダークモードが取り除かれました</string>
+    <!-- Thunderbird -->
+    <string name="title_keyword_label1">重要</string>
+    <string name="title_keyword_label2">仕事</string>
+    <string name="title_keyword_label3">プライベート</string>
+    <string name="title_keyword_label4">ToDo</string>
+    <string name="title_keyword_label5">後で</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="other">%1$d 件のメッセージ</item>
+    </plurals>
+    <string name="title_accessibility_accounts">アカウント</string>
+    <string name="title_accessibility_folders">フォルダー</string>
+    <string name="title_accessibility_searches">検索</string>
+    <string name="title_accessibility_menus">メニュー</string>
+    <string name="title_accessibility_extras">その他</string>
     <string name="title_accessibility_collapsed">折りたたみました</string>
     <string name="title_accessibility_expanded">展開しました</string>
     <string name="title_accessibility_seen">既読</string>
     <string name="title_accessibility_unseen">未読</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="other">%1$d 件のメッセージ</item>
-    </plurals>
-    <!-- Thunderbird -->
-    <string name="title_keyword_label1">重要</string>
-    <string name="title_keyword_label2">ワーク</string>
-    <string name="title_keyword_label3">パーソナル</string>
-    <string name="title_keyword_label4">タスク</string>
-    <string name="title_keyword_label5">あとで</string>
     <string name="title_accessibility_flagged">スター付き</string>
     <string name="title_accessibility_unflagged">スターなし</string>
     <string name="title_accessibility_collapse">折りたたむ</string>

@@ -743,6 +743,7 @@
     <string name="title_advanced_cleanup_hint">Cái này sẽ xóa tất cả tệp tạm</string>
     <string name="title_advanced_never_favorite">Không bao giờ yêu thích</string>
     <string name="title_advanced_edit_name">Chỉnh sửa tên</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Tên thư mục</string>
     <string name="title_advanced_swipe_actions">Đặt các hành động vuốt</string>
     <string name="title_advanced_swipe_actions_hint">Cái này sẽ đặt hành động vuốt trái và phải cho tất cả tài khoản IMAP</string>
     <string name="title_advanced_swipe_sensitivity">Độ nhạy vuốt trái/phải</string>
@@ -773,6 +774,7 @@
     <string name="title_account_interval_hint">Tần số làm mới kết nối để nhận thông báo đẩy hoặc tần số kiểm tra thư mới</string>
     <string name="title_account_partial_fetch_hint">Chỉ tắt cái này trong trường hợp có thư trống hoặc tệp đính kèm bị hỏng</string>
     <string name="title_color">Màu săc</string>
+    <string name="title_calendar">Lịch</string>
     <string name="title_background">Nền</string>
     <string name="title_transparent">Trong suốt</string>
     <string name="title_account_ondemand">Đồng bộ hoá thủ công</string>
@@ -1031,7 +1033,7 @@
     <string name="title_auto_confirm">Tự động xác nhận sau vài giây</string>
     <string name="title_buttons">Chọn các nút</string>
     <string name="title_buttons_hint">Các hành động thực sự có sẵn còn tuỳ vào loại tài khoản và thiết lập tài khoản</string>
-    <string name="title_button_search">Tìm kiếm trong các thư</string>
+    <string name="title_button_search_similar">Tìm kiếm các thư tương tự</string>
     <string name="title_button_search_text">Tìm kiếm trong văn bản thư</string>
     <string name="title_configure_buttons">Thiết lập các nút &#8230;</string>
     <string name="title_quick_actions">Chọn hành động</string>
@@ -1272,8 +1274,6 @@
     <string name="title_resync">Đồng bộ lại</string>
     <string name="title_charset">Bảng mã</string>
     <string name="title_charset_auto">Tự động</string>
-    <string name="title_alternative_text">Hiện văn bản thuần</string>
-    <string name="title_alternative_html">Hiện HTML</string>
     <string name="title_no_openpgp">Không tìm thấy OpenKeychain</string>
     <string name="title_user_interaction">Đang chuyển sang OpenKeychain</string>
     <string name="title_padlock">Sử dụng khoá để giải mã thư</string>
@@ -1739,19 +1739,21 @@
     <string name="title_widget_background">Màu nền</string>
     <string name="title_widget_day_night">Theo giao diện tối hệ thống</string>
     <string name="title_compat_dark">Google đã xoá chế độ tối cho tất cả phiên bản Android trước phiên bản 10</string>
-    <string name="title_accessibility_collapsed">Thu gọn</string>
-    <string name="title_accessibility_expanded">Mở rộng</string>
-    <string name="title_accessibility_seen">Đã đọc</string>
-    <string name="title_accessibility_unseen">Chưa đọc</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="other">%1$d thư</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Quan trọng</string>
     <string name="title_keyword_label2">Công việc</string>
     <string name="title_keyword_label3">Cá nhân</string>
     <string name="title_keyword_label4">Cần làm</string>
     <string name="title_keyword_label5">Để sau</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="other">%1$d thư</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Tài khoản</string>
+    <string name="title_accessibility_folders">Thư mục</string>
+    <string name="title_accessibility_collapsed">Thu gọn</string>
+    <string name="title_accessibility_expanded">Mở rộng</string>
+    <string name="title_accessibility_seen">Đã đọc</string>
+    <string name="title_accessibility_unseen">Chưa đọc</string>
     <string name="title_accessibility_flagged">Được gắn sao</string>
     <string name="title_accessibility_unflagged">Chưa gắn sao</string>
     <string name="title_accessibility_collapse">Thu gọn</string>

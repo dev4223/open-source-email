@@ -44,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 
 public class ViewModelMessages extends ViewModel {
     private AdapterMessage.ViewType last = AdapterMessage.ViewType.UNIFIED;
@@ -67,9 +66,6 @@ public class ViewModelMessages extends ViewModel {
             return super.remove(key);
         }
     };
-
-    // AndroidX IO = 4 threads
-    private ExecutorService executor = Helper.getBackgroundExecutor(4, "model");
 
     private static final int LOCAL_PAGE_SIZE = 50;
     private static final int THREAD_PAGE_SIZE = 100;
@@ -204,7 +200,7 @@ public class ViewModelMessages extends ViewModel {
                     break;
             }
 
-            builder.setFetchExecutor(executor);
+            builder.setFetchExecutor(Helper.getParallelExecutor());
 
             model = new Model(args, builder.build(), boundary);
             models.put(viewType, model);
@@ -231,7 +227,7 @@ public class ViewModelMessages extends ViewModel {
                     model.list.removeObservers(owner);
                 }
 
-                if (viewType == AdapterMessage.ViewType.THREAD) {
+                if (viewType == AdapterMessage.ViewType.THREAD || viewType == AdapterMessage.ViewType.SEARCH) {
                     Log.i("Remove model=" + viewType);
                     models.remove(viewType);
                 }
@@ -242,10 +238,10 @@ public class ViewModelMessages extends ViewModel {
             }
         });
 
-        if (viewType == AdapterMessage.ViewType.UNIFIED) {
+        if (viewType == AdapterMessage.ViewType.UNIFIED)
             models.remove(AdapterMessage.ViewType.FOLDER);
-            models.remove(AdapterMessage.ViewType.SEARCH);
-        } else if (viewType == AdapterMessage.ViewType.FOLDER)
+
+        if (viewType != AdapterMessage.ViewType.SEARCH)
             models.remove(AdapterMessage.ViewType.SEARCH);
 
         if (viewType != AdapterMessage.ViewType.THREAD) {

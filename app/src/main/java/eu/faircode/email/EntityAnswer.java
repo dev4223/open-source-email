@@ -164,6 +164,8 @@ public class EntityAnswer implements Serializable {
             if (username != null) {
                 int dot = username.indexOf('.');
                 if (dot < 0)
+                    dot = username.indexOf('_');
+                if (dot < 0)
                     first = username;
                 else
                     first = username.substring(0, dot);
@@ -360,7 +362,7 @@ public class EntityAnswer implements Serializable {
 
         if (compose && BuildConfig.DEBUG) {
             SubMenu profiles = main.addSubMenu(Menu.NONE, order, order++, "Profiles");
-            for (EmailProvider p : EmailProvider.loadProfiles(context)) {
+            for (EmailProvider p : EmailProvider.getProviders(context)) {
                 SpannableStringBuilder ssb = new SpannableStringBuilderEx();
                 int start;
                 ssb.append("IMAP (account, receive)");
@@ -410,8 +412,7 @@ public class EntityAnswer implements Serializable {
                 if (p.appPassword)
                     ssb.append("App password\n\n");
 
-                if (p.documentation !=
-                        null)
+                if (p.documentation != null)
                     ssb.append(HtmlHelper.fromHtml(p.documentation.toString(), context)).append("\n\n");
 
                 if (!TextUtils.isEmpty(p.link))

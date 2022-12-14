@@ -57,7 +57,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -119,6 +118,7 @@ public class EntityRule {
     static final int TYPE_TTS = 14;
     static final int TYPE_DELETE = 15;
     static final int TYPE_SOUND = 16;
+    static final int TYPE_LOCAL_ONLY = 17;
 
     static final String ACTION_AUTOMATION = BuildConfig.APPLICATION_ID + ".AUTOMATION";
     static final String EXTRA_RULE = "rule";
@@ -126,9 +126,8 @@ public class EntityRule {
     static final String EXTRA_SUBJECT = "subject";
     static final String EXTRA_RECEIVED = "received";
 
+    private static final String JSOUP_PREFIX = "jsoup:";
     private static final long SEND_DELAY = 5000L; // milliseconds
-
-    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "rule");
 
     static boolean needsHeaders(EntityMessage message, List<EntityRule> rules) {
         return needs(rules, "header");
@@ -365,7 +364,9 @@ public class EntityRule {
                 boolean regex = jbody.getBoolean("regex");
                 boolean skip_quotes = jbody.optBoolean("skip_quotes");
 
-                if (!regex)
+                boolean jsoup = value.startsWith(JSOUP_PREFIX);
+
+                if (!regex && !jsoup)
                     value = value.replaceAll("\\s+", " ");
 
                 if (html == null && message.content) {
@@ -378,7 +379,7 @@ public class EntityRule {
                 }
 
                 if (html == null)
-                    if (message.encrypt == null || EntityMessage.ENCRYPT_NONE.equals(message.encrypt))
+                    if (false && (message.encrypt == null || EntityMessage.ENCRYPT_NONE.equals(message.encrypt)))
                         throw new IllegalArgumentException(context.getString(R.string.title_rule_no_body));
                     else
                         return false;
@@ -386,9 +387,15 @@ public class EntityRule {
                 Document d = JsoupEx.parse(html);
                 if (skip_quotes)
                     d.select("blockquote").remove();
-                String text = d.body().text();
-                if (!matches(context, message, value, text, regex))
-                    return false;
+                if (jsoup) {
+                    String selector = value.substring(JSOUP_PREFIX.length());
+                    if (d.select(selector).size() == 0)
+                        return false;
+                } else {
+                    String text = d.body().text();
+                    if (!matches(context, message, value, text, regex))
+                        return false;
+                }
             }
 
             // Date
@@ -501,6 +508,8 @@ public class EntityRule {
                 return onActionDelete(context, message, jaction);
             case TYPE_SOUND:
                 return onActionSound(context, message, jaction);
+            case TYPE_LOCAL_ONLY:
+                return onActionLocalOnly(context, message, jaction);
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type + " name=" + name);
         }
@@ -576,9 +585,8 @@ public class EntityRule {
             case TYPE_DELETE:
                 return;
             case TYPE_SOUND:
-                String uri = jargs.optString("uri");
-                if (TextUtils.isEmpty(uri))
-                    throw new IllegalArgumentException(context.getString(R.string.title_rule_select_sound));
+                return;
+            case TYPE_LOCAL_ONLY:
                 return;
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type);
@@ -749,7 +757,7 @@ public class EntityRule {
             return true;
         }
 
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -814,17 +822,19 @@ public class EntityRule {
         Address[] from = new InternetAddress[]{new InternetAddress(identity.email, identity.name, StandardCharsets.UTF_8.name())};
 
         // Prevent loop
-        List<EntityMessage> messages = db.message().getMessagesByThread(
-                message.account, message.thread, null, null);
-        for (EntityMessage threaded : messages)
-            if (!threaded.id.equals(message.id) &&
-                    MessageHelper.equal(threaded.from, from)) {
-                EntityLog.log(context, EntityLog.Type.Rules, message,
-                        "Answer loop" +
-                                " name=" + answer.name +
-                                " from=" + MessageHelper.formatAddresses(from));
-                return;
-            }
+        if (isReply) {
+            List<EntityMessage> messages = db.message().getMessagesByThread(
+                    message.account, message.thread, null, null);
+            for (EntityMessage threaded : messages)
+                if (!threaded.id.equals(message.id) &&
+                        MessageHelper.equal(threaded.from, from)) {
+                    EntityLog.log(context, EntityLog.Type.Rules, message,
+                            "Answer loop" +
+                                    " name=" + answer.name +
+                                    " from=" + MessageHelper.formatAddresses(from));
+                    return;
+                }
+        }
 
         EntityMessage reply = new EntityMessage();
         reply.account = message.account;
@@ -969,7 +979,7 @@ public class EntityRule {
             return true;
         }
 
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -1099,21 +1109,33 @@ public class EntityRule {
     }
 
     private boolean onActionSound(Context context, EntityMessage message, JSONObject jargs) throws JSONException {
-        Log.i("Speaking name=" + name);
-
         if (message.ui_seen)
             return false;
 
-        Uri uri = Uri.parse(jargs.getString("uri"));
+        Uri uri = (jargs.has("uri") ? Uri.parse(jargs.getString("uri")) : null);
         boolean alarm = jargs.getBoolean("alarm");
         int duration = jargs.optInt("duration", MediaPlayerHelper.DEFAULT_ALARM_DURATION);
+        Log.i("Sound uri=" + uri + " alarm=" + alarm + " duration=" + duration);
 
         DB db = DB.getInstance(context);
 
         message.ui_silent = true;
         db.message().setMessageUiSilent(message.id, message.ui_silent);
 
-        MediaPlayerHelper.queue(context, uri, alarm, duration);
+        if (uri != null)
+            MediaPlayerHelper.queue(context, uri, alarm, duration);
+
+        return true;
+    }
+
+    private boolean onActionLocalOnly(Context context, EntityMessage message, JSONObject jargs) throws JSONException {
+        if (message.ui_seen)
+            return false;
+
+        DB db = DB.getInstance(context);
+
+        message.ui_local_only = true;
+        db.message().setMessageUiLocalOnly(message.id, message.ui_local_only);
 
         return true;
     }

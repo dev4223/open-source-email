@@ -228,6 +228,7 @@
     <string name="title_setup_free">Czy ta aplikacja jest darmowa?</string>
     <string name="title_setup_permissions">Przyznaj uprawnienia</string>
     <string name="title_setup_permissions_remark">Dostęp do kontaktów (opcjonalnie)</string>
+    <string name="title_setup_permissions_calendar">Do przechowywania zaproszeń (opcjonalnie)</string>
     <string name="title_setup_permissions_explanation">Uprawnienia dostępu do listy kontaktów są wymagane, aby wyszukiwać informacje kontaktowe i sugerować kontakty</string>
     <string name="title_setup_permissions_notify">Aby wyświetlić powiadomienia o nowych wiadomościach (opcjonalnie)</string>
     <string name="title_setup_permissions_notify_explanation">Uprawnienia dotyczące powiadomień są wymagane do wyświetlania powiadomień o nowych wiadomościach na pasku stanu</string>
@@ -278,6 +279,7 @@
     <string name="title_setup_import_rules">Importuj reguły filtrowania</string>
     <string name="title_setup_import_contacts">Importuj kontakty lokalne</string>
     <string name="title_setup_import_answers">Importuj szablony odpowiedzi</string>
+    <string name="title_setup_import_searches">Zaimportuj zapisane wyszukiwania</string>
     <string name="title_setup_import_settings">Opcje importowania</string>
     <string name="title_setup_exported">Ustawienia wyeksportowane</string>
     <string name="title_setup_imported">Ustawienia zaimportowane</string>
@@ -366,8 +368,9 @@
     <string name="title_advanced_check_mx">Sprawdź adresy e-mail nadawcy przy synchronizowaniu wiadomości</string>
     <string name="title_advanced_check_blocklist">Sprawdź, czy nazwa domeny nadawcy znajduje się na liście spamu</string>
     <string name="title_advanced_use_blocklist">Przenieś wiadomości z listy domen zablokowanych do folderu spam</string>
-    <string name="title_advanced_use_blocklist_pop3">Pomijaj wiadomości z domen znajdujących się na liście blokowania (tylko POP3)</string>
+    <string name="title_advanced_use_blocklist_pop3">Pomijaj wiadomości z listy zablokownaych domen (tylko POP3)</string>
     <string name="title_advanced_tune_keep_alive">Automatycznie dostosuj interwał zachowania aktywności</string>
+    <string name="title_advanced_blocklist_warning">Listy zablokowanego spamu nie są idealne i mogą blokować więcej niż tylko spam!</string>
     <string name="title_advanced_keyboard">Domyślnie pokaż klawiaturę</string>
     <string name="title_advanced_keyboard_no_fullscreen">Blokuj klawiaturę pełnoekranową</string>
     <string name="title_advanced_suggest_names">Użyj nazw i adresów e-mail</string>
@@ -611,7 +614,9 @@
     <string name="title_advanced_notifications_background">Użyj usługi w tle do synchronizacji wiadomości</string>
     <string name="title_advanced_notifications_background_hint">Usługa w tle może być w dowolnym momencie zatrzymana przez Androida, ale nie wymaga powiadomienia na pasku stanu</string>
     <string name="title_advanced_confirm_links">Potwierdź otwieranie linków</string>
-    <string name="title_advanced_check_links_dbl">Sprawdź listy blokowanych domen pod kątem podejrzanych linków</string>
+    <string name="title_advanced_sanitize_links">Domyślnie usuwaj parametry śledzące</string>
+    <string name="title_advanced_sanitize_links_hint">Tylko podczas potwierdzania linków</string>
+    <string name="title_advanced_check_links_dbl">Sprawdź listy zablokowanych domen pod kątem podejrzanych linków</string>
     <string name="title_advanced_confirm_images">Domyślnie nie pokazuj obrazów</string>
     <string name="title_advanced_ask_images">Potwierdź wyświetlanie obrazów</string>
     <string name="title_advanced_confirm_html">Domyślnie pokaż ponownie sformatowane wiadomości</string>
@@ -637,6 +642,7 @@
     <string name="title_advanced_clear_all_remark">Dane aplikacji zostaną nieodwracalnie usunięte!</string>
     <string name="title_advanced_sign_default">Domyślnie podpisuj</string>
     <string name="title_advanced_encrypt_default">Domyślnie szyfruj</string>
+    <string name="title_advanced_encrypt_auto">Automatycznie zaszyfruj, gdy wszystkie klucze odbiorców są dostępne</string>
     <string name="title_advanced_auto_decrypt">Automatycznie odszyfruj wiadomości</string>
     <string name="title_advanced_auto_undo_decrypt">Cofnij odszyfrowanie przy zamykaniu rozmowy</string>
     <string name="title_advanced_openpgp">Dostawca OpenPGP</string>
@@ -669,12 +675,15 @@
     <string name="title_advanced_language_system">Systemowy</string>
     <string name="title_advanced_lt">Integracja LanguageTool</string>
     <string name="title_advanced_lt_auto">Sprawdź akapit po nowym wierszu</string>
+    <string name="title_advanced_lt_user">Nazwa użytkownika (opcjonalnie)</string>
+    <string name="title_advanced_lt_key">Klucz API (opcjonalnie)</string>
     <string name="title_advanced_deepl">Integracja z DeepL</string>
     <string name="title_advanced_virus_total">Integracja z VirusTotal</string>
     <string name="title_advanced_sdcard">Chcę użyć karty SD</string>
     <string name="title_advanced_watchdog">Okresowo sprawdzaj, czy FairEmail jest nadal aktywny</string>
     <string name="title_advanced_updates">Sprawdź aktualizacje GitHub</string>
     <string name="title_advanced_check_weekly">Sprawdzaj co tydzień zamiast codziennie</string>
+    <string name="title_advanced_beta">Sprawdź wersję testową na BitBucket</string>
     <string name="title_advanced_changelog">Pokaż listę zmian po aktualizacji</string>
     <string name="title_advanced_experiments">Wypróbuj funkcje eksperymentalne</string>
     <string name="title_advanced_crash_reports">Wyślij raport o błędach</string>
@@ -790,6 +799,9 @@
     <string name="title_advanced_cleanup_hint">Spowoduje to usunięcie wszystkich plików tymczasowych</string>
     <string name="title_advanced_never_favorite">Nigdy ulubiony</string>
     <string name="title_advanced_edit_name">Zmień nazwę</string>
+    <string name="title_create_folder" comment="title_create_folder&#10;Title of dialog to create a folder">Utwórz folder</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Nazwa folderu</string>
+    <string name="title_create_folder_parent" comment="title_create_folder_parent&#10;Title for parent folder selection (spinner)">Folder nadrzędny</string>
     <string name="title_advanced_swipe_actions">Ustaw akcje przesuwania</string>
     <string name="title_advanced_swipe_actions_hint">Spowoduje to ustawienie akcji przesuwania w lewo i w prawo dla wszystkich kont IMAP</string>
     <string name="title_advanced_swipe_sensitivity">Czułość przesunięcia w lewo/prawo</string>
@@ -821,6 +833,7 @@
     <string name="title_account_noop_hint">Dzięki temu połączenie będzie odświeżane bardziej aktywnie, ale również zużyje więcej energii z baterii</string>
     <string name="title_account_partial_fetch_hint">Wyłącz to tylko w przypadku pustych wiadomości lub uszkodzonych załączników</string>
     <string name="title_color">Kolor</string>
+    <string name="title_calendar">Kalendarz</string>
     <string name="title_background">Tło</string>
     <string name="title_transparent">Przeźroczysty</string>
     <string name="title_account_ondemand">Synchronizuj ręcznie</string>
@@ -893,6 +906,7 @@
     <string name="title_drafts_select">Wysyłanie wiadomości e-mail wymaga wybrania folderu szkiców w ustawieniach konta</string>
     <string name="title_account_auth_update">Zaktualizuj autoryzację</string>
     <string name="title_account_auth_password">Przełącz na uwierzytelnianie hasłem</string>
+    <string name="title_change_password">Zmień hasło</string>
     <string name="title_delete_account">Usuń konto</string>
     <string name="title_account_delete">Usunąć to konto bezpowrotnie?</string>
     <string name="title_identity_delete">Usunąć tożsamość bezpowrotnie?</string>
@@ -1054,10 +1068,12 @@
     <string name="title_editasnew">Edytuj jako nową</string>
     <string name="title_edit_notes">Edytuj lokalne notatki</string>
     <string name="title_create_rule">Utwórz regułę &#8230;</string>
+    <string name="title_full_screen">Pełny ekran</string>
     <string name="title_force_light">Wymuś jasny motyw</string>
     <string name="title_share">Udostępnij</string>
     <string name="title_event">Dodaj do kalendarza</string>
     <string name="title_pin">Dodaj skrót</string>
+    <string name="title_pin_label">Tytuł skrótu</string>
     <string name="title_print">Drukuj</string>
     <string name="title_print_header">Wydrukuj nagłówek</string>
     <string name="title_print_images">Drukuj obrazy</string>
@@ -1082,7 +1098,7 @@
     <string name="title_auto_confirm">Potwierdź automatycznie po kilku sekundach</string>
     <string name="title_buttons">Wybierz przyciski</string>
     <string name="title_buttons_hint">Dostępne działania zależą od typu konta i konfiguracji</string>
-    <string name="title_button_search">Szukaj w wiadomościach</string>
+    <string name="title_button_search_similar">Szukaj podobnych wiadomości</string>
     <string name="title_button_search_text">Szukaj w tekście wiadomości</string>
     <string name="title_configure_buttons">Konfiguruj przyciski &#8230;</string>
     <string name="title_quick_actions">Wybierz działania</string>
@@ -1090,6 +1106,7 @@
     <string name="title_quick_actions_low">Niskie znaczenie</string>
     <string name="title_quick_actions_high">Wysokie znaczenie</string>
     <string name="title_quick_actions_snooze">Odłóż</string>
+    <string name="title_quick_actions_clear">Wyczyść zaznaczenie po akcji</string>
     <string name="title_trash">Kosz</string>
     <string name="title_copy">Kopiuj &#8230;</string>
     <string name="title_copy_to">Kopiuj do &#8230;</string>
@@ -1246,7 +1263,7 @@
     <string name="title_style_superscript">Indeks górny</string>
     <string name="title_style_strikethrough">Przekreślenie</string>
     <string name="title_style_protect">Zabezpiecz hasłem</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Zawartość chroniona</string>
+    <string name="title_style_protected">Zawartość chroniona</string>
     <string name="title_style_protect_size">Tekst jest zbyt długi</string>
     <string name="title_style_clear">Wyczyść formatowanie</string>
     <string name="title_style_link">Wstaw link</string>
@@ -1272,12 +1289,13 @@
     <string name="title_save_drafts">Zapisz szkice na serwerze</string>
     <string name="title_send_dialog">Pokaż opcje wysyłania</string>
     <string name="title_image_dialog">Pokaż opcje obrazu</string>
-    <string name="title_block_toolbar">Zablokuj pasek narzędzi</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Styl paska narzędzi</string>
     <string name="title_media_toolbar">Pasek mediów</string>
     <string name="title_manage_local_contacts">Zarządzaj kontaktami lokalnymi</string>
     <string name="title_insert_contact_group">Wstaw grupę kontaktów</string>
     <string name="title_insert_template">Wstaw szablon</string>
     <string name="title_create_template">Utwórz szablon</string>
+    <string name="title_select_default_identity">Wybierz domyślny adres</string>
     <string name="title_translate">Przetłumacz</string>
     <string name="title_translate_configure">Konfiguruj &#8230;</string>
     <string name="title_translate_key">Wprowadź klucz</string>
@@ -1338,8 +1356,8 @@
     <string name="title_resync">Resynchronizuj</string>
     <string name="title_charset">Kodowanie znaków</string>
     <string name="title_charset_auto">Automatyczne</string>
-    <string name="title_alternative_text">Pokaż zwykły tekst</string>
-    <string name="title_alternative_html">Pokaż HTML</string>
+    <string name="title_alternative_text">Wczytaj zwykły tekst</string>
+    <string name="title_alternative_html">Wczytaj HTML</string>
     <string name="title_no_openpgp">Nie znaleziono OpenKeychain</string>
     <string name="title_user_interaction">Przenoszenie do OpenKeychain</string>
     <string name="title_padlock">Użyj kłódki, aby odszyfrować wiadomość</string>
@@ -1703,6 +1721,7 @@
     <string name="title_reset_open">Ustaw lub wyczyść domyślne aplikacje</string>
     <string name="title_select_app">Wybierz aplikację</string>
     <string name="title_updated">Dostępna jest aktualizacja do wersji %1$s</string>
+    <string name="title_no_update">Brak dostępnych aktualizacji</string>
     <string name="title_issue">Masz pytanie lub problem?</string>
     <string name="title_yes">Tak</string>
     <string name="title_no">Nie</string>
@@ -1714,6 +1733,8 @@
     <string name="title_select_block">Zaznacz fragment</string>
     <string name="title_insert_brackets">Ujmij w nawias</string>
     <string name="title_insert_quotes">Cytuj</string>
+    <string name="title_lt_add">Dodaj wyraz</string>
+    <string name="title_lt_delete">Usuń wyraz</string>
     <string name="title_add">Dodaj</string>
     <string name="title_browse">Otwórz za pomocą</string>
     <string name="title_info">Info</string>
@@ -1813,22 +1834,27 @@
     <string name="title_widget_background">Kolor tła</string>
     <string name="title_widget_day_night">Podążaj za ciemnym motywem systemowym</string>
     <string name="title_compat_dark">Google usunęło tryb ciemny dla Androida przed wersją 10</string>
-    <string name="title_accessibility_collapsed">Zwinięta</string>
-    <string name="title_accessibility_expanded">Rozwinięta</string>
-    <string name="title_accessibility_seen">Przeczytana</string>
-    <string name="title_accessibility_unseen">Nieprzeczytana</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d wiadomość</item>
-        <item quantity="few">%1$d wiadomości</item>
-        <item quantity="many">%1$d wiadomości</item>
-        <item quantity="other">%1$d wiadomości</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Ważne</string>
     <string name="title_keyword_label2">Praca</string>
     <string name="title_keyword_label3">Osobiste</string>
     <string name="title_keyword_label4">Do zrobienia</string>
     <string name="title_keyword_label5">Później</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d wiadomość</item>
+        <item quantity="few">%1$d wiadomości</item>
+        <item quantity="many">%1$d wiadomości</item>
+        <item quantity="other">%1$d wiadomości</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Konta</string>
+    <string name="title_accessibility_folders">Foldery</string>
+    <string name="title_accessibility_searches">Wyszukiwania</string>
+    <string name="title_accessibility_menus">Menu</string>
+    <string name="title_accessibility_extras">Dodatkowe</string>
+    <string name="title_accessibility_collapsed">Zwinięta</string>
+    <string name="title_accessibility_expanded">Rozwinięta</string>
+    <string name="title_accessibility_seen">Przeczytana</string>
+    <string name="title_accessibility_unseen">Nieprzeczytana</string>
     <string name="title_accessibility_flagged">Oznaczona</string>
     <string name="title_accessibility_unflagged">Nie oznaczona</string>
     <string name="title_accessibility_collapse">Zwiń</string>

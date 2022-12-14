@@ -113,7 +113,6 @@ Related questions:
 * ~~The folder selector sometimes shows no folders for yet unknown reasons. This seems to be fixed.~~
 * ~~A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller. A workaround was added.~~
 * ~~Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
-* Scrolling to an internally linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 * A preview of a message text doesn't (always) appear on Samsung watches because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. Message preview texts are known to be displayed correctly on Pebble 2, Fitbit Charge 3, Mi band 3, and Xiaomi Amazfit BIP wearables. See also [this FAQ](#user-content-faq126).
 * A [bug in Android 6.0](https://issuetracker.google.com/issues/37068143) causes a crash with *... Invalid offset: ... Valid range is ...* when text is selected and tapping outside of the selected text. This bug has been fixed in Android 6.0.1.
 * Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.
@@ -394,6 +393,10 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(182) How can I select how a link should be opened?](#user-content-faq182)
 * [(183) How do I use Send?](#user-content-faq183)
 * [(184) How do I password protect content?](#user-content-faq184)
+* [(185) Can I install FairEmail on Windows?](#user-content-faq185)
+* [(186) How can I let the app auto store iCalendar invitations?](#user-content-faq186)
+* [(187) Are colored stars synchronized across devices?](#user-content-faq187)
+* [(188) Why is Google backup disabled?](#user-content-faq188)
 
 [I have another question.](#user-content-get-support)
 
@@ -695,8 +698,6 @@ To use a password you can use the quick setup wizard and select *Other provider*
 This Google security check is triggered more often with *less secure apps* enabled, less with an app password, and hardly when using an on-device account (OAuth).
 You might see the error *OAUTH2 asked for more*, which basically says the connection is temporarily blocked, until you confirm it is you.
 
-Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
-
 Note that an app specific password is required when two factor authentication is enabled.
 After enabling two factor authentication there will be this error message:
 
@@ -706,8 +707,8 @@ The error message "*Authentication failed - Invalid credentials*" or *Token refr
 or that getting an access token was not allowed,
 for example when the account is a [Family Link](https://support.google.com/families/answer/7101025) account, in which case you can use the Gmail app only.
 A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager.
-You can workaround this issue by using an app password.
-Please [see here](#user-content-howto) about how you can delete the account configured with the quick setup wizard.
+Please make sure permissions were granted to the app via setup step 2.
+You can try to workaround this issue by using the quick setup wizard *Gmail (Oauth)* or by using an app password.
 
 <br />
 
@@ -994,6 +995,19 @@ There is a shortcut (button) for this in the encryption settings for Android ver
 Android will ask you to set a PIN, pattern, or password if you didn't before.
 If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
+**Important**: If Android doesn't accept the password of a certificate, it probably means it doesn't support the certificate's encryption method.
+The solution is to convert the certificate like this:
+
+```
+openssl pkcs12 -nodes <your.p12 >certbag.pem
+openssl pkcs12 -export -legacy -in certbag.pem >legacy.p12
+```
+
+Note that .p12 and .pfx are interchangeable.
+You can find more information about this issue [here](https://stackoverflow.com/questions/71872900/installing-pcks12-certificate-in-android-wrong-password-bug)
+
+<br>
+
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing.
 Android only imports the first key, so to import all the keys, the certificate must first be split.
 This is not very trivial and you are advised to ask the certificate supplier for support.
@@ -1047,6 +1061,8 @@ The use of expired keys, inline encrypted/signed messages and hardware security 
 If you are looking for a free (test) S/MIME certificate, see [here](http://kb.mozillazine.org/Getting_an_SMIME_certificate) for the options.
 Please be sure to [read this first](https://davidroessli.com/logs/2019/09/free-smime-certificates-in-2019/#update20191219)
 if you want to request an S/MIME Actalis certificate.
+
+S/MIME certificates can for example be purchased via [Xolphin](https://www.xolphin.com/).
 
 How to extract a public key from a S/MIME certificate:
 
@@ -1835,6 +1851,7 @@ Since the images are downloaded from the source server [in real-time](https://bl
 this is even less secure because Google is involved too without providing much benefit.
 
 You can show images and original messages by default for trusted senders on a case-by-case basis by checking *Do not ask this again for ...*.
+You might need to reset the questions via a button in the miscellaneous settings tab page.
 
 <br />
 
@@ -1847,15 +1864,15 @@ Short version: AES 256 bit
 
 Long version:
 
-*Before version 1.1987*
+~~*Before version 1.1987*~~
 
 * A 256 bit key is derived with *PBKDF2WithHmacSHA1* using a 128 bit secure random salt and 65536 iterations
 * The used cipher is *AES/CBC/PKCS5Padding*
 
-*Since version 1.1987*
+~~*Since version 1.1987*~~
 
-* A 256 bit key is derived with *PBKDF2WithHmacSHA512* using a 128 bit secure random salt and 120000 iterations
-* The used cipher is *AES/GCM/NoPadding*
+* ~~A 256 bit key is derived with *PBKDF2WithHmacSHA512* using a 128 bit secure random salt and 120000 iterations~~
+* ~~The used cipher is *AES/GCM/NoPadding*~~
 
 <br />
 
@@ -2570,8 +2587,15 @@ Note that email addresses are formatted like this:
 "Somebody" <somebody@example.org>
 ``
 
-Note that message texts are normalized, which means that all whitespaces (spaces, tabs, line breaks, etc) are replaced by a single space.
+Note that message texts are normalized when not using a regex, which means that all whitespaces (spaces, tabs, line breaks, etc) are replaced by a single space.
 This makes it easier to match texts on multiple lines or when the line break is at different places.
+
+Since version 1.1996 it is possible to use [Jsoup selectors](https://jsoup.org/cookbook/extracting-data/selector-syntax) to match HTML elements,
+by prefixing the selector by *jsoup:* and entering it as text contains condition, like for example:
+
+```
+html > body > div > a[href=https://example.org]
+```
 
 You can use multiple rules, possibly with a *stop processing*, for an *or* or a *not* condition.
 
@@ -2930,9 +2954,9 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 
 The original message view will use a dark background when using a dark theme for Android version 10 and later.
 
-For Android before version 10 Google removed this feature from the [Android System WebView](https://play.google.com/store/apps/details?id=com.google.android.webview),
-even though it worked fine in most cases.
-Please see [this issue](https://issuetracker.google.com/issues/237785596) (requires a Google account login) requesting to restore this feature again for more information.
+~~For Android before version 10 Google removed this feature from the [Android System WebView](https://play.google.com/store/apps/details?id=com.google.android.webview),~~
+~~even though it worked fine in most cases.~~
+~~Please see [this issue](https://issuetracker.google.com/issues/237785596) (requires a Google account login) requesting to restore this feature again for more information.~~
 
 <br />
 
@@ -3846,6 +3870,17 @@ so you cannot use FairEmail or any other email client to access Tutanota.
 
 **Cyberfear** does not support IMAP, so you'll need to manually configure a POP3 account.
 
+**Skiff** uses a proprietary email protocol
+and [does not support IMAP](https://www.skiff.com/blog/tutanota-alternatives-comparison)
+so you cannot use FairEmail or any other email client to access Skiff.
+
+**Tildamail** uses a proprietary email protocol and does not support IMAP,
+so you cannot use FairEmail or any other email client to access Tildamail.
+
+**Criptext** uses a proprietary email protocol
+and [does not directly support IMAP](https://www.reddit.com/r/privacy/comments/chs82k/comment/ewrxxcn/),
+so you cannot use FairEmail or any other Android email client to access Criptext.
+
 <br />
 
 <a name="faq130"></a>
@@ -4022,6 +4057,7 @@ The confusing Microsoft specific server error *User is authenticated but not con
 * Required server components are disabled, please see [this article](https://learn.microsoft.com/en-us/exchange/troubleshoot/user-and-shared-mailboxes/pop3-imap-owa-activesync-office-365) about enabling IMAP, MAPI, etc.
 * Push messages are enabled for too many folders: see [this FAQ](#user-content-faq23) for more information and a workaround
 * There were too many login attempts in a too short time, for example by using multiple email clients at the same time
+* The wrong account was selected in the Microsoft account selector, for example an account with a different email address or a personal instead of a business account
 * An ad blocker or DNS changer is being used
 * There is a problem with the Exchange server license: it might be expired or for another server edition
 * An alias email address is being used as username instead of the primary email address
@@ -4041,6 +4077,8 @@ When using a shared mailbox, you might want to enable the option *Synchronize sh
 
 Sometimes it helps to use the *Other provider* wizard instead of the *Outlook/Office 365* wizard.
 You might need an app password for this, please see [this FAQ](#user-content-faq14).
+
+Background: this error happens if logging in to an account succeeded (with OAuth), but logging in to the email (IMAP/SMTP) server fails for some reason.
 
 <br />
 
@@ -4306,6 +4344,7 @@ Note that in case of IMAP all messages on your device are also on the email serv
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq152)
 
 You can insert the email addresses of all contacts in a contact group via the three dots menu of the message composer.
+You can also long press the person-add icon at the end of the to/cc/bcc/field.
 
 You can define contact groups with the Android contacts app, please see [here](https://support.google.com/contacts/answer/30970) for instructions.
 
@@ -4354,6 +4393,8 @@ A *winmail.dat* file is sent by an incorrectly configured Outlook client.
 It is a Microsoft specific file format ([TNEF](https://en.wikipedia.org/wiki/Transport_Neutral_Encapsulation_Format)) containing a message and possibly attachments.
 
 You can find some more information about this file [here](https://support.mozilla.org/en-US/kb/what-winmaildat-attachment).
+
+FairEmail has limited support for this file type.
 
 You can view it with for example the Android app [Letter Opener](https://play.google.com/store/apps/details?id=app.letteropener).
 
@@ -4778,9 +4819,11 @@ Related questions:
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq173)
 
-* The Play store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
-* The Play store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
+* The Play Store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
+* The Play Store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
 * The Play Store version does not support Gravatars/Libravatars due to Play Store policies
+* The Play Store version does not support auto storing iCalendar invitations, see [this FAQ](#user-content-faq186) for more information
+* The Play Store version is released about once a month only because I am tired of 1-star ratings for *Too many updates*. If you want to receive more updates, you can join the [Play Store test program](https://play.google.com/apps/testing/eu.faircode.email).
 * The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently, but updates need to be installed manually
 * The GitHub version has some different links, some more options (like sharing the HTML of a message) and some different default values (more geared to advanced users)
 * The GitHub version can be installed as an update over the Play store version, whereas the F-Droid build can't (see below for more details)
@@ -4937,6 +4980,9 @@ Since version 1.1974 there is an option to check paragraphs after a new line.
 
 The suboption *Use formal form* can be enabled to let LanguageTool suggest more formal text (business, legal, etc).
 
+Since version 1.2000 you can configure a username and an API key to access the premium features.
+You can long press text to select a word, and add it to or remove it from the personal dictionary via the *copy/paste* pop-up menu.
+
 <br />
 
 <a name="faq181"></a>
@@ -5031,9 +5077,74 @@ You can use [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) or [S/MIME]
 
 [Cross-site scripting](https://en.wikipedia.org/wiki/Cross-site_scripting) is prevented by using [DOMPurify](https://github.com/cure53/DOMPurify) (Apache License Version 2.0).
 
-Protected content is only available in non-Play Store versions of the app (since version 1.1985).
+Protected content is only available in non-Play Store versions of the app (since version 1.1985) and requires Android 8 Oreo or later.
 
 Sending protected content is a pro feature, decrypting protected content is a free feature.
+
+<br />
+
+<a name="faq185"></a>
+**(185) Can I install FairEmail on Windows?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq185)
+
+Yes, you can if you use Windows 11 or later and install the [Windows Subsystem for Android](https://learn.microsoft.com/en-us/windows/android/wsa/).
+
+You'll need to [download the GitHub version](https://github.com/M66B/FairEmail/releases) of the app and sideload it,
+which means that you need to enable developer mode, please [see here](https://learn.microsoft.com/en-us/windows/android/wsa/#test-and-debug),
+and that you need to install adb (platform tools), [see here](https://developer.android.com/studio/command-line/adb).
+
+You can install the app via the Windows command line like this:
+
+```
+cd /path/to/platform-tools
+adb connect 127.0.0.1:58526
+adb install /path/to/FairEmail-xxx.apk
+```
+
+It is also possible to install the Play Store, but this is more complicated.
+
+The app isn't available in the Amazon store because Amazon rebuilds all Android apps, and unfortunately, the app doesn't work correctly after rebuilding anymore.
+Amazon never responded to an issue reported about this.
+
+<br />
+
+<a name="faq186"></a>
+**(186) How can I let the app auto store iCalendar invitations?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq186)
+
+* Install the [GitHub version](https://github.com/M66B/FairEmail/releases) of the app
+* Grant permissions via setup step 2 of the main settings screen
+* Select a calendar in the accounts settings under *Manual setup and account options* (you can use the *Reset* button to disable storing invitations)
+
+New invitations will be stored automatically as *tentative*, with no alarms and reminders set.
+If you accept or decline an invitation, the status will be updated accordingly, after the accept/decline message has been sent successfully.
+Received updates and cancellations will be processed as well.
+
+This feature is available since version 1.1996.
+
+This feature is not available in the Play store version of the app due to the permissions required.
+
+This is a pro feature.
+
+<br />
+
+<a name="faq187"></a>
+**(187) Are colored stars synchronized across devices?**
+
+Colored stars can't be stored on email servers because email protocols do not support this.
+In other words, the color of stars is stored on your device only, and won't be synchronized across devices.
+
+<br />
+
+<a name="faq188"></a>
+**(188) Why is Google backup disabled?**
+
+Google backup is disabled to prevent privacy-sensitive information, like account credentials and email addresses,
+from [automatically being sent to Google](https://developer.android.com/guide/topics/data/autobackup).
+
+Unfortunately, it is not possible to enable cloud backup for other backup software without enabling Google backup.
 
 <br />
 

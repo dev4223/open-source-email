@@ -228,6 +228,7 @@
     <string name="title_setup_free">היישומון הזה חופשי לשימוש?</string>
     <string name="title_setup_permissions">הענקת הרשאות</string>
     <string name="title_setup_permissions_remark">כדי לגשת לנתונים של איש הקשר (רשות)</string>
+    <string name="title_setup_permissions_calendar">לאחסון הזמנות (רשות)</string>
     <string name="title_setup_permissions_explanation">נדרשות הרשאות לאנשי הקשר כדי לחפש פרטי אנשי קשר ולהציע אנשי קשר</string>
     <string name="title_setup_permissions_notify">להציג התראות על הודעות (רשות)</string>
     <string name="title_setup_permissions_notify_explanation">נדרשות הרשאות להתראות כדי להציג התראות להודעות חדשות בשורת המצב</string>
@@ -278,6 +279,7 @@
     <string name="title_setup_import_rules">ייבוא כללי סינון</string>
     <string name="title_setup_import_contacts">ייבוא אנשי קשר מקומיים</string>
     <string name="title_setup_import_answers">ייבוא תבניות תגובות</string>
+    <string name="title_setup_import_searches">ייבוא חיפושים שמורים</string>
     <string name="title_setup_import_settings">ייבוא אפשרויות</string>
     <string name="title_setup_exported">ההגדרות עברו ייצוא</string>
     <string name="title_setup_imported">ההגדרות עברו ייבוא</string>
@@ -369,6 +371,7 @@
     <string name="title_advanced_use_blocklist">העברת הודעות משמות תחום שברשימת החסימה לתיקיית הספאם</string>
     <string name="title_advanced_use_blocklist_pop3">דילוג על הודעות משמות תחום ברשימת החסימה (POP3 בלבד)</string>
     <string name="title_advanced_tune_keep_alive">כוונון משך ה־keep-alive אוטומטית</string>
+    <string name="title_advanced_blocklist_warning">רשימות החסימה אינן מושלמות והן עלולות לחסום הודעות תמימות!</string>
     <string name="title_advanced_keyboard">הצגת מקלדת כברירת מחדל</string>
     <string name="title_advanced_keyboard_no_fullscreen">מניעת מקלדת במסך מלא</string>
     <string name="title_advanced_suggest_names">שמות משתמשים וכתובות דוא״ל</string>
@@ -612,6 +615,8 @@
     <string name="title_advanced_notifications_background">להשתמש בשירות רקע לסנכרון הודעות</string>
     <string name="title_advanced_notifications_background_hint">שירות רקע יכול להיעצר על ידי Android בכל רגע נתון, אך אינו דורש התראה בשורת המצב</string>
     <string name="title_advanced_confirm_links">אישור פתיחת קישור</string>
+    <string name="title_advanced_sanitize_links">הסרת משתני מעקב כברירת מחדל</string>
+    <string name="title_advanced_sanitize_links_hint">רק בעת אישור קישורים</string>
     <string name="title_advanced_check_links_dbl">לבדוק קישורים חשודים מול רשימת שמות תחום חסומים</string>
     <string name="title_advanced_confirm_images">לא להציג תמונות כברירת מחדל</string>
     <string name="title_advanced_ask_images">אישור הצגת תמונות</string>
@@ -638,6 +643,7 @@
     <string name="title_advanced_clear_all_remark">נתוני היישומון יימחקו ללא אפשרות לשחזור!</string>
     <string name="title_advanced_sign_default">חתימה כבררת מחדל</string>
     <string name="title_advanced_encrypt_default">הצפנה כבררת מחדל</string>
+    <string name="title_advanced_encrypt_auto">להצפין אוטומטית כשכל מפתחות הנמענים זמינים</string>
     <string name="title_advanced_auto_decrypt">פענוח הודעות אוטומטית</string>
     <string name="title_advanced_auto_undo_decrypt">להשתמש בפענוח עם סגירת דיון</string>
     <string name="title_advanced_openpgp">ספק OpenPGP</string>
@@ -671,12 +677,15 @@
     <string name="title_advanced_language_system">מערכת</string>
     <string name="title_advanced_lt">שילוב מול LanguageTool</string>
     <string name="title_advanced_lt_auto">בדיקת פסקה אחרי שורה חדשה</string>
+    <string name="title_advanced_lt_user">שם משתמש (רשות)</string>
+    <string name="title_advanced_lt_key">מפתח API (רשות)</string>
     <string name="title_advanced_deepl">שילוב של DeepL</string>
     <string name="title_advanced_virus_total">שילוב של VirusTotal</string>
     <string name="title_advanced_sdcard">ארצה להשתמש בכרטיס SD</string>
     <string name="title_advanced_watchdog">לבדוק מדי פעם אם FairEmail עדיין פעיל</string>
     <string name="title_advanced_updates">איתור עדכונים ב־GitHub</string>
     <string name="title_advanced_check_weekly">לבדוק שבועית במקום יומית</string>
+    <string name="title_advanced_beta">איתור גרסאות בדיקה ב־BitBucket</string>
     <string name="title_advanced_changelog">הצגת יומן השינויים לאחר עדכון</string>
     <string name="title_advanced_experiments">התנסות ביכולות נסיוניות</string>
     <string name="title_advanced_crash_reports">שליחת דוחות שגיאה</string>
@@ -791,6 +800,9 @@
     <string name="title_advanced_cleanup_hint">פעולה זו תמחק את כל הקבצים הזמניים</string>
     <string name="title_advanced_never_favorite">לעולם לא להציב במועדפים</string>
     <string name="title_advanced_edit_name">עריכת שם</string>
+    <string name="title_create_folder" comment="title_create_folder&#10;Title of dialog to create a folder">יצירת תיקייה</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">שם תיקייה</string>
+    <string name="title_create_folder_parent" comment="title_create_folder_parent&#10;Title for parent folder selection (spinner)">תיקיית הורה</string>
     <string name="title_advanced_swipe_actions">הגדרת פעולות החלקה</string>
     <string name="title_advanced_swipe_actions_hint">יגדיר את פעולות החלקה שמאלה וימינה לכל חשבונות ה־IMAP</string>
     <string name="title_advanced_swipe_sensitivity">רגישות החלקה שמאלה/ימינה</string>
@@ -822,6 +834,7 @@
     <string name="title_account_noop_hint">הגדרה זו תרענן את החיבור בצורה יותר פעילה אך גם תצרוך יותר סוללה</string>
     <string name="title_account_partial_fetch_hint">יש להשבית את זה רק במקרה של הודעות ריקות או קבצים מצורפים פגומים</string>
     <string name="title_color">צבע</string>
+    <string name="title_calendar">לוח שנה</string>
     <string name="title_background">רקע</string>
     <string name="title_transparent">שקוף</string>
     <string name="title_account_ondemand">סנכרון ידני</string>
@@ -894,6 +907,7 @@
     <string name="title_drafts_select">שליחת הודעות דוא״ל דורש בחירת תיקיית טיוטות בהגדרות החשבון</string>
     <string name="title_account_auth_update">עדכון אימות</string>
     <string name="title_account_auth_password">מעבר לאימות עם סיסמה</string>
+    <string name="title_change_password">החלפת סיסמה</string>
     <string name="title_delete_account">מחיקת חשבון</string>
     <string name="title_account_delete">למחוק את החשבון הזה לצמיתות?</string>
     <string name="title_identity_delete">למחוק את הזהות הזאת לצמיתות?</string>
@@ -1056,10 +1070,12 @@
     <string name="title_editasnew">עריכה כחדש</string>
     <string name="title_edit_notes">עריכת הערות מקומיות</string>
     <string name="title_create_rule">יצירת כלל &#8230;</string>
+    <string name="title_full_screen">מסך מלא</string>
     <string name="title_force_light">אילוץ ערכת נושא בהירה</string>
     <string name="title_share">שיתוף</string>
     <string name="title_event">הוספה ללוח השנה</string>
     <string name="title_pin">הוספת קיצור דרך</string>
+    <string name="title_pin_label">כותרת קיצור הדרך</string>
     <string name="title_print">הדפסה</string>
     <string name="title_print_header">הדפסת כותרת</string>
     <string name="title_print_images">הדפסת הודעות</string>
@@ -1084,7 +1100,7 @@
     <string name="title_auto_confirm">לאשר אוטומטית לאחר מספר שניות</string>
     <string name="title_buttons">בחירת כפתורים</string>
     <string name="title_buttons_hint">הפעולות שזמינות בפועל תלויות בסוג החשבון וההגדרות</string>
-    <string name="title_button_search">חיפוש בהודעות</string>
+    <string name="title_button_search_similar">חיפוש הודעות דומות</string>
     <string name="title_button_search_text">חיפוש בטקסט ההודעות</string>
     <string name="title_configure_buttons">הגדרת כפתורים&#8230;</string>
     <string name="title_quick_actions">בחירת פעולות</string>
@@ -1092,6 +1108,7 @@
     <string name="title_quick_actions_low">חשיבות נמוכה</string>
     <string name="title_quick_actions_high">חשיבות גבוהה</string>
     <string name="title_quick_actions_snooze">השהיה</string>
+    <string name="title_quick_actions_clear">פינוי הבחירה לאחר פעולה</string>
     <string name="title_trash">אשפה</string>
     <string name="title_copy">העתקה&#8230;</string>
     <string name="title_copy_to">העתקה אל&#8230;</string>
@@ -1250,7 +1267,7 @@
     <string name="title_style_superscript">כתב עילי</string>
     <string name="title_style_strikethrough">קו חוצה</string>
     <string name="title_style_protect">הגנה בסיסמה</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">תוכן מוגן</string>
+    <string name="title_style_protected">תוכן מוגן</string>
     <string name="title_style_protect_size">הטקסט ארוך מדי</string>
     <string name="title_style_clear">הסרת עיצוב</string>
     <string name="title_style_link">הוספת קישור</string>
@@ -1276,12 +1293,13 @@
     <string name="title_save_drafts">שמירת טיוטות בשרת</string>
     <string name="title_send_dialog">הצגת אפשרויות שילוח</string>
     <string name="title_image_dialog">הצגת אפשרויות תמונה</string>
-    <string name="title_block_toolbar">סרגל כלים למקטע</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">סרגל כלי עיצוב</string>
     <string name="title_media_toolbar">סרגל כלי מדיה</string>
     <string name="title_manage_local_contacts">ניהול אנשי קשר מקומיים</string>
     <string name="title_insert_contact_group">הוספת קבוצת אנשי קשר</string>
     <string name="title_insert_template">הוספת תבנית</string>
     <string name="title_create_template">יצירת תבנית</string>
+    <string name="title_select_default_identity">בחירת כתובת ברירת מחדל</string>
     <string name="title_translate">תרגום</string>
     <string name="title_translate_configure">הגדרה&#8230;</string>
     <string name="title_translate_key">נא להקליד מפתח</string>
@@ -1342,8 +1360,8 @@
     <string name="title_resync">סנכרון מחדש</string>
     <string name="title_charset">הצפנה</string>
     <string name="title_charset_auto">אוטומטי</string>
-    <string name="title_alternative_text">הצגת טקסט פשוט</string>
-    <string name="title_alternative_html">הצגת HTML</string>
+    <string name="title_alternative_text">טעינת טקסט פשוט</string>
+    <string name="title_alternative_html">טעינת HTML</string>
     <string name="title_no_openpgp">OpenKeychain לא נמצא</string>
     <string name="title_user_interaction">מועבר ל־OpenKeychain</string>
     <string name="title_padlock">המנעול משמש לפענוח ההודעה</string>
@@ -1706,6 +1724,7 @@
     <string name="title_reset_open">הגדרת או מחיקת יישומוני בררת מחדל</string>
     <string name="title_select_app">בחירת יישומון</string>
     <string name="title_updated">עדכון לגרסה %1$s הזמינה</string>
+    <string name="title_no_update">אין עדכון זמין</string>
     <string name="title_issue">שאלה או טענה?</string>
     <string name="title_yes">כן</string>
     <string name="title_no">לא</string>
@@ -1717,6 +1736,8 @@
     <string name="title_select_block">בחירת מקטע</string>
     <string name="title_insert_brackets">תיחום בסוגריים</string>
     <string name="title_insert_quotes">ציטוט</string>
+    <string name="title_lt_add">הוספת מילה</string>
+    <string name="title_lt_delete">הסרת מילה</string>
     <string name="title_add">הוספה</string>
     <string name="title_browse">פתיחה באמצעות</string>
     <string name="title_info">פרטים</string>
@@ -1818,22 +1839,27 @@
     <string name="title_widget_background">צבע הרקע</string>
     <string name="title_widget_day_night">התחקות אחר ערכת העיצוב הכהה של המערכת</string>
     <string name="title_compat_dark">Google הסירה מצב כהה לגרסאות Android שקדמו ל־10</string>
-    <string name="title_accessibility_collapsed">מצומצם</string>
-    <string name="title_accessibility_expanded">מורחב</string>
-    <string name="title_accessibility_seen">נקראה</string>
-    <string name="title_accessibility_unseen">לא נקראו</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">הודעה</item>
-        <item quantity="two">%1$d הודעות</item>
-        <item quantity="many">%1$d הודעות</item>
-        <item quantity="other">%1$d הודעות</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">חשוב</string>
     <string name="title_keyword_label2">עבודה</string>
     <string name="title_keyword_label3">אישי</string>
     <string name="title_keyword_label4">לביצוע</string>
     <string name="title_keyword_label5">אחר כך</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">הודעה</item>
+        <item quantity="two">%1$d הודעות</item>
+        <item quantity="many">%1$d הודעות</item>
+        <item quantity="other">%1$d הודעות</item>
+    </plurals>
+    <string name="title_accessibility_accounts">חשבונות</string>
+    <string name="title_accessibility_folders">תיקיות</string>
+    <string name="title_accessibility_searches">חיפושים</string>
+    <string name="title_accessibility_menus">תפריטים</string>
+    <string name="title_accessibility_extras">תוספות</string>
+    <string name="title_accessibility_collapsed">מצומצם</string>
+    <string name="title_accessibility_expanded">מורחב</string>
+    <string name="title_accessibility_seen">נקראה</string>
+    <string name="title_accessibility_unseen">לא נקראו</string>
     <string name="title_accessibility_flagged">בכוכב</string>
     <string name="title_accessibility_unflagged">ללא כוכב</string>
     <string name="title_accessibility_collapse">צמצום</string>

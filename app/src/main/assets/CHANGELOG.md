@@ -2,9 +2,152 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
-### [Mei long](https://en.wikipedia.org/wiki/Mei_long)
+### [Ostromia](https://en.wikipedia.org/wiki/Ostromia)
+
+For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
+
+### 1.2013 - 2022-12-09
+
+* Added scrolling/fixed style toolbar
+* Added folder create button to folder selection dialog
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2012 - 2022-12-01
+
+* Small improvements and minor bug fixes
 
 ### Next version
+
+* Added send option for default text color
+* Added display option to swap trash/archive in bottom action bar
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2011 - 2022-11-29
+
+* Added optional button to show original message full screen
+* Added optional colored star quick action button
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2010 - 2022-11-25
+
+* Fixed inserting links into signatures
+* Small improvements and minor bug fixes
+
+### 1.2009 - 2022-11-25
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2008 - 2022-11-23
+
+* Improved original message view scrolling
+* Small improvements and minor bug fixes
+* Updated translations
+
+### [Ninjatitan](https://en.wikipedia.org/wiki/Ninjatitan)
+
+### 1.2007 - 2022-11-17
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2006 - 2022-11-16
+
+* Added searching again on the server in another account/folder
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2004 - 2022-11-15
+
+* Added send reminder for no/suitable internet
+* Added option to retain selection after quick action
+* LanguageTool premium: check per paragraph
+* Small improvements and minor bug fixes
+* Updated libraries
+* Updated translations
+
+### 1.2003 - 2022-11-12
+
+* Added option to remove tracking parameters by default (privacy settings tab page)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2002 - 2022-11-10
+
+* Fixed Outlook / Office 365 authentication
+* Updated translations
+
+### 1.2001 - 2022-11-10
+
+* Fixed Outlook / Office 365 OAuth in some cases
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2000 - 2022-11-10
+
+* Added OAuth for AOL (quick setup wizard)
+* Added change password button (main settings/extras section)
+* Added support for LanguageTool premium features, [see the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq180)
+* Added optional unified inbox navigation menu item (when the inboxes and unified folders diverge)
+* Added zipping attachments in the message composer (long press attached file)
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.1999 - 2022-11-05
+
+* Fixed refreshing OAuth tokens in some situations
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1998 - 2022-11-05
+
+* Fixed purging spam/trash in some situations
+
+### 1.1997 - 2022-11-05
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1996 - 2022-11-04
+
+* Added auto storing iCalendar invitations, [see the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq186)
+* Added Jsoup selector conditions, [see the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### [Mei long](https://en.wikipedia.org/wiki/Mei_long)
+
+### 1.1995 - 2022-10-30
+
+* Added selectable widget opacity for Android 12 and later
+* Added option to auto encrypt when all public keys are available
+* Small improvements and minor bug fixes
+* Updated libraries
+* Updated translations
+
+### 1.1994 - 2022-10-29
+
+* Fixed settings export for older devices
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1993 - 2022-10-28
+
+* Fixed rare crash
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.1992 - 2022-10-27
+
+* Fixed creating folders
+
+### 1.1991 - 2022-10-26
 
 * Small improvements and minor bug fixes
 * Updated AndroidX

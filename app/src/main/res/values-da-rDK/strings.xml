@@ -202,6 +202,7 @@
     <string name="title_setup_free">Er denne app gratis at bruge?</string>
     <string name="title_setup_permissions">Giv tilladelser</string>
     <string name="title_setup_permissions_remark">For at få tilgå kontaktoplysninger (valgfrit)</string>
+    <string name="title_setup_permissions_calendar">For at gemme invitationer (valgfrit)</string>
     <string name="title_setup_permissions_explanation">Kontakttilladelser kræves for at slå kontaktoplysninger op og foreslå kontaktpersoner</string>
     <string name="title_setup_permissions_notify">For at vise nye beskednotifikationer (valgfrit)</string>
     <string name="title_setup_permissions_notify_explanation">Notifikationstilladelse kræves for at vise notifikationer om nye beskeder på statusbjælken</string>
@@ -252,6 +253,7 @@
     <string name="title_setup_import_rules">Import af filterregler</string>
     <string name="title_setup_import_contacts">Import af lokale kontakter</string>
     <string name="title_setup_import_answers">Importér svarskabeloner</string>
+    <string name="title_setup_import_searches">Importér gemte søgninger</string>
     <string name="title_setup_import_settings">Importindstillinger</string>
     <string name="title_setup_exported">Indstillinger eksporteret</string>
     <string name="title_setup_imported">Indstillinger importeret</string>
@@ -343,6 +345,7 @@
     <string name="title_advanced_use_blocklist">Flyt beskeder fra blokeringslistedomæner til Spammappen</string>
     <string name="title_advanced_use_blocklist_pop3">Overspring beskeder fra domæner på en sortliste (kun POP3)</string>
     <string name="title_advanced_tune_keep_alive">Justér automatisk hold i live intervallet</string>
+    <string name="title_advanced_blocklist_warning">Bloklister er ikke perfekt og kan blokere mere end blot spam!</string>
     <string name="title_advanced_keyboard">Vis tastatur som standard</string>
     <string name="title_advanced_keyboard_no_fullscreen">Forhindr fuldskærmstastatur</string>
     <string name="title_advanced_suggest_names">Brugernavne og e-mailadresser</string>
@@ -586,6 +589,8 @@
     <string name="title_advanced_notifications_background">Benyt baggrundstjeneste til beskedsynkronisering</string>
     <string name="title_advanced_notifications_background_hint">En baggrundstjeneste kan til enhver tid stoppes af Android, men behøver ingen statusbjælkenotifikation</string>
     <string name="title_advanced_confirm_links">Bekræft åbning af links</string>
+    <string name="title_advanced_sanitize_links">Fjern som standard sporingsparametre</string>
+    <string name="title_advanced_sanitize_links_hint">Kun ved linkbekræftelse</string>
     <string name="title_advanced_check_links_dbl">Tjek domæneblokeringslister for mistænkelige links</string>
     <string name="title_advanced_confirm_images">Som standard Ingen billedvisning</string>
     <string name="title_advanced_ask_images">Bekræft visning af billeder</string>
@@ -612,6 +617,7 @@
     <string name="title_advanced_clear_all_remark">Alle app-data slettes irreversibelt!</string>
     <string name="title_advanced_sign_default">Signér som standard</string>
     <string name="title_advanced_encrypt_default">Kryptér som standard</string>
+    <string name="title_advanced_encrypt_auto">Kryptér automatisk, når alle modtageres nøgler er tilgængelige</string>
     <string name="title_advanced_auto_decrypt">Auto-dekryptér beskeder</string>
     <string name="title_advanced_auto_undo_decrypt">Fortryd dekryptering ved lukning af samtale</string>
     <string name="title_advanced_openpgp">OpenPGP-leverandør</string>
@@ -645,12 +651,15 @@
     <string name="title_advanced_language_system">System</string>
     <string name="title_advanced_lt">LanguageTool-integration</string>
     <string name="title_advanced_lt_auto">Tjek afsnit efter en ny linje</string>
+    <string name="title_advanced_lt_user">Brugernavn (valgfrit)</string>
+    <string name="title_advanced_lt_key">API-nøgle (valgfri)</string>
     <string name="title_advanced_deepl">DeepL-integration</string>
     <string name="title_advanced_virus_total">VirusTotal-integration</string>
     <string name="title_advanced_sdcard">Et SD-kort ønskes benyttet</string>
     <string name="title_advanced_watchdog">Tjek periodisk om FairEmail stadig er aktiv</string>
     <string name="title_advanced_updates">Tjek for GitHub-opdateringer</string>
     <string name="title_advanced_check_weekly">Tjek ugentligt i stedet for dagligt</string>
+    <string name="title_advanced_beta">Tjek for testversioner på BitBucket</string>
     <string name="title_advanced_changelog">Vis ændringslog efter opdatering</string>
     <string name="title_advanced_experiments">Prøv eksperimentelle funktioner</string>
     <string name="title_advanced_crash_reports">Send fejlrapporter</string>
@@ -766,6 +775,9 @@
     <string name="title_advanced_cleanup_hint">Dette vil slette alle midlertidige filer</string>
     <string name="title_advanced_never_favorite">Gør aldrig til favorit</string>
     <string name="title_advanced_edit_name">Redigér navn</string>
+    <string name="title_create_folder" comment="title_create_folder&#10;Title of dialog to create a folder">Opret mappe</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Mappenavn</string>
+    <string name="title_create_folder_parent" comment="title_create_folder_parent&#10;Title for parent folder selection (spinner)">Overordnet mappe</string>
     <string name="title_advanced_swipe_actions">Indstil strygehandlinger</string>
     <string name="title_advanced_swipe_actions_hint">Dette opsætter handlinger for venstre- og højrestrygning for alle IMAP-konti</string>
     <string name="title_advanced_swipe_sensitivity">Venstre/højre strygefølsomhed</string>
@@ -797,6 +809,7 @@
     <string name="title_account_noop_hint">Dette vil opdatere forbindelsen mere aktivt, men også forbruge mere batteristrøm</string>
     <string name="title_account_partial_fetch_hint">Deaktivér dette kun i tilfælde af tomme beskeder eller ødelagte vedhæftninger</string>
     <string name="title_color">Farve</string>
+    <string name="title_calendar">Kalender</string>
     <string name="title_background">Baggrund</string>
     <string name="title_transparent">Gennemsigtig</string>
     <string name="title_account_ondemand">Synkronisér manuelt</string>
@@ -869,6 +882,7 @@
     <string name="title_drafts_select">Afsendelse af e-mails kræver valg af en kladdemappe under kontoindstillingerne</string>
     <string name="title_account_auth_update">Opdatér godkendelse</string>
     <string name="title_account_auth_password">Skift til adgangskodegodkendelse</string>
+    <string name="title_change_password">Skift adgangskode</string>
     <string name="title_delete_account">Slet konto</string>
     <string name="title_account_delete">Slet denne konto permanent?</string>
     <string name="title_identity_delete">Slet denne identitet permanent?</string>
@@ -1031,10 +1045,12 @@
     <string name="title_editasnew">Redigér som ny</string>
     <string name="title_edit_notes">Redigér lokale notater</string>
     <string name="title_create_rule">Opret regel &#8230;</string>
+    <string name="title_full_screen">Fuldskærm</string>
     <string name="title_force_light">Gennemtving lyst tema</string>
     <string name="title_share">Del</string>
     <string name="title_event">Føj til kalender</string>
     <string name="title_pin">Tilføj genvej</string>
+    <string name="title_pin_label">Genvejsnavn</string>
     <string name="title_print">Udskriv</string>
     <string name="title_print_header">Udskriv header</string>
     <string name="title_print_images">Udskriv billeder</string>
@@ -1059,7 +1075,7 @@
     <string name="title_auto_confirm">Auto-bekræft efter et par sekunder</string>
     <string name="title_buttons">Vælg knapper</string>
     <string name="title_buttons_hint">De faktisk tilgængelige handlinger afhænger af kontotype og opsætning</string>
-    <string name="title_button_search">Søg i beskeder</string>
+    <string name="title_button_search_similar">Søg i tilsvarende beskeder</string>
     <string name="title_button_search_text">Søg i beskedtekst</string>
     <string name="title_configure_buttons">Opsæt knapper &#8230;</string>
     <string name="title_quick_actions">Vælg handlinger</string>
@@ -1067,6 +1083,7 @@
     <string name="title_quick_actions_low">Lav vigtighed</string>
     <string name="title_quick_actions_high">Høj vigtighed</string>
     <string name="title_quick_actions_snooze">Udsæt</string>
+    <string name="title_quick_actions_clear">Ryd valg efter handling</string>
     <string name="title_trash">Papirkurv</string>
     <string name="title_copy">Kopiér &#8230;</string>
     <string name="title_copy_to">Kopiér til &#8230;</string>
@@ -1225,7 +1242,7 @@
     <string name="title_style_superscript">Hævet</string>
     <string name="title_style_strikethrough">Gennemstreget</string>
     <string name="title_style_protect">Adgangskodebeskyttelse</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Beskyttet indhold</string>
+    <string name="title_style_protected">Beskyttet indhold</string>
     <string name="title_style_protect_size">Tekst for lang</string>
     <string name="title_style_clear">Ryd formatering</string>
     <string name="title_style_link">Indsæt link</string>
@@ -1251,12 +1268,13 @@
     <string name="title_save_drafts">Gem udkast på serveren</string>
     <string name="title_send_dialog">Vis Send-muligheder</string>
     <string name="title_image_dialog">Vis Billed-muligheder</string>
-    <string name="title_block_toolbar">Blokværktøjsbjælke</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Tilpas værktøjslinje</string>
     <string name="title_media_toolbar">Medieværktøjsbjælke</string>
     <string name="title_manage_local_contacts">Håndtér lokale kontakter</string>
     <string name="title_insert_contact_group">Indsæt kontaktgruppe</string>
     <string name="title_insert_template">Indsæt skabelon</string>
     <string name="title_create_template">Opret skabelon</string>
+    <string name="title_select_default_identity">Vælg standardadresse</string>
     <string name="title_translate">Oversæt</string>
     <string name="title_translate_configure">Opsæt&#8230;</string>
     <string name="title_translate_key">Angiv nøgle</string>
@@ -1317,8 +1335,8 @@
     <string name="title_resync">Synkronisér igen</string>
     <string name="title_charset">Indkodning</string>
     <string name="title_charset_auto">Automatisk</string>
-    <string name="title_alternative_text">Vis simpel tekst</string>
-    <string name="title_alternative_html">Vis HTML</string>
+    <string name="title_alternative_text">Indlæs simpel tekst</string>
+    <string name="title_alternative_html">Indlæs HTML</string>
     <string name="title_no_openpgp">OpenKeychain ikke fundet</string>
     <string name="title_user_interaction">Overfører til OpenKeychain</string>
     <string name="title_padlock">Brug hængelåsen til at dekryptere beskeden</string>
@@ -1692,6 +1710,8 @@
     <string name="title_select_block">Vælg blok</string>
     <string name="title_insert_brackets">Indsæt kantede parenteser</string>
     <string name="title_insert_quotes">Indsæt anførselstegn</string>
+    <string name="title_lt_add">Tilføj ord</string>
+    <string name="title_lt_delete">Fjern ord</string>
     <string name="title_add">Tilføj</string>
     <string name="title_browse">Åbn med</string>
     <string name="title_info">Info</string>
@@ -1793,20 +1813,25 @@
     <string name="title_widget_background">Baggrundsfarve</string>
     <string name="title_widget_day_night">Følg mørkt systemtema</string>
     <string name="title_compat_dark">Google understøtter nu kun mørk tilstand fra og med Android 10</string>
-    <string name="title_accessibility_collapsed">Sammenfoldet</string>
-    <string name="title_accessibility_expanded">Udfoldet</string>
-    <string name="title_accessibility_seen">Læst</string>
-    <string name="title_accessibility_unseen">Ulæst</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d besked</item>
-        <item quantity="other">%1$d beskeder</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Vigtigt</string>
     <string name="title_keyword_label2">Arbejde</string>
     <string name="title_keyword_label3">Personlig</string>
     <string name="title_keyword_label4">Resterer</string>
     <string name="title_keyword_label5">Senere</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d besked</item>
+        <item quantity="other">%1$d beskeder</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Konti</string>
+    <string name="title_accessibility_folders">Mapper</string>
+    <string name="title_accessibility_searches">Søgninger</string>
+    <string name="title_accessibility_menus">Menuer</string>
+    <string name="title_accessibility_extras">Ekstra</string>
+    <string name="title_accessibility_collapsed">Sammenfoldet</string>
+    <string name="title_accessibility_expanded">Udfoldet</string>
+    <string name="title_accessibility_seen">Læst</string>
+    <string name="title_accessibility_unseen">Ulæst</string>
     <string name="title_accessibility_flagged">Stjernemarkeret</string>
     <string name="title_accessibility_unflagged">Ikke-stjernemarkeret</string>
     <string name="title_accessibility_collapse">Sammenfold</string>

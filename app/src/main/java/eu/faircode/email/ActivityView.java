@@ -999,17 +999,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         });
 
-        db.search().liveSearch().observe(owner, new Observer<List<EntitySearch>>() {
+        db.search().liveSearches().observe(owner, new Observer<List<EntitySearch>>() {
             @Override
-            public void onChanged(List<EntitySearch> search) {
-                if (search == null)
-                    search = new ArrayList<>();
-                adapterNavSearch.set(search, nav_expanded);
+            public void onChanged(List<EntitySearch> searches) {
+                if (searches == null)
+                    searches = new ArrayList<>();
+                adapterNavSearch.set(searches, nav_expanded);
 
                 boolean nav_search = prefs.getBoolean("nav_search", true);
-                ibExpanderSearch.setVisibility(search.size() > 0 ? View.VISIBLE : View.GONE);
-                rvSearch.setVisibility(search.size() > 0 && nav_search ? View.VISIBLE : View.GONE);
-                vSeparatorSearch.setVisibility(search.size() > 0 ? View.VISIBLE : View.GONE);
+                ibExpanderSearch.setVisibility(searches.size() > 0 ? View.VISIBLE : View.GONE);
+                rvSearch.setVisibility(searches.size() > 0 && nav_search ? View.VISIBLE : View.GONE);
+                vSeparatorSearch.setVisibility(searches.size() > 0 ? View.VISIBLE : View.GONE);
             }
         });
 
@@ -1055,19 +1055,20 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     protected void onStart() {
         super.onStart();
-        infoTracker.addWindowLayoutInfoListener(this, Runnable::run, layoutStateChangeCallback);
+        if (BuildConfig.DEBUG)
+            infoTracker.addWindowLayoutInfoListener(this, Runnable::run, layoutStateChangeCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        infoTracker.removeWindowLayoutInfoListener(layoutStateChangeCallback);
+        if (BuildConfig.DEBUG)
+            infoTracker.removeWindowLayoutInfoListener(layoutStateChangeCallback);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        ServiceSynchronize.state(this, true);
 
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         IntentFilter iff = new IntentFilter();
@@ -1094,7 +1095,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     @Override
     protected void onPause() {
-        ServiceSynchronize.state(this, false);
         super.onPause();
 
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
@@ -1506,6 +1506,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean updates = prefs.getBoolean("updates", true);
+        boolean beta = prefs.getBoolean("beta", false) && false;
         boolean weekly = prefs.getBoolean("weekly", Helper.hasPlayStore(this));
         long last_update_check = prefs.getLong("last_update_check", 0);
 
@@ -1518,14 +1519,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         Bundle args = new Bundle();
         args.putBoolean("always", always);
+        args.putBoolean("beta", beta);
 
         new SimpleTask<UpdateInfo>() {
             @Override
             protected UpdateInfo onExecute(Context context, Bundle args) throws Throwable {
+                boolean beta = args.getBoolean("beta");
+
                 StringBuilder response = new StringBuilder();
                 HttpsURLConnection urlConnection = null;
                 try {
-                    URL latest = new URL(BuildConfig.GITHUB_LATEST_API);
+                    URL latest = new URL(beta ? BuildConfig.BITBUCKET_DOWNLOADS_API : BuildConfig.GITHUB_LATEST_API);
                     urlConnection = (HttpsURLConnection) latest.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setReadTimeout(UPDATE_TIMEOUT);
@@ -1551,50 +1555,99 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         JSONObject jmessage = new JSONObject(response.toString());
                         if (jmessage.has("message"))
                             throw new IllegalArgumentException(jmessage.getString("message"));
-                        throw new IOException("HTTP " + status + ": " + response.toString());
+                        throw new IOException("HTTP " + status + ": " + response);
                     }
                     if (status != HttpsURLConnection.HTTP_OK)
-                        throw new IOException("HTTP " + status + ": " + response.toString());
+                        throw new IOException("HTTP " + status + ": " + response);
 
                     JSONObject jroot = new JSONObject(response.toString());
 
-                    if (!jroot.has("tag_name") || jroot.isNull("tag_name"))
-                        throw new IOException("tag_name field missing");
-                    //if (!jroot.has("html_url") || jroot.isNull("html_url"))
-                    //    throw new IOException("html_url field missing");
-                    if (!jroot.has("assets") || jroot.isNull("assets"))
-                        throw new IOException("assets section missing");
+                    if (beta) {
+                        if (!jroot.has("values"))
+                            throw new IOException("values field missing");
 
-                    // Get update info
-                    UpdateInfo info = new UpdateInfo();
-                    info.tag_name = jroot.getString("tag_name");
-                    info.html_url = jroot.getString("html_url");
-                    //if (TextUtils.isEmpty(info.html_url))
-                    info.html_url = BuildConfig.GITHUB_LATEST_URI;
+                        JSONArray jvalues = jroot.getJSONArray("values");
+                        for (int i = 0; i < jvalues.length(); i++) {
+                            JSONObject jitem = jvalues.getJSONObject(i);
+                            if (!jitem.has("links"))
+                                continue;
 
-                    // Check if new release
-                    JSONArray jassets = jroot.getJSONArray("assets");
-                    for (int i = 0; i < jassets.length(); i++) {
-                        JSONObject jasset = jassets.getJSONObject(i);
-                        if (jasset.has("name") && !jasset.isNull("name")) {
-                            String name = jasset.getString("name");
-                            if (name.endsWith(".apk")) {
-                                info.download_url = jasset.optString("browser_download_url");
-                                Log.i("Latest version=" + info.tag_name);
-                                if (BuildConfig.DEBUG)
-                                    return info;
-                                try {
-                                    if (Double.parseDouble(info.tag_name) <=
-                                            Double.parseDouble(BuildConfig.VERSION_NAME))
-                                        return null;
-                                    else
+                            JSONObject jlinks = jitem.getJSONObject("links");
+                            if (!jlinks.has("self"))
+                                continue;
+
+                            JSONObject jself = jlinks.getJSONObject("self");
+                            if (!jself.has("href"))
+                                continue;
+
+                            // .../FairEmail-v1.1995a-play-preview-release.apk
+                            String link = jself.getString("href");
+                            if (!link.endsWith(".apk"))
+                                continue;
+
+                            int slash = link.lastIndexOf('/');
+                            if (slash < 0)
+                                continue;
+
+                            String[] c = link.substring(slash + 1).split("-");
+                            if (c.length < 4 ||
+                                    !"FairEmail".equals(c[0]) ||
+                                    c[1].length() < 8 ||
+                                    !"github".equals(c[2]) ||
+                                    !"update".equals(c[3]))
+                                continue;
+
+                            // v1.1995a
+                            Integer version = Helper.parseInt(c[1].substring(3, c[1].length() - 1));
+                            if (version == null)
+                                continue;
+                            char revision = c[1].charAt(c[1].length() - 1);
+
+                            int v = BuildConfig.VERSION_CODE;
+                            char r = BuildConfig.REVISION.charAt(0);
+                            if (BuildConfig.DEBUG || version > v || (version == v && revision > r)) {
+                                UpdateInfo info = new UpdateInfo();
+                                info.tag_name = c[1];
+                                info.html_url = BuildConfig.BITBUCKET_DOWNLOADS_URI;
+                                info.download_url = link;
+                                return info;
+                            }
+                        }
+                    } else {
+                        if (!jroot.has("tag_name") || jroot.isNull("tag_name"))
+                            throw new IOException("tag_name field missing");
+                        if (!jroot.has("assets") || jroot.isNull("assets"))
+                            throw new IOException("assets section missing");
+
+                        // Get update info
+                        UpdateInfo info = new UpdateInfo();
+                        info.tag_name = jroot.getString("tag_name");
+                        info.html_url = BuildConfig.GITHUB_LATEST_URI;
+
+                        // Check if new release
+                        JSONArray jassets = jroot.getJSONArray("assets");
+                        for (int i = 0; i < jassets.length(); i++) {
+                            JSONObject jasset = jassets.getJSONObject(i);
+                            if (jasset.has("name") && !jasset.isNull("name")) {
+                                String name = jasset.getString("name");
+                                if (name.endsWith(".apk")) {
+                                    info.download_url = jasset.optString("browser_download_url");
+                                    Log.i("Latest version=" + info.tag_name);
+                                    if (BuildConfig.DEBUG)
                                         return info;
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
-                                    if (BuildConfig.VERSION_NAME.equals(info.tag_name))
-                                        return null;
-                                    else
-                                        return info;
+                                    try {
+                                        if (Double.parseDouble(info.tag_name) <=
+                                                Double.parseDouble(BuildConfig.VERSION_NAME))
+                                            return null;
+                                        else
+                                            return info;
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                        if (BuildConfig.VERSION_NAME.equals(info.tag_name))
+                                            return null;
+                                        else
+                                            return info;
+                                    }
                                 }
                             }
                         }
@@ -1612,7 +1665,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean always = args.getBoolean("always");
                 if (info == null) {
                     if (always)
-                        ToastEx.makeText(ActivityView.this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG).show();
+                        ToastEx.makeText(ActivityView.this, R.string.title_no_update, Toast.LENGTH_LONG).show();
                     return;
                 }
 
@@ -2091,8 +2144,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onViewMessages(Intent intent) {
+        boolean unified = intent.getBooleanExtra("unified", false);
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            if (unified && "unified".equals(startup)) {
+                getSupportFragmentManager().popBackStack("unified", 0);
+                return;
+            } else
+                getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean foldernav = prefs.getBoolean("foldernav", false);
@@ -2114,7 +2172,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         fragment.setArguments(args);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("messages");
+        fragmentTransaction.replace(R.id.content_frame, fragment)
+                .addToBackStack(unified ? "unified" : "messages");
         fragmentTransaction.commit();
     }
 
@@ -2122,6 +2181,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         long account = intent.getLongExtra("account", -1);
         long folder = intent.getLongExtra("folder", -1);
         String query = intent.getStringExtra("query");
+        boolean sender_only = intent.getBooleanExtra("sender_only", false);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean fts = prefs.getBoolean("fts", false);
@@ -2129,6 +2189,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         BoundaryCallbackMessages.SearchCriteria criteria = new BoundaryCallbackMessages.SearchCriteria();
         criteria.query = query;
         criteria.fts = fts;
+        criteria.in_senders = true;
+        if (sender_only) {
+            criteria.in_recipients = false;
+            criteria.in_subject = false;
+            criteria.in_keywords = false;
+            criteria.in_message = false;
+            criteria.in_notes = false;
+        }
 
         FragmentMessages.search(
                 this, this, getSupportFragmentManager(),

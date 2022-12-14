@@ -52,11 +52,11 @@
             app:showAsAction="never" />
 
         <item
-            android:id="@+id/menu_block"
+            android:id="@+id/menu_style"
             android:checkable="true"
-            android:checked="false"
-            android:icon="@drawable/twotone_format_list_bulleted_24"
-            android:title="@string/title_block_toolbar"
+            android:checked="true"
+            android:icon="@drawable/twotone_text_format_24"
+            android:title="@string/title_style_toolbar"
             app:showAsAction="never" />
 
         <item
@@ -102,6 +102,14 @@
             android:id="@+id/menu_answer_create"
             android:icon="@drawable/outline_post_add_24"
             android:title="@string/title_create_template"
+            app:showAsAction="never">
+            <menu />
+        </item>
+
+        <item
+            android:id="@+id/menu_select_identity"
+            android:icon="@drawable/twotone_person_24"
+            android:title="@string/title_select_default_identity"
             app:showAsAction="never">
             <menu />
         </item>

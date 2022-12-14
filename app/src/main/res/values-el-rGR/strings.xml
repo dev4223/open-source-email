@@ -202,6 +202,7 @@
     <string name="title_setup_free">Η εφαρμογή αυτή χρησιμοποιείται δωρεάν;</string>
     <string name="title_setup_permissions">Απαιτούμενα δικαιώματα</string>
     <string name="title_setup_permissions_remark">Για πρόσβαση στις πληροφορίες επαφών (προαιρετικό)</string>
+    <string name="title_setup_permissions_calendar">Για την αποθήκευση προσκλήσεων (προαιρετικό)</string>
     <string name="title_setup_permissions_explanation">Απαιτείται άδεια πρόσβασης στις επαφές για την αναζήτηση πληροφοριών επικοινωνίας και για προτάσεις επαφών</string>
     <string name="title_setup_permissions_notify">Για να προβάλλονται ειδοποιήσεις νέων μηνυμάτων (προαιρετικό)</string>
     <string name="title_setup_permissions_notify_explanation">Απαιτούνται δικαιώματα ειδοποιήσεων για να προβάλλονται ειδοποιήσεις νέων μηνυμάτων στη γραμμή κατάστασης</string>
@@ -252,6 +253,7 @@
     <string name="title_setup_import_rules">Εισαγωγή κανόνων φίλτρων</string>
     <string name="title_setup_import_contacts">Εισαγωγή τοπικών επαφών</string>
     <string name="title_setup_import_answers">Εισαγωγή προτύπων απάντησης</string>
+    <string name="title_setup_import_searches">Εισαγωγή αποθηκευμένων αναζητήσεων</string>
     <string name="title_setup_import_settings">Εισαγωγή επιλογών</string>
     <string name="title_setup_exported">Επιτυχής εξαγωγή ρυθμίσεων</string>
     <string name="title_setup_imported">Επιτυχής εισαγωγή ρυθμίσεων</string>
@@ -342,6 +344,7 @@
     <string name="title_advanced_use_blocklist">Μετακίνηση μηνυμάτων από τομείς σε μια λίστα αποκλεισμού, προς τον φάκελο Ανεπιθύμητων</string>
     <string name="title_advanced_use_blocklist_pop3">Παράλειψη μηνυμάτων από τομείς σε λίστα αποκλεισμού (μόνο POP3)</string>
     <string name="title_advanced_tune_keep_alive">Αυτόματη ρύθμιση του χρονικού διαστήματος για διατήρηση ενεργής σύνδεσης</string>
+    <string name="title_advanced_blocklist_warning">Οι λίστες αποκλεισμού δεν είναι τέλειες και ενδέχεται να μπλοκάρουν και άλλα μηνύματα πέρα από τα ανεπιθύμητα!</string>
     <string name="title_advanced_keyboard">Εμφάνιση του πληκτρολογίου από προεπιλογή</string>
     <string name="title_advanced_keyboard_no_fullscreen">Να μην προβάλλεται το πληκτρολόγιο σε πλήρη οθόνη</string>
     <string name="title_advanced_suggest_names">Χρήση ονομάτων και διευθύνσεων ηλεκτρονικού ταχυδρομείου</string>
@@ -585,6 +588,8 @@
     <string name="title_advanced_notifications_background">Χρήση υπηρεσίας στο παρασκήνιο για το συγχρονισμό των μηνυμάτων</string>
     <string name="title_advanced_notifications_background_hint">Μια υπηρεσία που εκτελείται στο παρασκήνιο αλλά δεν απαιτεί κάποια ειδοποίηση στη γραμμή κατάστασης, μπορεί να τερματιστεί από το Android οποιαδήποτε στιγμή</string>
     <string name="title_advanced_confirm_links">Επιβεβαίωση ανοίγματος συνδέσμων</string>
+    <string name="title_advanced_sanitize_links">Αφαίρεση παραμέτρων ιχνηλάτησης από προεπιλογή</string>
+    <string name="title_advanced_sanitize_links_hint">Μόνο κατά την επιβεβαίωση συνδέσμων</string>
     <string name="title_advanced_check_links_dbl">Έλεγχος λιστών αποκλεισμένων τομέων για τους ύποπτους συνδέσμους</string>
     <string name="title_advanced_confirm_images">Να μην προβάλλεται καμία εικόνα από προεπιλογή</string>
     <string name="title_advanced_ask_images">Επιβεβαίωση προβολής των εικόνων</string>
@@ -611,6 +616,7 @@
     <string name="title_advanced_clear_all_remark">Τα δεδομένα της εφαρμογής θα διαγραφούν αμετάκλητα!</string>
     <string name="title_advanced_sign_default">Υπογραφή από προεπιλογή</string>
     <string name="title_advanced_encrypt_default">Κρυπτογράφηση από προεπιλογή</string>
+    <string name="title_advanced_encrypt_auto">Αυτόματη κρυπτογράφηση όταν τα κλειδιά όλων των παραληπτών είναι διαθέσιμα</string>
     <string name="title_advanced_auto_decrypt">Αυτόματη αποκρυπτογράφηση μηνυμάτων</string>
     <string name="title_advanced_auto_undo_decrypt">Αναίρεση αποκρυπτογράφησης κατά το κλείσιμο μιας συζήτησης</string>
     <string name="title_advanced_openpgp">Πάροχος OpenPGP</string>
@@ -642,12 +648,15 @@
     <string name="title_advanced_language_system">Σύστημα</string>
     <string name="title_advanced_lt">Ενσωμάτωση του LanguageTool</string>
     <string name="title_advanced_lt_auto">Έλεγχος της παραγράφου μετά από μία νέα γραμμή</string>
+    <string name="title_advanced_lt_user">Όνομα χρήστη (προαιρετικό)</string>
+    <string name="title_advanced_lt_key">Κλειδί API (προαιρετικό)</string>
     <string name="title_advanced_deepl">Ενσωμάτωση DeepL</string>
     <string name="title_advanced_virus_total">Ενσωμάτωση του VirusTotal</string>
     <string name="title_advanced_sdcard">Θέλω να χρησιμοποιήσω μια κάρτα SD</string>
     <string name="title_advanced_watchdog">Περιοδικός έλεγχος για το αν το FairEmail είναι ακόμη ενεργό</string>
     <string name="title_advanced_updates">Έλεγχος για ενημερώσεις στο GitHub</string>
     <string name="title_advanced_check_weekly">Εβδομαδιαίος έλεγχος αντί για καθημερινός</string>
+    <string name="title_advanced_beta">Έλεγχος για δοκιμαστικές εκδόσεις στο BitBucket</string>
     <string name="title_advanced_changelog">Προβολή ιστορικού αλλαγών μετά την ενημέρωση</string>
     <string name="title_advanced_experiments">Δοκιμή πειραματικών χαρακτηριστικών</string>
     <string name="title_advanced_crash_reports">Αποστολή αναφοράς σφαλμάτων</string>
@@ -762,6 +771,9 @@
     <string name="title_advanced_cleanup_hint">Θα διαγράψει όλα τα προσωρινά αρχεία</string>
     <string name="title_advanced_never_favorite">Ποτέ ως αγαπημένο</string>
     <string name="title_advanced_edit_name">Επεξεργασία ονόματος</string>
+    <string name="title_create_folder" comment="title_create_folder&#10;Title of dialog to create a folder">Δημιουργία φακέλου</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Όνομα φακέλου</string>
+    <string name="title_create_folder_parent" comment="title_create_folder_parent&#10;Title for parent folder selection (spinner)">Γονικός φάκελος</string>
     <string name="title_advanced_swipe_actions">Ορίστε τις ενέργειες σάρωσης</string>
     <string name="title_advanced_swipe_actions_hint">Θα ορίσει τις ενέργειες σάρωσης αριστερά και δεξιά για όλους τους λογαριασμούς IMAP</string>
     <string name="title_advanced_swipe_sensitivity">Ευαισθησία σάρωσης προς αριστερά/δεξιά</string>
@@ -793,6 +805,7 @@
     <string name="title_account_noop_hint">Αυτό θα ανανεώνει τη σύνδεση πιο ενεργά, αλλά θα χρησιμοποιεί, επίσης, περισσότερη μπαταρία</string>
     <string name="title_account_partial_fetch_hint">Απενεργοποιήστε το μόνο σε περιπτώσεις κενών μηνυμάτων ή χαλασμένων συνημμένων</string>
     <string name="title_color">Χρώμα</string>
+    <string name="title_calendar">Ημερολόγιο</string>
     <string name="title_background">Φόντο</string>
     <string name="title_transparent">Διαφανές</string>
     <string name="title_account_ondemand">Χειροκίνητος συγχρονισμός</string>
@@ -865,6 +878,7 @@
     <string name="title_drafts_select">Για την αποστολή μηνυμάτων απαιτείται να επιλεγεί ένας φάκελος για πρόχειρα από τις ρυθμίσεις λογαριασμού</string>
     <string name="title_account_auth_update">Ενημέρωση εξουσιοδότησης</string>
     <string name="title_account_auth_password">Αλλαγή σε ταυτοποίηση μέσω κωδικού πρόσβασης</string>
+    <string name="title_change_password">Αλλαγή κωδικού πρόσβασης</string>
     <string name="title_delete_account">Διαγραφή λογαριασμού</string>
     <string name="title_account_delete">Να διαγραφεί οριστικά αυτός ο λογαριασμός;</string>
     <string name="title_identity_delete">Να διαγραφεί οριστικά αυτή η ταυτότητα;</string>
@@ -1026,10 +1040,12 @@
     <string name="title_editasnew">Επεξεργασία ως νέου</string>
     <string name="title_edit_notes">Επεξεργασία τοπικών σημειώσεων</string>
     <string name="title_create_rule">Δημιουργία κανόνα &#8230;</string>
+    <string name="title_full_screen">Πλήρης οθόνη</string>
     <string name="title_force_light">Υποχρεωτικό φωτεινό θέμα</string>
     <string name="title_share">Κοινοποίηση</string>
     <string name="title_event">Προσθήκη στο ημερολόγιο</string>
     <string name="title_pin">Προσθήκη συντόμευσης</string>
+    <string name="title_pin_label">Όνομα συντόμευσης</string>
     <string name="title_print">Εκτύπωση</string>
     <string name="title_print_header">Εκτύπωσε κεφαλίδα</string>
     <string name="title_print_images">Εκτύπωση εικόνων</string>
@@ -1054,7 +1070,7 @@
     <string name="title_auto_confirm">Αυτόματη επιβεβαίωση μετά από μερικά δευτερόλεπτα</string>
     <string name="title_buttons">Επιλέξτε κουμπιά</string>
     <string name="title_buttons_hint">Οι όντως διαθέσιμες ενέργειες εξαρτώνται από τον τύπο και τη ρύθμιση του λογαριασμού</string>
-    <string name="title_button_search">Αναζήτηση στα μηνύματα</string>
+    <string name="title_button_search_similar">Αναζήτηση για παρόμοια μηνύματα</string>
     <string name="title_button_search_text">Αναζήτηση στο κείμενο του μηνύματος</string>
     <string name="title_configure_buttons">Ρύθμιση κουμπιών &#8230;</string>
     <string name="title_quick_actions">Επιλέξτε ενέργειες</string>
@@ -1062,6 +1078,7 @@
     <string name="title_quick_actions_low">Χαμηλή σημαντικότητα</string>
     <string name="title_quick_actions_high">Υψηλή σημαντικότητα</string>
     <string name="title_quick_actions_snooze">Αναβολή</string>
+    <string name="title_quick_actions_clear">Εκκαθάριση επιλογής μετά την ενέργεια</string>
     <string name="title_trash">Απορρίμματα</string>
     <string name="title_copy">Αντιγραφή &#8230;</string>
     <string name="title_copy_to">Αντιγραφή σε &#8230;</string>
@@ -1218,7 +1235,7 @@
     <string name="title_style_superscript">Εκθέτης</string>
     <string name="title_style_strikethrough">Διακριτή διαγραφή</string>
     <string name="title_style_protect">Προστασία με κωδικό πρόσβασης</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Προστατευόμενο περιεχόμενο</string>
+    <string name="title_style_protected">Προστατευόμενο περιεχόμενο</string>
     <string name="title_style_protect_size">Πολύ μεγάλο κείμενο</string>
     <string name="title_style_clear">Εκκαθάριση μορφοποίησης</string>
     <string name="title_style_link">Εισαγωγή συνδέσμου</string>
@@ -1244,12 +1261,13 @@
     <string name="title_save_drafts">Να αποθηκεύονται τα πρόχειρα στον εξυπηρετητή</string>
     <string name="title_send_dialog">Προβολή επιλογών αποστολής</string>
     <string name="title_image_dialog">Προβολή επιλογών εικόνας</string>
-    <string name="title_block_toolbar">Γραμμή εργαλείων επιλεγμένου κειμένου</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Γραμμή εργαλείων στιλ</string>
     <string name="title_media_toolbar">Γραμμή εργαλείων πολυμέσων</string>
     <string name="title_manage_local_contacts">Διαχείριση τοπικών επαφών</string>
     <string name="title_insert_contact_group">Εισαγωγή ομάδας επαφών</string>
     <string name="title_insert_template">Εισαγωγή προτύπου</string>
     <string name="title_create_template">Δημιουργία προτύπου</string>
+    <string name="title_select_default_identity">Ορισμός προεπιλεγμένης διεύθυνσης</string>
     <string name="title_translate">Μετάφραση</string>
     <string name="title_translate_configure">Ρύθμιση &#8230;</string>
     <string name="title_translate_key">Εισαγωγή κλειδιού</string>
@@ -1310,8 +1328,8 @@
     <string name="title_resync">Επανασυγχρονισμός</string>
     <string name="title_charset">Κωδικοποίηση</string>
     <string name="title_charset_auto">Αυτόματο</string>
-    <string name="title_alternative_text">Προβολή απλού κειμένου</string>
-    <string name="title_alternative_html">Προβολή HTML</string>
+    <string name="title_alternative_text">Φόρτωση απλού κειμένου</string>
+    <string name="title_alternative_html">Φόρτωση HTML</string>
     <string name="title_no_openpgp">Δεν βρέθηκε OpenKeychain</string>
     <string name="title_user_interaction">Μεταφορά προς OpenKeychain</string>
     <string name="title_padlock">Χρησιμοποιήστε το λουκέτο για να αποκρυπτογραφήσετε το μήνυμα</string>
@@ -1674,6 +1692,7 @@
     <string name="title_reset_open">Ορισμός ή εκκαθάριση προεπιλεγμένων εφαρμογών</string>
     <string name="title_select_app">Επιλογή εφαρμογής</string>
     <string name="title_updated">Ενημέρωση για την έκδοση %1$s διαθέσιμη</string>
+    <string name="title_no_update">Δεν υπάρχει διαθέσιμη ενημέρωση</string>
     <string name="title_issue">Έχετε μία ερώτηση ή κάποιο πρόβλημα;</string>
     <string name="title_yes">Ναι</string>
     <string name="title_no">Όχι</string>
@@ -1685,6 +1704,8 @@
     <string name="title_select_block">Επιλογή τμήματος</string>
     <string name="title_insert_brackets">Σε αγκύλες</string>
     <string name="title_insert_quotes">Παράθεση</string>
+    <string name="title_lt_add">Προσθήκη λέξης</string>
+    <string name="title_lt_delete">Αφαίρεση λέξης</string>
     <string name="title_add">Προσθήκη</string>
     <string name="title_browse">Άνοιγμα με</string>
     <string name="title_info">Πληροφορίες</string>
@@ -1785,20 +1806,25 @@
     <string name="title_widget_background">Χρώμα φόντου</string>
     <string name="title_widget_day_night">Σύμφωνα με το σκούρο θέμα συστήματος</string>
     <string name="title_compat_dark">Η Google έχει αφαιρέσει το σκούρο θέμα σε εκδόσεις Android προγενέστερες από την έκδοση 10</string>
-    <string name="title_accessibility_collapsed">Συνεπτυγμένο</string>
-    <string name="title_accessibility_expanded">Ανεπτυγμένο</string>
-    <string name="title_accessibility_seen">Αναγνωσμένο</string>
-    <string name="title_accessibility_unseen">Μη αναγνωσμένο</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d μήνυμα</item>
-        <item quantity="other">%1$d μηνύματα</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Σημαντικό</string>
     <string name="title_keyword_label2">Δουλειά</string>
     <string name="title_keyword_label3">Προσωπικά</string>
     <string name="title_keyword_label4">Εργασίες</string>
     <string name="title_keyword_label5">Αργότερα</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d μήνυμα</item>
+        <item quantity="other">%1$d μηνύματα</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Λογαριασμοί</string>
+    <string name="title_accessibility_folders">Φάκελοι</string>
+    <string name="title_accessibility_searches">Αναζητήσεις</string>
+    <string name="title_accessibility_menus">Μενού</string>
+    <string name="title_accessibility_extras">Επιπλέον επιλογές</string>
+    <string name="title_accessibility_collapsed">Συνεπτυγμένο</string>
+    <string name="title_accessibility_expanded">Ανεπτυγμένο</string>
+    <string name="title_accessibility_seen">Αναγνωσμένο</string>
+    <string name="title_accessibility_unseen">Μη αναγνωσμένο</string>
     <string name="title_accessibility_flagged">Με αστέρι</string>
     <string name="title_accessibility_unflagged">Χωρίς αστέρι</string>
     <string name="title_accessibility_collapse">Σύμπτυξη</string>

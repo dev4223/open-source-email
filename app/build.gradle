@@ -3,9 +3,9 @@ apply plugin: 'com.bugsnag.android.gradle'
 apply plugin: 'kotlin-android'
 apply plugin: 'de.undercouch.download'
 
-def getVersionCode = { -> return 1990 }
+def getVersionCode = { -> return 2013 }
 def getRevision = { -> return "a" }
-def getReleaseName = { -> return "Mei long" }
+def getReleaseName = { -> return "Ostromia" }
 // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
 
 def keystoreProperties = new Properties()
@@ -27,6 +27,8 @@ android {
         versionCode getVersionCode()
         versionName "1." + getVersionCode()
         archivesBaseName = "FairEmail-v$versionName" + getRevision()
+
+        manifestPlaceholders = [namespace: applicationId.replace('.debug', '')]
 
         buildConfigField "String", "REVISION", "\"" + getRevision() + "\""
         buildConfigField "String", "RELEASE_NAME", "\"" + getReleaseName() + "\""
@@ -163,6 +165,8 @@ android {
             buildConfigField "String", "CHANGELOG", "\"https://github.com/M66B/FairEmail/releases/\""
             buildConfigField "String", "GITHUB_LATEST_API", "\"https://api.github.com/repos/M66B/FairEmail/releases/latest\""
             buildConfigField "String", "GITHUB_LATEST_URI", "\"https://github.com/M66B/FairEmail/releases\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_API", "\"https://api.bitbucket.org/2.0/repositories/M66B/fairemail-test/downloads\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_URI", "\"https://bitbucket.org/M66B/fairemail-test/downloads/\""
             buildConfigField "String", "TX_URI", localProperties.getProperty("paypal.uri", "\"\"")
             buildConfigField "String", "GPA_URI", localProperties.getProperty("gpa.uri", "\"\"")
             buildConfigField "String", "INFO_URI", localProperties.getProperty("info.uri", "\"\"")
@@ -179,6 +183,8 @@ android {
             buildConfigField "String", "CHANGELOG", "\"https://github.com/M66B/FairEmail/releases/\""
             buildConfigField "String", "GITHUB_LATEST_API", "\"https://api.github.com/repos/M66B/FairEmail/releases/latest\""
             buildConfigField "String", "GITHUB_LATEST_URI", "\"https://github.com/M66B/FairEmail/releases\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_API", "\"https://api.bitbucket.org/2.0/repositories/M66B/fairemail-test/downloads\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_URI", "\"https://bitbucket.org/M66B/fairemail-test/downloads/\""
             buildConfigField "String", "TX_URI", "\"\""
             buildConfigField "String", "GPA_URI", "\"\""
             buildConfigField "String", "INFO_URI", "\"\""
@@ -196,6 +202,8 @@ android {
             buildConfigField "String", "CHANGELOG", "\"\""
             buildConfigField "String", "GITHUB_LATEST_API", "\"\""
             buildConfigField "String", "GITHUB_LATEST_URI", "\"\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_API", "\"\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_URI", "\"\""
             buildConfigField "String", "TX_URI", "\"\""
             buildConfigField "String", "GPA_URI", "\"\""
             buildConfigField "String", "INFO_URI", "\"\""
@@ -213,6 +221,8 @@ android {
             buildConfigField "String", "CHANGELOG", "\"\""
             buildConfigField "String", "GITHUB_LATEST_API", "\"\""
             buildConfigField "String", "GITHUB_LATEST_URI", "\"\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_API", "\"\""
+            buildConfigField "String", "BITBUCKET_DOWNLOADS_URI", "\"\""
             buildConfigField "String", "TX_URI", "\"\""
             buildConfigField "String", "GPA_URI", "\"\""
             buildConfigField "String", "INFO_URI", "\"\""
@@ -343,25 +353,25 @@ dependencies {
     def appcompat_version = "1.6.0-rc01" // 1.7.0-alpha01
     def emoji_version = "1.2.0"
     def activity_version = "1.6.1" // 1.7.0-alpha01
-    def fragment_version = "1.5.4" // 1.6.0-alpha03
-    def windows_version = "1.0.0" // 1.1.0-alpha03
-    def webkit_version = "1.5.0" // 1.6.0-alpha02
+    def fragment_version = "1.5.5" // 1.6.0-alpha04
+    def windows_version = "1.0.0" // 1.1.0-alpha04
+    def webkit_version = "1.6.0-beta01"
     def recyclerview_version = "1.3.0-rc01"
     def coordinatorlayout_version = "1.2.0"
-    def constraintlayout_version = "2.1.4" // 2.2.0-alpha01
-    def material_version = "1.6.1"
+    def constraintlayout_version = "2.1.4" // 2.2.0-alpha05
+    def material_version = "1.7.0"
     def browser_version = "1.4.0" // 1.5.0-alpha01
     def lbm_version = "1.1.0"
     def swiperefresh_version = "1.2.0-alpha01"
     def documentfile_version = "1.1.0-alpha01"
     def lifecycle_version = "2.5.1" // 2.6.0-alpha03
     def lifecycle_extensions_version = "2.2.0"
-    def room_version = "2.4.3" // 2.5.0-beta01
-    def sqlite_version = "2.2.0" // 2.3.0-beta01
+    def room_version = "2.4.3" // 2.5.0-rc01
+    def sqlite_version = "2.3.0-rc01"
     def requery_version = "3.39.2"
     def paging_version = "2.1.2" //  3.2.0-alpha03
     def preference_version = "1.2.0"
-    def work_version = "2.8.0-alpha04" // 2.8.0-beta01
+    def work_version = "2.8.0-rc01"
     def exif_version = "1.3.5"
     def biometric_version = "1.2.0-alpha05"
     def billingclient_version = "4.1.0"
@@ -372,7 +382,7 @@ dependencies {
     def dnsjava_version = "2.1.9"
     def openpgp_version = "12.0"
     def badge_version = "1.1.22"
-    def bugsnag_version = "5.23.0"
+    def bugsnag_version = "5.28.2"
     def biweekly_version = "0.6.6"
     def vcard_version = "0.11.3"
     def relinker_version = "1.4.5"
@@ -387,9 +397,9 @@ dependencies {
     def reactivestreams_version = "1.0.3"
     def rxjava2_version = "2.2.21"
     def svg_version = "1.4"
-    def compress_version = "1.21"
+    def compress_version = "1.22"
     def ipaddress_version = "5.3.4"
-    def canary_version = "2.9.1"
+    def canary_version = "2.10"
     def ws_version = "2.14"
 
     // https://developer.android.com/jetpack/androidx/releases/startup
@@ -604,6 +614,7 @@ dependencies {
 
     // https://github.com/square/leakcanary
     // https://square.github.io/leakcanary/getting_started/
+    // https://square.github.io/leakcanary/changelog/
     // https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
     debugImplementation "com.squareup.leakcanary:leakcanary-android:$canary_version"
 

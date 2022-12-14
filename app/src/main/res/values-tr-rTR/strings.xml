@@ -201,6 +201,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_setup_free">Bu uygulama ücretsiz mi?</string>
     <string name="title_setup_permissions">Verilen izinler</string>
     <string name="title_setup_permissions_remark">İletişim bilgilerine erişim için (isteğe bağlı)</string>
+    <string name="title_setup_permissions_calendar">Davetiyeleri saklamak (isteğe bağlı)</string>
     <string name="title_setup_permissions_explanation">Kişi bilgilerini aramak ve kişi önermek için kişi izinleri gerekir</string>
     <string name="title_setup_permissions_notify">Yeni mesaj bildirimlerini göstermek için (isteğe bağlı)</string>
     <string name="title_setup_permissions_notify_explanation">Durum çubuğunda yeni mesajlarda bildirimleri göstermek için bildirim izinleri gerekir</string>
@@ -251,6 +252,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_setup_import_rules">Filtre kurallarını içe aktar</string>
     <string name="title_setup_import_contacts">Yerel kişileri içe aktar</string>
     <string name="title_setup_import_answers">Yanıt şablonlarını içe aktar</string>
+    <string name="title_setup_import_searches">Kayıtlı aramaları içe aktar</string>
     <string name="title_setup_import_settings">İçe aktarma seçenekleri</string>
     <string name="title_setup_exported">Ayarlar dışa aktarıldı</string>
     <string name="title_setup_imported">Ayarlar içe aktarıldı</string>
@@ -341,6 +343,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_use_blocklist">Engellenenler listesindeki alanlardan gelen iletileri spam klasörüne taşıyın</string>
     <string name="title_advanced_use_blocklist_pop3">Engellenenler listesindeki alanlardan gelen mesajları atla (yalnızca POP3)</string>
     <string name="title_advanced_tune_keep_alive">Canlı tutma aralığını otomatik olarak ayarlayın</string>
+    <string name="title_advanced_blocklist_warning">Engelleme listeleri mükemmel değildir ve istenmeyen e-postalardan fazlasını engelleyebilir!</string>
     <string name="title_advanced_keyboard">Öntanımlı olarak klavyeyi göster</string>
     <string name="title_advanced_keyboard_no_fullscreen">Tam ekran klavyeyi önleyin, gizleyin</string>
     <string name="title_advanced_suggest_names">İsimleri ve e-posta adreslerini kullanın</string>
@@ -584,6 +587,8 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_notifications_background">İletileri senkronize etmek için arka plan servisi kullan</string>
     <string name="title_advanced_notifications_background_hint">Bir arka plan servisi Android tarafından herhangi bir zamanda durdurulabilir, ama çalışmak için sabit bir bildirime ihtiyaç duymaz</string>
     <string name="title_advanced_confirm_links">Bağlantıları açmayı onayla</string>
+    <string name="title_advanced_sanitize_links">Varsayılan olarak izleme parametrelerini kaldırın</string>
+    <string name="title_advanced_sanitize_links_hint">Sadece bağlantıları doğrularken</string>
     <string name="title_advanced_check_links_dbl">Şüpheli bağlantılar için alan engelleme listelerini kontrol edin</string>
     <string name="title_advanced_confirm_images">Varsayılan olarak resim gösterme</string>
     <string name="title_advanced_ask_images">Görüntüleri göstermeyi onayla</string>
@@ -610,6 +615,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_clear_all_remark">Uygulama verileri geri alınamaz şekilde silinecek!</string>
     <string name="title_advanced_sign_default">Varsayılan olarak imzala</string>
     <string name="title_advanced_encrypt_default">Varsayılan olarak şifrele</string>
+    <string name="title_advanced_encrypt_auto">Tüm alıcıların anahtarları kullanılabilir olduğunda otomatik olarak şifrele</string>
     <string name="title_advanced_auto_decrypt">İletilerin şifrelerini otomatik olarak çöz</string>
     <string name="title_advanced_auto_undo_decrypt">Görüşmeyi kapatırken şifre çözmeyi geri al</string>
     <string name="title_advanced_openpgp">OpenPGP sağlayıcı</string>
@@ -642,12 +648,15 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_language_system">Sistem</string>
     <string name="title_advanced_lt">Dil Aracı entegrasyonu</string>
     <string name="title_advanced_lt_auto">Yeni bir satırdan sonra paragrafı kontrol et</string>
+    <string name="title_advanced_lt_user">Kullanıcı adı (isteğe bağlı)</string>
+    <string name="title_advanced_lt_key">API anahtarı (isteğe bağlı)</string>
     <string name="title_advanced_deepl">DeepL entegrasyonu</string>
     <string name="title_advanced_virus_total">VirüsTotal entegrasyonu</string>
     <string name="title_advanced_sdcard">SD kart kullanmak istiyorum</string>
     <string name="title_advanced_watchdog">Düzenli aralıklarla FairEmail hala etkin mi diye kontrol et</string>
     <string name="title_advanced_updates">GitHub güncellemelerini kontrol et</string>
     <string name="title_advanced_check_weekly">Günlük yerine haftalık kontrol edin</string>
+    <string name="title_advanced_beta">BitBucket\'te test sürümlerini kontrol et</string>
     <string name="title_advanced_changelog">Güncellemeden sonra yapılan değişiklikler günlüğünü göster</string>
     <string name="title_advanced_experiments">Deneysel özellikleri deneyin</string>
     <string name="title_advanced_crash_reports">Hata raporları gönder</string>
@@ -763,6 +772,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_advanced_cleanup_hint">Bu bütün geçici dosyaları silecek</string>
     <string name="title_advanced_never_favorite">Asla sık kullanılan değil</string>
     <string name="title_advanced_edit_name">Adı düzenle</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Klasör adı</string>
     <string name="title_advanced_swipe_actions">Kaydırma eylemlerini ayarlayın</string>
     <string name="title_advanced_swipe_actions_hint">Bu, tüm IMAP hesapları için sola ve sağa kaydırma işlemini ayarlayacaktır.</string>
     <string name="title_advanced_swipe_sensitivity">Sol/sağ kaydırma hassasiyeti</string>
@@ -794,6 +804,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_account_noop_hint">Bu, bağlantıyı daha aktif bir şekilde yenileyecek, ancak aynı zamanda daha fazla pil gücü kullanacaktır</string>
     <string name="title_account_partial_fetch_hint">Bunu yalnızca boş iletiler veya bozuk ekler olması durumunda devre dışı bırakın</string>
     <string name="title_color">Renk</string>
+    <string name="title_calendar">Takvim</string>
     <string name="title_background">Arka Plan</string>
     <string name="title_transparent">Şeffaf</string>
     <string name="title_account_ondemand">Manuel olarak senkronize et</string>
@@ -866,6 +877,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_drafts_select">İleti göndermek için hesap ayarlarından taslaklar klasörü seçilmelidir</string>
     <string name="title_account_auth_update">Yetkilendirmeyi güncelle</string>
     <string name="title_account_auth_password">Parola kimlik doğrulamasına geç</string>
+    <string name="title_change_password">Parolayı değiştir</string>
     <string name="title_delete_account">Hesabı sil</string>
     <string name="title_account_delete">Bu hesap kalıcı olarak silinsin mi?</string>
     <string name="title_identity_delete">Bu kimlik kalıcı olarak silinsin mi?</string>
@@ -1026,10 +1038,12 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_editasnew">Yeni olarak düzenle</string>
     <string name="title_edit_notes">Yerel notları düzenle</string>
     <string name="title_create_rule">Kural oluştur &#8230;</string>
+    <string name="title_full_screen">Tam ekran</string>
     <string name="title_force_light">Aydınlık temasını zorla</string>
     <string name="title_share">Paylaş</string>
     <string name="title_event">Takvime ekle</string>
     <string name="title_pin">Kısayol ekle</string>
+    <string name="title_pin_label">Kısayol başlığı</string>
     <string name="title_print">Yazdır</string>
     <string name="title_print_header">Başlığı yazdır</string>
     <string name="title_print_images">Resimleri yazdır</string>
@@ -1054,7 +1068,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_auto_confirm">Birkaç saniye sonra otomatik olarak onayla</string>
     <string name="title_buttons">Seçim düğmeleri</string>
     <string name="title_buttons_hint">Gerçek eylemler, hesap türüne ve yapılandırmaya bağlıdır</string>
-    <string name="title_button_search">Mesajlarda ara</string>
+    <string name="title_button_search_similar">Benzer iletileri ara</string>
     <string name="title_button_search_text">Mesajda ara</string>
     <string name="title_configure_buttons">Düğme &#8230; yapılandır</string>
     <string name="title_quick_actions">Eylem seç</string>
@@ -1062,6 +1076,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_quick_actions_low">Düşük önem</string>
     <string name="title_quick_actions_high">Yüksek önem</string>
     <string name="title_quick_actions_snooze">Ertele</string>
+    <string name="title_quick_actions_clear">Eylemden sonra seçimi temizle</string>
     <string name="title_trash">Çöp Kutusu</string>
     <string name="title_copy">Kopyala &#8230;</string>
     <string name="title_copy_to">&#8230;\'ya kopyala</string>
@@ -1219,7 +1234,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_style_superscript">Üst Yazı</string>
     <string name="title_style_strikethrough">Üstü Çizili</string>
     <string name="title_style_protect">Şifreli koruma</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Korumalı içerik</string>
+    <string name="title_style_protected">Korumalı içerik</string>
     <string name="title_style_protect_size">Metin çok uzun</string>
     <string name="title_style_clear">Biçimlendirmeyi temizle</string>
     <string name="title_style_link">Bağlantı ekle</string>
@@ -1245,12 +1260,13 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_save_drafts">Taslakları sunucuya kaydet</string>
     <string name="title_send_dialog">Gönderme seçeneklerini göster</string>
     <string name="title_image_dialog">Görsel seçeneklerini göster</string>
-    <string name="title_block_toolbar">Araç çubuğunu engelle</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Stil araç çubuğu</string>
     <string name="title_media_toolbar">Medya araç çubuğu</string>
     <string name="title_manage_local_contacts">Yerel kişileri yönet</string>
     <string name="title_insert_contact_group">Kişi grubuna ekle</string>
     <string name="title_insert_template">Kalıp ekle</string>
     <string name="title_create_template">Şablon oluştur</string>
+    <string name="title_select_default_identity">Varsayılan adresi seçin</string>
     <string name="title_translate">Tercüme et</string>
     <string name="title_translate_configure">Yapılandır&#8230;</string>
     <string name="title_translate_key">Anahtarı gir</string>
@@ -1311,8 +1327,8 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_resync">Yeniden eşzamanla</string>
     <string name="title_charset">Metin kodlaması</string>
     <string name="title_charset_auto">Otomatik</string>
-    <string name="title_alternative_text">Düz metni göster</string>
-    <string name="title_alternative_html">HTML Göster</string>
+    <string name="title_alternative_text">Düzen metni yükle</string>
+    <string name="title_alternative_html">HTML\'i yükle</string>
     <string name="title_no_openpgp">OpenKeychain bulunamadı</string>
     <string name="title_user_interaction">OpenKeychain\'e gönderiliyor</string>
     <string name="title_padlock">Mesajın şifresini çözmek için asma kilidi kullan</string>
@@ -1674,6 +1690,7 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_reset_open">Varsayılan uygulamaları ayarlayın veya temizleyin</string>
     <string name="title_select_app">Uygulama seçin</string>
     <string name="title_updated">%1$s sürümüne güncelleme mevcut</string>
+    <string name="title_no_update">Kullanılabilir güncelleme yok</string>
     <string name="title_issue">Bir sorunuz ya da probleminiz mi var?</string>
     <string name="title_yes">Evet</string>
     <string name="title_no">Hayır</string>
@@ -1685,6 +1702,8 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_select_block">Blok seç</string>
     <string name="title_insert_brackets">Parantez içine al</string>
     <string name="title_insert_quotes">Alıntıla</string>
+    <string name="title_lt_add">Kelime ekle</string>
+    <string name="title_lt_delete">Kelime sil</string>
     <string name="title_add">Ekle</string>
     <string name="title_browse">Birlikte aç</string>
     <string name="title_info">Bilgi</string>
@@ -1785,20 +1804,25 @@ Gönderen etki alanını engellemek, profesyonel bir özellik olan filtre kurall
     <string name="title_widget_background">Arka plan rengi</string>
     <string name="title_widget_day_night">Karanlık sistem temasına uyum sağla</string>
     <string name="title_compat_dark">Google Android 10 öncesi sürümler için karanlık modu kaldırdı</string>
-    <string name="title_accessibility_collapsed">Daraltılan</string>
-    <string name="title_accessibility_expanded">Genişletilen</string>
-    <string name="title_accessibility_seen">Okunan</string>
-    <string name="title_accessibility_unseen">Okunmayan</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d mesaj</item>
-        <item quantity="other">%1$d mesaj</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Önemli</string>
     <string name="title_keyword_label2">İş</string>
     <string name="title_keyword_label3">Kişisel</string>
     <string name="title_keyword_label4">Yapılacaklar</string>
     <string name="title_keyword_label5">Daha sonra</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d mesaj</item>
+        <item quantity="other">%1$d mesaj</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Hesaplar</string>
+    <string name="title_accessibility_folders">Klasörler</string>
+    <string name="title_accessibility_searches">Aramalar</string>
+    <string name="title_accessibility_menus">Menüler</string>
+    <string name="title_accessibility_extras">Ekstralar</string>
+    <string name="title_accessibility_collapsed">Daraltılan</string>
+    <string name="title_accessibility_expanded">Genişletilen</string>
+    <string name="title_accessibility_seen">Okunan</string>
+    <string name="title_accessibility_unseen">Okunmayan</string>
     <string name="title_accessibility_flagged">Yıldızlı</string>
     <string name="title_accessibility_unflagged">Yıldızlı olmayan</string>
     <string name="title_accessibility_collapse">Daralt</string>

@@ -202,6 +202,7 @@
     <string name="title_setup_free">¿Esta aplicación es gratuita?</string>
     <string name="title_setup_permissions">Conceder permisos</string>
     <string name="title_setup_permissions_remark">Para acceder a información de contactos (opcional)</string>
+    <string name="title_setup_permissions_calendar">Para almacenar invitaciones (opcional)</string>
     <string name="title_setup_permissions_explanation">El permiso de contactos es necesario para buscar información de contactos y sugerirlos</string>
     <string name="title_setup_permissions_notify">Para mostrar notificaciones de mensajes nuevos (opcional)</string>
     <string name="title_setup_permissions_notify_explanation">Se requieren permisos de notificación para mostrar notificaciones de nuevos mensajes en la barra de estado</string>
@@ -252,6 +253,7 @@
     <string name="title_setup_import_rules">Importar reglas de filtro</string>
     <string name="title_setup_import_contacts">Importar contactos locales</string>
     <string name="title_setup_import_answers">Importar plantillas de respuesta</string>
+    <string name="title_setup_import_searches">Importar búsquedas guardadas</string>
     <string name="title_setup_import_settings">Importar opciones</string>
     <string name="title_setup_exported">Ajustes exportados</string>
     <string name="title_setup_imported">Ajustes importados</string>
@@ -342,6 +344,7 @@
     <string name="title_advanced_use_blocklist">Mover mensajes de dominios en lista de bloqueo a la carpeta de spam</string>
     <string name="title_advanced_use_blocklist_pop3">Omitir mensajes de dominios en una lista de bloqueo (sólo POP3)</string>
     <string name="title_advanced_tune_keep_alive">Ajustar automáticamente el intervalo de keep-alive</string>
+    <string name="title_advanced_blocklist_warning">¡Las listas de bloqueo no son perfectas y pueden bloquear algo más que spam!</string>
     <string name="title_advanced_keyboard">Mostrar teclado por defecto</string>
     <string name="title_advanced_keyboard_no_fullscreen">Evitar teclado de pantalla completa</string>
     <string name="title_advanced_suggest_names">Usar nombres y direcciones de correo electrónico</string>
@@ -585,6 +588,8 @@
     <string name="title_advanced_notifications_background">Usar servicio en segundo plano para sincronizar mensajes</string>
     <string name="title_advanced_notifications_background_hint">Un servicio en segundo plano puede ser detenido por Android en cualquier momento, pero no requiere una notificación de la barra de estado</string>
     <string name="title_advanced_confirm_links">Confirmar abrir enlaces</string>
+    <string name="title_advanced_sanitize_links">Eliminar parámetros de rastreo por defecto</string>
+    <string name="title_advanced_sanitize_links_hint">Sólo al confirmar enlaces</string>
     <string name="title_advanced_check_links_dbl">Comprobar listas de bloqueo de dominio para enlaces sospechosos</string>
     <string name="title_advanced_confirm_images">No mostrar imágenes por defecto</string>
     <string name="title_advanced_ask_images">Confirmar mostrar imágenes</string>
@@ -611,6 +616,7 @@
     <string name="title_advanced_clear_all_remark">¡Los datos de la aplicación serán irreversiblemente eliminados!</string>
     <string name="title_advanced_sign_default">Firmar por defecto</string>
     <string name="title_advanced_encrypt_default">Cifrar por defecto</string>
+    <string name="title_advanced_encrypt_auto">Cifrar automáticamente cuando las claves de todos los destinatarios están disponibles</string>
     <string name="title_advanced_auto_decrypt">Descifrar automáticamente los mensajes</string>
     <string name="title_advanced_auto_undo_decrypt">Deshacer descifrado al cerrar la conversación</string>
     <string name="title_advanced_openpgp">Proveedor OpenPGP</string>
@@ -643,12 +649,15 @@
     <string name="title_advanced_language_system">Sistema</string>
     <string name="title_advanced_lt">Integración con LanguageTool</string>
     <string name="title_advanced_lt_auto">Comprobar párrafo después de una nueva línea</string>
+    <string name="title_advanced_lt_user">Nombre de usuario (opcional)</string>
+    <string name="title_advanced_lt_key">Clave API (opcional)</string>
     <string name="title_advanced_deepl">Integración con DeepL</string>
     <string name="title_advanced_virus_total">Integración con VirusTotal</string>
     <string name="title_advanced_sdcard">Quiero usar una tarjeta SD</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Comprobar actualizaciones de GitHub</string>
     <string name="title_advanced_check_weekly">Comprobar semanalmente en lugar de diariamente</string>
+    <string name="title_advanced_beta">Buscar versiones de prueba en BitBucket</string>
     <string name="title_advanced_changelog">Mostrar registro de cambios después de actualizar</string>
     <string name="title_advanced_experiments">Probar características experimentales</string>
     <string name="title_advanced_crash_reports">Enviar informes de errores</string>
@@ -764,6 +773,7 @@
     <string name="title_advanced_cleanup_hint">Esto eliminará todos los archivos temporales</string>
     <string name="title_advanced_never_favorite">Nunca favorito</string>
     <string name="title_advanced_edit_name">Editar nombre</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Nombre de carpeta</string>
     <string name="title_advanced_swipe_actions">Establecer acciones de deslizamiento</string>
     <string name="title_advanced_swipe_actions_hint">Esto establecerá las acciones al deslizar a izquierda o derecha para todas las cuentas IMAP</string>
     <string name="title_advanced_swipe_sensitivity">Sensibilidad del deslizado a izquierda/derecha</string>
@@ -795,6 +805,7 @@
     <string name="title_account_noop_hint">Esto actualizará la conexión más activamente, pero también usará más batería</string>
     <string name="title_account_partial_fetch_hint">Desactivar esto sólo en caso de mensajes vacíos o adjuntos corruptos</string>
     <string name="title_color">Color</string>
+    <string name="title_calendar">Calendario</string>
     <string name="title_background">Fondo</string>
     <string name="title_transparent">Transparente</string>
     <string name="title_account_ondemand">Sincronizar manualmente</string>
@@ -867,6 +878,7 @@
     <string name="title_drafts_select">El envío de correos electrónicos requiere que se seleccione una carpeta de borradores en la configuración de la cuenta</string>
     <string name="title_account_auth_update">Actualizar autorización</string>
     <string name="title_account_auth_password">Cambiar a autenticación con contraseña</string>
+    <string name="title_change_password">Cambiar contraseña</string>
     <string name="title_delete_account">Suprimir la cuenta</string>
     <string name="title_account_delete">¿Eliminar esta cuenta permanentemente?</string>
     <string name="title_identity_delete">¿Eliminar esta identidad permanentemente?</string>
@@ -1028,10 +1040,12 @@
     <string name="title_editasnew">Editar como nuevo</string>
     <string name="title_edit_notes">Editar notas locales</string>
     <string name="title_create_rule">Crear regla &#8230;</string>
+    <string name="title_full_screen">Pantalla completa</string>
     <string name="title_force_light">Forzar tema claro</string>
     <string name="title_share">Compartir</string>
     <string name="title_event">Añadir al calendario</string>
     <string name="title_pin">Añadir acceso directo</string>
+    <string name="title_pin_label">Título del acceso directo</string>
     <string name="title_print">Imprimir</string>
     <string name="title_print_header">Imprimir encabezado</string>
     <string name="title_print_images">Imprimir imágenes</string>
@@ -1056,7 +1070,7 @@
     <string name="title_auto_confirm">Confirmar automáticamente después de unos segundos</string>
     <string name="title_buttons">Seleccionar botones</string>
     <string name="title_buttons_hint">Las acciones disponibles dependen del tipo de cuenta y configuración</string>
-    <string name="title_button_search">Buscar en mensajes</string>
+    <string name="title_button_search_similar">Buscar mensajes similares</string>
     <string name="title_button_search_text">Buscar en el texto del mensaje</string>
     <string name="title_configure_buttons">Configurar botones &#8230;</string>
     <string name="title_quick_actions">Seleccionar acciones</string>
@@ -1064,6 +1078,7 @@
     <string name="title_quick_actions_low">Baja importancia</string>
     <string name="title_quick_actions_high">Alta importancia</string>
     <string name="title_quick_actions_snooze">Posponer</string>
+    <string name="title_quick_actions_clear">Borrar selección después de la acción</string>
     <string name="title_trash">Papelera</string>
     <string name="title_copy">Copiar &#8230;</string>
     <string name="title_copy_to">Copiar a &#8230;</string>
@@ -1220,7 +1235,7 @@
     <string name="title_style_superscript">Superíndice</string>
     <string name="title_style_strikethrough">Tachado</string>
     <string name="title_style_protect">Proteger con contraseña</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Contenido protegido</string>
+    <string name="title_style_protected">Contenido protegido</string>
     <string name="title_style_protect_size">Texto demasiado largo</string>
     <string name="title_style_clear">Quitar formato</string>
     <string name="title_style_link">Insertar enlace</string>
@@ -1246,12 +1261,13 @@
     <string name="title_save_drafts">Guardar borradores en el servidor</string>
     <string name="title_send_dialog">Mostrar opciones de envío</string>
     <string name="title_image_dialog">Mostrar opciones de imagen</string>
-    <string name="title_block_toolbar">Barra de herramientas de bloque</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Barra de herramientas de estilo</string>
     <string name="title_media_toolbar">Barra de herramientas multimedia</string>
     <string name="title_manage_local_contacts">Administrar contactos locales</string>
     <string name="title_insert_contact_group">Insertar grupo de contactos</string>
     <string name="title_insert_template">Insertar plantilla</string>
     <string name="title_create_template">Crear plantilla</string>
+    <string name="title_select_default_identity">Seleccionar dirección por defecto</string>
     <string name="title_translate">Traducir</string>
     <string name="title_translate_configure">Configurar &#8230;</string>
     <string name="title_translate_key">Introducir clave</string>
@@ -1312,8 +1328,8 @@
     <string name="title_resync">Resincronizar</string>
     <string name="title_charset">Codificación</string>
     <string name="title_charset_auto">Automático</string>
-    <string name="title_alternative_text">Mostrar en texto sin formato</string>
-    <string name="title_alternative_html">Mostrar en HTML</string>
+    <string name="title_alternative_text">Cargar texto plano</string>
+    <string name="title_alternative_html">Cargar HTML</string>
     <string name="title_no_openpgp">OpenKeychain no encontrado</string>
     <string name="title_user_interaction">Transfiriendo a OpenKeychain</string>
     <string name="title_padlock">Use el candado para descifrar el mensaje</string>
@@ -1675,6 +1691,7 @@
     <string name="title_reset_open">Establecer o limpiar aplicaciones por defecto</string>
     <string name="title_select_app">Seleccionar app</string>
     <string name="title_updated">Actualización a la versión %1$s disponible</string>
+    <string name="title_no_update">No hay actualizaciones</string>
     <string name="title_issue">¿Tiene una pregunta o problema?</string>
     <string name="title_yes">Sí</string>
     <string name="title_no">No</string>
@@ -1686,6 +1703,8 @@
     <string name="title_select_block">Seleccionar bloque</string>
     <string name="title_insert_brackets">Corchete</string>
     <string name="title_insert_quotes">Comillas</string>
+    <string name="title_lt_add">Añadir palabra</string>
+    <string name="title_lt_delete">Quitar palabra</string>
     <string name="title_add">Agregar</string>
     <string name="title_browse">Abrir con</string>
     <string name="title_info">Información</string>
@@ -1786,20 +1805,25 @@
     <string name="title_widget_background">Color de fondo</string>
     <string name="title_widget_day_night">Seguir tema oscuro del sistema</string>
     <string name="title_compat_dark">Google eliminó el modo oscuro para versiones de Android anteriores a la versión 10</string>
-    <string name="title_accessibility_collapsed">Oculto</string>
-    <string name="title_accessibility_expanded">Expandido</string>
-    <string name="title_accessibility_seen">Leído</string>
-    <string name="title_accessibility_unseen">No leído</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d mensaje</item>
-        <item quantity="other">%1$d mensajes</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Importante</string>
     <string name="title_keyword_label2">Trabajo</string>
     <string name="title_keyword_label3">Personal</string>
     <string name="title_keyword_label4">Pendiente</string>
     <string name="title_keyword_label5">Más tarde</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d mensaje</item>
+        <item quantity="other">%1$d mensajes</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Cuentas</string>
+    <string name="title_accessibility_folders">Carpetas</string>
+    <string name="title_accessibility_searches">Búsquedas</string>
+    <string name="title_accessibility_menus">Menús</string>
+    <string name="title_accessibility_extras">Extras</string>
+    <string name="title_accessibility_collapsed">Oculto</string>
+    <string name="title_accessibility_expanded">Expandido</string>
+    <string name="title_accessibility_seen">Leído</string>
+    <string name="title_accessibility_unseen">No leído</string>
     <string name="title_accessibility_flagged">Destacado</string>
     <string name="title_accessibility_unflagged">No destacado</string>
     <string name="title_accessibility_collapse">Ocultar</string>

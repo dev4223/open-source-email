@@ -617,6 +617,7 @@
     <string name="title_advanced_cleanup_hint">Honek behin behineko fitxategi guztiak ezabatuko ditu</string>
     <string name="title_advanced_never_favorite">Inoiz ez gogokoa</string>
     <string name="title_advanced_edit_name">Editatu izena</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Karpetaren izena</string>
     <string name="title_advanced_swipe_actions">Ezarri irristatze ekintzak</string>
     <string name="title_advanced_swipe_actions_hint">Honek ezarriko du ezkerreko eta eskuineko irristatze-ekintzak IMAP kontu guztientzako</string>
     <string name="title_select">Hautatu &#8230;</string>
@@ -641,6 +642,7 @@
     <string name="title_account_interval_hint">Mezu berrien arazketa freskatzeko maiztasuna</string>
     <string name="title_account_partial_fetch_hint">Ezgaitu hau mezu hutsak edo eranskinak hondatuta badaude</string>
     <string name="title_color">Kolorea</string>
+    <string name="title_calendar">Egutegia</string>
     <string name="title_background">Atzealdea</string>
     <string name="title_transparent">Gardena</string>
     <string name="title_account_ondemand">Sinkronizatu eskuz</string>
@@ -847,7 +849,7 @@
     <string name="title_download_all">Deskargatu denak</string>
     <string name="title_save_all">Gorde denak</string>
     <string name="title_save_eml">Gorde mezu gordinaren fitxategia</string>
-    <string name="title_button_search">Bilatu mezuetan</string>
+    <string name="title_button_search_similar">Bilatu antzeko mezuak</string>
     <string name="title_button_search_text">Bilatu mezuen testuan</string>
     <string name="title_configure_buttons">Konfiguratu botoiak &#8230;</string>
     <string name="title_quick_actions">Aukeratu ekintzak</string>
@@ -1054,8 +1056,6 @@
     <string name="title_resync">Birsinkronizatu</string>
     <string name="title_charset">Kodeaketa</string>
     <string name="title_charset_auto">Automatikoa</string>
-    <string name="title_alternative_text">Erakutsi testu hutsa</string>
-    <string name="title_alternative_html">Erakutsi HTML</string>
     <string name="title_no_openpgp">Ez da OpenKeychain aurkitu</string>
     <string name="title_user_interaction">OpenKeychain-era transferitzen</string>
     <string name="title_signed_data">Egiaztatu sinadura mezuaren testua erakusteko</string>
@@ -1483,20 +1483,22 @@
     <string name="title_widget_avatars">Erakutsi kontaktuen abatarrak</string>
     <string name="title_widget_background">Atzeko kolorea</string>
     <string name="title_widget_day_night">Jarraitu sistemaren gai iluna</string>
-    <string name="title_accessibility_collapsed">Tolestuta</string>
-    <string name="title_accessibility_expanded">Hedatua</string>
-    <string name="title_accessibility_seen">Irakurrita</string>
-    <string name="title_accessibility_unseen">Irakurri gabea</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">Mezu %1$d</item>
-        <item quantity="other">%1$d mezu</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Garrantzitsua</string>
     <string name="title_keyword_label2">Lanekoa</string>
     <string name="title_keyword_label3">Pertsonala</string>
     <string name="title_keyword_label4">Egiteke</string>
     <string name="title_keyword_label5">Geroago</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">Mezu %1$d</item>
+        <item quantity="other">%1$d mezu</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Kontuak</string>
+    <string name="title_accessibility_folders">Karpetak</string>
+    <string name="title_accessibility_collapsed">Tolestuta</string>
+    <string name="title_accessibility_expanded">Hedatua</string>
+    <string name="title_accessibility_seen">Irakurrita</string>
+    <string name="title_accessibility_unseen">Irakurri gabea</string>
     <string name="title_accessibility_flagged">Izarduna</string>
     <string name="title_accessibility_unflagged">Izarrik gabe</string>
     <string name="title_accessibility_collapse">Tolestu</string>

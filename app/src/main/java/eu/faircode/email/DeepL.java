@@ -33,7 +33,6 @@ import android.text.style.RelativeSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -42,6 +41,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
+import com.google.android.material.textfield.TextInputLayout;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,7 +50,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -208,13 +208,14 @@ public class DeepL {
             }
         }
 
-        URL url = new URL(getBaseUri(context) + "translate?auth_key=" + key);
+        URL url = new URL(getBaseUri(key) + "translate");
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setReadTimeout(DEEPL_TIMEOUT * 1000);
         connection.setConnectTimeout(DEEPL_TIMEOUT * 1000);
         ConnectionHelper.setUserAgent(context, connection);
+        connection.setRequestProperty("Authorization", "DeepL-Auth-Key " + key);
         connection.setRequestProperty("Accept", "*/*");
         connection.setRequestProperty("Content-Length", Integer.toString(request.length()));
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -233,7 +234,7 @@ public class DeepL {
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
-                throw new FileNotFoundException(error);
+                throw new IOException(error);
             }
 
             String response = Helper.readStream(connection.getInputStream());
@@ -241,7 +242,7 @@ public class DeepL {
             JSONObject jroot = new JSONObject(response);
             JSONArray jtranslations = jroot.getJSONArray("translations");
             if (jtranslations.length() == 0)
-                throw new FileNotFoundException();
+                throw new IOException();
             JSONObject jtranslation = (JSONObject) jtranslations.get(0);
 
             Translation result = new Translation();
@@ -271,11 +272,12 @@ public class DeepL {
         String key = prefs.getString("deepl_key", null);
 
         // https://www.deepl.com/docs-api/other-functions/monitoring-usage/
-        URL url = new URL(getBaseUri(context) + "usage?auth_key=" + key);
+        URL url = new URL(getBaseUri(key) + "usage");
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setReadTimeout(DEEPL_TIMEOUT * 1000);
         connection.setConnectTimeout(DEEPL_TIMEOUT * 1000);
         ConnectionHelper.setUserAgent(context, connection);
+        connection.setRequestProperty("Authorization", "DeepL-Auth-Key " + key);
         connection.connect();
 
         try {
@@ -289,7 +291,7 @@ public class DeepL {
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
-                throw new FileNotFoundException(error);
+                throw new IOException(error);
             }
 
             String response = Helper.readStream(connection.getInputStream());
@@ -303,10 +305,8 @@ public class DeepL {
         }
     }
 
-    private static String getBaseUri(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String domain = (prefs.getBoolean("deepl_pro", false)
-                ? "api.deepl.com" : "api-free.deepl.com");
+    private static String getBaseUri(String key) {
+        String domain = (key.endsWith(":fx") ? "api-free.deepl.com" : "api.deepl.com");
         return "https://" + domain + "/v2/";
     }
 
@@ -346,7 +346,6 @@ public class DeepL {
             final Context context = getContext();
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String key = prefs.getString("deepl_key", null);
-            boolean pro = prefs.getBoolean("deepl_pro", false);
             boolean formal = prefs.getBoolean("deepl_formal", true);
             boolean small = prefs.getBoolean("deepl_small", false);
             boolean html = prefs.getBoolean("deepl_html", false);
@@ -354,8 +353,7 @@ public class DeepL {
 
             View view = LayoutInflater.from(context).inflate(R.layout.dialog_deepl, null);
             final ImageButton ibInfo = view.findViewById(R.id.ibInfo);
-            final EditText etKey = view.findViewById(R.id.etKey);
-            final CheckBox cbPro = view.findViewById(R.id.cbPro);
+            final TextInputLayout tilKey = view.findViewById(R.id.tilKey);
             final CheckBox cbFormal = view.findViewById(R.id.cbFormal);
             final TextView tvFormal = view.findViewById(R.id.tvFormal);
             final CheckBox cbSmall = view.findViewById(R.id.cbSmall);
@@ -385,8 +383,7 @@ public class DeepL {
                 }
             });
 
-            etKey.setText(key);
-            cbPro.setChecked(pro);
+            tilKey.getEditText().setText(key);
             cbFormal.setChecked(formal);
 
             try {
@@ -455,13 +452,12 @@ public class DeepL {
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String key = etKey.getText().toString().trim();
+                            String key = tilKey.getEditText().getText().toString().trim();
                             SharedPreferences.Editor editor = prefs.edit();
                             if (TextUtils.isEmpty(key))
                                 editor.remove("deepl_key");
                             else
                                 editor.putString("deepl_key", key);
-                            editor.putBoolean("deepl_pro", cbPro.isChecked());
                             editor.putBoolean("deepl_formal", cbFormal.isChecked());
                             editor.putBoolean("deepl_small", cbSmall.isChecked());
                             editor.putBoolean("deepl_html", cbHtml.isChecked());

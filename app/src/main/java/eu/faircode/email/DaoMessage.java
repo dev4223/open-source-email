@@ -334,8 +334,7 @@ public interface DaoMessage {
     @Transaction
     @Query("SELECT message.id FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
-            " WHERE content" +
-            " AND NOT fts" +
+            " WHERE NOT fts" +
             " AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
             " ORDER BY message.received")
     Cursor getMessageFts();
@@ -452,7 +451,7 @@ public interface DaoMessage {
             " LEFT JOIN message AS base ON base.id = :id" +
             " WHERE message.account = :account" +
             " AND (message.id = :id" +
-            " OR (message.msgid = :msgid AND message.folder <> base.folder))")
+            " OR (message.msgid = :msgid AND (message.folder <> base.folder OR message.hash = base.hash)))")
     List<EntityMessage> getMessagesBySimilarity(long account, long id, String msgid);
 
     @Query("SELECT COUNT(*) FROM message" +
@@ -793,6 +792,9 @@ public interface DaoMessage {
     @Query("UPDATE message SET ui_silent = :ui_silent WHERE id = :id AND NOT (ui_silent IS :ui_silent)")
     int setMessageUiSilent(long id, boolean ui_silent);
 
+    @Query("UPDATE message SET ui_local_only = :ui_local_only WHERE id = :id AND NOT (ui_local_only IS :ui_local_only)")
+    int setMessageUiLocalOnly(long id, boolean ui_local_only);
+
     @Query("UPDATE message SET ui_busy = :busy WHERE id = :id AND NOT (ui_busy IS :busy)")
     int setMessageUiBusy(long id, Long busy);
 
@@ -945,10 +947,12 @@ public interface DaoMessage {
             " AND NOT uid IS NULL")
     int deleteBrowsedMessages(long folder, long before);
 
-    @Query("DELETE FROM message" +
+    @Query("DELETE FROM message WHERE id IN (" +
+            " SELECT id FROM message" +
             " WHERE folder = :folder" +
-            " AND ui_hide")
-    int deleteHiddenMessages(long folder);
+            " AND ui_hide" +
+            " LIMIT :limit)")
+    int deleteHiddenMessages(long folder, int limit);
 
     @Query("DELETE FROM message" +
             " WHERE folder = :folder" +

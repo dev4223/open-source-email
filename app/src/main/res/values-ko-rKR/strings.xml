@@ -450,6 +450,7 @@
     <string name="title_advanced_notify_car_hint">\'연결\'이란 지도나 내비게이션을 표시하는 상태임을 의미합니다</string>
     <string name="title_advanced_never_favorite">즐겨찾기 등록 차단</string>
     <string name="title_advanced_edit_name">이름 수정</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">폴더명</string>
     <string name="title_select">&#8230; 선택</string>
     <string name="title_identity_name">이름</string>
     <string name="title_identity_tenant_hint">이 입력란은 대부분의 경우에 비어 있어야 합니다</string>
@@ -459,6 +460,7 @@
     <string name="title_account_name">계정명</string>
     <string name="title_account_category">카테고리</string>
     <string name="title_color">색상</string>
+    <string name="title_calendar">달력</string>
     <string name="title_transparent">투명도</string>
     <string name="title_account_left">왼쪽으로 밀기</string>
     <string name="title_account_right">우측으로 밀기</string>
@@ -977,19 +979,21 @@
     <string name="title_widget_background">배경 색</string>
     <string name="title_widget_day_night">시스템의 어두운 테마 설정 사용</string>
     <string name="title_compat_dark">Google은 Android 10 이전 버전에서 다크 모드를 제거했습니다</string>
-    <string name="title_accessibility_collapsed">접음</string>
-    <string name="title_accessibility_expanded">펼침</string>
-    <string name="title_accessibility_seen">읽음</string>
-    <string name="title_accessibility_unseen">읽지 않음</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="other">메시지 %1$d건</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">중요</string>
     <string name="title_keyword_label2">업무</string>
     <string name="title_keyword_label3">개인</string>
     <string name="title_keyword_label4">할 일</string>
     <string name="title_keyword_label5">나중에</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="other">메시지 %1$d건</item>
+    </plurals>
+    <string name="title_accessibility_accounts">계정</string>
+    <string name="title_accessibility_folders">폴더</string>
+    <string name="title_accessibility_collapsed">접음</string>
+    <string name="title_accessibility_expanded">펼침</string>
+    <string name="title_accessibility_seen">읽음</string>
+    <string name="title_accessibility_unseen">읽지 않음</string>
     <string name="title_accessibility_flagged">즐겨찾기에 추가함</string>
     <string name="title_accessibility_unflagged">즐겨찾기 해제함</string>
     <string name="title_accessibility_collapse">접음</string>

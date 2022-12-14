@@ -15,7 +15,7 @@
     <string name="channel_notification">ईमेल</string>
     <string name="channel_progress">प्रगति</string>
     <string name="channel_update">अद्यतन</string>
-    <string name="channel_warning">चेतावनी</string>
+    <string name="channel_warning">चेतावनियां</string>
     <string name="channel_error">त्रुटियाँ</string>
     <string name="channel_alert">सर्वर सुचना</string>
     <string name="channel_group_contacts">Contact</string>
@@ -34,7 +34,7 @@
     <string name="page_folders">फ़ोल्डर्स</string>
     <string name="page_compose">लिखें</string>
     <string name="tile_synchronize">तुल्यकालित करें</string>
-    <string name="tile_unseen">नया संदेश</string>
+    <string name="tile_unseen">नए संदेश</string>
     <string name="shortcut_refresh">रीफ्रेश करें</string>
     <string name="shortcut_compose">लिखें</string>
     <string name="shortcut_setup">सेटिंग</string>
@@ -138,6 +138,7 @@
     <string name="title_debug_info_remark">कृपया समस्या का वर्णन करें और समस्या के समय से संकेत मिलता है:</string>
     <string name="title_widget_account_all">सभी</string>
     <!-- Thunderbird -->
+    <string name="title_accessibility_folders">फ़ोल्डर्स</string>
     <!-- https://en.wikipedia.org/wiki/Display_resolution -->
     <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->

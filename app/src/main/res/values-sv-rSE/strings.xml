@@ -198,6 +198,7 @@
     <string name="title_setup_free">Är denna app gratis att använda?</string>
     <string name="title_setup_permissions">Bevilja behörigheter</string>
     <string name="title_setup_permissions_remark">Få tillgång till kontaktinformation (valfritt)</string>
+    <string name="title_setup_permissions_calendar">Spara inbjudningar (valfritt)</string>
     <string name="title_setup_permissions_explanation">Kontaktbehörigheter krävs för att söka kontaktinfo och föreslå kontakter</string>
     <string name="title_setup_permissions_notify">Visa aviseringar för nya meddelanden (valfritt)</string>
     <string name="title_setup_permissions_notify_explanation">Aviseringsbehörigheter krävs för att visa aviseringar för nya meddelanden i statusfältet</string>
@@ -335,6 +336,7 @@
     <string name="title_advanced_use_blocklist">Flytta meddelanden från domäner som finns på skräppostblockeringslistor till skräppost-mappen</string>
     <string name="title_advanced_use_blocklist_pop3">Hoppa över meddelanden från domäner på en blocklista (POP3)</string>
     <string name="title_advanced_tune_keep_alive">Justera automatiskt keep-alive intervallet</string>
+    <string name="title_advanced_blocklist_warning">Blocklistor är inte perfekta och kan blockera mer än bara skräppost!</string>
     <string name="title_advanced_keyboard">Visa tangentbord som standard</string>
     <string name="title_advanced_keyboard_no_fullscreen">Förhindra helskärmstangentbord</string>
     <string name="title_advanced_suggest_names">Visa namn och e-postadresser</string>
@@ -578,6 +580,8 @@
     <string name="title_advanced_notifications_background">Använd en bakgrundstjänst för att synkronisera meddelanden</string>
     <string name="title_advanced_notifications_background_hint">En bakgrundstjänst kan stoppas av Android när som helst, men kräver inte ett meddelande i statusfältet</string>
     <string name="title_advanced_confirm_links">Bekräfta att länkar öppnas</string>
+    <string name="title_advanced_sanitize_links">Ta bort spårningsparametrar som standard</string>
+    <string name="title_advanced_sanitize_links_hint">Endast när du bekräftar länkar</string>
     <string name="title_advanced_check_links_dbl">Kontrollera domänblockeringslistor för misstänkta länkar</string>
     <string name="title_advanced_confirm_images">Visa inga bilder som standard</string>
     <string name="title_advanced_ask_images">Bekräfta visning av bilder</string>
@@ -604,6 +608,7 @@
     <string name="title_advanced_clear_all_remark">Appens data kommer att tas bort oåterkalleligt!</string>
     <string name="title_advanced_sign_default">Signera som standard</string>
     <string name="title_advanced_encrypt_default">Kryptera som standard</string>
+    <string name="title_advanced_encrypt_auto">Kryptera automatiskt när alla mottagares nycklar är tillgängliga</string>
     <string name="title_advanced_auto_decrypt">Dekryptera meddelanden automatiskt</string>
     <string name="title_advanced_auto_undo_decrypt">Ångra dekryptering vid stängning av konversation</string>
     <string name="title_advanced_openpgp">OpenPGP-leverantör</string>
@@ -636,12 +641,15 @@
     <string name="title_advanced_language_system">System</string>
     <string name="title_advanced_lt">Språkintegration för verktyg</string>
     <string name="title_advanced_lt_auto">Kontrollera paragraf efter en ny rad</string>
+    <string name="title_advanced_lt_user">Användarnamn (frivilligt)</string>
+    <string name="title_advanced_lt_key">API-nyckel (frivilligt)</string>
     <string name="title_advanced_deepl">DeepL integration</string>
     <string name="title_advanced_virus_total">VirusTotal integration</string>
     <string name="title_advanced_sdcard">Jag vill använda ett SD-kort</string>
     <string name="title_advanced_watchdog">Kontrollera regelbundet om FairEmail fortfarande är aktiv</string>
     <string name="title_advanced_updates">Sök efter GitHub-uppdateringar</string>
     <string name="title_advanced_check_weekly">Kolla veckovis istället för dagligen</string>
+    <string name="title_advanced_beta">Sök efter testversioner på BitBucket</string>
     <string name="title_advanced_changelog">Visa ändringslogg efter uppdatering</string>
     <string name="title_advanced_experiments">Prova experimentella funktioner</string>
     <string name="title_advanced_crash_reports">Skicka felrapporter</string>
@@ -757,6 +765,7 @@
     <string name="title_advanced_cleanup_hint">Detta tar bort alla temporära filer</string>
     <string name="title_advanced_never_favorite">Aldrig favorit</string>
     <string name="title_advanced_edit_name">Redigera namn</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Mappnamn</string>
     <string name="title_advanced_swipe_actions">Ställ in svepåtgärder</string>
     <string name="title_advanced_swipe_actions_hint">Detta kommer att ställa in svep åt vänster och höger för alla IMAP-konton</string>
     <string name="title_advanced_swipe_sensitivity">Känslighet för vänster/höger svep</string>
@@ -788,6 +797,7 @@
     <string name="title_account_noop_hint">Detta kommer att uppdatera anslutningen mer aktivt, men även använda mer batterikraft</string>
     <string name="title_account_partial_fetch_hint">Inaktivera detta endast vid tomma meddelanden eller korrupta bilagor</string>
     <string name="title_color">Färg</string>
+    <string name="title_calendar">Kalender</string>
     <string name="title_background">Bakgrund</string>
     <string name="title_transparent">Transparent</string>
     <string name="title_account_ondemand">Synkronisera manuellt</string>
@@ -860,6 +870,7 @@
     <string name="title_drafts_select">Att skicka e-post kräver att en utkastmapp väljs i kontoinställningarna</string>
     <string name="title_account_auth_update">Uppdatera auktorisering</string>
     <string name="title_account_auth_password">Byt till lösenordsautentisering</string>
+    <string name="title_change_password">Ändra lösenord</string>
     <string name="title_delete_account">Radera konto</string>
     <string name="title_account_delete">Ta bort detta konto permanent?</string>
     <string name="title_identity_delete">Ta bort denna identitet permanent?</string>
@@ -1049,7 +1060,7 @@
     <string name="title_auto_confirm">Bekräfta automatiskt efter några sekunder</string>
     <string name="title_buttons">Välj knappar</string>
     <string name="title_buttons_hint">De faktiska åtgärder som är tillgängliga beror på kontotyp och konfiguration</string>
-    <string name="title_button_search">Sök i meddelanden</string>
+    <string name="title_button_search_similar">Sök liknande meddelanden</string>
     <string name="title_button_search_text">Sök i meddelandetext</string>
     <string name="title_configure_buttons">Konfigurera knappar &#8230;</string>
     <string name="title_quick_actions">Välj åtgärd</string>
@@ -1057,6 +1068,7 @@
     <string name="title_quick_actions_low">Ej viktigt</string>
     <string name="title_quick_actions_high">Viktigt</string>
     <string name="title_quick_actions_snooze">Pausa</string>
+    <string name="title_quick_actions_clear">Nollställ urval efter åtgärd</string>
     <string name="title_trash">Papperskorg</string>
     <string name="title_copy">Kopiera &#8230;</string>
     <string name="title_copy_to">Kopiera till &#8230;</string>
@@ -1213,7 +1225,7 @@
     <string name="title_style_superscript">Upphöjd text</string>
     <string name="title_style_strikethrough">Genomstruken</string>
     <string name="title_style_protect">Lösenordsskydda</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Skyddat innehåll</string>
+    <string name="title_style_protected">Skyddat innehåll</string>
     <string name="title_style_protect_size">Texten är för lång</string>
     <string name="title_style_clear">Rensa formatering</string>
     <string name="title_style_link">Infoga länk</string>
@@ -1239,7 +1251,6 @@
     <string name="title_save_drafts">Spara utkast på servern</string>
     <string name="title_send_dialog">Visa alternativ för skicka</string>
     <string name="title_image_dialog">Visa bildalternativ</string>
-    <string name="title_block_toolbar">Verktygsfält för textblock</string>
     <string name="title_media_toolbar">Verktygsfält för media</string>
     <string name="title_manage_local_contacts">Hantera lokala kontakter</string>
     <string name="title_insert_contact_group">Infoga kontaktgrupp</string>
@@ -1669,6 +1680,7 @@
     <string name="title_reset_open">Ange eller rensa standardappar</string>
     <string name="title_select_app">Välj app</string>
     <string name="title_updated">Uppdatering till version %1$s tillgänglig</string>
+    <string name="title_no_update">Ingen uppdatering tillgänglig</string>
     <string name="title_issue">Har du en fråga eller problem?</string>
     <string name="title_yes">Ja</string>
     <string name="title_no">Nej</string>
@@ -1679,6 +1691,8 @@
     <string name="title_insert_line">Infoga rad</string>
     <string name="title_select_block">Välj block</string>
     <string name="title_insert_quotes">Citera</string>
+    <string name="title_lt_add">Lägg till ord</string>
+    <string name="title_lt_delete">Ta bort ord</string>
     <string name="title_add">Lägg till</string>
     <string name="title_browse">Öppna med</string>
     <string name="title_info">Info</string>
@@ -1779,20 +1793,25 @@
     <string name="title_widget_background">Bakgrundsfärg</string>
     <string name="title_widget_day_night">Följ mörkt systemtema</string>
     <string name="title_compat_dark">Google tog bort mörkt läge för Android före version 10</string>
-    <string name="title_accessibility_collapsed">Ihopfälld</string>
-    <string name="title_accessibility_expanded">Expanderad</string>
-    <string name="title_accessibility_seen">Läst</string>
-    <string name="title_accessibility_unseen">Oläst</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d meddelande</item>
-        <item quantity="other">%1$d meddelanden</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Viktigt</string>
     <string name="title_keyword_label2">Arbete</string>
     <string name="title_keyword_label3">Personligt</string>
     <string name="title_keyword_label4">Att göra</string>
     <string name="title_keyword_label5">Senare</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d meddelande</item>
+        <item quantity="other">%1$d meddelanden</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Konton</string>
+    <string name="title_accessibility_folders">Mappar</string>
+    <string name="title_accessibility_searches">Sökningar</string>
+    <string name="title_accessibility_menus">Menyer</string>
+    <string name="title_accessibility_extras">Tillägg</string>
+    <string name="title_accessibility_collapsed">Ihopfälld</string>
+    <string name="title_accessibility_expanded">Expanderad</string>
+    <string name="title_accessibility_seen">Läst</string>
+    <string name="title_accessibility_unseen">Oläst</string>
     <string name="title_accessibility_flagged">Stjärnmärkta</string>
     <string name="title_accessibility_unflagged">Ostjärnmärkt</string>
     <string name="title_accessibility_collapse">Fäll ihop</string>

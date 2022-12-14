@@ -202,6 +202,7 @@
     <string name="title_setup_free">Onko tämän sovelluksen käyttäminen ilmaista?</string>
     <string name="title_setup_permissions">Myönnä käyttöoikeudet</string>
     <string name="title_setup_permissions_remark">Laitteen yhteystietoihin pääsemiseksi (valinnainen)</string>
+    <string name="title_setup_permissions_calendar">Kutsujen tallentamiseksi (valinnainen)</string>
     <string name="title_setup_permissions_explanation">Yhteystietojen käyttöoikeudet tarvitaan yhteystietojen etsimiseen ja ehdottamiseen</string>
     <string name="title_setup_permissions_notify">Uusien viestien ilmoitusten näyttämiseksi (valinnainen)</string>
     <string name="title_setup_permissions_notify_explanation">Ilmoitusten käyttöoikeudet tarvitaan, että voidaan näyttää uusien viestien ilmoitukset tilapalkissa</string>
@@ -342,6 +343,7 @@
     <string name="title_advanced_use_blocklist">Siirrä estolistalla olevista verkkotunnuksista vastaanotetut viestit roskapostikansioon</string>
     <string name="title_advanced_use_blocklist_pop3">Ohita viestit estolistalla olevista verkkotunnuksista (ainoastaan POP3)</string>
     <string name="title_advanced_tune_keep_alive">Säädä ylläpitokyselyn aikaväli automaattisesti</string>
+    <string name="title_advanced_blocklist_warning">Estolistat eivät toimi täydellisesti ja saattavat estää muutakin kuin roskapostia!</string>
     <string name="title_advanced_keyboard">Näytä näppäimistö oletuksena</string>
     <string name="title_advanced_keyboard_no_fullscreen">Estä koko näytön näppäimistö</string>
     <string name="title_advanced_suggest_names">Käytä nimiä ja sähköpostiosoitteita</string>
@@ -611,6 +613,7 @@
     <string name="title_advanced_clear_all_remark">Sovelluksen tiedot poistetaan. Tätä ei voi perua!</string>
     <string name="title_advanced_sign_default">Allekirjoita oletuksena</string>
     <string name="title_advanced_encrypt_default">Salaa oletuksena</string>
+    <string name="title_advanced_encrypt_auto">Salaa automaattisesti, kun kaikkien vastaanottajien avaimet ovat saatavilla</string>
     <string name="title_advanced_auto_decrypt">Pura viestien salaus automaattisesti</string>
     <string name="title_advanced_auto_undo_decrypt">Kumoa salauksen purku, kun keskustelu suljetaan</string>
     <string name="title_advanced_openpgp">OpenPGP-palveluntarjoaja</string>
@@ -648,6 +651,7 @@
     <string name="title_advanced_watchdog">Tarkista väliajoin, että FairEmail on edelleen aktiivinen</string>
     <string name="title_advanced_updates">Tarkista GitHub-päivitykset</string>
     <string name="title_advanced_check_weekly">Tarkista viikoittain päivittäisen sijaan</string>
+    <string name="title_advanced_beta">Tarkista, onko BitBucketissa testiversioita</string>
     <string name="title_advanced_changelog">Näytä muutosloki päivityksen jälkeen</string>
     <string name="title_advanced_experiments">Käytä kokeellisia ominaisuuksia</string>
     <string name="title_advanced_crash_reports">Lähetä virheraportit</string>
@@ -763,6 +767,7 @@
     <string name="title_advanced_cleanup_hint">Tämä poistaa kaikki väliaikaiset tiedostot</string>
     <string name="title_advanced_never_favorite">Ei koskaan suosikiksi</string>
     <string name="title_advanced_edit_name">Muokkaa nimeä</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Kansion nimi</string>
     <string name="title_advanced_swipe_actions">Aseta pyyhkäisytoiminnot</string>
     <string name="title_advanced_swipe_actions_hint">Tämä asettaa vasemmalle ja oikealle pyyhkäisyn toiminnot kaikille IMAP-tileille</string>
     <string name="title_advanced_swipe_sensitivity">Vasemmalle/oikealle pyyhkäisyn herkkyys</string>
@@ -794,6 +799,7 @@
     <string name="title_account_noop_hint">Tämä päivittää yhteyttä useammin, mutta käyttää enemmän akkua</string>
     <string name="title_account_partial_fetch_hint">Kytke tämä pois ainoastaan, jos ilmenee tyhjiä viestejä tai korruptoituneita liitteitä</string>
     <string name="title_color">Väri</string>
+    <string name="title_calendar">Kalenteri</string>
     <string name="title_background">Tausta</string>
     <string name="title_transparent">Läpinäkyvä</string>
     <string name="title_account_ondemand">Synkronoi manuaalisesti</string>
@@ -1055,7 +1061,7 @@
     <string name="title_auto_confirm">Vahvista automaattisesti muutaman sekunnin kuluttua</string>
     <string name="title_buttons">Valitse painikkeita</string>
     <string name="title_buttons_hint">Käytettävissä olevat toiminnot riippuvat tilin tyypistä ja asetuksista</string>
-    <string name="title_button_search">Hae viesteistä</string>
+    <string name="title_button_search_similar">Hae samankaltaisista viesteistä</string>
     <string name="title_button_search_text">Etsi viestin tekstistä</string>
     <string name="title_configure_buttons">Määritä painikkeet &#8230;</string>
     <string name="title_quick_actions">Valitse toiminnot</string>
@@ -1220,7 +1226,7 @@
     <string name="title_style_superscript">Yläindeksi</string>
     <string name="title_style_strikethrough">Yliviivattu</string>
     <string name="title_style_protect">Salasanasuojaus</string>
-    <string name="title_style_protected" comment="title_style_protected&#10;Title of dialog to decrypt protect content">Suojattu sisältö</string>
+    <string name="title_style_protected">Suojattu sisältö</string>
     <string name="title_style_protect_size">Liian pitkä teksti</string>
     <string name="title_style_clear">Poista muotoilu</string>
     <string name="title_style_link">Lisää linkki</string>
@@ -1246,7 +1252,7 @@
     <string name="title_save_drafts">Tallenna luonnokset palvelimelle</string>
     <string name="title_send_dialog">Näytä lähetysasetukset</string>
     <string name="title_image_dialog">Näytä kuva-asetukset</string>
-    <string name="title_block_toolbar">Lohkotyökalupalkki</string>
+    <string name="title_style_toolbar" comment="title_style_toolbar&#10;Title of menu item for a fixed style toolbar">Tyylityökalurivi</string>
     <string name="title_media_toolbar">Mediatyökalupalkki</string>
     <string name="title_manage_local_contacts">Hallinnoi paikallisia yhteystietoja</string>
     <string name="title_insert_contact_group">Lisää yhteystietoryhmä</string>
@@ -1312,8 +1318,6 @@
     <string name="title_resync">Synkronoi uudelleen</string>
     <string name="title_charset">Merkistökoodaus</string>
     <string name="title_charset_auto">Automaattinen</string>
-    <string name="title_alternative_text">Näytä muotoilematon teksti</string>
-    <string name="title_alternative_html">Näytä HTML</string>
     <string name="title_no_openpgp">OpenKeychain ei löytynyt</string>
     <string name="title_user_interaction">Siirretään OpenKeychain-sovellukseen</string>
     <string name="title_padlock">Pura viestin salaus lukolla</string>
@@ -1787,20 +1791,22 @@
     <string name="title_widget_background">Taustaväri</string>
     <string name="title_widget_day_night">Noudata järjestelmän tummaa teemaa</string>
     <string name="title_compat_dark">Google poisti tumman tilan versiota 10 vanhemmista Android-versioista</string>
-    <string name="title_accessibility_collapsed">Tiivistetty</string>
-    <string name="title_accessibility_expanded">Laajennettu</string>
-    <string name="title_accessibility_seen">Luettu</string>
-    <string name="title_accessibility_unseen">Lukematon</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d viesti</item>
-        <item quantity="other">%1$d viestiä</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Tärkeä</string>
     <string name="title_keyword_label2">Työ</string>
     <string name="title_keyword_label3">Henkilökohtainen</string>
     <string name="title_keyword_label4">Tehtävänä</string>
     <string name="title_keyword_label5">Myöhemmin</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d viesti</item>
+        <item quantity="other">%1$d viestiä</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Tilit</string>
+    <string name="title_accessibility_folders">Kansiot</string>
+    <string name="title_accessibility_collapsed">Tiivistetty</string>
+    <string name="title_accessibility_expanded">Laajennettu</string>
+    <string name="title_accessibility_seen">Luettu</string>
+    <string name="title_accessibility_unseen">Lukematon</string>
     <string name="title_accessibility_flagged">Tähdellinen</string>
     <string name="title_accessibility_unflagged">Tähdetön</string>
     <string name="title_accessibility_collapse">Tiivistä</string>

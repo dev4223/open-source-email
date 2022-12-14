@@ -660,6 +660,16 @@ public class ApplicationEx extends Application
                 editor.putBoolean("photo_picker", true);
         } else if (version < 1966)
             editor.remove("hide_timezone");
+        else if (version < 1994) {
+            // 2022-10-28 Spamcop blocks Google's addresses
+            editor.putBoolean("blocklist.Spamcop", false);
+        } else if (version < 2013) {
+            if (prefs.contains("compose_block")) {
+                if (prefs.getBoolean("experiments", false))
+                    editor.putBoolean("compose_style", prefs.getBoolean("compose_block", false));
+                editor.remove("compose_block");
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");
@@ -761,11 +771,15 @@ public class ApplicationEx extends Application
         @Override
         public void onActivityPostResumed(@NonNull Activity activity) {
             log(activity, "onActivityPostResumed");
+            if (activity instanceof ActivityView)
+                ServiceSynchronize.state(activity, true);
         }
 
         @Override
         public void onActivityPrePaused(@NonNull Activity activity) {
             log(activity, "onActivityPrePaused");
+            if (activity instanceof ActivityView)
+                ServiceSynchronize.state(activity, false);
         }
 
         @Override

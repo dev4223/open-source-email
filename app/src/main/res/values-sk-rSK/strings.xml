@@ -784,6 +784,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_advanced_cleanup_hint">Odstráni všetky dočasné súbory</string>
     <string name="title_advanced_never_favorite">Nikdy nepovažovať za obľúbený</string>
     <string name="title_advanced_edit_name">Zmeniť meno</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">Názov priečinka</string>
     <string name="title_advanced_swipe_actions">Nastaviť akcie pri potiahnutí</string>
     <string name="title_advanced_swipe_actions_hint">Nastaví akcie pri potiahnutí do strán pre všetky IMAP účty</string>
     <string name="title_advanced_swipe_sensitivity">Citlivosť potiahnutia do strán</string>
@@ -814,6 +815,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_account_interval_hint">Frekvencia obnovenia spojenia pre oznámenia push alebo frekvencia kontroly nových správ</string>
     <string name="title_account_partial_fetch_hint">Vypnite len pre prázdne správy alebo správy s poškodenými prílohami</string>
     <string name="title_color">Farba</string>
+    <string name="title_calendar">Kalendár</string>
     <string name="title_background">Pozadie</string>
     <string name="title_transparent">Priehľadná</string>
     <string name="title_account_ondemand">Synchronizovať ručne</string>
@@ -1073,7 +1075,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_auto_confirm">Automaticky potvrdiť po niekoľkých sekundách</string>
     <string name="title_buttons">Vybrať tlačidlá</string>
     <string name="title_buttons_hint">Skutočne dostupné akcie závisia od typu a nastavenia účtu</string>
-    <string name="title_button_search">Hľadať v správach</string>
+    <string name="title_button_search_similar">Hľadať podobné správy</string>
     <string name="title_button_search_text">Hľadať v texte správy</string>
     <string name="title_configure_buttons">Nastaviť tlačidlá &#8230;</string>
     <string name="title_quick_actions">Vybrať akcie</string>
@@ -1319,8 +1321,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_resync">Znova synchronizovať</string>
     <string name="title_charset">Kódovanie</string>
     <string name="title_charset_auto">Automatické</string>
-    <string name="title_alternative_text">Zobraziť obyčajný text</string>
-    <string name="title_alternative_html">Zobraziť HTML</string>
     <string name="title_no_openpgp">OpenKeychain nenájdený</string>
     <string name="title_user_interaction">Prenos do OpenKeychain</string>
     <string name="title_signed_data">Overiť podpis pre zobrazenie textu správy</string>
@@ -1785,22 +1785,24 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_widget_background">Farba pozadia</string>
     <string name="title_widget_day_night">Prispôsobiť sa tmavému vzhľadu systému</string>
     <string name="title_compat_dark">Google odstránili tmavý režim pre systémy staršie než Android 10</string>
-    <string name="title_accessibility_collapsed">Zbalené</string>
-    <string name="title_accessibility_expanded">Rozbalené</string>
-    <string name="title_accessibility_seen">Prečítané</string>
-    <string name="title_accessibility_unseen">Neprečítané</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d správa</item>
-        <item quantity="few">%1$d správy</item>
-        <item quantity="many">%1$d správ</item>
-        <item quantity="other">%1$d správ</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">Dôležité</string>
     <string name="title_keyword_label2">Práca</string>
     <string name="title_keyword_label3">Osobný</string>
     <string name="title_keyword_label4">Názov a adresa odkazu sú rôzne</string>
     <string name="title_keyword_label5">Neskôr</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d správa</item>
+        <item quantity="few">%1$d správy</item>
+        <item quantity="many">%1$d správ</item>
+        <item quantity="other">%1$d správ</item>
+    </plurals>
+    <string name="title_accessibility_accounts">Účty</string>
+    <string name="title_accessibility_folders">Priečinky</string>
+    <string name="title_accessibility_collapsed">Zbalené</string>
+    <string name="title_accessibility_expanded">Rozbalené</string>
+    <string name="title_accessibility_seen">Prečítané</string>
+    <string name="title_accessibility_unseen">Neprečítané</string>
     <string name="title_accessibility_flagged">S hviezdičkou</string>
     <string name="title_accessibility_unflagged">Bez hviezdičky</string>
     <string name="title_accessibility_collapse">Zbaliť</string>

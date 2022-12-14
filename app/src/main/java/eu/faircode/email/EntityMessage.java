@@ -236,6 +236,8 @@ public class EntityMessage implements Serializable {
     @NonNull
     public Boolean ui_silent = false;
     @NonNull
+    public Boolean ui_local_only = false;
+    @NonNull
     public Boolean ui_browsed = false;
     public Long ui_busy;
     public Long ui_snoozed;
@@ -577,9 +579,19 @@ public class EntityMessage implements Serializable {
     }
 
     static File getFile(Context context, Long id) {
-        File root = new File(context.getFilesDir(), "messages");
+        File root = Helper.ensureExists(new File(getRoot(context), "messages"));
         File dir = Helper.ensureExists(new File(root, "D" + (id / 1000)));
         return new File(dir, id.toString());
+    }
+
+    static File getRoot(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean external_storage = prefs.getBoolean("external_storage_message", false);
+
+        File root = (external_storage
+                ? Helper.getExternalFilesDir(context)
+                : context.getFilesDir());
+        return root;
     }
 
     static void convert(Context context) {
@@ -766,6 +778,7 @@ public class EntityMessage implements Serializable {
                     this.ui_found.equals(other.ui_found) &&
                     this.ui_ignored.equals(other.ui_ignored) &&
                     this.ui_silent.equals(other.ui_silent) &&
+                    this.ui_local_only.equals(other.ui_local_only) &&
                     this.ui_browsed.equals(other.ui_browsed) &&
                     Objects.equals(this.ui_busy, other.ui_busy) &&
                     Objects.equals(this.ui_snoozed, other.ui_snoozed) &&

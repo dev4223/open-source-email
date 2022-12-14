@@ -104,16 +104,19 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        Uri _uri = getArguments().getParcelable("uri");
-        String _title = getArguments().getString("title");
+        Bundle a = getArguments();
+        Uri _uri = a.getParcelable("uri");
+        String _title = a.getString("title");
         if (_title != null)
             _title = _title.replace("\uFFFC", ""); // Object replacement character
         if (TextUtils.isEmpty(_title))
             _title = null;
         final String title = _title;
+        final boolean always_confirm = a.getBoolean("always_confirm", false);
 
         final Context context = getContext();
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean sanitize_links = prefs.getBoolean("sanitize_links", false);
         boolean check_links_dbl = prefs.getBoolean("check_links_dbl", BuildConfig.PLAY_STORE_RELEASE);
         boolean disconnect_links = prefs.getBoolean("disconnect_links", true);
 
@@ -272,7 +275,8 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                         new Intent(ActivityView.ACTION_SEARCH_ADDRESS)
                                 .putExtra("account", -1L)
                                 .putExtra("folder", -1L)
-                                .putExtra("query", MailTo.parse(uri).getTo()));
+                                .putExtra("query", MailTo.parse(uri).getTo())
+                                .putExtra("sender_only", false));
             }
         });
 
@@ -522,9 +526,9 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         tvTitle.setText(title);
         tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
 
-        ibSearch.setVisibility(
+        ibSearch.setVisibility(context instanceof ActivityView &&
                 mailto != null && !TextUtils.isEmpty(mailto.getTo())
-                        ? View.VISIBLE : View.GONE);
+                ? View.VISIBLE : View.GONE);
 
         if (host != null && !host.equals(puny)) {
             etLink.setText(format(uri.buildUpon().encodedAuthority(puny).build(), context));
@@ -575,9 +579,14 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         tvDisconnectCategories.setVisibility(
                 categories == null || !BuildConfig.DEBUG ? View.GONE : View.VISIBLE);
 
+        cbSanitize.setChecked(sanitize_links);
+
         cbNotAgain.setText(context.getString(R.string.title_no_ask_for_again, uri.getHost()));
         cbNotAgain.setVisibility(
-                UriHelper.isSecure(uri) && !TextUtils.isEmpty(uri.getHost())
+                !always_confirm &&
+                        !sanitize_links &&
+                        UriHelper.isSecure(uri) &&
+                        !TextUtils.isEmpty(uri.getHost())
                         ? View.VISIBLE : View.GONE);
 
         setMore(false);

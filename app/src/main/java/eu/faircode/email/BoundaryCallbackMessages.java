@@ -59,7 +59,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -98,7 +98,6 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     private IBoundaryCallbackMessages intf;
 
     private State state;
-    private final ExecutorService executor = Helper.getBackgroundExecutor(1, "boundary");
 
     private static final int SEARCH_LIMIT_DEVICE = 1000;
 
@@ -150,7 +149,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     void retry() {
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 close(state, true);
@@ -160,21 +159,21 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     private void queue_load(final State state) {
-        if (state.queued > 1) {
-            Log.i("Boundary queued =" + state.queued);
+        if (state.queued.get() > 1) {
+            Log.i("Boundary queued =" + state.queued.get());
             return;
         }
-        state.queued++;
-        Log.i("Boundary queued +" + state.queued);
+        state.queued.incrementAndGet();
+        Log.i("Boundary queued +" + state.queued.get());
 
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 Helper.gc();
 
                 int free = Log.getFreeMemMb();
                 Map<String, String> crumb = new HashMap<>();
-                crumb.put("queued", Integer.toString(state.queued));
+                crumb.put("queued", Integer.toString(state.queued.get()));
                 Log.breadcrumb("Boundary run", crumb);
 
                 Log.i("Boundary run free=" + free);
@@ -223,11 +222,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         }
                     });
                 } finally {
-                    state.queued--;
-                    Log.i("Boundary queued -" + state.queued);
+                    state.queued.decrementAndGet();
+                    Log.i("Boundary queued -" + state.queued.get());
                     Helper.gc();
 
-                    crumb.put("queued", Integer.toString(state.queued));
+                    crumb.put("queued", Integer.toString(state.queued.get()));
                     Log.breadcrumb("Boundary done", crumb);
 
                     final int f = found;
@@ -289,7 +288,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             if (state.ids == null) {
                 SQLiteDatabase sdb = Fts4DbHelper.getInstance(context);
                 state.ids = Fts4DbHelper.match(sdb, account, folder, exclude, criteria, TextUtils.join(" ", word));
-                EntityLog.log(context, "Boundary FTS " +
+                EntityLog.log(context, "Boundary FTS" +
                         " account=" + account +
                         " folder=" + folder +
                         " criteria=" + criteria +
@@ -508,20 +507,38 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                             return search(true, browsable.keywords, protocol, state);
                                         } catch (Throwable ex) {
                                             EntityLog.log(context, ex.toString());
-                                            if (ex instanceof ProtocolException &&
-                                                    ex.getMessage() != null &&
-                                                    ex.getMessage().contains("full text search not supported")) {
-                                                String msg = context.getString(R.string.title_service_auth,
-                                                        account.host + ": " + getMessage(ex));
-                                                ApplicationEx.getMainHandler().post(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        if (intf != null)
-                                                            intf.onWarning(msg);
+                                            if (ex instanceof ProtocolException && ex.getMessage() != null)
+                                                try {
+                                                    boolean retry = false;
+                                                    String remark = null;
+                                                    if (ex.getMessage().contains("full text search not supported")) {
+                                                        retry = true;
+                                                        criteria.in_message = false;
+                                                    } else if (ex.getMessage().contains("invalid search criteria")) {
+                                                        // invalid SEARCH command syntax, invalid search criteria syntax
+                                                        retry = true;
+                                                        criteria.in_keywords = false;
+                                                        remark = "Keyword search not supported?";
                                                     }
-                                                });
-                                                criteria.in_message = false;
-                                            }
+
+                                                    if (retry) {
+                                                        String msg = context.getString(R.string.title_service_auth,
+                                                                account.host + ": " +
+                                                                        (remark == null ? "" : remark + " - ") +
+                                                                        getMessage(ex));
+                                                        ApplicationEx.getMainHandler().post(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                if (intf != null)
+                                                                    intf.onWarning(msg);
+                                                            }
+                                                        });
+
+                                                        return search(true, browsable.keywords, protocol, state);
+                                                    }
+                                                } catch (Throwable exex) {
+                                                    Log.w(exex);
+                                                }
                                         }
 
                                         return search(false, browsable.keywords, protocol, state);
@@ -854,7 +871,16 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         if (word.size() == 0)
             return true;
 
-        Pattern pat = Pattern.compile(".*?\\b(" + TextUtils.join("\\s+", word) + ")\\b.*?", Pattern.DOTALL);
+        StringBuilder sb = new StringBuilder();
+        sb.append(".*?\\b(");
+        for (int i = 0; i < word.size(); i++) {
+            if (i > 0)
+                sb.append("\\s+");
+            sb.append(Pattern.quote(word.get(i)));
+        }
+        sb.append(")\\b.*?");
+
+        Pattern pat = Pattern.compile(sb.toString(), Pattern.DOTALL);
         return pat.matcher(text).matches();
     }
 
@@ -867,7 +893,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         this.intf = null;
         Log.i("Boundary destroy");
 
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 close(state, true);
@@ -897,7 +923,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     static class State {
-        int queued = 0;
+        final AtomicInteger queued = new AtomicInteger(0);
         boolean destroyed = false;
         boolean error = false;
         int index = 0;
@@ -911,7 +937,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
         void reset() {
             Log.i("Boundary reset");
-            queued = 0;
+            queued.set(0);
             destroyed = false;
             error = false;
             index = 0;
@@ -1223,9 +1249,10 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 return false;
         }
 
-        JSONObject toJson() throws JSONException {
+        JSONObject toJsonData() throws JSONException {
             JSONObject json = new JSONObject();
             json.put("query", query);
+            json.put("fts", fts);
             json.put("in_senders", in_senders);
             json.put("in_recipients", in_recipients);
             json.put("in_subject", in_subject);
@@ -1269,9 +1296,10 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             return json;
         }
 
-        public static SearchCriteria fromJSON(JSONObject json) throws JSONException {
+        public static SearchCriteria fromJsonData(JSONObject json) throws JSONException {
             SearchCriteria criteria = new SearchCriteria();
             criteria.query = json.optString("query");
+            criteria.fts = json.optBoolean("fts");
             criteria.in_senders = json.optBoolean("in_senders");
             criteria.in_recipients = json.optBoolean("in_recipients");
             criteria.in_subject = json.optBoolean("in_subject");

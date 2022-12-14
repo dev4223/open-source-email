@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2022 by Marcel Bokhorst (M66B)
 */
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -57,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 
 import javax.mail.Address;
 import javax.mail.AuthenticationFailedException;
@@ -68,6 +68,11 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import biweekly.Biweekly;
+import biweekly.ICalendar;
+import biweekly.component.VEvent;
+import biweekly.property.Method;
+
 public class ServiceSend extends ServiceBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private TupleUnsent lastUnsent = null;
     private Network lastActive = null;
@@ -77,8 +82,6 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     private TwoStateOwner owner;
     private PowerManager.WakeLock wlOutbox;
     private List<Long> handling = new ArrayList<>();
-
-    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
 
     private static final int RETRY_MAX = 3;
     private static final int CONNECTIVITY_DELAY = 5000; // milliseconds
@@ -143,7 +146,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                             "Send process=" + TextUtils.join(",", process) +
                                     " handling=" + TextUtils.join(",", handling));
 
-                    executor.submit(new Runnable() {
+                    Helper.getSerialExecutor().submit(new Runnable() {
                         @Override
                         public void run() {
                             processOperations(process);
@@ -857,13 +860,44 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             } finally {
                 db.endTransaction();
             }
+
+            checkICalendar(sid);
         }
 
         ServiceSynchronize.eval(this, "sent");
     }
 
+    private void checkICalendar(long sid) {
+        boolean permission = Helper.hasPermission(this, Manifest.permission.WRITE_CALENDAR);
+        if (!permission)
+            return;
+
+        DB db = DB.getInstance(this);
+        List<EntityAttachment> attachments = db.attachment().getAttachments(sid);
+        if (attachments == null || attachments.size() == 0)
+            return;
+
+        for (EntityAttachment attachment : attachments)
+            if ("text/calendar".equals(attachment.type))
+                try {
+                    File ics = attachment.getFile(this);
+                    ICalendar icalendar = Biweekly.parse(ics).first();
+
+                    Method method = icalendar.getMethod();
+                    if (method == null || !method.isReply())
+                        return;
+
+                    VEvent event = icalendar.getEvents().get(0);
+                    EntityMessage message = db.message().getMessage(sid);
+                    CalendarHelper.update(this, event, message);
+                    break;
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+    }
+
     static void boot(final Context context) {
-        executor.submit(new Runnable() {
+        Helper.getSerialExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 try {

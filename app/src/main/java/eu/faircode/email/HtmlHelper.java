@@ -415,8 +415,12 @@ public class HtmlHelper {
     }
 
     static Document sanitizeCompose(Context context, String html, boolean show_images) {
+        return sanitizeCompose(context, JsoupEx.parse(html), show_images);
+    }
+
+    static Document sanitizeCompose(Context context, Document parsed, boolean show_images) {
         try {
-            return sanitize(context, JsoupEx.parse(html), false, show_images);
+            return sanitize(context, parsed, false, show_images);
         } catch (Throwable ex) {
             // OutOfMemoryError
             Log.e(ex);
@@ -1633,6 +1637,7 @@ public class HtmlHelper {
         //   xmlns="http://www.w3.org/TR/REC-html40">
 
         // <o:p>&nbsp;</o:p></span>
+        // <w:Sdt DocPart="0C3EDB8F875B40C899499DE56A431990" ...
 
         // Default XHTML namespace: http://www.w3.org/1999/xhtml
         // https://developer.mozilla.org/en-US/docs/Related/IMSC/Namespaces
@@ -1655,7 +1660,7 @@ public class HtmlHelper {
             String tag = e.tagName();
             if (tag.contains(":")) {
                 boolean show = (ns == null || tag.startsWith(ns) ||
-                        tag.startsWith("html:") || tag.startsWith("body:"));
+                        tag.startsWith("html:") || tag.startsWith("body:") || tag.startsWith("w:"));
                 if (display_hidden || show) {
                     String[] nstag = tag.split(":");
                     String t = nstag[nstag.length > 1 ? 1 : 0];
@@ -1670,9 +1675,9 @@ public class HtmlHelper {
                     }
                 } else {
                     e.remove();
-                    Log.i("Removed tag=" + tag);
+                    Log.i("Removed tag=" + tag + " ns=" + ns + " content=" + e.text());
                 }
-            } else if (!"html".equals(tag) && !"body".equals(tag)) {
+            } else if (!"html".equals(tag) && !"body".equals(tag) && !"w".equals(tag)) {
                 String xmlns = e.attr("xmlns").toLowerCase(Locale.ROOT);
                 if (!TextUtils.isEmpty(xmlns) && !xmlns.contains(W3NS)) {
                     if (display_hidden) {
@@ -1680,7 +1685,7 @@ public class HtmlHelper {
                         e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
                     } else {
                         e.remove();
-                        Log.i("Removed tag=" + tag + " xmlns=" + xmlns);
+                        Log.i("Removed tag=" + tag + " ns=" + ns + " xmlns=" + xmlns + " content=" + e.text());
                     }
                 }
             }
@@ -2587,6 +2592,27 @@ public class HtmlHelper {
             public FilterResult head(Node node, int depth) {
                 if (node instanceof Element) {
                     Element e = (Element) node;
+
+                    String style = e.attr("style");
+                    if (!TextUtils.isEmpty(style)) {
+                        String[] params = style.split(";");
+                        for (String param : params) {
+                            int colon = param.indexOf(':');
+                            if (colon <= 0)
+                                continue;
+                            String key = param.substring(0, colon).trim();
+                            if ("color".equalsIgnoreCase(key) ||
+                                    "background-color".equalsIgnoreCase(key) ||
+                                    "font-family".equalsIgnoreCase(key) ||
+                                    "font-size".equalsIgnoreCase(key) ||
+                                    "text-align".equalsIgnoreCase(key) ||
+                                    "text-decoration".equalsIgnoreCase(key) /* line-through */) {
+                                Log.i("Style element=" + node + " style=" + style);
+                                result.value = true;
+                                return FilterResult.STOP;
+                            }
+                        }
+                    }
 
                     if (STRUCTURE.contains(e.tagName()))
                         return FilterResult.CONTINUE;
@@ -3809,12 +3835,8 @@ public class HtmlHelper {
     }
 
     static Spanned fromHtml(@NonNull String html, Context context) {
-        return fromHtml(html, null, null, context);
-    }
-
-    static Spanned fromHtml(@NonNull String html, @Nullable ImageGetterEx imageGetter, @Nullable Html.TagHandler tagHandler, Context context) {
         Document document = JsoupEx.parse(html);
-        return fromDocument(context, document, imageGetter, tagHandler);
+        return fromDocument(context, document, null, null);
     }
 
     static Spanned trim(Spanned spanned) {

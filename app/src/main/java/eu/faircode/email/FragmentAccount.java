@@ -26,9 +26,11 @@ import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
+import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
@@ -63,6 +65,7 @@ import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -109,6 +112,9 @@ public class FragmentAccount extends FragmentBase {
     private EditText etCategory;
     private ViewButtonColor btnColor;
     private TextView tvColorPro;
+
+    private Button btnCalendar;
+    private TextView tvCalendarPro;
 
     private Button btnAdvanced;
     private CheckBox cbSynchronize;
@@ -161,6 +167,7 @@ public class FragmentAccount extends FragmentBase {
 
     private Group grpServer;
     private Group grpAuthorize;
+    private Group grpCalendar;
     private Group grpAdvanced;
     private Group grpFolders;
     private Group grpError;
@@ -169,12 +176,14 @@ public class FragmentAccount extends FragmentBase {
     private long copy = -1;
     private int auth = AUTH_TYPE_PASSWORD;
     private String provider = null;
+    private String calendar = null;
     private String certificate = null;
     private boolean saving = false;
 
     private static final int REQUEST_COLOR = 1;
-    private static final int REQUEST_SAVE = 2;
-    private static final int REQUEST_DELETE = 3;
+    private static final int REQUEST_CALENDAR = 2;
+    private static final int REQUEST_SAVE = 3;
+    private static final int REQUEST_DELETE = 4;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -222,6 +231,9 @@ public class FragmentAccount extends FragmentBase {
         etCategory = view.findViewById(R.id.etCategory);
         btnColor = view.findViewById(R.id.btnColor);
         tvColorPro = view.findViewById(R.id.tvColorPro);
+
+        btnCalendar = view.findViewById(R.id.btnCalendar);
+        tvCalendarPro = view.findViewById(R.id.tvCalendarPro);
 
         btnAdvanced = view.findViewById(R.id.btnAdvanced);
         cbSynchronize = view.findViewById(R.id.cbSynchronize);
@@ -272,6 +284,7 @@ public class FragmentAccount extends FragmentBase {
 
         grpServer = view.findViewById(R.id.grpServer);
         grpAuthorize = view.findViewById(R.id.grpAuthorize);
+        grpCalendar = view.findViewById(R.id.grpCalendar);
         grpAdvanced = view.findViewById(R.id.grpAdvanced);
         grpFolders = view.findViewById(R.id.grpFolders);
         grpError = view.findViewById(R.id.grpError);
@@ -287,6 +300,7 @@ public class FragmentAccount extends FragmentBase {
                                 ? View.VISIBLE : View.GONE);
                 grpServer.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
                 grpAuthorize.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
+                grpCalendar.setVisibility(position > 0 && !BuildConfig.PLAY_STORE_RELEASE ? View.VISIBLE : View.GONE);
 
                 btnAdvanced.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
                 if (position == 0)
@@ -307,9 +321,8 @@ public class FragmentAccount extends FragmentBase {
                 etUser.setTag(null);
                 etUser.setText(null);
                 tilPassword.getEditText().setText(null);
-                tvAppPassword.setVisibility(
-                        "office365".equals(provider.id) || "outlook".equals(provider.id)
-                                ? View.VISIBLE : View.GONE);
+                tvAppPassword.setVisibility(EntityAccount.isOutlook(provider.id)
+                        ? View.VISIBLE : View.GONE);
                 certificate = null;
                 tvCertificate.setText(R.string.title_optional);
                 etRealm.setText(null);
@@ -431,6 +444,22 @@ public class FragmentAccount extends FragmentBase {
         });
 
         Helper.linkPro(tvColorPro);
+
+        btnCalendar.setEnabled(Helper.hasPermission(getContext(), Manifest.permission.WRITE_CALENDAR));
+        btnCalendar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putString("calendar", calendar);
+
+                FragmentDialogCalendar fragment = new FragmentDialogCalendar();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentAccount.this, REQUEST_CALENDAR);
+                fragment.show(getParentFragmentManager(), "account:calendar");
+            }
+        });
+
+        Helper.linkPro(tvCalendarPro);
 
         btnAdvanced.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -603,6 +632,7 @@ public class FragmentAccount extends FragmentBase {
 
         grpServer.setVisibility(View.GONE);
         grpAuthorize.setVisibility(View.GONE);
+        grpCalendar.setVisibility(View.GONE);
         grpAdvanced.setVisibility(View.GONE);
         grpFolders.setVisibility(View.GONE);
         grpError.setVisibility(View.GONE);
@@ -895,6 +925,7 @@ public class FragmentAccount extends FragmentBase {
         args.putString("name", etName.getText().toString());
         args.putString("category", etCategory.getText().toString());
         args.putInt("color", btnColor.getColor());
+        args.putString("calendar", calendar);
 
         args.putBoolean("synchronize", cbSynchronize.isChecked());
         args.putBoolean("ignore_schedule", cbIgnoreSchedule.isChecked());
@@ -969,6 +1000,7 @@ public class FragmentAccount extends FragmentBase {
                 String name = args.getString("name");
                 String category = args.getString("category");
                 Integer color = args.getInt("color");
+                String calendar = args.getString("calendar");
 
                 boolean synchronize = args.getBoolean("synchronize");
                 boolean ignore_schedule = args.getBoolean("ignore_schedule");
@@ -1067,6 +1099,8 @@ public class FragmentAccount extends FragmentBase {
                     if (!Objects.equals(account.category, category))
                         return true;
                     if (!Objects.equals(account.color, color))
+                        return true;
+                    if (!Objects.equals(account.calendar, calendar))
                         return true;
                     if (!Objects.equals(account.synchronize, synchronize))
                         return true;
@@ -1220,6 +1254,7 @@ public class FragmentAccount extends FragmentBase {
                     account.name = name;
                     account.category = category;
                     account.color = color;
+                    account.calendar = calendar;
 
                     account.synchronize = synchronize;
                     jconditions.put("ignore_schedule", ignore_schedule);
@@ -1386,6 +1421,15 @@ public class FragmentAccount extends FragmentBase {
 
                 args.putBoolean("saved", true);
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("unset." + account.id + "." + EntityFolder.DRAFTS, drafts == null);
+                editor.putBoolean("unset." + account.id + "." + EntityFolder.SENT, sent == null);
+                editor.putBoolean("unset." + account.id + "." + EntityFolder.ARCHIVE, archive == null);
+                editor.putBoolean("unset." + account.id + "." + EntityFolder.TRASH, trash == null);
+                editor.putBoolean("unset." + account.id + "." + EntityFolder.JUNK, junk == null);
+                editor.apply();
+
                 return false;
             }
 
@@ -1481,6 +1525,7 @@ public class FragmentAccount extends FragmentBase {
         outState.putInt("fair:advanced", grpAuthorize == null ? View.VISIBLE : grpAdvanced.getVisibility());
         outState.putInt("fair:auth", auth);
         outState.putString("fair:authprovider", provider);
+        outState.putString("fair:calendar", calendar);
         super.onSaveInstanceState(outState);
     }
 
@@ -1520,7 +1565,7 @@ public class FragmentAccount extends FragmentBase {
             protected void onExecuted(Bundle args, final EntityAccount account) {
                 // Get providers
                 final Context context = getContext();
-                List<EmailProvider> providers = EmailProvider.loadProfiles(context);
+                List<EmailProvider> providers = EmailProvider.getProviders(context);
                 providers.add(0, new EmailProvider(getString(R.string.title_select)));
                 providers.add(1, new EmailProvider(getString(R.string.title_custom)));
 
@@ -1571,8 +1616,7 @@ public class FragmentAccount extends FragmentBase {
 
                     etUser.setText(account == null ? null : account.user);
                     tilPassword.getEditText().setText(account == null ? null : account.password);
-                    tvAppPassword.setVisibility(account != null &&
-                            ("office365".equals(account.provider) || "outlook".equals(account.provider))
+                    tvAppPassword.setVisibility(account != null && EntityAccount.isOutlook(account.provider)
                             ? View.VISIBLE : View.GONE);
                     certificate = (account == null ? null : account.certificate_alias);
                     tvCertificate.setText(certificate == null ? getString(R.string.title_optional) : certificate);
@@ -1618,6 +1662,7 @@ public class FragmentAccount extends FragmentBase {
 
                     auth = (account == null ? AUTH_TYPE_PASSWORD : account.auth_type);
                     provider = (account == null ? null : account.provider);
+                    calendar = (account == null ? null : account.calendar);
 
                     new SimpleTask<EntityAccount>() {
                         @Override
@@ -1648,6 +1693,7 @@ public class FragmentAccount extends FragmentBase {
                     grpAdvanced.setVisibility(savedInstanceState.getInt("fair:advanced"));
                     auth = savedInstanceState.getInt("fair:auth");
                     provider = savedInstanceState.getString("fair:authprovider");
+                    calendar = savedInstanceState.getString("fair:calendar");
                 }
 
                 Helper.setViewsEnabled(view, true);
@@ -1832,6 +1878,20 @@ public class FragmentAccount extends FragmentBase {
                         if (ActivityBilling.isPro(getContext())) {
                             Bundle args = data.getBundleExtra("args");
                             btnColor.setColor(args.getInt("color"));
+                        } else
+                            startActivity(new Intent(getContext(), ActivityBilling.class));
+                    }
+                    break;
+                case REQUEST_CALENDAR:
+                    if (resultCode == RESULT_OK && data != null) {
+                        if (ActivityBilling.isPro(getContext())) {
+                            Bundle args = data.getBundleExtra("args");
+                            JSONObject jobject = new JSONObject();
+                            jobject.put("id", args.getLong("id"));
+                            jobject.put("account", args.getString("account"));
+                            jobject.put("type", args.getString("type"));
+                            jobject.put("name", args.getString("name"));
+                            calendar = jobject.toString();
                         } else
                             startActivity(new Intent(getContext(), ActivityBilling.class));
                     }

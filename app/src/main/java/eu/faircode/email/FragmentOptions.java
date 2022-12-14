@@ -61,16 +61,12 @@ import com.google.android.material.tabs.TabLayout;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 public class FragmentOptions extends FragmentBase {
     private ViewPager pager;
     private PagerAdapter adapter;
     private String searching = null;
     private SuggestData data = null;
-
-    private final ExecutorService executor =
-            Helper.getBackgroundExecutor(1, "suggest");
 
     private static final int[] TAB_PAGES = {
             R.layout.fragment_setup,
@@ -149,7 +145,7 @@ public class FragmentOptions extends FragmentBase {
             "list_count", "bundled_fonts", "parse_classes",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
-            "seekbar", "actionbar", "actionbar_color", "group_category",
+            "seekbar", "actionbar", "actionbar_swap", "actionbar_color", "group_category",
             "autoscroll", "swipenav", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
             "swipe_reply",
             "language_detection",
@@ -386,8 +382,7 @@ public class FragmentOptions extends FragmentBase {
 
                         return data;
                     }
-                }.setExecutor(executor)
-                        .execute(FragmentOptions.this, args, "option:suggest");
+                }.serial().execute(FragmentOptions.this, args, "option:suggest");
             }
 
             private void _suggest(String query) {
@@ -484,7 +479,7 @@ public class FragmentOptions extends FragmentBase {
 
         @Override
         public int getCount() {
-            return 10;
+            return TAB_PAGES.length;
         }
 
         @NonNull

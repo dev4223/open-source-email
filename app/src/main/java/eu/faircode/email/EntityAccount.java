@@ -100,6 +100,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
     public String category;
     public String signature; // obsolete
     public Integer color;
+    public String calendar;
 
     @NonNull
     public Boolean synchronize;
@@ -166,6 +167,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
     public String capabilities;
     public Boolean capability_idle;
     public Boolean capability_utf8;
+    public Boolean capability_uidl;
 
     boolean isGmail() {
         return "imap.gmail.com".equalsIgnoreCase(host) ||
@@ -174,6 +176,10 @@ public class EntityAccount extends EntityOrder implements Serializable {
 
     boolean isOutlook() {
         return "outlook.office365.com".equalsIgnoreCase(host);
+    }
+
+    static boolean isOutlook(String id) {
+        return ("office365".equals(id) || "office365pcke".equals(id) || "outlook".equals(id));
     }
 
     boolean isYahooJp() {
@@ -287,6 +293,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
         json.put("name", name);
         json.put("category", category);
         json.put("color", color);
+        json.put("calendar", calendar);
 
         json.put("synchronize", synchronize);
         json.put("ondemand", ondemand);
@@ -366,6 +373,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
             account.category = json.getString("category");
         if (json.has("color"))
             account.color = json.getInt("color");
+        account.calendar = json.optString("calendar", null);
 
         account.synchronize = json.getBoolean("synchronize");
         if (json.has("ondemand"))
@@ -427,6 +435,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
                     Objects.equals(this.name, other.name) &&
                     Objects.equals(this.category, other.category) &&
                     Objects.equals(this.color, other.color) &&
+                    Objects.equals(this.calendar, other.calendar) &&
                     this.synchronize.equals(other.synchronize) &&
                     this.primary.equals(other.primary) &&
                     this.notify.equals(other.notify) &&

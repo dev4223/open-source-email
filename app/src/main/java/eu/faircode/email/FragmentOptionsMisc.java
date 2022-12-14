@@ -81,6 +81,8 @@ import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
+import com.google.android.material.textfield.TextInputLayout;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -125,20 +127,25 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swLanguageToolAuto;
     private SwitchCompat swLanguageToolPicky;
     private EditText etLanguageTool;
+    private EditText etLanguageToolUser;
+    private TextInputLayout tilLanguageToolKey;
     private ImageButton ibLanguageTool;
     private SwitchCompat swDeepL;
     private TextView tvDeepLPrivacy;
     private ImageButton ibDeepL;
     private SwitchCompat swVirusTotal;
     private TextView tvVirusTotalPrivacy;
-    private EditText etVirusTotal;
+    private TextInputLayout tilVirusTotal;
     private ImageButton ibVirusTotal;
     private SwitchCompat swSend;
     private EditText etSend;
     private ImageButton ibSend;
     private SwitchCompat swUpdates;
+    private TextView tvGithubPrivacy;
     private ImageButton ibChannelUpdated;
     private SwitchCompat swCheckWeekly;
+    private SwitchCompat swBeta;
+    private TextView tvBitBucketPrivacy;
     private SwitchCompat swChangelog;
     private SwitchCompat swCrashReports;
     private TextView tvUuid;
@@ -169,9 +176,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swWorkManager;
     private SwitchCompat swExternalStorage;
     private TextView tvExternalStorageFolder;
-    private TextView tvRoomQueryThreads;
-    private SeekBar sbRoomQueryThreads;
-    private ImageButton ibRoom;
     private SwitchCompat swIntegrity;
     private SwitchCompat swWal;
     private SwitchCompat swCheckpoints;
@@ -186,7 +190,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SeekBar sbThreadRange;
     private ImageButton ibSqliteCache;
     private SwitchCompat swUndoManager;
-    private SwitchCompat swWebViewLegacy;
     private SwitchCompat swBrowserZoom;
     private SwitchCompat swFakeDark;
     private SwitchCompat swShowRecent;
@@ -233,6 +236,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpVirusTotal;
     private Group grpSend;
     private Group grpUpdates;
+    private Group grpBitbucket;
     private Group grpTest;
     private CardView cardDebug;
 
@@ -245,19 +249,18 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "sort_answers", "shortcuts", "fts",
             "classification", "class_min_probability", "class_min_difference",
             "language",
-            "lt_enabled", "lt_auto", "lt_picky", "lt_uri",
+            "lt_enabled", "lt_auto", "lt_picky", "lt_uri", "lt_user", "lt_key",
             "deepl_enabled",
             "vt_enabled", "vt_apikey",
             "send_enabled", "send_host",
-            "updates", "weekly", "show_changelog",
+            "updates", "weekly", "beta", "show_changelog",
             "crash_reports", "cleanup_attachments",
             "watchdog", "experiments", "main_log", "main_log_memory", "protocol", "log_level", "debug", "leak_canary",
             "test1", "test2", "test3", "test4", "test5",
             "work_manager", // "external_storage",
-            "query_threads",
             "sqlite_integrity_check", "wal", "sqlite_checkpoints", "sqlite_analyze", "sqlite_auto_vacuum", "sqlite_sync_extra", "sqlite_cache",
             "chunk_size", "thread_range", "undo_manager",
-            "webview_legacy", "browser_zoom", "fake_dark",
+            "browser_zoom", "fake_dark",
             "show_recent",
             "use_modseq", "uid_command", "perform_expunge", "uid_expunge",
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", "use_top",
@@ -337,20 +340,25 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swLanguageToolAuto = view.findViewById(R.id.swLanguageToolAuto);
         swLanguageToolPicky = view.findViewById(R.id.swLanguageToolPicky);
         etLanguageTool = view.findViewById(R.id.etLanguageTool);
+        etLanguageToolUser = view.findViewById(R.id.etLanguageToolUser);
+        tilLanguageToolKey = view.findViewById(R.id.tilLanguageToolKey);
         ibLanguageTool = view.findViewById(R.id.ibLanguageTool);
         swDeepL = view.findViewById(R.id.swDeepL);
         tvDeepLPrivacy = view.findViewById(R.id.tvDeepLPrivacy);
         ibDeepL = view.findViewById(R.id.ibDeepL);
         swVirusTotal = view.findViewById(R.id.swVirusTotal);
         tvVirusTotalPrivacy = view.findViewById(R.id.tvVirusTotalPrivacy);
-        etVirusTotal = view.findViewById(R.id.etVirusTotal);
+        tilVirusTotal = view.findViewById(R.id.tilVirusTotal);
         ibVirusTotal = view.findViewById(R.id.ibVirusTotal);
         swSend = view.findViewById(R.id.swSend);
         etSend = view.findViewById(R.id.etSend);
         ibSend = view.findViewById(R.id.ibSend);
         swUpdates = view.findViewById(R.id.swUpdates);
+        tvGithubPrivacy = view.findViewById(R.id.tvGithubPrivacy);
         ibChannelUpdated = view.findViewById(R.id.ibChannelUpdated);
         swCheckWeekly = view.findViewById(R.id.swWeekly);
+        swBeta = view.findViewById(R.id.swBeta);
+        tvBitBucketPrivacy = view.findViewById(R.id.tvBitBucketPrivacy);
         swChangelog = view.findViewById(R.id.swChangelog);
         swCrashReports = view.findViewById(R.id.swCrashReports);
         tvUuid = view.findViewById(R.id.tvUuid);
@@ -381,9 +389,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swWorkManager = view.findViewById(R.id.swWorkManager);
         swExternalStorage = view.findViewById(R.id.swExternalStorage);
         tvExternalStorageFolder = view.findViewById(R.id.tvExternalStorageFolder);
-        tvRoomQueryThreads = view.findViewById(R.id.tvRoomQueryThreads);
-        sbRoomQueryThreads = view.findViewById(R.id.sbRoomQueryThreads);
-        ibRoom = view.findViewById(R.id.ibRoom);
         swIntegrity = view.findViewById(R.id.swIntegrity);
         swWal = view.findViewById(R.id.swWal);
         swCheckpoints = view.findViewById(R.id.swCheckpoints);
@@ -398,7 +403,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvThreadRange = view.findViewById(R.id.tvThreadRange);
         sbThreadRange = view.findViewById(R.id.sbThreadRange);
         swUndoManager = view.findViewById(R.id.swUndoManager);
-        swWebViewLegacy = view.findViewById(R.id.swWebViewLegacy);
         swBrowserZoom = view.findViewById(R.id.swBrowserZoom);
         swFakeDark = view.findViewById(R.id.swFakeDark);
         swShowRecent = view.findViewById(R.id.swShowRecent);
@@ -445,6 +449,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         grpVirusTotal = view.findViewById(R.id.grpVirusTotal);
         grpSend = view.findViewById(R.id.grpSend);
         grpUpdates = view.findViewById(R.id.grpUpdates);
+        grpBitbucket = view.findViewById(R.id.grpBitbucket);
         grpTest = view.findViewById(R.id.grpTest);
         cardDebug = view.findViewById(R.id.cardDebug);
 
@@ -693,6 +698,48 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        etLanguageToolUser.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String apikey = s.toString().trim();
+                if (TextUtils.isEmpty(apikey))
+                    prefs.edit().remove("lt_user").apply();
+                else
+                    prefs.edit().putString("lt_user", apikey).apply();
+            }
+        });
+
+        tilLanguageToolKey.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String apikey = s.toString().trim();
+                if (TextUtils.isEmpty(apikey))
+                    prefs.edit().remove("lt_key").apply();
+                else
+                    prefs.edit().putString("lt_key", apikey).apply();
+            }
+        });
+
         ibLanguageTool.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -718,7 +765,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         ibDeepL.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.viewFAQ(v.getContext(), 167, true);
+                DeepL.FragmentDialogDeepL fragment = new DeepL.FragmentDialogDeepL();
+                fragment.show(getParentFragmentManager(), "deepl:configure");
             }
         });
 
@@ -737,7 +785,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        etVirusTotal.addTextChangedListener(new TextWatcher() {
+        tilVirusTotal.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 // Do nothing
@@ -806,11 +854,20 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("updates", checked).apply();
                 swCheckWeekly.setEnabled(checked);
+                swBeta.setEnabled(checked);
                 if (!checked) {
                     NotificationManager nm =
                             Helper.getSystemService(getContext(), NotificationManager.class);
                     nm.cancel(NotificationHelper.NOTIFICATION_UPDATE);
                 }
+            }
+        });
+
+        tvGithubPrivacy.getPaint().setUnderlineText(true);
+        tvGithubPrivacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.GITHUB_PRIVACY_URI), true);
             }
         });
 
@@ -830,6 +887,21 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("weekly", checked).apply();
+            }
+        });
+
+        swBeta.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("beta", checked).apply();
+            }
+        });
+
+        tvBitBucketPrivacy.getPaint().setUnderlineText(true);
+        tvBitBucketPrivacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.BITBUCKET_PRIVACY_URI), true);
             }
         });
 
@@ -1088,11 +1160,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        swExternalStorage.setEnabled(getContext().getExternalFilesDir(null) != null);
+        swExternalStorage.setEnabled(Helper.getExternalFilesDir(getContext()) != null);
         swExternalStorage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                prefs.edit().putBoolean("external_storage", isChecked).apply();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("external_storage", isChecked);
+                if (BuildConfig.DEBUG)
+                    editor.putBoolean("external_storage_message", isChecked);
+                editor.apply();
 
                 Bundle args = new Bundle();
                 args.putBoolean("external_storage", isChecked);
@@ -1102,16 +1178,16 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     protected Integer onExecute(Context context, Bundle args) throws IOException {
                         boolean external_storage = args.getBoolean("external_storage");
 
-                        File source = (!external_storage
-                                ? context.getExternalFilesDir(null)
+                        File sourceRoot = (!external_storage
+                                ? Helper.getExternalFilesDir(context)
                                 : context.getFilesDir());
 
-                        File target = (external_storage
-                                ? context.getExternalFilesDir(null)
+                        File targetRoot = (external_storage
+                                ? Helper.getExternalFilesDir(context)
                                 : context.getFilesDir());
 
-                        source = Helper.ensureExists(new File(source, "attachments"));
-                        target = Helper.ensureExists(new File(target, "attachments"));
+                        File source = Helper.ensureExists(new File(sourceRoot, "attachments"));
+                        File target = Helper.ensureExists(new File(targetRoot, "attachments"));
 
                         File[] attachments = source.listFiles();
                         if (attachments != null)
@@ -1121,6 +1197,29 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                                 Helper.copy(attachment, dest);
                                 attachment.delete();
                             }
+
+                        if (BuildConfig.DEBUG) {
+                            source = Helper.ensureExists(new File(sourceRoot, "messages"));
+                            target = Helper.ensureExists(new File(targetRoot, "messages"));
+                            File[] dirs = source.listFiles();
+                            if (dirs != null)
+                                for (File dir : dirs) {
+                                    File[] messages = dir.listFiles();
+                                    if (messages != null)
+                                        for (File message : messages) {
+                                            String path = dir.getPath();
+                                            path = path.substring(path.lastIndexOf(File.separator));
+                                            File t = new File(target, path);
+                                            if (!t.exists() && !t.mkdir())
+                                                throw new IOException("Could not create dir=" + t);
+                                            File dest = new File(t, message.getName());
+                                            Log.i("Move " + message + " to " + dest);
+                                            Helper.copy(message, dest);
+                                            message.delete();
+                                        }
+                                    dir.delete();
+                                }
+                        }
 
                         return (attachments == null ? -1 : attachments.length);
                     }
@@ -1136,31 +1235,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentOptionsMisc.this, args, "external");
-            }
-        });
-
-        sbRoomQueryThreads.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                prefs.edit().putInt("query_threads", progress).apply();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // Do nothing
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // Do nothing
-            }
-        });
-
-        ibRoom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                prefs.edit().remove("debug").commit();
-                ApplicationEx.restart(v.getContext(), "query_threads");
             }
         });
 
@@ -1285,14 +1359,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("undo_manager", checked).apply();
-            }
-        });
-
-        swWebViewLegacy.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
-        swWebViewLegacy.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("webview_legacy", checked).apply();
             }
         });
 
@@ -1614,7 +1680,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         files.addAll(getFiles(context.getCacheDir(), MIN_FILE_SIZE));
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                             files.addAll(getFiles(context.getDataDir(), MIN_FILE_SIZE));
-                        files.addAll(getFiles(context.getExternalFilesDir(null), MIN_FILE_SIZE));
+                        files.addAll(getFiles(Helper.getExternalFilesDir(context), MIN_FILE_SIZE));
 
                         Collections.sort(files, new Comparator<File>() {
                             @Override
@@ -1648,7 +1714,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                                 ? null : context.getDataDir());
                         File filesDir = context.getFilesDir();
                         File cacheDir = context.getCacheDir();
-                        File externalDir = context.getExternalFilesDir(null);
+                        File externalDir = Helper.getExternalFilesDir(context);
 
                         if (dataDir != null)
                             ssb.append("Data: ").append(dataDir.getAbsolutePath()).append("\r\n");
@@ -1816,11 +1882,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         grpUpdates.setVisibility(!BuildConfig.DEBUG &&
                 (Helper.isPlayStoreInstall() || !Helper.hasValidFingerprint(getContext()))
                 ? View.GONE : View.VISIBLE);
+        grpBitbucket.setVisibility(View.GONE);
         grpTest.setVisibility(BuildConfig.TEST_RELEASE ? View.VISIBLE : View.GONE);
 
         setLastCleanup(prefs.getLong("last_cleanup", -1));
 
-        File external = getContext().getExternalFilesDir(null);
+        File external = Helper.getExternalFilesDir(getContext());
         boolean emulated = (external != null && Environment.isExternalStorageEmulated(external));
         tvExternalStorageFolder.setText(
                 (external == null ? null : external.getAbsolutePath()) + (emulated ? " emulated" : ""));
@@ -1902,7 +1969,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         if ("last_cleanup".equals(key))
             setLastCleanup(prefs.getLong(key, -1));
 
-        if ("lt_uri".equals(key) || "vt_apikey".equals(key) || "send_host".equals(key))
+        if ("lt_uri".equals(key) ||
+                "lt_user".equals(key) ||
+                "lt_key".equals(key) ||
+                "vt_apikey".equals(key) ||
+                "send_host".equals(key))
             return;
 
         if ("global_keywords".equals(key))
@@ -2054,14 +2125,18 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swLanguageToolPicky.setChecked(prefs.getBoolean("lt_picky", false));
         swLanguageToolPicky.setEnabled(swLanguageTool.isChecked());
         etLanguageTool.setText(prefs.getString("lt_uri", null));
+        etLanguageToolUser.setText(prefs.getString("lt_user", null));
+        tilLanguageToolKey.getEditText().setText(prefs.getString("lt_key", null));
         swDeepL.setChecked(prefs.getBoolean("deepl_enabled", false));
         swVirusTotal.setChecked(prefs.getBoolean("vt_enabled", false));
-        etVirusTotal.setText(prefs.getString("vt_apikey", null));
+        tilVirusTotal.getEditText().setText(prefs.getString("vt_apikey", null));
         swSend.setChecked(prefs.getBoolean("send_enabled", false));
         etSend.setText(prefs.getString("send_host", null));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
         swCheckWeekly.setChecked(prefs.getBoolean("weekly", Helper.hasPlayStore(getContext())));
         swCheckWeekly.setEnabled(swUpdates.isChecked());
+        swBeta.setChecked(prefs.getBoolean("beta", false));
+        swBeta.setEnabled(swUpdates.isChecked());
         swChangelog.setChecked(prefs.getBoolean("show_changelog", !BuildConfig.PLAY_STORE_RELEASE));
         swExperiments.setChecked(prefs.getBoolean("experiments", false));
         swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
@@ -2073,7 +2148,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swMainLogMem.setChecked(prefs.getBoolean("main_log_memory", false));
         swMainLogMem.setEnabled(swMainLog.isChecked());
         swProtocol.setChecked(prefs.getBoolean("protocol", false));
-        swLogInfo.setChecked(prefs.getInt("log_level", Log.getDefaultLogLevel()) <= android.util.Log.INFO);
+        swLogInfo.setChecked(prefs.getInt("log_level", android.util.Log.WARN) <= android.util.Log.INFO);
         swDebug.setChecked(prefs.getBoolean("debug", false));
         swCanary.setChecked(prefs.getBoolean("leak_canary", false));
         swTest1.setChecked(prefs.getBoolean("test1", false));
@@ -2085,10 +2160,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swAutostart.setChecked(Helper.isComponentEnabled(getContext(), ReceiverAutoStart.class));
         swWorkManager.setChecked(prefs.getBoolean("work_manager", true));
         swExternalStorage.setChecked(prefs.getBoolean("external_storage", false));
-
-        int query_threads = prefs.getInt("query_threads", DB.DEFAULT_QUERY_THREADS);
-        tvRoomQueryThreads.setText(getString(R.string.title_advanced_room_query_threads, NF.format(query_threads)));
-        sbRoomQueryThreads.setProgress(query_threads);
 
         swIntegrity.setChecked(prefs.getBoolean("sqlite_integrity_check", true));
         swWal.setChecked(prefs.getBoolean("wal", true));
@@ -2116,7 +2187,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         sbThreadRange.setProgress(thread_range);
 
         swUndoManager.setChecked(prefs.getBoolean("undo_manager", false));
-        swWebViewLegacy.setChecked(prefs.getBoolean("webview_legacy", false));
         swBrowserZoom.setChecked(prefs.getBoolean("browser_zoom", false));
         swFakeDark.setChecked(prefs.getBoolean("fake_dark", false));
         swShowRecent.setChecked(prefs.getBoolean("show_recent", false));

@@ -43,6 +43,7 @@ import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,6 +95,7 @@ public class HtmlEx {
             return;
         }
 
+        Log.breadcrumb("withinHtml", "length", Integer.toString(text.length()));
         withinDiv(out, text, 0, text.length(), option);
     }
 
@@ -102,7 +104,7 @@ public class HtmlEx {
 
         int next;
         for (int i = 0; i < len; i = next) {
-            next = text.nextSpanTransition(i, len, ParagraphStyle.class);
+            next = nextSpanTransition(text, i, len, ParagraphStyle.class);
             ParagraphStyle[] style = getSpans(text, i, next, ParagraphStyle.class);
             String elements = " ";
             boolean needDiv = false;
@@ -137,8 +139,8 @@ public class HtmlEx {
                                   int option) {
         int next;
         for (int i = start; i < end; i = next) {
-            int n1 = text.nextSpanTransition(i, end, QuoteSpan.class);
-            int n2 = text.nextSpanTransition(i, end, eu.faircode.email.IndentSpan.class);
+            int n1 = nextSpanTransition(text, i, end, QuoteSpan.class);
+            int n2 = nextSpanTransition(text, i, end, eu.faircode.email.IndentSpan.class);
             next = Math.min(n1, n2);
             try {
                 List<Object> spans = new ArrayList<>();
@@ -165,7 +167,8 @@ public class HtmlEx {
                 }
             } catch (Throwable ex) {
                 Log.e("withinDiv " + start + "..." + end + "/" + text.length() +
-                        " i=" + i + " n1=" + n1 + " n2=" + n2);
+                        " i=" + i + " n1=" + n1 + " n2=" + n2 +
+                        "\n" + android.util.Log.getStackTraceString(ex));
                 throw ex;
             }
         }
@@ -241,10 +244,10 @@ public class HtmlEx {
                                                    int end) {
         List<Boolean> levels = new ArrayList<>();
 
-        int next;
+        int next = -1;
         for (int i = start; i <= end; i = next) {
-            next = TextUtils.indexOf(text, '\n', i, end);
             try {
+                next = TextUtils.indexOf(text, '\n', i, end);
                 if (next < 0) {
                     next = end;
                 }
@@ -326,7 +329,8 @@ public class HtmlEx {
                 next++;
             } catch (Throwable ex) {
                 Log.e("withinBlockquoteIndividual " + start + "..." + end + "/" + text.length() +
-                        " i=" + i + " next=" + next);
+                        " i=" + i + " next=" + next +
+                        "\n" + android.util.Log.getStackTraceString(ex));
                 throw ex;
             }
         }
@@ -372,7 +376,7 @@ public class HtmlEx {
     private /* static */ void withinParagraph(StringBuilder out, Spanned text, int start, int end) {
         int next;
         for (int i = start; i < end; i = next) {
-            next = text.nextSpanTransition(i, end, CharacterStyle.class);
+            next = nextSpanTransition(text, i, end, CharacterStyle.class);
             try {
                 CharacterStyle[] style = getSpans(text, i, next, CharacterStyle.class);
 
@@ -416,26 +420,6 @@ public class HtmlEx {
                         out.append(((URLSpan) style[j]).getURL());
                         out.append("\">");
                     }
-                    if (style[j] instanceof ImageSpan) {
-                        out.append("<img src=\"");
-                        out.append(((ImageSpan) style[j]).getSource());
-                        out.append("\"");
-
-                        if (style[j] instanceof ImageSpanEx) {
-                            ImageSpanEx img = (ImageSpanEx) style[j];
-                            int w = img.getWidth();
-                            if (w > 0)
-                                out.append(" width=\"").append(w).append("\"");
-                            int h = img.getHeight();
-                            if (h > 0)
-                                out.append(" height=\"").append(h).append("\"");
-                        }
-
-                        out.append(">");
-
-                        // Don't output the dummy character underlying the image.
-                        i = next;
-                    }
                     if (style[j] instanceof AbsoluteSizeSpan) {
                         AbsoluteSizeSpan s = ((AbsoluteSizeSpan) style[j]);
                         float sizeDip = s.getSize();
@@ -468,6 +452,29 @@ public class HtmlEx {
                         //        0xFFFFFF & color));
                         out.append(String.format("<span style=\"background-color:%s;\">",
                                 eu.faircode.email.HtmlHelper.encodeWebColor(color)));
+                    }
+                }
+
+                for (int j = 0; j < style.length; j++) {
+                    if (style[j] instanceof ImageSpan) {
+                        out.append("<img src=\"");
+                        out.append(((ImageSpan) style[j]).getSource());
+                        out.append("\"");
+
+                        if (style[j] instanceof ImageSpanEx) {
+                            ImageSpanEx img = (ImageSpanEx) style[j];
+                            int w = img.getWidth();
+                            if (w > 0)
+                                out.append(" width=\"").append(w).append("\"");
+                            int h = img.getHeight();
+                            if (h > 0)
+                                out.append(" height=\"").append(h).append("\"");
+                        }
+
+                        out.append(">");
+
+                        // Don't output the dummy character underlying the image.
+                        i = next;
                     }
                 }
 
@@ -526,7 +533,8 @@ public class HtmlEx {
                 }
             } catch (Throwable ex) {
                 Log.e("withinParagraph " + start + "..." + end + "/" + text.length() +
-                        " i=" + i + " next=" + next);
+                        " i=" + i + " next=" + next +
+                        "\n" + android.util.Log.getStackTraceString(ex));
                 throw ex;
             }
         }
@@ -567,13 +575,23 @@ public class HtmlEx {
                     out.append(c);
                 }
             } catch (Throwable ex) {
-                Log.e("withinStyle " + start + "..." + end + "/" + text.length() + " i=" + i);
+                Log.e("withinStyle " + start + "..." + end + "/" + text.length() + " i=" + i +
+                        "\n" + android.util.Log.getStackTraceString(ex));
                 throw ex;
             }
         }
     }
 
-    private <T> T[] getSpans(Spanned text, int start, int end, Class<T> type) {
+    private static int nextSpanTransition(Spanned text, int start, int limit, Class type) {
+        try {
+            return text.nextSpanTransition(start, limit, type);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return limit;
+        }
+    }
+
+    private static <T> T[] getSpans(Spanned text, int start, int end, Class<T> type) {
         try {
             return text.getSpans(start, end, type);
         } catch (Throwable ex) {
@@ -599,7 +617,7 @@ public class HtmlEx {
                     at eu.faircode.email.FragmentCompose$54.onExecute(SourceFile:1)
                     at eu.faircode.email.SimpleTask$2.run(SourceFile:5)
              */
-            return (T[]) new Object[0];
+            return (T[]) Array.newInstance(type, 0);
         }
     }
 }

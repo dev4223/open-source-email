@@ -243,7 +243,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -305,6 +304,7 @@ public class FragmentMessages extends FragmentBase
     private ImageButton ibBatchSnooze;
     private ImageButton ibBatchHide;
     private ImageButton ibBatchFlag;
+    private ImageButton ibBatchFlagColor;
     private ImageButton ibLowImportance;
     private ImageButton ibHighImportance;
     private ImageButton ibInbox;
@@ -349,6 +349,8 @@ public class FragmentMessages extends FragmentBase
     private boolean swipenav;
     private boolean seekbar;
     private boolean actionbar;
+    private int actionbar_delete_id;
+    private int actionbar_archive_id;
     private boolean actionbar_color;
     private boolean autoexpand;
     private boolean autoclose;
@@ -446,8 +448,6 @@ public class FragmentMessages extends FragmentBase
             "time", "unread", "starred", "priority"
     ));
 
-    private static final ExecutorService executor = Helper.getBackgroundExecutor(1, "messages");
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -490,6 +490,9 @@ public class FragmentMessages extends FragmentBase
                 args.getBoolean("force_threading"));
         seekbar = prefs.getBoolean("seekbar", false);
         actionbar = prefs.getBoolean("actionbar", true);
+        boolean actionbar_swap = prefs.getBoolean("actionbar_swap", false);
+        actionbar_delete_id = (actionbar_swap ? R.id.action_archive : R.id.action_delete);
+        actionbar_archive_id = (actionbar_swap ? R.id.action_delete : R.id.action_archive);
         actionbar_color = prefs.getBoolean("actionbar_color", false);
         autoexpand = prefs.getBoolean("autoexpand", true);
         autoclose = prefs.getBoolean("autoclose", true);
@@ -596,6 +599,7 @@ public class FragmentMessages extends FragmentBase
         ibBatchSnooze = view.findViewById(R.id.ibBatchSnooze);
         ibBatchHide = view.findViewById(R.id.ibBatchHide);
         ibBatchFlag = view.findViewById(R.id.ibBatchFlag);
+        ibBatchFlagColor = view.findViewById(R.id.ibBatchFlagColor);
         ibLowImportance = view.findViewById(R.id.ibLowImportance);
         ibHighImportance = view.findViewById(R.id.ibHighImportance);
         ibInbox = view.findViewById(R.id.ibInbox);
@@ -684,9 +688,7 @@ public class FragmentMessages extends FragmentBase
 
         rvMessage.setHasFixedSize(false);
 
-        int threads = prefs.getInt("query_threads", DB.DEFAULT_QUERY_THREADS);
-        if (threads >= 4)
-            rvMessage.setItemViewCacheSize(ITEM_CACHE_SIZE);
+        rvMessage.setItemViewCacheSize(ITEM_CACHE_SIZE);
         //rvMessage.getRecycledViewPool().setMaxRecycledViews(0, 10); // Default 5
 
         final LinearLayoutManager llm = new LinearLayoutManager(getContext()) {
@@ -1272,7 +1274,7 @@ public class FragmentMessages extends FragmentBase
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 ActionData data = (ActionData) bottom_navigation.getTag();
                 int itemId = menuItem.getItemId();
-                if (itemId == R.id.action_delete) {
+                if (itemId == actionbar_delete_id) {
                     if (data.delete)
                         onActionDelete();
                     else
@@ -1281,7 +1283,7 @@ public class FragmentMessages extends FragmentBase
                 } else if (itemId == R.id.action_snooze) {
                     onActionSnooze();
                     return true;
-                } else if (itemId == R.id.action_archive) {
+                } else if (itemId == actionbar_archive_id) {
                     onActionMove(EntityFolder.ARCHIVE);
                     return true;
                 } else if (itemId == R.id.action_prev) {
@@ -1441,14 +1443,16 @@ public class FragmentMessages extends FragmentBase
         ibBatchSeen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onActionSeenSelection(true, null, true);
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionSeenSelection(true, null, more_clear);
             }
         });
 
         ibBatchUnseen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onActionSeenSelection(false, null, true);
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionSeenSelection(false, null, more_clear);
             }
         });
 
@@ -1469,21 +1473,32 @@ public class FragmentMessages extends FragmentBase
         ibBatchFlag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onActionFlagSelection(true, Color.TRANSPARENT, null, true);
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionFlagSelection(true, Color.TRANSPARENT, null, more_clear);
+            }
+        });
+
+        ibBatchFlagColor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionFlagColorSelection(more_clear);
             }
         });
 
         ibLowImportance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onActionSetImportanceSelection(EntityMessage.PRIORITIY_LOW, true);
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionSetImportanceSelection(EntityMessage.PRIORITIY_LOW, more_clear);
             }
         });
 
         ibHighImportance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onActionSetImportanceSelection(EntityMessage.PRIORITIY_HIGH, true);
+                boolean more_clear = prefs.getBoolean("more_clear", true);
+                onActionSetImportanceSelection(EntityMessage.PRIORITIY_HIGH, more_clear);
             }
         });
 
@@ -1579,15 +1594,15 @@ public class FragmentMessages extends FragmentBase
         fabSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (folder > 0) {
+                if (folder > 0 && !server) {
                     search(getContext(), getViewLifecycleOwner(), getParentFragmentManager(),
                             account, folder, true, criteria);
                     return;
                 }
 
                 Bundle args = new Bundle();
-                args.putLong("account", account);
-                args.putLong("folder", folder);
+                args.putLong("account", server ? -1L : account);
+                args.putLong("folder", server ? -1L : folder);
 
                 new SimpleTask<List<EntityAccount>>() {
                     @Override
@@ -1605,7 +1620,7 @@ public class FragmentMessages extends FragmentBase
                                 result.add(account);
                         }
 
-                        if (folder > 0) {
+                        if (fid > 0) {
                             EntityFolder folder = db.folder().getFolder(fid);
                             if (folder != null)
                                 args.putString("folderName", folder.getDisplayName(context));
@@ -1621,7 +1636,7 @@ public class FragmentMessages extends FragmentBase
                     protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
                         if (accounts.size() == 1) {
                             EntityAccount account = accounts.get(0);
-                            if (account.isGmail())
+                            if (account.isGmail() && !server)
                                 searchArchive(account.id);
                             else
                                 searchAccount(account.id);
@@ -1651,7 +1666,7 @@ public class FragmentMessages extends FragmentBase
 
                                     long account = intent.getLongExtra("account", -1);
                                     boolean gmail = intent.getBooleanExtra("gmail", false);
-                                    if (gmail)
+                                    if (gmail && !server)
                                         searchArchive(account);
                                     else
                                         searchAccount(account);
@@ -1771,24 +1786,29 @@ public class FragmentMessages extends FragmentBase
         else
             fabCompose.hide();
 
-        if (viewType == AdapterMessage.ViewType.SEARCH && criteria != null && !server) {
-            if (criteria.with_hidden ||
-                    criteria.with_encrypted ||
-                    criteria.with_attachments ||
-                    criteria.with_notes ||
-                    criteria.with_types != null) {
-                fabSearch.hide();
-                if (animator != null && animator.isStarted())
-                    animator.end();
-            } else {
-                fabSearch.show();
-                if (animator != null && !animator.isStarted())
-                    animator.start();
-            }
-        } else {
+        if (viewType != AdapterMessage.ViewType.SEARCH ||
+                criteria == null ||
+                criteria.with_hidden ||
+                criteria.with_encrypted ||
+                criteria.with_attachments ||
+                criteria.with_notes ||
+                criteria.with_types != null) {
             fabSearch.hide();
             if (animator != null && animator.isStarted())
                 animator.end();
+        } else {
+            fabSearch.setBackgroundTintList(ColorStateList.valueOf(
+                    Helper.resolveColor(getContext(), server
+                            ? R.attr.colorSeparator
+                            : R.attr.colorFabBackground)));
+            fabSearch.show();
+            if (server) {
+                if (animator != null && animator.isStarted())
+                    animator.end();
+            } else {
+                if (animator != null && !animator.isStarted())
+                    animator.start();
+            }
         }
 
         fabMore.hide();
@@ -2285,7 +2305,8 @@ public class FragmentMessages extends FragmentBase
         @Override
         public void setExpanded(TupleMessageEx message, boolean value, boolean scroll) {
             // Prevent flicker
-            if (value && message.accountAutoSeen) {
+            if (value && message.accountAutoSeen &&
+                    (message.uid != null || message.accountProtocol == EntityAccount.TYPE_POP)) {
                 message.unseen = 0;
                 message.ui_seen = true;
                 message.visible_unseen = 0;
@@ -2494,6 +2515,9 @@ public class FragmentMessages extends FragmentBase
 
                         EntityFolder targetFolder = db.folder().getFolderByType(message.account, type);
                         if (targetFolder == null)
+                            return result;
+
+                        if (sourceFolder.id.equals(targetFolder.id))
                             return result;
 
                         result.add(new MessageTarget(context, message, account, sourceFolder, account, targetFolder));
@@ -3090,6 +3114,7 @@ public class FragmentMessages extends FragmentBase
                                 args.putInt("color", message.color == null ? Color.TRANSPARENT : message.color);
                                 args.putString("title", getString(R.string.title_flag_color));
                                 args.putBoolean("reset", true);
+                                args.putInt("faq", 187);
 
                                 FragmentDialogColor fragment = new FragmentDialogColor();
                                 fragment.setArguments(args);
@@ -3228,7 +3253,9 @@ public class FragmentMessages extends FragmentBase
                                 EntityFolder.TRASH.equals(targetFolder.type) ? null : message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null || sourceFolder.read_only)
+                            if (sourceFolder == null ||
+                                    sourceFolder.read_only ||
+                                    sourceFolder.id.equals(targetFolder.id))
                                 continue;
                             if (EntityFolder.TRASH.equals(targetFolder.type)) {
                                 if (EntityFolder.ARCHIVE.equals(sourceFolder.type) && thread && filter_archive)
@@ -3678,7 +3705,7 @@ public class FragmentMessages extends FragmentBase
 
                 if (ids.length < MAX_SEND_RAW)
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_raw_send, order++, R.string.title_raw_send)
-                            .setIcon(R.drawable.twotone_attachment_24);
+                            .setIcon(R.drawable.twotone_attach_email_24);
 
                 if (result.canInbox()) // not is inbox
                     popupMenu.getMenu().add(Menu.FIRST, R.string.title_folder_inbox, order++, R.string.title_folder_inbox)
@@ -3756,7 +3783,7 @@ public class FragmentMessages extends FragmentBase
                             onActionFlagSelection(false, Color.TRANSPARENT, null, false);
                             return true;
                         } else if (itemId == R.string.title_flag_color) {
-                            onActionFlagColorSelection();
+                            onActionFlagColorSelection(false);
                             return true;
                         } else if (itemId == R.string.title_importance_low) {
                             onActionSetImportanceSelection(EntityMessage.PRIORITIY_LOW, false);
@@ -3799,7 +3826,7 @@ public class FragmentMessages extends FragmentBase
                             long[] ids = getSelection();
                             if (ids.length != 1)
                                 return false;
-                            searchSender(getContext(), getViewLifecycleOwner(), getParentFragmentManager(), ids[0]);
+                            searchContact(getContext(), getViewLifecycleOwner(), getParentFragmentManager(), ids[0], true);
                             return true;
                         }
                         return false;
@@ -4026,11 +4053,13 @@ public class FragmentMessages extends FragmentBase
         }.execute(this, args, "messages:flag");
     }
 
-    private void onActionFlagColorSelection() {
+    private void onActionFlagColorSelection(boolean clear) {
         Bundle args = new Bundle();
         args.putInt("color", Color.TRANSPARENT);
         args.putString("title", getString(R.string.title_flag_color));
         args.putBoolean("reset", true);
+        args.putBoolean("clear", clear);
+        args.putInt("faq", 187);
 
         FragmentDialogColor fragment = new FragmentDialogColor();
         fragment.setArguments(args);
@@ -4229,7 +4258,9 @@ public class FragmentMessages extends FragmentBase
                                 EntityFolder.TRASH.equals(targetFolder.type) ? null : message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null || sourceFolder.read_only)
+                            if (sourceFolder == null ||
+                                    sourceFolder.read_only ||
+                                    sourceFolder.id.equals(targetFolder.id))
                                 continue;
                             if (EntityFolder.TRASH.equals(targetFolder.type)) {
                                 if (EntityFolder.ARCHIVE.equals(sourceFolder.type) && filter_archive)
@@ -4318,7 +4349,9 @@ public class FragmentMessages extends FragmentBase
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null || sourceFolder.read_only)
+                            if (sourceFolder == null ||
+                                    sourceFolder.read_only ||
+                                    sourceFolder.id.equals(targetFolder.id))
                                 continue;
 
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder).setCopy(copy));
@@ -4712,9 +4745,6 @@ public class FragmentMessages extends FragmentBase
         int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
-
-        // Restart spinner
-        swipeRefresh.resetRefreshing();
 
         if (!checkRedmiNote())
             if (!checkDoze())
@@ -5546,6 +5576,8 @@ public class FragmentMessages extends FragmentBase
 
     private void onMenuSaveSearch() {
         Bundle args = new Bundle();
+        args.putLong("account", account);
+        args.putLong("folder", folder);
         args.putSerializable("criteria", criteria);
 
         FragmentDialogSaveSearch fragment = new FragmentDialogSaveSearch();
@@ -5825,8 +5857,14 @@ public class FragmentMessages extends FragmentBase
 
     private void onMenuConfirmLinks() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean compact = !prefs.getBoolean("confirm_links", true);
-        prefs.edit().putBoolean("confirm_links", compact).apply();
+        boolean confirm_links = !prefs.getBoolean("confirm_links", true);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("confirm_links", confirm_links);
+        if (confirm_links)
+            for (String key : prefs.getAll().keySet())
+                if (key.endsWith(".confirm_link"))
+                    editor.remove(key);
+        editor.apply();
         invalidateOptionsMenu();
     }
 
@@ -5953,6 +5991,9 @@ public class FragmentMessages extends FragmentBase
 
                 DB db = DB.getInstance(context);
 
+                EntityAccount account = db.account().getAccount(args.getLong("account"));
+                EntityFolder folder = db.folder().getFolder(args.getLong("folder"));
+
                 EntitySearch search = null;
                 if (criteria.id != null)
                     search = db.search().getSearch(criteria.id);
@@ -5961,10 +6002,12 @@ public class FragmentMessages extends FragmentBase
 
                 int order = args.getInt("order");
 
+                search.account_uuid = (account == null ? null : account.uuid);
+                search.folder_name = (folder == null ? null : folder.name);
                 search.name = args.getString("name");
                 search.order = (order < 0 ? null : order);
                 search.color = args.getInt("color", Color.TRANSPARENT);
-                search.data = criteria.toJson().toString();
+                search.data = criteria.toJsonData().toString();
 
                 if (search.color == Color.TRANSPARENT)
                     search.color = null;
@@ -6121,7 +6164,8 @@ public class FragmentMessages extends FragmentBase
             }
         }
 
-        if (Objects.equals(lastUnseen, unseen) &&
+        if (refreshing == swipeRefresh.isRefreshing() &&
+                Objects.equals(lastUnseen, unseen) &&
                 Objects.equals(lastRefreshing, refreshing) &&
                 Objects.equals(lastFolderErrors, folderErrors) &&
                 Objects.equals(lastAccountErrors, accountErrors)) {
@@ -6207,6 +6251,7 @@ public class FragmentMessages extends FragmentBase
                     boolean more_snooze = prefs.getBoolean("more_snooze", false);
                     boolean more_hide = prefs.getBoolean("more_hide", false);
                     boolean more_flag = prefs.getBoolean("more_flag", false);
+                    boolean more_flag_color = prefs.getBoolean("more_flag_color", false);
                     boolean more_importance_high = prefs.getBoolean("more_importance_high", false);
                     boolean more_importance_low = prefs.getBoolean("more_importance_low", false);
                     boolean more_inbox = prefs.getBoolean("more_inbox", true);
@@ -6265,6 +6310,10 @@ public class FragmentMessages extends FragmentBase
                     if (flag)
                         count++;
 
+                    boolean flag_color = (more_flag_color && count < MAX_QUICK_ACTIONS && (result.unflagged || result.flagged));
+                    if (flag_color)
+                        count++;
+
                     boolean hide = (more_hide && count < MAX_QUICK_ACTIONS && result.visible);
                     if (hide)
                         count++;
@@ -6288,6 +6337,7 @@ public class FragmentMessages extends FragmentBase
                     ibBatchSnooze.setVisibility(snooze ? View.VISIBLE : View.GONE);
                     ibBatchHide.setVisibility(hide ? View.VISIBLE : View.GONE);
                     ibBatchFlag.setVisibility(flag ? View.VISIBLE : View.GONE);
+                    ibBatchFlagColor.setVisibility(flag_color ? View.VISIBLE : View.GONE);
                     ibLowImportance.setVisibility(importance_low ? View.VISIBLE : View.GONE);
                     ibHighImportance.setVisibility(importance_high ? View.VISIBLE : View.GONE);
                     ibInbox.setVisibility(inbox ? View.VISIBLE : View.GONE);
@@ -6304,7 +6354,7 @@ public class FragmentMessages extends FragmentBase
                 protected void onException(Bundle args, Throwable ex) {
                     Log.unexpectedError(getParentFragmentManager(), ex);
                 }
-            }.setExecutor(executor).setId("messages:" + FragmentMessages.this.hashCode()).execute(this, args, "quickactions");
+            }.serial().setId("messages:" + FragmentMessages.this.hashCode()).execute(this, args, "quickactions");
         } else {
             fabMore.hide();
             tvSelectedCount.setVisibility(View.GONE);
@@ -6842,20 +6892,26 @@ public class FragmentMessages extends FragmentBase
 
                     bottom_navigation.setTag(data);
 
-                    bottom_navigation.getMenu().findItem(R.id.action_delete).setIcon(
-                            data.forever ? R.drawable.twotone_delete_forever_24 : R.drawable.twotone_delete_24);
-                    bottom_navigation.getMenu().findItem(R.id.action_delete).setVisible(data.trashable);
-                    bottom_navigation.getMenu().findItem(R.id.action_snooze).setVisible(data.snoozable);
-                    bottom_navigation.getMenu().findItem(R.id.action_archive).setVisible(data.archivable);
+                    bottom_navigation.getMenu().findItem(actionbar_delete_id)
+                            .setIcon(data.forever ? R.drawable.twotone_delete_forever_24 : R.drawable.twotone_delete_24)
+                            .setTitle(data.forever ? R.string.title_delete_permanently : R.string.title_trash)
+                            .setVisible(data.trashable);
+                    bottom_navigation.getMenu().findItem(R.id.action_snooze)
+                            .setVisible(data.snoozable);
+                    bottom_navigation.getMenu().findItem(actionbar_archive_id)
+                            .setIcon(R.drawable.twotone_archive_24)
+                            .setTitle(R.string.title_archive)
+                            .setVisible(data.archivable);
                     bottom_navigation.setVisibility(View.VISIBLE);
 
-                    bottom_navigation.findViewById(R.id.action_delete).setOnLongClickListener(new View.OnLongClickListener() {
-                        @Override
-                        public boolean onLongClick(View v) {
-                            onActionDelete();
-                            return true;
-                        }
-                    });
+                    bottom_navigation.findViewById(actionbar_delete_id)
+                            .setOnLongClickListener(new View.OnLongClickListener() {
+                                @Override
+                                public boolean onLongClick(View v) {
+                                    onActionDelete();
+                                    return true;
+                                }
+                            });
                 }
 
                 @Override
@@ -6945,7 +7001,7 @@ public class FragmentMessages extends FragmentBase
                     if (account.protocol != EntityAccount.TYPE_IMAP) {
                         if (account.auto_seen)
                             EntityOperation.queue(context, message, EntityOperation.SEEN, true);
-                    } else {
+                    } else if (message.uid != null) {
                         if (account.auto_seen)
                             EntityOperation.queue(context, message, EntityOperation.SEEN, true);
 
@@ -7645,10 +7701,10 @@ public class FragmentMessages extends FragmentBase
                     !bottom_navigation.isEnabled() ||
                     bottom_navigation.getVisibility() != View.VISIBLE)
                 return false;
-            MenuItem archive = bottom_navigation.getMenu().findItem(R.id.action_archive);
+            MenuItem archive = bottom_navigation.getMenu().findItem(actionbar_archive_id);
             if (archive == null || !archive.isVisible() || !archive.isEnabled())
                 return false;
-            bottom_navigation.getMenu().performIdentifierAction(R.id.action_archive, 0);
+            bottom_navigation.getMenu().performIdentifierAction(actionbar_archive_id, 0);
             return true;
         }
 
@@ -7657,10 +7713,10 @@ public class FragmentMessages extends FragmentBase
                     !bottom_navigation.isEnabled() ||
                     bottom_navigation.getVisibility() != View.VISIBLE)
                 return false;
-            MenuItem delete = bottom_navigation.getMenu().findItem(R.id.action_delete);
+            MenuItem delete = bottom_navigation.getMenu().findItem(actionbar_delete_id);
             if (delete == null || !delete.isVisible() || !delete.isEnabled())
                 return false;
-            bottom_navigation.getMenu().performIdentifierAction(R.id.action_delete, 0);
+            bottom_navigation.getMenu().performIdentifierAction(actionbar_delete_id, 0);
             return true;
         }
 
@@ -7945,7 +8001,7 @@ public class FragmentMessages extends FragmentBase
                         }
 
                         Bundle args = data.getBundleExtra("args");
-                        onActionFlagSelection(true, args.getInt("color"), null, false);
+                        onActionFlagSelection(true, args.getInt("color"), null, args.getBoolean("clear"));
                     }
                     break;
                 case REQUEST_MESSAGE_SNOOZE:
@@ -8466,7 +8522,7 @@ public class FragmentMessages extends FragmentBase
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.setExecutor(executor).execute(this, args, "decrypt:pgp");
+        }.serial().execute(this, args, "decrypt:pgp");
     }
 
     private void onSmime(Bundle args) {
@@ -9123,7 +9179,7 @@ public class FragmentMessages extends FragmentBase
                     }
                 return trace;
             }
-        }.setExecutor(executor).execute(this, args, "decrypt:s/mime");
+        }.serial().execute(this, args, "decrypt:s/mime");
     }
 
     private static void checkPep(EntityMessage message, List<EntityAttachment> remotes, Context context) {
@@ -9663,7 +9719,9 @@ public class FragmentMessages extends FragmentBase
                             EntityOperation.queue(context, message, EntityOperation.COPY, tid);
                         else {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null || sourceFolder.read_only)
+                            if (sourceFolder == null ||
+                                    sourceFolder.read_only ||
+                                    sourceFolder.id.equals(targetFolder.id))
                                 continue;
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder));
                         }
@@ -9704,8 +9762,6 @@ public class FragmentMessages extends FragmentBase
         args.putBoolean("print_html_images", print_html_images);
 
         new SimpleTask<String[]>() {
-            private final ExecutorService executor = Helper.getBackgroundExecutor(0, "print");
-
             @Override
             protected String[] onExecute(Context context, Bundle args) throws IOException {
                 long id = args.getLong("id");
@@ -9763,7 +9819,7 @@ public class FragmentMessages extends FragmentBase
                             continue;
                         }
 
-                        futures.add(executor.submit(new Callable<Void>() {
+                        futures.add(Helper.getParallelExecutor().submit(new Callable<Void>() {
                             @Override
                             public Void call() throws Exception {
                                 try (OutputStream os = new FileOutputStream(out)) {
@@ -10056,7 +10112,7 @@ public class FragmentMessages extends FragmentBase
             return;
 
         DB db = DB.getInstance(context);
-        db.getQueryExecutor().execute(new Runnable() {
+        Helper.getParallelExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -10081,7 +10137,7 @@ public class FragmentMessages extends FragmentBase
         fragmentTransaction.commit();
     }
 
-    static void searchSender(Context context, LifecycleOwner owner, FragmentManager fm, long message) {
+    static void searchContact(Context context, LifecycleOwner owner, FragmentManager fm, long message, boolean sender_only) {
         Bundle args = new Bundle();
         args.putLong("id", message);
 
@@ -10139,7 +10195,8 @@ public class FragmentMessages extends FragmentBase
                         new Intent(ActivityView.ACTION_SEARCH_ADDRESS)
                                 .putExtra("account", -1L)
                                 .putExtra("folder", -1L)
-                                .putExtra("query", query));
+                                .putExtra("query", query)
+                                .putExtra("sender_only", sender_only));
             }
 
             @Override
@@ -10855,6 +10912,7 @@ public class FragmentMessages extends FragmentBase
             final CheckBox cbSnooze = dview.findViewById(R.id.cbSnooze);
             final CheckBox cbHide = dview.findViewById(R.id.cbHide);
             final CheckBox cbFlag = dview.findViewById(R.id.cbFlag);
+            final CheckBox cbFlagColor = dview.findViewById(R.id.cbFlagColor);
             final CheckBox cbImportanceLow = dview.findViewById(R.id.cbImportanceLow);
             final CheckBox cbImportanceHigh = dview.findViewById(R.id.cbImportanceHigh);
             final CheckBox cbInbox = dview.findViewById(R.id.cbInbox);
@@ -10863,6 +10921,7 @@ public class FragmentMessages extends FragmentBase
             final CheckBox cbTrash = dview.findViewById(R.id.cbTrash);
             final CheckBox cbDelete = dview.findViewById(R.id.cbDelete);
             final CheckBox cbMove = dview.findViewById(R.id.cbMove);
+            final CheckBox cbClear = dview.findViewById(R.id.cbClear);
 
             tvHint.setText(getString(R.string.title_quick_actions_hint, MAX_QUICK_ACTIONS));
             cbSeen.setChecked(prefs.getBoolean("more_seen", true));
@@ -10870,6 +10929,7 @@ public class FragmentMessages extends FragmentBase
             cbSnooze.setChecked(prefs.getBoolean("more_snooze", false));
             cbHide.setChecked(prefs.getBoolean("more_hide", false));
             cbFlag.setChecked(prefs.getBoolean("more_flag", false));
+            cbFlagColor.setChecked(prefs.getBoolean("more_flag_color", false));
             cbImportanceLow.setChecked(prefs.getBoolean("more_importance_low", false));
             cbImportanceHigh.setChecked(prefs.getBoolean("more_importance_high", false));
             cbInbox.setChecked(prefs.getBoolean("more_inbox", true));
@@ -10878,6 +10938,7 @@ public class FragmentMessages extends FragmentBase
             cbTrash.setChecked(prefs.getBoolean("more_trash", true));
             cbDelete.setChecked(prefs.getBoolean("more_delete", false));
             cbMove.setChecked(prefs.getBoolean("more_move", true));
+            cbClear.setChecked(prefs.getBoolean("more_clear", true));
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
@@ -10890,6 +10951,7 @@ public class FragmentMessages extends FragmentBase
                             editor.putBoolean("more_snooze", cbSnooze.isChecked());
                             editor.putBoolean("more_hide", cbHide.isChecked());
                             editor.putBoolean("more_flag", cbFlag.isChecked());
+                            editor.putBoolean("more_flag_color", cbFlagColor.isChecked());
                             editor.putBoolean("more_importance_low", cbImportanceLow.isChecked());
                             editor.putBoolean("more_importance_high", cbImportanceHigh.isChecked());
                             editor.putBoolean("more_inbox", cbInbox.isChecked());
@@ -10898,6 +10960,7 @@ public class FragmentMessages extends FragmentBase
                             editor.putBoolean("more_trash", cbTrash.isChecked());
                             editor.putBoolean("more_delete", cbDelete.isChecked());
                             editor.putBoolean("more_move", cbMove.isChecked());
+                            editor.putBoolean("more_clear", cbClear.isChecked());
                             editor.apply();
                             sendResult(Activity.RESULT_OK);
                         }

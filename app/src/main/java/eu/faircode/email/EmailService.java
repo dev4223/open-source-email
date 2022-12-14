@@ -73,7 +73,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import javax.mail.AuthenticationFailedException;
@@ -110,15 +109,12 @@ public class EmailService implements AutoCloseable {
     private String ehlo;
     private boolean log;
     private boolean debug;
-    private int level;
     private Properties properties;
     private Session isession;
     private Service iservice;
     private StoreListener listener;
     private ServiceAuthenticator authenticator;
     private RingBuffer<String> breadcrumbs;
-
-    private ExecutorService executor = Helper.getBackgroundExecutor(0, "mail");
 
     static final int PURPOSE_CHECK = 1;
     static final int PURPOSE_USE = 2;
@@ -189,7 +185,6 @@ public class EmailService implements AutoCloseable {
         else if (protocol_since + PROTOCOL_LOG_DURATION < now)
             prefs.edit().putBoolean("protocol", false).apply();
         this.log = prefs.getBoolean("protocol", false);
-        this.level = prefs.getInt("log_level", Log.getDefaultLogLevel());
         this.ssl_harden = prefs.getBoolean("ssl_harden", false);
         this.ssl_harden_strict = prefs.getBoolean("ssl_harden_strict", false);
         this.cert_strict = prefs.getBoolean("cert_strict", !BuildConfig.PLAY_STORE_RELEASE);
@@ -209,7 +204,7 @@ public class EmailService implements AutoCloseable {
                 " use_top=" + use_top);
 
         properties.put("mail.event.scope", "folder");
-        properties.put("mail.event.executor", executor);
+        properties.put("mail.event.executor", Helper.getParallelExecutor());
 
         if (!auth_plain)
             properties.put("mail." + protocol + ".auth.plain.disable", "true");
@@ -430,7 +425,19 @@ public class EmailService implements AutoCloseable {
                 }
             }
 
-            factory = new SSLSocketFactoryService(host, insecure, ssl_harden, ssl_harden_strict, cert_strict, key, chain, fingerprint);
+            boolean strict = ssl_harden_strict;
+            if (strict)
+                if ("pop3".equals(protocol) || "pop3s".equals(protocol))
+                    strict = false;
+                else {
+                    EmailProvider p = EmailProvider.getProviderByHost(context, host);
+                    if (p != null && "1.2".equals(p.maxtls)) {
+                        strict = false;
+                        Log.i(p.name + " maxtls=" + p.maxtls);
+                    }
+                }
+
+            factory = new SSLSocketFactoryService(host, insecure, ssl_harden, strict, cert_strict, key, chain, fingerprint);
             properties.put("mail." + protocol + ".ssl.socketFactory", factory);
             properties.put("mail." + protocol + ".socketFactory.fallback", "false");
             properties.put("mail." + protocol + ".ssl.checkserveridentity", "false");
@@ -481,7 +488,11 @@ public class EmailService implements AutoCloseable {
                     authenticator.refreshToken(true);
                     connect(host, port, auth, user, factory);
                 } catch (Exception ex1) {
-                    Log.e(ex1);
+                    Throwable cause = ex1.getCause();
+                    if (cause == null)
+                        Log.e(ex1);
+                    else
+                        Log.e(new Throwable(ex1.getMessage() + " error=" + cause.getMessage(), ex1));
                     String msg = ex.getMessage();
                     if (auth == AUTH_TYPE_GMAIL &&
                             msg != null && msg.endsWith("Invalid credentials (Failure)"))
@@ -508,6 +519,34 @@ public class EmailService implements AutoCloseable {
             } else
                 throw ex;
         } catch (MessagingException ex) {
+            /*
+                javax.mail.MessagingException: FY1 BAD Command Error. 10;
+                  nested exception is:
+                    com.sun.mail.iap.BadCommandException: FY1 BAD Command Error. 10
+                javax.mail.MessagingException: FY1 BAD Command Error. 10;
+                  nested exception is:
+                    com.sun.mail.iap.BadCommandException: FY1 BAD Command Error. 10
+                    at com.sun.mail.imap.IMAPStore.protocolConnect(SourceFile:40)
+                    at javax.mail.Service.connect(SourceFile:31)
+                    at eu.faircode.email.EmailService._connect(SourceFile:31)
+                    at eu.faircode.email.EmailService.connect(SourceFile:99)
+                    at eu.faircode.email.EmailService.connect(SourceFile:40)
+                    at eu.faircode.email.EmailService.connect(SourceFile:4)
+                    at eu.faircode.email.ServiceSynchronize.monitorAccount(SourceFile:40)
+                    at eu.faircode.email.ServiceSynchronize.access$1100(SourceFile:1)
+                    at eu.faircode.email.ServiceSynchronize$4$2.run(SourceFile:1)
+                    at java.lang.Thread.run(Thread.java:919)
+                Caused by: com.sun.mail.iap.BadCommandException: FY1 BAD Command Error. 10
+                    at com.sun.mail.iap.Protocol.handleResult(SourceFile:7)
+                    at com.sun.mail.imap.protocol.IMAPProtocol.handleLoginResult(SourceFile:4)
+                    at com.sun.mail.imap.protocol.IMAPProtocol.authoauth2(SourceFile:36)
+                    at com.sun.mail.imap.IMAPStore.authenticate(SourceFile:24)
+                    at com.sun.mail.imap.IMAPStore.login(SourceFile:22)
+                    at com.sun.mail.imap.IMAPStore.protocolConnect(SourceFile:24)
+             */
+            if (ex.getMessage() != null && ex.getMessage().contains("Command Error. 10"))
+                throw new AuthenticationFailedException(context.getString(R.string.title_service_error10), ex);
+
             if (purpose == PURPOSE_CHECK) {
                 if (port == 995 && !("pop3".equals(protocol) || "pop3s".equals(protocol)))
                     throw new MessagingException(context.getString(R.string.title_service_port), ex);
@@ -709,7 +748,7 @@ public class EmailService implements AutoCloseable {
 
         breadcrumbs = new RingBuffer<>(BREADCRUMBS_SIZE);
 
-        boolean trace = (debug || log || level <= android.util.Log.INFO);
+        boolean trace = (debug || log || Log.isDebugLogLevel());
 
         isession.setDebug(trace);
         if (trace)

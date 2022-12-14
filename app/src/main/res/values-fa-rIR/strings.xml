@@ -223,6 +223,7 @@
     <string name="title_setup_import_rules">وارد کردن قوانین غربالگری</string>
     <string name="title_setup_import_contacts">وارد کردن مخاطبین محلی</string>
     <string name="title_setup_import_answers">وارد کردن الگوهای پاسخ‌دهی</string>
+    <string name="title_setup_import_searches">جستجوهای ذخیره شده را وارد کن</string>
     <string name="title_setup_import_settings">وارد کردن گزینه‌ها</string>
     <string name="title_setup_exported">تنظیمات صادر شدند</string>
     <string name="title_setup_imported">تنظیمات وارد شدند</string>
@@ -539,6 +540,7 @@
     <string name="title_advanced_cleanup_hint">این تمام پرونده‌های موقت را حذف خواهد کرد</string>
     <string name="title_advanced_never_favorite">هرگز مورد علاقه نشود</string>
     <string name="title_advanced_edit_name">ویرایش نام</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">نام پوشه</string>
     <string name="title_advanced_swipe_actions">تنظیم کنش‌های کشیدن</string>
     <string name="title_select">انتخاب &#8230;</string>
     <string name="title_identity_name">نام شما</string>
@@ -555,6 +557,7 @@
     <string name="title_account_name">نام حساب</string>
     <string name="title_account_name_hint">برای افتراق پوشه‌ها استفاده می‌شود</string>
     <string name="title_color">رنگ</string>
+    <string name="title_calendar">تقویم</string>
     <string name="title_account_ondemand">همگام‌سازی دستی</string>
     <string name="title_account_notify">اعلانات جداگانه</string>
     <string name="title_account_left">کشیدن به چپ</string>
@@ -725,6 +728,7 @@
     <string name="title_save_eml">ذخیره پرونده خام پیام</string>
     <string name="title_save_file">ذخیره فایل</string>
     <string name="title_auto_confirm">پس از چند ثانیه به طور خودکار تایید کن</string>
+    <string name="title_button_search_similar">جستجوی پیام‌های مشابه</string>
     <string name="title_quick_actions">انتخاب عملکرد</string>
     <string name="title_quick_actions_hint">حداکثر %1$d کنش نشان داده خواهد شد</string>
     <string name="title_quick_actions_low">کم اهمیت</string>
@@ -1254,20 +1258,22 @@
     <string name="title_widget_background">رنگ پس‌زمینه</string>
     <string name="title_widget_day_night">بر اساس تم تاریک سیستم</string>
     <string name="title_compat_dark">گوگل قابلیت حالت تاریک را در نسخه‌های اندروید کمتر از ۱۰ حذف کرد</string>
-    <string name="title_accessibility_collapsed">جمع شده</string>
-    <string name="title_accessibility_expanded">گسترش یافته</string>
-    <string name="title_accessibility_seen">خوانده شده</string>
-    <string name="title_accessibility_unseen">خوانده نشده</string>
-    <plurals name="title_accessibility_messages">
-        <item quantity="one">%1$d پیام</item>
-        <item quantity="other">%1$d پیام</item>
-    </plurals>
     <!-- Thunderbird -->
     <string name="title_keyword_label1">مهم</string>
     <string name="title_keyword_label2">محل کار</string>
     <string name="title_keyword_label3">شخصی</string>
     <string name="title_keyword_label4">برای انجام</string>
     <string name="title_keyword_label5">بعدا</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d پیام</item>
+        <item quantity="other">%1$d پیام</item>
+    </plurals>
+    <string name="title_accessibility_accounts">حساب‌ها</string>
+    <string name="title_accessibility_folders">پوشه‌ها</string>
+    <string name="title_accessibility_collapsed">جمع شده</string>
+    <string name="title_accessibility_expanded">گسترش یافته</string>
+    <string name="title_accessibility_seen">خوانده شده</string>
+    <string name="title_accessibility_unseen">خوانده نشده</string>
     <string name="title_accessibility_flagged">ستاره دار</string>
     <string name="title_accessibility_unflagged">بدون ستاره شده</string>
     <string name="title_accessibility_collapse">جمع شدن</string>

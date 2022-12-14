@@ -237,6 +237,7 @@
     <string name="title_advanced_cleanup">تنظيف</string>
     <string name="title_advanced_debug">وضع التصحيح</string>
     <string name="title_advanced_browse_hint">جلب المزيد من الرسائل عند التمرير إلى أسفل</string>
+    <string name="title_create_folder_name" comment="title_create_folder_name&#10;Title for input field for a folder name">إسم المجلد</string>
     <string name="title_identity_name">إسمك</string>
     <string name="title_identity_email">البريد الإلكتروني</string>
     <string name="title_advanced_sender">السماح بتغيير عنوان المُرسِل</string>
@@ -535,9 +536,11 @@
     <string name="title_widget_font_size">حجم النص</string>
     <string name="title_widget_semi_transparent">خلفية شبه شفافة</string>
     <string name="title_widget_background">لون الخلفية</string>
-    <string name="title_accessibility_unseen">غير مقروءة</string>
     <!-- Thunderbird -->
     <string name="title_keyword_label4">للانجاز</string>
+    <string name="title_accessibility_accounts">الحسابات</string>
+    <string name="title_accessibility_folders">المجلدات</string>
+    <string name="title_accessibility_unseen">غير مقروءة</string>
     <string name="title_accessibility_flagged">مميّزة بنجمة</string>
     <string name="title_accessibility_edit">تعديل</string>
     <string name="title_accessibility_attachment">المرفق</string>

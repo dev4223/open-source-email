@@ -32,12 +32,20 @@ import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.mail.Part;
 
@@ -164,7 +172,7 @@ public class EntityAttachment {
         boolean external_storage = prefs.getBoolean("external_storage", false);
 
         File root = (external_storage
-                ? context.getExternalFilesDir(null)
+                ? Helper.getExternalFilesDir(context)
                 : context.getFilesDir());
         return root;
     }
@@ -273,6 +281,19 @@ public class EntityAttachment {
         if ("odp".equals(extension))
             return "application/vnd.oasis.opendocument.presentation";
 
+        // Audio
+
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Configuring_servers_for_Ogg_media
+
+        if ("oga".equals(extension))
+            return "audio/ogg";
+
+        if ("ogv".equals(extension))
+            return "video/ogg";
+
+        if ("ogg".equals(extension))
+            return "application/ogg";
+
         // Images
 
         if ("avif".equals(extension))
@@ -333,6 +354,25 @@ public class EntityAttachment {
         }
 
         return type;
+    }
+
+    void zip(Context context) throws IOException {
+        File file = getFile(context);
+        File zip = new File(file.getAbsolutePath() + ".zip");
+
+        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+            try (ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zip)))) {
+                out.setMethod(ZipOutputStream.DEFLATED);
+                out.setLevel(Deflater.BEST_COMPRESSION);
+                ZipEntry entry = new ZipEntry(name);
+                out.putNextEntry(entry);
+                Helper.copy(in, out);
+            }
+        }
+
+        DB db = DB.getInstance(context);
+        db.attachment().setName(id, name + ".zip", "application/zip", zip.length());
+        file.delete();
     }
 
     public static boolean equals(List<EntityAttachment> a1, List<EntityAttachment> a2) {
