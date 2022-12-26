@@ -251,7 +251,7 @@ public class Helper {
     static ExecutorService sSerialTaskExecutor = null;
 
     static int sOperationIndex = 0;
-    static ExecutorService[] sOperationExecutor = new ExecutorService[OPERATION_WORKERS];
+    static final ExecutorService[] sOperationExecutor = new ExecutorService[OPERATION_WORKERS];
 
     static ExecutorService getSerialExecutor() {
         if (sSerialExecutor == null)
@@ -272,11 +272,13 @@ public class Helper {
     }
 
     static ExecutorService getOperationExecutor() {
-        if (sOperationExecutor[sOperationIndex] == null)
-            sOperationExecutor[sOperationIndex] = getBackgroundExecutor(1, "operation");
-        ExecutorService result = sOperationExecutor[sOperationIndex];
-        sOperationIndex = (sOperationIndex + 1) % sOperationExecutor.length;
-        return result;
+        synchronized (sOperationExecutor) {
+            if (sOperationExecutor[sOperationIndex] == null)
+                sOperationExecutor[sOperationIndex] = getBackgroundExecutor(1, "operation");
+            ExecutorService result = sOperationExecutor[sOperationIndex];
+            sOperationIndex = (sOperationIndex + 1) % sOperationExecutor.length;
+            return result;
+        }
     }
 
     private static ExecutorService getBackgroundExecutor(int threads, final String name) {
@@ -296,7 +298,7 @@ public class Helper {
             // java.lang.OutOfMemoryError: pthread_create (1040KB stack) failed: Try again
             // 1040 KB native stack size / 32 KB thread stack size ~ 32 threads
             int processors = Runtime.getRuntime().availableProcessors(); // Modern devices: 8
-            threads = processors * 2;
+            threads = Math.max(8, processors * 2);
         }
 
         if (threads == 0)

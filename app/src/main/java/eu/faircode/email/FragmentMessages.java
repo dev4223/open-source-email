@@ -3398,6 +3398,10 @@ public class FragmentMessages extends FragmentBase
                     }
                 }
 
+                boolean canRaw = (message.uid != null ||
+                        (EntityFolder.INBOX.equals(message.folderType) &&
+                                message.accountProtocol == EntityAccount.TYPE_POP));
+
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), anchor);
                 popupMenu.inflate(R.menu.popup_reply);
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients.length > 0);
@@ -3416,9 +3420,7 @@ public class FragmentMessages extends FragmentBase
 
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(message.content);
-                popupMenu.getMenu().findItem(R.id.menu_forward_raw)
-                        .setEnabled(message.uid != null)
-                        .setVisible(Boolean.TRUE.equals(message.raw) || message.accountProtocol == EntityAccount.TYPE_IMAP);
+                popupMenu.getMenu().findItem(R.id.menu_forward_raw).setEnabled(canRaw);
                 popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setEnabled(message.content);
 
@@ -5035,7 +5037,7 @@ public class FragmentMessages extends FragmentBase
         cal.set(Calendar.MILLISECOND, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.DAY_OF_MONTH, 30);
         cal.set(Calendar.MONTH, Calendar.MAY);
         cal.set(Calendar.YEAR, 2022);
@@ -5121,7 +5123,7 @@ public class FragmentMessages extends FragmentBase
         cal.set(Calendar.MILLISECOND, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.DAY_OF_MONTH, 1);
         cal.set(Calendar.MONTH, Calendar.OCTOBER);
         cal.set(Calendar.YEAR, 2022);

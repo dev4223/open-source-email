@@ -26,8 +26,7 @@ Please [see here](https://github.com/M66B/FairEmail/tree/master/tutorials) for t
 * [How to ...?](#user-content-howto)
 * [Known problems](#user-content-known-problems)
 * [Planned features](#user-content-planned-features)
-* [Frequently requested features](#user-content-frequently-requested-features)
-* [Frequently Asked Questions](#user-content-frequently-asked-questions)
+* [Frequently Asked Questions](#user-content-frequently-asked-questions) (FAQ)
 * [Get support](#user-content-get-support)
 
 <h2><a name="authorizing-accounts"></a>Authorizing accounts</h2>
@@ -69,7 +68,7 @@ Please see [here](#user-content-faq22) for common error messages and solutions.
 Related questions:
 
 * [Is OAuth supported?](#user-content-faq111)
-* [Why is ActiveSync not supported?](#user-content-faq133)
+* [Why is ActiveSync &trade; not supported?](#user-content-faq133)
 
 <a name="howto">
 
@@ -197,15 +196,6 @@ The cause might be [changes in Android 7 Nougat](https://ericsink.com/entries/sq
 * &#x2714; Many more ...
 
 Anything on this list is in random order and *might* be added in the near future.
-
-<h2><a name="frequently-requested-features"></a>Frequently requested features</h2>
-
-&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-frequently-requested-features)
-
-The design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too.
-The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
-All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
-Fonts, sizes, colors, etc should be material design whenever possible.
 
 <h2><a name="frequently-asked-questions"></a>Frequently Asked Questions</h2>
 
@@ -341,7 +331,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(130) What does message error ... mean?](#user-content-faq130)
 * [(131) Can you change the direction for swiping to previous/next message?](#user-content-faq131)
 * [(132) Why are new message notifications silent?](#user-content-faq132)
-* [(133) Why is ActiveSync not supported?](#user-content-faq133)
+* [(133) Why is ActiveSync &trade; not supported?](#user-content-faq133)
 * [(134) Can you add leave messages on the server?](#user-content-faq134)
 * [(135) Why are trashed messages and drafts shown in conversations?](#user-content-faq135)
 * [(136) How can I delete an account/identity/folder?](#user-content-faq136)
@@ -787,9 +777,9 @@ Note that this will result in extra internet traffic.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq8)
 
-Firstly, Exchange *protocol* is not the same as Exchange *server* or Exchange *account*.
+Firstly, Exchange *protocol* (EWS) is not the same as Exchange *server* or Exchange *account*.
 
-The Microsoft Exchange Web Services (EWS) protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
+The Microsoft Exchange Web Services &trade; (EWS) protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
 Microsoft stopped updating the EWS libraries [in 2016](https://github.com/OfficeDev/ews-java-api).
 So, it makes little sense to add this protocol anymore.
 
@@ -797,7 +787,7 @@ You can use a Microsoft Exchange account if it is accessible via IMAP, which is 
 See [here](https://support.office.com/en-us/article/what-is-a-microsoft-exchange-account-47f000aa-c2bf-48ac-9bc2-83e5c6036793) for more information.
 
 Note that the desciption of FairEmail starts with the remark
-that non-standard protocols, like Microsoft Exchange Web Services and Microsoft ActiveSync are not supported.
+that non-standard protocols, like Microsoft Exchange Web Services &trade; and Microsoft ActiveSync &trade; are not supported.
 
 Please see [here](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040)
 for the Microsoft documentation about configuring an email client.
@@ -806,7 +796,7 @@ There is also a section about common connection errors and solutions.
 Some older Exchange server versions have a bug causing empty message and corrupt attachments.
 Please see [this FAQ](#user-content-faq110) for a workaround.
 
-Please see [this FAQ](#user-content-faq133) about ActiveSync support.
+Please see [this FAQ](#user-content-faq133) about ActiveSync &trade; support.
 
 Please see [this FAQ](#user-content-faq111) about OAuth support.
 
@@ -1218,6 +1208,8 @@ Using the search index is a pro feature.
 >
 
 An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting *Outlook/Office 365*.
+
+**Important**: a personal and a business account can have the same email address, but have different mailboxes (folders). So, please make sure you select the right option.
 
 Microsoft said "*We have turned off SMTP AUTH for millions of tenants not using it*", which can result in this error message:
 
@@ -3056,7 +3048,7 @@ To authorize a Yahoo/AT&T, AOL, or Sky account you need to use an app password i
 For instructions about how to create an app password, please see here:
 
 * [for Yahoo/AT&T](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)
-* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password) **Important**: app password generation is broken, [frustrating many people](https://aol.uservoice.com/forums/912886-aol-mail/suggestions/45235399-i-wanted-to-generate-a-third-party-app-password-bu) because this means you can use the AOL app and the browser only.
+* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password) ~~**Important**: app password generation is broken, [frustrating many people](https://aol.uservoice.com/forums/912886-aol-mail/suggestions/45235399-i-wanted-to-generate-a-third-party-app-password-bu) because this means you can use the AOL app and the browser only.~~
 * [for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)
 
 Please see [this FAQ](#user-content-faq111) about OAuth support.
@@ -3127,6 +3119,10 @@ Servers generally have more memory and computing power, so they are much better 
 Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client.
 Moreover, email servers have access to information, like the IP address, etc of the connecting server, which an email client has no access to.
 
+If you are receiving a significant amount of spam, the first thing you should do is consider switching to another email provider.
+Some email servers excell at filtering spam, and others are really bad at it.
+Switching to another e-mail provider is no fun, but neither is wading through piles of spam on a daily basis.
+
 Spam filtering based on message headers might have been feasible,
 but unfortunately this technique is [patented by Microsoft](https://patents.google.com/patent/US7543076).
 
@@ -3187,6 +3183,8 @@ You can enable the debug panel by enabling debug mode in the miscellaneous setti
 To prevent ongoing operations from storing attachments at the old location
 you should disable receiving messages in the receive settings and wait until all operations have been completed before changing this option.
 Please be aware that removing the storage space will inevitably result in problems, which is one of the reasons why this option is hidden.
+
+Moving messages to an sdcard is not an option because this would significantly reduce the response times of the app.
 
 When needed you can save (raw) messages via the three-dots menu just above the message text
 and save attachments by tapping on the floppy icon.
@@ -3939,15 +3937,16 @@ Android might rate limit the notification sound, which can cause some new messag
 <br />
 
 <a name="faq133"></a>
-**(133) Why is ActiveSync not supported?**
+**(133) Why is ActiveSync &trade; not supported?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq133)
 
-The Microsoft Exchange ActiveSync protocol [is patented](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing) and can therefore not be supported.
-For this reason you won't find many, if any, other email clients supporting ActiveSync.
+The Microsoft Exchange ActiveSync &trade; protocol [is patented](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing) and Microsoft doesn't give out licenses anymore.
+Therefore, it isn't possible to support ActiveSync &trade; anymore.
+For this same reason, you won't find many, if any, other email clients supporting ActiveSync &trade;.
 
 Note that the desciption of FairEmail starts with the remark
-that non-standard protocols, like Microsoft Exchange Web Services and Microsoft ActiveSync are not supported.
+that non-standard protocols, like Microsoft Exchange Web Services &trade; and Microsoft ActiveSync &trade; are not supported.
 
 <br />
 
@@ -5164,7 +5163,6 @@ There is no support on building and developing things by yourself.
 
 A change will be considered only if more than a few people ask for it.
 Changes in the past resulted too often in lots of complaints of other people.
-You can ask for support for changes [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168).
 
 Requested features should:
 
@@ -5173,6 +5171,10 @@ Requested features should:
 * fit within the philosophy of FairEmail (privacy-oriented, security-minded)
 * comply with common standards (IMAP, SMTP, etc.)
 * comply with the [Core app quality guidelines](https://developer.android.com/docs/quality-guidelines/core-app-quality)
+
+The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
+All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
+Fonts, sizes, colors, etc should be material design whenever possible.
 
 A feature will be considered useful to most people if more than 0.1% of the users request a feature, which in practice means about 500 people.
 

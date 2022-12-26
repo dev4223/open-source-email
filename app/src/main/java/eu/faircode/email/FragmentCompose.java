@@ -625,6 +625,7 @@ public class FragmentCompose extends FragmentBase {
                                 return;
                             if (hasSelection != selection) {
                                 hasSelection = selection;
+                                ibLink.setVisibility(style /* && media */ ? View.GONE : View.VISIBLE);
                                 style_bar.setVisibility(style || hasSelection ? View.VISIBLE : View.GONE);
                                 media_bar.setVisibility(style || !etBody.hasSelection() ? View.VISIBLE : View.GONE);
                                 invalidateOptionsMenu();
@@ -632,6 +633,7 @@ public class FragmentCompose extends FragmentBase {
                         }
                     }, 20);
                 } else {
+                    ibLink.setVisibility(View.VISIBLE); // no media
                     style_bar.setVisibility(style || selection ? View.VISIBLE : View.GONE);
                     media_bar.setVisibility(View.GONE);
                 }
@@ -1277,17 +1279,17 @@ public class FragmentCompose extends FragmentBase {
                 if (!auto_identity)
                     return null;
 
-                List<Integer> types = new ArrayList<>();
-                if (suggest_sent)
-                    types.add(EntityContact.TYPE_TO);
-                if (suggest_received)
-                    types.add(EntityContact.TYPE_FROM);
-
-                if (types.size() == 0)
-                    return null;
+                EntityLog.log(context, "Select identity email=" + email +
+                        " sent=" + suggest_sent + " received=" + suggest_received);
 
                 DB db = DB.getInstance(context);
-                List<Long> identities = db.contact().getIdentities(email, types);
+                List<Long> identities = null;
+                if (suggest_sent)
+                    identities = db.contact().getIdentities(email, EntityContact.TYPE_TO);
+                if (suggest_received && (identities == null || identities.size() == 0))
+                    identities = db.contact().getIdentities(email, EntityContact.TYPE_FROM);
+                EntityLog.log(context, "Selected identity email=" + email +
+                        " identities=" + (identities == null ? null : identities.size()));
                 if (identities != null && identities.size() == 1)
                     return identities.get(0);
 
@@ -2065,6 +2067,7 @@ public class FragmentCompose extends FragmentBase {
         style = !style;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefs.edit().putBoolean("compose_style", style).apply();
+        ibLink.setVisibility(style && media ? View.GONE : View.VISIBLE);
         style_bar.setVisibility(style || etBody.hasSelection() ? View.VISIBLE : View.GONE);
         media_bar.setVisibility(media && (style || !etBody.hasSelection()) ? View.VISIBLE : View.GONE);
         invalidateOptionsMenu();
@@ -2074,6 +2077,7 @@ public class FragmentCompose extends FragmentBase {
         media = !media;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefs.edit().putBoolean("compose_media", media).apply();
+        ibLink.setVisibility(style && media ? View.GONE : View.VISIBLE);
         style_bar.setVisibility(style || etBody.hasSelection() ? View.VISIBLE : View.GONE);
         media_bar.setVisibility(media && (style || !etBody.hasSelection()) ? View.VISIBLE : View.GONE);
         invalidateOptionsMenu();
@@ -2497,10 +2501,12 @@ public class FragmentCompose extends FragmentBase {
             @Override
             protected void onPreExecute(Bundle args) {
                 if (silent) {
-                    int textColorHighlight = Helper.resolveColor(getContext(), android.R.attr.textColorHighlight);
-                    highlightSpan = new BackgroundColorSpan(textColorHighlight);
-                    etBody.getText().setSpan(highlightSpan, start, end,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
+                    if (!BuildConfig.PLAY_STORE_RELEASE) {
+                        int textColorHighlight = Helper.resolveColor(getContext(), android.R.attr.textColorHighlight);
+                        highlightSpan = new BackgroundColorSpan(textColorHighlight);
+                        etBody.getText().setSpan(highlightSpan, start, end,
+                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
+                    }
                 } else {
                     toast = ToastEx.makeText(getContext(), R.string.title_suggestions_check, Toast.LENGTH_LONG);
                     toast.show();
@@ -4730,12 +4736,11 @@ public class FragmentCompose extends FragmentBase {
                             Address[] tos = MessageHelper.parseAddresses(context, to);
                             if (tos != null && tos.length > 0) {
                                 String email = ((InternetAddress) tos[0]).getAddress();
-                                List<Integer> types = new ArrayList<>();
+                                List<Long> identities = null;
                                 if (suggest_sent)
-                                    types.add(EntityContact.TYPE_TO);
-                                if (suggest_received)
-                                    types.add(EntityContact.TYPE_FROM);
-                                List<Long> identities = db.contact().getIdentities(email, types);
+                                    identities = db.contact().getIdentities(email, EntityContact.TYPE_TO);
+                                if (suggest_received && (identities == null || identities.size() == 0))
+                                    identities = db.contact().getIdentities(email, EntityContact.TYPE_FROM);
                                 if (identities != null && identities.size() == 1) {
                                     EntityIdentity identity = db.identity().getIdentity(identities.get(0));
                                     if (identity != null)
@@ -6762,6 +6767,7 @@ public class FragmentCompose extends FragmentBase {
             @Override
             protected void onPostExecute(Bundle args) {
                 pbWait.setVisibility(View.GONE);
+                ibLink.setVisibility(style && media ? View.GONE : View.VISIBLE);
                 style_bar.setVisibility(style || etBody.hasSelection() ? View.VISIBLE : View.GONE);
                 media_bar.setVisibility(media && (style || !etBody.hasSelection()) ? View.VISIBLE : View.GONE);
                 bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision > 1);
@@ -6841,7 +6847,12 @@ public class FragmentCompose extends FragmentBase {
                     if (spannedRef.length() > 0 && spannedRef.charAt(0) == '\n')
                         spannedRef = (Spanned) spannedRef.subSequence(1, spannedRef.length());
 
-                    Locale ref_lang = TextHelper.detectLanguage(context, spannedRef.toString());
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean language_detection = prefs.getBoolean("language_detection", false);
+
+                    Locale ref_lang = (language_detection
+                            ? TextHelper.detectLanguage(context, spannedRef.toString())
+                            : null);
                     args.putSerializable("ref_lang", ref_lang);
                 }
 

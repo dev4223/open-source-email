@@ -265,6 +265,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean week;
     private boolean cards;
     private boolean shadow_unread;
+    private boolean shadow_border;
     private boolean shadow_highlight;
     private boolean threading;
     private boolean threading_unread;
@@ -1914,7 +1915,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindSeen(TupleMessageEx message) {
-            if (cards && shadow_unread) {
+            if (cards && shadow_unread && shadow_border) {
                 boolean shadow = (message.unseen > 0);
                 int color = (shadow
                         ? ColorUtils.setAlphaComponent(shadow_highlight ? colorUnreadHighlight : colorAccent, 127)
@@ -2000,9 +2001,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean split = (viewType != ViewType.THREAD && properties.getValue("split", message.id));
 
             int color = Color.TRANSPARENT;
-            if (cards && shadow_unread && message.unseen > 0)
-                color = ColorUtils.setAlphaComponent(colorCardBackground, 192);
-            else if (split)
+            if (cards && shadow_unread && message.unseen > 0) {
+                if (shadow_border)
+                    color = ColorUtils.setAlphaComponent(colorCardBackground, 192);
+                else {
+                    int fg = (shadow_highlight ? colorUnreadHighlight : colorAccent);
+                    color = ColorUtils.blendARGB(colorCardBackground, fg, 0.125f);
+                }
+            } else if (split)
                 color = ColorUtils.setAlphaComponent(textColorHighlightInverse, 127);
             else if (flags_background && flagged && !expanded)
                 color = ColorUtils.setAlphaComponent(mcolor, 127);
@@ -3187,13 +3193,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         return document.html();
                     } else {
+                        HtmlHelper.autoLink(document);
+
                         if (message.ui_found && found && !TextUtils.isEmpty(searched))
                             HtmlHelper.highlightSearched(context, document, searched);
 
                         // Cleanup message
                         document = HtmlHelper.sanitizeView(context, document, show_images);
-
-                        HtmlHelper.autoLink(document);
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                             args.putParcelable("actions", getConversationActions(message, document, context));
@@ -7470,6 +7476,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.week = prefs.getBoolean("date_week", false);
         this.cards = prefs.getBoolean("cards", true);
         this.shadow_unread = prefs.getBoolean("shadow_unread", false);
+        this.shadow_border = prefs.getBoolean("shadow_border", true);
         this.shadow_highlight = prefs.getBoolean("shadow_highlight", false);
         this.threading = prefs.getBoolean("threading", true);
         this.threading_unread = threading && prefs.getBoolean("threading_unread", false);
@@ -8531,7 +8538,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return null;
 
                         List<EntityMessage> messages =
-                                db.message().getMessagesBySimilarity(message.account, message.id, message.msgid);
+                                db.message().getMessagesBySimilarity(message.account, message.id, message.msgid, message.hash);
                         if (messages == null)
                             return null;
 

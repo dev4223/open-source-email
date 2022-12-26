@@ -518,6 +518,7 @@
     <string name="title_advanced_cards_beige">Use beige background when using card style (light themes only)</string>
     <string name="title_advanced_tabular_background">Use card color as background color when using tabular style</string>
     <string name="title_advanced_cards_shadow">Use shadow for unread messages when using card style</string>
+    <string name="title_advanced_cards_shadow_border">Show border</string>
     <string name="title_advanced_cards_shadow_highlight">Use highlight color instead of accent color</string>
     <string name="title_advanced_tabular_dividers">Use divider lines when using tabular style</string>
     <string name="title_advanced_date_header">Group by date</string>
@@ -640,6 +641,7 @@
     <string name="title_advanced_autounstar">Automatically remove stars from messages on moving messages</string>
     <string name="title_advanced_auto_important">Automatically make starred messages important</string>
     <string name="title_advanced_reset_importance">Reset importance on moving messages</string>
+    <string name="title_advanced_cancel_snooze">Cancel snooze on moving messages</string>
     <string name="title_advanced_swipe_reply">Swipe expanded messages to the right to reply</string>
     <string name="title_advanced_default_snooze">Default snooze/delay time</string>
 
@@ -792,6 +794,7 @@
     <string name="title_advanced_test4" translatable="false">Test #4</string>
     <string name="title_advanced_test5" translatable="false">Test #5</string>
     <string name="title_advanced_repair" translatable="false">Repair</string>
+    <string name="title_advanced_daily" translatable="false">Daily</string>
     <string name="title_advanced_autostart" translatable="false">Autostart app</string>
     <string name="title_advanced_work_manager" translatable="false">Initialize work manager</string>
     <string name="title_advanced_external_storage" translatable="false">Use external storage</string>
@@ -917,7 +920,6 @@
     <string name="title_advanced_parse_classes_hint">This will more accurately display messages, but possibly with a delay</string>
 
     <string name="title_advanced_restore_on_launch_hint">Restore last app state when restarted via the launcher icon within %1$d minutes</string>
-    <string name="title_advanced_language_detection_hint">Language detection support depends on the device manufacturer</string>
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
     <string name="title_advanced_expandall_hint">The answer button will not be shown when multiple messages are expanded because it is unclear which message the button applies to</string>
     <string name="title_advanced_autoseen_hint">Automatically marking messages as read on expanding can be disabled in the advanced account settings of each account</string>
@@ -1743,6 +1745,8 @@
     <string name="title_rule_name">Name</string>
     <string name="title_rule_order">Order</string>
     <string name="title_rule_enabled">Enabled</string>
+    <string name="title_rule_daily">Run daily (only)</string>
+    <string name="title_rule_age">Messages older than (days)</string>
     <string name="title_rule_stop">Stop processing rules after executing this rule</string>
     <string name="title_rule_sender">Sender contains</string>
     <string name="title_rule_sender_known">Sender is a contact</string>

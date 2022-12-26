@@ -256,6 +256,7 @@ public class ApplicationEx extends Application
 
             WorkerAutoUpdate.init(this);
             WorkerCleanup.init(this);
+            WorkerDailyRules.init(this);
         }
 
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
@@ -640,7 +641,7 @@ public class ApplicationEx extends Application
         } else if (version < 1931)
             editor.remove("button_force_light").remove("fake_dark");
         else if (version < 1933) {
-            editor.putBoolean("lt_enabled", true);
+            editor.putBoolean("lt_enabled", false);
             if (prefs.contains("disable_top")) {
                 editor.putBoolean("use_top", !prefs.getBoolean("disable_top", false));
                 editor.remove("disable_top");
@@ -669,6 +670,9 @@ public class ApplicationEx extends Application
                     editor.putBoolean("compose_style", prefs.getBoolean("compose_block", false));
                 editor.remove("compose_block");
             }
+        } else if (version < 2016) {
+            if (!prefs.contains("reset_snooze"))
+                editor.putBoolean("reset_snooze", false);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

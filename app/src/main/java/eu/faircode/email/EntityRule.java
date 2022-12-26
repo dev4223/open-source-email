@@ -93,6 +93,8 @@ public class EntityRule {
     @NonNull
     public boolean enabled;
     @NonNull
+    public boolean daily;
+    @NonNull
     public boolean stop;
     @NonNull
     public String condition;
@@ -155,6 +157,21 @@ public class EntityRule {
     boolean matches(Context context, EntityMessage message, List<Header> headers, String html) throws MessagingException {
         try {
             JSONObject jcondition = new JSONObject(condition);
+
+            // general
+            if (this.daily) {
+                JSONObject jgeneral = jcondition.optJSONObject("general");
+                if (jgeneral != null) {
+                    int age = jgeneral.optInt("age");
+                    if (age > 0) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTimeInMillis(message.received);
+                        cal.add(Calendar.DAY_OF_MONTH, age);
+                        if (cal.getTimeInMillis() > new Date().getTime())
+                            return false;
+                    }
+                }
+            }
 
             // Sender
             JSONObject jsender = jcondition.optJSONObject("sender");
@@ -453,10 +470,10 @@ public class EntityRule {
 
         if (matched)
             EntityLog.log(context, EntityLog.Type.Rules, message,
-                    "Rule=" + name + ":" + order + " matched " +
+                    "Rule=" + name + "@" + order + " matched " +
                             " needle=" + needle + " haystack=" + haystack + " regex=" + regex);
         else
-            Log.i("Rule=" + name + ":" + order + " matched=" + matched +
+            Log.i("Rule=" + name + "@" + order + " matched=" + matched +
                     " needle=" + needle + " haystack=" + haystack + " regex=" + regex);
         return matched;
     }
@@ -473,7 +490,8 @@ public class EntityRule {
     private boolean _execute(Context context, EntityMessage message) throws JSONException, IllegalArgumentException {
         JSONObject jaction = new JSONObject(action);
         int type = jaction.getInt("type");
-        EntityLog.log(context, EntityLog.Type.Rules, message, "Executing rule=" + type + ":" + name);
+        EntityLog.log(context, EntityLog.Type.Rules, message,
+                "Executing rule=" + type + ":" + this.name + "@" + this.order);
 
         switch (type) {
             case TYPE_NOOP:
@@ -1258,6 +1276,7 @@ public class EntityRule {
                     this.name.equals(other.name) &&
                     this.order == other.order &&
                     this.enabled == other.enabled &&
+                    this.daily == other.daily &&
                     this.stop == other.stop &&
                     this.condition.equals(other.condition) &&
                     this.action.equals(other.action) &&
@@ -1309,6 +1328,7 @@ public class EntityRule {
         json.put("name", name);
         json.put("order", order);
         json.put("enabled", enabled);
+        json.put("daily", daily);
         json.put("stop", stop);
         json.put("condition", condition);
         json.put("action", action);
@@ -1325,6 +1345,7 @@ public class EntityRule {
         rule.name = json.getString("name");
         rule.order = json.getInt("order");
         rule.enabled = json.getBoolean("enabled");
+        rule.daily = json.optBoolean("daily");
         rule.stop = json.getBoolean("stop");
         rule.condition = json.getString("condition");
         rule.action = json.getString("action");
