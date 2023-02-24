@@ -225,7 +225,6 @@ Memblokir domain pengirim menggunakan aturan saring, yang merupakan fitur pro.  
     <string name="title_setup_export_remark">        Karena berkas pengaturan berisi seluruh informasi pengaturan dan akun, maka di enkripsi dengan kata sandi.
 Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lupa!    </string>
     <string name="title_setup_export_do">Berkas ekspor akan berisi seluruh pengaturan dan data, tetapi tidak ada pesan dan gambar yang mengacu dalam tanda tangan</string>
-    <string name="title_setup_import_do">Akun yang diimpor akan ditambahkan tanpa menimpa akun yang sudah ada</string>
     <string name="title_setup_password">Kata Sandi</string>
     <string name="title_setup_password_chars">Kata sandi mengandung karakter kontrol atau spasi</string>
     <string name="title_setup_password_repeat">Ulangi kata sandi</string>
@@ -301,6 +300,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_section_encryption">Enkripsi</string>
     <string name="title_advanced_section_notifications">Pemberitahuan</string>
     <string name="title_advanced_section_misc">Lainnya</string>
+    <string name="title_advanced_section_backup">Cadangan</string>
     <string name="title_advanced_default">Semua opsi biasanya telah menggunakan nilai bawaan, yang tidak perlu diubah untuk menggunakan aplikasi</string>
     <string name="title_advanced_receive">Terima pesan untuk semua akun</string>
     <string name="title_advanced_when">Kapan</string>
@@ -523,10 +523,10 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_quick_filter">Tampilkan ikon filter cepat yang tidak mengganggu</string>
     <string name="title_advanced_quick_scroll">Tampilkan ikon gulir cepat ke atas/bawah yang tidak mengganggu</string>
     <string name="title_advanced_autoread">Secara otomatis menandai pesan telah terbaca saat memindahkan pesan</string>
-    <string name="title_advanced_star_snoozed">Secara otomatis menambahkan bintang saat penundaan pesan</string>
     <string name="title_advanced_autounstar">Secara otomatis menghapus bintang saat memindahkan pesan</string>
-    <string name="title_advanced_auto_important">Secara otomatis pesan berbintang menjadi pesan penting</string>
     <string name="title_advanced_reset_importance">Atur ulang \'label penting\' saat pesan di pindah</string>
+    <string name="title_advanced_star_snoozed">Secara otomatis menambahkan bintang saat penundaan pesan</string>
+    <string name="title_advanced_auto_important">Secara otomatis pesan berbintang menjadi pesan penting</string>
     <string name="title_advanced_swipe_reply">Usap ke kanan pesan yang dibentangkan untuk balas</string>
     <string name="title_advanced_default_snooze">Waktu tunda/jeda bawaan</string>
     <string name="title_advanced_notifications">Kelola pemberitahuan</string>
@@ -1269,6 +1269,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_sort_on_attachments">Memiliki lampiran</string>
     <string name="title_sort_on_hidden">Tersembunyi</string>
     <string name="title_sort_ascending">Terlama dahulu</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Urutan</string>
     <string name="title_filter">Filter</string>
     <string name="title_filter_seen">Sudah dibaca</string>
     <string name="title_filter_unflagged">Tidak berbintang</string>
@@ -1341,6 +1342,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_rule_time_after">Diterima setelah</string>
     <string name="title_rule_time_before">Diterima sebelum</string>
     <string name="title_rule_time_rel">Waktu relatif (diterima) antara</string>
+    <string name="title_rule_time_every_day">Setiap hari</string>
     <string name="title_rule_regex">Regex</string>
     <string name="title_rule_and">DAN</string>
     <string name="title_rule_action">Tindakan</string>

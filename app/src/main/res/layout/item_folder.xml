@@ -180,6 +180,7 @@
                 android:text="type"
                 android:textAppearance="@android:style/TextAppearance.Small"
                 android:textStyle="italic"
+                app:layout_constraintEnd_toStartOf="@+id/tvTotal"
                 app:layout_constraintStart_toEndOf="@id/ivType"
                 app:layout_constraintTop_toBottomOf="@id/tvName" />
 
@@ -282,10 +283,10 @@
                 android:backgroundTint="?attr/colorInfoBackground"
                 android:drawableEnd="@drawable/twotone_help_24"
                 android:drawablePadding="6dp"
-                app:drawableTint="?attr/colorInfoForeground"
                 android:text="@string/title_setup_help"
                 android:textColor="?attr/colorInfoForeground"
                 android:textStyle="bold"
+                app:drawableTint="?attr/colorInfoForeground"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvError" />
 

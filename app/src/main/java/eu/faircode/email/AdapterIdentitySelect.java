@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -79,10 +79,13 @@ public class AdapterIdentitySelect extends ArrayAdapter<TupleIdentityEx> {
             text1.setText(identity.getDisplayName() + " <" + identity.email + ">");
         else {
             text1.setText(identity.getDisplayName() + (identity.primary ? " ★" : ""));
-            text2.setText(identity.accountName + "/" + identity.email);
+            text2.setText(identity.accountName + ":" + identity.email);
         }
 
-        tvExtra.setText((identity.cc == null ? "" : "+CC") + (identity.bcc == null ? "" : "+BCC"));
+        tvExtra.setText(
+                (identity.cc == null ? "" : "+CC") +
+                        (identity.bcc == null ? "" : "+BCC") +
+                        (identity.replyto != null && !identity.replyto.equals(identity.email) ? "<<" : ""));
 
         text2.setVisibility(single ? View.GONE : View.VISIBLE);
         tvExtra.setVisibility(identity.cc == null && identity.bcc == null ? View.GONE : View.VISIBLE);

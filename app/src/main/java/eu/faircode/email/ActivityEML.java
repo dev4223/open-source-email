@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ContentResolver;
@@ -392,7 +392,7 @@ public class ActivityEML extends ActivityBase {
                                 create.setType(apart.attachment.getMimeType());
                                 if (!TextUtils.isEmpty(apart.attachment.name))
                                     create.putExtra(Intent.EXTRA_TITLE, apart.attachment.name);
-                                Helper.openAdvanced(create);
+                                Helper.openAdvanced(ActivityEML.this, create);
                                 if (create.resolveActivity(getPackageManager()) == null) // system whitelisted
                                     ToastEx.makeText(ActivityEML.this, R.string.title_no_saf, Toast.LENGTH_LONG).show();
                                 else
@@ -581,6 +581,7 @@ public class ActivityEML extends ActivityBase {
                     try (EmailService iservice = new EmailService(
                             context, account.getProtocol(), account.realm, account.encryption, account.insecure, account.unicode, true)) {
                         iservice.setPartialFetch(account.partial_fetch);
+                        iservice.setRawFetch(account.raw_fetch);
                         iservice.setIgnoreBodyStructureSize(account.ignore_size);
                         iservice.connect(account);
 

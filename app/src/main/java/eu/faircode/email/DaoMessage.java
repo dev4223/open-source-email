@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.database.Cursor;
@@ -349,8 +349,9 @@ public interface DaoMessage {
             //" OR (:message AND `preview` LIKE :find COLLATE NOCASE)" + // no index
             //" OR (:notes AND `notes` LIKE :find COLLATE NOCASE)" + // no index
             //" OR (:headers AND `headers` LIKE :find COLLATE NOCASE)" + // no index
-            " OR (attachment.name LIKE :find COLLATE NOCASE)" + // no index
-            " OR (attachment.type LIKE :find COLLATE NOCASE)) AS matched" + // no index
+            //" OR (attachment.name LIKE :find COLLATE NOCASE)" + // no index
+            //" OR (attachment.type LIKE :find COLLATE NOCASE)" +
+            ") AS matched" + // no index
             " FROM message" +
             " LEFT JOIN attachment ON attachment.message = message.id" +
             " WHERE NOT ui_hide" +
@@ -488,6 +489,11 @@ public interface DaoMessage {
             " WHERE folder = :folder" +
             " AND NOT ui_seen")
     int countUnseen(long folder);
+
+    @Query("SELECT COUNT(*) FROM message" +
+            " WHERE folder = :folder" +
+            " AND ui_hide")
+    int countHidden(long folder);
 
     @Query("SELECT COUNT(*)" +
             " FROM message" +

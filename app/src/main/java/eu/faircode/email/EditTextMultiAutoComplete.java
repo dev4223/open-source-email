@@ -16,9 +16,12 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
+import android.content.ClipData;
+import android.content.ClipDescription;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
@@ -221,6 +224,32 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
         setSelection(edit.length());
     }
 
+    @Override
+    public boolean onTextContextMenuItem(int id) {
+        try {
+            if (id == android.R.id.paste) {
+                Context context = getContext();
+                ClipboardManager cbm = Helper.getSystemService(context, ClipboardManager.class);
+                if (cbm != null && cbm.hasPrimaryClip()) {
+                    ClipData data = cbm.getPrimaryClip();
+                    ClipDescription description = (data == null ? null : data.getDescription());
+                    ClipData.Item item = (data == null ? null : data.getItemAt(0));
+                    CharSequence text = (item == null ? null : item.coerceToText(context));
+                    if (text != null) {
+                        CharSequence label = (description == null ? "coerced_plain_text" : description.getLabel());
+                        data = ClipData.newPlainText(label, text.toString());
+                        cbm.setPrimaryClip(data);
+                    }
+                }
+            }
+
+            return super.onTextContextMenuItem(id);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return false;
+        }
+    }
+
     private final Runnable update = new Runnable() {
         @Override
         public void run() {
@@ -336,7 +365,7 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
                                     Integer has = encryption.get(email);
                                     if (has == null) {
                                         final List<Address> recipient = Arrays.asList(new Address[]{parsed[0]});
-                                        Helper.getParallelExecutor().submit(new Runnable() {
+                                        Helper.getUIExecutor().submit(new Runnable() {
                                             @Override
                                             public void run() {
                                                 try {

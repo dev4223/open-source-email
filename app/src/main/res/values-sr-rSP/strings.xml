@@ -128,7 +128,6 @@
     <string name="title_setup_error">Грешка</string>
     <string name="title_setup_export">Извези поставке</string>
     <string name="title_setup_import">Увези поставке</string>
-    <string name="title_setup_import_do">Увезени налози ће бити додати поред постојећих</string>
     <string name="title_setup_password">Лозинка</string>
     <string name="title_setup_password_repeat">Поновите лозинку</string>
     <string name="title_setup_password_missing">Лозинка недостаје</string>
@@ -166,6 +165,7 @@
     <string name="title_advanced_section_encryption">Шифровање</string>
     <string name="title_advanced_section_notifications">Обавештења</string>
     <string name="title_advanced_section_misc">Разно</string>
+    <string name="title_advanced_section_backup">Резервна копија</string>
     <string name="title_advanced_when">Када</string>
     <string name="title_advanced_schedule">Распоред</string>
     <string name="title_advanced_advanced">Напредно</string>
@@ -663,6 +663,7 @@
     <string name="title_sort_on_attachments">Прилози</string>
     <string name="title_sort_on_hidden">Сакривеним</string>
     <string name="title_sort_ascending">Прво најстарије</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Редослед</string>
     <string name="title_filter">Филтрирај по</string>
     <string name="title_filter_seen">Прочитаним</string>
     <string name="title_filter_unflagged">Без звездице</string>
@@ -718,6 +719,7 @@
     <string name="title_rule_subject">Наслов садржи</string>
     <string name="title_rule_attachments">Има прилог</string>
     <string name="title_rule_header">Заглавље садржи</string>
+    <string name="title_rule_time_every_day">Сваки дан</string>
     <string name="title_rule_regex">Регуларни израз</string>
     <string name="title_rule_and">И</string>
     <string name="title_rule_action">Радња</string>

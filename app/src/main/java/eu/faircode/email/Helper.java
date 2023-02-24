@@ -16,11 +16,14 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
+
+import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
+import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -41,6 +44,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -61,6 +65,7 @@ import android.os.PowerManager;
 import android.os.StatFs;
 import android.os.storage.StorageManager;
 import android.provider.Browser;
+import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
@@ -71,6 +76,8 @@ import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.TransformationMethod;
 import android.util.DisplayMetrics;
 import android.util.Pair;
 import android.util.TypedValue;
@@ -123,6 +130,7 @@ import androidx.viewpager.widget.PagerAdapter;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 
 import org.openintents.openpgp.util.OpenPgpApi;
 
@@ -147,6 +155,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -161,7 +170,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -195,7 +203,7 @@ public class Helper {
     static final String PRIVACY_URI = "https://github.com/M66B/FairEmail/blob/master/PRIVACY.md";
     static final String TUTORIALS_URI = "https://github.com/M66B/FairEmail/tree/master/tutorials#main";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
-    static final String SUPPORT_URI = "https://contact.faircode.eu/";
+    static final String SUPPORT_URI = "https://contact.faircode.eu/?product=fairemailsupport";
     static final String TEST_URI = "https://play.google.com/apps/testing/" + BuildConfig.APPLICATION_ID;
     static final String BIMI_PRIVACY_URI = "https://datatracker.ietf.org/doc/html/draft-brotman-ietf-bimi-guidance-03#section-7.4";
     static final String LT_PRIVACY_URI = "https://languagetool.org/legal/privacy";
@@ -246,12 +254,11 @@ public class Helper {
             "wsc", "wsf", "wsh"
     ));
 
-    static ExecutorService sSerialExecutor = null;
-    static ExecutorService sParallelExecutor = null;
-    static ExecutorService sSerialTaskExecutor = null;
-
-    static int sOperationIndex = 0;
-    static final ExecutorService[] sOperationExecutor = new ExecutorService[OPERATION_WORKERS];
+    private static ExecutorService sSerialExecutor = null;
+    private static ExecutorService sParallelExecutor = null;
+    private static ExecutorService sUIExecutor = null;
+    private static ExecutorService sMediaExecutor = null;
+    private static ExecutorService sDownloadExecutor = null;
 
     static ExecutorService getSerialExecutor() {
         if (sSerialExecutor == null)
@@ -265,32 +272,47 @@ public class Helper {
         return sParallelExecutor;
     }
 
-    static ExecutorService getSerialTaskExecutor() {
-        if (sSerialTaskExecutor == null)
-            sSerialTaskExecutor = getBackgroundExecutor(1, "task");
-        return sSerialTaskExecutor;
+    static ExecutorService getUIExecutor() {
+        if (sUIExecutor == null)
+            sUIExecutor = getBackgroundExecutor(0, "UI");
+        return sUIExecutor;
     }
 
-    static ExecutorService getOperationExecutor() {
-        synchronized (sOperationExecutor) {
-            if (sOperationExecutor[sOperationIndex] == null)
-                sOperationExecutor[sOperationIndex] = getBackgroundExecutor(1, "operation");
-            ExecutorService result = sOperationExecutor[sOperationIndex];
-            sOperationIndex = (sOperationIndex + 1) % sOperationExecutor.length;
-            return result;
-        }
+    static ExecutorService getMediaTaskExecutor() {
+        if (sMediaExecutor == null)
+            sMediaExecutor = getBackgroundExecutor(1, "media");
+        return sMediaExecutor;
     }
 
-    private static ExecutorService getBackgroundExecutor(int threads, final String name) {
+    static ExecutorService getDownloadTaskExecutor() {
+        if (sDownloadExecutor == null)
+            sDownloadExecutor = getBackgroundExecutor(0, "download");
+        return sDownloadExecutor;
+    }
+
+    static ExecutorService getBackgroundExecutor(int threads, final String name) {
         ThreadFactory factory = new ThreadFactory() {
             private final AtomicInteger threadId = new AtomicInteger();
 
             @Override
             public Thread newThread(@NonNull Runnable runnable) {
-                Thread thread = new Thread(runnable);
-                thread.setName("FairEmail_bg_" + name + "_" + threadId.getAndIncrement());
-                thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-                return thread;
+                int delay = 1;
+                while (true)
+                    try {
+                        Thread thread = new Thread(runnable);
+                        thread.setName("FairEmail_bg_" + name + "_" + threadId.getAndIncrement());
+                        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
+                        return thread;
+                    } catch (OutOfMemoryError ex) {
+                        Log.w(ex);
+                        try {
+                            Thread.sleep(delay * 1000L);
+                        } catch (InterruptedException ignored) {
+                        }
+                        delay *= 2;
+                        if (delay > 7)
+                            throw ex;
+                    }
             }
         };
 
@@ -298,21 +320,19 @@ public class Helper {
             // java.lang.OutOfMemoryError: pthread_create (1040KB stack) failed: Try again
             // 1040 KB native stack size / 32 KB thread stack size ~ 32 threads
             int processors = Runtime.getRuntime().availableProcessors(); // Modern devices: 8
-            threads = Math.max(8, processors * 2);
-        }
-
-        if (threads == 0)
+            threads = Math.max(8, processors * 2) + 1;
             return new ThreadPoolExecutorEx(
                     name,
-                    0, Integer.MAX_VALUE,
-                    60L, TimeUnit.SECONDS,
-                    new SynchronousQueue<Runnable>(),
+                    threads,
+                    threads,
+                    3, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<Runnable>(),
                     factory);
-        else if (threads == 1)
+        } else if (threads == 1)
             return new ThreadPoolExecutorEx(
                     name,
                     threads, threads,
-                    0L, TimeUnit.MILLISECONDS,
+                    3, TimeUnit.SECONDS,
                     new PriorityBlockingQueue<Runnable>(10, new PriorityComparator()),
                     factory) {
                 private final AtomicLong sequenceId = new AtomicLong();
@@ -332,7 +352,7 @@ public class Helper {
             return new ThreadPoolExecutorEx(
                     name,
                     threads, threads,
-                    0L, TimeUnit.MILLISECONDS,
+                    3, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<Runnable>(),
                     factory);
     }
@@ -347,6 +367,8 @@ public class Helper {
                 BlockingQueue<Runnable> workQueue,
                 ThreadFactory threadFactory) {
             super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+            if (keepAliveTime != 0)
+                allowCoreThreadTimeOut(true);
             this.name = name;
         }
 
@@ -856,14 +878,19 @@ public class Helper {
 
     // View
 
+    static Integer actionBarHeight = null;
+
     static int getActionBarHeight(Context context) {
-        int actionBarHeight;
-        TypedValue tv = new TypedValue();
-        if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-            DisplayMetrics dm = context.getResources().getDisplayMetrics();
-            return TypedValue.complexToDimensionPixelSize(tv.data, dm);
-        } else
-            return Helper.dp2pixels(context, 56);
+        if (actionBarHeight == null) {
+            TypedValue tv = new TypedValue();
+            if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+                DisplayMetrics dm = context.getResources().getDisplayMetrics();
+                actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, dm);
+            } else
+                actionBarHeight = Helper.dp2pixels(context, 56);
+        }
+
+        return actionBarHeight;
     }
 
     static int getBottomNavigationHeight(Context context) {
@@ -1196,7 +1223,6 @@ public class Helper {
 
         return Uri.parse(SUPPORT_URI)
                 .buildUpon()
-                .appendQueryParameter("product", "fairemailsupport")
                 .appendQueryParameter("version", BuildConfig.VERSION_NAME + BuildConfig.REVISION)
                 .appendQueryParameter("locale", slocale.toString())
                 .appendQueryParameter("language", language == null ? "" : language)
@@ -1479,6 +1505,14 @@ public class Helper {
                 isRealme() ||
                 isBlackview() ||
                 isSony());
+    }
+
+    static boolean isAggressivelyKilling() {
+        return (BuildConfig.DEBUG ||
+                isSamsung() ||
+                isOnePlus() ||
+                isHuawei() ||
+                isXiaomi());
     }
 
     static boolean isAndroid12() {
@@ -1920,6 +1954,22 @@ public class Helper {
     }
     // https://issuetracker.google.com/issues/37054851
 
+    static String getPrintableString(String value) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char kar = value.charAt(i);
+            if (kar == '\n')
+                result.append('|');
+            else if (kar == ' ')
+                result.append('_');
+            else if (!Helper.isPrintableChar(kar) || kar == '\u00a0')
+                result.append('{').append(Integer.toHexString(kar)).append('}');
+            else
+                result.append(kar);
+        }
+        return result.toString();
+    }
+
     static DateFormat getTimeInstance(Context context) {
         return getTimeInstance(context, SimpleDateFormat.MEDIUM);
     }
@@ -1965,6 +2015,17 @@ public class Helper {
         if (style == SimpleDateFormat.MEDIUM)
             skeleton += "s";
         return android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
+    }
+
+    static CharSequence getRelativeDateSpanString(Context context, long millis) {
+        Calendar cal0 = Calendar.getInstance();
+        Calendar cal1 = Calendar.getInstance();
+        cal0.setTimeInMillis(millis);
+        boolean thisMonth = (cal0.get(Calendar.MONTH) == cal1.get(Calendar.MONTH));
+        boolean thisYear = (cal0.get(Calendar.YEAR) == cal1.get(Calendar.YEAR));
+        String skeleton = (thisMonth && thisYear ? "MMM-d" : "Y-M-d");
+        String format = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
+        return new SimpleDateFormat(format).format(millis);
     }
 
     static CharSequence getRelativeTimeSpanString(Context context, long millis) {
@@ -2284,8 +2345,12 @@ public class Helper {
         };
     }
 
-    static boolean isDot(char c) {
-        return (c == '.' /* Latin */ || c == '。' /* Chinese */);
+    static boolean isEndChar(char c) {
+        return (c == '.' /* Latin */ ||
+                c == '。' /* Chinese */ ||
+                c == ',' ||
+                c == ':' || c == ';' ||
+                c == '?' || c == '!');
     }
 
     static String trim(String value, String chars) {
@@ -2487,15 +2552,21 @@ public class Helper {
     }
 
     static List<File> listFiles(File dir) {
-        List<File> result = new ArrayList<>();
-        File[] files = dir.listFiles();
-        if (files != null)
-            for (File file : files)
-                if (file.isDirectory())
-                    result.addAll(listFiles(file));
-                else
-                    result.add(file);
-        return result;
+        return listFiles(dir, null);
+    }
+
+    static List<File> listFiles(File dir, Long minSize) {
+        List<File> files = new ArrayList<>();
+        if (dir != null) {
+            File[] listed = dir.listFiles();
+            if (listed != null)
+                for (File file : listed)
+                    if (file.isDirectory())
+                        files.addAll(listFiles(file, minSize));
+                    else if (minSize == null || file.length() > minSize)
+                        files.add(file);
+        }
+        return files;
     }
 
     static long getAvailableStorageSpace() {
@@ -2533,14 +2604,17 @@ public class Helper {
         return size;
     }
 
-    static void openAdvanced(Intent intent) {
+    static void openAdvanced(Context context, Intent intent) {
         // https://issuetracker.google.com/issues/72053350
         intent.putExtra("android.content.extra.SHOW_ADVANCED", true);
         intent.putExtra("android.content.extra.FANCY", true);
         intent.putExtra("android.content.extra.SHOW_FILESIZE", true);
         intent.putExtra("android.provider.extra.SHOW_ADVANCED", true);
-        //File initial = Environment.getExternalStorageDirectory();
-        //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.fromFile(initial));
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String default_folder = prefs.getString("default_folder", null);
+        if (default_folder != null)
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(default_folder));
     }
 
     static class ByteArrayInOutStream extends ByteArrayOutputStream {
@@ -2561,6 +2635,23 @@ public class Helper {
 
     static boolean isUiThread() {
         return (Looper.myLooper() == Looper.getMainLooper());
+    }
+
+    static boolean isPersisted(Context context, Uri uri, boolean read, boolean write) {
+        try {
+            List<UriPermission> uperms = context.getContentResolver().getPersistedUriPermissions();
+            for (UriPermission uperm : uperms)
+                if (uperm.getUri().equals(uri)) {
+                    boolean canRead = uperm.isReadPermission();
+                    boolean canWrite = uperm.isWritePermission();
+                    Log.i(uri + " read=" + read + "/" + canRead + " write=" + write + "/" + canWrite);
+                    return (!read || canRead) && (!write || canWrite);
+                }
+            return false;
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return !BuildConfig.DEBUG;
+        }
     }
 
     // Cryptography
@@ -2646,14 +2737,13 @@ public class Helper {
     }
 
     static boolean canAuthenticate(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String pin = prefs.getString("pin", null);
-        if (!TextUtils.isEmpty(pin))
-            return true;
-
         try {
             BiometricManager bm = BiometricManager.from(context);
-            return (bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS);
+            if (bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS)
+                return true;
+            if (bm.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS)
+                return true;
+            return false;
         } catch (Throwable ex) {
             /*
                 java.lang.SecurityException: eu.faircode.email from uid 10377 not allowed to perform USE_FINGERPRINT
@@ -2723,37 +2813,38 @@ public class Helper {
                     BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
                             .setTitle(activity.getString(enabled == null ? R.string.app_name : R.string.title_setup_biometrics));
 
-                    KeyguardManager kgm = (KeyguardManager) activity.getSystemService(Context.KEYGUARD_SERVICE);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && kgm != null && kgm.isDeviceSecure())
-                        info.setDeviceCredentialAllowed(true);
+                    BiometricManager bm = BiometricManager.from(activity);
+                    int authenticators = BiometricManager.Authenticators.BIOMETRIC_WEAK;
+                    if (bm.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS)
+                        authenticators |= BiometricManager.Authenticators.DEVICE_CREDENTIAL;
                     else
                         info.setNegativeButtonText(activity.getString(android.R.string.cancel));
-
-                    info.setConfirmationRequired(false);
+                    info.setAllowedAuthenticators(authenticators)
+                            .setConfirmationRequired(false);
 
                     info.setSubtitle(activity.getString(enabled == null ? R.string.title_setup_biometrics_unlock
                             : enabled
                             ? R.string.title_setup_biometrics_disable
                             : R.string.title_setup_biometrics_enable));
 
-                    final BiometricPrompt prompt = new BiometricPrompt(activity, Helper.getParallelExecutor(),
+                    final BiometricPrompt prompt = new BiometricPrompt(activity, Helper.getUIExecutor(),
                             new BiometricPrompt.AuthenticationCallback() {
                                 private int fails = 0;
 
                                 @Override
                                 public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-                                    if (isCancelled(errorCode) || errorCode == BiometricPrompt.ERROR_UNABLE_TO_PROCESS)
+                                    if (isBioCancelled(errorCode) || errorCode == BiometricPrompt.ERROR_UNABLE_TO_PROCESS)
                                         Log.w("Authenticate biometric error " + errorCode + ": " + errString);
                                     else
                                         Log.e("Authenticate biometric error " + errorCode + ": " + errString);
 
-                                    if (isHardwareFailure(errorCode)) {
+                                    if (isBioHardwareFailure(errorCode)) {
                                         prefs.edit().remove("biometrics").apply();
                                         ApplicationEx.getMainHandler().post(authenticated);
                                         return;
                                     }
 
-                                    if (!isCancelled(errorCode))
+                                    if (!isBioCancelled(errorCode))
                                         ApplicationEx.getMainHandler().post(new RunnableEx("auth:error") {
                                             @Override
                                             public void delegate() {
@@ -2778,19 +2869,6 @@ public class Helper {
                                     Log.w("Authenticate biometric failed");
                                     if (++fails >= 3)
                                         ApplicationEx.getMainHandler().post(cancelled);
-                                }
-
-                                private boolean isCancelled(int errorCode) {
-                                    return (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
-                                            errorCode == BiometricPrompt.ERROR_CANCELED ||
-                                            errorCode == BiometricPrompt.ERROR_USER_CANCELED);
-                                }
-
-                                private boolean isHardwareFailure(int errorCode) {
-                                    return (errorCode == BiometricPrompt.ERROR_HW_UNAVAILABLE ||
-                                            errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS || // No fingerprints enrolled.
-                                            errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
-                                            errorCode == BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL);
                                 }
                             });
 
@@ -2957,6 +3035,80 @@ public class Helper {
         prefs.edit().remove("last_authentication").apply();
     }
 
+    static void setupPasswordToggle(FragmentActivity activity, TextInputLayout tilPassword) {
+        boolean can = canAuthenticate(activity);
+        boolean secure = isSecure(activity);
+
+        tilPassword.setEndIconMode(can || secure ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
+        tilPassword.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TransformationMethod tm = tilPassword.getEditText().getTransformationMethod();
+                if (tm == null)
+                    tilPassword.getEditText().setTransformationMethod(PasswordTransformationMethod.getInstance());
+                else {
+                    if (can) {
+                        BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
+                                .setTitle(activity.getString(R.string.title_setup_biometrics))
+                                .setSubtitle(activity.getString(R.string.title_password));
+
+                        BiometricManager bm = BiometricManager.from(activity);
+                        int authenticators = BiometricManager.Authenticators.BIOMETRIC_WEAK;
+                        if (bm.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS)
+                            authenticators |= BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+                        else
+                            info.setNegativeButtonText(activity.getString(android.R.string.cancel));
+                        info.setAllowedAuthenticators(authenticators)
+                                .setConfirmationRequired(false);
+
+                        BiometricPrompt prompt = new BiometricPrompt(activity, Helper.getUIExecutor(),
+                                new BiometricPrompt.AuthenticationCallback() {
+                                    @Override
+                                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                                        tilPassword.post(new RunnableEx("tilPassword") {
+                                            @Override
+                                            protected void delegate() {
+                                                tilPassword.getEditText().setTransformationMethod(null);
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                                        tilPassword.post(new RunnableEx("tilPassword") {
+                                            @Override
+                                            protected void delegate() {
+                                                if (isBioCancelled(errorCode))
+                                                    return;
+                                                else if (isBioHardwareFailure(errorCode))
+                                                    tilPassword.getEditText().setTransformationMethod(null);
+                                                else
+                                                    ToastEx.makeText(activity, "Error " + errorCode + ": " + errString, Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                                    }
+                                });
+                        prompt.authenticate(info.build());
+                    } else if (secure)
+                        tilPassword.getEditText().setTransformationMethod(null);
+                }
+            }
+        });
+    }
+
+    private static boolean isBioCancelled(int errorCode) {
+        return (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                errorCode == BiometricPrompt.ERROR_CANCELED ||
+                errorCode == BiometricPrompt.ERROR_USER_CANCELED);
+    }
+
+    private static boolean isBioHardwareFailure(int errorCode) {
+        return (errorCode == BiometricPrompt.ERROR_HW_UNAVAILABLE ||
+                errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS || // No fingerprints enrolled.
+                errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
+                errorCode == BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL);
+    }
+
     static void selectKeyAlias(final Activity activity, final LifecycleOwner owner, final String alias, final IKeyAlias intf) {
         final Context context = activity.getApplicationContext();
         new Thread(new Runnable() {
@@ -3066,7 +3218,11 @@ public class Helper {
     // Miscellaneous
 
     static void gc() {
-        if (BuildConfig.DEBUG) {
+        gc(false);
+    }
+
+    static void gc(boolean force) {
+        if (force || BuildConfig.DEBUG) {
             Runtime.getRuntime().gc();
             try {
                 Thread.sleep(50);

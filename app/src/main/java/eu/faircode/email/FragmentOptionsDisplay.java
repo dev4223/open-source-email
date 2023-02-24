@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -87,8 +87,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swClosePane;
     private TextView tvColumnWidth;
     private SeekBar sbColumnWidth;
+    private SwitchCompat swHideToolbar;
     private SwitchCompat swNavOptions;
     private SwitchCompat swNavCategories;
+    private SwitchCompat swNavLastSync;
     private SwitchCompat swNavMessageCount;
     private SwitchCompat swNavUnseenDrafts;
     private SwitchCompat swNavPinnedCount;
@@ -162,6 +164,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     private SwitchCompat swContrast;
     private SwitchCompat swHyphenation;
+    private TextView tvHyphenationHint;
     private Spinner spDisplayFont;
     private SwitchCompat swMonospacedPre;
     private SwitchCompat swTextSeparators;
@@ -196,7 +199,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "date", "date_week", "date_fixed", "date_bold", "group_category",
             "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers",
             "portrait2", "portrait2c", "landscape", "close_pane", "column_width",
-            "nav_options", "nav_categories", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
+            "hide_toolbar", "nav_options", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
             "threading", "threading_unread", "indentation", "seekbar", "actionbar", "actionbar_swap", "actionbar_color",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
             "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "generated_icons", "identicons",
@@ -250,8 +253,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swClosePane = view.findViewById(R.id.swClosePane);
         tvColumnWidth = view.findViewById(R.id.tvColumnWidth);
         sbColumnWidth = view.findViewById(R.id.sbColumnWidth);
+        swHideToolbar = view.findViewById(R.id.swHideToolbar);
         swNavOptions = view.findViewById(R.id.swNavOptions);
         swNavCategories = view.findViewById(R.id.swNavCategories);
+        swNavLastSync = view.findViewById(R.id.swNavLastSync);
         swNavMessageCount = view.findViewById(R.id.swNavMessageCount);
         swNavUnseenDrafts = view.findViewById(R.id.swNavUnseenDrafts);
         swNavPinnedCount = view.findViewById(R.id.swNavPinnedCount);
@@ -323,6 +328,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swOverrideWidth = view.findViewById(R.id.swOverrideWidth);
         swContrast = view.findViewById(R.id.swContrast);
         swHyphenation = view.findViewById(R.id.swHyphenation);
+        tvHyphenationHint = view.findViewById(R.id.tvHyphenationHint);
         spDisplayFont = view.findViewById(R.id.spDisplayFont);
         swMonospacedPre = view.findViewById(R.id.swMonospacedPre);
         swTextSeparators = view.findViewById(R.id.swTextSeparators);
@@ -582,6 +588,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        swHideToolbar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("hide_toolbar", checked).apply();
+            }
+        });
+
         swNavOptions.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -600,6 +613,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("nav_count", checked).apply();
+            }
+        });
+
+        swNavLastSync.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("nav_last_sync", checked).apply();
             }
         });
 
@@ -1143,6 +1163,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         });
 
         swHyphenation.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? View.GONE : View.VISIBLE);
+        tvHyphenationHint.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? View.GONE : View.VISIBLE);
         swHyphenation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1409,8 +1430,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         tvColumnWidth.setText(getString(R.string.title_advanced_column_width, NF.format(column_width)));
         sbColumnWidth.setProgress(column_width);
 
+        swHideToolbar.setChecked(prefs.getBoolean("hide_toolbar", !BuildConfig.PLAY_STORE_RELEASE));
         swNavOptions.setChecked(prefs.getBoolean("nav_options", true));
         swNavCategories.setChecked(prefs.getBoolean("nav_categories", false));
+        swNavLastSync.setChecked(prefs.getBoolean("nav_last_sync", true));
         swNavMessageCount.setChecked(prefs.getBoolean("nav_count", false));
         swNavUnseenDrafts.setChecked(prefs.getBoolean("nav_unseen_drafts", false));
         swNavPinnedCount.setChecked(prefs.getBoolean("nav_count_pinned", false));

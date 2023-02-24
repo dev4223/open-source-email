@@ -16,11 +16,10 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
@@ -114,6 +113,7 @@ public class FragmentIdentity extends FragmentBase {
 
     private CheckBox cbSenderExtra;
     private CheckBox cbSenderExtraName;
+    private CheckBox cbReplyExtraName;
     private TextView etSenderExtra;
     private ImageButton ibSenderExtra;
     private EditText etReplyTo;
@@ -213,6 +213,7 @@ public class FragmentIdentity extends FragmentBase {
 
         cbSenderExtra = view.findViewById(R.id.cbSenderExtra);
         cbSenderExtraName = view.findViewById(R.id.cbSenderExtraName);
+        cbReplyExtraName = view.findViewById(R.id.cbReplyExtraName);
         etSenderExtra = view.findViewById(R.id.etSenderExtra);
         ibSenderExtra = view.findViewById(R.id.ibSenderExtra);
         etReplyTo = view.findViewById(R.id.etReplyTo);
@@ -395,6 +396,7 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 cbSenderExtraName.setEnabled(isChecked);
+                cbReplyExtraName.setEnabled(isChecked);
             }
         });
 
@@ -523,7 +525,6 @@ public class FragmentIdentity extends FragmentBase {
         btnAutoConfig.setEnabled(false);
         pbAutoConfig.setVisibility(View.GONE);
         cbInsecure.setVisibility(View.GONE);
-        tilPassword.setEndIconMode(id < 0 || Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
 
         btnAdvanced.setVisibility(View.GONE);
 
@@ -560,9 +561,52 @@ public class FragmentIdentity extends FragmentBase {
         etRealm.setText(account.realm);
         cbTrust.setChecked(false);
 
+        setAuth(auth);
+    }
+
+    private void setAuth(int auth) {
         etUser.setEnabled(auth == AUTH_TYPE_PASSWORD);
         tilPassword.getEditText().setEnabled(auth == AUTH_TYPE_PASSWORD);
         btnCertificate.setEnabled(auth == AUTH_TYPE_PASSWORD);
+
+        tilPassword.setEndIconMode(TextInputLayout.END_ICON_NONE);
+        tilPassword.setEndIconMode(auth == AUTH_TYPE_PASSWORD ? END_ICON_PASSWORD_TOGGLE : TextInputLayout.END_ICON_CUSTOM);
+
+        if (auth == AUTH_TYPE_PASSWORD)
+            Helper.setupPasswordToggle(getActivity(), tilPassword);
+        else {
+            tilPassword.setEndIconDrawable(R.drawable.twotone_edit_24);
+
+            tilPassword.setEndIconOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(view.getContext(), FragmentIdentity.this, view);
+
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_account_auth_password, 1, R.string.title_account_auth_password);
+
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            int id = item.getItemId();
+                            if (id == R.string.title_account_auth_password) {
+                                onPassword();
+                                return true;
+                            } else
+                                return false;
+                        }
+
+                        private void onPassword() {
+                            FragmentIdentity.this.auth = AUTH_TYPE_PASSWORD;
+                            setAuth(AUTH_TYPE_PASSWORD);
+                            tilPassword.getEditText().setText(null);
+                            tilPassword.requestFocus();
+                        }
+                    });
+
+                    popupMenu.show();
+                }
+            });
+        }
     }
 
     private void setProvider(EmailProvider provider) {
@@ -660,6 +704,7 @@ public class FragmentIdentity extends FragmentBase {
         args.putInt("color", btnColor.getColor());
         args.putBoolean("sender_extra", cbSenderExtra.isChecked());
         args.putBoolean("sender_extra_name", cbSenderExtraName.isChecked());
+        args.putBoolean("reply_extra_name", cbReplyExtraName.isChecked());
         args.putString("sender_extra_regex", etSenderExtra.getText().toString());
         args.putString("replyto", etReplyTo.getText().toString().trim());
         args.putString("cc", etCc.getText().toString().trim());
@@ -709,11 +754,7 @@ public class FragmentIdentity extends FragmentBase {
                 saving = false;
                 invalidateOptionsMenu();
                 Helper.setViewsEnabled(view, true);
-                if (auth != AUTH_TYPE_PASSWORD) {
-                    etUser.setEnabled(false);
-                    tilPassword.getEditText().setEnabled(false);
-                    btnCertificate.setEnabled(false);
-                }
+                setAuth(auth); // Disable user/password again
                 pbSave.setVisibility(View.GONE);
             }
 
@@ -747,6 +788,7 @@ public class FragmentIdentity extends FragmentBase {
 
                 boolean sender_extra = args.getBoolean("sender_extra");
                 boolean sender_extra_name = args.getBoolean("sender_extra_name");
+                boolean reply_extra_name = args.getBoolean("reply_extra_name");
                 String sender_extra_regex = args.getString("sender_extra_regex");
                 String replyto = args.getString("replyto");
                 String cc = args.getString("cc");
@@ -895,6 +937,8 @@ public class FragmentIdentity extends FragmentBase {
                         return true;
                     if (!Objects.equals(identity.sender_extra_name, sender_extra_name))
                         return true;
+                    if (!Objects.equals(identity.reply_extra_name, reply_extra_name))
+                        return true;
                     if (!Objects.equals(identity.sender_extra_regex, sender_extra_regex))
                         return true;
                     if (!Objects.equals(identity.replyto, replyto))
@@ -1002,6 +1046,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     identity.sender_extra = sender_extra;
                     identity.sender_extra_name = sender_extra_name;
+                    identity.reply_extra_name = reply_extra_name;
                     identity.sender_extra_regex = sender_extra_regex;
                     identity.replyto = replyto;
                     identity.cc = cc;
@@ -1187,6 +1232,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     cbSenderExtra.setChecked(identity != null && identity.sender_extra);
                     cbSenderExtraName.setChecked(identity != null && identity.sender_extra_name);
+                    cbReplyExtraName.setChecked(identity != null && identity.reply_extra_name);
                     etSenderExtra.setText(identity == null ? null : identity.sender_extra_regex);
                     etReplyTo.setText(identity == null ? null : identity.replyto);
                     etCc.setText(identity == null ? null : identity.cc);
@@ -1230,48 +1276,11 @@ public class FragmentIdentity extends FragmentBase {
                 }
 
                 Helper.setViewsEnabled(view, true);
-
-                if (auth != AUTH_TYPE_PASSWORD) {
-                    etUser.setEnabled(false);
-                    tilPassword.getEditText().setEnabled(false);
-                    btnCertificate.setEnabled(false);
-
-                    tilPassword.setEndIconDrawable(R.drawable.twotone_edit_24);
-                    tilPassword.setEndIconOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), FragmentIdentity.this, view);
-
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_account_auth_password, 1, R.string.title_account_auth_password);
-
-                            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                @Override
-                                public boolean onMenuItemClick(MenuItem item) {
-                                    int id = item.getItemId();
-                                    if (id == R.string.title_account_auth_password) {
-                                        onPassword();
-                                        return true;
-                                    } else
-                                        return false;
-                                }
-
-                                private void onPassword() {
-                                    auth = AUTH_TYPE_PASSWORD;
-                                    etUser.setEnabled(true);
-                                    tilPassword.getEditText().setText(null);
-                                    tilPassword.getEditText().setEnabled(true);
-                                    tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
-                                    tilPassword.requestFocus();
-                                }
-                            });
-
-                            popupMenu.show();
-                        }
-                    });
-                }
+                setAuth(auth);
 
                 cbPrimary.setEnabled(cbSynchronize.isChecked());
                 cbSenderExtraName.setEnabled(cbSenderExtra.isChecked());
+                cbReplyExtraName.setEnabled(cbSenderExtra.isChecked());
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                 boolean sign_default = prefs.getBoolean("sign_default", false);

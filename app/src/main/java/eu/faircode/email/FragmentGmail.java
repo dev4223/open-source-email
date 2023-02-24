@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.accounts.AccountManager.newChooseAccountIntent;
@@ -529,11 +529,9 @@ public class FragmentGmail extends FragmentBase {
                         account.synchronize = true;
                         account.primary = (primary == null);
 
-                        if (pop) {
-                            // https://support.google.com/mail/answer/7104828
+                        // https://support.google.com/mail/answer/7104828
+                        if (pop)
                             account.leave_on_device = true;
-                            account.max_messages = EntityAccount.DEFAULT_MAX_MESSAGES;
-                        }
 
                         account.created = new Date().getTime();
                         account.last_connected = account.created;

@@ -242,6 +242,9 @@
                 android:id="@+id/tvNoEmailHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:drawableStart="@drawable/two_tone_filter_alt_12"
+                android:drawablePadding="3dp"
+                android:drawableTint="?attr/colorAccent"
                 android:text="@string/title_filters_active"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 app:layout_constraintEnd_toEndOf="@+id/rvMessage"
@@ -654,6 +657,21 @@
                 app:tint="@color/action_foreground" />
 
             <ImageButton
+                android:id="@+id/ibNormalImportance"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/title_importance_normal"
+                android:padding="6dp"
+                android:scaleType="fitCenter"
+                android:tooltipText="@string/title_importance_normal"
+                android:visibility="gone"
+                app:layout_constraintEnd_toStartOf="@id/ibLowImportance"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/twotone_horizontal_rule_24"
+                app:tint="@color/action_foreground" />
+
+            <ImageButton
                 android:id="@+id/ibHighImportance"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -663,7 +681,7 @@
                 android:scaleType="fitCenter"
                 android:tooltipText="@string/title_importance_high"
                 android:visibility="gone"
-                app:layout_constraintEnd_toStartOf="@+id/ibLowImportance"
+                app:layout_constraintEnd_toStartOf="@+id/ibNormalImportance"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/baseline_arrow_upward_24"
                 app:tint="@color/action_foreground" />

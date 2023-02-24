@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -64,7 +64,7 @@ public class EntityLog {
     @NonNull
     public String data;
 
-    public enum Type {General, Statistics, Scheduling, Network, Account, Protocol, Classification, Notification, Rules, Debug}
+    public enum Type {General, Statistics, Scheduling, Network, Account, Protocol, Classification, Notification, Rules, Cloud, Debug}
 
     static void log(final Context context, String data) {
         log(context, Type.General, data);
@@ -229,6 +229,8 @@ public class EntityLog {
                 return ContextCompat.getColor(context, R.color.solarizedBlue);
             case Rules:
                 return ContextCompat.getColor(context, R.color.solarizedCyan);
+            case Cloud:
+                return ContextCompat.getColor(context, R.color.solarizedRed);
             case Debug:
                 return Helper.resolveColor(context, R.attr.colorWarning);
             default:

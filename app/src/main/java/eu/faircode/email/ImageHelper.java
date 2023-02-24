@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -78,7 +78,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 class ImageHelper {
     static final int DOWNLOAD_TIMEOUT = 15; // seconds
@@ -470,11 +470,10 @@ class ImageHelper {
             lld.setLevel(1);
 
             Integer kbps = ConnectionHelper.getLinkDownstreamBandwidthKbps(context);
-            ExecutorService executor = (kbps != null && kbps < SLOW_CONNECTION
-                    ? Helper.getSerialExecutor()
-                    : Helper.getParallelExecutor());
+            boolean slow = (kbps != null && kbps < SLOW_CONNECTION);
+            Semaphore semaphore = new Semaphore(1);
 
-            executor.submit(new Runnable() {
+            Helper.getDownloadTaskExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -487,7 +486,16 @@ class ImageHelper {
                         }
 
                         // Download image
-                        Drawable d = downloadImage(context, id, source, null);
+                        Drawable d;
+                        try {
+                            if (slow)
+                                semaphore.acquire();
+                            d = downloadImage(context, id, source, null);
+                        } finally {
+                            if (slow)
+                                semaphore.release();
+                        }
+
                         fitDrawable(d, aw, ah, scale, view);
                         post(d, source);
                     } catch (Throwable ex) {

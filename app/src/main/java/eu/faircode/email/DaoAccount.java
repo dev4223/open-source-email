@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import androidx.lifecycle.LiveData;
@@ -99,6 +99,7 @@ public interface DaoAccount {
             "    AND folder.type <> '" + EntityFolder.JUNK + "'" +
             "    AND folder.type <> '" + EntityFolder.DRAFTS + "'" +
             "    AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
+            "    AND folder.count_unread" +
             "    AND NOT ui_seen" +
             "    AND NOT ui_hide) AS unseen" +
             " FROM account" +
@@ -299,6 +300,11 @@ public interface DaoAccount {
 
     @Query("UPDATE account SET capability_uidl = :uidl WHERE id = :id AND NOT (capability_uidl IS :uidl)")
     int setAccountUidl(long id, Boolean uidl);
+
+    @Query("UPDATE account" +
+            " SET last_modified = :last_modified" +
+            " WHERE id = :id")
+    int setAccountLastModified(long id, Long last_modified);
 
     @Query("DELETE FROM account WHERE id = :id")
     int deleteAccount(long id);

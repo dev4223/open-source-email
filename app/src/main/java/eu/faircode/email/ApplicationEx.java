@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -58,6 +58,8 @@ import java.util.Map;
 public class ApplicationEx extends Application
         implements androidx.work.Configuration.Provider, SharedPreferences.OnSharedPreferenceChangeListener {
     private Thread.UncaughtExceptionHandler prev = null;
+
+    private static final Object lock = new Object();
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -257,6 +259,7 @@ public class ApplicationEx extends Application
             WorkerAutoUpdate.init(this);
             WorkerCleanup.init(this);
             WorkerDailyRules.init(this);
+            WorkerSync.init(this);
         }
 
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
@@ -349,6 +352,7 @@ public class ApplicationEx extends Application
             EntityLog.log(context, "Upgrading from " + version + " to " + BuildConfig.VERSION_CODE);
 
         SharedPreferences.Editor editor = prefs.edit();
+        editor.remove("max_backoff_power");
 
         if (version < BuildConfig.VERSION_CODE)
             editor.remove("crash_report_count");
@@ -673,7 +677,11 @@ public class ApplicationEx extends Application
         } else if (version < 2016) {
             if (!prefs.contains("reset_snooze"))
                 editor.putBoolean("reset_snooze", false);
-        }
+        } else if (version < 2029) {
+            if (!prefs.contains("plain_only_reply"))
+                editor.putBoolean("plain_only_reply", true);
+        } else if (version < 2046)
+            editor.remove("message_junk");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");
@@ -775,14 +783,16 @@ public class ApplicationEx extends Application
         @Override
         public void onActivityPostResumed(@NonNull Activity activity) {
             log(activity, "onActivityPostResumed");
-            if (activity instanceof ActivityView)
+            if (activity instanceof ActivityView ||
+                    (BuildConfig.DEBUG && activity instanceof ActivityCompose))
                 ServiceSynchronize.state(activity, true);
         }
 
         @Override
         public void onActivityPrePaused(@NonNull Activity activity) {
             log(activity, "onActivityPrePaused");
-            if (activity instanceof ActivityView)
+            if (activity instanceof ActivityView ||
+                    (BuildConfig.DEBUG && activity instanceof ActivityCompose))
                 ServiceSynchronize.state(activity, false);
         }
 
@@ -866,7 +876,9 @@ public class ApplicationEx extends Application
 
     synchronized static Handler getMainHandler() {
         if (handler == null)
-            handler = new Handler(Looper.getMainLooper());
+            synchronized (lock) {
+                handler = new Handler(Looper.getMainLooper());
+            }
         return handler;
     }
 }

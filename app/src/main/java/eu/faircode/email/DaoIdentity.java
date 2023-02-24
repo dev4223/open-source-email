@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import androidx.lifecycle.LiveData;
@@ -141,6 +141,9 @@ public interface DaoIdentity {
     @Query("UPDATE identity SET sign_key_alias = :alias WHERE id = :id AND NOT (sign_key_alias IS :alias)")
     int setIdentitySignKeyAlias(long id, String alias);
 
+    @Query("UPDATE identity SET sign_key_alias = NULL")
+    int clearIdentitySignKeyAliases();
+
     @Query("UPDATE identity SET max_size = :max_size WHERE id = :id AND NOT (max_size IS :max_size)")
     int setIdentityMaxSize(long id, Long max_size);
 
@@ -152,6 +155,11 @@ public interface DaoIdentity {
 
     @Query("UPDATE identity SET `primary` = 0 WHERE account = :account AND NOT (`primary` IS 0)")
     void resetPrimary(long account);
+
+    @Query("UPDATE identity" +
+            " SET last_modified = :last_modified" +
+            " WHERE id = :id")
+    int setIdentityLastModified(long id, Long last_modified);
 
     @Query("DELETE FROM identity WHERE id = :id")
     int deleteIdentity(long id);

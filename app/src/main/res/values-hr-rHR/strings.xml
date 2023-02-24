@@ -231,7 +231,6 @@
         Za ponovni uvoz postavki potrebna je lozinka, stoga je nemojte zaboraviti!
     </string>
     <string name="title_setup_export_do">Datoteka za izvoz sadržavat će sve postavke i podatke, ali ne i poruke i slike na koje se upućuje u potpisima</string>
-    <string name="title_setup_import_do">Uvezeni računi bit će dodani bez prepisa postojećih</string>
     <string name="title_setup_password">Lozinka</string>
     <string name="title_setup_password_chars">Lozinka sadrži znakove kontrole ili bjeline</string>
     <string name="title_setup_password_repeat">Ponovite lozinku</string>
@@ -306,6 +305,7 @@
     <string name="title_advanced_section_encryption">Šifriranje</string>
     <string name="title_advanced_section_notifications">Obavijesti</string>
     <string name="title_advanced_section_misc">Razno</string>
+    <string name="title_advanced_section_backup">Sigurnosno kopiranje</string>
     <string name="title_advanced_default">Sve opcije imaju uobičajene standardne vrijednosti koje se ne moraju mijenjati za korištenje aplikacije</string>
     <string name="title_advanced_receive">Primi poruke za sve račune</string>
     <string name="title_advanced_when">Kada</string>
@@ -522,10 +522,10 @@
     <string name="title_advanced_quick_scroll">Pokaži nenametljive ikone za brzo pomicanje prema gore / dolje</string>
     <string name="title_advanced_folder_nav">Uvijek se vrati na popis mapa s popisa poruka</string>
     <string name="title_advanced_autoread">Automatski označiti poruke kao pročitane u pokretu poruka</string>
-    <string name="title_advanced_star_snoozed">Automatski dodaj zvjezdicu pri odgađaju poruka</string>
     <string name="title_advanced_autounstar">Automatsko uklanjanje zvijezda iz poruka prema pokretu</string>
-    <string name="title_advanced_auto_important">Automatically make starred messages important</string>
     <string name="title_advanced_reset_importance">Povrati važnost pri pokretu poruke</string>
+    <string name="title_advanced_star_snoozed">Automatski dodaj zvjezdicu pri odgađaju poruka</string>
+    <string name="title_advanced_auto_important">Automatically make starred messages important</string>
     <string name="title_advanced_swipe_reply">Povuci proširene poruke udesno za odgovor</string>
     <string name="title_advanced_default_snooze">Zadano vrijeme odlaganja/odgađanja</string>
     <string name="title_advanced_notifications">Upravljaj obavijestima</string>
@@ -920,7 +920,6 @@
     <string name="title_edit_account_name">Uredi ime računa</string>
     <string name="title_hide_folder">Sakrij mapu</string>
     <string name="title_hide_seen_folder">Sakrij mapu ako su sve poruke pročitane</string>
-    <string name="title_hide_seen_folder_hint">Samo u popisu mapa prikazanom na početnom zaslonu</string>
     <string name="title_unified_folder">Prikaži u objedinjenoj ulaznom spremniku</string>
     <string name="title_navigation_folder">Prikaži u navigacijskom izborniku</string>
     <string name="title_synchronize_folder">Sinkroniziranje (primanje poruka)</string>
@@ -1339,6 +1338,7 @@
     <string name="title_sort_on_attachments">Prilozi</string>
     <string name="title_sort_on_hidden">Skriveno</string>
     <string name="title_sort_ascending">Prvo najstarije</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Redoslijed</string>
     <string name="title_filter">Filtrirati</string>
     <string name="title_filter_seen">Pročitaj</string>
     <string name="title_filter_unflagged">Bez zvjezdice</string>
@@ -1418,6 +1418,7 @@
     <string name="title_rule_time_after">Primljeno nakon</string>
     <string name="title_rule_time_before">Primljeno prije</string>
     <string name="title_rule_time_rel">Relativno vrijeme (primljeno) između</string>
+    <string name="title_rule_time_every_day">Svaki dan</string>
     <string name="title_rule_regex">Regularni izraz</string>
     <string name="title_rule_and">I</string>
     <string name="title_rule_action">Akcija</string>

@@ -42,6 +42,9 @@
     </provider>
     <provider
         name="Outlook"
+        documentation="&lt;b&gt;You may need to use &lt;a href=&quot;https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;an app password&lt;/a&gt;&lt;/b&gt;."
+        documentation.de="&lt;b&gt;Möglicherweise müssen Sie ein &lt;a href=&quot;https://support.microsoft.com/de-de/account-billing/verwenden-von-app-kennw%C3%B6rter-mit-apps-die-keine-zweistufige-%C3%BCberpr%C3%BCfung-unterst%C3%BCtzen-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;App-Passwort&lt;/a&gt; verwenden&lt;/b&gt;."
+        documentation.fr="&lt;b&gt;Vous devrez peut-être utiliser &lt;a href=&quot;https://support.microsoft.com/fr-fr/account-billing/utilisation-de-mots-de-passe-d-application-avec-des-applications-qui-ne-prennent-pas-en-charge-la-v%C3%A9rification-en-deux-%C3%A9tapes-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;un mot de passe d\'application&lt;/a&gt;&lt;/b&gt;."
         domain="outlook\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         maxtls="1.2"
@@ -60,6 +63,9 @@
     </provider>
     <provider
         name="Live"
+        documentation="&lt;b&gt;You may need to use &lt;a href=&quot;https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;an app password&lt;/a&gt;&lt;/b&gt;."
+        documentation.de="&lt;b&gt;Möglicherweise müssen Sie ein &lt;a href=&quot;https://support.microsoft.com/de-de/account-billing/verwenden-von-app-kennw%C3%B6rter-mit-apps-die-keine-zweistufige-%C3%BCberpr%C3%BCfung-unterst%C3%BCtzen-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;App-Passwort&lt;/a&gt; verwenden&lt;/b&gt;."
+        documentation.fr="&lt;b&gt;Vous devrez peut-être utiliser &lt;a href=&quot;https://support.microsoft.com/fr-fr/account-billing/utilisation-de-mots-de-passe-d-application-avec-des-applications-qui-ne-prennent-pas-en-charge-la-v%C3%A9rification-en-deux-%C3%A9tapes-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;un mot de passe d\'application&lt;/a&gt;&lt;/b&gt;."
         domain="live\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         maxtls="1.2"
@@ -78,6 +84,9 @@
     </provider>
     <provider
         name="Hotmail"
+        documentation="&lt;b&gt;You may need to use &lt;a href=&quot;https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;an app password&lt;/a&gt;&lt;/b&gt;."
+        documentation.de="&lt;b&gt;Möglicherweise müssen Sie ein &lt;a href=&quot;https://support.microsoft.com/de-de/account-billing/verwenden-von-app-kennw%C3%B6rter-mit-apps-die-keine-zweistufige-%C3%BCberpr%C3%BCfung-unterst%C3%BCtzen-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;App-Passwort&lt;/a&gt; verwenden&lt;/b&gt;."
+        documentation.fr="&lt;b&gt;Vous devrez peut-être utiliser &lt;a href=&quot;https://support.microsoft.com/fr-fr/account-billing/utilisation-de-mots-de-passe-d-application-avec-des-applications-qui-ne-prennent-pas-en-charge-la-v%C3%A9rification-en-deux-%C3%A9tapes-5896ed9b-4263-e681-128a-a6f2979a7944&quot;&gt;un mot de passe d\'application&lt;/a&gt;&lt;/b&gt;."
         domain="hotmail\\..*"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         maxtls="1.2"
@@ -110,7 +119,7 @@
     </provider>
     <provider
         name="Outlook"
-        description="Outlook/Office 365"
+        description="Office 365"
         enabled="false"
         id="office365"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
@@ -150,7 +159,7 @@
     </provider>
     <provider
         name="Outlook"
-        description="Outlook/Office 365"
+        description="Office 365"
         id="office365pcke"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         maxtls="1.2"
@@ -180,15 +189,61 @@
             redirectUri="msauth.eu.faircode.email://auth"
             scopes="profile,openid,email,offline_access,https://outlook.office.com/IMAP.AccessAsUser.All,https://outlook.office.com/SMTP.Send,https://outlook.office.com/POP.AccessAsUser.All"
             tokenEndpoint="https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-            tokenScopes="true" />
+            tokenScopes="true">
+            <!--parameter
+                key="domain_hint"
+                value="9188040d-6c67-4c5b-b112-36a304b66dad" /-->
+        </oauth>
+        <!-- https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow -->
+        <!-- https://docs.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth -->
+        <!-- https://learn.microsoft.com/en-us/azure/active-directory/develop/redirect-uris-ios -->
+    </provider>
+    <provider
+        name="Outlook test"
+        debug="true"
+        description="Office 365 test"
+        id="outlooktest"
+        link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
+        maxtls="1.2"
+        noop="true"
+        order="5"
+        partial="false"
+        useip="false">
+        <imap
+            host="outlook.office365.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.office365.com"
+            port="587"
+            starttls="true" />
+        <pop
+            host="outlook.office365.com"
+            port="995"
+            starttls="false" />
+        <oauth
+            askAccount="true"
+            authorizationEndpoint="https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"
+            clientId="835c3383-543c-4aa2-98ca-c465eb039987"
+            enabled="false"
+            privacy="https://privacy.microsoft.com/privacystatement"
+            prompt="login"
+            redirectUri="msauth://eu.faircode.email/xSLzBBuLJunOQPB89rtzM54FXx4%3D"
+            scopes="profile,openid,email,offline_access,https://outlook.office.com/IMAP.AccessAsUser.All,https://outlook.office.com/SMTP.Send"
+            tokenEndpoint="https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
+            tokenScopes="true">
+            <!--parameter
+                key="domain_hint"
+                value="9188040d-6c67-4c5b-b112-36a304b66dad" /-->
+        </oauth>
         <!-- https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow -->
         <!-- https://docs.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth -->
         <!-- https://learn.microsoft.com/en-us/azure/active-directory/develop/redirect-uris-ios -->
     </provider>
     <provider
         name="Outlook"
-        description="Outlook"
-        enabled="false"
+        alt="true"
+        description="Office 365 (alt)"
         id="outlook"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         maxtls="1.2"
@@ -204,11 +259,10 @@
             host="smtp.office365.com"
             port="587"
             starttls="true" />
-        <!--pop
+        <pop
             host="outlook.office365.com"
             port="995"
-            starttls="false" /-->
-        <!-- https://outlook.office.com/POP.AccessAsUser.All -->
+            starttls="false" />
         <oauth
             askAccount="true"
             authorizationEndpoint="https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
@@ -216,8 +270,8 @@
             enabled="true"
             privacy="https://privacy.microsoft.com/privacystatement"
             prompt="login"
-            redirectUri="msauth.eu.faircode.email://auth"
-            scopes="openid,email,offline_access,https://outlook.office.com/IMAP.AccessAsUser.All,https://outlook.office.com/SMTP.Send"
+            redirectUri="msauth://eu.faircode.email/xSLzBBuLJunOQPB89rtzM54FXx4%3D"
+            scopes="profile,openid,email,offline_access,https://outlook.office.com/IMAP.AccessAsUser.All,https://outlook.office.com/SMTP.Send,https://outlook.office.com/POP.AccessAsUser.All"
             tokenEndpoint="https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
             tokenScopes="true" />
     </provider>
@@ -261,7 +315,7 @@
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88"
         noop="true"
         order="7"
-        partial="false">
+        partial="true">
         <imap
             host="imap.mail.yahoo.com"
             port="993"
@@ -295,7 +349,7 @@
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88"
         noop="true"
         order="7"
-        partial="false">
+        partial="true">
         <imap
             host="imap.mail.yahoo.com"
             port="993"
@@ -678,6 +732,7 @@
     </provider>
     <provider
         name="freenet.de"
+        documentation="Haben Sie SMTP über die Systemsteuerung des E-Mail-Anbieters aktiviert?"
         domain="freenet\\.de,fn\\.de,freenetmail\\.de,bossmail\\.de,justmail\\.de"
         link="https://kundenservice.freenet.de/artikel/1869">
         <imap
@@ -691,6 +746,7 @@
     </provider>
     <provider
         name="Zoho"
+        documentation="You might need to use &lt;a href=&quot;https://help.zoho.com/portal/en/kb/bigin/channels/email/articles/generate-an-app-specific-password&quot;&gt;an app password&lt;/a&gt;."
         domain="zoho\\.com"
         link="https://www.zoho.com/mail/help/imap-access.html"
         maxtls="1.2">
@@ -705,6 +761,7 @@
     </provider>
     <provider
         name="Zoho EU"
+        documentation="You might need to use &lt;a href=&quot;https://help.zoho.com/portal/en/kb/bigin/channels/email/articles/generate-an-app-specific-password&quot;&gt;an app password&lt;/a&gt;."
         domain="zohomail\\.eu"
         link="https://www.zoho.eu/mail/help/imap-access.html"
         maxtls="1.2">
@@ -719,6 +776,7 @@
     </provider>
     <provider
         name="Zoho AU"
+        documentation="You might need to use &lt;a href=&quot;https://help.zoho.com/portal/en/kb/bigin/channels/email/articles/generate-an-app-specific-password&quot;&gt;an app password&lt;/a&gt;."
         domain="zohomail\\.com\\.au"
         maxtls="1.2">
         <imap
@@ -945,7 +1003,8 @@
         domain="aol\\..*,compuserve\\.com"
         id="aol"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88"
-        noop="true">
+        noop="true"
+        partial="true">
         <imap
             host="imap.aol.com"
             port="993"
@@ -1082,7 +1141,7 @@
     </provider>
     <provider
         name="o2.pl"
-        domain="o2\\.pl"
+        domain="o2\\.pl,go2\\.pl"
         link="https://pomoc.o2.pl/jak-skonfigurowac-program-pocztowy"
         maxtls="1.2"
         noop="true">
@@ -1587,11 +1646,11 @@
         domain="alice\\.de,alice-dsl\\.de,alice-dsl\\.net"
         link="https://maildienste.de/alice/">
         <imap
-            host="imap.alice-dsl.de"
+            host="imap.alice.de"
             port="993"
             starttls="false" />
         <smtp
-            host="smtp.alice-dsl.de"
+            host="smtp.alice.de"
             port="587"
             starttls="true" />
     </provider>
@@ -1826,6 +1885,32 @@
             port="465"
             starttls="false" />
     </provider>
+    <provider
+        name="Plusnet/force9"
+        domain=".*\\.force9\\.co\\.uk"
+        link="https://www.plus.net/help/email-guides/how-to-set-up-plusnet-email/">
+        <imap
+            host="imap.force9.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="relay.force9.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Plusnet/free"
+        domain=".*\\.free-online\\.net"
+        link="https://www.plus.net/help/email-guides/how-to-set-up-plusnet-email/">
+        <imap
+            host="imap.free-online.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="relay.free-online.net"
+            port="465"
+            starttls="false" />
+    </provider>
     <provider name="Netbeat">
         <imap
             host="mail.netbeat.de"
@@ -1915,5 +2000,44 @@
             host="mail.minuskel.de"
             port="587"
             starttls="true" />
+    </provider>
+    <provider
+        name="Drie.at"
+        domain="drei\\.at"
+        link="https://www.drei.at/de/info/support/e-mail-einstellungen/">
+        <imap
+            host="imap.drei.at"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.drei.at"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Virgilio.it"
+        domain="virgilio\\.it"
+        link="https://aiuto.virgilio.it/articolo/mail/parametri-di-configurazione-per-il-client-di-posta/">
+        <imap
+            host="in.virgilio.it"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="out.virgilio.it"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Optimum"
+        domain="optimum\\.net,optonline\\.net"
+        link="https://faq.optimum.net/node/7327">
+        <imap
+            host="mail.optimum.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.optimum.net"
+            port="465"
+            starttls="false" />
     </provider>
 </providers>

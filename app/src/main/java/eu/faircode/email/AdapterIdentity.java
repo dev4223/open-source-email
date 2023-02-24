@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
@@ -68,6 +68,7 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
     private LayoutInflater inflater;
 
     private int colorStripeWidth;
+    private boolean debug;
 
     private List<TupleIdentityEx> items = new ArrayList<>();
 
@@ -139,7 +140,11 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
             ivPrimary.setVisibility(identity.primary ? View.VISIBLE : View.GONE);
             ivGroup.setVisibility(identity.self ? View.GONE : View.VISIBLE);
             tvName.setText(identity.getDisplayName());
-            tvUser.setText(identity.email);
+
+            StringBuilder user = new StringBuilder(identity.email);
+            if (identity.provider != null && (BuildConfig.DEBUG || debug))
+                user.append(" (").append(identity.provider).append(')');
+            tvUser.setText(user);
 
             if ("connected".equals(identity.state)) {
                 ivState.setImageResource(R.drawable.twotone_cloud_done_24);
@@ -174,7 +179,9 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
             tvSignKeyId.setVisibility(sb.length() > 0 ? View.VISIBLE : View.GONE);
 
             tvLast.setText(context.getString(R.string.title_last_connected,
-                    (identity.last_connected == null ? "-" : DTF.format(identity.last_connected))));
+                    (identity.last_connected == null ? "-" : DTF.format(identity.last_connected))) +
+                    (BuildConfig.DEBUG ?
+                            "/" + (identity.last_modified == null ? "-" : DTF.format(identity.last_modified)) : ""));
 
             tvMaxSize.setText(identity.max_size == null ? null : Helper.humanReadableByteCount(identity.max_size));
             tvMaxSize.setVisibility(identity.max_size == null ? View.GONE : View.VISIBLE);
@@ -418,6 +425,7 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
         this.colorStripeWidth = Helper.dp2pixels(context, color_stripe_wide ? 12 : 6);
+        this.debug = prefs.getBoolean("debug", false);
 
         this.DTF = Helper.getDateTimeInstance(context, DateFormat.SHORT, DateFormat.SHORT);
 

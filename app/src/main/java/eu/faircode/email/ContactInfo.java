@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -29,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -97,6 +98,8 @@ public class ContactInfo {
 
     static final int FAVICON_READ_BYTES = 50 * 1024;
 
+    private static final Object lock = new Object();
+    private static ContactInfo anonymous = null;
     private static Map<String, Lookup> emailLookup = new ConcurrentHashMap<>();
     private static final Map<String, ContactInfo> emailContactInfo = new HashMap<>();
 
@@ -226,14 +229,27 @@ public class ContactInfo {
     }
 
     private static ContactInfo[] get(Context context, long account, String folderType, String selector, Address[] addresses, boolean cacheOnly) {
-        if (addresses == null || addresses.length == 0)
-            return new ContactInfo[]{new ContactInfo()};
+        if (addresses == null || addresses.length == 0) {
+            ContactInfo anonymous = getAnonymous(context);
+            return new ContactInfo[]{anonymous == null ? new ContactInfo() : anonymous};
+        }
 
         ContactInfo[] result = new ContactInfo[addresses.length];
         for (int i = 0; i < addresses.length; i++) {
             result[i] = _get(context, account, folderType, selector, (InternetAddress) addresses[i], cacheOnly);
-            if (result[i] == null)
-                return null;
+            if (result[i] == null) {
+                if (cacheOnly)
+                    return null;
+                ContactInfo anonymous = getAnonymous(context);
+                if (anonymous == null)
+                    return null;
+                result[i] = anonymous;
+            } else if (result[i].bitmap == null) {
+                if (!cacheOnly) {
+                    ContactInfo anonymous = getAnonymous(context);
+                    result[i].bitmap = (anonymous == null ? null : anonymous.bitmap);
+                }
+            }
         }
 
         return result;
@@ -256,11 +272,21 @@ public class ContactInfo {
         ContactInfo info = new ContactInfo();
         info.email = address.getAddress();
 
+        // Maximum file name length: 255
+        // Maximum email address length: 320 (<local part = 64> @ <domain part = 255>)
+        final String ekey;
+        if (TextUtils.isEmpty(info.email))
+            ekey = null;
+        else
+            ekey = (info.email.length() > 255
+                    ? info.email.substring(0, 255)
+                    : info.email).toLowerCase(Locale.ROOT);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean avatars = prefs.getBoolean("avatars", true);
         boolean prefer_contact = prefs.getBoolean("prefer_contact", false);
         boolean distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
-        boolean bimi = prefs.getBoolean("bimi", false);
+        boolean bimi = (prefs.getBoolean("bimi", false) && !BuildConfig.PLAY_STORE_RELEASE);
         boolean gravatars = (prefs.getBoolean("gravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
         boolean libravatars = (prefs.getBoolean("libravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
         boolean favicons = prefs.getBoolean("favicons", false);
@@ -331,7 +357,6 @@ public class ContactInfo {
                     }
 
                 final String domain = d.toLowerCase(Locale.ROOT);
-                final String email = info.email.toLowerCase(Locale.ROOT);
 
                 File dir = Helper.ensureExists(new File(context.getFilesDir(), "favicons"));
 
@@ -339,12 +364,12 @@ public class ContactInfo {
                     // check cache
                     File[] files = null;
                     if (gravatars) {
-                        File f = new File(dir, email + ".gravatar");
+                        File f = new File(dir, ekey + ".gravatar");
                         if (f.exists())
                             files = new File[]{f};
                     }
                     if (files == null && libravatars) {
-                        File f = new File(dir, email + ".libravatar");
+                        File f = new File(dir, ekey + ".libravatar");
                         if (f.exists())
                             files = new File[]{f};
                     }
@@ -356,6 +381,7 @@ public class ContactInfo {
                             }
                         });
                     if (files != null && files.length == 1) {
+                        files[0].setLastModified(new Date().getTime());
                         if (files[0].length() == 0)
                             Log.i("Avatar blacklisted cache" + files[0].getName());
                         else {
@@ -374,7 +400,7 @@ public class ContactInfo {
                         List<Future<Favicon>> futures = new ArrayList<>();
 
                         if (bimi)
-                            futures.add(Helper.getParallelExecutor().submit(new Callable<Favicon>() {
+                            futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Favicon>() {
                                 @Override
                                 public Favicon call() throws Exception {
                                     Pair<Bitmap, Boolean> bimi =
@@ -383,10 +409,13 @@ public class ContactInfo {
                                 }
                             }));
 
+                        String email = info.email.toLowerCase(Locale.ROOT);
                         if (gravatars)
-                            futures.add(Helper.getParallelExecutor().submit(Avatar.getGravatar(email, scaleToPixels, context)));
+                            futures.add(Helper.getDownloadTaskExecutor()
+                                    .submit(Avatar.getGravatar(email, scaleToPixels, context)));
                         if (libravatars)
-                            futures.add(Helper.getParallelExecutor().submit(Avatar.getLibravatar(email, scaleToPixels, context)));
+                            futures.add(Helper.getDownloadTaskExecutor()
+                                    .submit(Avatar.getLibravatar(email, scaleToPixels, context)));
 
                         if (favicons) {
                             String host = domain;
@@ -395,7 +424,7 @@ public class ContactInfo {
                             while (host.indexOf('.') > 0) {
                                 final URL base = new URL("https://" + host);
 
-                                futures.add(Helper.getParallelExecutor().submit(new Callable<Favicon>() {
+                                futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Favicon>() {
                                     @Override
                                     public Favicon call() throws Exception {
                                         return parseFavicon(base, scaleToPixels, context);
@@ -413,7 +442,7 @@ public class ContactInfo {
                                 final URL base = new URL("https://" + host);
 
                                 for (String name : FIXED_FAVICONS)
-                                    futures.add(Helper.getParallelExecutor().submit(new Callable<Favicon>() {
+                                    futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Favicon>() {
                                         @Override
                                         public Favicon call() throws Exception {
                                             return getFavicon(new URL(base, name), null, scaleToPixels, context);
@@ -465,7 +494,7 @@ public class ContactInfo {
 
                         // Add to cache
                         File output = new File(dir,
-                                (info.isEmailBased() ? email : domain) +
+                                (info.isEmailBased() ? ekey : domain) +
                                         "." + info.type +
                                         (info.verified ? "_verified" : ""));
                         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(output))) {
@@ -501,16 +530,20 @@ public class ContactInfo {
 
         // Generated
         boolean identicon = false;
-        if (info.bitmap == null && generated && !TextUtils.isEmpty(info.email)) {
+        String name = address.getPersonal();
+        String tag = (TextUtils.isEmpty(info.email) ? name : info.email);
+        String etag = (TextUtils.isEmpty(info.email) ? Helper.sanitizeFilename(name + "@name") : ekey);
+        if (info.bitmap == null && generated && !TextUtils.isEmpty(tag)) {
             File dir = Helper.ensureExists(new File(context.getFilesDir(), "generated"));
             File[] files = dir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File file, String name) {
-                    return name.startsWith(info.email);
+                    return name.startsWith(etag);
                 }
             });
             if (files != null && files.length == 1) {
                 Log.i("Generated from cache=" + files[0].getName());
+                files[0].setLastModified(new Date().getTime());
                 info.bitmap = BitmapFactory.decodeFile(files[0].getAbsolutePath());
                 info.type = Helper.getExtension(files[0].getName());
             } else {
@@ -518,16 +551,16 @@ public class ContactInfo {
                 if (identicons) {
                     identicon = true;
                     info.bitmap = ImageHelper.generateIdenticon(
-                            info.email, dp, 5, context);
+                            tag, dp, 5, context);
                     info.type = "identicon";
                 } else {
                     info.bitmap = ImageHelper.generateLetterIcon(
-                            info.email, address.getPersonal(), dp, context);
+                            tag, address.getPersonal(), dp, context);
                     info.type = "letter";
                 }
 
                 // Add to cache
-                File output = new File(dir, info.email + "." + info.type);
+                File output = new File(dir, etag + "." + info.type);
                 try (OutputStream os = new BufferedOutputStream(new FileOutputStream(output))) {
                     info.bitmap.compress(Bitmap.CompressFormat.PNG, 90, os);
                 } catch (IOException ex) {
@@ -558,6 +591,35 @@ public class ContactInfo {
 
         info.time = new Date().getTime();
         return info;
+    }
+
+    private static ContactInfo getAnonymous(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean avatars = prefs.getBoolean("avatars", true);
+        boolean bimi = (prefs.getBoolean("bimi", false) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean gravatars = (prefs.getBoolean("gravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean libravatars = (prefs.getBoolean("libravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean favicons = prefs.getBoolean("favicons", false);
+        boolean generated = prefs.getBoolean("generated_icons", true);
+        boolean identicons = prefs.getBoolean("identicons", false);
+        if (avatars || bimi || gravatars || libravatars || favicons || generated || identicons) {
+            synchronized (lock) {
+                if (anonymous == null) {
+                    Drawable d = context.getDrawable(R.drawable.twotone_person_24);
+                    Bitmap bitmap = Bitmap.createBitmap(d.getIntrinsicWidth(), d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                    d.setTint(Helper.resolveColor(context, R.attr.colorSeparator));
+                    d.draw(canvas);
+
+                    anonymous = new ContactInfo();
+                    anonymous.bitmap = bitmap;
+                }
+                return anonymous;
+            }
+        }
+
+        return null;
     }
 
     private static Favicon parseFavicon(URL base, int scaleToPixels, Context context) throws IOException {
@@ -732,7 +794,6 @@ public class ContactInfo {
         for (int i = 0; i < imgs.size(); i++)
             Log.i("Favicon #" + getOrder(host, imgs.get(i)) + " " + i + "=" + imgs.get(i) + " @" + base);
 
-        List<Future<Pair<Favicon, URL>>> futures = new ArrayList<>();
         for (Element img : imgs) {
             String rel = img.attr("rel").trim().toLowerCase(Locale.ROOT);
             if (REL_EXCLUDE.contains(rel)) // dns-prefetch: gmx.net
@@ -744,20 +805,11 @@ public class ContactInfo {
             if (TextUtils.isEmpty(favicon))
                 continue;
 
-            final URL url = new URL(base, favicon);
-            futures.add(Helper.getParallelExecutor().submit(new Callable<Pair<Favicon, URL>>() {
-                @Override
-                public Pair<Favicon, URL> call() throws Exception {
-                    return new Pair(getFavicon(url, img.attr("type"), scaleToPixels, context), url);
-                }
-            }));
-        }
-
-        for (Future<Pair<Favicon, URL>> future : futures)
             try {
-                Pair<Favicon, URL> result = future.get();
-                Log.i("Using favicon=" + result.second);
-                return result.first;
+                URL url = new URL(base, favicon);
+                Favicon f = getFavicon(url, img.attr("type"), scaleToPixels, context);
+                Log.i("Using favicon=" + url);
+                return f;
             } catch (Throwable ex) {
                 if (ex.getCause() instanceof FileNotFoundException ||
                         ex.getCause() instanceof CertPathValidatorException)
@@ -765,6 +817,7 @@ public class ContactInfo {
                 else
                     Log.e(ex);
             }
+        }
 
         return null;
     }

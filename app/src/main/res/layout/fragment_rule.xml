@@ -419,7 +419,18 @@
                     app:layout_constraintBottom_toBottomOf="@+id/cbHeader"
                     app:layout_constraintEnd_toStartOf="@+id/cbHeader"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/cbHeader" />
+                    app:layout_constraintTop_toTopOf="@+id/ibHeader" />
+
+                <ImageButton
+                    android:id="@+id/ibHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintBottom_toBottomOf="@+id/cbHeader"
+                    app:layout_constraintEnd_toStartOf="@+id/cbHeader"
+                    app:layout_constraintTop_toTopOf="@+id/cbHeader"
+                    app:srcCompat="@drawable/twotone_filter_alt_24" />
 
                 <CheckBox
                     android:id="@+id/cbHeader"
@@ -664,6 +675,15 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvScheduleHourStart" />
 
+                <CheckBox
+                    android:id="@+id/cbEveryDay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/title_rule_time_every_day"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvScheduleHourEnd" />
+
                 <TextView
                     android:id="@+id/tvAction"
                     android:layout_width="wrap_content"
@@ -674,7 +694,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvScheduleHourEnd" />
+                    app:layout_constraintTop_toBottomOf="@+id/cbEveryDay" />
 
                 <View
                     android:id="@+id/vSeparatorAction"
@@ -845,7 +865,7 @@
                     android:id="@+id/tvMoveCreateRemark"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="$year$ $month$ $domain$"
+                    android:text="$year$ $month$ $week$ $day$ $domain$"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"

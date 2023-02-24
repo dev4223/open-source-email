@@ -31,7 +31,7 @@
         <item
             android:id="@+id/menu_send_chips"
             android:checkable="true"
-            android:icon="@drawable/twotone_alternate_email_24"
+            android:icon="@drawable/twotone_crop_3_2_24"
             android:title="@string/title_advanced_send_chips"
             app:showAsAction="never" />
 
@@ -117,7 +117,7 @@
         <item
             android:id="@+id/title_search_in_text"
             android:icon="@drawable/twotone_manage_search_24"
-            android:title="@string/title_button_search_text"
+            android:title="@string/title_search_in_text"
             app:showAsAction="never" />
 
         <item

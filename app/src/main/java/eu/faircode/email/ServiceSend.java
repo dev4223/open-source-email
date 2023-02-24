@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -33,6 +33,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
 import javax.mail.Address;
 import javax.mail.AuthenticationFailedException;
@@ -83,11 +85,15 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     private PowerManager.WakeLock wlOutbox;
     private List<Long> handling = new ArrayList<>();
 
+    private static final ExecutorService executor =
+            Helper.getBackgroundExecutor(1, "send");
+
     private static final int RETRY_MAX = 3;
     private static final int CONNECTIVITY_DELAY = 5000; // milliseconds
     private static final int PROGRESS_UPDATE_INTERVAL = 1000; // milliseconds
 
     static final int PI_SEND = 1;
+    static final int PI_FIX = 2;
 
     @Override
     public void onCreate() {
@@ -146,7 +152,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                             "Send process=" + TextUtils.join(",", process) +
                                     " handling=" + TextUtils.join(",", handling));
 
-                    Helper.getSerialExecutor().submit(new Runnable() {
+                    executor.submit(new Runnable() {
                         @Override
                         public void run() {
                             processOperations(process);
@@ -240,6 +246,20 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             builder.setSubText(getString(R.string.title_notification_waiting));
         if (lastProgress >= 0)
             builder.setProgress(100, lastProgress, false);
+
+        if (!lastSuitable) {
+            Intent manage = new Intent(this, ActivitySetup.class)
+                    .setAction("connection")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    .putExtra("tab", "connection");
+            PendingIntent piManage = PendingIntentCompat.getActivity(
+                    this, ActivitySetup.PI_CONNECTION, manage, PendingIntent.FLAG_UPDATE_CURRENT);
+            NotificationCompat.Action.Builder actionManage = new NotificationCompat.Action.Builder(
+                    R.drawable.twotone_settings_24,
+                    getString(R.string.title_setup_manage),
+                    piManage);
+            builder.addAction(actionManage.build());
+        }
 
         Notification notification = builder.build();
         notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -372,6 +392,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                         break;
 
                     EntityOperation op = ops.get(0);
+                    if (db.operation().getOperation(op.id) == null) {
+                        ops.remove(op);
+                        continue;
+                    }
 
                     EntityMessage message = null;
                     if (op.message != null)
@@ -438,11 +462,24 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                             try {
                                 int tries_left = (unrecoverable ? 0 : RETRY_MAX - op.tries);
                                 NotificationManager nm = Helper.getSystemService(this, NotificationManager.class);
-                                if (NotificationHelper.areNotificationsEnabled(nm))
+                                if (NotificationHelper.areNotificationsEnabled(nm)) {
+                                    NotificationCompat.Builder builder = getNotificationError(
+                                            MessageHelper.formatAddressesShort(message.to), ex, tries_left);
+
+                                    if (ex instanceof AuthenticationFailedException &&
+                                            ex.getMessage() != null &&
+                                            ex.getMessage().contains("535 5.7.3 Authentication unsuccessful")) {
+                                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Helper.SUPPORT_URI))
+                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        PendingIntent piFix = PendingIntentCompat.getActivity(
+                                                this, PI_FIX, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                        builder.setContentIntent(piFix);
+                                    }
+
                                     nm.notify("send:" + message.id,
                                             NotificationHelper.NOTIFICATION_TAGGED,
-                                            getNotificationError(
-                                                    MessageHelper.formatAddressesShort(message.to), ex, tries_left).build());
+                                            builder.build());
+                                }
                             } catch (Throwable ex1) {
                                 Log.w(ex1);
                             }
@@ -496,6 +533,8 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                         continue;
                     db.operation().deleteOperation(op.id);
                 }
+
+                EntityLog.log(this, "Send restore id=" + message.id);
 
                 db.message().setMessageError(message.id, null);
                 nm.cancel("send:" + message.id, NotificationHelper.NOTIFICATION_TAGGED);
@@ -854,7 +893,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 // Message could have been deleted
                 EntityMessage orphan = db.message().getMessage(sid);
                 if (orphan != null)
-                    EntityOperation.queue(this, orphan, EntityOperation.EXISTS);
+                    if (account == null || account.protocol == EntityAccount.TYPE_IMAP)
+                        EntityOperation.queue(this, orphan, EntityOperation.EXISTS);
+                    else if (sent != null)
+                        EntityContact.received(this, account, sent, message);
 
                 db.setTransactionSuccessful();
             } finally {

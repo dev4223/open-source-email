@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
@@ -258,7 +258,8 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             tvLast.setText(context.getString(R.string.title_last_connected,
                     (account.last_connected == null ? "-" : DTF.format(account.last_connected)) +
                             (BuildConfig.DEBUG ?
-                                    " " + account.poll_interval +
+                                    "/" + (account.last_modified == null ? "-" : DTF.format(account.last_modified)) +
+                                            " " + account.poll_interval +
                                             "/" + account.keep_alive_ok +
                                             "/" + account.keep_alive_failed +
                                             "/" + account.keep_alive_succeeded : "")));

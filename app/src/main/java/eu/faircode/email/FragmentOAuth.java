@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -125,6 +125,7 @@ public class FragmentOAuth extends FragmentBase {
     private TextView tvConfiguring;
     private TextView tvGmailHint;
     private TextView tvGmailLoginHint;
+    private TextView tvGmailLoginMax;
 
     private TextView tvError;
     private TextView tvOfficeAuthHint;
@@ -180,6 +181,7 @@ public class FragmentOAuth extends FragmentBase {
         tvConfiguring = view.findViewById(R.id.tvConfiguring);
         tvGmailHint = view.findViewById(R.id.tvGmailHint);
         tvGmailLoginHint = view.findViewById(R.id.tvGmailLoginHint);
+        tvGmailLoginMax = view.findViewById(R.id.tvGmailLoginMax);
 
         tvError = view.findViewById(R.id.tvError);
         tvOfficeAuthHint = view.findViewById(R.id.tvOfficeAuthHint);
@@ -271,6 +273,7 @@ public class FragmentOAuth extends FragmentBase {
         tvConfiguring.setVisibility(View.GONE);
         tvGmailHint.setVisibility("gmail".equals(id) ? View.VISIBLE : View.GONE);
         tvGmailLoginHint.setVisibility("gmail".equals(id) ? View.VISIBLE : View.GONE);
+        tvGmailLoginMax.setVisibility("gmail".equals(id) ? View.VISIBLE : View.GONE);
         hideError();
 
         etName.setText(personal);
@@ -341,6 +344,8 @@ public class FragmentOAuth extends FragmentBase {
             btnOAuth.setEnabled(false);
             pbOAuth.setVisibility(View.VISIBLE);
             hideError();
+
+            Log.breadcrumb("onAuthorize", "id", id);
 
             final Context context = getContext();
             PackageManager pm = context.getPackageManager();
@@ -435,7 +440,7 @@ public class FragmentOAuth extends FragmentBase {
 
             String clientId = provider.oauth.clientId;
             Uri redirectUri = Uri.parse(provider.oauth.redirectUri);
-            if ("gmail".equals(id) && BuildConfig.DEBUG) {
+            if ("gmail".equals(id) && BuildConfig.DEBUG && false) {
                 clientId = "803253368361-hr8kelm53hqodj7c6brdjeb2ctn5jg3p.apps.googleusercontent.com";
                 redirectUri = Uri.parse("eu.faircode.email.debug:/");
             }
@@ -492,6 +497,8 @@ public class FragmentOAuth extends FragmentBase {
             cbPop.setEnabled(true);
             cbRecent.setEnabled(true);
             cbUpdate.setEnabled(true);
+
+            Log.breadcrumb("onHandleOAuth", "id", id);
 
             AuthorizationResponse auth = AuthorizationResponse.fromIntent(data);
             if (auth == null) {
@@ -570,6 +577,8 @@ public class FragmentOAuth extends FragmentBase {
     }
 
     private void onOAuthorized(String accessToken, String idToken, AuthState state) {
+        Log.breadcrumb("onOAuthorized", "id", id);
+
         if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             return;
 
@@ -687,6 +696,13 @@ public class FragmentOAuth extends FragmentBase {
                             String payload = new String(Base64.decode(segments[1], Base64.DEFAULT));
                             EntityLog.log(context, "jwt payload=" + payload);
                             JSONObject jpayload = new JSONObject(payload);
+
+                            if (jpayload.has("iat"))
+                                Log.i("Issued at " + new Date(jpayload.getLong("iat") * 1000L));
+                            if (jpayload.has("nbf"))
+                                Log.i("Not before " + new Date(jpayload.getLong("nbf") * 1000L));
+                            if (jpayload.has("exp"))
+                                Log.i("Expiration time " + new Date(jpayload.getLong("exp") * 1000L));
 
                             if (jpayload.has("preferred_username")) {
                                 String u = jpayload.getString("preferred_username");
@@ -880,9 +896,7 @@ public class FragmentOAuth extends FragmentBase {
                         account.keep_alive_noop = provider.noop;
 
                         account.partial_fetch = provider.partial;
-
-                        if (pop)
-                            account.max_messages = EntityAccount.DEFAULT_MAX_MESSAGES;
+                        account.raw_fetch = provider.raw;
 
                         account.created = new Date().getTime();
                         account.last_connected = account.created;
@@ -1013,8 +1027,14 @@ public class FragmentOAuth extends FragmentBase {
         grpError.setVisibility(View.VISIBLE);
 
         if (EntityAccount.isOutlook(id)) {
-            if (ex instanceof AuthenticationFailedException)
+            if (ex instanceof AuthenticationFailedException) {
+                if (ex.getMessage() != null &&
+                        ex.getMessage().contains("535 5.7.3 Authentication unsuccessful"))
+                    tvOfficeAuthHint.setText(R.string.title_setup_office_auth_5_7_3);
+                else
+                    tvOfficeAuthHint.setText(R.string.title_setup_office_auth);
                 tvOfficeAuthHint.setVisibility(View.VISIBLE);
+            }
         }
 
         EmailProvider provider;
@@ -1025,7 +1045,7 @@ public class FragmentOAuth extends FragmentBase {
             provider = null;
         }
 
-        btnHelp.setVisibility((provider != null && provider.link != null ? View.VISIBLE : View.GONE));
+        btnHelp.setVisibility(provider != null && provider.link != null ? View.VISIBLE : View.GONE);
 
         etName.setEnabled(true);
         etEmail.setEnabled(true);

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.app.ActivityManager;
@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -84,10 +85,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
+import androidx.work.WorkQuery;
 
 import com.bugsnag.android.BreadcrumbType;
 import com.bugsnag.android.Bugsnag;
@@ -137,6 +142,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -172,6 +178,8 @@ public class Log {
     private static int level = android.util.Log.INFO;
     private static final long MAX_LOG_SIZE = 8 * 1024 * 1024L;
     private static final int MAX_CRASH_REPORTS = (BuildConfig.TEST_RELEASE ? 50 : 5);
+    private static final long MIN_FILE_SIZE = 1024 * 1024L;
+    private static final long MIN_ZIP_SIZE = 2 * 1024 * 1024L;
     private static final String TAG = "fairemail";
 
     // https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html
@@ -518,6 +526,7 @@ public class Log {
                         event.addMetadata("extra", "memory_available", getAvailableMb());
                         event.addMetadata("extra", "native_allocated", Debug.getNativeHeapAllocatedSize() / 1024L / 1024L);
                         event.addMetadata("extra", "native_size", Debug.getNativeHeapSize() / 1024L / 1024L);
+                        event.addMetadata("extra", "classifier_size", MessageClassifier.getSize(context));
 
                         Boolean ignoringOptimizations = Helper.isIgnoringOptimizations(context);
                         event.addMetadata("extra", "optimizing", (ignoringOptimizations != null && !ignoringOptimizations));
@@ -656,7 +665,7 @@ public class Log {
                         else if (element instanceof Spanned)
                             elements[i] = "<redacted>";
                         else
-                            elements[i] = (element == null ? "<null>" : printableString(element.toString()));
+                            elements[i] = (element == null ? "<null>" : Helper.getPrintableString(element.toString()));
                     }
                     value = TextUtils.join(",", elements);
                     if (length > 10)
@@ -717,22 +726,6 @@ public class Log {
         }
 
         return result;
-    }
-
-    static String printableString(String value) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char kar = value.charAt(i);
-            if (kar == '\n')
-                result.append('|');
-            else if (kar == ' ')
-                result.append('_');
-            else if (!Helper.isPrintableChar(kar))
-                result.append('{').append(Integer.toHexString(kar)).append('}');
-            else
-                result.append(kar);
-        }
-        return result.toString();
     }
 
     static void logMemory(Context context, String message) {
@@ -1846,6 +1839,33 @@ public class Log {
         return draft;
     }
 
+    static void unexpectedError(Fragment fragment, Throwable ex) {
+        unexpectedError(fragment, ex, true);
+    }
+
+    static void unexpectedError(Fragment fragment, Throwable ex, boolean report) {
+        try {
+            unexpectedError(fragment.getParentFragmentManager(), ex, report);
+        } catch (Throwable exex) {
+            Log.w(exex);
+            /*
+                Exception java.lang.IllegalStateException:
+                  at androidx.fragment.app.Fragment.getParentFragmentManager (Fragment.java:1107)
+                  at eu.faircode.email.FragmentDialogForwardRaw.send (FragmentDialogForwardRaw.java:307)
+                  at eu.faircode.email.FragmentDialogForwardRaw.access$200 (FragmentDialogForwardRaw.java:56)
+                  at eu.faircode.email.FragmentDialogForwardRaw$4.onClick (FragmentDialogForwardRaw.java:239)
+                  at androidx.appcompat.app.AlertController$ButtonHandler.handleMessage (AlertController.java:167)
+                  at android.os.Handler.dispatchMessage (Handler.java:106)
+                  at android.os.Looper.loopOnce (Looper.java:210)
+                  at android.os.Looper.loop (Looper.java:299)
+                  at android.app.ActivityThread.main (ActivityThread.java:8168)
+                  at java.lang.reflect.Method.invoke (Method.java)
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:556)
+                  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1037)
+             */
+        }
+    }
+
     static void unexpectedError(FragmentManager manager, Throwable ex) {
         unexpectedError(manager, ex, true);
     }
@@ -1952,7 +1972,8 @@ public class Log {
                 Helper.hasPlayStore(context) ? "s" : "",
                 BuildConfig.DEBUG ? "d" : "",
                 ActivityBilling.isPro(context) ? "+" : "-"));
-        sb.append(String.format("Package: %s\r\n", BuildConfig.APPLICATION_ID));
+        sb.append(String.format("Package: %s uid: %d\r\n",
+                BuildConfig.APPLICATION_ID, android.os.Process.myUid()));
         sb.append(String.format("Android: %s (SDK device=%d target=%d)\r\n",
                 Build.VERSION.RELEASE, Build.VERSION.SDK_INT, Helper.getTargetSdk(context)));
 
@@ -1968,6 +1989,18 @@ public class Log {
         sb.append(String.format("Last cleanup: %s\r\n", new Date(last_cleanup)));
         sb.append(String.format("Now: %s\r\n", new Date()));
         sb.append(String.format("Zone: %s\r\n", TimeZone.getDefault().getID()));
+
+        String language = prefs.getString("language", null);
+        sb.append(String.format("Locale: def=%s lang=%s\r\n",
+                Locale.getDefault(), language));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+            sb.append(String.format("System: %s\r\n",
+                    Resources.getSystem().getConfiguration().locale));
+        else {
+            LocaleList ll = Resources.getSystem().getConfiguration().getLocales();
+            for (int i = 0; i < ll.size(); i++)
+                sb.append(String.format("System: %s\r\n", ll.get(i)));
+        }
 
         sb.append("\r\n");
 
@@ -1991,9 +2024,6 @@ public class Log {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
             sb.append(String.format("SoC: %s/%s\r\n", Build.SOC_MANUFACTURER, Build.SOC_MODEL));
         sb.append(String.format("OS version: %s\r\n", osVersion));
-        sb.append(String.format("uid: %d\r\n", android.os.Process.myUid()));
-        sb.append(String.format("Log main: %b protocol: %b debug: %b build: %b\r\n",
-                main_log, protocol, Log.isDebugLogLevel(), BuildConfig.DEBUG));
         sb.append("\r\n");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -2020,27 +2050,22 @@ public class Log {
             }
         }
 
+        sb.append(String.format("Log main: %b protocol: %b debug: %b build: %b\r\n",
+                main_log, protocol, Log.isDebugLogLevel(), BuildConfig.DEBUG));
+
         int[] contacts = ContactInfo.getStats();
         sb.append(String.format("Contact lookup: %d cached: %d\r\n",
                 contacts[0], contacts[1]));
-
-        String language = prefs.getString("language", null);
-        sb.append(String.format("Locale: def=%s lang=%s\r\n",
-                Locale.getDefault(), language));
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
-            sb.append(String.format("System: %s\r\n",
-                    Resources.getSystem().getConfiguration().locale));
-        else {
-            LocaleList ll = Resources.getSystem().getConfiguration().getLocales();
-            for (int i = 0; i < ll.size(); i++)
-                sb.append(String.format("System: %s\r\n", ll.get(i)));
-        }
 
         String charset = MimeUtility.getDefaultJavaCharset();
         sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
 
         sb.append("Transliterate: ")
                 .append(TextHelper.canTransliterate())
+                .append("\r\n");
+
+        sb.append("Classifier: ")
+                .append(Helper.humanReadableByteCount(MessageClassifier.getSize(context)))
                 .append("\r\n");
 
         sb.append("\r\n");
@@ -2055,11 +2080,21 @@ public class Log {
                     Helper.formatDuration(running), Helper.formatDuration(cpu), util));
         }
 
+        Boolean largeHeap;
+        try {
+            ApplicationInfo info = pm.getApplicationInfo(context.getPackageName(), 0);
+            largeHeap = (info.flags & ApplicationInfo.FLAG_LARGE_HEAP) != 0;
+        } catch (Throwable ex) {
+            largeHeap = null;
+        }
+
         ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
-        sb.append(String.format("Memory class: %d/%d MB Total: %s\r\n",
-                am.getMemoryClass(), am.getLargeMemoryClass(), Helper.humanReadableByteCount(mi.totalMem)));
+        sb.append(String.format("Memory class: %d/%d Large: %s MB Total: %s\r\n",
+                am.getMemoryClass(), am.getLargeMemoryClass(),
+                largeHeap == null ? "?" : Boolean.toString(largeHeap),
+                Helper.humanReadableByteCount(mi.totalMem)));
 
         long storage_available = Helper.getAvailableStorageSpace();
         long storage_total = Helper.getTotalStorageSpace();
@@ -2233,7 +2268,13 @@ public class Log {
                     Object value = settings.get(key);
                     if ("wipe_mnemonic".equals(key) && value != null)
                         value = "[redacted]";
-                    if (key != null && key.startsWith("oauth."))
+                    else if ("cloud_user".equals(key) && value != null)
+                        value = "[redacted]";
+                    else if ("cloud_password".equals(key) && value != null)
+                        value = "[redacted]";
+                    else if ("pin".equals(key) && value != null)
+                        value = "[redacted]";
+                    else if (key != null && key.startsWith("oauth."))
                         value = "[redacted]";
                     size += write(os, key + "=" + value + "\r\n");
                 }
@@ -2373,12 +2414,13 @@ public class Log {
 
                         size += write(os, account.name + (account.primary ? "*" : "") +
                                 " " + (account.protocol == EntityAccount.TYPE_IMAP ? "IMAP" : "POP") + "/" + account.auth_type +
+                                (account.provider == null ? "" : " [" + account.provider + "]") +
                                 " " + account.host + ":" + account.port + "/" + account.encryption +
                                 " sync=" + account.synchronize +
                                 " exempted=" + account.poll_exempted +
                                 " poll=" + account.poll_interval +
                                 " ondemand=" + account.ondemand +
-                                " msgs=" + content + "/" + messages +
+                                " msgs=" + content + "/" + messages + " max=" + account.max_messages +
                                 " ops=" + db.operation().getOperationCount(account.id) +
                                 " schedule=" + (!ignore_schedule) + (ignore_schedule ? " !!!" : "") +
                                 " unmetered=" + unmetered + (unmetered ? " !!!" : "") +
@@ -2392,6 +2434,7 @@ public class Log {
                         for (TupleFolderEx folder : folders)
                             if (folder.synchronize) {
                                 int unseen = db.message().countUnseen(folder.id);
+                                int hidden = db.message().countHidden(folder.id);
                                 int notifying = db.message().countNotifying(folder.id);
                                 size += write(os, "- " + folder.name + " " +
                                         folder.type + (folder.inherited_type == null ? "" : "/" + folder.inherited_type) +
@@ -2401,7 +2444,7 @@ public class Log {
                                         " days=" + folder.sync_days + "/" + folder.keep_days +
                                         " msgs=" + folder.content + "/" + folder.messages + "/" + folder.total +
                                         " ops=" + db.operation().getOperationCount(folder.id, null) +
-                                        " unseen=" + unseen + " notifying=" + notifying +
+                                        " unseen=" + unseen + " hidden=" + hidden + " notifying=" + notifying +
                                         " " + folder.state +
                                         (folder.last_sync == null ? "" : " " + dtf.format(folder.last_sync)) +
                                         "\r\n");
@@ -2428,7 +2471,13 @@ public class Log {
                         for (EntityIdentity identity : identities)
                             if (identity.synchronize) {
                                 size += write(os, account.name + "/" + identity.name + (identity.primary ? "*" : "") + " " +
-                                        identity.display + " " + identity.email + " " +
+                                        identity.display + " " + identity.email +
+                                        (identity.self ? "" : " !self") +
+                                        (identity.provider == null ? "" : " [" + identity.provider + "]") +
+                                        (TextUtils.isEmpty(identity.sender_extra_regex) ? "" : " regex=" + identity.sender_extra_regex) +
+                                        (!identity.sender_extra ? "" : " edit" +
+                                                (identity.sender_extra_name ? "+name" : "-name") +
+                                                (identity.reply_extra_name ? "+copy" : "-copy")) +
                                         " " + identity.host + ":" + identity.port + "/" + identity.encryption +
                                         " ops=" + db.operation().getOperationCount(EntityOperation.SEND) +
                                         " " + identity.state +
@@ -2480,6 +2529,9 @@ public class Log {
                                 jfolder.put("selectable", folder.selectable);
                                 jfolder.put("inferiors", folder.inferiors);
                                 jfolder.put("auto_add", folder.auto_add);
+                                jfolder.put("tbc", Boolean.TRUE.equals(folder.tbc));
+                                jfolder.put("rename", folder.rename);
+                                jfolder.put("tbd", Boolean.TRUE.equals(folder.tbd));
                                 jfolder.put("operations", db.operation().getOperationCount(folder.id, null));
                                 jfolder.put("error", folder.error);
                                 if (folder.last_sync != null)
@@ -2629,7 +2681,7 @@ public class Log {
             }
 
             db.attachment().setDownloaded(attachment.id, size);
-            if (!BuildConfig.DEBUG)
+            if (!BuildConfig.DEBUG && size > MIN_ZIP_SIZE)
                 attachment.zip(context);
         } catch (Throwable ex) {
             Log.e(ex);
@@ -2739,7 +2791,7 @@ public class Log {
                 }
 
                 db.attachment().setDownloaded(attachment.id, size);
-                if (!BuildConfig.DEBUG)
+                if (!BuildConfig.DEBUG && size > MIN_ZIP_SIZE)
                     attachment.zip(context);
             } finally {
                 if (proc != null)
@@ -2845,6 +2897,21 @@ public class Log {
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                 try {
+                    List<UriPermission> uperms = context.getContentResolver().getPersistedUriPermissions();
+                    if (uperms != null)
+                        for (UriPermission uperm : uperms) {
+                            size += write(os, String.format("%s r=%b w=%b %s\r\n",
+                                    uperm.getUri().toString(),
+                                    uperm.isReadPermission(),
+                                    uperm.isWritePermission(),
+                                    new Date(uperm.getPersistedTime())));
+                        }
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+                size += write(os, "\r\n");
+
+                try {
                     PackageInfo pi = context.getPackageManager()
                             .getPackageInfo(BuildConfig.APPLICATION_ID, PackageManager.GET_PERMISSIONS);
                     for (int i = 0; i < pi.requestedPermissions.length; i++)
@@ -2892,6 +2959,24 @@ public class Log {
 
                 size += write(os, "\r\n");
 
+                try {
+                    List<WorkInfo> works = WorkManager
+                            .getInstance(context)
+                            .getWorkInfos(WorkQuery.fromStates(
+                                    WorkInfo.State.ENQUEUED,
+                                    WorkInfo.State.BLOCKED,
+                                    WorkInfo.State.RUNNING))
+                            .get();
+                    for (WorkInfo work : works) {
+                        size += write(os, String.format("Work: %s\r\n",
+                                work.toString()));
+                    }
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+
+                size += write(os, "\r\n");
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     Map<Integer, Integer> exts = SdkExtensions.getAllExtensionVersions();
                     for (Integer ext : exts.keySet())
@@ -2919,6 +3004,31 @@ public class Log {
                     }
                     size += write(os, "\r\n");
                 }
+
+                List<File> files = new ArrayList<>();
+                try {
+                    files.addAll(Helper.listFiles(context.getFilesDir(), MIN_FILE_SIZE));
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+                try {
+                    files.addAll(Helper.listFiles(context.getCacheDir(), MIN_FILE_SIZE));
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+
+                Collections.sort(files, new Comparator<File>() {
+                    @Override
+                    public int compare(File f1, File f2) {
+                        return -Long.compare(f1.length(), f2.length());
+                    }
+                });
+
+                for (int i = 0; i < Math.min(100, files.size()); i++)
+                    size += write(os, String.format("%d %s %s\r\n", i + 1,
+                            Helper.humanReadableByteCount(files.get(i).length()),
+                            files.get(i).getAbsoluteFile()));
+                size += write(os, "\r\n");
 
                 size += write(os, String.format("Configuration: %s\r\n\r\n",
                         context.getResources().getConfiguration()));

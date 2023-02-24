@@ -215,7 +215,6 @@
     <string name="title_setup_export_remark">  Konfigurazio-fitxategia kontuaren konfigurazio eta informazio guztia jasotzen duenez, pasahitz batekin zifratzen da.
   Pasahitza beharrezkoa da konfigurazioa berriro inportatzeko; beraz, mesedez, ez ahaztu!    </string>
     <string name="title_setup_export_do">Esportazio-fitxategiak doikuntza eta datu guztiak izango ditu, baina ez dago mezurik, ezta erreferentziazko irudirik ere sinaduretan</string>
-    <string name="title_setup_import_do">Inportatutako kontuak daudenak gainidatzi gabe gehituko dira</string>
     <string name="title_setup_password">Pasahitza</string>
     <string name="title_setup_password_chars">Pasahitzak kontrol karaktereak edo espazio zuriak ditu</string>
     <string name="title_setup_password_repeat">Errepikatu pasahitza</string>
@@ -284,6 +283,7 @@
     <string name="title_advanced_section_encryption">Zifratzea</string>
     <string name="title_advanced_section_notifications">Jakinarazpenak</string>
     <string name="title_advanced_section_misc">Miszelanea</string>
+    <string name="title_advanced_section_backup">Babes-kopia</string>
     <string name="title_advanced_default">Aukera guztiek erabili ohi dituzten balio estandarrak dituzte, aplikazioa erabiltzeko aldatu behar ez direnak</string>
     <string name="title_advanced_receive">Jaso kontu guztietako mezuak</string>
     <string name="title_advanced_when">Noiz</string>
@@ -467,10 +467,10 @@
     <string name="title_advanced_quick_scroll">Erakutsi azkar gora/behera korritzeko ikonoak</string>
     <string name="title_advanced_folder_nav">Itzuli beti karpeten zerrendara mezuen zerrrendatik</string>
     <string name="title_advanced_autoread">Markatu mezuak irakurrita gisa hauek mugitzean</string>
-    <string name="title_advanced_star_snoozed">Gehitu automatikoki izarra atzeratutako mezuetan</string>
     <string name="title_advanced_autounstar">Kendu izarrak mezuetatik hauek mugitzean</string>
-    <string name="title_advanced_auto_important">Bihurtu izardun mezuak garrantzitsu automatikoki</string>
     <string name="title_advanced_reset_importance">Berrezarri garrantzia mezuak mugitzean</string>
+    <string name="title_advanced_star_snoozed">Gehitu automatikoki izarra atzeratutako mezuetan</string>
+    <string name="title_advanced_auto_important">Bihurtu izardun mezuak garrantzitsu automatikoki</string>
     <string name="title_advanced_notifications">Kudeatu jakinarazpenak</string>
     <string name="title_advanced_notifications_default">Kanal lehenetsia</string>
     <string name="title_advanced_badge">Erakutsi mezu berrien kopurua abiarazleko ikonoan</string>
@@ -1134,6 +1134,7 @@
     <string name="title_sort_on_attachments">Eranskinak</string>
     <string name="title_sort_on_hidden">Ezkutuan</string>
     <string name="title_sort_ascending">Zaharrena lehena</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Ordena</string>
     <string name="title_filter">Iragazi</string>
     <string name="title_filter_seen">Irakurrita</string>
     <string name="title_filter_unflagged">Izarrik gabe</string>
@@ -1201,6 +1202,7 @@
     <string name="title_rule_header">Goiburuak hau du</string>
     <string name="title_rule_body">Testuak dauka</string>
     <string name="title_rule_body_remark">Baldintza hori erabiltzeak beti deskargatuko du testua mezutik, eta horrek mezu-zerrendaren sinkronizazioa mantsotu dezake</string>
+    <string name="title_rule_time_every_day">Egunero</string>
     <string name="title_rule_regex">Adierazpen erregularra</string>
     <string name="title_rule_and">ETA</string>
     <string name="title_rule_action">Ekintza</string>

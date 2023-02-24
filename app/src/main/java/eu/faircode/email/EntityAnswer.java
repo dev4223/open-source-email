@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -221,6 +221,9 @@ public class EntityAnswer implements Serializable {
                 text = text.replace("$" + name + "$", TextUtils.join("<br>", lines));
             }
 
+        if (BuildConfig.DEBUG)
+            text = text.replace("$version$", BuildConfig.VERSION_NAME);
+
         return text;
     }
 
@@ -331,7 +334,7 @@ public class EntityAnswer implements Serializable {
                 continue;
             order++;
 
-            SpannableStringBuilder ssb = new SpannableStringBuilder(answer.name);
+            SpannableStringBuilder ssb = new SpannableStringBuilderEx(answer.name);
 
             if (answer.color != null) {
                 Drawable d = new ColorDrawable(answer.color);
@@ -431,7 +434,7 @@ public class EntityAnswer implements Serializable {
         icon.setTint(color);
 
         for (EntityAnswer answer : favorites) {
-            SpannableStringBuilder ssb = new SpannableStringBuilder(answer.name);
+            SpannableStringBuilder ssb = new SpannableStringBuilderEx(answer.name);
 
             if (answer.color != null) {
                 Drawable d = new ColorDrawable(answer.color);

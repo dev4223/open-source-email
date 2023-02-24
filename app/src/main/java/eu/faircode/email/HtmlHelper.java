@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
@@ -109,7 +109,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URI;
 import java.text.DateFormat;
-import java.text.Normalizer;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -142,12 +141,13 @@ public class HtmlHelper {
     static final int MAX_SHARE_TEXT_SIZE = 50 * 1024; // characters
     static final int MAX_TRANSLATABLE_TEXT_SIZE = 50 * 1024; // characters
 
+    static final float MIN_LUMINANCE_VIEW = 0.7f;
+    static final float MIN_LUMINANCE_COMPOSE = 0.85f;
+
     private static final int DEFAULT_FONT_SIZE = 16; // pixels
     private static final int DEFAULT_FONT_SIZE_PT = 12; // points
     private static final int GRAY_THRESHOLD = Math.round(255 * 0.2f);
     private static final int COLOR_THRESHOLD = Math.round(255 * 0.1f);
-    private static final float MIN_LUMINANCE_VIEW = 0.7f;
-    private static final float MIN_LUMINANCE_COMPOSE = 0.85f;
     private static final int TAB_SIZE = 4;
     private static final int MAX_ALT = 250;
     private static final int MAX_AUTO_LINK = 250;
@@ -567,6 +567,8 @@ public class HtmlHelper {
             safelist.addTags("center").addAttributes(":all", "align");
         if (!view)
             safelist.addProtocols("img", "src", "content");
+        if (BuildConfig.DEBUG)
+            safelist.addAttributes(":all", "x-computed");
 
         final Document document = new Cleaner(safelist).clean(parsed);
 
@@ -764,7 +766,7 @@ public class HtmlHelper {
                                     // Special case:
                                     //   external draft: very dark/light font
                                     double lum = ColorUtils.calculateLuminance(color);
-                                    if (dark ? lum < 1 - MIN_LUMINANCE_COMPOSE : lum > MIN_LUMINANCE_COMPOSE)
+                                    if (lum < 1 - MIN_LUMINANCE_COMPOSE || lum > MIN_LUMINANCE_COMPOSE)
                                         color = null;
                                 }
 
@@ -981,7 +983,7 @@ public class HtmlHelper {
                             // https://developer.mozilla.org/en-US/docs/Web/CSS/margin
                             // https://developer.mozilla.org/en-US/docs/Web/CSS/padding
                             if (element.isBlock()) {
-                                Float[] p = new Float[4];
+                                Float[] p = new Float[4]; // top, right, bottom, left
 
                                 String[] v = value.split(" ");
                                 for (int i = 0; i < v.length && i < p.length; i++)
@@ -992,7 +994,11 @@ public class HtmlHelper {
                                     p[2] = p[0];
                                     p[3] = p[0];
                                 } else if (v.length == 2) {
+                                    // top and bottom, left and right
                                     p[2] = p[0];
+                                    p[3] = p[1];
+                                } else if (v.length == 3) {
+                                    // top, right and left, bottom
                                     p[3] = p[1];
                                 }
 
@@ -1109,15 +1115,11 @@ public class HtmlHelper {
         // Paragraphs
         for (Element p : document.select("p")) {
             p.tagName("div");
-            if (p.childNodeSize() != 0) {
-                if (p.childNodeSize() == 1) {
-                    Node lonely = p.childNode(0);
-                    if (lonely instanceof TextNode &&
-                            "\u00a0".equals(((TextNode) lonely).getWholeText()))
-                        continue;
-                }
+            if (TextUtils.isEmpty(p.text())) {
+                p.attr("x-line-before", "false");
+                p.attr("x-line-after", "true");
+            } else
                 p.attr("x-paragraph", "true");
-            }
         }
 
         // Short inline quotes
@@ -1866,7 +1868,7 @@ public class HtmlHelper {
             }
 
         for (String key : baseParams.keySet())
-            if (!STYLE_NO_INHERIT.contains(key))
+            if (!STYLE_NO_INHERIT.contains(key) || element)
                 result.put(key, baseParams.get(key));
 
         return TextUtils.join(";", result.values());
@@ -2643,42 +2645,6 @@ public class HtmlHelper {
         return result.value;
     }
 
-    static void collapseQuotes(Document document) {
-        document.body().filter(new NodeFilter() {
-            private int level = 0;
-
-            @Override
-            public FilterResult head(Node node, int depth) {
-                if (level > 0)
-                    return FilterResult.REMOVE;
-
-                if (node instanceof Element) {
-                    Element element = (Element) node;
-                    if ("blockquote".equals(element.tagName()) && hasBorder(element)) {
-                        Element prev = element.previousElementSibling();
-                        if (prev != null &&
-                                "blockquote".equals(prev.tagName()) && hasBorder(prev))
-                            return FilterResult.REMOVE;
-                        else {
-                            level++;
-                            element.html("&#8230;");
-                        }
-                    }
-                }
-
-                return FilterResult.CONTINUE;
-            }
-
-            @Override
-            public FilterResult tail(Node node, int depth) {
-                if ("blockquote".equals(node.nodeName()))
-                    level--;
-
-                return FilterResult.CONTINUE;
-            }
-        });
-    }
-
     static void removeSignatures(Document d) {
         d.body().filter(new NodeFilter() {
             private boolean remove = false;
@@ -2842,7 +2808,7 @@ public class HtmlHelper {
     }
 
     static Spanned highlightHeaders(Context context, String headers, boolean blocklist) {
-        SpannableStringBuilder ssb = new SpannableStringBuilderEx(headers);
+        SpannableStringBuilder ssb = new SpannableStringBuilderEx(headers.replaceAll("\\t", " "));
         int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
         int colorVerified = Helper.resolveColor(context, R.attr.colorVerified);
         int colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
@@ -3000,9 +2966,12 @@ public class HtmlHelper {
                                 Element span = document.createElement("span");
                                 span.attr("style", mergeStyles(
                                         span.attr("style"),
-                                        "font-size:larger; background-color:" + encodeWebColor(color)
-                                ));
-                                span.text(text.substring(start, end));
+                                        "font-size:larger !important;" +
+                                                "font-weight:bold !important;" +
+                                                "background-color:" + encodeWebColor(color) + " !important"));
+                                span.text(tnode.getWholeText().length() == text.length()
+                                        ? tnode.getWholeText().substring(start, end)
+                                        : text.substring(start, end));
                                 holder.appendChild(span);
 
                                 prev = end;

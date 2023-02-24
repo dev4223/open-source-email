@@ -18,6 +18,7 @@
     <string name="channel_notification">E-mail</string>
     <string name="channel_progress">Πρόοδος</string>
     <string name="channel_update">Ενημερώσεις</string>
+    <string name="channel_announcements">Ανακοινώσεις</string>
     <string name="channel_warning">Προειδοποιήσεις</string>
     <string name="channel_error">Σφάλματα</string>
     <string name="channel_alert">Ειδοποιήσεις διακομιστή</string>
@@ -176,9 +177,11 @@
     <string name="title_setup_gmail_rationale">Παρακαλώ, παραχωρήστε τις απαιτούμενες άδειες για την επιλογή ενός λογαριασμού και την ανάγνωση του ονόματός σας</string>
     <string name="title_setup_gmail_permissions">Η Google θα ζητήσει άδειες που αφορούν στην ανάγνωση, σύνταξη, αποστολή και οριστική διαγραφή όλων των μηνυμάτων σας. Το FairEmail δεν θα διαγράψει ποτέ τα μηνύματά σας χωρίς τη ρητή συγκατάθεσή σας.</string>
     <string name="title_setup_gmail_login">Εάν το Chrome είναι συνδεδεμένο με έναν λογαριασμό, μπορεί να προστεθεί ένας καινούργιος λογαριασμός μόνον μέσα από το Android. Αυτό μπορεί να αποφευχθεί, εάν αποσυνδεθείτε από το Chrome μέσω των ρυθμίσεων συγχρονισμού στο Chrome.</string>
+    <string name="title_setup_gmail_max">Σε περίπτωση μηνύματος σφάλματος \"Είστε συνδεδεμένοι στον μέγιστο αριθμό λογαριασμών\", πρέπει να αποσυνδεθείτε από όλους τους λογαριασμούς Google στον περιηγητή.</string>
     <string name="title_setup_gmail_on_device">Γιατί πρέπει να επιλέξω έναν λογαριασμό περασμένο στη συσκευή;</string>
     <string name="title_setup_gmail_password">Θέλω να εξουσιοδοτήσω έναν λογαριασμό με έναν κωδικό πρόσβασης αντί για έναν λογαριασμό στη συσκευή</string>
     <string name="title_setup_office_auth">Το σφάλμα \'ΠΙΣΤΟΠΟΙΗΣΗ απέτυχε\' μπορεί να προκληθεί επειδή το IMAP/SMTP έχει απενεργοποιηθεί από το διαχειριστή του συστήματος</string>
+    <string name="title_setup_office_auth_5_7_3">Παρακαλώ, δοκιμάστε τον οδηγό γρήγορης ρύθμισης: \"Άλλος πάροχος\".</string>
     <string name="title_setup_oauth_rationale">Παραχωρήστε πρόσβαση στον λογαριασμό σας %1$s</string>
     <string name="title_setup_oauth_update">Εκ νέου εξουσιοδότηση ενός ήδη υπάρχοντος λογαριασμού (διαφορετικά, δημιουργήστε έναν καινούργιο λογαριασμό)</string>
     <string name="title_setup_oauth_updated">Η εξουσιοδότηση λογαριασμού ενημερώθηκε</string>
@@ -212,6 +215,7 @@
     <string name="title_setup_doze_remark">Για αξιόπιστη αποστολή και λήψη μηνυμάτων στο παρασκήνιο</string>
     <string name="title_setup_doze_explanation">Οι βελτιστοποιήσεις μπαταρίας θα πρέπει να απενεργοποιηθούν για την εφαρμογή, ώστε να διασφαλιστεί η αξιόπιστη αποστολή και λήψη μηνυμάτων στο παρασκήνιο</string>
     <string name="title_setup_doze_hint">Αν και μπορεί να ακούγεται αντιφατικό, η απενεργοποίηση των βελτιστοποιήσεων μπαταρίας για αυτήν την εφαρμογή, θα έχει ως αποτέλεσμα μικρότερη χρήση μπαταρίας</string>
+    <string name="title_setup_doze_aggressively">Αυτή η συσκευή ενδέχεται να σταματήσει την υπηρεσία συγχρονισμού</string>
     <string name="title_setup_doze_why">Γιατί θα ήταν καλό να απενεργοποιηθούν οι βελτιστοποιήσεις μπαταρίας;</string>
     <string name="title_setup_doze_instructions">Στο επόμενο παράθυρο διαλόγου του Android αλλάζετε το \"Μη βελτιστοποιημένες\" σε \"Όλες οι εφαρμογές\", επιλέγετε αυτήν την εφαρμογή και επιλέγετε \"Να μην γίνεται βελτιστοποίηση\"</string>
     <string name="title_setup_doze_battery">Η μπαταρία χρησιμοποιείται παραπάνω από το κανονικό;</string>
@@ -243,7 +247,8 @@
         Ο κωδικός πρόσβασης απαιτείται για να εισαγάγετε ξανά τις ρυθμίσεις, οπότε, παρακαλούμε, μην τον ξεχάσετε!
     </string>
     <string name="title_setup_export_do">Το αρχείο εξαγωγής θα περιέχει όλες τις ρυθμίσεις και τα δεδομένα, αλλά όχι μηνύματα, ούτε και εικόνες ενσωματωμένες σε υπογραφές</string>
-    <string name="title_setup_import_do">Οι εισαγόμενοι λογαριασμοί θα προστεθούν χωρίς να αντικατασταθεί κάποιος από τους ήδη υπάρχοντες</string>
+    <string name="title_setup_scroll">Οι διάλογοι εισόδου μπορεί να είναι με κύλιση!</string>
+    <string name="title_setup_backup">Πώς δημιουργούνται αντίγραφα ασφαλείας των μηνυμάτων;</string>
     <string name="title_setup_password">Κωδικός πρόσβασης</string>
     <string name="title_setup_password_chars">Ο κωδικός πρόσβασης περιέχει χαρακτήρες ελέγχου ή διαστήματα</string>
     <string name="title_setup_password_repeat">Επανάληψη κωδικού πρόσβασης</string>
@@ -319,6 +324,7 @@
     <string name="title_advanced_section_encryption">Κρυπτογράφηση</string>
     <string name="title_advanced_section_notifications">Ειδοποιήσεις</string>
     <string name="title_advanced_section_misc">Διάφορα</string>
+    <string name="title_advanced_section_backup">Αντίγραφο Ασφαλείας</string>
     <string name="title_advanced_default">Όλες οι επιλογές έχουν συνήθως χρησιμοποιούμενες τυπικές τιμές, χωρίς να είναι ανάγκη να αλλάξουν για να χρησιμοποιηθεί η εφαρμογή</string>
     <string name="title_advanced_receive">Λήψη μηνυμάτων για όλους τους λογαριασμούς</string>
     <string name="title_advanced_when">Πότε</string>
@@ -359,6 +365,7 @@
     <string name="title_advanced_send_reminders">Εμφάνιση υπενθυμίσεων</string>
     <string name="title_advanced_send_delayed">Καθυστέρηση αποστολής μηνυμάτων</string>
     <string name="title_advanced_attach_new">Προσθήκη κοινόχρηστων αρχείων σε ένα νέο πρόχειρο</string>
+    <string name="title_advanced_answer_default">Το σύντομο πάτημα στο κουμπί απάντησης θα:</string>
     <string name="title_advanced_answer_action">Το παρατεταμένο πάτημα στο κουμπί απάντησης θα:</string>
     <string name="title_advanced_send_pending">Προβολή διακριτικού εικονιδίου για απεσταλμένα με χρονοκαθυστέρηση</string>
     <string name="title_advanced_auto_save_paragraph">Αυτόματη αποθήκευση ενός προχείρου μετά από κάθε παράγραφο</string>
@@ -385,6 +392,7 @@
     <string name="title_advanced_reply_move_inbox">Το ίδιο για τα μηνύματα στα εισερχόμενα</string>
     <string name="title_advanced_auto_link">Αυτόματη δημιουργία συνδέσμων</string>
     <string name="title_advanced_plain_only">Αποστολή απλού κειμένου από προεπιλογή</string>
+    <string name="title_advanced_plain_only_reply">Αυτόματη χρήση μόνο απλού κειμένου κατά την απάντηση σε μήνυμα που έχει μόνο απλό κείμενο</string>
     <string name="title_advanced_flow">Αναπροσαρμοσμένη μορφοποίηση για απλό κείμενο</string>
     <string name="title_advanced_usenet_signature">Τήρηση των συμβάσεων υπογραφής του Usenet</string>
     <string name="title_advanced_remove_signatures">Αφαίρεση των γνωστών υπογραφών</string>
@@ -416,6 +424,7 @@
     <string name="title_advanced_caption_message">Μήνυμα</string>
     <string name="title_advanced_caption_message_header">Κεφαλίδα μηνύματος</string>
     <string name="title_advanced_caption_message_body">Σώμα μηνύματος</string>
+    <string name="title_advanced_caption_file">Αρχείο</string>
     <string name="title_advanced_portrait">Κατακόρυφος προσανατολισμός</string>
     <string name="title_advanced_landscape">Οριζόντιος προσανατολισμός</string>
     <string name="title_advanced_two_row">Χρήση δύο γραμμών</string>
@@ -423,20 +432,23 @@
     <string name="title_advanced_min_screen_size">Ελάχιστο μέγεθος οθόνης για διαχωρισμό της οθόνης</string>
     <string name="title_advanced_close_pane">Σύμπτυξη γραμμής ή στήλης κατά το κλείσιμο μιας συζήτησης</string>
     <string name="title_advanced_column_width">Πλάτος στήλης / ύψος γραμμής μηνύματος: %1$s %%</string>
+    <string name="title_advanced_hide_toolbar">Απόκρυψη της πάνω γραμμής εργαλείων κατά την κύλιση μηνυμάτων</string>
     <string name="title_advanced_nav_options">Να προβάλλονται οι επιλογές του μενού πλοήγησης</string>
     <string name="title_advanced_nav_categories">Να προβάλλονται οι κατηγορίες λογαριασμών στο μενού πλοήγησης</string>
     <string name="title_advanced_nav_pin">Καρφίτσωμα του μενού πλοήγησης</string>
     <string name="title_advanced_nav_hide_title">Απόκρυψη των επιλογών του μενού πλοήγησης;</string>
     <string name="title_advanced_nav_hide_message">Μπορείτε να ενεργοποιήσετε ξανά τις επιλογές στις ρυθμίσεις εμφάνισης</string>
+    <string name="title_advanced_nav_last_sync">Προβολής της ώρας του τελευταίου συγχρονισμού στο μενού πλοήγησης</string>
     <string name="title_advanced_nav_message_count">Να προβάλλεται ο αριθμός των τοπικά αποθηκευμένων μηνυμάτων στο μενού πλοήγησης</string>
     <string name="title_advanced_nav_unseen_drafts">Να προβάλλεται ο αριθμός των μη αναγνωσμένων προχείρων στο μενού πλοήγησης</string>
     <string name="title_advanced_nav_pinned_count">Να προβάλλεται ο αριθμός των μη αναγνωσμένων μηνυμάτων στο καρφιτσωμένο μενού πλοήγησης</string>
     <string name="title_advanced_startup">Εμφάνιση στην οθόνη έναρξης</string>
     <string name="title_advanced_cards">Προβολή σε στιλ κάρτας αντί σε στιλ πίνακα</string>
+    <string name="title_advanced_category">Η κατηγορία λογαριασμού μπορεί να ρυθμιστεί στις επιλογές λογαριασμού για προχωρημένους, μέσω της οθόνης των κυρίων ρυθμίσεων</string>
     <string name="title_advanced_cards_beige">Μπεζ φόντο κατά τη χρήση του στιλ κάρτας (ανοιχτόχρωμα θέματα μόνο)</string>
     <string name="title_advanced_tabular_background">Να χρησιμοποιείται το χρώμα της κάρτας ως χρώμα φόντου κατά τη χρήση του στιλ πίνακα</string>
     <string name="title_advanced_cards_shadow">Σκίαση μη αναγνωσμένων μηνυμάτων κατά τη χρήση στιλ κάρτας</string>
-    <string name="title_advanced_cards_shadow_border" comment="title_advanced_cards_shadow_border&#10;Title for option to disable the border for unread messages">Προβολή περιγράμματος</string>
+    <string name="title_advanced_cards_shadow_border">Προβολή περιγράμματος</string>
     <string name="title_advanced_cards_shadow_highlight">Χρήση του χρώματος επισήμανσης αντί του χρώματος έμφασης</string>
     <string name="title_advanced_tabular_dividers">Χρήση διαχωριστικών γραμμών κατά τη χρήση στιλ πίνακα</string>
     <string name="title_advanced_date_header">Ομαδοποίηση κατά ημερομηνία</string>
@@ -541,27 +553,35 @@
     <string name="title_advanced_expand_one">Ανάπτυξη μόνο ενός μηνύματος κάθε φορά</string>
     <string name="title_advanced_collapse_multiple">Σύμπτυξη των μηνυμάτων σε μια συζήτηση με πολλαπλά μηνύματα, πατώντας \"πίσω\"</string>
     <string name="title_advanced_autoclose">Αυτόματη κλείσιμο των συζητήσεων</string>
+    <string name="title_advanced_autoclose_send">Αυτόματο κλείσιμο συζητήσεων μετά την αποστολή μηνυμάτων</string>
     <string name="title_advanced_onclose">Κατά το κλείσιμο μιας συζήτησης</string>
     <string name="title_advanced_autoclose_unread">Να κλείνουν οι συζητήσεις όταν τα μηνύματα επισημαίνονται ως μη αναγνωσμένα</string>
     <string name="title_advanced_collapse_marked">Σύμπτυξη μηνυμάτων που επισημαίνονται χειροκίνητα ως αναγνωσμένα ή μη αναγνωσμένα</string>
     <string name="title_advanced_undo">Χρονικό περιθώριο για αναίρεση</string>
     <string name="title_advanced_quick_filter">Διακριτικά εικονίδια για γρήγορο φιλτράρισμα</string>
     <string name="title_advanced_quick_scroll">Διακριτικά εικονίδια για ταχεία κύλιση προς τα πάνω/κάτω</string>
+    <string name="title_advanced_quick_actions">Προβολή γρήγορων ενεργειών όταν μηνύματα είναι επιλεγμένα</string>
     <string name="title_advanced_folder_nav">Πάντα επιστροφή στη λίστα φακέλων από μια λίστα μηνυμάτων</string>
     <string name="title_advanced_autoread">Αυτόματη σήμανση των μηνυμάτων ως αναγνωσμένων κατά τη μετακίνησή τους</string>
-    <string name="title_advanced_star_snoozed">Αυτόματη προσθήκη αστεριού στα υπό αναβολή μηνύματα</string>
     <string name="title_advanced_autounstar">Αυτόματη αφαίρεση των αστεριών από τα μηνύματα κατά τη μετακίνησή τους</string>
-    <string name="title_advanced_auto_important">Να επισημαίνονται αυτόματα ως σημαντικά τα μηνύματα με αστέρια</string>
     <string name="title_advanced_reset_importance">Επαναφορά του βαθμού σημαντικότητας κατά τη μετακίνηση των μηνυμάτων</string>
+    <string name="title_advanced_thread_sent_trash">Όταν διαγράφεται μια συζήτηση, να διαγράφονται επίσης και τα απεσταλμένα μηνύματα</string>
+    <string name="title_advanced_star_snoozed">Αυτόματη προσθήκη αστεριού στα υπό αναβολή μηνύματα</string>
+    <string name="title_advanced_auto_important">Να επισημαίνονται αυτόματα ως σημαντικά τα μηνύματα με αστέρια</string>
     <string name="title_advanced_cancel_snooze">Ακύρωση αναβολής κατά τη μετακίνηση μηνυμάτων</string>
+    <string name="title_advanced_auto_block_sender">Αυτόματος αποκλεισμός του αποστολέα κατά την αναφορά μηνύματος ως ανεπιθύμητου</string>
     <string name="title_advanced_swipe_reply">Σύρετε προς τα δεξιά τα αναπτυγμένα μηνύματα για να απαντήσετε</string>
     <string name="title_advanced_default_snooze">Προεπιλεγμένος χρόνος αναβολής/καθυστέρησης</string>
+    <string name="title_advanced_default_folder">Επιλογή προεπιλεγμένου φακέλου</string>
     <string name="title_advanced_notifications">Διαχείριση ειδοποιήσεων</string>
+    <string name="title_advanced_notifications_delete">Διαγραφή καναλιών ειδοποιήσεων</string>
     <string name="title_advanced_notifications_default">Προεπιλεγμένο κανάλι</string>
     <string name="title_advanced_notifications_service">Κανάλι παρακολούθησης</string>
     <string name="title_advanced_notifications_newest_first">Να προβάλλονται πρώτα οι πιο πρόσφατες ειδοποιήσεις</string>
     <string name="title_advanced_badge">Προβολή του αριθμού των νέων μηνυμάτων πάνω στο εικονίδιο εκκίνησης</string>
     <string name="title_advanced_unseen_ignored">Να αντιστοιχεί ο αριθμός των νέων μηνυμάτων με τον αριθμό των ειδοποιήσεων</string>
+    <string name="title_advanced_notify_grouping">Ομαδοποίηση ειδοποιήσεων</string>
+    <string name="title_advanced_notify_private">Να παραμένουν οι ειδοποιήσεις ιδιωτικές όταν η συσκευή είναι κλειδωμένη</string>
     <string name="title_advanced_notify_background">Προβολή ειδοποιήσεων μόνο στο υπόβαθρο</string>
     <string name="title_advanced_notify_known">Προβολή ειδοποιήσεων μόνο για τις επαφές</string>
     <string name="title_advanced_notify_suppress_in_call">Αναβολή ειδοποιήσεων κατά τη διάρκεια μιας κλήσης</string>
@@ -616,6 +636,7 @@
     <string name="title_advanced_disconnect_auto_update">Αυτόματη εβδομαδιαία ενημέρωση των λιστών</string>
     <string name="title_advanced_disconnect_links">Χρήση προειδοποιητικών λιστών για συνδέσμους ιχνηλάτησης</string>
     <string name="title_advanced_disconnect_images">Χρήση λιστών για ταυτοποίηση των εικόνων ιχνηλάτησης</string>
+    <string name="title_advanced_clear_all_hint">Αυτό θα διαγράψει όλα τα δεδομένα της εφαρμογής από τη συσκευή σας, συμπεριλαμβανομένων των ρυθμισμένων λογαριασμών ηλεκτρονικού ταχυδρομείου, των μηνυμάτων, των ρυθμίσεων και όλων των συλλεγμένων δεδομένων.</string>
     <string name="title_advanced_mnemonic">Διαγραφή δεδομένων εξ αποστάσεως</string>
     <string name="title_advanced_mnemonic_hint">Οποιοδήποτε μήνυμα έχει ληφθεί και έχει τις παρακάτω λέξεις στη γραμμή θέματος, θα διαγράψει αυτόματα και αμέσως τα δεδομένα της εφαρμογής</string>
     <string name="title_advanced_clear_all">Διαγραφή των δεδομένων της εφαρμογής</string>
@@ -664,6 +685,7 @@
     <string name="title_advanced_check_weekly">Εβδομαδιαίος έλεγχος αντί για καθημερινός</string>
     <string name="title_advanced_beta">Έλεγχος για δοκιμαστικές εκδόσεις στο BitBucket</string>
     <string name="title_advanced_changelog">Προβολή ιστορικού αλλαγών μετά την ενημέρωση</string>
+    <string name="title_advanced_announcements">Έλεγχος για ανακοινώσεις</string>
     <string name="title_advanced_experiments">Δοκιμή πειραματικών χαρακτηριστικών</string>
     <string name="title_advanced_crash_reports">Αποστολή αναφοράς σφαλμάτων</string>
     <string name="title_advanced_cleanup_attachments">Διαγραφή συνημμένων από παλιά μηνύματα</string>
@@ -702,6 +724,7 @@
     <string name="title_advanced_auto_identity_hint">Με αυτό θα επιλέγεται η τελευταία ταυτότητα που έχει χρησιμοποιηθεί κατά την επιλογή ενός παραλήπτη για νέα μηνύματα</string>
     <string name="title_advanced_send_reminders_hint">Να προβάλλεται μια προειδοποίηση όταν το κείμενο του μηνύματος ή το θέμα είναι κενό ή όταν φαίνεται πως ένα συνημμένο λείπει</string>
     <string name="title_advanced_reply_move_hint">Ο διακομιστής ηλ. ταχυδρομείου ενδέχεται να προσθέτει ακόμα τα μηνύματα στον φάκελο απεσταλμένων</string>
+    <string name="title_advanced_compose_color_hint">Πολύ ανοικτά ή πολύ σκούρα χρώματα θα έχουν ως αποτέλεσμα δυσανάγνωστα μηνύματα για τους παραλήπτες</string>
     <string name="title_advanced_usenet_hint">Να παρεμβάλλεται ένα \'-- \' ανάμεσα στο κείμενο και την υπογραφή</string>
     <string name="title_advanced_remove_signature_hint">Αυτό μπορεί να επιφέρει την απαλοιφή είτε υπερβολικά λίγου είτε υπερβολικά πολύ κειμένου</string>
     <string name="title_advanced_metered_hint">Οι συνδέσεις με ογκοχρέωση είναι, γενικά, οι κινητές συνδέσεις διαδικτύου ή τα επί πληρωμή σημεία Wi-Fi</string>
@@ -737,6 +760,9 @@
     <string name="title_advanced_inline_hint">Οι ένθετες εικόνες είναι οι εικόνες που περιλαμβάνονται στο μήνυμα</string>
     <string name="compressed">Τα περιεχόμενα των συμπιεσμένων αρχείων (%1$s) με περισσότερα από %2$s αρχεία ή με αρχεία μεγαλύτερα από %3$s δεν θα προβάλλονται</string>
     <string name="title_advanced_parse_classes_hint">Η προβολή των εικόνων θα είναι πιο ακριβής αλλά με ενδεχόμενη καθυστέρηση</string>
+    <string name="title_advanced_default_folder_hint">        Το Android ενδέχεται να ζητήσει άδεια πρόσβασης στον επιλεγμένο φάκελο, παρόλο που η εφαρμογή δεν το χρειάζεται.
+        Μπορείτε να ακυρώσετε τον διάλογο επιλογής για να επαναφέρετε τον προεπιλεγμένο φάκελο (συνήθως τον φάκελο \"Λήψεις\").
+    </string>
     <string name="title_advanced_restore_on_launch_hint">Επαναφέρεται η τελευταία κατάσταση της εφαρμογής, εφόσον γίνεται επανεκκίνηση εντός %1$d λεπτών μέσω του εικονιδίου εκκίνησης</string>
     <string name="title_advanced_autoexpand_hint">Αυτόματο άνοιγμα του μηνύματος όταν υπάρχει μόνον ένα μήνυμα ή μόνον ένα μη αναγνωσμένο μήνυμα σε μία συζήτηση</string>
     <string name="title_advanced_expandall_hint">Το κουμπί απάντησης δεν θα εμφανίζεται όταν έχουν αναπτυχθεί πολλαπλά μηνύματα, καθώς τότε δεν είναι σαφές σε ποιο μήνυμα ακριβώς αφορά το κουμπί</string>
@@ -789,6 +815,7 @@
     <string name="title_identity_color_hint">Τα χρώματα των ταυτοτήτων έχουν προτεραιότητα έναντι των χρωμάτων των φακέλων και των λογαριασμών</string>
     <string name="title_advanced_sender">Να επιτρέπεται η τροποποίηση της διεύθυνσης του αποστολέα</string>
     <string name="title_advanced_sender_name">Χρήση ονόματος όταν η διεύθυνση αποστολέα έχει τροποποιηθεί</string>
+    <string name="title_advanced_reply_name">Αντιγραφή του ονόματος από το ληφθέν μήνυμα</string>
     <string name="title_advanced_sender_regex">Να ταιριάξει η κανονική έκφραση (Regex) με το όνομα χρήστη εισερχομένων μηνυμάτων</string>
     <string name="title_identity_reply_to">Απάντηση στη διεύθυνση αυτή</string>
     <string name="title_identity_internal">Εσωτερικά ονόματα τομέα (χωρισμένα με κόμμα)</string>
@@ -809,6 +836,7 @@
     <string name="title_account_interval_hint">Συχνότητα ανανέωσης της σύνδεσης για μηνύματα ώθησης (push) ή συχνότητα ελέγχου για νέα μηνύματα</string>
     <string name="title_account_noop_hint">Αυτό θα ανανεώνει τη σύνδεση πιο ενεργά, αλλά θα χρησιμοποιεί, επίσης, περισσότερη μπαταρία</string>
     <string name="title_account_partial_fetch_hint">Απενεργοποιήστε το μόνο σε περιπτώσεις κενών μηνυμάτων ή χαλασμένων συνημμένων</string>
+    <string name="title_account_raw_fetch_hint">Αν ενεργοποιηθεί, θα αυξηθεί η κατανάλωση μπαταρίας και δεδομένων</string>
     <string name="title_color">Χρώμα</string>
     <string name="title_calendar">Ημερολόγιο</string>
     <string name="title_background">Φόντο</string>
@@ -847,6 +875,9 @@
     <string name="title_leave_deleted">Να παραμένουν τα διεγραμμένα μηνύματα στον διακομιστή</string>
     <string name="title_leave_on_device">Να παραμένουν τα μηνύματα στη συσκευή</string>
     <string name="title_max_messages">Μέγιστος αριθμός μηνυμάτων για κατέβασμα (κενό για όλα)</string>
+    <string name="title_max_messages_remark">        Εισάγετε έναν θετικό αριθμό για να κατεβάσετε τα μηνύματα στο τέλος (το πιο συνηθισμένο)
+        και έναν αρνητικό αριθμό για να κατεβάσετε τα μηνύματα στην αρχή (το λιγότερο συνηθισμένο)
+    </string>
     <string name="title_keep_poll_interval">Χρονικό διάστημα μεταξύ συγχρονισμών (λεπτά)</string>
     <string name="title_keep_alive_interval">Μεσοδιάστημα διατήρησης ενεργούς σύνδεσης (λεπτά)</string>
     <string name="title_keep_alive_noop">Επανεκκίνηση IMAP IDLE περιοδικά</string>
@@ -888,6 +919,7 @@
     <string name="title_account_delete">Να διαγραφεί οριστικά αυτός ο λογαριασμός;</string>
     <string name="title_identity_delete">Να διαγραφεί οριστικά αυτή η ταυτότητα;</string>
     <string name="title_edit_html">Επεξεργασία ως HTML</string>
+    <string name="title_check_html">Έλεγχος HTML</string>
     <string name="title_import_file">Εισαγωγή αρχείου</string>
     <string name="title_sign_key">Κλειδί υπογραφής: %1$s</string>
     <string name="title_last_connected">Τελευταία σύνδεση: %1$s</string>
@@ -973,7 +1005,7 @@
     <string name="title_edit_account_color">Επεξεργασία χρώματος λογαριασμού</string>
     <string name="title_hide_folder">Απόκρυψη φακέλου</string>
     <string name="title_hide_seen_folder">Απόκρυψη φακέλου, εφόσον όλα τα μηνύματα έχουν διαβαστεί</string>
-    <string name="title_hide_seen_folder_hint">Μόνο για τη λίστα φακέλων που εμφανίζεται στην οθόνη έναρξης</string>
+    <string name="title_hide_seen_folder_hint">Μόνον στον λογαριασμό και στην ενοποιημένη λίστα φακέλων</string>
     <string name="title_unified_folder">Προβολή στα ενοποιημένα εισερχόμενα</string>
     <string name="title_navigation_folder">Προβολή στο μενού πλοήγησης</string>
     <string name="title_navigation_folder_hide">Απόκρυψη στο μενού πλοήγησης</string>
@@ -1082,6 +1114,7 @@
     <string name="title_quick_actions">Επιλέξτε ενέργειες</string>
     <string name="title_quick_actions_hint">Θα προβάλλονται μέχρι %1$d ενέργειες</string>
     <string name="title_quick_actions_low">Χαμηλή σημαντικότητα</string>
+    <string name="title_quick_actions_normal">Κανονική σημαντικότητα</string>
     <string name="title_quick_actions_high">Υψηλή σημαντικότητα</string>
     <string name="title_quick_actions_snooze">Αναβολή</string>
     <string name="title_quick_actions_clear">Εκκαθάριση επιλογής μετά την ενέργεια</string>
@@ -1115,6 +1148,7 @@
     <string name="title_reply_receipt">Αποστολή αποδεικτικού ανάγνωσης</string>
     <string name="title_reply_hard_bounce">Αποστολή σκληρής αναπήδησης (hard bounce)</string>
     <string name="title_reply_template">Απάντηση με ένα πρότυπο</string>
+    <string name="title_reply_menu">Προβολή μενού επιλογών</string>
     <string name="title_move_undo">Μετακίνηση προς %1$s (%2$d)</string>
     <string name="title_authentication_failed">Η ταυτοποίηση %1$s απέτυχε</string>
     <string name="title_on_blocklist">Σε λίστα αποκλεισμού ανεπιθύμητης αλληλογραφίας</string>
@@ -1183,6 +1217,7 @@
     </string>
     <string name="title_compose">Σύνταξη</string>
     <string name="title_submitter">Στάλθηκε από:</string>
+    <string name="title_signed_by">Υπογεγραμμένο από:</string>
     <string name="title_delivered_to">Παραδόθηκε σε:</string>
     <string name="title_from">Από:</string>
     <string name="title_to">Προς:</string>
@@ -1244,8 +1279,10 @@
     <string name="title_style_protected">Προστατευόμενο περιεχόμενο</string>
     <string name="title_style_protect_size">Πολύ μεγάλο κείμενο</string>
     <string name="title_style_clear">Εκκαθάριση μορφοποίησης</string>
+    <string name="title_style_setting_keep_selection">Διατήρηση επιλογής</string>
     <string name="title_style_link">Εισαγωγή συνδέσμου</string>
     <string name="title_style_link_address">Διεύθυνση</string>
+    <string name="title_style_link_image">Εισαγωγή ως εικόνα</string>
     <string name="title_style_link_title">Τίτλος</string>
     <string name="title_style_link_metadata">Ανάκτηση τίτλου</string>
     <string name="title_style_link_metadata_remark">Με αυτό θα γίνει ανάκτηση του τίτλου και της εισαχθείσας διεύθυνσης</string>
@@ -1337,12 +1374,15 @@
     <string name="title_alternative_text">Φόρτωση απλού κειμένου</string>
     <string name="title_alternative_html">Φόρτωση HTML</string>
     <string name="title_no_openpgp">Δεν βρέθηκε OpenKeychain</string>
+    <string name="title_no_openpgp_remark">Η από άκρο σε άκρο κρυπτογράφηση PGP πρέπει πρώτα να ρυθμιστεί</string>
     <string name="title_user_interaction">Μεταφορά προς OpenKeychain</string>
     <string name="title_padlock">Χρησιμοποιήστε το λουκέτο για να αποκρυπτογραφήσετε το μήνυμα</string>
     <string name="title_signed_data">Επαλήθευση της υπογραφής για προβολή του κειμένου του μηνύματος</string>
     <string name="title_not_encrypted">Το μήνυμα δεν είναι υπογεγραμμένο ή κρυπτογραφημένο</string>
     <string name="title_no_sign_key">Κανένα κλειδί υπογραφής δεν επιλέχθηκε</string>
     <string name="title_reset_sign_key">Επαναφορά κλειδιού υπογραφής</string>
+    <string name="title_reset_selected_keys">Επαναφορά επιλεγμένων κλειδιών</string>
+    <string name="title_reset_selected_keys_hint">Μπορεί να χρησιμοποιηθεί σε περίπτωση νέων πιστοποιητικών, κλπ.</string>
     <string name="title_signature_none">Μη υπογεγραμμένο μήνυμα</string>
     <string name="title_signature_valid">Έγκυρη υπογραφή μηνύματος</string>
     <string name="title_signature_valid_from">Έγκυρη υπογραφή μηνύματος: %1$s</string>
@@ -1417,6 +1457,7 @@
     <string name="title_sort_on_attachments">Συνημμένα</string>
     <string name="title_sort_on_hidden">Κρυφό</string>
     <string name="title_sort_ascending">Πρώτα τα παλαιότερα</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Σειρά</string>
     <string name="title_filter">Φιλτράρισμα (αποκλεισμός)</string>
     <string name="title_filter_seen">Αναγνωσμένα</string>
     <string name="title_filter_unflagged">Χωρίς αστέρι</string>
@@ -1485,6 +1526,8 @@
     <string name="title_rule_name">Όνομα</string>
     <string name="title_rule_order">Σειρά</string>
     <string name="title_rule_enabled">Ενεργοποιημένος</string>
+    <string name="title_rule_daily">Εκτέλεση μόνο μία φορά κάθε ημέρα</string>
+    <string name="title_rule_age">Μηνύματα παλαιότερα από (ημέρες)</string>
     <string name="title_rule_stop">Διακοπή επεξεργασίας κανόνων μετά την εκτέλεση αυτού του κανόνα</string>
     <string name="title_rule_sender">Ο αποστολέας περιέχει</string>
     <string name="title_rule_sender_known">Ο αποστολέας είναι μια επαφή</string>
@@ -1499,6 +1542,7 @@
     <string name="title_rule_time_after">Λήφθηκε μετά από</string>
     <string name="title_rule_time_before">Λήφθηκε πριν από</string>
     <string name="title_rule_time_rel">Σχετικός χρόνος (λήψης) μεταξύ</string>
+    <string name="title_rule_time_every_day">Καθημερινά</string>
     <string name="title_rule_regex">Regex</string>
     <string name="title_rule_and">ΚΑΙ</string>
     <string name="title_rule_action">Ενέργεια</string>
@@ -1806,6 +1850,7 @@
     <string name="title_widget_padding">Μέγεθος διαστήματος μεταξύ μηνυμάτων</string>
     <string name="title_widget_separator_lines">Προβολή διαχωριστικών γραμμών</string>
     <string name="title_widget_semi_transparent">Ημιδιαφανές φόντο</string>
+    <string name="title_widget_count_top">Προβολή του αριθμού των μη αναγνωσμένων στην κορυφή</string>
     <string name="title_widget_avatars">Προβολή άβαταρ των επαφών</string>
     <string name="title_widget_refresh">Προβολή κουμπιού ανανέωσης μηνυμάτων</string>
     <string name="title_widget_compose">Να εμφανίζεται το κουμπί σύνταξης νέου μηνύματος</string>

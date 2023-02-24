@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ClipData;
@@ -55,6 +55,7 @@ import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.preference.PreferenceManager;
 
+import org.github.DetectHtml;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -317,37 +318,7 @@ public class EditTextCompose extends FixedEditText {
                 }
 
                 private boolean insertLine() {
-                    try {
-                        int start = getSelectionStart();
-                        if (start < 0)
-                            return false;
-
-                        Editable edit = getText();
-                        if (edit == null)
-                            return false;
-
-                        if (start == 0 || edit.charAt(start - 1) != '\n')
-                            edit.insert(start++, "\n");
-                        if (start == edit.length() || edit.charAt(start) != '\n')
-                            edit.insert(start, "\n");
-
-                        edit.insert(start, "\uFFFC"); // Object replacement character
-
-                        int colorSeparator = Helper.resolveColor(getContext(), R.attr.colorSeparator);
-                        float stroke = context.getResources().getDisplayMetrics().density;
-                        edit.setSpan(
-                                new LineSpan(colorSeparator, stroke, 0f),
-                                start, start + 1,
-                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                        setSelection(start + 2);
-
-                        return true;
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                        ToastEx.makeText(context, Log.formatThrowable(ex), Toast.LENGTH_LONG).show();
-                        return false;
-                    }
+                    return StyleHelper.apply(R.id.menu_style_insert_line, null, null, EditTextCompose.this);
                 }
 
                 private boolean insertSnippet(long id) {
@@ -367,7 +338,7 @@ public class EditTextCompose extends FixedEditText {
                         if (snippet.id.equals(id)) {
                             String html = snippet.getHtml(context, to);
 
-                            Helper.getParallelExecutor().submit(new Runnable() {
+                            Helper.getUIExecutor().submit(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
@@ -414,7 +385,7 @@ public class EditTextCompose extends FixedEditText {
             });
 
             DB db = DB.getInstance(context);
-            Helper.getParallelExecutor().submit(new Runnable() {
+            Helper.getUIExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -514,22 +485,34 @@ public class EditTextCompose extends FixedEditText {
                 ClipData.Item item = cbm.getPrimaryClip().getItemAt(0);
 
                 final String html;
-                String h = item.getHtmlText();
+                String h = null;
+                if (raw) {
+                    CharSequence text = item.getText();
+                    if (text != null && DetectHtml.isHtml(text.toString())) {
+                        Log.i("Paste: raw HTML");
+                        h = text.toString();
+                    }
+                }
+                if (h == null)
+                    h = item.getHtmlText();
                 if (h == null) {
                     CharSequence text = item.getText();
                     if (text == null)
                         return false;
+                    Log.i("Paste: using plain text");
                     html = "<div>" + HtmlHelper.formatPlainText(text.toString(), false) + "</div>";
-                } else
+                } else {
+                    Log.i("Paste: using HTML");
                     html = h;
+                }
 
-                Helper.getParallelExecutor().submit(new Runnable() {
+                Helper.getUIExecutor().submit(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            SpannableStringBuilder ssb = (raw)
+                            SpannableStringBuilder ssb = (raw
                                     ? new SpannableStringBuilderEx(html)
-                                    : getSpanned(context, html);
+                                    : getSpanned(context, html));
 
                             EditTextCompose.this.post(new Runnable() {
                                 @Override
@@ -674,7 +657,11 @@ public class EditTextCompose extends FixedEditText {
                             (flags & InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0)
                         info.requestPermission();
 
-                    inputContentListener.onInputContent(info.getContentUri());
+                    String type = null;
+                    if (info.getDescription().getMimeTypeCount() > 0)
+                        type = info.getDescription().getMimeType(0);
+
+                    inputContentListener.onInputContent(info.getContentUri(), type);
                     return true;
                 } catch (Throwable ex) {
                     Log.w(ex);
@@ -689,7 +676,7 @@ public class EditTextCompose extends FixedEditText {
     }
 
     interface IInputContentListener {
-        void onInputContent(Uri uri);
+        void onInputContent(Uri uri, String type);
     }
 
     void setSelectionListener(ISelection listener) {

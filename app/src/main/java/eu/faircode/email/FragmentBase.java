@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.ActionBar.DISPLAY_SHOW_CUSTOM;
@@ -95,15 +95,26 @@ public class FragmentBase extends Fragment {
 
     static final int REQUEST_PERMISSIONS = 1000;
 
-    static final String ACTION_STORE_ATTACHMENT = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENT";
-    static final String ACTION_STORE_ATTACHMENTS = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENTS";
-
     protected ActionBar getSupportActionBar() {
         FragmentActivity activity = getActivity();
         if (activity instanceof ActivityBase)
             return ((ActivityBase) activity).getSupportActionBar();
         else
             return null;
+    }
+
+    protected boolean isActionBarShown() {
+        FragmentActivity activity = getActivity();
+        if (activity instanceof ActivityBase)
+            return ((ActivityBase) activity).isActionBarShown();
+        else
+            return false;
+    }
+
+    protected void showActionBar(boolean show) {
+        FragmentActivity activity = getActivity();
+        if (activity instanceof ActivityBase)
+            ((ActivityBase) activity).showActionBar(show);
     }
 
     protected void setCount(String count) {
@@ -320,21 +331,12 @@ public class FragmentBase extends Fragment {
             getParentFragmentManager().popBackStack();
             finish = false;
         }
-
-        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-        IntentFilter iff = new IntentFilter();
-        iff.addAction(ACTION_STORE_ATTACHMENT);
-        iff.addAction(ACTION_STORE_ATTACHMENTS);
-        lbm.registerReceiver(receiver, iff);
     }
 
     @Override
     public void onPause() {
         Log.d("Pause " + this);
         super.onPause();
-
-        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-        lbm.unregisterReceiver(receiver);
     }
 
     @Override
@@ -500,52 +502,40 @@ public class FragmentBase extends Fragment {
         ((ActivityBilling) getActivity()).addBillingListener(listener, getViewLifecycleOwner());
     }
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                String action = intent.getAction();
+    protected void onStoreAttachment(EntityAttachment attachment) {
+        getArguments().putLong("selected_attachment", attachment.id);
+        Log.i("Save attachment id=" + attachment.id);
 
-                if (ACTION_STORE_ATTACHMENT.equals(action))
-                    onStoreAttachment(intent);
-                if (ACTION_STORE_ATTACHMENTS.equals(action))
-                    onStoreAttachments(intent);
-            }
-        }
-    };
-
-    private void onStoreAttachment(Intent intent) {
-        long attachment = intent.getLongExtra("id", -1L);
-        getArguments().putLong("selected_attachment", attachment);
-        Log.i("Save attachment id=" + attachment);
+        final Context context = getContext();
 
         Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         create.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        create.setType(intent.getStringExtra("type"));
-        create.putExtra(Intent.EXTRA_TITLE, intent.getStringExtra("name"));
-        Helper.openAdvanced(create);
-        PackageManager pm = getContext().getPackageManager();
+        create.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        create.setType(attachment.type);
+        create.putExtra(Intent.EXTRA_TITLE, attachment.name);
+        Helper.openAdvanced(context, create);
+        PackageManager pm = context.getPackageManager();
         if (create.resolveActivity(pm) == null) { // system whitelisted
             Log.w("SAF missing");
-            ToastEx.makeText(getContext(), R.string.title_no_saf, Toast.LENGTH_LONG).show();
+            ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
         } else
-            startActivityForResult(Helper.getChooser(getContext(), create), REQUEST_ATTACHMENT);
+            startActivityForResult(Helper.getChooser(context, create), REQUEST_ATTACHMENT);
     }
 
-    private void onStoreAttachments(Intent intent) {
-        long message = intent.getLongExtra("id", -1L);
+    protected void onStoreAttachments(long message) {
         getArguments().putLong("selected_message", message);
         Log.i("Save attachments message=" + message);
 
+        final Context context = getContext();
+
         Intent tree = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        Helper.openAdvanced(tree);
-        PackageManager pm = getContext().getPackageManager();
+        Helper.openAdvanced(context, tree);
+        PackageManager pm = context.getPackageManager();
         if (tree.resolveActivity(pm) == null) { // system whitelisted
             Log.w("SAF missing");
-            ToastEx.makeText(getContext(), R.string.title_no_saf, Toast.LENGTH_LONG).show();
+            ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
         } else
-            startActivityForResult(Helper.getChooser(getContext(), tree), REQUEST_ATTACHMENTS);
+            startActivityForResult(Helper.getChooser(context, tree), REQUEST_ATTACHMENTS);
     }
 
     private void onSaveAttachment(Intent data) {

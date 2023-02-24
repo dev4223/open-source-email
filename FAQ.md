@@ -54,6 +54,7 @@ For authorizing:
 * Apple iCloud, see [question 148](#user-content-faq148) ([German](https://support.apple.com/de-de/HT204397))
 * Free.fr, see [question 157](#user-content-faq157)
 * Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
+* Posteo: not that there is [no spam folder](https://posteo.de/en/help/how-does-the-posteo-spam-filter-work) ([German](https://posteo.de/hilfe/wie-funktioniert-der-posteo-spamfilter))
 * Web.de: please check if [IMAP is enabled](https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html)
 * Web.de: with two factor authentication you'll need to use [an app password](https://web.de/email/sicherheit/zwei-faktor-authentifizierung/)
 * GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html)). Reportedly, you need to do this on a desktop computer.
@@ -209,7 +210,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
 * [(7) Why are sent messages not appearing (directly) in the sent folder?](#user-content-faq7)
 * [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
-* [(9) What are identities / how do I add an alias?](#user-content-faq9)
+* [(9) What are identities / how do I add an alias / configure a default CC or BCC address?](#user-content-faq9)
 * [~~(11) Why is POP not supported?~~](#user-content-faq11)
 * [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
 * [(12) How does encryption/decryption work?](#user-content-faq12)
@@ -259,7 +260,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(57) Can I use HTML in signatures?](#user-content-faq57)
 * [(58) What does an open/closed email icon mean?](#user-content-faq58)
 * [(59) Can original messages be opened in the browser?](#user-content-faq59)
-* [(60) Did you known ...?](#user-content-faq60)
+* [(60) Did you know ...?](#user-content-faq60)
 * [(61) Why are some messages shown dimmed?](#user-content-faq61)
 * [(62) Which authentication methods are supported?](#user-content-faq62)
 * [(63) How are images resized for displaying on screens?](#user-content-faq63)
@@ -387,6 +388,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(186) How can I let the app auto store iCalendar invitations?](#user-content-faq186)
 * [(187) Are colored stars synchronized across devices?](#user-content-faq187)
 * [(188) Why is Google backup disabled?](#user-content-faq188)
+* [(189) What is cloud sync?](#user-content-faq189)
 
 [I have another question.](#user-content-get-support)
 
@@ -803,7 +805,7 @@ Please see [this FAQ](#user-content-faq111) about OAuth support.
 <br />
 
 <a name="faq9"></a>
-**(9) What are identities / how do I add an alias?**
+**(9) What are identities / how do I add an alias / configure a default CC or BCC address?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq9)
 
@@ -813,13 +815,16 @@ Some providers allow you to have multiple aliases.
 You can configure these by setting the email address field of an additional identity to the alias address
 and setting the user name field to your main email address.
 
-Note that you can copy an identity by long pressing it.
+Note that you can copy an identity by long pressing it in the list of identities (via *Manual setup and account options* in the main settings page).
 
 Alternatively, you can enable *Allow editing sender address* in the advanced settings of an existing identity to edit the username when composing a new message,
 if your provider allows this. Considering the email address test@example.org you can use these special username formats:
 
-* Username *+extra* will result in the email address *test+extra@example.org*
-* Username *@extra* will result in the email address *test@extra.example.org*
+* "*+extra*" will result in the email address "*test+extra@example.org*"
+* "*@extra*" will result in the email address "*test@extra.example.org*"
+* "*Some name, username*" will result in the email address "*Some name, &lt;username@example.org&gt;*" (since version 1.2032)
+
+You can configure a default CC or BCC address in the advanced identity settings.
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
@@ -1228,6 +1233,11 @@ See [here](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-f
 
 Please see [this FAQ](#user-content-faq139) for possible causes of the error *... User is authenticated but not connected ...*.
 
+For unknown reasons, some Outlook/Hotmail accounts cannot send messages
+because of the server error '*535 5.7.3 Authentication unsuccessful*'.
+This can be resolved by authenticating the account with an (app) password (see above) instead of with OAuth.
+You should use the "*Other provider*" wizard instead of "*Outlook / Office 365 (OAuth)*" in this case.
+
 For setting up an Office 365 account, please see [this FAQ](#user-content-faq156).
 
 <br />
@@ -1264,6 +1274,7 @@ Possible causes of messages not being synchronized (sent or received) are:
 * The number of days to synchronize message for is set too low
 * There is no usable internet connection
 * The email server is temporarily not available
+* Battery optimizations were not disable via setup step 3
 * Android stopped the synchronization service
 * A memory management app stopped the synchronization service
 
@@ -1273,8 +1284,10 @@ If there are any error messages, please see [this FAQ](#user-content-faq22).
 
 On some devices, where there are lots of applications competing for memory, Android may stop the synchronization service as a last resort.
 
-Some Android versions stop apps and services too aggressively.
-See [this dedicated website](https://dontkillmyapp.com/) and [this Android issue](https://issuetracker.google.com/issues/122098785) for more information.
+Some Android versions, especially those of Samsung, OnePlus, Huawei and Xiaomi, stop apps and services too aggressively.
+See [this dedicated website](https://dontkillmyapp.com/) "*Don't kill my app*" for solutions,
+and [this Android issue](https://issuetracker.google.com/issues/122098785) (requires logging in with a Google account) for more information.
+
 If you have a Doogee device, please [see here](https://android.stackexchange.com/questions/214639/background-apps-get-killed-by-something-other-than-battery-optimization).
 
 Disabling battery optimizations (setup step 3) reduces the chance Android will stop the synchronization service.
@@ -1661,15 +1674,15 @@ please [contact me](https://contact.faircode.eu/?product=fairemailsupport).
 
 External image:
 
-![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_image_black_48dp.png)
+<img alt="External image" src="https://github.com/M66B/FairEmail/blob/master/images/baseline_image_black_48dp.png" width="48" height="48" />
 
 Embedded image:
 
-![Embedded image](https://github.com/M66B/FairEmail/blob/master/images/baseline_photo_library_black_48dp.png)
+<img alt="Embedded image" src="https://github.com/M66B/FairEmail/blob/master/images/baseline_photo_library_black_48dp.png" width="48" height="48" />
 
 Broken image:
 
-![Broken image](https://github.com/M66B/FairEmail/blob/master/images/baseline_broken_image_black_48dp.png)
+<img alt="Broken image" src="https://github.com/M66B/FairEmail/blob/master/images/baseline_broken_image_black_48dp.png" width="48" height="48" />
 
 Note that downloading external images from a remote server can be used to record you did see a message, which you likely don't want if the message is spam or malicious.
 
@@ -1797,10 +1810,16 @@ to match **the username** of an email address (the part before the @ sign).
 Note that the domain name (the parts after the @ sign) always needs to be equal to the domain name of the identity.
 Since version 1.1640 it is possible to match the full email address with a regex, which can be useful for matching alias domain names.
 
-If you like to match a catch-all email address, this regex is mostly okay:
+If you want to match a catch-all email address, this regex is usually fine, provided all usernames for the domain are yours:
 
 ```
 .*
+```
+
+If you want to *not* match specific addresses, you can use something like this:
+
+```
+^(?!marcel$|johanna$).*
 ```
 
 If you like to match the special purpose email addresses abc@example.com and xyx@example.com
@@ -1813,7 +1832,11 @@ and like to have a fallback email address main@example.com as well, you could do
 You can test a regex [here](https://regexr.com/).
 
 Matched identities can be used to color code messages.
+
 The identity color takes precedence over the folder and account color.
+This means that the color of the color stripe will be determined by first checking if there is a color set for the 'via' (matched) identity,
+and after that if there is a color set for the folder containing the message, and finally if there is a color set for the account the message belongs to.
+
 Setting identity colors is a pro feature.
 
 <br />
@@ -2301,11 +2324,11 @@ so it is better to resize images with an image editor first.
 
 The email icon in the folder list can be open (outlined) or closed (solid):
 
-![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_mail_outline_black_48dp.png)
+<img src="https://github.com/M66B/FairEmail/blob/master/images/baseline_mail_outline_black_48dp.png" width="48" height="48" />
 
 Message bodies and attachments are not downloaded by default.
 
-![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_email_black_48dp.png)
+<img src="https://github.com/M66B/FairEmail/blob/master/images/baseline_email_black_48dp.png" width="48" height="48" />
 
 Message bodies and attachments are downloaded by default.
 
@@ -2557,10 +2580,12 @@ You'll need to give a rule a name and you'll need to define the order in which a
 
 You can disable a rule and you can stop processing other rules after a rule has been executed, which can be used to create a *not* condition.
 
+Since version 1.2018 there is a rule option to run rules daily on messages older than defined.
+
 The following rule conditions are available:
 
-* Sender contains or sender is contact
-* Recipient contains
+* Sender (from, reply-to) contains or sender is contact
+* Recipient (to, cc, bcc) contains
 * Subject contains
 * Has attachments (optional of specific type)
 * Header contains
@@ -2636,11 +2661,16 @@ This will be more reliable than forwarding because forwarded messages might be c
 A *move* action can optionally create subfolders (since version 1.1966) to move messages to, for which you can use the following placeholders:
 
 ```
+$day$ (since version 1.2030)
 $week$
 $month$
 $year$
 $domain$
+$group$ (since version 1.2030)
 ```
+
+$group$ will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only.
+Note that the Android contact provider isn't very fast, so using this placeholder can slow down fetching messages.
 
 <br />
 
@@ -2663,10 +2693,10 @@ $<keyword>$
 To match *set* message flags via a header condition (since version 1.1777):
 
 ```
-$$seen$
-$$answered$
-$$flagged$
-$$deleted$
+$$seen$ (read)
+$$answered$ (replied to)
+$$flagged$ (starred, favorite)
+$$deleted$ (marked as deleted)
 ```
 
 To match *passed* message checks via a header condition (since version 1.1787):
@@ -2688,7 +2718,7 @@ $$signed$ (since version 1.1981)
 $$encrypted$ (since version 1.1981)
 ```
 
-Note that *regex* should be disable and that there should be no white space.
+Note that *regex* should be disabled and that there should be no white space.
 
 Please be aware that a difference in the *from* and *reply-to* domain, and no or multi *from* addresses isn't a good indication of spam.
 
@@ -2781,6 +2811,8 @@ This means that messages with multiple labels will be shown multiple times as we
 
 A lot of knowledge and experience is required to successfully develop an app for a specific platform,
 which is why I develop apps for Android only.
+
+You can install FairEmail on recent Windows versions, though, see [here](#user-content-faq185), and also on ChromeOS via the Play Store.
 
 <br />
 
@@ -2964,7 +2996,7 @@ The BBC article '[Spy pixels in emails have become endemic](https://www.bbc.com/
 
 FairEmail will in most cases automatically recognize tracking images and replace them by this icon:
 
-![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_my_location_black_48dp.png)
+<img src="https://github.com/M66B/FairEmail/blob/master/images/baseline_my_location_black_48dp.png" width="48" height="48" />
 
 Automatic recognition of tracking images can be disabled in the privacy settings.
 
@@ -3596,14 +3628,14 @@ First of all, a purchase will be available on all devices logged into the same G
 You can select the account in the Play store app by tapping on the avatar at the top right.
 
 Google manages all purchases, so as a developer I have little control over purchases.
-So, basically the only thing I can do, is give some advice:
+So, basically, the only thing I can do, is suggest some things:
 
 * Make sure you have an active, working internet connection, and turn off any VPN based app because it might prevent the Play store from checking purchases
 * Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
 * Make sure you installed FairEmail via the right Google account if you configured multiple Google accounts on your device (you might need to reinstall the app)
 * Make sure the Play store app is up to date, please [see here](https://support.google.com/googleplay/answer/1050566?hl=en)
 * Open the Play store app and wait at least a minute to give it time to synchronize with the Google servers
-* Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases; sometimes it help to tap the *buy* button
+* Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases; sometimes it helps to tap the *buy* button
 
 You can also try to clear the cache of the Play store app via the Android apps settings.
 Restarting the device might be necessary to let the Play store recognize the purchase correctly.
@@ -3623,7 +3655,9 @@ Note that:
 
 Please [see here](https://support.google.com/googleplay/answer/4646404) about how to add, remove, or edit your Google Play payment method.
 
-If you cannot solve the problem with the purchase, you will have to contact Google about it.
+If you cannot restore a purchase,
+please contact me via [this contact form](https://contact.faircode.eu/?product=fairemailsupport),
+mentioning the email address of the Google account used for the purchase.
 
 <br />
 
@@ -3697,13 +3731,14 @@ because this could result in grouping unrelated messages and would be at the exp
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq123)
 
 If FairEmail cannot connect to an email server to synchronize messages,
-for example if the internet connection is bad or a firewall or a VPN is blocking the connection,
+for example, if the internet connection is bad or a firewall or a VPN is blocking or aborting the connection,
 FairEmail will retry one time after waiting 8 seconds while keeping the device awake (=use battery power).
 If this fails, FairEmail will schedule an alarm to retry after 5, 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
 
 By temporarily enabling debug mode in the miscellaneous settings, you can disable this logarithmic back-off scheme (since version 1.1855).
 This will result in using a linear back-off scheme, which means that after each successive failure the waiting time will be
 increased by 1 minute the first 5 minutes and thereafter by 5 minutes up to 60 minutes.
+This might increase the battery usage significantly!
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby)
 does not allow to wake the device earlier than after 15 minutes when doze mode is active.
@@ -4058,6 +4093,8 @@ The confusing Microsoft specific server error *User is authenticated but not con
 * There were too many login attempts in a too short time, for example by using multiple email clients at the same time
 * The wrong account was selected in the Microsoft account selector, for example an account with a different email address or a personal instead of a business account
 * An ad blocker or DNS changer is being used
+* Devices in another time zone are connected to the same account
+* A security policy is blocking the login, for example because only specific network connections are allowed
 * There is a problem with the Exchange server license: it might be expired or for another server edition
 * An alias email address is being used as username instead of the primary email address
 * An incorrect login scheme is being used for a shared mailbox: the right scheme is *username@domain\SharedMailboxAlias*
@@ -4132,7 +4169,7 @@ by long pressing the sent folder in the folder list and enabling *Show in unifie
 This way all messages can stay where they belong, while allowing to see both incoming and outgoing messages at one place.
 
 If this is not an option, you can [create a rule](#user-content-faq71) to automatically move sent messages to the inbox
-or set a default CC/BCC address in the advanced identity settings (via the manual setup in the main setup screen) to send yourself a copy.
+or set a default CC or BCC address in the advanced identity settings (via the manual setup in the main setup screen) to send yourself a copy.
 
 <br />
 
@@ -4162,7 +4199,7 @@ Note that trashing a message will permanently remove it from the server and that
 
 To record voice notes you can press this icon in the bottom action bar of the message composer:
 
-![External image](https://github.com/M66B/FairEmail/blob/master/images/baseline_record_voice_over_black_48dp.png)
+<img src="https://github.com/M66B/FairEmail/blob/master/images/baseline_record_voice_over_black_48dp.png" width="48" height="48" />
 
 This requires a compatible audio recorder app to be installed.
 In particular [this common intent](https://developer.android.com/reference/android/provider/MediaStore.Audio.Media.html#RECORD_SOUND_ACTION)
@@ -4181,7 +4218,7 @@ Voice notes will automatically be attached.
 
 Account:
 
-* Version 1.1927-: enable *Separate notifications* in the advanced account settings
+* ~~Version 1.1927-: enable *Separate notifications* in the advanced account settings~~
 * Version 1.1927+: long press the account in the account list and select *Create notification channel*
 * Long press the account in the account list and select *Edit notification channel* to change the notification sound
 
@@ -4226,7 +4263,7 @@ Sometimes the server received date/time is incorrect,
 mostly because messages were incorrectly imported from another server and sometimes due to a bug in the email server.
 
 In these rare cases, it is possible to let FairEmail use either the date/time from the *Date* header (sent time) or from the *Received* header as a workaround.
-This can be changed in the advanced account settings: Settings, tap Manual setup, tap Accounts, tap account, tap Advanced.
+This can be changed in the advanced account settings: go to the Settings, tap *Manual setup and account options*, tap *Accounts*, tap the account, tap *Advanced*.
 
 This will not change the time of already synchronized messages.
 To solve this, long press the folder(s) in the folder list and select *Delete local messages* and *Synchronize now*.
@@ -4320,20 +4357,20 @@ Unfortunately, there exists no intent to delete existing calendar events.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq151)
 
-An email client is meant to read and write messages, not to backup and restore messages.
-Note that breaking or losing your device, means losing your messages!
-
+An email client is meant to read and write messages, not to back up and restore messages.
+In other words, an email client is a viewer for messages on an email server, and not a backup tool.
 Instead, the email provider/server is responsible for backups.
 
 If you want to make a backup yourself, you could use a tool like [imapsync](https://imapsync.lamiral.info/).
 
 Since version 1.1556 it is possible to export all messages of a POP3 folder in mbox format according to [RFC4155](https://www.ietf.org/rfc/rfc4155.txt),
-which might be useful to save sent messages if the email server doesn't.
+which might be useful to backup sent messages if the email server doesn't (which is risky because breaking or losing your device, means losing your sent messages!).
+For this, please long press on the folder in the folder list of an account (tap on the account name in the navigation menu).
 
-If you want to import an mbox file to an existing email account,
-you can use Thunderbird on a desktop computer and the [ImportExportTools](https://addons.thunderbird.net/nl/thunderbird/addon/importexporttools/) add-on.
+If you want to import an mbox file into an existing email account,
+you can use Thunderbird on a desktop computer and the [ImportExportTools NG](https://addons.thunderbird.net/de/thunderbird/addon/importexporttools-ng/) add-on.
 
-Note that in case of IMAP all messages on your device are also on the email server.
+Note that in case of IMAP, all messages on your device are also on the email server.
 
 <br />
 
@@ -5121,6 +5158,9 @@ New invitations will be stored automatically as *tentative*, with no alarms and 
 If you accept or decline an invitation, the status will be updated accordingly, after the accept/decline message has been sent successfully.
 Received updates and cancellations will be processed as well.
 
+Please make sure synchronizing calendars is enabled in the Android account settings
+if you want to synchronize events to other devices.
+
 This feature is available since version 1.1996.
 
 This feature is not available in the Play store version of the app due to the permissions required.
@@ -5146,6 +5186,40 @@ from [automatically being sent to Google](https://developer.android.com/guide/to
 Unfortunately, it is not possible to enable cloud backup for other backup software without enabling Google backup.
 
 <br />
+
+<a name="faq189"></a>
+**(189) What is cloud sync?**
+
+Cloud sync is meant to synchronize configuration data across devices.
+It can be used to restore configuration data onto a new device too.
+
+Cloud sync is based on a cloud account.
+You can register/login by entering a username and a password and using the *Login* button.
+
+A cloud sync account needs to be activated, which is to prevent misusing the cloud sync server.
+To activate a cloud sync account, use the *Activate* button to send an email to a special email address.
+The email needs to come from an address used to activate the pro features before.
+You'll receive an email in response indicating whether the activation was succesful or not.
+
+The app will automatically synchronize once a day around 1:30 AM, provided there is an internet connection,
+otherwise synchronization will be postponed until after an internet connection becomes available.
+You can also manually synchronize with the opposite arrows button.
+
+Synchronization will currently add and update enabled accounts and identities only,
+but on the roadmap is synchronizing blocked senders and filter rules too.
+
+Updating includes enabling/disabling accounts and identities.
+
+Existing accounts or identities will never be deleted
+
+Please note that accounts are only considered the same if they are cloud synced and never if the same account is configured on different devices.
+
+All data is [end-to-end encrypted](https://en.wikipedia.org/wiki/End-to-end_encryption),
+which means that the cloud server can't see the data contents.
+The used encryption method is [AES-GCM-SIV](https://en.wikipedia.org/wiki/AES-GCM-SIV)
+using a 256 bit key derived from the username and password with [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) using SHA256 and 310,000 iterations.
+
+Cloud sync is an experimental feature. It is not available for the Play Store version of the app, yet.
 
 <h2><a name="get-support"></a>Get support</h2>
 
@@ -5175,6 +5249,9 @@ Requested features should:
 The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
 All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
 Fonts, sizes, colors, etc should be material design whenever possible.
+
+There are requests daily to change the appearance in this or that way, but the problem is that these requests are more often than not conflicting.
+To prevent making other people unhappy, changes in the appearance always need to clearly and objectively contribute to the usability of the app to be considered.
 
 A feature will be considered useful to most people if more than 0.1% of the users request a feature, which in practice means about 500 people.
 

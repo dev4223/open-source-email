@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -262,7 +262,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private float textSize;
 
     private boolean date;
-    private boolean week;
+    private boolean date_week;
+    private boolean date_fixed;
     private boolean cards;
     private boolean shadow_unread;
     private boolean shadow_border;
@@ -273,6 +274,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean avatars;
     private boolean color_stripe;
     private boolean check_authentication;
+    private boolean native_dkim;
     private boolean check_tls;
     private boolean check_reply_domain;
     private boolean check_mx;
@@ -337,6 +339,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private DateFormat TF;
     private DateFormat DTF;
 
+    private static final ExecutorService executorDiffer =
+            Helper.getBackgroundExecutor(0, "differ");
+    private static final ExecutorService executorAvatar =
+            Helper.getBackgroundExecutor(0, "avatar");
+
     private static final int MAX_RECIPIENTS_COMPACT = 3;
     private static final int MAX_RECIPIENTS_NORMAL = 7;
 
@@ -396,6 +403,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibPinContact;
         private ImageButton ibAddContact;
 
+        private TextView tvSignedByTitle;
         private TextView tvSubmitterTitle;
         private TextView tvDeliveredToTitle;
         private TextView tvFromExTitle;
@@ -409,6 +417,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvLanguageTitle;
         private TextView tvThreadTitle;
 
+        private TextView tvSignedBy;
         private TextView tvSubmitter;
         private TextView tvDeliveredTo;
         private TextView tvFromEx;
@@ -659,7 +668,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
                             if (ddss.length > 0) {
-                                properties.setValue("quotes", message.id, true);
+                                int s = buffer.getSpanStart(ddss[0]);
+                                properties.setValue("quotes", message.id, buffer.charAt(s) != '0');
+                                properties.setHeight(message.id, null);
                                 bindBody(message, false);
                                 return true;
                             }
@@ -804,6 +815,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibPinContact = vsBody.findViewById(R.id.ibPinContact);
             ibAddContact = vsBody.findViewById(R.id.ibAddContact);
 
+            tvSignedByTitle = vsBody.findViewById(R.id.tvSignedByTitle);
             tvSubmitterTitle = vsBody.findViewById(R.id.tvSubmitterTitle);
             tvDeliveredToTitle = vsBody.findViewById(R.id.tvDeliveredToTitle);
             tvFromExTitle = vsBody.findViewById(R.id.tvFromExTitle);
@@ -817,6 +829,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvLanguageTitle = vsBody.findViewById(R.id.tvLanguageTitle);
             tvThreadTitle = vsBody.findViewById(R.id.tvThreadTitle);
 
+            tvSignedBy = vsBody.findViewById(R.id.tvSignedBy);
             tvSubmitter = vsBody.findViewById(R.id.tvSubmitter);
             tvDeliveredTo = vsBody.findViewById(R.id.tvDeliveredTo);
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
@@ -1462,10 +1475,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setVisibility(
                     message.totalSize != null && ("size".equals(sort) || "attachments".equals(sort))
                             ? View.VISIBLE : View.GONE);
-            SpannableStringBuilder time = new SpannableStringBuilderEx(
-                    (date && !week) && FragmentMessages.SORT_DATE_HEADER.contains(sort)
-                            ? TF.format(message.received)
-                            : Helper.getRelativeTimeSpanString(context, message.received));
+            SpannableStringBuilder time;
+            if (date_week)
+                time = new SpannableStringBuilderEx(Helper.getRelativeDateSpanString(context, message.received));
+            else
+                time = new SpannableStringBuilderEx(
+                        (date || date_fixed) && FragmentMessages.SORT_DATE_HEADER.contains(sort)
+                                ? TF.format(message.received)
+                                : Helper.getRelativeTimeSpanString(context, message.received));
             if (show_recent && message.recent)
                 time.setSpan(new UnderlineSpan(), 0, time.length(), 0);
             tvTime.setText(time);
@@ -1523,8 +1540,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFolder.setText(outbox ? message.identityEmail : message.accountName);
             else if (viewType == ViewType.THREAD || viewType == ViewType.SEARCH)
                 tvFolder.setText(message.getFolderName(context));
-            else
-                tvFolder.setText(message.accountName + "/" + message.getFolderName(context));
+            else {
+                SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                ssb.append(message.accountName);
+                if (message.accountColor != null)
+                    ssb.setSpan(new ForegroundColorSpan(message.accountColor), 0, ssb.length(), 0);
+                ssb.append('/');
+                int s = ssb.length();
+                ssb.append(message.getFolderName(context));
+                if (message.folderColor != null)
+                    ssb.setSpan(new ForegroundColorSpan(message.folderColor), s, ssb.length(), 0);
+                tvFolder.setText(ssb);
+            }
 
             /*else if (type == null) {
                 String folderName = (message.folderDisplay == null
@@ -1688,7 +1715,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                     }
-                }.setLog(false);
+                }.setExecutor(executorAvatar).setLog(false);
                 taskContactInfo.execute(context, owner, aargs, "message:avatar");
             } else
                 bindContactInfo(message, info, addresses);
@@ -1758,6 +1785,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibPinContact.setVisibility(View.GONE);
             ibAddContact.setVisibility(View.GONE);
 
+            tvSignedByTitle.setVisibility(View.GONE);
             tvSubmitterTitle.setVisibility(View.GONE);
             tvDeliveredToTitle.setVisibility(View.GONE);
             tvFromExTitle.setVisibility(View.GONE);
@@ -1771,6 +1799,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvLanguageTitle.setVisibility(View.GONE);
             tvThreadTitle.setVisibility(View.GONE);
 
+            tvSignedBy.setVisibility(View.GONE);
             tvSubmitter.setVisibility(View.GONE);
             tvDeliveredTo.setVisibility(View.GONE);
             tvFromEx.setVisibility(View.GONE);
@@ -2365,7 +2394,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibPin.setVisibility(tools && !outbox && button_pin && pin ? View.VISIBLE : View.GONE);
                     ibShare.setVisibility(tools && !outbox && button_share && message.content ? View.VISIBLE : View.GONE);
                     ibEvent.setVisibility(tools && !outbox && button_event && message.content ? View.VISIBLE : View.GONE);
-                    ibSearchText.setVisibility(tools && !outbox && button_search_text && message.content && !full ? View.VISIBLE : View.GONE);
+                    ibSearchText.setVisibility(tools && !outbox && button_search_text && message.content ? View.VISIBLE : View.GONE);
                     ibSearch.setVisibility(tools && !outbox && button_search && (froms > 0 || tos > 0) ? View.VISIBLE : View.GONE);
                     ibTranslate.setVisibility(tools && !outbox && button_translate && DeepL.isAvailable(context) && message.content ? View.VISIBLE : View.GONE);
                     ibFullScreen.setVisibility(tools && full && button_full_screen && message.content ? View.VISIBLE : View.GONE);
@@ -2573,6 +2602,32 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibNotifyContact.setVisibility(show_addresses && hasChannel && froms > 0 ? View.VISIBLE : View.GONE);
             ibPinContact.setVisibility(show_addresses && pin && contacts && froms > 0 ? View.VISIBLE : View.GONE);
             ibAddContact.setVisibility(show_addresses && contacts && froms > 0 ? View.VISIBLE : View.GONE);
+
+
+            boolean known_signer = false;
+            if (native_dkim &&
+                    message.signedby != null &&
+                    message.from != null &&
+                    message.from.length == 1) {
+                // https://dmarcly.com/blog/what-is-dmarc-identifier-alignment-domain-alignment
+                String domain = UriHelper.getEmailDomain(((InternetAddress) message.from[0]).getAddress());
+                if (domain != null)
+                    for (String signer : message.signedby.split(","))
+                        if (Objects.equals(
+                                UriHelper.getRootDomain(context, signer),
+                                UriHelper.getRootDomain(context, domain))) {
+                            known_signer = true;
+                            break;
+                        }
+            }
+            boolean show_signers = (native_dkim &&
+                    message.signedby != null &&
+                    (show_addresses || !known_signer));
+
+            tvSignedByTitle.setVisibility(show_signers ? View.VISIBLE : View.GONE);
+            tvSignedBy.setVisibility(show_signers ? View.VISIBLE : View.GONE);
+            tvSignedBy.setTextColor(known_signer ? textColorTertiary : colorAccent);
+            tvSignedBy.setText(message.signedby);
 
             tvSubmitterTitle.setVisibility(!TextUtils.isEmpty(submitter) ? View.VISIBLE : View.GONE);
             tvSubmitter.setVisibility(!TextUtils.isEmpty(submitter) ? View.VISIBLE : View.GONE);
@@ -2834,7 +2889,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             boolean show_full = properties.getValue("full", message.id);
             boolean show_images = properties.getValue("images", message.id);
-            boolean show_quotes = (properties.getValue("quotes", message.id) || !collapse_quotes);
+            boolean show_quotes = properties.getValue("quotes", message.id);
 
             boolean dark = Helper.isDarkTheme(context);
             boolean force_light = properties.getValue("force_light", message.id);
@@ -2964,6 +3019,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putBoolean("show_full", show_full);
             args.putBoolean("show_images", show_images);
             args.putBoolean("show_quotes", show_quotes);
+            args.putBoolean("collapse_quotes", collapse_quotes);
             args.putInt("zoom", zoom);
 
             float scale = (size == 0 || textSize == 0 ? 1.0f : size / (textSize * message_zoom / 100f));
@@ -2988,6 +3044,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     final boolean show_full = args.getBoolean("show_full");
                     final boolean show_images = args.getBoolean("show_images");
                     final boolean show_quotes = args.getBoolean("show_quotes");
+                    final boolean collapse_quotes = args.getBoolean("collapse_quotes");
                     final int zoom = args.getInt("zoom");
                     final float scale = args.getFloat("scale");
                     final boolean download_plain = prefs.getBoolean("download_plain", false);
@@ -3204,10 +3261,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                             args.putParcelable("actions", getConversationActions(message, document, context));
 
-                        // Collapse quotes
-                        if (!show_quotes)
-                            HtmlHelper.collapseQuotes(document);
-
                         // Draw images
                         SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, new HtmlHelper.ImageGetterEx() {
                             @Override
@@ -3224,26 +3277,73 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             }
                         }, null);
 
-                        if (show_quotes)
+                        if (!collapse_quotes)
                             return ssb;
 
                         // Replace quote spans
-                        final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
                         QuoteSpan[] quoteSpans = ssb.getSpans(0, ssb.length(), QuoteSpan.class);
+                        if (quoteSpans == null || quoteSpans.length == 0)
+                            return ssb;
+
+                        List<QuoteSpan> lqs = new ArrayList<>();
                         for (QuoteSpan quoteSpan : quoteSpans) {
                             int s = ssb.getSpanStart(quoteSpan);
                             int e = ssb.getSpanEnd(quoteSpan);
-                            ssb.setSpan(
-                                    new DynamicDrawableSpan() {
-                                        @Override
-                                        public Drawable getDrawable() {
-                                            Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_format_quote_24);
-                                            d.setTint(colorAccent);
-                                            d.setBounds(0, 0, px, px);
-                                            return d;
-                                        }
-                                    },
-                                    s, e, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+                            boolean enclosed = false;
+                            for (QuoteSpan eqs : quoteSpans) {
+                                if (eqs == quoteSpan)
+                                    continue;
+
+                                int es = ssb.getSpanStart(eqs);
+                                int ee = ssb.getSpanEnd(eqs);
+                                if (es <= s && ee >= e) {
+                                    enclosed = true;
+                                    break;
+                                }
+                            }
+
+                            if (!enclosed)
+                                lqs.add(quoteSpan);
+                        }
+
+                        final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
+                        final Drawable d = ContextCompat.getDrawable(context, show_quotes
+                                ? R.drawable.outline_unfold_less_24
+                                : R.drawable.twotone_format_quote_24);
+                        d.setTint(colorAccent);
+                        d.setBounds(0, 0, px, px);
+
+                        for (QuoteSpan quoteSpan : lqs) {
+                            int s = ssb.getSpanStart(quoteSpan);
+                            int e = ssb.getSpanEnd(quoteSpan);
+                            if (s == 0 || s == e)
+                                continue;
+
+                            if (show_quotes) {
+                                ssb.insert(s - 1, "\n0");
+                                ssb.setSpan(
+                                        new DynamicDrawableSpan() {
+                                            @Override
+                                            public Drawable getDrawable() {
+                                                return d;
+                                            }
+                                        },
+                                        s, s + 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                            } else {
+                                for (Object span : ssb.getSpans(s, e, Object.class))
+                                    ssb.removeSpan(span);
+                                ssb.delete(s, e);
+                                ssb.insert(s - 1, "\n1");
+                                ssb.setSpan(
+                                        new DynamicDrawableSpan() {
+                                            @Override
+                                            public Drawable getDrawable() {
+                                                return d;
+                                            }
+                                        },
+                                        s, s + 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                            }
                         }
 
                         return ssb;
@@ -3381,6 +3481,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             message.received);
                 }
             }.setCount(false).execute(context, owner, args, "message:body");
+        }
+
+        public void searchWebView(String text) {
+            if (wvBody instanceof WebView)
+                ((WebView) wvBody).findAllAsync(text);
         }
 
         @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -4108,11 +4213,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ArrayList<Uri> result = new ArrayList<>();
                     for (EntityAttachment attachment : attachments)
                         if (attachment.available &&
-                                attachment.isAttachment() && attachment.isImage()) {
-                            File file = attachment.getFile(context);
-                            Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
-                            result.add(uri);
-                        }
+                                attachment.isAttachment() && attachment.isImage())
+                            result.add(attachment.getUri(context));
 
                     return result;
                 }
@@ -4282,12 +4384,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 } else if (id == R.id.ibSearch) {
                     onSearchContact(message, false);
                 } else if (id == R.id.ibTranslate) {
-                    if (DeepL.canTranslate(context))
-                        onActionTranslate(message);
-                    else {
-                        DeepL.FragmentDialogDeepL fragment = new DeepL.FragmentDialogDeepL();
-                        fragment.show(parentFragment.getParentFragmentManager(), "deepl:configure");
-                    }
+                    onActionTranslate(message);
                 } else if (id == R.id.ibFullScreen)
                     onActionOpenFull(message);
                 else if (id == R.id.ibForceLight) {
@@ -4664,6 +4761,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         .append('\n');
                 sb.append("DMARC: ")
                         .append(message.dmarc == null ? "-" : (message.dmarc ? "✓" : "✗"));
+            }
+
+            if (native_dkim && !TextUtils.isEmpty(message.signedby)) {
+                if (sb.length() > 0)
+                    sb.append('\n');
+                sb.append("Signed by:");
+                for (String signer : message.signedby.split(","))
+                    sb.append('\n').append(signer);
             }
 
             if (Boolean.TRUE.equals(message.blocklist)) {
@@ -5112,7 +5217,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onToggleMessage(TupleMessageEx message) {
-            if (EntityFolder.DRAFTS.equals(message.folderType) &&
+            if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1 &&
                     !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) &&
                     !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
                 context.startActivity(
@@ -5177,10 +5282,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onSaveAttachments(TupleMessageEx message) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(
-                    new Intent(FragmentBase.ACTION_STORE_ATTACHMENTS)
-                            .putExtra("id", message.id));
+            ((FragmentBase) parentFragment).onStoreAttachments(message.id);
         }
 
         private void onActionCopyNote(TupleMessageEx message) {
@@ -5462,10 +5564,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (attachment == null)
                         return;
 
-                    File file = attachment.getFile(context);
-                    Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
                     context.startActivity(new Intent(context, ActivityAMP.class)
-                            .setData(uri)
+                            .setData(attachment.getUri(context))
                             .putExtra("id", attachment.message));
                 }
 
@@ -6022,7 +6122,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private boolean onOpenLink(Uri uri, String title, boolean always_confirm) {
             Log.i("Opening uri=" + uri + " title=" + title + " always confirm=" + always_confirm);
-            uri = Uri.parse(uri.toString().replaceAll("\\s+", ""));
+            uri = Uri.parse(uri.toString().trim().replaceAll("\\s+", "+"));
 
             if (ProtectedContent.isProtectedContent(uri)) {
                 Bundle args = new Bundle();
@@ -6079,10 +6179,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 String scheme = guri.getScheme();
                 String host = guri.getHost();
 
+                String chost = FragmentDialogOpenLink.getConfirmHost(uri);
                 boolean sanitize_links = prefs.getBoolean("sanitize_links", false);
-                boolean confirm_link =
-                        !"https".equalsIgnoreCase(scheme) || TextUtils.isEmpty(host) ||
-                                prefs.getBoolean(host + ".confirm_link", true);
+                boolean confirm_link = (chost == null || prefs.getBoolean(chost + ".confirm_link", true));
                 if (always_confirm || sanitize_links || (confirm_links && confirm_link)) {
                     Bundle args = new Bundle();
                     args.putParcelable("uri", uri);
@@ -6638,12 +6737,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionTranslate(TupleMessageEx message) {
-            Bundle args = new Bundle();
-            args.putLong("id", message.id);
+            if (DeepL.canTranslate(context)) {
+                Bundle args = new Bundle();
+                args.putLong("id", message.id);
 
-            FragmentDialogTranslate fragment = new FragmentDialogTranslate();
-            fragment.setArguments(args);
-            fragment.show(parentFragment.getParentFragmentManager(), "message:translate");
+                FragmentDialogTranslate fragment = new FragmentDialogTranslate();
+                fragment.setArguments(args);
+                fragment.show(parentFragment.getParentFragmentManager(), "message:translate");
+            } else {
+                DeepL.FragmentDialogDeepL fragment = new DeepL.FragmentDialogDeepL();
+                fragment.show(parentFragment.getParentFragmentManager(), "deepl:configure");
+            }
         }
 
         private void onActionForceLight(TupleMessageEx message) {
@@ -6800,8 +6904,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (uris.size() == 1)
                                 intent.putExtra(Intent.EXTRA_STREAM, uris.get(0));
                             else {
-                                intent.setAction(Intent.ACTION_SEND_MULTIPLE);
-                                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                                // Too many apps don't accept ACTION_SEND_MULTIPLE
+                                ClipData clip = null;
+                                ContentResolver resolver = context.getContentResolver();
+                                for (Uri uri : uris) {
+                                    if (clip == null)
+                                        clip = ClipData.newUri(resolver, context.getString(R.string.app_name), uri);
+                                    else
+                                        clip.addItem(new ClipData.Item(uri));
+                                }
+                                intent.setClipData(clip);
                             }
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         }
@@ -6987,6 +7099,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 sheets);
                         if (!TextUtils.isEmpty(computed))
                             element.attr("x-computed", computed);
+                    }
+
+                    if (BuildConfig.DEBUG) {
+                        d = HtmlHelper.sanitizeView(context, d, false);
+                        d.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
                     }
 
                     File dir = Helper.ensureExists(new File(context.getFilesDir(), "shared"));
@@ -7473,7 +7590,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         boolean generated = prefs.getBoolean("generated_icons", true);
 
         this.date = prefs.getBoolean("date", true);
-        this.week = prefs.getBoolean("date_week", false);
+        this.date_week = prefs.getBoolean("date_week", false);
+        this.date_fixed = (!date && prefs.getBoolean("date_fixed", false));
         this.cards = prefs.getBoolean("cards", true);
         this.shadow_unread = prefs.getBoolean("shadow_unread", false);
         this.shadow_border = prefs.getBoolean("shadow_border", true);
@@ -7485,6 +7603,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.avatars = (contacts && avatars) || (bimi || gravatars || libravatars || favicons || generated);
         this.color_stripe = prefs.getBoolean("color_stripe", true);
         this.check_authentication = prefs.getBoolean("check_authentication", true);
+        this.native_dkim = prefs.getBoolean("native_dkim", false);
         this.check_tls = prefs.getBoolean("check_tls", true);
         this.check_reply_domain = prefs.getBoolean("check_reply_domain", true);
         this.check_mx = prefs.getBoolean("check_mx", false);
@@ -7614,6 +7733,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!Objects.equals(prev.bimi_selector, next.bimi_selector)) {
                     same = false;
                     log("bimi_selector changed", next.id);
+                }
+                if (!Objects.equals(prev.signedby, next.signedby)) {
+                    same = false;
+                    log("signedby changed", next.id);
                 }
                 if (!Objects.equals(prev.tls, next.tls)) {
                     same = false;
@@ -7956,7 +8079,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         };
 
         AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(callback)
-                .setBackgroundThreadExecutor(Helper.getParallelExecutor())
+                .setBackgroundThreadExecutor(executorDiffer)
                 .build();
         this.differ = new AsyncPagedListDiffer<>(new AdapterListUpdateCallback(this), config);
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {
@@ -8121,8 +8244,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         if (email == null)
             return;
 
-        email = MessageHelper.addExtra(email, extra);
-        ((InternetAddress) addresses[0]).setAddress(email);
+        Pair<String, String> p = MessageHelper.getExtra(email, extra);
+
+        if (p.first != null)
+            try {
+                ((InternetAddress) addresses[0]).setPersonal(p.first);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+        if (p.second != null)
+            ((InternetAddress) addresses[0]).setAddress(p.second);
     }
 
     PagedList<TupleMessageEx> getCurrentList() {

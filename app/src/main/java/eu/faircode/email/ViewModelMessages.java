@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 public class ViewModelMessages extends ViewModel {
     private AdapterMessage.ViewType last = AdapterMessage.ViewType.UNIFIED;
@@ -66,6 +67,9 @@ public class ViewModelMessages extends ViewModel {
             return super.remove(key);
         }
     };
+
+    private static final ExecutorService executor =
+            Helper.getBackgroundExecutor(0, "model");
 
     private static final int LOCAL_PAGE_SIZE = 50;
     private static final int THREAD_PAGE_SIZE = 100;
@@ -200,7 +204,7 @@ public class ViewModelMessages extends ViewModel {
                     break;
             }
 
-            builder.setFetchExecutor(Helper.getParallelExecutor());
+            builder.setFetchExecutor(executor);
 
             model = new Model(args, builder.build(), boundary);
             models.put(viewType, model);
@@ -241,7 +245,8 @@ public class ViewModelMessages extends ViewModel {
         if (viewType == AdapterMessage.ViewType.UNIFIED)
             models.remove(AdapterMessage.ViewType.FOLDER);
 
-        if (viewType != AdapterMessage.ViewType.SEARCH)
+        if (viewType != AdapterMessage.ViewType.SEARCH &&
+                viewType != AdapterMessage.ViewType.THREAD)
             models.remove(AdapterMessage.ViewType.SEARCH);
 
         if (viewType != AdapterMessage.ViewType.THREAD) {
@@ -432,7 +437,7 @@ public class ViewModelMessages extends ViewModel {
                         Log.i("Observe previous/next fallback=" + result);
                         return result;
                     }
-                }.execute(context, owner, args, "model:fallback");
+                }.setExecutor(executor).execute(context, owner, args, "model:fallback");
             }
         });
     }

@@ -227,7 +227,6 @@
         Mật khẩu đó là bắt buộc để nhập lại cài đặt, nên vui lòng đừng quên nó!
     </string>
     <string name="title_setup_export_do">Tệp xuất sẽ chứa tất cả cài đặt và dữ liệu, nhưng không có thư và không có hình ảnh được nhắc đến trong chữ ký</string>
-    <string name="title_setup_import_do">Các tài khoản được nhập sẽ được thêm mà không ghi đè lên bất kỳ tài khoản đang tồn tại nào</string>
     <string name="title_setup_password">Mật khẩu</string>
     <string name="title_setup_password_chars">Mật khẩu chứa ký tự điều khiển hoặc không gian trắng</string>
     <string name="title_setup_password_repeat">Nhập lại mật khẩu</string>
@@ -302,6 +301,7 @@
     <string name="title_advanced_section_encryption">Mã hóa</string>
     <string name="title_advanced_section_notifications">Thông báo</string>
     <string name="title_advanced_section_misc">Khác</string>
+    <string name="title_advanced_section_backup">Sao lưu</string>
     <string name="title_advanced_default">Tất cả tuỳ chọn đều có các giá trị tiêu chuẩn thường được sử dụng, chúng không cần được thay đổi để sử dụng ứng dụng</string>
     <string name="title_advanced_receive">Nhận thư cho tất cả tài khoản</string>
     <string name="title_advanced_when">Khi nào</string>
@@ -525,10 +525,10 @@
     <string name="title_advanced_quick_scroll">Hiện biểu tượng cuộn lên/xuống nhanh không gây phiền</string>
     <string name="title_advanced_folder_nav">Luôn quay lại danh sách thư mục từ danh sách thư</string>
     <string name="title_advanced_autoread">Tự động đánh dấu thư đã đọc khi di chuyển thư</string>
-    <string name="title_advanced_star_snoozed">Tự động thêm sao khi đặt báo lại thư</string>
     <string name="title_advanced_autounstar">Tự động bỏ sao khỏi thư khi di chuyển thư</string>
-    <string name="title_advanced_auto_important">Tự động làm cho thư được gắn sao trở nên quan trọng</string>
     <string name="title_advanced_reset_importance">Đặt lại tầm quan trọng khi di chuyển thư</string>
+    <string name="title_advanced_star_snoozed">Tự động thêm sao khi đặt báo lại thư</string>
+    <string name="title_advanced_auto_important">Tự động làm cho thư được gắn sao trở nên quan trọng</string>
     <string name="title_advanced_swipe_reply">Vuốt thư đã mở rộng sang phải để trả lời</string>
     <string name="title_advanced_default_snooze">Thời gian trễ/báo lại mặc định</string>
     <string name="title_advanced_notifications">Quản lý thông báo</string>
@@ -933,7 +933,6 @@
     <string name="title_edit_account_color">Sửa màu tài khoản</string>
     <string name="title_hide_folder">Ẩn thư mục</string>
     <string name="title_hide_seen_folder">Ẩn thư mục nếu tất cả thư đã được đọc</string>
-    <string name="title_hide_seen_folder_hint">Chỉ ở danh sách thư mục hiện ở màn hình bắt đầu</string>
     <string name="title_unified_folder">Hiện trong hộp thư đến hợp nhất</string>
     <string name="title_navigation_folder">Hiện trong menu điều hướng</string>
     <string name="title_synchronize_folder">Đồng bộ hoá (nhận thư)</string>
@@ -1354,6 +1353,7 @@
     <string name="title_sort_on_attachments">Tệp đính kèm</string>
     <string name="title_sort_on_hidden">Ẩn</string>
     <string name="title_sort_ascending">Cũ nhất trước</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Thứ tự</string>
     <string name="title_filter">Lọc ra</string>
     <string name="title_filter_seen">Đã đọc</string>
     <string name="title_filter_unflagged">Chưa gắn sao</string>
@@ -1433,6 +1433,7 @@
     <string name="title_rule_time_after">Đã nhận sau</string>
     <string name="title_rule_time_before">Đã nhận trước</string>
     <string name="title_rule_time_rel">Thời gian tương đối (đã nhận) giữa</string>
+    <string name="title_rule_time_every_day">Mỗi ngày</string>
     <string name="title_rule_regex">Biểu thức tìm kiếm</string>
     <string name="title_rule_and">VÀ</string>
     <string name="title_rule_action">Hành động</string>

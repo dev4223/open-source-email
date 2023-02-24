@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
@@ -76,6 +76,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private Button btnCheck;
     private ContentLoadingProgressBar pbCheck;
     private TextView tvPatience;
+    private TextView tvProgress;
 
     private TextView tvError;
     private TextView tvErrorHint;
@@ -100,6 +101,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private Group grpCertificate;
     private Group grpError;
 
+    private int title;
     private boolean update;
     private EmailProvider bestProvider = null;
     private Bundle bestArgs = null;
@@ -118,6 +120,7 @@ public class FragmentQuickSetup extends FragmentBase {
         super.onCreate(savedInstanceState);
 
         Bundle args = getArguments();
+        title = args.getInt("title", R.string.title_setup_other);
         update = args.getBoolean("update", true);
 
         lockOrientation();
@@ -126,7 +129,7 @@ public class FragmentQuickSetup extends FragmentBase {
     @Override
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        setSubtitle(R.string.title_setup_other);
+        setSubtitle(title);
         setHasOptionsMenu(true);
 
         view = (ViewGroup) inflater.inflate(R.layout.fragment_quick_setup, container, false);
@@ -141,6 +144,7 @@ public class FragmentQuickSetup extends FragmentBase {
         btnCheck = view.findViewById(R.id.btnCheck);
         pbCheck = view.findViewById(R.id.pbCheck);
         tvPatience = view.findViewById(R.id.tvPatience);
+        tvProgress = view.findViewById(R.id.tvProgress);
 
         tvError = view.findViewById(R.id.tvError);
         tvErrorHint = view.findViewById(R.id.tvErrorHint);
@@ -248,6 +252,7 @@ public class FragmentQuickSetup extends FragmentBase {
         tvSmtpFingerprint.setText(null);
         pbCheck.setVisibility(View.GONE);
         tvPatience.setVisibility(View.GONE);
+        tvProgress.setVisibility(View.GONE);
         pbSave.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
         tvInstructions.setMovementMethod(LinkMovementMethod.getInstance());
@@ -302,6 +307,7 @@ public class FragmentQuickSetup extends FragmentBase {
                 Helper.setViewsEnabled(view, true);
                 pbCheck.setVisibility(View.GONE);
                 tvPatience.setVisibility(View.GONE);
+                tvProgress.setVisibility(View.GONE);
                 pbSave.setVisibility(View.GONE);
             }
 
@@ -333,13 +339,20 @@ public class FragmentQuickSetup extends FragmentBase {
                 Throwable fail = null;
                 List<EmailProvider> providers;
                 if (best == null)
-                    providers = EmailProvider.fromEmail(context, email, EmailProvider.Discover.ALL);
+                    providers = EmailProvider.fromEmail(context, email, EmailProvider.Discover.ALL,
+                            new EmailProvider.IDiscovery() {
+                                @Override
+                                public void onStatus(String status) {
+                                    postProgress(status);
+                                }
+                            });
                 else
                     providers = Arrays.asList(best);
                 for (EmailProvider provider : providers)
                     try {
                         EntityLog.log(context, "Checking" +
                                 " imap=" + provider.imap + " smtp=" + provider.smtp);
+                        postProgress(provider.imap + "/" + provider.smtp);
 
                         if (fail == null)
                             args.putParcelable("provider", provider);
@@ -540,6 +553,7 @@ public class FragmentQuickSetup extends FragmentBase {
                                 account.keep_alive_noop = provider.noop;
 
                                 account.partial_fetch = provider.partial;
+                                account.raw_fetch = provider.raw;
 
                                 account.created = new Date().getTime();
                                 account.last_connected = account.created;
@@ -622,6 +636,12 @@ public class FragmentQuickSetup extends FragmentBase {
             }
 
             @Override
+            protected void onProgress(CharSequence status, Bundle data) {
+                tvProgress.setText(status);
+                tvProgress.setVisibility(View.VISIBLE);
+            }
+
+            @Override
             protected void onExecuted(Bundle args, EmailProvider result) {
                 setManual(false);
 
@@ -691,7 +711,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                     if (provider != null &&
                             provider.imap != null && provider.smtp != null) {
-                        tvUser.setText("-");
+                        tvUser.setText(TextUtils.isEmpty(provider.username) ? "-" : provider.username);
                         tvImap.setText(provider.imap.toString());
                         tvSmtp.setText(provider.smtp.toString());
                         grpSetup.setVisibility(View.VISIBLE);

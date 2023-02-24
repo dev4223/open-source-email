@@ -182,7 +182,6 @@ As \"Berjochten op de server stean litte l\" net ynskeakele is, gean dizze berjo
     <string name="title_setup_close">Slut ynstellings</string>
     <string name="title_setup_export">Ynstellings eksportearje</string>
     <string name="title_setup_import">Ynstellings ymportearje</string>
-    <string name="title_setup_import_do">Ymporteare akkounts sille tafoege wurde sûnder besteande oerskriuwe</string>
     <string name="title_setup_password">Wachtwurd</string>
     <string name="title_setup_password_chars">Wachtwurd befettet karakters foar kontrôle as spaasjes</string>
     <string name="title_setup_password_repeat">Werhelje wachtwurd</string>
@@ -381,10 +380,10 @@ As \"Berjochten op de server stean litte l\" net ynskeakele is, gean dizze berjo
     <string name="title_advanced_quick_filter">Lit net-opfallende rappe filterikoanen sjen</string>
     <string name="title_advanced_quick_scroll">Lit net-opfallende rappe byldkaikes omheech / omleech sjen</string>
     <string name="title_advanced_autoread">Markearje berjochten automatysk lêzen op bewegende berjochten</string>
-    <string name="title_advanced_star_snoozed">Foegje stjer automatysk ta by slûgjen fan berjochten</string>
     <string name="title_advanced_autounstar">Fuortsmite stjerren automatysk fan berjochten op bewegende berjochten</string>
-    <string name="title_advanced_auto_important">Meitsje automatyske berjochten wichtich</string>
     <string name="title_advanced_reset_importance">Belang werstelle by it ferpleatsen fan berjochten</string>
+    <string name="title_advanced_star_snoozed">Foegje stjer automatysk ta by slûgjen fan berjochten</string>
+    <string name="title_advanced_auto_important">Meitsje automatyske berjochten wichtich</string>
     <string name="title_advanced_notifications">Notifikaasjes beheare</string>
     <string name="title_advanced_notifications_default">Standert kanaal</string>
     <string name="title_advanced_notifications_newest_first">Toan earst nijste notifikaasjes</string>
@@ -1048,6 +1047,7 @@ As \"Berjochten op de server stean litte l\" net ynskeakele is, gean dizze berjo
     <string name="title_sort_on_attachments">Taheaksels</string>
     <string name="title_sort_on_hidden">Ferburgen</string>
     <string name="title_sort_ascending">Aldste earst</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Sekwinsje</string>
     <string name="title_filter">Útfilterje</string>
     <string name="title_filter_seen">Lêze</string>
     <string name="title_filter_unflagged">Unstjerre</string>
@@ -1115,6 +1115,7 @@ As \"Berjochten op de server stean litte l\" net ynskeakele is, gean dizze berjo
     <string name="title_rule_time_after">Ûntfangen nei</string>
     <string name="title_rule_time_before">Ûntfangen foardat</string>
     <string name="title_rule_time_rel">Relative tiid tusken (ûntfongen)</string>
+    <string name="title_rule_time_every_day">Eltse dei</string>
     <string name="title_rule_regex">Regex</string>
     <string name="title_rule_and">EN</string>
     <string name="title_rule_action">Aksje</string>

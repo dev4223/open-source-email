@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.app.NotificationChannel;
@@ -236,8 +236,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         private void bindTo(final TupleFolderEx folder) {
             boolean disabled = isDisabled(folder);
-            boolean hide_seen = (account < 0 && !primary &&
-                    folder.hide_seen && folder.unseen + folder.childs_unseen == 0);
 
             int p = 0;
             if (show_compact)
@@ -247,7 +245,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     p = dp3;
             view.setPadding(p, p, p, p);
             view.setActivated(folder.tbc != null || folder.rename != null || folder.tbd != null);
-            view.setAlpha(folder.hide || hide_seen || disabled ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(folder.hide || folder.isHidden(listener != null) || disabled ? Helper.LOW_LIGHT : 1.0f);
 
             if (listener == null && selectedModel != null)
                 itemView.setBackgroundColor(
@@ -374,7 +372,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     tvType.setText(EntityFolder.localizeType(context, folder.type) +
                             (folder.inherited_type == null || !(BuildConfig.DEBUG || EntityFolder.SENT.equals(folder.inherited_type))
                                     ? ""
-                                    : "/" + EntityFolder.localizeType(context, folder.inherited_type)));
+                                    : "/" + EntityFolder.localizeType(context, folder.inherited_type)) +
+                            (EntityFolder.FLAGGED.equals(folder.subtype) ? "*" : ""));
 
                 tvTotal.setText(folder.total == null ? null : NF.format(folder.total));
 
@@ -655,6 +654,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     (folder.selectable && (debug || BuildConfig.DEBUG)))
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_export_messages, order++, R.string.title_export_messages);
 
+            if (!folder.selectable)
+                popupMenu.getMenu()
+                        .add(Menu.NONE, R.string.title_hide_folder, order++, R.string.title_hide_folder)
+                        .setCheckable(true)
+                        .setChecked(folder.hide);
+
             int childs = 0;
             if (folder.child_refs != null)
                 for (TupleFolderEx child : folder.child_refs)
@@ -768,6 +773,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     } else if (itemId == R.string.title_delete_channel) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                             onActionDeleteChannel();
+                        return true;
+                    } else if (itemId == R.string.title_hide_folder) {
+                        onActionHide();
                         return true;
                     } else if (itemId == R.string.title_create_sub_folder) {
                         onActionCreateFolder();
@@ -1162,7 +1170,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     intent.setType("*/*");
                     intent.putExtra(Intent.EXTRA_TITLE, filename);
-                    Helper.openAdvanced(intent);
+                    Helper.openAdvanced(context, intent);
 
                     if (intent.resolveActivity(context.getPackageManager()) == null) { //  // system/GET_CONTENT whitelisted
                         ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
@@ -1210,6 +1218,30 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 @RequiresApi(api = Build.VERSION_CODES.O)
                 private void onActionDeleteChannel() {
                     folder.deleteNotificationChannel(context);
+                }
+
+                private void onActionHide() {
+                    Bundle args = new Bundle();
+                    args.putLong("id", folder.id);
+                    args.putBoolean("hide", !folder.hide);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) throws Throwable {
+                            long id = args.getLong("id");
+                            boolean hide = args.getBoolean("hide");
+
+                            DB db = DB.getInstance(context);
+                            db.folder().setFolderHide(id, hide);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "folder:hide");
                 }
 
                 private void onActionCreateFolder() {
@@ -1346,7 +1378,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         if (account < 0 && !primary) {
             List<TupleFolderEx> filtered = new ArrayList<>();
             for (TupleFolderEx folder : folders)
-                if (show_hidden || !folder.hide_seen || folder.unseen + folder.childs_unseen > 0)
+                if (show_hidden || !folder.isHidden(listener != null))
                     filtered.add(folder);
 
             if (filtered.size() > 0)
@@ -1558,9 +1590,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     (parent.subscribed != null && parent.subscribed) ||
                     (childs != null && childs.size() > 0)) {
                 parent.indentation = indentation;
-                result.add(parent);
-                if (!parent.collapsed && childs != null)
-                    result.addAll(childs);
+                if (show_hidden || !parent.isHidden(listener != null)) {
+                    result.add(parent);
+                    if (!parent.collapsed && childs != null)
+                        result.addAll(childs);
+                }
             }
         }
 

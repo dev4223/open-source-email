@@ -2,9 +2,195 @@
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
 
-### [Ostromia](https://en.wikipedia.org/wiki/Ostromia)
-
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
+
+### [Quetecsaurus](https://en.wikipedia.org/wiki/Quetecsaurus)
+
+### Next version
+
+* Added sort options for filter rules
+* Added option to disable auto hiding of answer button
+* Added option to auto enable sync of new folders
+* Added presets for snooze / delayed send
+* Added account/folder colors to account/folder name in message header
+* Added scrolling of original message when using up/down buttons
+* Added Korean and Norwegian to DeepL
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2045 - 2023-02-18
+
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2043 - 2023-02-05
+
+* Small improvements and minor bug fixes
+* Updated material design library
+* Updated translations
+
+### 1.2042 - 2023-02-03
+
+* Fixed confirming non-https links
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2041 - 2023-02-02
+
+* Added collapsing block quotes again
+* Added biometric authentication to show passwords
+* Added every day to rule relative time condition
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated translations
+
+### 1.2040 - 2023-01-31
+
+* Reverted message text preview layout change
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2039 - 2023-01-31
+
+* Fixed upgrading from older versions
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2038 - 2023-01-30
+
+* Showing person icon for contacts without avatars
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2037 - 2023-01-29
+
+* Fixed archiving of sent messages
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2036 - 2023-01-29
+
+* Fixed folder item layout
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2035 - 2023-01-28
+
+* Added option to disable trashing sent messages when trashing a conversation
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2034 - 2023-01-27
+
+* Fixed sending attachments with POP3
+* Added styling settings with an option to keep the selection
+* Added option to select default folder (behavior settings)
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2033 - 2023-01-26
+
+* Fixed incorrect folder state icons
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2032 - 2023-01-26
+
+* Added local POP3 operations to reduce the number of account connections
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2031 - 2023-01-24
+
+* Added [cloud sync](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq189) to synchronize accounts across devices
+* Added "*Don't ask again*" for mailto links
+* Added inserting image links
+* Added menu item to check HTML syntax of a signature
+* Added option to disable last sync time in the navigation menu
+* Added option to disable automatically blocking spam senders
+* Added option to configure default answer button action
+* Added option to automatically close conversations on sending messages
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2030 - 2023-01-14
+
+* Added backup settings tab page
+* Added option to disable quick actions
+* Improved performance
+* Small improvements and minor bug fixes
+* Updated AndroidX
+* Updated translations
+
+### 1.2029 - 2023-01-09
+
+* Added auto hiding top toolbar when scrolling messages (can be turned off in the display settings)
+* Added option to disable automatically plain text only when replying to a plain text only message
+* Added option to show unread count badge at the top of the unread count widget
+* Added option for normal importance quick action
+* Small improvements and minor bug fixes
+* Updated translations
+
+### [Pelecanimimus](https://en.wikipedia.org/wiki/Pelecanimimus)
+
+### 1.2028 - 2023-01-06
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2027 - 2023-01-04
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2026 - 2023-01-02
+
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2025 - 2023-01-01
+
+* Happy New Year / Frohes neues Jahr / Bonne Année
+* Small improvements and minor bug fixes
+
+### 1.2024 - 2022-12-31
+
+* Small improvements and minor bug fixes
+
+### 1.2023 - 2022-12-30
+
+* Restored the bugfix and declared that the app is sending email addresses to third-parties in the Play Store data safety form when it is not :-(
+
+### 1.2022 - 2022-12-30
+
+* Reverted a bugfix to comply with Play Store policies
+* Small improvements and minor bug fixes
+
+### 1.2021 - 2022-12-30
+
+* Disabled BIMI for the Play Store version
+* Small improvements and minor bug fixes
+
+### 1.2020 - 2022-12-30
+
+* Fixed opening the app in some circumstances
+* Small improvements and minor bug fixes
+
+### 1.2019 - 2022-12-28
+
+* Fixed push messages in some circumstances
+* Small improvements and minor bug fixes
+
+### 1.2018 - 2022-12-28
+
+* Fixed occasional freezes
+* Added option to run rules daily
+* Added inserting lines to style toolbar
+* Small improvements and minor bug fixes
+* Updated translations
 
 ### 1.2017 - 2022-12-23
 

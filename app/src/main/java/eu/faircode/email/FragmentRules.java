@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -173,14 +173,18 @@ public class FragmentRules extends FragmentBase {
             searching = savedInstanceState.getString("fair:searching");
         adapter.search(searching);
 
-        DB db = DB.getInstance(getContext());
+        final Context context = getContext();
+        DB db = DB.getInstance(context);
         db.rule().liveRules(folder).observe(getViewLifecycleOwner(), new Observer<List<TupleRuleEx>>() {
             @Override
             public void onChanged(List<TupleRuleEx> rules) {
                 if (rules == null)
                     rules = new ArrayList<>();
 
-                adapter.set(protocol, rules);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                String sort = prefs.getString("rule_sort", "order");
+
+                adapter.set(protocol, sort, rules);
 
                 pbWait.setVisibility(View.GONE);
                 grpReady.setVisibility(View.VISIBLE);
@@ -270,13 +274,35 @@ public class FragmentRules extends FragmentBase {
 
         MenuCompat.setGroupDividerEnabled(menu, true);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String sort = prefs.getString("rule_sort", "order");
+
+        if ("last_applied".equals(sort))
+            menu.findItem(R.id.menu_sort_on_last_applied).setChecked(true);
+        else if ("applied".equals(sort))
+            menu.findItem(R.id.menu_sort_on_applied).setChecked(true);
+        else
+            menu.findItem(R.id.menu_sort_on_order).setChecked(true);
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_export) {
+        if (itemId == R.id.menu_sort_on_order) {
+            item.setChecked(true);
+            onMenuSort("order");
+            return true;
+        } else if (itemId == R.id.menu_sort_on_applied) {
+            item.setChecked(true);
+            onMenuSort("applied");
+            return true;
+        } else if (itemId == R.id.menu_sort_on_last_applied) {
+            item.setChecked(true);
+            onMenuSort("last_applied");
+            return true;
+        } else if (itemId == R.id.menu_export) {
             onMenuExport();
             return true;
         } else if (itemId == R.id.menu_import) {
@@ -289,9 +315,17 @@ public class FragmentRules extends FragmentBase {
         return super.onOptionsItemSelected(item);
     }
 
+    private void onMenuSort(String sort) {
+        final Context context = getContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putString("rule_sort", sort).apply();
+        adapter.setSort(sort);
+    }
+
     private void onMenuExport() {
-        if (!ActivityBilling.isPro(getContext())) {
-            startActivity(new Intent(getContext(), ActivityBilling.class));
+        final Context context = getContext();
+        if (!ActivityBilling.isPro(context)) {
+            startActivity(new Intent(context, ActivityBilling.class));
             return;
         }
 
@@ -301,7 +335,7 @@ public class FragmentRules extends FragmentBase {
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_TITLE, "fairemail_" +
                 new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".rules");
-        Helper.openAdvanced(intent);
+        Helper.openAdvanced(context, intent);
         startActivityForResult(intent, REQUEST_EXPORT);
     }
 

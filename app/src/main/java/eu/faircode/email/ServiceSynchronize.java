@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -122,11 +122,18 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private boolean isInCar = false;
     private boolean isOptimizing = false;
 
-    private boolean foreground = false;
+    private MutableLiveData<Boolean> foreground = new MutableLiveData<>();
     private final Map<Long, Core.State> coreStates = new Hashtable<>();
     private final MutableLiveData<ConnectionHelper.NetworkState> liveNetworkState = new MutableLiveData<>();
     private final MutableLiveData<List<TupleAccountState>> liveAccountState = new MutableLiveData<>();
     private final MediatorState liveAccountNetworkState = new MediatorState();
+
+    private static final ExecutorService executorService =
+            Helper.getBackgroundExecutor(1, "sync");
+    private static final ExecutorService executorNotify =
+            Helper.getBackgroundExecutor(1, "notify");
+
+    static final int DEFAULT_BACKOFF_POWER = 3; // 2^3=8 seconds (totally 8+2x20=48 seconds)
 
     private static final long BACKUP_DELAY = 30 * 1000L; // milliseconds
     private static final long PURGE_DELAY = 30 * 1000L; // milliseconds
@@ -136,7 +143,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final int TUNE_KEEP_ALIVE_INTERVAL_STEP = 2; // minutes
     private static final int OPTIMIZE_POLL_INTERVAL = 15; // minutes
     private static final int CONNECT_BACKOFF_START = 8; // seconds
-    private static final int CONNECT_BACKOFF_MAX = 8; // seconds (totally 8+2x20=48 seconds)
     private static final int CONNECT_BACKOFF_INTERMEDIATE = 5; // minutes
     private static final int CONNECT_BACKOFF_ALARM_START = 15; // minutes
     private static final int CONNECT_BACKOFF_ALARM_MAX = 60; // minutes
@@ -373,7 +379,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 }
                                 if (current.canRun(ServiceSynchronize.this)) {
                                     event = true;
-                                    start(current, current.accountState.isEnabled(current.enabled) || sync, force);
+                                    boolean dosync = (sync ||
+                                            current.accountState.isEnabled(current.enabled) ||
+                                            !prev.accountState.equals(current.accountState)); // Token refreshed
+                                    start(current, dosync, force);
                                 }
                             } else if (current.canRun(ServiceSynchronize.this) &&
                                     state != null && !state.isAlive()) {
@@ -464,7 +473,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
 
             private void init(final TupleAccountNetworkState accountNetworkState) {
-                Helper.getSerialExecutor().submit(new RunnableEx("state#init") {
+                executorService.submit(new RunnableEx("state#init") {
                     @Override
                     public void delegate() {
                         long start = new Date().getTime();
@@ -523,7 +532,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 }, "sync.account." + accountNetworkState.accountState.id);
                 coreStates.put(accountNetworkState.accountState.id, astate);
 
-                Helper.getSerialExecutor().submit(new RunnableEx("state#start") {
+                executorService.submit(new RunnableEx("state#start") {
                     @Override
                     public void delegate() {
                         long start = new Date().getTime();
@@ -564,7 +573,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Scheduling,
                         "Service stop=" + accountNetworkState);
 
-                Helper.getSerialExecutor().submit(new RunnableEx("state#stop") {
+                executorService.submit(new RunnableEx("state#stop") {
                     @Override
                     public void delegate() {
                         long start = new Date().getTime();
@@ -602,7 +611,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Scheduling,
                         "Service delete=" + accountNetworkState);
 
-                Helper.getSerialExecutor().submit(new RunnableEx("state#delete") {
+                executorService.submit(new RunnableEx("state#delete") {
                     @Override
                     public void delegate() {
                         long start = new Date().getTime();
@@ -629,7 +638,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
 
             private void quit(final Integer eventId) {
-                Helper.getSerialExecutor().submit(new RunnableEx("state#quit") {
+                executorService.submit(new RunnableEx("state#quit") {
                     @Override
                     public void delegate() {
                         long start = new Date().getTime();
@@ -688,7 +697,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             private final Runnable backup = new RunnableEx("state#backup") {
                 @Override
                 public void delegate() {
-                    Helper.getSerialExecutor().submit(new RunnableEx("state#backup#exec") {
+                    executorService.submit(new RunnableEx("state#backup#exec") {
                         @Override
                         public void delegate() {
                             long start = new Date().getTime();
@@ -807,6 +816,18 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
         });
 
+        foreground.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean foreground) {
+                Log.i("Observed foreground=" + foreground);
+                boolean fg = Boolean.TRUE.equals(foreground);
+                if (!fg && (isInCall || isInCar))
+                    mowner.stop();
+                else
+                    mowner.start();
+            }
+        });
+
         MediaPlayerHelper.liveInCall(this, this, new MediaPlayerHelper.IInCall() {
             @Override
             public void onChanged(boolean inCall) {
@@ -814,7 +835,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Debug,
                         "In call=" + inCall + " suppress=" + suppress);
                 isInCall = (inCall && suppress);
-                if (isInCall || isInCar)
+                boolean fg = Boolean.TRUE.equals(foreground.getValue());
+                if (!fg && (isInCall || isInCar))
                     mowner.stop();
                 else
                     mowner.start();
@@ -830,7 +852,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Debug,
                         "Projection=" + projection + " state=" + connectionState + " suppress=" + suppress);
                 isInCar = (projection && suppress);
-                if (isInCall || isInCar)
+                boolean fg = Boolean.TRUE.equals(foreground.getValue());
+                if (!fg && (isInCall || isInCar))
                     mowner.stop();
                 else
                     mowner.start();
@@ -840,11 +863,12 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         mutableUnseenNotify.observe(mowner, new Observer<List<TupleMessageEx>>() {
             @Override
             public void onChanged(final List<TupleMessageEx> messages) {
-                Helper.getSerialExecutor().submit(new RunnableEx("mutableUnseenNotify") {
+                executorNotify.submit(new RunnableEx("mutableUnseenNotify") {
                     @Override
                     public void delegate() {
                         try {
-                            Core.notifyMessages(ServiceSynchronize.this, messages, notificationData, foreground);
+                            boolean fg = Boolean.TRUE.equals(foreground.getValue());
+                            Core.notifyMessages(ServiceSynchronize.this, messages, notificationData, fg);
                         } catch (SecurityException ex) {
                             Log.w(ex);
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
@@ -1321,9 +1345,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private void onState(Intent intent) {
-        foreground = intent.getBooleanExtra("foreground", false);
+        boolean fg = intent.getBooleanExtra("foreground", false);
+        foreground.postValue(fg);
         for (Core.State state : coreStates.values())
-            state.setForeground(foreground);
+            state.setForeground(fg);
     }
 
     private void onPoll(Intent intent) {
@@ -1526,7 +1551,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 Log.i(account.name + " run thread=" + currentThread);
 
                 final ObjectHolder<TwoStateOwner> cowner = new ObjectHolder<>();
-                final ExecutorService executor = Helper.getOperationExecutor();
+                final ExecutorService executor = Helper.getBackgroundExecutor(1, "operation." + account.id);
 
                 // Debug
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1538,6 +1563,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 final EmailService iservice = new EmailService(
                         this, account.getProtocol(), account.realm, account.encryption, account.insecure, account.unicode, debug);
                 iservice.setPartialFetch(account.partial_fetch);
+                iservice.setRawFetch(account.raw_fetch);
                 iservice.setIgnoreBodyStructureSize(account.ignore_size);
                 if (account.protocol != EntityAccount.TYPE_IMAP)
                     iservice.setLeaveOnServer(account.leave_on_server);
@@ -2622,6 +2648,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 if (state.isRunning()) {
                     long now = new Date().getTime();
                     boolean logarithmic_backoff = prefs.getBoolean("logarithmic_backoff", true);
+                    int max_backoff_power = prefs.getInt("max_backoff_power", DEFAULT_BACKOFF_POWER - 3);
+                    int max_backoff = (int) Math.pow(2, max_backoff_power + 3);
 
                     if (logarithmic_backoff) {
                         // Check for fast successive server, connectivity, etc failures
@@ -2654,7 +2682,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                     " avg=" + (avg_fail / 1000L) + "/" + (fail_threshold / 1000L) +
                                                     " missing=" + (missing / 1000L) +
                                                     " compensate=" + compensate +
-                                                    " backoff=" + backoff +
+                                                    " backoff=" + backoff + "/" + max_backoff +
                                                     " host=" + account.host +
                                                     " ex=" + Log.formatThrowable(last_fail, false);
                                             if (compensate > 2)
@@ -2675,14 +2703,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     int backoff = state.getBackoff();
                     int recently = (lastLost + LOST_RECENTLY < now ? 1 : 2);
                     EntityLog.log(this, EntityLog.Type.Account, account,
-                            account.name + " backoff=" + backoff +
+                            account.name + " backoff=" + backoff + "/" + max_backoff +
                                     " recently=" + recently + "x" +
                                     " logarithmic=" + logarithmic_backoff);
 
                     if (logarithmic_backoff) {
-                        if (backoff < CONNECT_BACKOFF_MAX)
+                        if (backoff < max_backoff)
                             state.setBackoff(backoff * 2);
-                        else if (backoff == CONNECT_BACKOFF_MAX)
+                        else if (backoff == max_backoff)
                             if (AlarmManagerCompatEx.hasExactAlarms(this))
                                 state.setBackoff(CONNECT_BACKOFF_INTERMEDIATE * 60);
                             else
@@ -2706,11 +2734,12 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     Map<String, String> crumb = new HashMap<>();
                     crumb.put("account", account.name);
                     crumb.put("backoff", Integer.toString(backoff));
+                    crumb.put("max_backoff", Integer.toString(max_backoff));
                     crumb.put("recently", Integer.toString(recently));
                     crumb.put("logarithmic", Boolean.toString(logarithmic_backoff));
                     Log.breadcrumb("Backing off", crumb);
 
-                    if (backoff <= CONNECT_BACKOFF_MAX) {
+                    if (backoff <= max_backoff) {
                         // Short back-off period, keep device awake
                         try {
                             long interval = backoff * 1000L * recently;

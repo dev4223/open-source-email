@@ -265,7 +265,6 @@
         Toto heslo je potrebné zadať aj pri importe nastavení, prosím, bezpečne si ho uchovajte!
     </string>
     <string name="title_setup_export_do">Exportovaný súbor bude obsahovať všetky nastavenia a údaje okrem emailových správ a obrázkov odkazovaných vo vašich podpisoch</string>
-    <string name="title_setup_import_do">Importované účty budú pridané bez prepísania existujúcich účtov</string>
     <string name="title_setup_password">Heslo</string>
     <string name="title_setup_password_chars">Heslo obsahuje riadiace alebo prázdne znaky</string>
     <string name="title_setup_password_repeat">Zopakovať heslo</string>
@@ -339,6 +338,7 @@
     <string name="title_advanced_section_encryption">Šifrovanie</string>
     <string name="title_advanced_section_notifications">Upozornenia</string>
     <string name="title_advanced_section_misc">Rôzne</string>
+    <string name="title_advanced_section_backup">Zálohovať</string>
     <string name="title_advanced_default">Všetky voľby majú prednastavené bežne používané štandardné hodnoty, ktoré nie je potrebné pre používanie aplikácie meniť</string>
     <string name="title_advanced_receive">Prijímať správy pre všetky účty</string>
     <string name="title_advanced_when">Kedy</string>
@@ -563,10 +563,10 @@
     <string name="title_advanced_quick_scroll">Zobraziť neobťažujúce ikonky pre rýchly posun nahor/nadol</string>
     <string name="title_advanced_folder_nav">Zo zoznamu správ vždy prejsť späť do zoznamu priečinkov</string>
     <string name="title_advanced_autoread">Po presunutí správy automaticky označiť ako prečítané</string>
-    <string name="title_advanced_star_snoozed">Automaticky pridať hviezdičku po odložení správ</string>
     <string name="title_advanced_autounstar">Automaticky odstrániť hviezdičku po presunutí správ</string>
-    <string name="title_advanced_auto_important">Automaticky nastaviť vysokú prioritu pre správy s hviezdičkou</string>
     <string name="title_advanced_reset_importance">Zrušiť nastavenie priority po presunutí správ</string>
+    <string name="title_advanced_star_snoozed">Automaticky pridať hviezdičku po odložení správ</string>
+    <string name="title_advanced_auto_important">Automaticky nastaviť vysokú prioritu pre správy s hviezdičkou</string>
     <string name="title_advanced_swipe_reply">Odpovedať švihnutím rozbalených správ vpravo</string>
     <string name="title_advanced_default_snooze">Predvolený čas odloženia</string>
     <string name="title_advanced_notifications">Spravovať upozornenia</string>
@@ -974,7 +974,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_edit_account_color">Upraviť farbu účtu</string>
     <string name="title_hide_folder">Skryť priečinok</string>
     <string name="title_hide_seen_folder">Skryť priečinok, keď sú všetky správy prečítané</string>
-    <string name="title_hide_seen_folder_hint">Len v zozname priečinkov na úvodnej obrazovke</string>
     <string name="title_unified_folder">Zobraziť v spoločnej doručenej pošte</string>
     <string name="title_navigation_folder">Zobrazovať v navigačnom menu</string>
     <string name="title_synchronize_folder">Synchronizovať (prijať správy)</string>
@@ -1400,6 +1399,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_sort_on_attachments">Prílohy</string>
     <string name="title_sort_on_hidden">Skryté</string>
     <string name="title_sort_ascending">Od najstaršej</string>
+    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Poradie</string>
     <string name="title_filter">Filtrovať</string>
     <string name="title_filter_seen">Prečítané</string>
     <string name="title_filter_unflagged">Bez hviezdičky</string>
@@ -1479,6 +1479,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_rule_time_after">Prijaté po</string>
     <string name="title_rule_time_before">Prijaté pred</string>
     <string name="title_rule_time_rel">Relatívny čas (prijaté) v rozmedzí</string>
+    <string name="title_rule_time_every_day">Každý deň</string>
     <string name="title_rule_regex">Regulárny výraz</string>
     <string name="title_rule_and">A</string>
     <string name="title_rule_action">Akcia</string>

@@ -571,6 +571,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:checked="true"
+                    android:drawableStart="@drawable/twotone_get_app_24"
+                    android:drawablePadding="6dp"
                     android:text="@string/title_advanced_updates"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -647,6 +649,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:drawableStart="@drawable/twotone_list_alt_24"
+                    android:drawablePadding="6dp"
                     android:text="@string/title_advanced_changelog"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -654,14 +658,45 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAnnouncements"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:drawableStart="@drawable/baseline_campaign_white_24"
+                    android:drawablePadding="6dp"
+                    android:text="@string/title_advanced_announcements"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swChangelog"
+                    app:switchPadding="12dp" />
+
+                <TextView
+                    android:id="@+id/tvAnnouncementsPrivacy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:drawableEnd="@drawable/twotone_open_in_new_12"
+                    android:drawablePadding="6dp"
+                    android:text="@string/title_privacy_policy"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?android:attr/textColorLink"
+                    app:drawableTint="?android:attr/textColorLink"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swAnnouncements" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swCrashReports"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:drawableStart="@drawable/twotone_report_24"
+                    android:drawablePadding="6dp"
                     android:text="@string/title_advanced_crash_reports"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swChangelog"
+                    app:layout_constraintTop_toBottomOf="@id/tvAnnouncementsPrivacy"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -785,6 +820,12 @@
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     app:constraint_referenced_ids="swBeta,tvBitBucketPrivacy" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpAnnouncements"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="swAnnouncements,tvAnnouncementsPrivacy" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
@@ -1109,6 +1150,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swEmergency"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_emergency"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swAutostart"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swWorkManager"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1117,7 +1170,7 @@
                     android:text="@string/title_advanced_work_manager"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swAutostart"
+                    app:layout_constraintTop_toBottomOf="@id/swEmergency"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1366,6 +1419,17 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swPreamble"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_preamble"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swModSeq"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swUid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1373,7 +1437,7 @@
                     android:text="@string/title_advanced_uid"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swModSeq"
+                    app:layout_constraintTop_toBottomOf="@id/swPreamble"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1516,6 +1580,28 @@
                     app:layout_constraintTop_toBottomOf="@id/swIdleDone"
                     app:switchPadding="12dp" />
 
+                <TextView
+                    android:id="@+id/tvMaxBackoff"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_max_backoff"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swFastFetch" />
+
+                <SeekBar
+                    android:id="@+id/sbMaxBackOff"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:max="4"
+                    android:progress="3"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvMaxBackoff" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swLogarithmicBackoff"
                     android:layout_width="0dp"
@@ -1525,7 +1611,7 @@
                     android:text="@string/title_advanced_logarithmic_backoff"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swFastFetch"
+                    app:layout_constraintTop_toBottomOf="@id/sbMaxBackOff"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -1554,6 +1640,30 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNativeDkim"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_native_dkim"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swExactAlarms"
+                    app:switchPadding="12dp" />
+
+                <TextView
+                    android:id="@+id/tvNativeDkimHint"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_sync_delay_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?attr/colorWarning"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNativeDkim" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swInfra"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1561,7 +1671,7 @@
                     android:text="@string/title_advanced_infra"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swExactAlarms"
+                    app:layout_constraintTop_toBottomOf="@id/tvNativeDkimHint"
                     app:switchPadding="12dp" />
 
                 <androidx.constraintlayout.helper.widget.Flow

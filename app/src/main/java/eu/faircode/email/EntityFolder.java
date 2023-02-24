@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -78,6 +78,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
     @NonNull
     public String type;
     public String inherited_type;
+    public String subtype;
     @NonNull
     public Integer level = 0; // obsolete
     @NonNull
@@ -119,6 +120,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
     @NonNull
     public Boolean navigation = false;
     @NonNull
+    public Boolean count_unread = true;
+    @NonNull
     public Boolean notify = false;
 
     public Integer total; // messages on server
@@ -156,6 +159,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
     static final String SENT = "Sent";
     static final String SYSTEM = "System";
     static final String USER = "User";
+
+    static final String FLAGGED = "flagged";
 
     // https://tools.ietf.org/html/rfc6154
     // https://www.iana.org/assignments/imap-mailbox-name-attributes/imap-mailbox-name-attributes.xhtml
@@ -324,12 +329,12 @@ public class EntityFolder extends EntityOrder implements Serializable {
         this.poll = parent.poll;
         this.poll_factor = parent.poll_factor;
         this.download = parent.download;
-        this.auto_classify_source = parent.auto_classify_source;
-        this.auto_classify_target = parent.auto_classify_target;
+        //this.auto_classify_source = parent.auto_classify_source;
+        //this.auto_classify_target = parent.auto_classify_target;
         this.sync_days = parent.sync_days;
         this.keep_days = parent.keep_days;
-        this.unified = parent.unified;
-        this.navigation = parent.navigation;
+        //this.unified = parent.unified;
+        //this.navigation = parent.navigation;
         this.notify = parent.notify;
     }
 
@@ -464,7 +469,9 @@ public class EntityFolder extends EntityOrder implements Serializable {
 
     String getDisplayName(Context context, EntityFolder parent) {
         String n = name;
-        if (parent != null && name.startsWith(parent.name))
+        if (parent != null &&
+                n.startsWith(parent.name) &&
+                n.length() > parent.name.length() + 1)
             n = n.substring(parent.name.length() + 1);
         return (display == null ? localizeName(context, n) : display);
     }
@@ -505,6 +512,13 @@ public class EntityFolder extends EntityOrder implements Serializable {
         }
 
         return USER;
+    }
+
+    static String getSubtype(String[] attrs, String fullname) {
+        for (String attr : attrs)
+            if ("\\Flagged".equals(attr)) // Gmail
+                return FLAGGED;
+        return null;
     }
 
     private static class TypeScore {

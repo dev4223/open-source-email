@@ -16,11 +16,10 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
@@ -130,6 +129,7 @@ public class FragmentAccount extends FragmentBase {
     private EditText etInterval;
     private CheckBox cbNoop;
     private CheckBox cbPartialFetch;
+    private CheckBox cbRawFetch;
     private CheckBox cbIgnoreSize;
     private RadioGroup rgDate;
     private CheckBox cbUnicode;
@@ -249,6 +249,7 @@ public class FragmentAccount extends FragmentBase {
         etInterval = view.findViewById(R.id.etInterval);
         cbNoop = view.findViewById(R.id.cbNoop);
         cbPartialFetch = view.findViewById(R.id.cbPartialFetch);
+        cbRawFetch = view.findViewById(R.id.cbRawFetch);
         cbIgnoreSize = view.findViewById(R.id.cbIgnoreSize);
         rgDate = view.findViewById(R.id.rgDate);
         cbUnicode = view.findViewById(R.id.cbUnicode);
@@ -332,6 +333,7 @@ public class FragmentAccount extends FragmentBase {
                 etInterval.setText(provider.keepalive > 0 ? Integer.toString(provider.keepalive) : null);
                 cbNoop.setChecked(provider.noop);
                 cbPartialFetch.setChecked(provider.partial);
+                cbRawFetch.setChecked(provider.raw);
 
                 tvSentWarning.setVisibility(View.GONE);
                 grpFolders.setVisibility(View.GONE);
@@ -611,7 +613,11 @@ public class FragmentAccount extends FragmentBase {
 
         rgEncryption.setVisibility(View.GONE);
         cbInsecure.setVisibility(View.GONE);
-        tilPassword.setEndIconMode(id < 0 || Helper.isSecure(getContext()) ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
+
+        if (id < 0)
+            tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
+        else
+            Helper.setupPasswordToggle(getActivity(), tilPassword);
 
         btnAdvanced.setVisibility(View.GONE);
 
@@ -937,6 +943,7 @@ public class FragmentAccount extends FragmentBase {
         args.putString("interval", etInterval.getText().toString());
         args.putBoolean("noop", cbNoop.isChecked());
         args.putBoolean("partial_fetch", cbPartialFetch.isChecked());
+        args.putBoolean("raw_fetch", cbRawFetch.isChecked());
         args.putBoolean("ignore_size", cbIgnoreSize.isChecked());
         args.putBoolean("use_date", rgDate.getCheckedRadioButtonId() == R.id.radio_date_header);
         args.putBoolean("use_received", rgDate.getCheckedRadioButtonId() == R.id.radio_received_header);
@@ -1012,6 +1019,7 @@ public class FragmentAccount extends FragmentBase {
                 String interval = args.getString("interval");
                 boolean noop = args.getBoolean("noop");
                 boolean partial_fetch = args.getBoolean("partial_fetch");
+                boolean raw_fetch = args.getBoolean("raw_fetch");
                 boolean ignore_size = args.getBoolean("ignore_size");
                 boolean use_date = args.getBoolean("use_date");
                 boolean use_received = args.getBoolean("use_received");
@@ -1121,6 +1129,8 @@ public class FragmentAccount extends FragmentBase {
                     if (!Objects.equals(account.keep_alive_noop, noop))
                         return true;
                     if (!Objects.equals(account.partial_fetch, partial_fetch))
+                        return true;
+                    if (!Objects.equals(account.raw_fetch, raw_fetch))
                         return true;
                     if (!Objects.equals(account.ignore_size, ignore_size))
                         return true;
@@ -1272,6 +1282,7 @@ public class FragmentAccount extends FragmentBase {
                     account.poll_interval = Math.max(1, poll_interval);
                     account.keep_alive_noop = noop;
                     account.partial_fetch = partial_fetch;
+                    account.raw_fetch = raw_fetch;
                     account.ignore_size = ignore_size;
                     account.use_date = use_date;
                     account.use_received = use_received;
@@ -1587,7 +1598,8 @@ public class FragmentAccount extends FragmentBase {
                         boolean found = false;
                         for (int pos = 2; pos < providers.size(); pos++) {
                             EmailProvider provider = providers.get(pos);
-                            if ((provider.oauth != null) == (account.auth_type == AUTH_TYPE_OAUTH) &&
+                            if ((provider.oauth != null) ==
+                                    (account.auth_type == AUTH_TYPE_GMAIL || account.auth_type == AUTH_TYPE_OAUTH) &&
                                     provider.imap.host.equals(account.host) &&
                                     provider.imap.port == account.port &&
                                     provider.imap.starttls == (account.encryption == EmailService.ENCRYPTION_STARTTLS)) {
@@ -1648,6 +1660,7 @@ public class FragmentAccount extends FragmentBase {
                     etInterval.setText(account == null ? "" : Long.toString(account.poll_interval));
                     cbNoop.setChecked(account == null ? true : account.keep_alive_noop);
                     cbPartialFetch.setChecked(account == null ? true : account.partial_fetch);
+                    cbRawFetch.setChecked(account == null ? false : account.raw_fetch);
                     cbIgnoreSize.setChecked(account == null ? false : account.ignore_size);
                     cbUnicode.setChecked(account == null ? false : account.unicode);
                     cbUnmetered.setChecked(jcondition.optBoolean("unmetered"));

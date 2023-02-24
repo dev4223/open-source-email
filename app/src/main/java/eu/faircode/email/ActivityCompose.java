@@ -16,10 +16,11 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.app.NotificationManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,6 +41,7 @@ import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -71,9 +73,21 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
     @Override
     public void onBackStackChanged() {
         if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
-            String action = getIntent().getAction();
-            if (!isShared(action) &&
-                    (action == null || !action.startsWith("widget:"))) {
+            Intent intent = getIntent();
+
+            String action = intent.getAction();
+            boolean widget = (action != null && action.startsWith("widget:"));
+
+            String[] tos = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
+            boolean cloud = (tos != null && tos.length == 1 && BuildConfig.CLOUD_EMAIL.equals(tos[0]));
+
+            if (cloud) {
+                Intent setup = new Intent(this, ActivitySetup.class)
+                        .setAction("misc")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .putExtra("tab", "backup");
+                startActivity(setup);
+            } else if (!isShared(action) && !widget) {
                 Intent parent = getParentActivityIntent();
                 if (parent != null)
                     if (shouldUpRecreateTask(parent))
@@ -102,6 +116,20 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
             args = new Bundle();
 
             Uri uri = intent.getData();
+
+            // Workaround mailto in email address
+            if (uri == null && intent.hasExtra(Intent.EXTRA_EMAIL))
+                try {
+                    String[] to = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
+                    if (to != null && to.length == 1 &&
+                            to[0] != null && to[0].startsWith("mailto:")) {
+                        uri = Uri.parse(to[0]);
+                        intent.removeExtra(Intent.EXTRA_EMAIL);
+                    }
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+
             if (uri != null && "mailto".equalsIgnoreCase(uri.getScheme())) {
                 // https://www.ietf.org/rfc/rfc2368.txt
                 MailTo mailto = MailTo.parse(uri.toString());
@@ -190,26 +218,40 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
             if (!TextUtils.isEmpty(html))
                 args.putString("body", html);
 
-            if (intent.hasExtra(Intent.EXTRA_STREAM))
-                if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-                    ArrayList<Uri> streams = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-                    if (streams != null) {
-                        // Some apps send null streams
-                        ArrayList<Uri> uris = new ArrayList<>();
-                        for (Uri stream : streams)
-                            if (stream != null)
-                                uris.add(stream);
-                        if (uris.size() > 0)
-                            args.putParcelableArrayList("attachments", uris);
-                    }
-                } else {
-                    Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                    if (stream != null) {
-                        ArrayList<Uri> uris = new ArrayList<>();
+            ArrayList<Uri> uris = new ArrayList<>();
+
+            ClipData clip = intent.getClipData();
+            if (clip != null)
+                for (int i = 0; i < clip.getItemCount(); i++) {
+                    ClipData.Item item = clip.getItemAt(i);
+                    Uri stream = (item == null ? null : item.getUri());
+                    if (stream != null)
                         uris.add(stream);
-                        args.putParcelableArrayList("attachments", uris);
-                    }
                 }
+
+            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                ArrayList<Uri> streams = (Intent.ACTION_SEND_MULTIPLE.equals(action)
+                        ? intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                        : new ArrayList<>(Arrays.asList((Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM))));
+                if (streams != null) {
+                    // Some apps send null streams
+                    for (Uri stream : streams)
+                        if (stream != null) {
+                            boolean found = false;
+                            for (Uri e : uris)
+                                if (stream.equals(e)) {
+                                    found = true;
+                                    break;
+                                }
+                            if (!found)
+                                uris.add(stream);
+                        }
+                }
+            }
+
+            if (uris.size() > 0)
+                args.putParcelableArrayList("attachments", uris);
+
         } else
             args = intent.getExtras();
 

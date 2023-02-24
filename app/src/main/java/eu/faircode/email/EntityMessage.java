@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -74,6 +74,8 @@ import javax.mail.internet.InternetAddress;
                 @Index(value = {"account"}),
                 @Index(value = {"folder"}),
                 @Index(value = {"identity"}),
+                @Index(value = {"replying"}),
+                @Index(value = {"forwarding"}),
                 @Index(value = {"folder", "uid"}, unique = true),
                 @Index(value = {"inreplyto"}),
                 @Index(value = {"msgid"}),
@@ -153,6 +155,7 @@ public class EntityMessage implements Serializable {
     public Boolean receipt_request;
     public Address[] receipt_to;
     public String bimi_selector;
+    public String signedby;
     public Boolean tls;
     public Boolean dkim;
     public Boolean spf;

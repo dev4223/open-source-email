@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -181,15 +181,19 @@ public class FragmentOperations extends FragmentBase {
 
                                         List<EntityOperation> ops = new ArrayList<>();
 
+                                        // ADD, SEND, EXISTS, SUBSCRIBE
+
                                         if (error)
                                             addAll(ops, db.operation().getOperationsError());
 
                                         if (fetch) {
                                             addAll(ops, db.operation().getOperations(EntityOperation.FETCH));
                                             addAll(ops, db.operation().getOperations(EntityOperation.DOWNLOAD));
+                                            addAll(ops, db.operation().getOperations(EntityOperation.RAW));
                                             addAll(ops, db.operation().getOperations(EntityOperation.BODY));
                                             addAll(ops, db.operation().getOperations(EntityOperation.ATTACHMENT));
                                             addAll(ops, db.operation().getOperations(EntityOperation.HEADERS));
+                                            addAll(ops, db.operation().getOperations(EntityOperation.RULE));
                                             addAll(ops, db.operation().getOperations(EntityOperation.SYNC));
                                         }
 

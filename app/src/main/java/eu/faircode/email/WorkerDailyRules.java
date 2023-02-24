@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -129,27 +129,29 @@ public class WorkerDailyRules extends Worker {
         try {
             if (enabled) {
                 Calendar cal = Calendar.getInstance();
-                long delay = cal.getTimeInMillis();
+                long now = cal.getTimeInMillis();
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MINUTE, 0);
                 cal.set(Calendar.HOUR_OF_DAY, 1);
-                cal.add(Calendar.DAY_OF_MONTH, 1);
-                delay = cal.getTimeInMillis() - delay;
+                long delay = cal.getTimeInMillis() - now;
+                if (delay < 0)
+                    cal.add(Calendar.DATE, 1);
+                delay = cal.getTimeInMillis() - now;
 
                 Log.i("Queuing " + getName() + " delay=" + (delay / (60 * 1000L)) + "m");
                 PeriodicWorkRequest.Builder builder =
                         new PeriodicWorkRequest.Builder(WorkerDailyRules.class, 1, TimeUnit.DAYS)
                                 .setInitialDelay(delay, TimeUnit.MILLISECONDS);
                 WorkManager.getInstance(context)
-                        .enqueueUniquePeriodicWork(getName(), ExistingPeriodicWorkPolicy.KEEP, builder.build());
+                        .enqueueUniquePeriodicWork(getName(), ExistingPeriodicWorkPolicy.UPDATE, builder.build());
                 Log.i("Queued " + getName());
             } else {
                 Log.i("Cancelling " + getName());
                 WorkManager.getInstance(context).cancelUniqueWork(getName());
                 Log.i("Cancelled " + getName());
             }
-        } catch (IllegalStateException ex) {
+        } catch (Throwable ex) {
             // https://issuetracker.google.com/issues/138465476
             Log.w(ex);
         }

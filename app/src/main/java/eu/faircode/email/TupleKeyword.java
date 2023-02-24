@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2022 by Marcel Bokhorst (M66B)
+    Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -26,11 +26,13 @@ import android.graphics.Color;
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class TupleKeyword {
@@ -75,12 +77,15 @@ public class TupleKeyword {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
+        final Collator collator = Collator.getInstance(Locale.getDefault());
+        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
+
         Collections.sort(all, new Comparator<String>() {
             @Override
             public int compare(String k1, String k2) {
                 k1 = prefs.getString("kwtitle." + k1, getDefaultKeywordAlias(context, k1));
                 k2 = prefs.getString("kwtitle." + k2, getDefaultKeywordAlias(context, k2));
-                return k1.compareTo(k2);
+                return collator.compare(k1, k2);
             }
         });
 
