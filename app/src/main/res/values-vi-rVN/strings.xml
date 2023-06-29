@@ -203,7 +203,6 @@
     <string name="title_setup_doze_battery">Sử dụng pin nhiều?</string>
     <string name="title_setup_doze_stopped">Đồng bộ hoá bị dừng?</string>
     <string name="title_setup_doze_device">Điều này có thể là bắt buộc đối với thiết bị này</string>
-    <string name="title_setup_alarm_12">Ứng dụng không hoạt động</string>
     <string name="title_setup_inexact">Các báo thức &amp; lời nhắc đang tắt</string>
     <string name="title_setup_background">Hạn chế trong nền đang bật</string>
     <string name="title_setup_data">Trình tiết kiệm dữ liệu đang bật</string>
@@ -278,9 +277,9 @@
     <string name="title_setup_defaults">Khôi phục mặc định</string>
     <string name="title_setup_reset_questions">Đặt lại các câu hỏi</string>
     <string name="title_setup_reset_general">Câu hỏi chung</string>
-    <string name="title_setup_reset_full">Hiện thư gốc</string>
-    <string name="title_setup_reset_images">Hiện hình ảnh</string>
     <string name="title_setup_reset_links">Xác nhận liên kết</string>
+    <string name="title_setup_reset_images">Hiện hình ảnh</string>
+    <string name="title_setup_reset_full">Hiện thư gốc</string>
     <string name="title_check_gmail_oauth">Các tài khoản Gmail của bạn sẽ tiếp tục hoạt động sau 30 tháng 5, 2022</string>
     <string name="title_check_gmail_password">Một số tài khoản Gmail của bạn có thể dừng hoạt động sau 30 tháng 5, 2022</string>
     <string name="title_check_outlook_oauth">Các tài khoản Outlook của bạn sẽ tiếp tục hoạt động sau 1 tháng 10, 2022</string>
@@ -340,7 +339,6 @@
     <string name="title_advanced_send_chips">Hiển thị bong bóng địa chỉ</string>
     <string name="title_advanced_send_reminders">Hiện lời nhắc</string>
     <string name="title_advanced_send_delayed">Trì hoãn việc gửi thư</string>
-    <string name="title_advanced_attach_new">Thêm các tệp được chia sẻ vào bản nháp mới</string>
     <string name="title_advanced_answer_action">Giữ phím trả lời sẽ:</string>
     <string name="title_advanced_send_pending">Hiện biểu tượng gửi được trì hoãn không gây phiền</string>
     <string name="title_advanced_auto_save_paragraph">Tự đông lưu bản nháp sau mỗi đoạn văn</string>
@@ -1353,7 +1351,8 @@
     <string name="title_sort_on_attachments">Tệp đính kèm</string>
     <string name="title_sort_on_hidden">Ẩn</string>
     <string name="title_sort_ascending">Cũ nhất trước</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Thứ tự</string>
+    <string name="title_sort_on_name">Tên</string>
+    <string name="title_sort_on_order">Thứ tự</string>
     <string name="title_filter">Lọc ra</string>
     <string name="title_filter_seen">Đã đọc</string>
     <string name="title_filter_unflagged">Chưa gắn sao</string>
@@ -1406,7 +1405,8 @@
     <string name="title_rule_snooze">Báo lại</string>
     <string name="title_rule_flag">Thêm sao</string>
     <string name="title_rule_importance">Đặt tầm quan trọng</string>
-    <string name="title_rule_keyword">Thêm từ khoá</string>
+    <string name="title_rule_keyword_add">Thêm</string>
+    <string name="title_rule_keyword_delete">Xoá</string>
     <string name="title_rule_move">Di chuyển</string>
     <string name="title_rule_copy">Sao chép (nhãn)</string>
     <string name="title_rule_answer">Trả lời/chuyển tiếp</string>
@@ -1417,6 +1417,7 @@
     <string name="title_rule_caption">Chỉnh sửa quy tắc</string>
     <string name="title_rule_title">Quy tắc áp dụng cho</string>
     <string name="title_rule_name">Tên</string>
+    <string name="title_rule_group">Nhóm</string>
     <string name="title_rule_order">Thứ tự</string>
     <string name="title_rule_enabled">Bật</string>
     <string name="title_rule_stop">Dừng việc xử lý các quy tắc sau khi thực thi quy tắc này</string>
@@ -1604,10 +1605,8 @@
     <string name="title_hint_support">Nếu bạn có câu hỏi hoặc vấn đề, hãy sử dụng menu hỗ trợ để có trợ giúp</string>
     <string name="title_hint_message_actions">Vuốt trái để đưa vào thùng rác; Vuốt phải để lưu trữ (nếu có); Các hành động vuốt có thể được thiết lập trong cài đặt tài khoản</string>
     <string name="title_hint_message_selection">Nhấn giữ một thư để bắt đầu chọn nhiều thư; Giữ và vuốt lên hoặc xuống để chọn thêm thư</string>
-    <string name="title_hint_message_junk">Các thư này ở trong thư mục thư rác của máy chủ email. Rõ ràng là ứng dụng không thể ngăn không cho thư rác được gửi đến bạn.</string>
     <string name="title_hint_important">Quan trọng</string>
     <string name="title_hint_sync">Việc tải xuống thư có thể mất một ít thời gian, tùy vào tốc độ của nhà cung cấp, kết nối internet, thiết bị và số lượng thư. Trong khi đang tải xuống thư, ứng dụng có thể sẽ phản hồi chậm hơn.</string>
-    <string name="title_hint_sync_note">Theo mặc định, không phải tất cả thư sẽ được tải xuống để giới hạn sử dụng không gian bộ nhớ, pin và dữ liệu. Bạn có thể thay đổi điều này bằng cách nhấn giữ một thư mục trong danh sách thư mục và chọn \'Đồng bộ hoá thêm\'.</string>
     <string name="title_hint_battery">Vì FairEmail theo mặc định luôn nhận thư, Android sẽ báo cáo FairEmail là luôn hoạt động. Do đó, FairEmail có thể trông như là luôn tiêu hao pin mặc dù không phải vậy.</string>
     <string name="title_hint_reformat">Theo mặc định, FairEmail định dạng lại các thư vì lý do riêng tư và bảo mật. Để xem thư gốc, hãy nhấn biểu tượng \'toàn màn hình\' trên văn bản thư.</string>
     <string name="title_hint_design">Thiết kế này có chủ ý không gây xao lãng, nhưng vẫn rất hữu dụng. Có nhiều tuỳ chọn để tuỳ biến ngoại hình, nhưng hãy hiểu rằng không thể nào làm cho mọi người hoàn toàn vui cùng lúc.</string>
@@ -1663,7 +1662,6 @@
     <string name="title_via">Qua: %1$s</string>
     <string name="title_1hour">1 tiếng</string>
     <string name="title_1day">1 ngày</string>
-    <string name="title_1week">1 tuần</string>
     <string name="title_now">Bây giờ</string>
     <string name="title_after">Sau %1$s</string>
     <string name="title_reset">Đặt lại</string>
@@ -1880,6 +1878,7 @@
     <string-array name="encryptNames">
         <item>Không có</item>
         <item>PGP chỉ ký</item>
+        <item>PGP encrypt-only</item>
         <item>PGP ký+mã hoá</item>
         <item>S/MIME chỉ ký</item>
         <item>S/MIME ký+mã hoá</item>

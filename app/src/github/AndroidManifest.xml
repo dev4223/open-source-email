@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 
@@ -44,6 +45,10 @@
     <uses-feature
         android:name="android.hardware.fingerprint"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <!-- https://developer.android.com/topic/arc -->
 
     <!-- Android 11: https://developer.android.com/preview/privacy/package-visibility -->
     <!-- https://developer.android.com/training/package-visibility/use-cases -->
@@ -99,6 +104,11 @@
 
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
         </intent>
 
         <provider
@@ -192,6 +202,16 @@
 
                 <data android:scheme="message" />
                 <data android:host="email.faircode.eu" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="link.fairemail.net" />
             </intent-filter>
         </activity>
 
@@ -300,6 +320,44 @@
             android:launchMode="singleTask"
             android:parentActivityName=".ActivityView"
             android:resizeableActivity="true">
+            <meta-data
+                android:name="android.service.chooser.chooser_target_service"
+                android:value="androidx.sharetarget.ChooserTargetServiceCompat" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="mailto" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="mailto" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ActivitySendSelf"
+            android:enabled="false"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_send_self"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.AppCompat.Translucent">
             <meta-data
                 android:name="android.service.chooser.chooser_target_service"
                 android:value="androidx.sharetarget.ChooserTargetServiceCompat" />
@@ -479,7 +537,7 @@
             android:resizeableActivity="true"
             android:taskAffinity="${applicationId}.SETUP"
             tools:node="replace">
-            <intent-filter android:autoVerify="false">
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -557,6 +615,8 @@
                 <action android:name="${applicationId}.ENABLE" />
                 <action android:name="${applicationId}.DISABLE" />
                 <action android:name="${applicationId}.INTERVAL" />
+                <action android:name="${applicationId}.RULE" />
+                <action android:name="${applicationId}.TEMPLATE" />
                 <action android:name="${applicationId}.DISCONNECT.ME" />
             </intent-filter>
         </service>
@@ -607,6 +667,11 @@
                 <action android:name="android.service.controls.ControlsProviderService" />
             </intent-filter>
         </service>
+
+        <service
+            android:name="WidgetUnifiedService"
+            android:exported="true"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <provider
             android:name=".FileProviderEx"
@@ -674,16 +739,12 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name="WidgetUnifiedService"
-            android:exported="true"
-            android:permission="android.permission.BIND_REMOTEVIEWS" />
-
         <receiver
             android:name=".ReceiverAutoStart"
             android:exported="true">
 
-            <intent-filter>
+            <!-- https://developer.android.com/guide/topics/manifest/intent-filter-element.html#priority -->
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
 

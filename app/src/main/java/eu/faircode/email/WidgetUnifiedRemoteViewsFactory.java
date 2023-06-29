@@ -66,6 +66,8 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
     private int font;
     private int padding;
     private boolean avatars;
+    private boolean account_name;
+    private int subject_lines;
     private boolean prefer_contact;
     private boolean only_contact;
     private boolean distinguish_contacts;
@@ -116,6 +118,8 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
         font = prefs.getInt("widget." + appWidgetId + ".font", 0);
         padding = prefs.getInt("widget." + appWidgetId + ".padding", 0);
         avatars = prefs.getBoolean("widget." + appWidgetId + ".avatars", false);
+        account_name = prefs.getBoolean("widget." + appWidgetId + ".account_name", true);
+        subject_lines = prefs.getInt("widget." + appWidgetId + ".subject_lines", 1);
 
         prefer_contact = prefs.getBoolean("prefer_contact", false);
         only_contact = prefs.getBoolean("only_contact", false);
@@ -279,9 +283,19 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
                 views.setInt(R.id.separator, "setBackgroundColor", colorSeparator);
             }
 
+            try {
+                views.setInt(idSubject, "setMaxLines", subject_lines);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+            views.setTextViewText(R.id.tvNotes, message.notes);
+            views.setTextColor(R.id.tvNotes, message.notes_color == null ? colorWidgetRead : message.notes_color);
+            views.setViewVisibility(R.id.tvNotes, message.notes == null ? View.GONE : View.VISIBLE);
+
             views.setViewVisibility(R.id.separator, separators ? View.VISIBLE : View.GONE);
 
-            views.setViewVisibility(idAccount, account < 0 && !allColors ? View.VISIBLE : View.GONE);
+            views.setViewVisibility(idAccount, account < 0 && !allColors && account_name ? View.VISIBLE : View.GONE);
 
         } catch (Throwable ex) {
             Log.e(ex);

@@ -109,7 +109,7 @@ import javax.mail.event.MessageCountEvent;
 import javax.mail.event.StoreEvent;
 import javax.mail.event.StoreListener;
 
-import me.leolin.shortcutbadger.ShortcutBadger;
+import me.leolin.shortcutbadger.ShortcutBadgerAlt;
 
 public class ServiceSynchronize extends ServiceBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private Network lastActive = null;
@@ -938,9 +938,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     // Update badge
                     try {
                         if (count == 0 || !badge)
-                            ShortcutBadger.removeCount(ServiceSynchronize.this);
+                            ShortcutBadgerAlt.removeCount(ServiceSynchronize.this);
                         else
-                            ShortcutBadger.applyCount(ServiceSynchronize.this, count);
+                            ShortcutBadgerAlt.applyCount(ServiceSynchronize.this, count);
                     } catch (Throwable ex) {
                         Log.e(ex);
                     }
@@ -2317,7 +2317,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                 if (ifolder != null && ifolder.isOpen()) {
                                                                     db.folder().setFolderState(folder.id, "closing");
                                                                     try {
-                                                                        ifolder.close(false);
+                                                                        boolean expunge =
+                                                                                (account.protocol == EntityAccount.TYPE_POP &&
+                                                                                        !account.leave_on_server && account.client_delete);
+                                                                        ifolder.close(expunge);
                                                                     } catch (Throwable ex) {
                                                                         Log.w(folder.name, ex);
                                                                     }
@@ -3290,10 +3293,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         if (!ActivityBilling.isPro(context))
             return null;
 
-        int minuteStart = prefs.getInt("schedule_start", 0);
-        int minuteEnd = prefs.getInt("schedule_end", 0);
-
         Calendar calStart = Calendar.getInstance();
+        boolean weekend = CalendarHelper.isWeekend(context, calStart);
+        int defStart = (weekend ? prefs.getInt("schedule_start", 0) : 0);
+        int defEnd = (weekend ? prefs.getInt("schedule_end", 0) : 0);
+
+        int minuteStart = prefs.getInt("schedule_start" + (weekend ? "_weekend" : ""), defStart);
+        int minuteEnd = prefs.getInt("schedule_end" + (weekend ? "_weekend" : ""), defEnd);
+
         calStart.set(Calendar.HOUR_OF_DAY, minuteStart / 60);
         calStart.set(Calendar.MINUTE, minuteStart % 60);
         calStart.set(Calendar.SECOND, 0);
@@ -3317,7 +3324,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             boolean son = prefs.getBoolean("schedule_day" + sdow, true);
             boolean eon = prefs.getBoolean("schedule_day" + edow, true);
 
-            if (BuildConfig.DEBUG)
+            if (BuildConfig.DEBUG && false)
                 Log.i("@@@ eval dow=" + sdow + "/" + edow +
                         " on=" + son + "/" + eon +
                         " start=" + new Date(calStart.getTimeInMillis()) +
@@ -3338,6 +3345,12 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     calEnd.set(Calendar.HOUR_OF_DAY, 0);
                     calEnd.set(Calendar.MINUTE, 0);
                 }
+
+                if (BuildConfig.DEBUG)
+                    Log.i("@@@ eval dow=" + sdow + "/" + edow +
+                            " on=" + son + "/" + eon +
+                            " start=" + new Date(calStart.getTimeInMillis()) +
+                            " end=" + new Date(calEnd.getTimeInMillis()));
 
                 break;
             }

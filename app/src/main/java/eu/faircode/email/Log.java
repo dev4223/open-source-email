@@ -19,6 +19,9 @@ package eu.faircode.email;
     Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
+import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
+
+import android.Manifest;
 import android.app.ActivityManager;
 import android.app.ApplicationExitInfo;
 import android.app.Dialog;
@@ -27,6 +30,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,6 +42,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
+import android.content.pm.ResolveInfo;
+import android.content.pm.verify.domain.DomainVerificationManager;
+import android.content.pm.verify.domain.DomainVerificationUserState;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -65,6 +72,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 import android.os.ext.SdkExtensions;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -85,6 +93,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
+import androidx.browser.customtabs.CustomTabsClient;
+import androidx.browser.customtabs.CustomTabsServiceConnection;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
@@ -108,6 +118,9 @@ import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
+
+import net.openid.appauth.AuthState;
+import net.openid.appauth.TokenResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -147,9 +160,11 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -1771,9 +1786,15 @@ public class Log {
         }
     }
 
-    static EntityMessage getDebugInfo(Context context, int title, Throwable ex, String log) throws IOException, JSONException {
+    static EntityMessage getDebugInfo(Context context, String source, int title, Throwable ex, String log, Bundle args) throws IOException, JSONException {
         StringBuilder sb = new StringBuilder();
-        sb.append(context.getString(title)).append("\n\n\n\n");
+        sb.append(context.getString(title)).append("\n\n");
+        if (args != null) {
+            sb.append(args.getString("issue"));
+            if (args.getBoolean("contact"))
+                sb.append("\n\n").append("Prior contact");
+        }
+        sb.append("\n\n");
         sb.append(getAppInfo(context));
         if (ex != null)
             sb.append(ex.toString()).append("\n").append(android.util.Log.getStackTraceString(ex));
@@ -1804,7 +1825,8 @@ public class Log {
             draft.thread = draft.msgid;
             draft.to = new Address[]{myAddress()};
             draft.subject = context.getString(R.string.app_name) + " " +
-                    BuildConfig.VERSION_NAME + BuildConfig.REVISION + " debug info";
+                    BuildConfig.VERSION_NAME + BuildConfig.REVISION +
+                    " debug info - " + source;
             draft.received = new Date().getTime();
             draft.seen = true;
             draft.ui_seen = true;
@@ -1926,7 +1948,7 @@ public class Log {
                         new SimpleTask<Long>() {
                             @Override
                             protected Long onExecute(Context context, Bundle args) throws Throwable {
-                                return Log.getDebugInfo(context, R.string.title_unexpected_info_remark, ex, null).id;
+                                return Log.getDebugInfo(context, "report", R.string.title_unexpected_info_remark, ex, null, null).id;
                             }
 
                             @Override
@@ -2057,6 +2079,8 @@ public class Log {
         sb.append(String.format("Contact lookup: %d cached: %d\r\n",
                 contacts[0], contacts[1]));
 
+        sb.append(String.format("Accessibility: %b\r\n", Helper.isAccessibilityEnabled(context)));
+
         String charset = MimeUtility.getDefaultJavaCharset();
         sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
 
@@ -2179,10 +2203,9 @@ public class Log {
                 WebViewEx.isFeatureSupported(context, WebViewFeature.ALGORITHMIC_DARKENING)));
         try {
             PackageInfo pkg = WebViewCompat.getCurrentWebViewPackage(context);
-            sb.append(String.format("WebView %d/%s %s\r\n",
+            sb.append(String.format("WebView %d/%s\r\n",
                     pkg == null ? -1 : pkg.versionCode,
-                    pkg == null ? null : pkg.versionName,
-                    pkg == null || pkg.versionCode / 100000 < 5304 ? "!!!" : ""));
+                    pkg == null ? null : pkg.versionName));
         } catch (Throwable ex) {
             sb.append(ex).append("\r\n");
         }
@@ -2276,6 +2299,8 @@ public class Log {
                         value = "[redacted]";
                     else if (key != null && key.startsWith("oauth."))
                         value = "[redacted]";
+                    else if (key != null && key.startsWith("graph.contacts."))
+                        value = "[redacted]";
                     size += write(os, key + "=" + value + "\r\n");
                 }
 
@@ -2334,8 +2359,13 @@ public class Log {
 
                 String ds = ConnectionHelper.getDataSaving(context);
                 boolean vpn = ConnectionHelper.vpnActive(context);
-                boolean ng = Helper.isInstalled(context, "eu.faircode.netguard");
-                boolean tc = Helper.isInstalled(context, "net.kollnig.missioncontrol");
+                boolean ng = false;
+                try {
+                    PackageManager pm = context.getPackageManager();
+                    pm.getPackageInfo("eu.faircode.netguard", 0);
+                    ng = true;
+                } catch (Throwable ignored) {
+                }
 
                 Integer bucket = null;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
@@ -2351,12 +2381,24 @@ public class Log {
                     filter = nm.getCurrentInterruptionFilter();
                 }
 
+                StringBuilder filters = new StringBuilder();
+                StringBuilder sorts = new StringBuilder();
+                for (String key : prefs.getAll().keySet())
+                    if (key.startsWith("filter_")) {
+                        Object value = prefs.getAll().get(key);
+                        if (Boolean.TRUE.equals(value))
+                            filters.append(' ').append(key.substring(7)).append('=').append(value);
+                    } else if (key.startsWith("sort_")) {
+                        Object value = prefs.getAll().get(key);
+                        sorts.append(' ').append(key).append('=').append(value);
+                    }
+
                 size += write(os, "enabled=" + enabled + (enabled ? "" : " !!!") +
                         " interval=" + pollInterval + "\r\n" +
                         "metered=" + metered + (metered ? "" : " !!!") +
                         " saving=" + ds + ("enabled".equals(ds) ? " !!!" : "") +
                         " vpn=" + vpn + (vpn ? " !!!" : "") +
-                        " ng=" + ng + " tc=" + tc + "\r\n" +
+                        " ng=" + ng + "\r\n" +
                         "optimizing=" + (ignoring == null ? null : !ignoring) + (Boolean.FALSE.equals(ignoring) ? " !!!" : "") +
                         " bucket=" + (bucket == null ? null :
                         Helper.getStandbyBucketName(bucket) +
@@ -2371,25 +2413,69 @@ public class Log {
                         " messages=" + db.message().countTotal() +
                         " rules=" + db.rule().countTotal() +
                         " ops=" + db.operation().getOperationCount() +
-                        " outbox=" + db.message().countOutbox() +
+                        " outbox=" + db.message().countOutbox() + "\r\n" +
+                        "filter " + filters + " " + sorts +
                         "\r\n\r\n");
 
                 if (schedule) {
                     int minuteStart = prefs.getInt("schedule_start", 0);
                     int minuteEnd = prefs.getInt("schedule_end", 0);
+                    int minuteStartWeekend = prefs.getInt("schedule_start_weekend", minuteStart);
+                    int minuteEndWeekend = prefs.getInt("schedule_end_weekend", minuteEnd);
 
-                    size += write(os, "schedule " +
-                            (minuteStart / 60) + ":" + (minuteStart % 60) + "..." +
-                            (minuteEnd / 60) + ":" + (minuteEnd % 60) + "\r\n");
+                    size += write(os, String.format("schedule %s...%s weekend %s...%s\r\n",
+                            CalendarHelper.formatHour(context, minuteStart),
+                            CalendarHelper.formatHour(context, minuteEnd),
+                            CalendarHelper.formatHour(context, minuteStartWeekend),
+                            CalendarHelper.formatHour(context, minuteEndWeekend)));
 
                     String[] daynames = new DateFormatSymbols().getWeekdays();
                     for (int i = 0; i < 7; i++) {
                         boolean day = prefs.getBoolean("schedule_day" + i, true);
-                        size += write(os, "schedule " + daynames[i + 1] + "=" + day + "\r\n");
+                        boolean weekend = CalendarHelper.isWeekend(context, i + 1);
+                        size += write(os, String.format("schedule %s=%b %s\r\n",
+                                daynames[i + 1], day, weekend ? "weekend" : ""));
                     }
 
                     size += write(os, "\r\n");
                 }
+
+                for (EntityAccount account : accounts)
+                    if (account.synchronize)
+                        try {
+                            String info = "pwd";
+                            if (account.auth_type == ServiceAuthenticator.AUTH_TYPE_OAUTH ||
+                                    account.auth_type == ServiceAuthenticator.AUTH_TYPE_GRAPH)
+                                info = getTokenInfo(account.password, account.auth_type);
+                            size += write(os, String.format("%s %s\r\n", account.name, info));
+
+                            List<EntityIdentity> identities = db.identity().getSynchronizingIdentities(account.id);
+                            for (EntityIdentity identity : identities)
+                                if (identity.auth_type == ServiceAuthenticator.AUTH_TYPE_OAUTH ||
+                                        identity.auth_type == ServiceAuthenticator.AUTH_TYPE_GRAPH)
+                                    size += write(os, String.format("- %s %s\r\n",
+                                            identity.name, getTokenInfo(identity.password, identity.auth_type)));
+                        } catch (Throwable ex) {
+                            size += write(os, ex.toString() + "\r\n");
+                        }
+
+                size += write(os, "\r\n");
+
+                Map<Long, EntityFolder> unified = new HashMap<>();
+                for (EntityFolder folder : db.folder().getFoldersByType(EntityFolder.INBOX))
+                    unified.put(folder.id, folder);
+                for (EntityFolder folder : db.folder().getFoldersUnified(null, false))
+                    unified.put(folder.id, folder);
+
+                for (Long fid : unified.keySet()) {
+                    EntityFolder folder = unified.get(fid);
+                    EntityAccount account = db.account().getAccount(folder.account);
+                    size += write(os, String.format("%s/%s:%s sync=%b unified=%b\r\n",
+                            (account == null ? null : account.name),
+                            folder.name, folder.type, folder.synchronize, folder.unified));
+                }
+
+                size += write(os, "\r\n");
 
                 for (EntityAccount account : accounts) {
                     if (account.synchronize) {
@@ -2413,13 +2499,16 @@ public class Log {
                         }
 
                         size += write(os, account.name + (account.primary ? "*" : "") +
-                                " " + (account.protocol == EntityAccount.TYPE_IMAP ? "IMAP" : "POP") + "/" + account.auth_type +
-                                (account.provider == null ? "" : " [" + account.provider + "]") +
-                                " " + account.host + ":" + account.port + "/" + account.encryption +
+                                " " + (account.protocol == EntityAccount.TYPE_IMAP ? "IMAP" : "POP") +
+                                " [" + (account.provider == null ? "" : account.provider) +
+                                ":" + ServiceAuthenticator.getAuthTypeName(account.auth_type) + "]" +
+                                " " + account.host + ":" + account.port + "/" +
+                                EmailService.getEncryptionName(account.encryption) +
+                                (account.insecure ? " !!!" : "") +
                                 " sync=" + account.synchronize +
                                 " exempted=" + account.poll_exempted +
                                 " poll=" + account.poll_interval +
-                                " ondemand=" + account.ondemand +
+                                " ondemand=" + account.ondemand + (account.ondemand ? " !!!" : "") +
                                 " msgs=" + content + "/" + messages + " max=" + account.max_messages +
                                 " ops=" + db.operation().getOperationCount(account.id) +
                                 " schedule=" + (!ignore_schedule) + (ignore_schedule ? " !!!" : "") +
@@ -2432,7 +2521,7 @@ public class Log {
                         if (folders.size() > 0)
                             Collections.sort(folders, folders.get(0).getComparator(context));
                         for (TupleFolderEx folder : folders)
-                            if (folder.synchronize) {
+                            if (folder.synchronize || account.protocol == EntityAccount.TYPE_POP) {
                                 int unseen = db.message().countUnseen(folder.id);
                                 int hidden = db.message().countHidden(folder.id);
                                 int notifying = db.message().countNotifying(folder.id);
@@ -2441,7 +2530,7 @@ public class Log {
                                         (folder.unified ? " unified" : "") +
                                         (folder.notify ? " notify" : "") +
                                         " poll=" + folder.poll + "/" + folder.poll_factor +
-                                        " days=" + folder.sync_days + "/" + folder.keep_days +
+                                        " days=" + getDays(folder.sync_days) + "/" + getDays(folder.keep_days) +
                                         " msgs=" + folder.content + "/" + folder.messages + "/" + folder.total +
                                         " ops=" + db.operation().getOperationCount(folder.id, null) +
                                         " unseen=" + unseen + " hidden=" + hidden + " notifying=" + notifying +
@@ -2473,12 +2562,15 @@ public class Log {
                                 size += write(os, account.name + "/" + identity.name + (identity.primary ? "*" : "") + " " +
                                         identity.display + " " + identity.email +
                                         (identity.self ? "" : " !self") +
-                                        (identity.provider == null ? "" : " [" + identity.provider + "]") +
+                                        " [" + (identity.provider == null ? "" : identity.provider) +
+                                        ":" + ServiceAuthenticator.getAuthTypeName(identity.auth_type) + "]" +
                                         (TextUtils.isEmpty(identity.sender_extra_regex) ? "" : " regex=" + identity.sender_extra_regex) +
                                         (!identity.sender_extra ? "" : " edit" +
                                                 (identity.sender_extra_name ? "+name" : "-name") +
                                                 (identity.reply_extra_name ? "+copy" : "-copy")) +
-                                        " " + identity.host + ":" + identity.port + "/" + identity.encryption +
+                                        " " + identity.host + ":" + identity.port + "/" +
+                                        EmailService.getEncryptionName(identity.encryption) +
+                                        (identity.insecure ? " !!!" : "") +
                                         " ops=" + db.operation().getOperationCount(EntityOperation.SEND) +
                                         " " + identity.state +
                                         (identity.last_connected == null ? "" : " " + dtf.format(identity.last_connected)) +
@@ -2529,6 +2621,8 @@ public class Log {
                                 jfolder.put("selectable", folder.selectable);
                                 jfolder.put("inferiors", folder.inferiors);
                                 jfolder.put("auto_add", folder.auto_add);
+                                jfolder.put("flags", folder.flags == null ? null : TextUtils.join(",", folder.flags));
+                                jfolder.put("keywords", folder.keywords == null ? null : TextUtils.join(",", folder.keywords));
                                 jfolder.put("tbc", Boolean.TRUE.equals(folder.tbc));
                                 jfolder.put("rename", folder.rename);
                                 jfolder.put("tbd", Boolean.TRUE.equals(folder.tbd));
@@ -2564,6 +2658,13 @@ public class Log {
         }
     }
 
+    private static String getDays(Integer days) {
+        if (days == null)
+            return "?";
+        else
+            return (days == Integer.MAX_VALUE ? "∞" : Integer.toString(days));
+    }
+
     private static void attachNetworkInfo(Context context, long id, int sequence) {
         try {
             DB db = DB.getInstance(context);
@@ -2585,14 +2686,33 @@ public class Log {
 
                 NetworkInfo ani = cm.getActiveNetworkInfo();
                 if (ani != null)
-                    size += write(os, ani.toString() +
+                    size += write(os, "Active network info=" + ani +
+                            " connecting=" + ani.isConnectedOrConnecting() +
                             " connected=" + ani.isConnected() +
+                            " available=" + ani.isAvailable() +
+                            " state=" + ani.getState() + "/" + ani.getDetailedState() +
                             " metered=" + cm.isActiveNetworkMetered() +
                             " roaming=" + ani.isRoaming() +
                             " type=" + ani.getType() + "/" + ani.getTypeName() +
                             "\r\n\r\n");
 
                 Network active = ConnectionHelper.getActiveNetwork(context);
+                NetworkInfo a = (active == null ? null : cm.getNetworkInfo(active));
+                NetworkCapabilities c = (active == null ? null : cm.getNetworkCapabilities(active));
+                LinkProperties p = (active == null ? null : cm.getLinkProperties(active));
+                boolean n = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M);
+                size += write(os, "Active network=" + active + " native=" + n + "\r\n");
+                size += write(os, "   info=" + a +
+                        " connecting=" + (a == null ? null : a.isConnectedOrConnecting()) +
+                        " connected=" + (a == null ? null : a.isConnected()) +
+                        " available=" + (a == null ? null : a.isAvailable()) +
+                        " state=" + (a == null ? null : a.getState() + "/" + a.getDetailedState()) +
+                        " roaming=" + (a == null ? null : a.isRoaming()) +
+                        " type=" + (a == null ? null : a.getType() + "/" + a.getTypeName()) +
+                        "\r\n");
+                size += write(os, "   caps=" + c + "\r\n");
+                size += write(os, "   props=" + p + "\r\n\r\n");
+
                 for (Network network : cm.getAllNetworks()) {
                     size += write(os, (network.equals(active) ? "active=" : "network=") + network + "\r\n");
 
@@ -2629,11 +2749,35 @@ public class Log {
                 size += write(os, "Connected=" + state.isConnected() + "\r\n");
                 size += write(os, "Suitable=" + state.isSuitable() + "\r\n");
                 size += write(os, "Unmetered=" + state.isUnmetered() + "\r\n");
-                size += write(os, "Roaming=" + state.isRoaming() + "\r\n\r\n");
+                size += write(os, "Roaming=" + state.isRoaming() + "\r\n");
+                size += write(os, "\r\n");
 
+                boolean[] has46 = ConnectionHelper.has46(context);
+
+                size += write(os, "Has IPv4=" + has46[0] + " IPv6=" + has46[1] + "\r\n");
                 size += write(os, "VPN active=" + ConnectionHelper.vpnActive(context) + "\r\n");
                 size += write(os, "Data saving=" + ConnectionHelper.isDataSaving(context) + "\r\n");
                 size += write(os, "Airplane=" + ConnectionHelper.airplaneMode(context) + "\r\n");
+                size += write(os, "\r\n");
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                int timeout = prefs.getInt("timeout", EmailService.DEFAULT_CONNECT_TIMEOUT);
+                boolean metered = prefs.getBoolean("metered", true);
+                boolean roaming = prefs.getBoolean("roaming", true);
+                boolean rlah = prefs.getBoolean("rlah", true);
+                boolean standalone_vpn = prefs.getBoolean("standalone_vpn", false);
+                boolean require_validated = prefs.getBoolean("require_validated", false);
+                boolean require_validated_captive = prefs.getBoolean("require_validated_captive", true);
+                boolean vpn_only = prefs.getBoolean("vpn_only", false);
+
+                size += write(os, "timeout=" + timeout + "s" + (timeout == EmailService.DEFAULT_CONNECT_TIMEOUT ? "" : " !!!") + "\r\n");
+                size += write(os, "metered=" + metered + (metered ? "" : " !!!") + "\r\n");
+                size += write(os, "roaming=" + roaming + (roaming ? "" : " !!!") + "\r\n");
+                size += write(os, "rlah=" + rlah + (rlah ? "" : " !!!") + "\r\n");
+                size += write(os, "standalone_vpn=" + standalone_vpn + (standalone_vpn ? " !!!" : "") + "\r\n");
+                size += write(os, "validated=" + require_validated + (require_validated ? " !!!" : "") + "\r\n");
+                size += write(os, "validated/captive=" + require_validated_captive + (require_validated_captive ? "" : " !!!") + "\r\n");
+                size += write(os, "vpn_only=" + vpn_only + (vpn_only ? " !!!" : "") + "\r\n");
 
                 size += write(os, "\r\n");
                 size += write(os, getCiphers().toString());
@@ -2666,9 +2810,10 @@ public class Log {
                 DateFormat TF = Helper.getTimeInstance(context);
 
                 for (EntityLog entry : db.log().getLogs(from, null)) {
-                    size += write(os, String.format("%s [%d:%d:%d:%d] %s\r\n",
+                    size += write(os, String.format("%s [%d:%d:%d:%d:%d] %s\r\n",
                             TF.format(entry.time),
                             entry.type.ordinal(),
+                            (entry.thread == null ? 0 : entry.thread),
                             (entry.account == null ? 0 : entry.account),
                             (entry.folder == null ? 0 : entry.folder),
                             (entry.message == null ? 0 : entry.message),
@@ -2823,8 +2968,10 @@ public class Log {
                 NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    boolean permission = Helper.hasPermission(context, Manifest.permission.POST_NOTIFICATIONS);
                     boolean enabled = nm.areNotificationsEnabled();
-                    size += write(os, String.format("Enabled=%b %s\r\n",
+                    size += write(os, String.format("Permission=%b %s Enabled=%b %s\r\n",
+                            permission, (permission ? "" : "!!!"),
                             enabled, (enabled ? "" : "!!!")));
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -2841,6 +2988,30 @@ public class Log {
                 size += write(os, String.format("InCall=%b DND=%b\r\n\r\n",
                         MediaPlayerHelper.isInCall(context),
                         MediaPlayerHelper.isDnd(context)));
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+                StringBuilder options = new StringBuilder();
+                for (String key : prefs.getAll().keySet())
+                    if (key.startsWith("notify_")) {
+                        Object value = prefs.getAll().get(key);
+                        boolean mark = false;
+                        if ("notify_known".equals(key) && Boolean.TRUE.equals(value))
+                            mark = true;
+                        if ("notify_background_only".equals(key) && Boolean.TRUE.equals(value))
+                            mark = true;
+                        if ("notify_suppress_in_car".equals(key) && Boolean.TRUE.equals(value))
+                            mark = true;
+                        options.append(' ').append(key).append('=')
+                                .append(value)
+                                .append(mark ? " !!!" : "")
+                                .append("\r\n");
+                    }
+
+                if (options.length() > 0) {
+                    options.append("\r\n");
+                    size += write(os, options.toString());
+                }
 
                 for (NotificationChannel channel : nm.getNotificationChannels())
                     try {
@@ -2892,10 +3063,98 @@ public class Log {
             attachment.id = db.attachment().insertAttachment(attachment);
 
             long now = new Date().getTime();
+            PackageManager pm = context.getPackageManager();
 
             long size = 0;
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                for (Class<?> cls : new Class[]{
+                        ActivitySendSelf.class,
+                        ActivitySearch.class,
+                        ActivityAnswer.class,
+                        ReceiverAutoStart.class})
+                    size += write(os, String.format("%s=%b\r\n",
+                            cls.getSimpleName(), Helper.isComponentEnabled(context, cls)));
+                size += write(os, "\r\n");
+
+                try {
+                    Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+                    List<ResolveInfo> homes = context.getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DEFAULT_ONLY);
+                    if (homes != null)
+                        for (ResolveInfo ri : homes)
+                            size += write(os, String.format("Launcher=%s\r\n", ri.activityInfo.packageName));
+
+                    ResolveInfo rid = context.getPackageManager().resolveActivity(home, PackageManager.MATCH_DEFAULT_ONLY);
+                    size += write(os, String.format("Default launcher=%s\r\n", (rid == null ? null : rid.activityInfo.packageName)));
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+                size += write(os, "\r\n");
+
+                try {
+                    int flags = PackageManager.GET_RESOLVED_FILTER;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        flags |= PackageManager.MATCH_ALL;
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
+                    List<ResolveInfo> ris = pm.queryIntentActivities(intent, flags);
+                    size += write(os, "Browsers=" + (ris == null ? null : ris.size()) + "\r\n");
+                    if (ris != null)
+                        for (ResolveInfo ri : ris) {
+                            Intent serviceIntent = new Intent();
+                            serviceIntent.setAction("android.support.customtabs.action.CustomTabsService");
+                            serviceIntent.setPackage(ri.activityInfo.packageName);
+                            boolean tabs = (pm.resolveService(serviceIntent, 0) != null);
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("Browser=").append(ri.activityInfo.packageName);
+                            sb.append(" tabs=").append(tabs);
+                            sb.append(" view=").append(ri.filter.hasAction(Intent.ACTION_VIEW));
+                            sb.append(" browsable=").append(ri.filter.hasCategory(Intent.CATEGORY_BROWSABLE));
+                            sb.append(" authorities=").append(ri.filter.authoritiesIterator() != null);
+                            sb.append(" schemes=");
+
+                            boolean first = true;
+                            Iterator<String> schemeIter = ri.filter.schemesIterator();
+                            while (schemeIter.hasNext()) {
+                                String scheme = schemeIter.next();
+                                if (first)
+                                    first = false;
+                                else
+                                    sb.append(',');
+                                sb.append(scheme);
+                            }
+
+                            if (tabs && BuildConfig.DEBUG)
+                                try {
+                                    boolean bindable = context.bindService(serviceIntent, new CustomTabsServiceConnection() {
+                                        @Override
+                                        public void onCustomTabsServiceConnected(@NonNull final ComponentName component, final CustomTabsClient client) {
+                                            try {
+                                                context.unbindService(this);
+                                            } catch (Throwable ex) {
+                                                Log.e(ex);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onServiceDisconnected(final ComponentName component) {
+                                            // Do nothing
+                                        }
+                                    }, 0);
+                                    sb.append(" bindable=").append(bindable);
+                                } catch (Throwable ex) {
+                                    size += write(os, ex.toString());
+                                }
+
+                            sb.append("\r\n");
+
+                            size += write(os, sb.toString());
+                        }
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+                size += write(os, "\r\n");
+
                 try {
                     List<UriPermission> uperms = context.getContentResolver().getPersistedUriPermissions();
                     if (uperms != null)
@@ -2912,8 +3171,7 @@ public class Log {
                 size += write(os, "\r\n");
 
                 try {
-                    PackageInfo pi = context.getPackageManager()
-                            .getPackageInfo(BuildConfig.APPLICATION_ID, PackageManager.GET_PERMISSIONS);
+                    PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, PackageManager.GET_PERMISSIONS);
                     for (int i = 0; i < pi.requestedPermissions.length; i++)
                         if (pi.requestedPermissions[i] != null &&
                                 pi.requestedPermissions[i].startsWith("android.permission.")) {
@@ -2960,6 +3218,60 @@ public class Log {
                 size += write(os, "\r\n");
 
                 try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW)
+                            .addCategory(Intent.CATEGORY_BROWSABLE)
+                            .setData(Uri.parse("http://example.com/"));
+                    ResolveInfo main = pm.resolveActivity(intent, 0);
+
+                    int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
+                    intent.setData(Uri.parse("http://example.com"));
+                    List<ResolveInfo> browsers = pm.queryIntentActivities(intent, flags);
+
+                    for (ResolveInfo ri : browsers) {
+                        Intent serviceIntent = new Intent();
+                        serviceIntent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
+                        serviceIntent.setPackage(ri.activityInfo.packageName);
+                        CharSequence label = pm.getApplicationLabel(ri.activityInfo.applicationInfo);
+                        boolean tabs = (pm.resolveService(serviceIntent, 0) != null);
+                        boolean def = (main != null &&
+                                Objects.equals(ri.activityInfo.packageName, main.activityInfo.packageName));
+                        size += write(os, String.format("Browser: %s (%s) tabs=%b default=%b\r\n",
+                                ri.activityInfo.packageName, label, tabs, def));
+                    }
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    String open_with_pkg = prefs.getString("open_with_pkg", null);
+                    boolean open_with_tabs = prefs.getBoolean("open_with_tabs", true);
+                    size += write(os, String.format("Selected: %s tabs=%b\r\n",
+                            open_with_pkg, open_with_tabs));
+
+                    size += write(os, "\r\n");
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    try {
+                        DomainVerificationManager dvm = Helper.getSystemService(context, DomainVerificationManager.class);
+                        DomainVerificationUserState userState = dvm.getDomainVerificationUserState(context.getPackageName());
+                        Map<String, Integer> hostToStateMap = userState.getHostToStateMap();
+                        for (String key : hostToStateMap.keySet()) {
+                            Integer stateValue = hostToStateMap.get(key);
+                            if (stateValue == DomainVerificationUserState.DOMAIN_STATE_VERIFIED)
+                                size += write(os, String.format("Verified: %s\r\n", key));
+                            else if (stateValue == DomainVerificationUserState.DOMAIN_STATE_SELECTED)
+                                size += write(os, String.format("selected: %s\r\n", key));
+                            else
+                                size += write(os, String.format("Unverified: %s (%d)\r\n", key,
+                                        stateValue == null ? -1 : stateValue));
+                        }
+                    } catch (Throwable ex) {
+                        size += write(os, String.format("%s\r\n", ex));
+                    }
+                    size += write(os, "\r\n");
+                }
+
+                try {
                     List<WorkInfo> works = WorkManager
                             .getInstance(context)
                             .getWorkInfos(WorkQuery.fromStates(
@@ -2977,13 +3289,18 @@ public class Log {
 
                 size += write(os, "\r\n");
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Map<Integer, Integer> exts = SdkExtensions.getAllExtensionVersions();
-                    for (Integer ext : exts.keySet())
-                        size += write(os, String.format("Extension %d / %d\r\n", ext, exts.get(ext)));
-                    if (exts.size() > 0)
-                        size += write(os, "\r\n");
-                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    try {
+                        Map<Integer, Integer> exts = SdkExtensions.getAllExtensionVersions();
+                        for (Integer ext : exts.keySet())
+                            size += write(os, String.format("Extension %d / %d\r\n", ext, exts.get(ext)));
+                        if (exts.size() > 0)
+                            size += write(os, "\r\n");
+
+                        size += write(os, String.format("Max. pick images: %d\r\n\r\n", MediaStore.getPickImagesMaxLimit()));
+                    } catch (Throwable ex) {
+                        size += write(os, String.format("%s\r\n", ex));
+                    }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     try {
@@ -3038,8 +3355,8 @@ public class Log {
                 size += write(os, "\r\n");
 
                 size += write(os, String.format("%s=%b\r\n",
-                        Helper.getOpenKeychainPackage(context),
-                        Helper.isOpenKeychainInstalled(context)));
+                        PgpHelper.getPackageName(context),
+                        PgpHelper.isOpenKeychainInstalled(context)));
 
                 try {
                     int maxKeySize = javax.crypto.Cipher.getMaxAllowedKeyLength("AES");
@@ -3100,7 +3417,6 @@ public class Log {
                     }
 
                 try {
-                    PackageManager pm = context.getPackageManager();
                     List<PermissionGroupInfo> groups = pm.getAllPermissionGroups(0);
                     groups.add(0, null); // Ungrouped
 
@@ -3146,6 +3462,19 @@ public class Log {
         Helper.copy(source, target);
 
         db.attachment().setDownloaded(attachment.id, target.length());
+    }
+
+    static String getTokenInfo(String password, int auth_type) throws JSONException {
+        AuthState authState = AuthState.jsonDeserialize(password);
+        Long expiration = authState.getAccessTokenExpirationTime();
+        TokenResponse t = authState.getLastTokenResponse();
+        Set<String> scopeSet = (t == null ? null : t.getScopeSet());
+        String[] scopes = (scopeSet == null ? new String[0] : scopeSet.toArray(new String[0]));
+        return String.format("%s expire=%s need=%b %s",
+                ServiceAuthenticator.getAuthTypeName(auth_type),
+                (expiration == null ? null : new Date(expiration)),
+                authState.getNeedsTokenRefresh(),
+                TextUtils.join(",", scopes));
     }
 
     static SpannableStringBuilder getCiphers() {

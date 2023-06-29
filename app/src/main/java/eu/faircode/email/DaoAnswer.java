@@ -58,6 +58,9 @@ public interface DaoAnswer {
     @Query("SELECT * FROM answer WHERE uuid = :uuid")
     EntityAnswer getAnswerByUUID(String uuid);
 
+    @Query("SELECT * FROM answer WHERE name = :name")
+    List<EntityAnswer> getAnswerByName(String name);
+
     @Query("SELECT * FROM answer" +
             " WHERE standard AND NOT hide")
     EntityAnswer getStandardAnswer();
@@ -66,14 +69,18 @@ public interface DaoAnswer {
             " WHERE receipt AND NOT hide")
     EntityAnswer getReceiptAnswer();
 
-    @Query("SELECT * FROM answer" +
-            " ORDER BY `group`, -favorite, name COLLATE NOCASE")
+    @Query("SELECT * FROM answer")
     LiveData<List<EntityAnswer>> liveAnswers();
 
     @Query("SELECT COUNT(*) FROM answer" +
             " WHERE NOT hide" +
             " AND (:favorite OR NOT favorite)")
     Integer getAnswerCount(boolean favorite);
+
+    @Query("SELECT DISTINCT `group` FROM answer" +
+            " WHERE NOT `group` IS NULL" +
+            " ORDER by `group` COLLATE NOCASE")
+    List<String> getGroups();
 
     @Insert
     long insertAnswer(EntityAnswer answer);

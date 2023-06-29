@@ -37,13 +37,11 @@ import static me.everything.android.ui.overscroll.OverScrollBounceEffectDecorato
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -55,7 +53,6 @@ import android.content.res.ColorStateList;
 import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -73,10 +70,7 @@ import android.os.OperationCanceledException;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
-import android.print.PrintAttributes;
-import android.print.PrintDocumentAdapter;
-import android.print.PrintJob;
-import android.print.PrintManager;
+import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.security.KeyChain;
@@ -86,7 +80,6 @@ import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.format.DateUtils;
@@ -114,13 +107,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -188,9 +175,6 @@ import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.util.Store;
 import org.json.JSONException;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.openintents.openpgp.AutocryptPeerUpdate;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.OpenPgpSignatureResult;
@@ -206,9 +190,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.CertPathBuilder;
@@ -242,9 +223,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import javax.mail.Address;
@@ -254,7 +233,13 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import biweekly.Biweekly;
+import biweekly.ICalendar;
+import biweekly.component.VEvent;
+import biweekly.property.Status;
 import me.everything.android.ui.overscroll.IOverScrollDecor;
+import me.everything.android.ui.overscroll.IOverScrollState;
+import me.everything.android.ui.overscroll.IOverScrollStateListener;
 import me.everything.android.ui.overscroll.IOverScrollUpdateListener;
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator;
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter;
@@ -265,6 +250,7 @@ public class FragmentMessages extends FragmentBase
     private SwipeRefreshLayoutEx swipeRefresh;
     private TextView tvAirplane;
     private TextView tvNotifications;
+    private TextView tvBatteryOptimizations;
     private TextView tvSupport;
     private ImageButton ibHintSupport;
     private ImageButton ibHintSwipe;
@@ -288,6 +274,7 @@ public class FragmentMessages extends FragmentBase
     private ContentLoadingProgressBar pbWait;
     private Group grpAirplane;
     private Group grpNotifications;
+    private Group grpBatteryOptimizations;
     private Group grpSupport;
     private Group grpHintSupport;
     private Group grpHintSwipe;
@@ -337,8 +324,6 @@ public class FragmentMessages extends FragmentBase
 
     private int searchIndex = 0;
     private TextView searchView = null;
-
-    private WebView printWebView = null;
 
     private boolean hide_toolbar;
     private boolean cards;
@@ -418,7 +403,6 @@ public class FragmentMessages extends FragmentBase
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
     private static final float LUMINANCE_THRESHOLD = 0.7f;
     private static final int ITEM_CACHE_SIZE = 10; // Default: 2 items
-    private static final int MAX_QUICK_ACTIONS = 5;
 
     private static final int REQUEST_RAW = 1;
     private static final int REQUEST_OPENPGP = 4;
@@ -446,6 +430,7 @@ public class FragmentMessages extends FragmentBase
     private static final int REQUEST_SAVE_SEARCH = 26;
     private static final int REQUEST_QUICK_ACTIONS = 27;
     static final int REQUEST_BLOCK_SENDERS = 28;
+    static final int REQUEST_CALENDAR = 29;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
@@ -486,6 +471,8 @@ public class FragmentMessages extends FragmentBase
         if (folder > 0 && thread == null && type == null && criteria == null)
             Log.e("Messages for folder without type");
 
+        accessibility = Helper.isAccessibilityEnabled(getContext());
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         hide_toolbar = prefs.getBoolean("hide_toolbar", !BuildConfig.PLAY_STORE_RELEASE);
@@ -500,7 +487,8 @@ public class FragmentMessages extends FragmentBase
                 args.getBoolean("force_threading"));
         swipenav = prefs.getBoolean("swipenav", true);
         seekbar = prefs.getBoolean("seekbar", false);
-        thread_sent_trash = prefs.getBoolean("thread_sent_trash", true);
+        thread_sent_trash = (prefs.getBoolean("thread_sent_trash", true) &&
+                !EntityFolder.SENT.equals(type));
         actionbar = prefs.getBoolean("actionbar", true);
         boolean actionbar_swap = prefs.getBoolean("actionbar_swap", false);
         actionbar_delete_id = (actionbar_swap ? R.id.action_archive : R.id.action_delete);
@@ -511,7 +499,7 @@ public class FragmentMessages extends FragmentBase
         onclose = (autoclose ? null : prefs.getString("onclose", null));
         quick_scroll = prefs.getBoolean("quick_scroll", true);
         addresses = prefs.getBoolean("addresses", false);
-        auto_hide_answer = prefs.getBoolean("auto_hide_answer", true);
+        auto_hide_answer = prefs.getBoolean("auto_hide_answer", !accessibility);
         swipe_reply = prefs.getBoolean("swipe_reply", false);
         quick_actions = prefs.getBoolean("quick_actions", true);
 
@@ -519,8 +507,6 @@ public class FragmentMessages extends FragmentBase
         colorAccent = Helper.resolveColor(getContext(), R.attr.colorAccent);
         colorSeparator = Helper.resolveColor(getContext(), R.attr.colorSeparator);
         colorWarning = Helper.resolveColor(getContext(), R.attr.colorWarning);
-
-        accessibility = Helper.isAccessibilityEnabled(getContext());
 
         if (criteria == null)
             if (thread == null) {
@@ -571,6 +557,7 @@ public class FragmentMessages extends FragmentBase
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
         tvAirplane = view.findViewById(R.id.tvAirplane);
         tvNotifications = view.findViewById(R.id.tvNotifications);
+        tvBatteryOptimizations = view.findViewById(R.id.tvBatteryOptimizations);
         tvSupport = view.findViewById(R.id.tvSupport);
         ibHintSupport = view.findViewById(R.id.ibHintSupport);
         ibHintSwipe = view.findViewById(R.id.ibHintSwipe);
@@ -595,6 +582,7 @@ public class FragmentMessages extends FragmentBase
         pbWait = view.findViewById(R.id.pbWait);
         grpAirplane = view.findViewById(R.id.grpAirplane);
         grpNotifications = view.findViewById(R.id.grpNotifications);
+        grpBatteryOptimizations = view.findViewById(R.id.grpBatteryOptimizations);
         grpSupport = view.findViewById(R.id.grpSupport);
         grpHintSupport = view.findViewById(R.id.grpHintSupport);
         grpHintSwipe = view.findViewById(R.id.grpHintSwipe);
@@ -653,6 +641,15 @@ public class FragmentMessages extends FragmentBase
         });
 
         tvNotifications.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), ActivitySetup.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                v.getContext().startActivity(intent);
+            }
+        });
+
+        tvBatteryOptimizations.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), ActivitySetup.class)
@@ -1048,16 +1045,39 @@ public class FragmentMessages extends FragmentBase
                 cal.set(Calendar.MILLISECOND, 0);
                 cal.add(Calendar.DAY_OF_MONTH, -1);
 
-                CharSequence rtime;
-                if (time <= cal.getTimeInMillis())
-                    rtime = DateUtils.formatDateRange(context,
-                            time, time,
-                            FORMAT_SHOW_WEEKDAY | FORMAT_SHOW_DATE);
-                else
-                    rtime = DateUtils.getRelativeTimeSpanString(
-                            time, now.getTime(),
-                            DAY_IN_MILLIS, 0);
-                return (rtime == null ? "" : rtime.toString());
+                try {
+                    CharSequence rtime;
+                    if (time <= cal.getTimeInMillis())
+                        rtime = DateUtils.formatDateRange(context,
+                                time, time,
+                                FORMAT_SHOW_WEEKDAY | FORMAT_SHOW_DATE);
+                    else
+                        rtime = DateUtils.getRelativeTimeSpanString(
+                                time, now.getTime(),
+                                DAY_IN_MILLIS, 0);
+                    return (rtime == null ? "" : rtime.toString());
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                    /*
+                        java.util.MissingResourceException: Can't find resource for bundle android/icu/impl/data/icudt60b/supplementalData.res, key calendarPreferenceData
+                            at android.icu.util.UResourceBundle.get(UResourceBundle.java:491)
+                            at android.icu.util.Calendar.getKeywordValuesForLocale(Calendar.java:1873)
+                            at android.icu.text.DateTimePatternGenerator.getCalendarTypeToUse(DateTimePatternGenerator.java:165)
+                            at android.icu.text.DateTimePatternGenerator.addCLDRData(DateTimePatternGenerator.java:265)
+                            at android.icu.text.DateTimePatternGenerator.initData(DateTimePatternGenerator.java:139)
+                            at android.icu.text.DateTimePatternGenerator.getFrozenInstance(DateTimePatternGenerator.java:123)
+                            at android.icu.text.DateTimePatternGenerator.getInstance(DateTimePatternGenerator.java:92)
+                            at android.icu.text.DateIntervalFormat.getInstance(DateIntervalFormat.java:470)
+                            at libcore.icu.DateIntervalFormat.getFormatter(DateIntervalFormat.java:100)
+                            at libcore.icu.DateIntervalFormat.formatDateRange(DateIntervalFormat.java:87)
+                            at libcore.icu.DateIntervalFormat.formatDateRange(DateIntervalFormat.java:49)
+                            at android.text.format.DateUtils.formatDateRange(DateUtils.java:735)
+                            at android.text.format.DateUtils.formatDateRange(DateUtils.java:560)
+                            at android.text.format.DateUtils.formatDateRange(DateUtils.java:537)
+                            at eu.faircode.email.FragmentMessages$13.getRelativeDate(SourceFile:52)
+                     */
+                    return Helper.getDateInstance(context).format(time);
+                }
             }
 
             @NonNull
@@ -1356,6 +1376,7 @@ public class FragmentMessages extends FragmentBase
                 args.putString("thread", thread);
                 args.putLong("id", id);
                 args.putString("type", folderType);
+                args.putBoolean("thread_sent_trash", thread_sent_trash);
                 args.putBoolean("filter_archive", filter_archive);
 
                 new SimpleTask<ArrayList<MessageTarget>>() {
@@ -1365,6 +1386,7 @@ public class FragmentMessages extends FragmentBase
                         String thread = args.getString("thread");
                         long id = args.getLong("id");
                         String type = args.getString("type");
+                        boolean thread_sent_trash = args.getBoolean("thread_sent_trash");
                         boolean filter_archive = args.getBoolean("filter_archive");
 
                         ArrayList<MessageTarget> result = new ArrayList<>();
@@ -1390,7 +1412,8 @@ public class FragmentMessages extends FragmentBase
                                         (!filter_archive || !EntityFolder.ARCHIVE.equals(sourceFolder.type)) &&
                                         !EntityFolder.DRAFTS.equals(sourceFolder.type) && !EntityFolder.OUTBOX.equals(sourceFolder.type) &&
                                         !(EntityFolder.SENT.equals(sourceFolder.type) && EntityFolder.ARCHIVE.equals(targetFolder.type)) &&
-                                        !(EntityFolder.SENT.equals(sourceFolder.type) && EntityFolder.JUNK.equals(targetFolder.type)) && (!EntityFolder.SENT.equals(sourceFolder.type) || !EntityFolder.TRASH.equals(targetFolder.type) || thread_sent_trash) &&
+                                        !(EntityFolder.SENT.equals(sourceFolder.type) && EntityFolder.JUNK.equals(targetFolder.type)) &&
+                                        (!EntityFolder.SENT.equals(sourceFolder.type) || !EntityFolder.TRASH.equals(targetFolder.type) || thread_sent_trash) &&
                                         !EntityFolder.TRASH.equals(sourceFolder.type) && !EntityFolder.JUNK.equals(sourceFolder.type))
                                     result.add(new MessageTarget(context, threaded, account, sourceFolder, account, targetFolder));
                             }
@@ -1572,6 +1595,22 @@ public class FragmentMessages extends FragmentBase
             }
         });
 
+        ibInbox.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                MoreResult result = (MoreResult) cardMore.getTag();
+                if (result == null || !result.isJunk)
+                    return false;
+
+                if (result.hasPop && !result.hasImap)
+                    onActionBlockSender();
+                else if (!result.hasPop && result.hasImap)
+                    onActionJunkSelection();
+
+                return true;
+            }
+        });
+
         ibArchive.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1750,7 +1789,7 @@ public class FragmentMessages extends FragmentBase
                         aargs.putLongArray("disabled", new long[]{});
                         aargs.putSerializable("criteria", criteria);
 
-                        FragmentDialogFolder fragment = new FragmentDialogFolder();
+                        FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
                         fragment.setArguments(aargs);
                         fragment.setTargetFragment(FragmentMessages.this, REQUEST_SEARCH);
                         fragment.show(getParentFragmentManager(), "messages:search");
@@ -1822,6 +1861,7 @@ public class FragmentMessages extends FragmentBase
         FragmentDialogTheme.setBackground(getContext(), view, false);
         grpAirplane.setVisibility(View.GONE);
         grpNotifications.setVisibility(View.GONE);
+        grpBatteryOptimizations.setVisibility(View.GONE);
         tvNoEmail.setVisibility(View.GONE);
         tvNoEmailHint.setVisibility(View.GONE);
         etSearch.setVisibility(View.GONE);
@@ -2071,26 +2111,25 @@ public class FragmentMessages extends FragmentBase
                         DEFAULT_TOUCH_DRAG_MOVE_RATIO_BCK,
                         DEFAULT_DECELERATE_FACTOR
                 );
-                decor.setOverScrollUpdateListener(new IOverScrollUpdateListener() {
-                    private boolean triggered = false;
 
+                ObjectHolder<Boolean> otriggered = new ObjectHolder<>(false);
+
+                decor.setOverScrollUpdateListener(new IOverScrollUpdateListener() {
                     @Override
                     public void onOverScrollUpdate(IOverScrollDecor decor, int state, float offset) {
                         float height = decor.getView().getHeight();
                         if (height == 0)
                             return;
 
-                        if (offset == 0)
-                            triggered = false;
-                        else if (!triggered) {
+                        if (!otriggered.value) {
                             float dx = Math.abs(offset * DEFAULT_TOUCH_DRAG_MOVE_RATIO_FWD);
                             if (offset > 0 && dx > height / 4) {
-                                triggered = true;
+                                otriggered.value = true;
                                 handleAutoClose();
                             }
 
                             if (offset < 0 && dx > height / 8) {
-                                triggered = true;
+                                otriggered.value = true;
 
                                 Bundle args = new Bundle();
                                 args.putInt("icon", R.drawable.twotone_drive_file_move_24);
@@ -2101,12 +2140,21 @@ public class FragmentMessages extends FragmentBase
                                 args.putBoolean("filter_archive", filter_archive);
                                 args.putLongArray("disabled", new long[]{folder});
 
-                                FragmentDialogFolder fragment = new FragmentDialogFolder();
+                                FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
                                 fragment.setArguments(args);
                                 fragment.setTargetFragment(FragmentMessages.this, REQUEST_THREAD_MOVE);
                                 fragment.show(getParentFragmentManager(), "overscroll:move");
                             }
                         }
+                    }
+                });
+
+                decor.setOverScrollStateListener(new IOverScrollStateListener() {
+                    @Override
+                    public void onOverScrollStateChange(IOverScrollDecor decor, int oldState, int newState) {
+                        // offset is unreliable
+                        if (newState == IOverScrollState.STATE_IDLE)
+                            otriggered.value = false;
                     }
                 });
             } catch (Throwable ex) {
@@ -2477,7 +2525,16 @@ public class FragmentMessages extends FragmentBase
         }
 
         @Override
-        public void setPosition(long id, Pair<Integer, Integer> position) {
+        public void setPosition(long id, Pair<Integer, Integer> delta, Pair<Integer, Integer> position) {
+            if (delta != null && delta.second != 0) {
+                boolean down = (delta.second > 0);
+                if (scrolling != down) {
+                    scrolling = down;
+                    updateCompose();
+                    updateExpanded();
+                }
+            }
+
             if (position == null)
                 positions.remove(id);
             else
@@ -2649,6 +2706,8 @@ public class FragmentMessages extends FragmentBase
 
         @Override
         public void layoutChanged() {
+            if (rvMessage == null)
+                return;
             rvMessage.post(new Runnable() {
                 @Override
                 public void run() {
@@ -2705,14 +2764,22 @@ public class FragmentMessages extends FragmentBase
 
         @Override
         public float getSwipeEscapeVelocity(float defaultValue) {
+            return super.getSwipeEscapeVelocity(defaultValue) * getSwipeSensitivityFactor();
+        }
+
+        @Override
+        public float getSwipeVelocityThreshold(float defaultValue) {
+            return super.getSwipeVelocityThreshold(defaultValue) * getSwipeSensitivityFactor();
+        }
+
+        private int getSwipeSensitivityFactor() {
             int swipe_sensitivity = FragmentOptionsBehavior.DEFAULT_SWIPE_SENSITIVITY;
             Context context = getContext();
             if (context != null) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 swipe_sensitivity = prefs.getInt("swipe_sensitivity", swipe_sensitivity);
             }
-            return super.getSwipeEscapeVelocity(defaultValue) *
-                    (FragmentOptionsBehavior.MAX_SWIPE_SENSITIVITY - swipe_sensitivity + 1);
+            return (FragmentOptionsBehavior.MAX_SWIPE_SENSITIVITY - swipe_sensitivity + 1);
         }
 
         @Override
@@ -3213,7 +3280,7 @@ public class FragmentMessages extends FragmentBase
             args.putBoolean("copy", false);
             args.putBoolean("similar", true);
 
-            FragmentDialogFolder fragment = new FragmentDialogFolder();
+            FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
             fragment.setArguments(args);
             fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_MOVE);
             fragment.show(getParentFragmentManager(), "swipe:move");
@@ -3265,10 +3332,58 @@ public class FragmentMessages extends FragmentBase
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             boolean delete_asked = prefs.getBoolean("delete_asked", false);
+            final int undo_timeout = prefs.getInt("undo_timeout", 5000);
             if (delete_asked) {
-                Intent data = new Intent();
-                data.putExtra("args", args);
-                onActivityResult(REQUEST_MESSAGE_DELETE, RESULT_OK, data);
+                if (leave_deleted) {
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+
+                            long now = new Date().getTime();
+                            long busy = now + undo_timeout * 2;
+
+                            DB db = DB.getInstance(context);
+                            try {
+                                db.beginTransaction();
+
+                                db.message().setMessageUiBusy(id, busy);
+                                db.message().setMessageUiHide(id, true);
+                                db.message().setMessageFound(id, false);
+                                // Prevent new message notification on undo
+                                db.message().setMessageUiIgnored(id, true);
+
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
+                            return null;
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Void v) {
+                            FragmentActivity activity = getActivity();
+                            if (!(activity instanceof ActivityView)) {
+                                Intent data = new Intent();
+                                data.putExtra("args", args);
+                                onActivityResult(REQUEST_MESSAGE_DELETE, RESULT_OK, data);
+                                return;
+                            }
+
+                            String title = getString(R.string.title_move_undo, getString(R.string.title_trash), 1);
+                            ((ActivityView) activity).undo(title, args, taskDeleteLeaveDo, taskDeleteLeaveUndo);
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(getParentFragmentManager(), ex);
+                        }
+                    }.execute(FragmentMessages.this, args, "delete:leave");
+                } else {
+                    Intent data = new Intent();
+                    data.putExtra("args", args);
+                    onActivityResult(REQUEST_MESSAGE_DELETE, RESULT_OK, data);
+                }
                 return;
             }
 
@@ -3310,6 +3425,9 @@ public class FragmentMessages extends FragmentBase
                         EntityAccount sourceAccount = db.account().getAccount(message.account);
                         if (sourceAccount == null)
                             return result;
+                        EntityFolder baseFolder = db.folder().getFolder(message.folder);
+                        if (baseFolder == null)
+                            return result;
 
                         EntityFolder targetFolder = db.folder().getFolder(tid);
                         if (targetFolder == null)
@@ -3322,7 +3440,8 @@ public class FragmentMessages extends FragmentBase
                         List<EntityMessage> messages = db.message().getMessagesByThread(
                                 message.account, message.thread,
                                 threading && thread ? null : id,
-                                EntityFolder.TRASH.equals(targetFolder.type) ? null : message.folder);
+                                !EntityFolder.DRAFTS.equals(baseFolder.type) &&
+                                        EntityFolder.TRASH.equals(targetFolder.type) ? null : message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
                             if (sourceFolder == null ||
@@ -3349,7 +3468,10 @@ public class FragmentMessages extends FragmentBase
 
                 @Override
                 protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                    moveUndo(result);
+                    if (result == null || result.size() == 0)
+                        redraw(NO_POSITION);
+                    else
+                        moveUndo(result);
                 }
 
                 @Override
@@ -3361,6 +3483,58 @@ public class FragmentMessages extends FragmentBase
                         Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "swipe:folder");
+        }
+    };
+
+    private static final SimpleTask<Void> taskDeleteLeaveDo = new SimpleTask<Void>() {
+        @Override
+        protected Void onExecute(Context context, Bundle args) {
+            long id = args.getLong("id");
+            DB db = DB.getInstance(context);
+            try {
+                db.beginTransaction();
+
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    return null;
+
+                message.ui_busy = null;
+                db.message().setMessageUiBusy(message.id, message.ui_busy);
+                EntityOperation.queue(context, message, EntityOperation.DELETE);
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onException(Bundle args, Throwable ex) {
+        }
+    };
+
+    private static final SimpleTask<Void> taskDeleteLeaveUndo = new SimpleTask<Void>() {
+        @Override
+        protected Void onExecute(Context context, Bundle args) {
+            long id = args.getLong("id");
+
+            DB db = DB.getInstance(context);
+            try {
+                db.beginTransaction();
+
+                db.message().setMessageUiHide(id, false);
+                db.message().setMessageUiBusy(id, null);
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onException(Bundle args, Throwable ex) {
         }
     };
 
@@ -3379,7 +3553,10 @@ public class FragmentMessages extends FragmentBase
             String action = prefs.getString(
                     long_press ? "answer_action" : "answer_single",
                     long_press ? "reply" : "menu");
-            if ("menu".equals(action) || !message.content)
+            if ("move".equals(action)) {
+                if (canMove(message))
+                    onMenuMove(message);
+            } else if ("menu".equals(action) || !message.content)
                 onReply(message, selected, fabReply);
             else
                 onMenuReply(message, action);
@@ -3492,6 +3669,7 @@ public class FragmentMessages extends FragmentBase
                 popupMenu.getMenu().findItem(R.id.menu_forward_raw).setEnabled(canRaw);
                 popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_answer).setEnabled(message.content);
+                popupMenu.getMenu().findItem(R.id.menu_move_to).setEnabled(canMove(message));
 
                 if (data.answers != null) {
                     int order = 100;
@@ -3562,6 +3740,12 @@ public class FragmentMessages extends FragmentBase
                             return true;
                         } else if (itemId == R.id.menu_reply_answer) {
                             onMenuAnswer(message);
+                            return true;
+                        } else if (itemId == R.id.menu_move_to) {
+                            onMenuMove(message);
+                            return true;
+                        } else if (itemId == R.id.menu_settings) {
+                            onMenuAnswerSettings();
                             return true;
                         }
                         return false;
@@ -3701,6 +3885,64 @@ public class FragmentMessages extends FragmentBase
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(getContext(), getViewLifecycleOwner(), new Bundle(), "message:answer");
+    }
+
+    private boolean canMove(TupleMessageEx message) {
+        boolean pop = (message.accountProtocol == EntityAccount.TYPE_POP);
+        boolean move = !(message.folderReadOnly || message.uid == null) ||
+                (pop && EntityFolder.TRASH.equals(message.folderType));
+        return move;
+    }
+
+    private void onMenuMove(TupleMessageEx message) {
+        if (message.accountProtocol == EntityAccount.TYPE_POP &&
+                EntityFolder.TRASH.equals(message.folderType) && !message.accountLeaveDeleted) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.account);
+
+            new SimpleTask<EntityFolder>() {
+                @Override
+                protected EntityFolder onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    return db.folder().getFolderByType(id, EntityFolder.INBOX);
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, EntityFolder inbox) {
+                    _onMenuMove(message, new long[]{message.folder, inbox == null ? -1L : inbox.id});
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
+            }.execute(this, args, "move:pop");
+        } else
+            _onMenuMove(message, new long[]{message.folder});
+    }
+
+    private void _onMenuMove(TupleMessageEx message, long[] disabled) {
+        Bundle args = new Bundle();
+        args.putInt("icon", R.drawable.twotone_drive_file_move_24);
+        args.putString("title", getString(R.string.title_move_to_folder));
+        args.putLong("account", message.account);
+        args.putLongArray("disabled", disabled);
+        args.putLong("message", message.id);
+        args.putBoolean("copy", false);
+        args.putBoolean("cancopy", true);
+        args.putBoolean("similar", false);
+
+        FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
+        fragment.setArguments(args);
+        fragment.setTargetFragment(this, REQUEST_MESSAGE_MOVE);
+        fragment.show(getParentFragmentManager(), "message:move");
+    }
+
+    private void onMenuAnswerSettings() {
+        FragmentDialogAnswerButton fragment = new FragmentDialogAnswerButton();
+        fragment.show(getParentFragmentManager(), "dialog:answer");
     }
 
     private void onMore() {
@@ -4298,6 +4540,7 @@ public class FragmentMessages extends FragmentBase
         args.putString("type", type);
         args.putBoolean("block", block);
         args.putLongArray("ids", getSelection());
+        args.putBoolean("thread_sent_trash", thread_sent_trash);
         args.putBoolean("filter_archive", filter_archive);
 
         new SimpleTask<ArrayList<MessageTarget>>() {
@@ -4306,6 +4549,7 @@ public class FragmentMessages extends FragmentBase
                 String type = args.getString("type");
                 boolean block = args.getBoolean("block");
                 long[] ids = args.getLongArray("ids");
+                boolean thread_sent_trash = args.getBoolean("thread_sent_trash");
                 boolean filter_archive = args.getBoolean("filter_archive");
 
                 ArrayList<MessageTarget> result = new ArrayList<>();
@@ -4338,6 +4582,8 @@ public class FragmentMessages extends FragmentBase
                                     sourceFolder.id.equals(targetFolder.id))
                                 continue;
                             if (EntityFolder.TRASH.equals(targetFolder.type)) {
+                                if (EntityFolder.SENT.equals(sourceFolder.type) && !thread_sent_trash)
+                                    continue;
                                 if (EntityFolder.ARCHIVE.equals(sourceFolder.type) && filter_archive)
                                     continue;
                                 if (EntityFolder.JUNK.equals(sourceFolder.type) && !threaded.folder.equals(message.folder))
@@ -4380,8 +4626,9 @@ public class FragmentMessages extends FragmentBase
         args.putBoolean("copy", copy);
         args.putBoolean("cancopy", true);
         args.putLongArray("disabled", Helper.toLongArray(disabled));
+        args.putLongArray("messages", getSelection());
 
-        FragmentDialogFolder fragment = new FragmentDialogFolder();
+        FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
         fragment.setArguments(args);
         fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_MOVE);
         fragment.show(getParentFragmentManager(), "messages:move");
@@ -4468,6 +4715,9 @@ public class FragmentMessages extends FragmentBase
                 boolean filter_archive = args.getBoolean("filter_archive");
                 long tid = args.getLong("folder");
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean move_thread_sent = prefs.getBoolean("move_thread_sent", false);
+
                 ArrayList<MessageTarget> result = new ArrayList<>();
 
                 DB db = DB.getInstance(context);
@@ -4488,7 +4738,8 @@ public class FragmentMessages extends FragmentBase
                         EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
                         if (sourceFolder != null && !sourceFolder.read_only &&
                                 !targetFolder.id.equals(threaded.folder) &&
-                                !EntityFolder.isOutgoing(sourceFolder.type) &&
+                                (!EntityFolder.isOutgoing(sourceFolder.type) ||
+                                        (EntityFolder.SENT.equals(sourceFolder.type) && move_thread_sent)) &&
                                 (!filter_archive || !EntityFolder.ARCHIVE.equals(sourceFolder.type)))
                             result.add(new MessageTarget(context, threaded, account, sourceFolder, account, targetFolder));
                     }
@@ -4804,6 +5055,8 @@ public class FragmentMessages extends FragmentBase
         lbm.registerReceiver(receiver, iff);
 
         final Context context = getContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
         ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
@@ -4817,19 +5070,28 @@ public class FragmentMessages extends FragmentBase
                         hasPermission(Manifest.permission.POST_NOTIFICATIONS));
         grpNotifications.setVisibility(canNotify ? View.GONE : View.VISIBLE);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isIgnoring = !Boolean.FALSE.equals(Helper.isIgnoringOptimizations(context));
+        //boolean canSchedule = AlarmManagerCompatEx.canScheduleExactAlarms(context);
+        boolean enabled = prefs.getBoolean("enabled", true);
+        boolean reminder = prefs.getBoolean("setup_reminder", true);
+        boolean targeting =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
+        grpBatteryOptimizations.setVisibility(
+                !isIgnoring && enabled && reminder && targeting ? View.VISIBLE : View.GONE);
+
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
 
-        if (!checkRedmiNote())
-            if (!checkDoze())
+        if (true || !checkRedmiNote())
+            if (true || !checkDoze())
                 if (!checkReporting())
                     if (!checkReview())
                         if (!checkFingerprint())
                             if (!checkGmail())
-                                checkOutlook();
+                                if (!checkOutlook())
+                                    ;
 
         prefs.registerOnSharedPreferenceChangeListener(this);
         onSharedPreferenceChanged(prefs, "pro");
@@ -4887,7 +5149,8 @@ public class FragmentMessages extends FragmentBase
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if ("pro".equals(key) || "banner_hidden".equals(key)) {
+        if (grpSupport != null &&
+                ("pro".equals(key) || "banner_hidden".equals(key))) {
             boolean pro = ActivityBilling.isPro(getContext());
             long banner_hidden = prefs.getLong("banner_hidden", 0);
             grpSupport.setVisibility(
@@ -6345,72 +6608,72 @@ public class FragmentMessages extends FragmentBase
 
                         int count = 0;
 
-                        boolean move = (more_move && count < MAX_QUICK_ACTIONS && result.canMove());
+                        boolean move = (more_move && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canMove());
                         if (move)
                             count++;
 
-                        boolean delete = (more_delete && count < MAX_QUICK_ACTIONS && result.canDelete());
+                        boolean delete = (more_delete && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canDelete());
                         if (delete)
                             count++;
 
-                        boolean trash = (more_trash && count < MAX_QUICK_ACTIONS && result.canTrash());
+                        boolean trash = (more_trash && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canTrash());
                         if (trash)
                             count++;
 
                         if (!delete && !trash && (inTrash || inJunk) &&
-                                more_trash && count < MAX_QUICK_ACTIONS && result.canDelete()) {
+                                more_trash && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canDelete()) {
                             delete = true;
                             count++;
                         }
 
-                        boolean junk = (more_junk && count < MAX_QUICK_ACTIONS && result.canJunk());
+                        boolean junk = (more_junk && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canJunk());
                         if (junk)
                             count++;
 
-                        boolean archive = (more_archive && count < MAX_QUICK_ACTIONS && result.canArchive());
+                        boolean archive = (more_archive && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canArchive());
                         if (archive)
                             count++;
 
-                        boolean inbox = ((more_inbox || (more_junk && inJunk)) && count < MAX_QUICK_ACTIONS && result.canInbox());
+                        boolean inbox = ((more_inbox || (more_junk && inJunk)) && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.canInbox());
                         if (inbox)
                             count++;
 
-                        boolean importance_high = (more_importance_high && count < MAX_QUICK_ACTIONS &&
+                        boolean importance_high = (more_importance_high && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS &&
                                 !EntityMessage.PRIORITIY_HIGH.equals(result.importance));
                         if (importance_high)
                             count++;
 
-                        boolean importance_normal = (more_importance_normal && count < MAX_QUICK_ACTIONS &&
+                        boolean importance_normal = (more_importance_normal && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS &&
                                 !EntityMessage.PRIORITIY_NORMAL.equals(result.importance));
                         if (importance_normal)
                             count++;
 
-                        boolean importance_low = (more_importance_low && count < MAX_QUICK_ACTIONS &&
+                        boolean importance_low = (more_importance_low && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS &&
                                 !EntityMessage.PRIORITIY_LOW.equals(result.importance));
                         if (importance_low)
                             count++;
 
-                        boolean flag = (more_flag && count < MAX_QUICK_ACTIONS && result.unflagged);
+                        boolean flag = (more_flag && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.unflagged);
                         if (flag)
                             count++;
 
-                        boolean flag_color = (more_flag_color && count < MAX_QUICK_ACTIONS && (result.unflagged || result.flagged));
+                        boolean flag_color = (more_flag_color && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && (result.unflagged || result.flagged));
                         if (flag_color)
                             count++;
 
-                        boolean hide = (more_hide && count < MAX_QUICK_ACTIONS && result.visible);
+                        boolean hide = (more_hide && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.visible);
                         if (hide)
                             count++;
 
-                        boolean snooze = (more_snooze && count < MAX_QUICK_ACTIONS);
+                        boolean snooze = (more_snooze && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS);
                         if (snooze)
                             count++;
 
-                        boolean unseen = (more_unseen && count < MAX_QUICK_ACTIONS && result.seen);
+                        boolean unseen = (more_unseen && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.seen);
                         if (unseen)
                             count++;
 
-                        boolean seen = (more_seen && count < MAX_QUICK_ACTIONS && result.unseen);
+                        boolean seen = (more_seen && count < FragmentDialogQuickActions.MAX_QUICK_ACTIONS && result.unseen);
                         if (seen)
                             count++;
 
@@ -6623,16 +6886,19 @@ public class FragmentMessages extends FragmentBase
                 (language_detection && !TextUtils.isEmpty(filter_language) && !outbox));
 
         boolean none = (items == 0 && initialized);
+        boolean searching = (viewType == AdapterMessage.ViewType.SEARCH && server && (!initialized || loading) && items == 0);
         boolean filtered = (filter_active && viewType != AdapterMessage.ViewType.SEARCH);
 
         pbWait.setVisibility(loading || tasks > 0 ? View.VISIBLE : View.GONE);
-        tvNoEmail.setVisibility(none ? View.VISIBLE : View.GONE);
+        tvNoEmail.setText(searching ? R.string.title_search_server_wait : R.string.title_no_messages);
+        tvNoEmail.setVisibility(none || searching ? View.VISIBLE : View.GONE);
         tvNoEmailHint.setVisibility(none && filtered ? View.VISIBLE : View.GONE);
 
         if (BuildConfig.DEBUG)
             updateDebugInfo();
 
-        Log.i("List state reason=" + reason +
+        Log.i("List state who=" + Helper.getWho(this) + "" +
+                " reason=" + reason +
                 " tasks=" + tasks + " loading=" + loading +
                 " items=" + items + " initialized=" + initialized +
                 " wait=" + (pbWait.getVisibility() == View.VISIBLE) +
@@ -6805,7 +7071,7 @@ public class FragmentMessages extends FragmentBase
             // - single, non archived/trashed/sent message
             // - one unread, non archived/trashed/sent message in conversation
             // - sole message
-            if (autoexpand) {
+            if (autoexpand || (pinned && pinnedMessage != null)) {
                 TupleMessageEx expand = null;
                 if (finds > 0) {
                     if (finds == 1)
@@ -7406,7 +7672,7 @@ public class FragmentMessages extends FragmentBase
                     return;
                 }
 
-                String title = getString(R.string.title_move_undo, getNames(result, true), result.size());
+                String title = getString(R.string.title_move_undo, FragmentMoveAsk.getNames(result, true), result.size());
                 ((ActivityView) activity).undo(title, args, taskUndoMove, taskUndoShow);
 
                 if (viewType == AdapterMessage.ViewType.THREAD) {
@@ -7492,45 +7758,6 @@ public class FragmentMessages extends FragmentBase
         }
     };
 
-    private static String getNames(ArrayList<MessageTarget> result, boolean dest) {
-        boolean across = false;
-        for (MessageTarget target : result)
-            if (target.isAcross())
-                across = true;
-
-        Map<String, Integer> nameCount = new HashMap<>();
-        for (MessageTarget target : result) {
-            String name = "";
-            if (across)
-                name += (dest ? target.targetAccount.name : target.sourceAccount.name) + "/";
-            name += (dest ? target.targetFolder.display : target.sourceFolder.display);
-            if (!nameCount.containsKey(name))
-                nameCount.put(name, 0);
-            nameCount.put(name, nameCount.get(name) + 1);
-        }
-
-        List<String> keys = new ArrayList(nameCount.keySet());
-
-        Collator collator = Collator.getInstance(Locale.getDefault());
-        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
-        Collections.sort(keys, collator);
-
-        NumberFormat NF = NumberFormat.getNumberInstance();
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < keys.size(); i++) {
-            if (i > 0)
-                sb.append(", ");
-            sb.append(keys.get(i));
-            if (!dest && keys.size() > 1) {
-                int count = nameCount.get(keys.get(i));
-                sb.append('(').append(NF.format(count)).append(')');
-            }
-        }
-
-        return sb.toString();
-    }
-
     static String getSort(Context context, AdapterMessage.ViewType viewType, String type) {
         if (viewType == AdapterMessage.ViewType.UNIFIED)
             return "sort_unified";
@@ -7550,7 +7777,16 @@ public class FragmentMessages extends FragmentBase
     }
 
     static String getFilter(Context context, String name, AdapterMessage.ViewType viewType, String type) {
-        return "filter_" + (EntityFolder.isOutgoing(type) ? "out_" : "") + name;
+        String filter;
+        if (EntityFolder.isOutgoing(type))
+            filter = "out_";
+        else if (EntityFolder.ARCHIVE.equals(type) ||
+                EntityFolder.TRASH.equals(type) ||
+                EntityFolder.JUNK.equals(type))
+            filter = type.toLowerCase(Locale.ROOT) + "_";
+        else
+            filter = "";
+        return "filter_" + filter + name;
     }
 
     private void lockMessage(long id) throws IOException {
@@ -8229,6 +8465,10 @@ public class FragmentMessages extends FragmentBase
                     if (resultCode == RESULT_OK)
                         onBlockSenders(data.getBundleExtra("args"));
                     break;
+                case REQUEST_CALENDAR:
+                    if (resultCode == RESULT_OK)
+                        onInsertCalendar(data.getBundleExtra("args"));
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -8544,7 +8784,7 @@ public class FragmentMessages extends FragmentBase
                                             remote.sequence = index + 1;
                                             remote.id = db.attachment().insertAttachment(remote);
                                             try {
-                                                parts.downloadAttachment(context, index, remote);
+                                                parts.downloadAttachment(context, index, remote, null);
                                             } catch (Throwable ex) {
                                                 Log.e(ex);
                                             }
@@ -8646,7 +8886,8 @@ public class FragmentMessages extends FragmentBase
                         startIntentSenderForResult(
                                 pi.getIntentSender(),
                                 REQUEST_OPENPGP,
-                                null, 0, 0, 0, null);
+                                null, 0, 0, 0,
+                                Helper.getBackgroundActivityOptions());
                     } catch (IntentSender.SendIntentException ex) {
                         // Likely cancelled
                         Log.w(ex);
@@ -9255,7 +9496,7 @@ public class FragmentMessages extends FragmentBase
                         Log.i("s/mime attachment=" + remote);
 
                         try {
-                            parts.downloadAttachment(context, index, remote);
+                            parts.downloadAttachment(context, index, remote, null);
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
@@ -9626,6 +9867,62 @@ public class FragmentMessages extends FragmentBase
         }.execute(this, args, "messages:block");
     }
 
+    private void onInsertCalendar(Bundle args) {
+        new SimpleTask<Long>() {
+            @Override
+            protected Long onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("message");
+                String selectedAccount = args.getString("account");
+                String selectedName = args.getString("name");
+
+                DB db = DB.getInstance(context);
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    return null;
+
+                List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+                if (attachments == null)
+                    return null;
+
+                EntityAttachment calendar = null;
+                for (EntityAttachment attachment : attachments)
+                    if (attachment.available &&
+                            "text/calendar".equals(attachment.getMimeType()))
+                        calendar = attachment;
+
+                if (calendar == null)
+                    return null;
+
+                ICalendar icalendar = Biweekly.parse(calendar.getFile(context)).first();
+                VEvent event = icalendar.getEvents().get(0);
+
+                int status = CalendarContract.Events.STATUS_TENTATIVE;
+                if (event.getStatus() != null &&
+                        Status.CONFIRMED.equals(event.getStatus().getValue()))
+                    status = CalendarContract.Events.STATUS_CONFIRMED;
+
+                return CalendarHelper.insert(context, icalendar, event, status,
+                        selectedAccount, selectedName, message);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Long eventId) {
+                if (eventId == null)
+                    return;
+
+                // https://developer.android.com/guide/topics/providers/calendar-provider.html#intent-view
+                Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId);
+                Intent intent = new Intent(Intent.ACTION_VIEW).setData(uri);
+                startActivity(intent);
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "insert:calendar");
+    }
+
     private void onMoveAskAcross(final ArrayList<MessageTarget> result) {
         boolean across = false;
         for (MessageTarget target : result)
@@ -9905,264 +10202,7 @@ public class FragmentMessages extends FragmentBase
     }
 
     private void onPrint(Bundle args) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean print_html_header = prefs.getBoolean("print_html_header", true);
-        boolean print_html_images = prefs.getBoolean("print_html_images", true);
-
-        args.putBoolean("print_html_header", print_html_header);
-        args.putBoolean("print_html_images", print_html_images);
-
-        new SimpleTask<String[]>() {
-            @Override
-            protected String[] onExecute(Context context, Bundle args) throws IOException {
-                long id = args.getLong("id");
-                boolean headers = args.getBoolean("headers");
-                boolean print_html_header = args.getBoolean("print_html_header");
-                boolean print_html_images = args.getBoolean("print_html_images");
-                CharSequence selected = args.getCharSequence("selected");
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                int timeout = prefs.getInt("timeout", ImageHelper.DOWNLOAD_TIMEOUT) * 1000;
-
-                DB db = DB.getInstance(context);
-                EntityMessage message = db.message().getMessage(id);
-                if (message == null || !message.content)
-                    return null;
-
-                File file = message.getFile(context);
-                if (!file.exists())
-                    return null;
-
-                List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-                if (attachments == null)
-                    return null;
-
-                Document document;
-                if (!TextUtils.isEmpty(selected) && selected instanceof Spanned)
-                    document = JsoupEx.parse(HtmlHelper.toHtml((Spanned) selected, context));
-                else
-                    document = JsoupEx.parse(file);
-
-                boolean monospaced_pre = prefs.getBoolean("monospaced_pre", false);
-                if (message.isPlainOnly() && monospaced_pre)
-                    HtmlHelper.restorePre(document);
-
-                HtmlHelper.markText(document);
-
-                HtmlHelper.embedInlineImages(context, id, document, true);
-
-                // onPageFinished will not be called if not all images can be loaded
-                File dir = new File(context.getFilesDir(), "images");
-                List<Future<Void>> futures = new ArrayList<>();
-                Elements imgs = document.select("img");
-                for (int i = 0; i < imgs.size(); i++) {
-                    Element img = imgs.get(i);
-                    String src = img.attr("src");
-                    if (src.startsWith("http:") || src.startsWith("https:")) {
-                        final File out = new File(dir, id + "." + i + ".print");
-                        img.attr("src", "file:" + out.getAbsolutePath());
-
-                        if (print_html_images) {
-                            if (out.exists() && out.length() > 0)
-                                continue;
-                        } else {
-                            out.delete();
-                            continue;
-                        }
-
-                        futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                try (OutputStream os = new FileOutputStream(out)) {
-                                    URL url = new URL(src);
-                                    Log.i("Caching url=" + url);
-
-                                    HttpURLConnection connection = null;
-                                    try {
-                                        connection = ConnectionHelper.openConnectionUnsafe(context, src, timeout, timeout);
-                                        Helper.copy(connection.getInputStream(), os);
-                                    } finally {
-                                        if (connection != null)
-                                            connection.disconnect();
-                                    }
-                                } catch (Throwable ex) {
-                                    Log.w(ex);
-                                }
-
-                                return null;
-                            }
-                        }));
-                    }
-                }
-
-                for (Future<Void> future : futures)
-                    try {
-                        future.get();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-
-                // @page WordSection1 {size:612.0pt 792.0pt; margin:70.85pt 70.85pt 70.85pt 70.85pt;}
-                // div.WordSection1 {page:WordSection1;}
-                // <body><div class=WordSection1>
-
-                for (Element element : document.body().select("div[class]")) {
-                    String clazz = element.attr("class");
-                    if (clazz.startsWith("WordSection"))
-                        element.removeClass(clazz);
-                }
-
-                if (print_html_header) {
-                    Element header = document.createElement("p");
-
-                    if (message.from != null && message.from.length > 0) {
-                        Element span = document.createElement("span");
-                        Element strong = document.createElement("strong");
-                        strong.text(context.getString(R.string.title_from));
-                        span.appendChild(strong);
-                        span.appendText(" " + MessageHelper.formatAddresses(message.from));
-                        span.appendElement("br");
-                        header.appendChild(span);
-                    }
-
-                    if (message.to != null && message.to.length > 0) {
-                        Element span = document.createElement("span");
-                        Element strong = document.createElement("strong");
-                        strong.text(context.getString(R.string.title_to));
-                        span.appendChild(strong);
-                        span.appendText(" " + MessageHelper.formatAddresses(message.to));
-                        span.appendElement("br");
-                        header.appendChild(span);
-                    }
-
-                    if (message.cc != null && message.cc.length > 0) {
-                        Element span = document.createElement("span");
-                        Element strong = document.createElement("strong");
-                        strong.text(context.getString(R.string.title_cc));
-                        span.appendChild(strong);
-                        span.appendText(" " + MessageHelper.formatAddresses(message.cc));
-                        span.appendElement("br");
-                        header.appendChild(span);
-                    }
-
-                    if (message.received != null) {
-                        DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
-
-                        Element span = document.createElement("span");
-                        Element strong = document.createElement("strong");
-                        strong.text(context.getString(R.string.title_received));
-                        span.appendChild(strong);
-                        span.appendText(" " + DTF.format(message.received));
-                        span.appendElement("br");
-                        header.appendChild(span);
-                    }
-
-                    for (EntityAttachment attachment : attachments)
-                        if (attachment.isAttachment()) {
-                            Element span = document.createElement("span");
-                            Element strong = document.createElement("strong");
-                            strong.text(context.getString(R.string.title_attachment));
-                            span.appendChild(strong);
-                            if (!TextUtils.isEmpty(attachment.name))
-                                span.appendText(" " + attachment.name);
-                            if (attachment.size != null)
-                                span.appendText(" " + Helper.humanReadableByteCount(attachment.size));
-                            span.appendElement("br");
-                            header.appendChild(span);
-                        }
-
-                    if (!TextUtils.isEmpty(message.subject)) {
-                        Element span = document.createElement("span");
-                        span.appendText(message.subject);
-                        span.appendElement("br");
-                        header.appendChild(span);
-                    }
-
-                    if (headers && message.headers != null) {
-                        header.appendElement("hr");
-                        Element pre = document.createElement("pre");
-                        pre.text(message.headers);
-                        header.appendChild(pre);
-                    }
-
-                    header.appendElement("hr").appendElement("br");
-
-                    document.body().prependChild(header);
-                }
-
-                return new String[]{message.subject, document.body().html()};
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, final String[] data) {
-                if (data == null) {
-                    Log.w("Print no data");
-                    return;
-                }
-
-                ActivityBase activity = (ActivityBase) getActivity();
-                if (activity == null) {
-                    Log.w("Print no activity");
-                    return;
-                }
-
-                final Context context = activity.getOriginalContext();
-                boolean print_html_images = args.getBoolean("print_html_images");
-
-                // https://developer.android.com/training/printing/html-docs.html
-                printWebView = new WebView(context);
-
-                WebSettings settings = printWebView.getSettings();
-                settings.setUserAgentString(WebViewEx.getUserAgent(context, printWebView));
-                settings.setLoadsImagesAutomatically(print_html_images);
-                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                settings.setAllowFileAccess(true);
-
-                printWebView.setWebViewClient(new WebViewClient() {
-                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                        return false;
-                    }
-
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        Log.i("Print page finished");
-
-                        try {
-                            if (printWebView == null) {
-                                Log.w("Print no view");
-                                return;
-                            }
-
-                            PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
-                            String jobName = getString(R.string.app_name);
-                            if (!TextUtils.isEmpty(data[0]))
-                                jobName += " - " + data[0];
-
-                            Log.i("Print queue job=" + jobName);
-                            PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
-                            PrintJob job = printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
-                            EntityLog.log(context, "Print queued job=" + job.getInfo());
-                        } catch (Throwable ex) {
-                            try {
-                                Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof ActivityNotFoundException));
-                            } catch (IllegalStateException exex) {
-                                ToastEx.makeText(context, Log.formatThrowable(ex), Toast.LENGTH_LONG).show();
-                            }
-                        } finally {
-                            printWebView = null;
-                        }
-                    }
-                });
-
-                Log.i("Print load data");
-                printWebView.loadDataWithBaseURL("about:blank", data[1], "text/html", StandardCharsets.UTF_8.name(), null);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Log.unexpectedError(getParentFragmentManager(), ex);
-            }
-        }.execute(this, args, "message:print");
+        FragmentDialogPrint.print((ActivityBase) getActivity(), getParentFragmentManager(), args);
     }
 
     private void onEmptyFolder(Bundle args) {
@@ -10285,7 +10325,7 @@ public class FragmentMessages extends FragmentBase
 
         FragmentTransaction fragmentTransaction = manager.beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("search");
-        fragmentTransaction.commit();
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
     static void searchContact(Context context, LifecycleOwner owner, FragmentManager fm, long message, boolean sender_only) {
@@ -10695,437 +10735,6 @@ public class FragmentMessages extends FragmentBase
                 this.display = folder.getDisplayName(context);
                 this.color = folder.color;
             }
-        }
-    }
-
-    public static class FragmentDialogAskSpam extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            Bundle args = getArguments();
-            int count = args.getInt("count");
-
-            final Context context = getContext();
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            boolean block_sender = prefs.getBoolean("block_sender", true);
-            String text = getResources().getQuantityString(R.plurals.title_ask_spam, count, count);
-
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_spam, null);
-            TextView tvMessage = dview.findViewById(R.id.tvMessage);
-            CheckBox cbBlockSender = dview.findViewById(R.id.cbBlockSender);
-
-            tvMessage.setText(text);
-            cbBlockSender.setChecked(block_sender);
-
-            return new AlertDialog.Builder(context)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            boolean block = cbBlockSender.isChecked();
-                            prefs.edit().putBoolean("block_sender", block).apply();
-                            getArguments().putBoolean("block", block);
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogReporting extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
-            Button btnInfo = dview.findViewById(R.id.btnInfo);
-
-            btnInfo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.viewFAQ(v.getContext(), 104);
-                }
-            });
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            prefs.edit().putBoolean("crash_reports", true).apply();
-                            Log.setCrashReporting(true);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
-                        }
-                    })
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogReview extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_review, null);
-            TextView tvHelp = dview.findViewById(R.id.tvHelp);
-
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-            Dialog dialog = new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            prefs.edit().putBoolean("review_asked", true).apply();
-                            startActivity(Helper.getIntentRate(getContext()));
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            prefs.edit().putBoolean("review_asked", true).apply();
-                        }
-                    })
-                    .setNeutralButton(R.string.title_later, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            prefs.edit().putLong("review_later", new Date().getTime()).apply();
-                        }
-                    })
-                    .create();
-
-            tvHelp.setPaintFlags(tvHelp.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            tvHelp.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                    prefs.edit().putLong("review_later", new Date().getTime()).apply();
-                    startActivity(Helper.getIntentIssue(v.getContext(), "Review:issue"));
-                }
-            });
-
-            return dialog;
-        }
-
-        @Override
-        public void onCancel(@NonNull DialogInterface dialog) {
-            super.onCancel(dialog);
-            try {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                prefs.edit().putBoolean("review_asked", true).apply();
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-        }
-    }
-
-    public static class FragmentDialogBoundaryError extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            String error = getArguments().getString("error");
-
-            final Context context = getContext();
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_boundary_error, null);
-            TextView tvError = dview.findViewById(R.id.tvError);
-
-            tvError.setText(error);
-
-            return new AlertDialog.Builder(context)
-                    .setView(dview)
-                    .setPositiveButton(R.string.title_boundary_retry, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    })
-                    .create();
-        }
-    }
-
-    public static class FragmentMoveAsk extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            String notagain = getArguments().getString("notagain");
-            ArrayList<MessageTarget> result = getArguments().getParcelableArrayList("result");
-
-            final Context context = getContext();
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_move, null);
-            TextView tvMessages = dview.findViewById(R.id.tvMessages);
-            TextView tvSourceFolders = dview.findViewById(R.id.tvSourceFolders);
-            TextView tvTargetFolders = dview.findViewById(R.id.tvTargetFolders);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-            TextView tvJunkLearn = dview.findViewById(R.id.tvJunkLearn);
-
-            String question = context.getResources()
-                    .getQuantityString(R.plurals.title_moving_messages,
-                            result.size(), result.size());
-
-            tvMessages.setText(question);
-            tvSourceFolders.setText(getNames(result, false));
-            tvTargetFolders.setText(getNames(result, true));
-
-            List<String> sources = new ArrayList<>();
-            List<String> targets = new ArrayList<>();
-            Integer sourceColor = null;
-            Integer targetColor = null;
-            boolean junk = false;
-            for (MessageTarget t : result) {
-                if (!sources.contains(t.sourceFolder.type))
-                    sources.add(t.sourceFolder.type);
-                if (!targets.contains(t.targetFolder.type))
-                    targets.add(t.targetFolder.type);
-                if (sourceColor == null)
-                    sourceColor = t.sourceFolder.color;
-                if (targetColor == null)
-                    targetColor = t.targetFolder.color;
-                if (!junk &&
-                        (EntityFolder.JUNK.equals(t.sourceFolder.type) ||
-                                EntityFolder.JUNK.equals(t.targetFolder.type)))
-                    junk = true;
-            }
-
-            Drawable source = null;
-            if (sources.size() == 1) {
-                source = ContextCompat.getDrawable(context, EntityFolder.getIcon(sources.get(0)));
-                if (source != null)
-                    source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
-                if (sourceColor == null)
-                    sourceColor = EntityFolder.getDefaultColor(sources.get(0), context);
-            } else {
-                source = ContextCompat.getDrawable(context, R.drawable.twotone_folders_24);
-                source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
-                sourceColor = null;
-            }
-
-            Drawable target = null;
-            if (targets.size() == 1) {
-                target = ContextCompat.getDrawable(context, EntityFolder.getIcon(targets.get(0)));
-                if (target != null)
-                    target.setBounds(0, 0, target.getIntrinsicWidth(), target.getIntrinsicHeight());
-                if (targetColor == null)
-                    targetColor = EntityFolder.getDefaultColor(targets.get(0), context);
-            } else
-                targetColor = null;
-
-            tvSourceFolders.setCompoundDrawablesRelative(source, null, null, null);
-            tvTargetFolders.setCompoundDrawablesRelative(target, null, null, null);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (sourceColor != null)
-                    tvSourceFolders.setCompoundDrawableTintList(ColorStateList.valueOf(sourceColor));
-                if (targetColor != null)
-                    tvTargetFolders.setCompoundDrawableTintList(ColorStateList.valueOf(targetColor));
-            }
-
-            if (notagain != null)
-                cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(buttonView.getContext());
-                        prefs.edit().putBoolean(notagain, isChecked).apply();
-                    }
-                });
-
-            tvJunkLearn.setVisibility(junk ? View.VISIBLE : View.GONE);
-
-            return new AlertDialog.Builder(context)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    })
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogSaveSearch extends FragmentDialogBase {
-        private ViewButtonColor btnColor;
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Bundle args = getArguments();
-
-            BoundaryCallbackMessages.SearchCriteria criteria =
-                    (BoundaryCallbackMessages.SearchCriteria) args.getSerializable("criteria");
-            if (criteria == null)
-                criteria = new BoundaryCallbackMessages.SearchCriteria();
-
-            final Context context = getContext();
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_save_search, null);
-            EditText etName = dview.findViewById(R.id.etName);
-            EditText etOrder = dview.findViewById(R.id.etOrder);
-            btnColor = dview.findViewById(R.id.btnColor);
-
-            btnColor.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.hideKeyboard(etName);
-
-                    Bundle args = new Bundle();
-                    args.putInt("color", btnColor.getColor());
-                    args.putString("title", getString(R.string.title_color));
-                    args.putBoolean("reset", true);
-
-                    FragmentDialogColor fragment = new FragmentDialogColor();
-                    fragment.setArguments(args);
-                    fragment.setTargetFragment(FragmentDialogSaveSearch.this, 1234);
-                    fragment.show(getParentFragmentManager(), "search:color");
-                }
-            });
-
-            etName.setText(criteria.name == null ? criteria.getTitle(context) : criteria.name);
-            etOrder.setText(criteria.order == null ? null : Integer.toString(criteria.order));
-            btnColor.setColor(criteria.color);
-
-            AlertDialog.Builder dialog = new AlertDialog.Builder(context)
-                    .setView(dview)
-                    .setPositiveButton(R.string.title_save, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String order = etOrder.getText().toString();
-                            args.putString("name", etName.getText().toString());
-                            args.putInt("order",
-                                    !TextUtils.isEmpty(order) && TextUtils.isDigitsOnly(order)
-                                            ? Integer.parseInt(order) : -1);
-                            args.putInt("color", btnColor.getColor());
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    });
-
-            if (criteria.id != null)
-                dialog.setNeutralButton(R.string.title_delete, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        sendResult(Activity.RESULT_FIRST_USER);
-                    }
-                });
-
-            return dialog.create();
-        }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-
-            try {
-                if (resultCode == RESULT_OK && data != null) {
-                    Bundle args = data.getBundleExtra("args");
-                    int color = args.getInt("color");
-                    btnColor.setColor(color);
-                }
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-        }
-    }
-
-    public static class FragmentDialogQuickActions extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Context context = getContext();
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_quick_actions, null);
-            final TextView tvHint = dview.findViewById(R.id.tvHint);
-            final CheckBox cbSeen = dview.findViewById(R.id.cbSeen);
-            final CheckBox cbUnseen = dview.findViewById(R.id.cbUnseen);
-            final CheckBox cbSnooze = dview.findViewById(R.id.cbSnooze);
-            final CheckBox cbHide = dview.findViewById(R.id.cbHide);
-            final CheckBox cbFlag = dview.findViewById(R.id.cbFlag);
-            final CheckBox cbFlagColor = dview.findViewById(R.id.cbFlagColor);
-            final CheckBox cbImportanceLow = dview.findViewById(R.id.cbImportanceLow);
-            final CheckBox cbImportanceNormal = dview.findViewById(R.id.cbImportanceNormal);
-            final CheckBox cbImportanceHigh = dview.findViewById(R.id.cbImportanceHigh);
-            final CheckBox cbInbox = dview.findViewById(R.id.cbInbox);
-            final CheckBox cbArchive = dview.findViewById(R.id.cbArchive);
-            final CheckBox cbJunk = dview.findViewById(R.id.cbJunk);
-            final CheckBox cbTrash = dview.findViewById(R.id.cbTrash);
-            final CheckBox cbDelete = dview.findViewById(R.id.cbDelete);
-            final CheckBox cbMove = dview.findViewById(R.id.cbMove);
-            final CheckBox cbClear = dview.findViewById(R.id.cbClear);
-
-            tvHint.setText(getString(R.string.title_quick_actions_hint, MAX_QUICK_ACTIONS));
-            cbSeen.setChecked(prefs.getBoolean("more_seen", true));
-            cbUnseen.setChecked(prefs.getBoolean("more_unseen", false));
-            cbSnooze.setChecked(prefs.getBoolean("more_snooze", false));
-            cbHide.setChecked(prefs.getBoolean("more_hide", false));
-            cbFlag.setChecked(prefs.getBoolean("more_flag", false));
-            cbFlagColor.setChecked(prefs.getBoolean("more_flag_color", false));
-            cbImportanceLow.setChecked(prefs.getBoolean("more_importance_low", false));
-            cbImportanceNormal.setChecked(prefs.getBoolean("more_importance_normal", false));
-            cbImportanceHigh.setChecked(prefs.getBoolean("more_importance_high", false));
-            cbInbox.setChecked(prefs.getBoolean("more_inbox", true));
-            cbArchive.setChecked(prefs.getBoolean("more_archive", true));
-            cbJunk.setChecked(prefs.getBoolean("more_junk", true));
-            cbTrash.setChecked(prefs.getBoolean("more_trash", true));
-            cbDelete.setChecked(prefs.getBoolean("more_delete", false));
-            cbMove.setChecked(prefs.getBoolean("more_move", true));
-            cbClear.setChecked(prefs.getBoolean("more_clear", true));
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putBoolean("more_seen", cbSeen.isChecked());
-                            editor.putBoolean("more_unseen", cbUnseen.isChecked());
-                            editor.putBoolean("more_snooze", cbSnooze.isChecked());
-                            editor.putBoolean("more_hide", cbHide.isChecked());
-                            editor.putBoolean("more_flag", cbFlag.isChecked());
-                            editor.putBoolean("more_flag_color", cbFlagColor.isChecked());
-                            editor.putBoolean("more_importance_low", cbImportanceLow.isChecked());
-                            editor.putBoolean("more_importance_normal", cbImportanceNormal.isChecked());
-                            editor.putBoolean("more_importance_high", cbImportanceHigh.isChecked());
-                            editor.putBoolean("more_inbox", cbInbox.isChecked());
-                            editor.putBoolean("more_archive", cbArchive.isChecked());
-                            editor.putBoolean("more_junk", cbJunk.isChecked());
-                            editor.putBoolean("more_trash", cbTrash.isChecked());
-                            editor.putBoolean("more_delete", cbDelete.isChecked());
-                            editor.putBoolean("more_move", cbMove.isChecked());
-                            editor.putBoolean("more_clear", cbClear.isChecked());
-                            editor.apply();
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    })
-                    .create();
         }
     }
 }

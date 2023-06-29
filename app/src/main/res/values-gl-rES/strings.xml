@@ -214,7 +214,6 @@
     <string name="title_setup_doze_battery">Uso elevado da batería?</string>
     <string name="title_setup_doze_stopped">Detívose a sincronización?</string>
     <string name="title_setup_doze_device">Probablemente sexa necesario neste dispositivo</string>
-    <string name="title_setup_alarm_12">A aplicación non vai funcionar</string>
     <string name="title_setup_inexact">As alarmas e recordatorios están desactivados</string>
     <string name="title_setup_background">As restricións de fondo están habilitadas</string>
     <string name="title_setup_data">O aforro de datos está activado</string>
@@ -289,9 +288,9 @@
     <string name="title_setup_defaults">Restaurar valores predefinidos</string>
     <string name="title_setup_reset_questions">Reiniciar cuestións</string>
     <string name="title_setup_reset_general">Preguntas xerais</string>
-    <string name="title_setup_reset_full">Ver mensaxes orixinais</string>
-    <string name="title_setup_reset_images">Amosar imaxes</string>
     <string name="title_setup_reset_links">Confirmat ligazóns</string>
+    <string name="title_setup_reset_images">Amosar imaxes</string>
+    <string name="title_setup_reset_full">Ver mensaxes orixinais</string>
     <string name="title_check_gmail_oauth">As súas contas de Gmail seguirán a funcionar despois do 30 de maio de 2022</string>
     <string name="title_check_gmail_password">Algunhas das súas contas de Gmail poderían deixar de funcionar despois do 30 de maio de 2022</string>
     <string name="title_check_outlook_oauth">As súas contas de Outlook seguirán a funcionar despois do 1 de outubro de 2022</string>
@@ -350,7 +349,6 @@
     <string name="title_advanced_send_chips">Mostrar enderezos en globos</string>
     <string name="title_advanced_send_reminders">Mostrar recordatorios</string>
     <string name="title_advanced_send_delayed">Adiar o envío de mensaxes</string>
-    <string name="title_advanced_attach_new">Engadir arquivos compartidos a un novo borrador</string>
     <string name="title_advanced_answer_action">Unha pulsación longa no botón de resposta fará:</string>
     <string name="title_advanced_send_pending">Mostrar iconas non obstruíntes de envíos adiados</string>
     <string name="title_advanced_auto_save_paragraph">Gardar automaticamente un borrador despois de cada parágrafo</string>
@@ -1347,7 +1345,8 @@
     <string name="title_sort_on_attachments">Con anexos</string>
     <string name="title_sort_on_hidden">Agochado</string>
     <string name="title_sort_ascending">Máis antigos primeiro</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Orde</string>
+    <string name="title_sort_on_name">Nome</string>
+    <string name="title_sort_on_order">Orde</string>
     <string name="title_filter">Sen coincidencia nos filtros</string>
     <string name="title_filter_seen">Lido</string>
     <string name="title_filter_unflagged">Sen destacar</string>
@@ -1403,7 +1402,8 @@
     <string name="title_rule_snooze">Adiar</string>
     <string name="title_rule_flag">Engadir estrela</string>
     <string name="title_rule_importance">Definir importancia</string>
-    <string name="title_rule_keyword">Engadir palabras chave</string>
+    <string name="title_rule_keyword_add">Engadir</string>
+    <string name="title_rule_keyword_delete">Eliminar</string>
     <string name="title_rule_move">Mover</string>
     <string name="title_rule_copy">Copiar (etiqueta)</string>
     <string name="title_rule_answer">Responder/reenviar</string>
@@ -1602,10 +1602,8 @@
     <string name="title_hint_support">Se ten unha pregunta ou problema, por favor, use o menú de asistencia para obter axuda</string>
     <string name="title_hint_message_actions">Esvare á esquerda para botar ao lixo; á dereita para arquivar (se é posible) As accións de arrastre pódense configurar nos axustes da conta</string>
     <string name="title_hint_message_selection">Faga unha pulsación longa para comezar a seleccionar múltiples mensaxes; manteña e esvare cara arriba ou abaixo para seleccionar máis mensaxes</string>
-    <string name="title_hint_message_junk">Estas mensaxes están no cartafol de spam do servidor de correo. Obviamente, esta aplicación non pode evitar que se lle envíen as mensaxes de spam.</string>
     <string name="title_hint_important">Importante</string>
     <string name="title_hint_sync">Baixar mensaxes pode levar certo tempo, dependendo da velocidade do provedor, da conexión a internet, o dispositivo e o número de mensaxes. Mentres a aplicación estea baixando mensaxes, pode responder máis lentamente.</string>
-    <string name="title_hint_sync_note">Por defecto, non todas as mensaxes van ser descargadas para limitar o espazo de almacenamento e o uso de datos e batería. Pode cambiar isto premendo un intre na lista de cartafoles e seleccionando \'Sincronizar máis\'.</string>
     <string name="title_hint_battery">Como FairEmail sempre está a recibir mensaxes, Android considerará que sempre está activa. Polo tanto podería parecer que FairEmail está sempre a consumir batería cando en realidade non é así.</string>
     <string name="title_hint_reformat">Por defecto, FairEmail reformata as mensaxes por razóns de privacidade e de seguridade. Para ver a mensaxe orixinal, prema na icona de \'pantalla completa\' sobre o texto da mensaxe.</string>
     <string name="title_hint_design">O deseño pretende non distraer e aínda manterse altamente funcional. Hai moitas opcións para personalizar a aparencia, pero comprenda que non é posible contentar a todas as persoas ao mesmo tempo.</string>
@@ -1666,7 +1664,6 @@
     <string name="title_via">Mediante: %1$s</string>
     <string name="title_1hour">Unha hora</string>
     <string name="title_1day">Un día</string>
-    <string name="title_1week">Unha semana</string>
     <string name="title_now">Agora</string>
     <string name="title_after">Despois de %1$s</string>
     <string name="title_reset">Reiniciar</string>
@@ -1894,6 +1891,7 @@
     <string-array name="encryptNames">
         <item>Ningún</item>
         <item>Só sinatura PGP</item>
+        <item>PGP encrypt-only</item>
         <item>Sinatura e cifrado PGP</item>
         <item>Só sinatura S/MIME</item>
         <item>Cifrado e asinado S/MIME</item>

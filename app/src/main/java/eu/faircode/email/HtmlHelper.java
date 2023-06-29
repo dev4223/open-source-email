@@ -114,6 +114,7 @@ import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -654,7 +655,7 @@ public class HtmlHelper {
             String style = processStyles(tag, clazz, null, sheets);
 
             // Element style
-            style = mergeElementStyles(style, element.attr("style"));
+            style = mergeStyles(style, element.attr("style"));
 
             if ("fairemail_debug_info".equals(clazz))
                 style = mergeStyles(style, "font-size: smaller");
@@ -664,13 +665,14 @@ public class HtmlHelper {
                 if ("center".equals(element.tagName())) {
                     style = mergeStyles(style, "text-align:center");
                     element.tagName("div");
-                } else if ("table".equals(element.tagName()))
-                    style = mergeStyles(style, "text-align:left");
-                else {
+                } else if ("table".equals(element.tagName())) {
+                    if (!element.attr("style").contains("text-align"))
+                        style = mergeStyles(style, "text-align:left");
+                } else {
                     // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
                     String align = element.attr("align");
                     if (!TextUtils.isEmpty(align))
-                        style = mergeStyles(style, "text-align:" + align);
+                        style = mergeStyles("text-align:" + align, style);
                 }
             }
 
@@ -766,7 +768,7 @@ public class HtmlHelper {
                                     // Special case:
                                     //   external draft: very dark/light font
                                     double lum = ColorUtils.calculateLuminance(color);
-                                    if (lum < 1 - MIN_LUMINANCE_COMPOSE || lum > MIN_LUMINANCE_COMPOSE)
+                                    if (dark ? lum < 1 - MIN_LUMINANCE_COMPOSE : lum > MIN_LUMINANCE_COMPOSE)
                                         color = null;
                                 }
 
@@ -873,17 +875,8 @@ public class HtmlHelper {
                             break;
 
                         case "font-weight":
-                            if (element.parent() != null) {
-                                Integer fweight = getFontWeight(value);
-                                if (fweight != null && fweight >= 600) {
-                                    Element strong = new Element("strong");
-                                    for (Node child : new ArrayList<>(element.childNodes())) {
-                                        child.remove();
-                                        strong.appendChild(child);
-                                    }
-                                    element.appendChild(strong);
-                                }
-                            }
+                            // https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight
+                            sb.append(key).append(":").append(value).append(";");
                             break;
 
                         case "font-family":
@@ -1007,16 +1000,11 @@ public class HtmlHelper {
                                 else if (key.endsWith("bottom"))
                                     p[0] = null;
 
-                                if (p[0] != null)
-                                    if (p[0] == 0)
-                                        element.attr("x-line-before", "false");
-                                    else if (p[0] > 0.5)
-                                        element.attr("x-line-before", "true");
-                                if (p[2] != null)
-                                    if (p[2] == 0)
-                                        element.attr("x-line-after", "false");
-                                    else if (p[2] > 0.5)
-                                        element.attr("x-line-after", "true");
+                                // Both margin and padding can be set
+                                if (p[0] != null && !"true".equals(element.attr("x-line-before")))
+                                    element.attr("x-line-before", Boolean.toString(p[0] > 0.5));
+                                if (p[2] != null && !"true".equals(element.attr("x-line-after")))
+                                    element.attr("x-line-after", Boolean.toString(p[2] > 0.5));
                             }
                             break;
 
@@ -1115,6 +1103,11 @@ public class HtmlHelper {
         // Paragraphs
         for (Element p : document.select("p")) {
             p.tagName("div");
+
+            Element last = p.lastElementChild();
+            if (last != null && "br".equals(last.tagName()))
+                last.remove();
+
             if (TextUtils.isEmpty(p.text())) {
                 p.attr("x-line-before", "false");
                 p.attr("x-line-after", "true");
@@ -1397,7 +1390,6 @@ public class HtmlHelper {
             // Remove spacer, etc
             if (!show_images && !(inline_images && isInline) &&
                     TextUtils.isEmpty(img.attr("x-tracking"))) {
-                Log.i("Removing small image");
                 Integer width = Helper.parseInt(img.attr("width").trim());
                 Integer height = Helper.parseInt(img.attr("height").trim());
                 if (width != null && height != null) {
@@ -1408,6 +1400,7 @@ public class HtmlHelper {
                 }
                 if ((width != null && width <= SMALL_IMAGE_SIZE) ||
                         (height != null && height <= SMALL_IMAGE_SIZE)) {
+                    Log.i("Removing small image src=" + src);
                     img.remove();
                     continue;
                 }
@@ -1435,10 +1428,11 @@ public class HtmlHelper {
                             alt = context.getString(R.string.title_image_link);
                     }
                     if (!TextUtils.isEmpty(alt)) {
-                        Element span = document.createElement("span")
+                        Element a = document.createElement("a")
+                                .attr("href", src)
                                 .text("[" + alt + "]")
                                 .attr("x-font-size-abs", Integer.toString(textSizeSmall));
-                        img.appendChild(span);
+                        img.appendChild(a);
                     }
                 } else if (!TextUtils.isEmpty(alt)) {
                     Element a = document.createElement("a")
@@ -1568,6 +1562,10 @@ public class HtmlHelper {
                                 end--;
                                 group = group.substring(0, group.length() - 1);
                             }
+                            if (end < text.length() && text.charAt(end) == '$') {
+                                end++;
+                                group += '$';
+                            }
 
                             boolean email = group.contains("@") && !group.contains(":");
                             Log.i("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
@@ -1615,6 +1613,26 @@ public class HtmlHelper {
             public void tail(Node node, int depth) {
             }
         }, document);
+    }
+
+    static boolean embedYouTube(Document document) {
+        // https://developers.google.com/youtube/player_parameters
+        // Requires: setBlockNetworkLoads and setJavaScriptEnabled
+        boolean has = false;
+        for (Element a : document.select("a"))
+            if (a.attr("href").startsWith("https://www.youtube.com/embed/")) {
+                String link = a.attr("href");
+                a.tagName("iframe");
+                a.attr("id", link.substring(link.lastIndexOf("/") + 1));
+                a.attr("type", "text/html");
+                a.attr("src", link);
+                a.attr("frameborder", "0");
+                a.removeAttr("href");
+                if (a.text().equals(link))
+                    a.text("");
+                has = true;
+            }
+        return has;
     }
 
     static void guessSchemes(Document document) {
@@ -1759,15 +1777,15 @@ public class HtmlHelper {
                                 ElementSelectorImpl eselector = (ElementSelectorImpl) selector;
                                 if (tag == null
                                         ? eselector.getLocalName() == null
-                                        : tag.equals(eselector.getLocalName()))
-                                    style = mergeStyles(style, srule.getStyle().getCssText());
+                                        : tag.equalsIgnoreCase(eselector.getLocalName()))
+                                    style = mergeStyles(style, srule.getStyle().getCssText(), false);
                                 break;
                             case Selector.SAC_CONDITIONAL_SELECTOR:
                                 ConditionalSelectorImpl cselector = (ConditionalSelectorImpl) selector;
                                 if (cselector.getCondition().getConditionType() == SAC_CLASS_CONDITION) {
                                     ClassConditionImpl ccondition = (ClassConditionImpl) cselector.getCondition();
-                                    if (clazz.equals(ccondition.getValue()))
-                                        style = mergeStyles(style, srule.getStyle().getCssText());
+                                    if (clazz.equalsIgnoreCase(ccondition.getValue()))
+                                        style = mergeStyles(style, srule.getStyle().getCssText(), false);
                                 }
                                 break;
                         }
@@ -1801,10 +1819,6 @@ public class HtmlHelper {
     }
 
     static String mergeStyles(String base, String style) {
-        return mergeStyles(base, style, false);
-    }
-
-    static String mergeElementStyles(String base, String style) {
         return mergeStyles(base, style, true);
     }
 
@@ -1889,6 +1903,8 @@ public class HtmlHelper {
                 return 300;
             case "normal":
             case "regular":
+            case "unset":
+            case "initial":
                 return 400;
             case "bolder":
             case "strong":
@@ -1899,8 +1915,6 @@ public class HtmlHelper {
                 return 900;
             case "none":
             case "auto":
-            case "unset":
-            case "initial":
             case "inherit":
                 return null;
         }
@@ -2272,7 +2286,7 @@ public class HtmlHelper {
                 Uri uri = Uri.parse(img.attr("src"));
                 String host = uri.getHost();
                 if (host != null && !hosts.contains(host) &&
-                        !isTrackingHost(host, disconnect_images))
+                        !isTrackingHost(context, host, disconnect_images))
                     hosts.add(host);
             }
         }
@@ -2290,7 +2304,7 @@ public class HtmlHelper {
             if (host == null || hosts.contains(host))
                 continue;
 
-            if (isTrackingPixel(img) || isTrackingHost(host, disconnect_images)) {
+            if (isTrackingPixel(img) || isTrackingHost(context, host, disconnect_images)) {
                 img.attr("src", sb.toString());
                 img.attr("alt", context.getString(R.string.title_legend_tracking_pixel));
                 img.attr("height", "24");
@@ -2325,10 +2339,10 @@ public class HtmlHelper {
         }
     }
 
-    private static boolean isTrackingHost(String host, boolean disconnect_images) {
+    private static boolean isTrackingHost(Context context, String host, boolean disconnect_images) {
         if (TRACKING_HOSTS.contains(host))
             return true;
-        if (disconnect_images && DisconnectBlacklist.isTracking(host))
+        if (disconnect_images && DisconnectBlacklist.isTrackingImage(context, host))
             return true;
         return false;
     }
@@ -2759,22 +2773,6 @@ public class HtmlHelper {
                 }
         }
 
-        // https://tools.ietf.org/html/rfc3676#section-4.5
-        for (QuoteSpan span : ssb.getSpans(0, ssb.length(), QuoteSpan.class)) {
-            int start = ssb.getSpanStart(span);
-            int end = ssb.getSpanEnd(span);
-
-            for (int i = end - 2; i >= start; i--)
-                if (ssb.charAt(i) == '\n')
-                    if (i + 1 < ssb.length() && ssb.charAt(i + 1) == '>')
-                        ssb.insert(i + 1, ">");
-                    else
-                        ssb.insert(i + 1, "> ");
-
-            if (start < ssb.length())
-                ssb.insert(start, ssb.charAt(start) == '>' ? ">" : "> ");
-        }
-
         for (BulletSpan span : ssb.getSpans(0, ssb.length(), BulletSpan.class)) {
             int start = ssb.getSpanStart(span);
             if (span instanceof NumberSpan) {
@@ -2802,6 +2800,22 @@ public class HtmlHelper {
             int start = ssb.getSpanStart(span);
             int end = ssb.getSpanEnd(span);
             ssb.replace(start, end, LINE);
+        }
+
+        // https://tools.ietf.org/html/rfc3676#section-4.5
+        for (QuoteSpan span : ssb.getSpans(0, ssb.length(), QuoteSpan.class)) {
+            int start = ssb.getSpanStart(span);
+            int end = ssb.getSpanEnd(span);
+
+            for (int i = end - 2; i >= start; i--)
+                if (ssb.charAt(i) == '\n')
+                    if (i + 1 < ssb.length() && ssb.charAt(i + 1) == '>')
+                        ssb.insert(i + 1, ">");
+                    else
+                        ssb.insert(i + 1, "> ");
+
+            if (start < ssb.length())
+                ssb.insert(start, ssb.charAt(start) == '>' ? ">" : "> ");
         }
 
         return ssb.toString();
@@ -2951,7 +2965,9 @@ public class HtmlHelper {
                     if (node instanceof TextNode)
                         try {
                             TextNode tnode = (TextNode) node;
-                            String text = Fts4DbHelper.preprocessText(tnode.getWholeText());
+                            String whole = tnode.getWholeText();
+                            String text = Fts4DbHelper.preprocessText(whole);
+                            String ref = (whole.length() == text.length() ? whole : text);
 
                             Matcher result = p.matcher(text);
 
@@ -2961,7 +2977,7 @@ public class HtmlHelper {
                                 int start = result.start(1);
                                 int end = result.end(1);
 
-                                holder.appendText(text.substring(prev, start));
+                                holder.appendText(ref.substring(prev, start));
 
                                 Element span = document.createElement("span");
                                 span.attr("style", mergeStyles(
@@ -2969,9 +2985,7 @@ public class HtmlHelper {
                                         "font-size:larger !important;" +
                                                 "font-weight:bold !important;" +
                                                 "background-color:" + encodeWebColor(color) + " !important"));
-                                span.text(tnode.getWholeText().length() == text.length()
-                                        ? tnode.getWholeText().substring(start, end)
-                                        : text.substring(start, end));
+                                span.text(ref.substring(start, end));
                                 holder.appendChild(span);
 
                                 prev = end;
@@ -2981,7 +2995,7 @@ public class HtmlHelper {
                                 return;
 
                             if (prev < text.length())
-                                holder.appendText(text.substring(prev));
+                                holder.appendText(ref.substring(prev));
 
                             tnode.before(holder);
                             tnode.text("");
@@ -3273,6 +3287,7 @@ public class HtmlHelper {
                             ssb.append('\n');
 
                     if ("true".equals(element.attr("x-line-before")) &&
+                            !"true".equals(element.attr("x-paragraph")) &&
                             (prev == null || !"true".equals(prev.attr("x-line-after"))) &&
                             ssb.length() > 0 && ssb.charAt(ssb.length() - 1) == '\n')
                         ssb.append('\n');
@@ -3325,6 +3340,11 @@ public class HtmlHelper {
                                         } catch (Throwable ex) {
                                             Log.i(ex);
                                         }
+                                    break;
+                                case "font-weight":
+                                    Integer fweight = getFontWeight(value);
+                                    if (fweight != null)
+                                        setSpan(ssb, new StyleSpan(fweight >= 600 ? Typeface.BOLD : Typeface.NORMAL), start, ssb.length());
                                     break;
                                 case "font-family":
                                     if ("wingdings".equalsIgnoreCase(value)) {
@@ -3696,6 +3716,7 @@ public class HtmlHelper {
                             ssb.append('\n');
 
                     if ("true".equals(element.attr("x-line-after")) &&
+                            !"true".equals(element.attr("x-paragraph")) &&
                             ssb.length() > 0 && ssb.charAt(ssb.length() - 1) == '\n')
                         ssb.append('\n');
 
@@ -3771,6 +3792,46 @@ public class HtmlHelper {
                     f |= Spanned.SPAN_PARAGRAPH;
             }
             ssb.setSpan(spans[i], s, e, f);
+        }
+
+        for (Object bold : spans) {
+            if (bold instanceof StyleSpan) {
+                int style = ((StyleSpan) bold).getStyle();
+                if (style == Typeface.BOLD) {
+                    int bs = start.get(bold);
+                    int be = end.get(bold);
+
+                    List<StyleSpan> normal = new ArrayList<>();
+                    for (StyleSpan ss : ssb.getSpans(bs, be, StyleSpan.class))
+                        if (ss.getStyle() == Typeface.NORMAL)
+                            normal.add(ss);
+
+                    if (normal.size() > 0) {
+                        ssb.removeSpan(bold);
+
+                        Collections.sort(normal, new Comparator<StyleSpan>() {
+                            @Override
+                            public int compare(StyleSpan s1, StyleSpan s2) {
+                                int s = Integer.compare(ssb.getSpanStart(s1), ssb.getSpanStart(s2));
+                                if (s != 0)
+                                    return s;
+                                return -Integer.compare(ssb.getSpanEnd(s1), ssb.getSpanEnd(s2));
+                            }
+                        });
+
+                        for (StyleSpan n : normal) {
+                            int ns = start.get(n);
+                            if (ns > bs) {
+                                ssb.setSpan(new StyleSpan(Typeface.BOLD), bs, ns, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                bs = end.get(n);
+                            }
+                        }
+
+                        if (bs < be)
+                            ssb.setSpan(new StyleSpan(Typeface.BOLD), bs, be, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
         }
 
         return ssb;

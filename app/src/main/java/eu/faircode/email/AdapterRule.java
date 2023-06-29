@@ -199,7 +199,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                     setAction(getAction(type), value);
                 } else if (type == EntityRule.TYPE_KEYWORD) {
-                    setAction(getAction(type), jaction.optString("keyword"));
+                    boolean set = jaction.optBoolean("set", true);
+                    setAction(getAction(type), (set ? "+" : "-") + jaction.optString("keyword"));
                 } else if (type == EntityRule.TYPE_ANSWER) {
                     to = jaction.optString("to");
                     if (!TextUtils.isEmpty(to)) {
@@ -298,9 +299,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
             popupMenu.getMenu().add(Menu.NONE, R.string.title_rule_execute, 2, R.string.title_rule_execute)
                     .setEnabled(ActivityBilling.isPro(context));
             popupMenu.getMenu().add(Menu.NONE, R.string.title_reset, 3, R.string.title_reset);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_rule_edit_group, 4, R.string.title_rule_edit_group);
             if (protocol == EntityAccount.TYPE_IMAP) {
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_move_to_folder, 4, R.string.title_move_to_folder);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_copy, 5, R.string.title_copy);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_move_to_folder, 5, R.string.title_move_to_folder);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_copy, 6, R.string.title_copy);
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -315,6 +317,9 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                         return true;
                     } else if (itemId == R.string.title_reset) {
                         onActionReset();
+                        return true;
+                    } else if (itemId == R.string.title_rule_edit_group) {
+                        onActionGroup();
                         return true;
                     } else if (itemId == R.string.title_move_to_folder) {
                         onActionMove();
@@ -459,6 +464,17 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     }.execute(context, owner, args, "rule:reset");
                 }
 
+                private void onActionGroup() {
+                    Bundle args = new Bundle();
+                    args.putLong("rule", rule.id);
+                    args.putString("name", rule.group);
+
+                    FragmentDialogRuleGroup fragment = new FragmentDialogRuleGroup();
+                    fragment.setArguments(args);
+                    fragment.setTargetFragment(parentFragment, FragmentRules.REQUEST_GROUP);
+                    fragment.show(parentFragment.getParentFragmentManager(), "rule:group");
+                }
+
                 private void onActionMove() {
                     Bundle args = new Bundle();
                     args.putInt("icon", R.drawable.twotone_drive_file_move_24);
@@ -467,21 +483,21 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     args.putLongArray("disabled", new long[]{rule.folder});
                     args.putLong("rule", rule.id);
 
-                    FragmentDialogFolder fragment = new FragmentDialogFolder();
+                    FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(parentFragment, FragmentRules.REQUEST_MOVE);
                     fragment.show(parentFragment.getParentFragmentManager(), "rule:move");
                 }
 
                 private void onActionCopy() {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                    lbm.sendBroadcast(
-                            new Intent(ActivityView.ACTION_EDIT_RULE)
-                                    .putExtra("id", rule.id)
-                                    .putExtra("account", rule.account)
-                                    .putExtra("folder", rule.folder)
-                                    .putExtra("protocol", protocol)
-                                    .putExtra("copy", true));
+                    Bundle args = new Bundle();
+                    args.putLong("rule", rule.id);
+                    args.putInt("type", protocol); // account selector
+
+                    FragmentDialogSelectAccount fragment = new FragmentDialogSelectAccount();
+                    fragment.setArguments(args);
+                    fragment.setTargetFragment(parentFragment, FragmentRules.REQUEST_RULE_COPY_ACCOUNT);
+                    fragment.show(parentFragment.getParentFragmentManager(), "rule:copy:account");
                 }
             });
 
@@ -706,6 +722,13 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
     @Override
     public long getItemId(int position) {
         return selected.get(position).id;
+    }
+
+    public EntityRule getItemAtPosition(int pos) {
+        if (pos >= 0 && pos < selected.size())
+            return selected.get(pos);
+        else
+            return null;
     }
 
     @Override

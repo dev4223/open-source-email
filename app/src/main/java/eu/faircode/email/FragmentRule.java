@@ -43,12 +43,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
+import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -57,14 +59,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Lifecycle;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -88,6 +87,7 @@ public class FragmentRule extends FragmentBase {
 
     private TextView tvFolder;
     private EditText etName;
+    private AutoCompleteTextView etGroup;
     private EditText etOrder;
     private CheckBox cbEnabled;
     private CheckBox cbDaily;
@@ -127,6 +127,7 @@ public class FragmentRule extends FragmentBase {
     private TextView tvScheduleHourStart;
     private TextView tvScheduleHourEnd;
     private CheckBox cbEveryDay;
+    private EditText etYounger;
 
     private Spinner spAction;
     private TextView tvActionRemark;
@@ -140,6 +141,7 @@ public class FragmentRule extends FragmentBase {
     private Spinner spImportance;
 
     private EditText etKeyword;
+    private RadioGroup rgKeyword;
 
     private Button btnFolder;
     private EditText etMoveCreate;
@@ -185,6 +187,7 @@ public class FragmentRule extends FragmentBase {
     private Group grpDelete;
     private Group grpLocalOnly;
 
+    private ArrayAdapter<String> adapterGroup;
     private ArrayAdapter<String> adapterDay;
     private ArrayAdapter<Action> adapterAction;
     private ArrayAdapter<EntityIdentity> adapterIdentity;
@@ -198,8 +201,6 @@ public class FragmentRule extends FragmentBase {
     private Uri sound = null;
 
     private DateFormat DF;
-
-    private final static int MAX_CHECK = 10;
 
     private static final int REQUEST_SENDER = 1;
     private static final int REQUEST_RECIPIENT = 2;
@@ -233,7 +234,8 @@ public class FragmentRule extends FragmentBase {
             "$$lowpriority$",
             "$$highpriority$",
             "$$signed$",
-            "$$encrypted$"
+            "$$encrypted$",
+            "$$aligned$"
     ));
 
     @Override
@@ -270,6 +272,7 @@ public class FragmentRule extends FragmentBase {
 
         tvFolder = view.findViewById(R.id.tvFolder);
         etName = view.findViewById(R.id.etName);
+        etGroup = view.findViewById(R.id.etGroup);
         etOrder = view.findViewById(R.id.etOrder);
         cbEnabled = view.findViewById(R.id.cbEnabled);
         cbDaily = view.findViewById(R.id.cbDaily);
@@ -309,6 +312,7 @@ public class FragmentRule extends FragmentBase {
         tvScheduleHourStart = view.findViewById(R.id.tvScheduleHourStart);
         tvScheduleHourEnd = view.findViewById(R.id.tvScheduleHourEnd);
         cbEveryDay = view.findViewById(R.id.cbEveryDay);
+        etYounger = view.findViewById(R.id.etYounger);
 
         spAction = view.findViewById(R.id.spAction);
         tvActionRemark = view.findViewById(R.id.tvActionRemark);
@@ -322,6 +326,7 @@ public class FragmentRule extends FragmentBase {
         spImportance = view.findViewById(R.id.spImportance);
 
         etKeyword = view.findViewById(R.id.etKeyword);
+        rgKeyword = view.findViewById(R.id.rgKeyword);
 
         btnFolder = view.findViewById(R.id.btnFolder);
         etMoveCreate = view.findViewById(R.id.etMoveCreate);
@@ -367,6 +372,10 @@ public class FragmentRule extends FragmentBase {
         grpAutomation = view.findViewById(R.id.grpAutomation);
         grpDelete = view.findViewById(R.id.grpDelete);
         grpLocalOnly = view.findViewById(R.id.grpLocalOnly);
+
+        adapterGroup = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
+        etGroup.setThreshold(1);
+        etGroup.setAdapter(adapterGroup);
 
         cbDaily.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -537,7 +546,7 @@ public class FragmentRule extends FragmentBase {
                         args.putLong("account", account);
                         args.putLongArray("disabled", new long[]{});
 
-                        FragmentDialogFolder fragment = new FragmentDialogFolder();
+                        FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
                         fragment.setArguments(args);
                         fragment.setTargetFragment(FragmentRule.this, REQUEST_FOLDER);
                         fragment.show(getParentFragmentManager(), "rule:folder");
@@ -836,7 +845,9 @@ public class FragmentRule extends FragmentBase {
                 RefData data = new RefData();
 
                 DB db = DB.getInstance(context);
+                data.account = db.account().getAccount(aid);
                 data.folder = db.folder().getFolder(fid);
+                data.groups = db.rule().getGroups();
                 data.identities = db.identity().getSynchronizingIdentities(aid);
                 data.answers = db.answer().getAnswers(false);
 
@@ -845,7 +856,12 @@ public class FragmentRule extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, RefData data) {
-                tvFolder.setText(data.folder.getDisplayName(getContext()));
+                tvFolder.setText(String.format("%s:%s",
+                        data.account == null ? "" : data.account.name,
+                        data.folder.getDisplayName(getContext())));
+
+                adapterGroup.clear();
+                adapterGroup.addAll(data.groups);
 
                 adapterIdentity.clear();
                 adapterIdentity.addAll(data.identities);
@@ -1166,6 +1182,7 @@ public class FragmentRule extends FragmentBase {
                         JSONObject jschedule = jcondition.optJSONObject("schedule");
 
                         etName.setText(rule == null ? args.getString("subject") : rule.name);
+                        etGroup.setText(rule == null ? null : rule.group);
                         etOrder.setText(rule == null ? null : Integer.toString(rule.order));
                         cbEnabled.setChecked(rule == null || rule.enabled);
                         cbDaily.setChecked(rule != null && rule.daily);
@@ -1209,6 +1226,8 @@ public class FragmentRule extends FragmentBase {
                         int end = (jschedule != null && jschedule.has("end") ? jschedule.getInt("end") : 0);
 
                         cbEveryDay.setChecked(jschedule != null && jschedule.optBoolean("all"));
+                        etYounger.setText(jcondition.has("younger")
+                                ? Integer.toString(jcondition.optInt("younger")) : null);
 
                         spScheduleDayStart.setSelection(start / (24 * 60));
                         spScheduleDayEnd.setSelection(end / (24 * 60));
@@ -1246,12 +1265,17 @@ public class FragmentRule extends FragmentBase {
 
                                 case EntityRule.TYPE_KEYWORD:
                                     etKeyword.setText(jaction.getString("keyword"));
+                                    rgKeyword.check(jaction.optBoolean("set", true)
+                                            ? R.id.keyword_add : R.id.keyword_delete);
+
                                     break;
 
                                 case EntityRule.TYPE_MOVE:
                                 case EntityRule.TYPE_COPY:
-                                    long target = jaction.optLong("target", -1);
-                                    showFolder(target);
+                                    if (copy < 0 || rule.account == account) {
+                                        long target = jaction.optLong("target", -1);
+                                        showFolder(target);
+                                    }
                                     if (type == EntityRule.TYPE_MOVE) {
                                         etMoveCreate.setText(jaction.optString("create"));
                                         cbMoveSeen.setChecked(jaction.optBoolean("seen"));
@@ -1260,12 +1284,14 @@ public class FragmentRule extends FragmentBase {
                                     break;
 
                                 case EntityRule.TYPE_ANSWER:
-                                    long identity = jaction.optLong("identity", -1);
-                                    for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
-                                        if (adapterIdentity.getItem(pos).id.equals(identity)) {
-                                            spIdent.setSelection(pos);
-                                            break;
-                                        }
+                                    if (copy < 0 || rule.account == account) {
+                                        long identity = jaction.optLong("identity", -1);
+                                        for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
+                                            if (adapterIdentity.getItem(pos).id.equals(identity)) {
+                                                spIdent.setSelection(pos);
+                                                break;
+                                            }
+                                    }
 
                                     long answer = jaction.optLong("answer", -1);
                                     for (int pos = 1; pos < adapterAnswer.getCount(); pos++)
@@ -1370,11 +1396,12 @@ public class FragmentRule extends FragmentBase {
 
             Bundle args = new Bundle();
             args.putLong("folder", folder);
+            args.putString("name", etName.getText().toString());
             args.putBoolean("daily", cbDaily.isChecked());
             args.putString("condition", jcondition.toString());
             args.putString("action", jaction.toString());
 
-            FragmentDialogCheck fragment = new FragmentDialogCheck();
+            FragmentDialogRuleCheck fragment = new FragmentDialogRuleCheck();
             fragment.setArguments(args);
             fragment.show(getParentFragmentManager(), "rule:check");
 
@@ -1394,6 +1421,7 @@ public class FragmentRule extends FragmentBase {
             args.putLong("id", id);
             args.putLong("folder", folder);
             args.putString("name", etName.getText().toString());
+            args.putString("group", etGroup.getText().toString().trim());
             args.putString("order", etOrder.getText().toString());
             args.putBoolean("enabled", cbEnabled.isChecked());
             args.putBoolean("daily", cbDaily.isChecked());
@@ -1417,6 +1445,7 @@ public class FragmentRule extends FragmentBase {
                     long id = args.getLong("id");
                     long folder = args.getLong("folder");
                     String name = args.getString("name");
+                    String group = args.getString("group");
                     String order = args.getString("order");
                     boolean enabled = args.getBoolean("enabled");
                     boolean daily = args.getBoolean("daily");
@@ -1426,6 +1455,9 @@ public class FragmentRule extends FragmentBase {
 
                     if (TextUtils.isEmpty(name))
                         throw new IllegalArgumentException(context.getString(R.string.title_rule_name_missing));
+
+                    if (TextUtils.isEmpty(group))
+                        group = null;
 
                     JSONObject jcondition = new JSONObject(condition);
                     JSONObject jsender = jcondition.optJSONObject("sender");
@@ -1454,6 +1486,7 @@ public class FragmentRule extends FragmentBase {
                         EntityRule rule = new EntityRule();
                         rule.folder = folder;
                         rule.name = name;
+                        rule.group = group;
                         rule.order = Integer.parseInt(order);
                         rule.enabled = enabled;
                         rule.daily = daily;
@@ -1466,6 +1499,7 @@ public class FragmentRule extends FragmentBase {
                         EntityRule rule = db.rule().getRule(id);
                         rule.folder = folder;
                         rule.name = name;
+                        rule.group = group;
                         rule.order = Integer.parseInt(order);
                         rule.enabled = enabled;
                         rule.daily = daily;
@@ -1596,6 +1630,14 @@ public class FragmentRule extends FragmentBase {
             jcondition.put("schedule", jschedule);
         }
 
+        String younger = etYounger.getText().toString().trim();
+        if (!TextUtils.isEmpty(younger) && TextUtils.isDigitsOnly(younger))
+            try {
+                jcondition.put("younger", Integer.parseInt(younger));
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
         return jcondition;
     }
 
@@ -1624,6 +1666,7 @@ public class FragmentRule extends FragmentBase {
 
                 case EntityRule.TYPE_KEYWORD:
                     jaction.put("keyword", MessageHelper.sanitizeKeyword(etKeyword.getText().toString()));
+                    jaction.put("set", rgKeyword.getCheckedRadioButtonId() == R.id.keyword_add);
                     break;
 
                 case EntityRule.TYPE_MOVE:
@@ -1670,7 +1713,9 @@ public class FragmentRule extends FragmentBase {
     }
 
     private static class RefData {
+        EntityAccount account;
         EntityFolder folder;
+        List<String> groups;
         List<EntityIdentity> identities;
         List<EntityAnswer> answers;
     }
@@ -1722,179 +1767,6 @@ public class FragmentRule extends FragmentBase {
         public void onTimeSet(TimePicker view, int hour, int minute) {
             getArguments().putInt("minutes", hour * 60 + minute);
             sendResult(RESULT_OK);
-        }
-    }
-
-    public static class FragmentDialogCheck extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            long folder = getArguments().getLong("folder");
-            boolean daily = getArguments().getBoolean("daily");
-            String condition = getArguments().getString("condition");
-            String action = getArguments().getString("action");
-
-            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_rule_match, null);
-            final TextView tvNoMessages = dview.findViewById(R.id.tvNoMessages);
-            final RecyclerView rvMessage = dview.findViewById(R.id.rvMessage);
-            final Button btnExecute = dview.findViewById(R.id.btnExecute);
-            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
-
-            rvMessage.setHasFixedSize(false);
-            LinearLayoutManager llm = new LinearLayoutManager(getContext());
-            rvMessage.setLayoutManager(llm);
-
-            final AdapterRuleMatch adapter = new AdapterRuleMatch(getContext(), getViewLifecycleOwner());
-            rvMessage.setAdapter(adapter);
-
-            tvNoMessages.setVisibility(View.GONE);
-            rvMessage.setVisibility(View.GONE);
-            btnExecute.setVisibility(View.GONE);
-
-            final Bundle args = new Bundle();
-            args.putLong("folder", folder);
-            args.putBoolean("daily", daily);
-            args.putString("condition", condition);
-            args.putString("action", action);
-
-            btnExecute.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    new SimpleTask<Integer>() {
-                        private Toast toast = null;
-
-                        @Override
-                        protected void onPreExecute(Bundle args) {
-                            toast = ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG);
-                            toast.show();
-                        }
-
-                        @Override
-                        protected void onPostExecute(Bundle args) {
-                            if (toast != null)
-                                toast.cancel();
-                        }
-
-                        @Override
-                        protected Integer onExecute(Context context, Bundle args) throws Throwable {
-                            EntityRule rule = new EntityRule();
-                            rule.folder = args.getLong("folder");
-                            rule.daily = args.getBoolean("daily");
-                            rule.condition = args.getString("condition");
-                            rule.action = args.getString("action");
-
-                            int applied = 0;
-
-                            DB db = DB.getInstance(context);
-                            List<Long> ids =
-                                    db.message().getMessageIdsByFolder(rule.folder);
-                            for (long mid : ids)
-                                try {
-                                    db.beginTransaction();
-
-                                    EntityMessage message = db.message().getMessage(mid);
-                                    if (message == null || message.ui_hide)
-                                        continue;
-
-                                    if (rule.matches(context, message, null, null))
-                                        if (rule.execute(context, message))
-                                            applied++;
-
-                                    db.setTransactionSuccessful();
-                                } finally {
-                                    db.endTransaction();
-                                }
-
-                            if (applied > 0)
-                                ServiceSynchronize.eval(context, "rules/manual");
-
-                            return applied;
-                        }
-
-                        @Override
-                        protected void onExecuted(Bundle args, Integer applied) {
-                            dismiss();
-                            ToastEx.makeText(getContext(), getString(R.string.title_rule_applied, applied), Toast.LENGTH_LONG).show();
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            if (ex instanceof IllegalArgumentException)
-                                ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                            else
-                                Log.unexpectedError(getParentFragmentManager(), ex);
-                        }
-                    }.execute(FragmentDialogCheck.this, args, "rule:execute");
-                }
-            });
-
-            new SimpleTask<List<EntityMessage>>() {
-                @Override
-                protected void onPreExecute(Bundle args) {
-                    pbWait.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                protected void onPostExecute(Bundle args) {
-                    pbWait.setVisibility(View.GONE);
-                }
-
-                @Override
-                protected List<EntityMessage> onExecute(Context context, Bundle args) throws Throwable {
-                    EntityRule rule = new EntityRule();
-                    rule.folder = args.getLong("folder");
-                    rule.daily = args.getBoolean("daily");
-                    rule.condition = args.getString("condition");
-                    rule.action = args.getString("action");
-                    rule.validate(context);
-
-                    List<EntityMessage> matching = new ArrayList<>();
-
-                    DB db = DB.getInstance(context);
-                    List<Long> ids =
-                            db.message().getMessageIdsByFolder(rule.folder);
-                    for (long id : ids) {
-                        EntityMessage message = db.message().getMessage(id);
-                        if (message == null)
-                            continue;
-
-                        if (rule.matches(context, message, null, null))
-                            matching.add(message);
-
-                        if (matching.size() >= MAX_CHECK)
-                            break;
-                    }
-
-                    return matching;
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, List<EntityMessage> messages) {
-                    adapter.set(messages);
-
-                    if (messages.size() > 0) {
-                        rvMessage.setVisibility(View.VISIBLE);
-                        btnExecute.setVisibility(View.VISIBLE);
-                    } else
-                        tvNoMessages.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    if (ex instanceof IllegalArgumentException) {
-                        tvNoMessages.setText(ex.getMessage());
-                        tvNoMessages.setVisibility(View.VISIBLE);
-                    } else
-                        Log.unexpectedError(getParentFragmentManager(), ex);
-                }
-            }.execute(this, args, "rule:check");
-
-            return new AlertDialog.Builder(getContext())
-                    .setIcon(R.drawable.baseline_mail_outline_24)
-                    .setTitle(R.string.title_rule_matched)
-                    .setView(dview)
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
         }
     }
 }

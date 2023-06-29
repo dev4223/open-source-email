@@ -109,6 +109,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private View view;
     private ImageButton ibHelp;
     private SwitchCompat swPowerMenu;
+    private SwitchCompat swSendSelf;
     private SwitchCompat swExternalSearch;
     private SwitchCompat swSortAnswers;
     private SwitchCompat swExternalAnswer;
@@ -119,10 +120,28 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SeekBar sbClassMinProbability;
     private TextView tvClassMinDifference;
     private SeekBar sbClassMinDifference;
+    private SwitchCompat swShowFiltered;
     private ImageButton ibClassification;
     private TextView tvFtsIndexed;
     private TextView tvFtsPro;
     private Spinner spLanguage;
+    private SwitchCompat swUpdates;
+    private TextView tvGithubPrivacy;
+    private ImageButton ibChannelUpdated;
+    private SwitchCompat swCheckWeekly;
+    private SwitchCompat swBeta;
+    private TextView tvBitBucketPrivacy;
+    private SwitchCompat swChangelog;
+    private SwitchCompat swAnnouncements;
+    private TextView tvAnnouncementsPrivacy;
+    private SwitchCompat swCrashReports;
+    private TextView tvUuid;
+    private Button btnReset;
+    private SwitchCompat swCleanupAttachments;
+    private Button btnCleanup;
+    private TextView tvLastCleanup;
+    private TextView tvSdcard;
+
     private SwitchCompat swLanguageTool;
     private TextView tvLanguageToolPrivacy;
     private SwitchCompat swLanguageToolAuto;
@@ -141,22 +160,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSend;
     private EditText etSend;
     private ImageButton ibSend;
-    private SwitchCompat swUpdates;
-    private TextView tvGithubPrivacy;
-    private ImageButton ibChannelUpdated;
-    private SwitchCompat swCheckWeekly;
-    private SwitchCompat swBeta;
-    private TextView tvBitBucketPrivacy;
-    private SwitchCompat swChangelog;
-    private SwitchCompat swAnnouncements;
-    private TextView tvAnnouncementsPrivacy;
-    private SwitchCompat swCrashReports;
-    private TextView tvUuid;
-    private Button btnReset;
-    private SwitchCompat swCleanupAttachments;
-    private Button btnCleanup;
-    private TextView tvLastCleanup;
-    private TextView tvSdcard;
+    private SwitchCompat swOpenAi;
+    private TextView tvOpenAiPrivacy;
+    private EditText etOpenAi;
+    private TextInputLayout tilOpenAi;
+    private EditText etOpenAiModel;
+    private TextView tvOpenAiTemperature;
+    private SeekBar sbOpenAiTemperature;
+    private SwitchCompat swOpenAiModeration;
+    private ImageButton ibOpenAi;
 
     private CardView cardAdvanced;
     private SwitchCompat swWatchdog;
@@ -176,6 +188,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private Button btnRepair;
     private Button btnDaily;
+    private TextView tvLastDaily;
     private SwitchCompat swAutostart;
     private SwitchCompat swEmergency;
     private SwitchCompat swWorkManager;
@@ -194,9 +207,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvThreadRange;
     private SeekBar sbThreadRange;
     private ImageButton ibSqliteCache;
+    private SwitchCompat swAutoScroll;
     private SwitchCompat swUndoManager;
     private SwitchCompat swBrowserZoom;
     private SwitchCompat swFakeDark;
+    private EditText etViewportHeight;
     private SwitchCompat swShowRecent;
     private SwitchCompat swModSeq;
     private SwitchCompat swPreamble;
@@ -218,8 +233,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swLogarithmicBackoff;
     private SwitchCompat swExactAlarms;
     private SwitchCompat swNativeDkim;
+    private SwitchCompat swNativeArc;
+    private EditText etNativeArcWhitelist;
     private SwitchCompat swInfra;
     private SwitchCompat swDupMsgId;
+    private SwitchCompat swThreadByRef;
     private EditText etKeywords;
     private SwitchCompat swTestIab;
     private Button btnImportProviders;
@@ -244,6 +262,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private Group grpVirusTotal;
     private Group grpSend;
+    private Group grpOpenAi;
     private Group grpUpdates;
     private Group grpBitbucket;
     private Group grpAnnouncements;
@@ -258,25 +277,30 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private final static String[] RESET_OPTIONS = new String[]{
             "sort_answers", "shortcuts", "fts",
             "classification", "class_min_probability", "class_min_difference",
+            "show_filtered",
             "language",
             "lt_enabled", "lt_auto", "lt_picky", "lt_uri", "lt_user", "lt_key",
             "deepl_enabled",
             "vt_enabled", "vt_apikey",
-            "send_enabled", "send_host",
+            "send_enabled", "send_host", "send_dlimit", "send_tlimit",
+            "openai_enabled", "openai_uri", "openai_apikey", "openai_model", "openai_temperature", "openai_moderation",
             "updates", "weekly", "beta", "show_changelog", "announcements",
             "crash_reports", "cleanup_attachments",
             "watchdog", "experiments", "main_log", "main_log_memory", "protocol", "log_level", "debug", "leak_canary",
             "test1", "test2", "test3", "test4", "test5",
             "emergency_file", "work_manager", // "external_storage",
             "sqlite_integrity_check", "wal", "sqlite_checkpoints", "sqlite_analyze", "sqlite_auto_vacuum", "sqlite_sync_extra", "sqlite_cache",
-            "chunk_size", "thread_range", "undo_manager",
+            "chunk_size", "thread_range",
+            "autoscroll_editor", "undo_manager",
             "browser_zoom", "fake_dark",
             "show_recent",
             "use_modseq", "preamble", "uid_command", "perform_expunge", "uid_expunge",
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", "use_top",
             "keep_alive_poll", "empty_pool", "idle_done", "fast_fetch",
             "max_backoff_power", "logarithmic_backoff",
-            "exact_alarms", "native_dkim", "infra", "dkim_verify", "dup_msgids", "global_keywords", "test_iab"
+            "exact_alarms",
+            "native_dkim", "native_arc", "native_arc_whitelist",
+            "infra", "dup_msgids", "thread_byref", "global_keywords", "test_iab"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -333,6 +357,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         ibHelp = view.findViewById(R.id.ibHelp);
         swPowerMenu = view.findViewById(R.id.swPowerMenu);
+        swSendSelf = view.findViewById(R.id.swSendSelf);
         swExternalSearch = view.findViewById(R.id.swExternalSearch);
         swSortAnswers = view.findViewById(R.id.swSortAnswers);
         swExternalAnswer = view.findViewById(R.id.swExternalAnswer);
@@ -344,9 +369,27 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         sbClassMinProbability = view.findViewById(R.id.sbClassMinProbability);
         tvClassMinDifference = view.findViewById(R.id.tvClassMinDifference);
         sbClassMinDifference = view.findViewById(R.id.sbClassMinDifference);
+        swShowFiltered = view.findViewById(R.id.swShowFiltered);
         tvFtsIndexed = view.findViewById(R.id.tvFtsIndexed);
         tvFtsPro = view.findViewById(R.id.tvFtsPro);
         spLanguage = view.findViewById(R.id.spLanguage);
+        swUpdates = view.findViewById(R.id.swUpdates);
+        tvGithubPrivacy = view.findViewById(R.id.tvGithubPrivacy);
+        ibChannelUpdated = view.findViewById(R.id.ibChannelUpdated);
+        swCheckWeekly = view.findViewById(R.id.swWeekly);
+        swBeta = view.findViewById(R.id.swBeta);
+        tvBitBucketPrivacy = view.findViewById(R.id.tvBitBucketPrivacy);
+        swChangelog = view.findViewById(R.id.swChangelog);
+        swAnnouncements = view.findViewById(R.id.swAnnouncements);
+        tvAnnouncementsPrivacy = view.findViewById(R.id.tvAnnouncementsPrivacy);
+        swCrashReports = view.findViewById(R.id.swCrashReports);
+        tvUuid = view.findViewById(R.id.tvUuid);
+        btnReset = view.findViewById(R.id.btnReset);
+        swCleanupAttachments = view.findViewById(R.id.swCleanupAttachments);
+        btnCleanup = view.findViewById(R.id.btnCleanup);
+        tvLastCleanup = view.findViewById(R.id.tvLastCleanup);
+        tvSdcard = view.findViewById(R.id.tvSdcard);
+
         swLanguageTool = view.findViewById(R.id.swLanguageTool);
         tvLanguageToolPrivacy = view.findViewById(R.id.tvLanguageToolPrivacy);
         swLanguageToolAuto = view.findViewById(R.id.swLanguageToolAuto);
@@ -365,22 +408,15 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swSend = view.findViewById(R.id.swSend);
         etSend = view.findViewById(R.id.etSend);
         ibSend = view.findViewById(R.id.ibSend);
-        swUpdates = view.findViewById(R.id.swUpdates);
-        tvGithubPrivacy = view.findViewById(R.id.tvGithubPrivacy);
-        ibChannelUpdated = view.findViewById(R.id.ibChannelUpdated);
-        swCheckWeekly = view.findViewById(R.id.swWeekly);
-        swBeta = view.findViewById(R.id.swBeta);
-        tvBitBucketPrivacy = view.findViewById(R.id.tvBitBucketPrivacy);
-        swChangelog = view.findViewById(R.id.swChangelog);
-        swAnnouncements = view.findViewById(R.id.swAnnouncements);
-        tvAnnouncementsPrivacy = view.findViewById(R.id.tvAnnouncementsPrivacy);
-        swCrashReports = view.findViewById(R.id.swCrashReports);
-        tvUuid = view.findViewById(R.id.tvUuid);
-        btnReset = view.findViewById(R.id.btnReset);
-        swCleanupAttachments = view.findViewById(R.id.swCleanupAttachments);
-        btnCleanup = view.findViewById(R.id.btnCleanup);
-        tvLastCleanup = view.findViewById(R.id.tvLastCleanup);
-        tvSdcard = view.findViewById(R.id.tvSdcard);
+        swOpenAi = view.findViewById(R.id.swOpenAi);
+        tvOpenAiPrivacy = view.findViewById(R.id.tvOpenAiPrivacy);
+        etOpenAi = view.findViewById(R.id.etOpenAi);
+        tilOpenAi = view.findViewById(R.id.tilOpenAi);
+        etOpenAiModel = view.findViewById(R.id.etOpenAiModel);
+        tvOpenAiTemperature = view.findViewById(R.id.tvOpenAiTemperature);
+        sbOpenAiTemperature = view.findViewById(R.id.sbOpenAiTemperature);
+        swOpenAiModeration = view.findViewById(R.id.swOpenAiModeration);
+        ibOpenAi = view.findViewById(R.id.ibOpenAi);
 
         cardAdvanced = view.findViewById(R.id.cardAdvanced);
         swWatchdog = view.findViewById(R.id.swWatchdog);
@@ -400,6 +436,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         btnRepair = view.findViewById(R.id.btnRepair);
         btnDaily = view.findViewById(R.id.btnDaily);
+        tvLastDaily = view.findViewById(R.id.tvLastDaily);
         swAutostart = view.findViewById(R.id.swAutostart);
         swEmergency = view.findViewById(R.id.swEmergency);
         swWorkManager = view.findViewById(R.id.swWorkManager);
@@ -418,9 +455,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         sbChunkSize = view.findViewById(R.id.sbChunkSize);
         tvThreadRange = view.findViewById(R.id.tvThreadRange);
         sbThreadRange = view.findViewById(R.id.sbThreadRange);
+        swAutoScroll = view.findViewById(R.id.swAutoScroll);
         swUndoManager = view.findViewById(R.id.swUndoManager);
         swBrowserZoom = view.findViewById(R.id.swBrowserZoom);
         swFakeDark = view.findViewById(R.id.swFakeDark);
+        etViewportHeight = view.findViewById(R.id.etViewportHeight);
         swShowRecent = view.findViewById(R.id.swShowRecent);
         swModSeq = view.findViewById(R.id.swModSeq);
         swPreamble = view.findViewById(R.id.swPreamble);
@@ -442,8 +481,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swLogarithmicBackoff = view.findViewById(R.id.swLogarithmicBackoff);
         swExactAlarms = view.findViewById(R.id.swExactAlarms);
         swNativeDkim = view.findViewById(R.id.swNativeDkim);
+        swNativeArc = view.findViewById(R.id.swNativeArc);
+        etNativeArcWhitelist = view.findViewById(R.id.etNativeArcWhitelist);
         swInfra = view.findViewById(R.id.swInfra);
         swDupMsgId = view.findViewById(R.id.swDupMsgId);
+        swThreadByRef = view.findViewById(R.id.swThreadByRef);
         etKeywords = view.findViewById(R.id.etKeywords);
         swTestIab = view.findViewById(R.id.swTestIab);
         btnImportProviders = view.findViewById(R.id.btnImportProviders);
@@ -468,6 +510,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         grpVirusTotal = view.findViewById(R.id.grpVirusTotal);
         grpSend = view.findViewById(R.id.grpSend);
+        grpOpenAi = view.findViewById(R.id.grpOpenAi);
         grpUpdates = view.findViewById(R.id.grpUpdates);
         grpBitbucket = view.findViewById(R.id.grpBitbucket);
         grpAnnouncements = view.findViewById(R.id.grpAnnouncements);
@@ -492,6 +535,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
                     Helper.enableComponent(getContext(), ServicePowerControl.class, checked);
+            }
+        });
+
+        swSendSelf.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                Helper.enableComponent(getContext(), ActivitySendSelf.class, checked);
             }
         });
 
@@ -620,6 +670,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swShowFiltered.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("show_filtered", isChecked).apply();
+            }
+        });
+
         spLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -663,6 +720,124 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("language").commit();
+            }
+        });
+
+        swUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("updates", checked).apply();
+                swCheckWeekly.setEnabled(checked);
+                swBeta.setEnabled(checked);
+                if (!checked) {
+                    NotificationManager nm =
+                            Helper.getSystemService(getContext(), NotificationManager.class);
+                    nm.cancel(NotificationHelper.NOTIFICATION_UPDATE);
+                }
+            }
+        });
+
+        tvGithubPrivacy.getPaint().setUnderlineText(true);
+        tvGithubPrivacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.GITHUB_PRIVACY_URI), true);
+            }
+        });
+
+        final Intent channelUpdate = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
+                .putExtra(Settings.EXTRA_CHANNEL_ID, "update");
+
+        ibChannelUpdated.setVisibility(View.GONE);
+        ibChannelUpdated.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.getContext().startActivity(channelUpdate);
+            }
+        });
+
+        swCheckWeekly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("weekly", checked).apply();
+            }
+        });
+
+        swBeta.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("beta", checked).apply();
+            }
+        });
+
+        tvBitBucketPrivacy.getPaint().setUnderlineText(true);
+        tvBitBucketPrivacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.BITBUCKET_PRIVACY_URI), true);
+            }
+        });
+
+        swChangelog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("show_changelog", checked).apply();
+            }
+        });
+
+        swAnnouncements.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("announcements", checked).apply();
+            }
+        });
+
+        tvAnnouncementsPrivacy.getPaint().setUnderlineText(true);
+        tvAnnouncementsPrivacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.GITHUB_PRIVACY_URI), true);
+            }
+        });
+
+        swCrashReports.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit()
+                        .remove("crash_report_count")
+                        .putBoolean("crash_reports", checked)
+                        .apply();
+                Log.setCrashReporting(checked);
+            }
+        });
+
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onResetQuestions();
+            }
+        });
+
+        swCleanupAttachments.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("cleanup_attachments", checked).apply();
+            }
+        });
+
+        btnCleanup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onCleanup();
+            }
+        });
+
+        tvSdcard.setPaintFlags(tvSdcard.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        tvSdcard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), 93);
             }
         });
 
@@ -870,121 +1045,114 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        swUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swOpenAi.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("updates", checked).apply();
-                swCheckWeekly.setEnabled(checked);
-                swBeta.setEnabled(checked);
-                if (!checked) {
-                    NotificationManager nm =
-                            Helper.getSystemService(getContext(), NotificationManager.class);
-                    nm.cancel(NotificationHelper.NOTIFICATION_UPDATE);
-                }
+                prefs.edit().putBoolean("openai_enabled", checked).apply();
             }
         });
 
-        tvGithubPrivacy.getPaint().setUnderlineText(true);
-        tvGithubPrivacy.setOnClickListener(new View.OnClickListener() {
+        tvOpenAiPrivacy.getPaint().setUnderlineText(true);
+        tvOpenAiPrivacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(Helper.GITHUB_PRIVACY_URI), true);
+                Helper.view(v.getContext(), Uri.parse(BuildConfig.OPENAI_PRIVACY), true);
             }
         });
 
-        final Intent channelUpdate = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
-                .putExtra(Settings.EXTRA_CHANNEL_ID, "update");
+        etOpenAi.setHint(BuildConfig.OPENAI_ENDPOINT);
+        etOpenAi.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
 
-        ibChannelUpdated.setVisibility(View.GONE);
-        ibChannelUpdated.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String apikey = s.toString().trim();
+                if (TextUtils.isEmpty(apikey))
+                    prefs.edit().remove("openai_uri").apply();
+                else
+                    prefs.edit().putString("openai_uri", apikey).apply();
+            }
+        });
+
+        tilOpenAi.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String apikey = s.toString().trim();
+                if (TextUtils.isEmpty(apikey))
+                    prefs.edit().remove("openai_apikey").apply();
+                else
+                    prefs.edit().putString("openai_apikey", apikey).apply();
+            }
+        });
+
+        etOpenAiModel.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String model = s.toString().trim();
+                if (TextUtils.isEmpty(model))
+                    prefs.edit().remove("openai_model").apply();
+                else
+                    prefs.edit().putString("openai_model", model).apply();
+            }
+        });
+
+        sbOpenAiTemperature.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float temp = progress / 10f;
+                prefs.edit().putFloat("openai_temperature", temp).apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+        });
+
+        swOpenAiModeration.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("openai_moderation", checked).apply();
+            }
+        });
+
+        ibOpenAi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                v.getContext().startActivity(channelUpdate);
-            }
-        });
-
-        swCheckWeekly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("weekly", checked).apply();
-            }
-        });
-
-        swBeta.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("beta", checked).apply();
-            }
-        });
-
-        tvBitBucketPrivacy.getPaint().setUnderlineText(true);
-        tvBitBucketPrivacy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(Helper.BITBUCKET_PRIVACY_URI), true);
-            }
-        });
-
-        swChangelog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("show_changelog", checked).apply();
-            }
-        });
-
-        swAnnouncements.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("announcements", checked).apply();
-            }
-        });
-
-        tvAnnouncementsPrivacy.getPaint().setUnderlineText(true);
-        tvAnnouncementsPrivacy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(Helper.GITHUB_PRIVACY_URI), true);
-            }
-        });
-
-        swCrashReports.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit()
-                        .remove("crash_report_count")
-                        .putBoolean("crash_reports", checked)
-                        .apply();
-                Log.setCrashReporting(checked);
-            }
-        });
-
-        btnReset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onResetQuestions();
-            }
-        });
-
-        swCleanupAttachments.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("cleanup_attachments", checked).apply();
-            }
-        });
-
-        btnCleanup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onCleanup();
-            }
-        });
-
-        tvSdcard.setPaintFlags(tvSdcard.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        tvSdcard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Helper.viewFAQ(v.getContext(), 93);
+                Helper.viewFAQ(v.getContext(), 190);
             }
         });
 
@@ -1416,6 +1584,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swAutoScroll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autoscroll_editor", checked).apply();
+            }
+        });
+
         swUndoManager.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1435,6 +1610,27 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("fake_dark", checked).apply();
+            }
+        });
+
+        etViewportHeight.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable edit) {
+                try {
+                    prefs.edit().putInt("viewport_height", Integer.parseInt(edit.toString())).apply();
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
             }
         });
 
@@ -1587,11 +1783,37 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        swNativeDkim.setEnabled(!BuildConfig.PLAY_STORE_RELEASE);
         swNativeDkim.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("native_dkim", checked).apply();
+                swNativeArc.setEnabled(checked && swNativeDkim.isEnabled());
+                etNativeArcWhitelist.setEnabled(checked && swNativeDkim.isEnabled());
+            }
+        });
+
+        swNativeArc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("native_arc", checked).apply();
+            }
+        });
+
+        etNativeArcWhitelist.setHint(TextUtils.join(",", MessageHelper.ARC_WHITELIST_DEFAULT));
+        etNativeArcWhitelist.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                prefs.edit().putString("native_arc_whitelist", s.toString().trim()).apply();
             }
         });
 
@@ -1606,6 +1828,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("dup_msgids", checked).apply();
+            }
+        });
+
+        swThreadByRef.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("thread_byref", checked).apply();
             }
         });
 
@@ -1957,18 +2186,23 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        grpVirusTotal.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
-        grpSend.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
-
         grpUpdates.setVisibility(!BuildConfig.DEBUG &&
                 (Helper.isPlayStoreInstall() || !Helper.hasValidFingerprint(getContext()))
                 ? View.GONE : View.VISIBLE);
         grpBitbucket.setVisibility(View.GONE);
         grpAnnouncements.setVisibility(TextUtils.isEmpty(BuildConfig.ANNOUNCEMENT_URI)
                 ? View.GONE : View.VISIBLE);
+        grpVirusTotal.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
+        grpSend.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
+        grpOpenAi.setVisibility(TextUtils.isEmpty(BuildConfig.OPENAI_ENDPOINT) ? View.GONE : View.VISIBLE);
         grpTest.setVisibility(BuildConfig.TEST_RELEASE ? View.VISIBLE : View.GONE);
 
         setLastCleanup(prefs.getLong("last_cleanup", -1));
+
+        if (prefs.contains("last_daily"))
+            tvLastDaily.setText(new Date(prefs.getLong("last_daily", 0)).toString());
+        else
+            tvLastDaily.setText(("-"));
 
         File external = Helper.getExternalFilesDir(getContext());
         boolean emulated = (external != null && Environment.isExternalStorageEmulated(external));
@@ -2052,14 +2286,24 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         if ("last_cleanup".equals(key))
             setLastCleanup(prefs.getLong(key, -1));
 
+        if ("last_daily".equals(key))
+            tvLastDaily.setText(new Date(prefs.getLong(key, 0)).toString());
+
         if ("lt_uri".equals(key) ||
                 "lt_user".equals(key) ||
                 "lt_key".equals(key) ||
                 "vt_apikey".equals(key) ||
-                "send_host".equals(key))
+                "send_host".equals(key) ||
+                "openai_uri".equals(key) ||
+                "openai_apikey".equals(key) ||
+                "openai_model".equals(key) ||
+                "viewport_height".equals(key))
             return;
 
         if ("global_keywords".equals(key))
+            return;
+
+        if ("native_arc_whitelist".equals(key))
             return;
 
         setOptions();
@@ -2084,9 +2328,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         final Context context = getContext();
         View dview = LayoutInflater.from(context).inflate(R.layout.dialog_reset_questions, null);
         final CheckBox cbGeneral = dview.findViewById(R.id.cbGeneral);
-        final CheckBox cbFull = dview.findViewById(R.id.cbFull);
-        final CheckBox cbImages = dview.findViewById(R.id.cbImages);
         final CheckBox cbLinks = dview.findViewById(R.id.cbLinks);
+        final CheckBox cbFiles = dview.findViewById(R.id.cbFiles);
+        final CheckBox cbImages = dview.findViewById(R.id.cbImages);
+        final CheckBox cbFull = dview.findViewById(R.id.cbFull);
 
         new AlertDialog.Builder(context)
                 .setView(dview)
@@ -2106,10 +2351,14 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         for (String key : prefs.getAll().keySet())
                             if ((!BuildConfig.DEBUG &&
                                     key.startsWith("translated_") && cbGeneral.isChecked()) ||
+                                    key.startsWith("oauth.") ||
                                     (key.startsWith("announcement.") && cbGeneral.isChecked()) ||
-                                    (key.endsWith(".show_full") && cbFull.isChecked()) ||
+                                    (key.endsWith(".confirm_link") && cbLinks.isChecked()) ||
+                                    (key.endsWith(".link_view") && cbLinks.isChecked()) ||
+                                    (key.endsWith(".link_sanitize") && cbLinks.isChecked()) ||
+                                    (key.endsWith(".confirm_files") && cbFiles.isChecked()) ||
                                     (key.endsWith(".show_images") && cbImages.isChecked()) ||
-                                    (key.endsWith(".confirm_link") && cbLinks.isChecked())) {
+                                    (key.endsWith(".show_full") && cbFull.isChecked())) {
                                 Log.i("Removing option=" + key);
                                 editor.remove(key);
                             }
@@ -2144,13 +2393,18 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 WorkerCleanup.cleanup(context, true);
-                WorkManager.getInstance(context).pruneWork();
                 return null;
             }
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                final Context context = getContext();
+                WorkManager.getInstance(context).pruneWork();
+                WorkerAutoUpdate.init(context);
+                WorkerCleanup.init(context);
+                WorkerDailyRules.init(context);
+                WorkerSync.init(context);
+                ToastEx.makeText(context, R.string.title_completed, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -2161,187 +2415,212 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     }
 
     private void setOptions() {
-        if (view == null || getContext() == null)
-            return;
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        ActivityManager am = Helper.getSystemService(getContext(), ActivityManager.class);
-        int class_mb = am.getMemoryClass();
-        int class_large_mb = am.getLargeMemoryClass();
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        am.getMemoryInfo(mi);
-
-        swSortAnswers.setChecked(prefs.getBoolean("sort_answers", false));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-            swPowerMenu.setChecked(Helper.isComponentEnabled(getContext(), ServicePowerControl.class));
-        swExternalSearch.setChecked(Helper.isComponentEnabled(getContext(), ActivitySearch.class));
-        swExternalAnswer.setChecked(Helper.isComponentEnabled(getContext(), ActivityAnswer.class));
-        swShortcuts.setChecked(prefs.getBoolean("shortcuts", true));
-        swFts.setChecked(prefs.getBoolean("fts", false));
-
-        swClassification.setChecked(prefs.getBoolean("classification", false));
-
-        int class_min_chance = prefs.getInt("class_min_probability", 15);
-        tvClassMinProbability.setText(getString(R.string.title_advanced_class_min_chance, NF.format(class_min_chance)));
-        sbClassMinProbability.setProgress(class_min_chance);
-
-        int class_min_difference = prefs.getInt("class_min_difference", 50);
-        tvClassMinDifference.setText(getString(R.string.title_advanced_class_min_difference, NF.format(class_min_difference)));
-        sbClassMinDifference.setProgress(class_min_difference);
-
-        int selected = -1;
-        String language = prefs.getString("language", null);
-        List<String> display = new ArrayList<>();
-        display.add(getString(R.string.title_advanced_language_system));
-        for (int pos = 0; pos < languages.size(); pos++) {
-            Pair<String, String> lang = languages.get(pos);
-            display.add(lang.second);
-            if (lang.first.equals(language))
-                selected = pos + 1;
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, android.R.id.text1, display);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spLanguage.setAdapter(adapter);
-        if (selected >= 0)
-            spLanguage.setSelection(selected);
-
-        swLanguageTool.setChecked(prefs.getBoolean("lt_enabled", false));
-        swLanguageToolAuto.setChecked(prefs.getBoolean("lt_auto", true));
-        swLanguageToolAuto.setEnabled(swLanguageTool.isChecked());
-        swLanguageToolPicky.setChecked(prefs.getBoolean("lt_picky", false));
-        swLanguageToolPicky.setEnabled(swLanguageTool.isChecked());
-        etLanguageTool.setText(prefs.getString("lt_uri", null));
-        etLanguageToolUser.setText(prefs.getString("lt_user", null));
-        tilLanguageToolKey.getEditText().setText(prefs.getString("lt_key", null));
-        swDeepL.setChecked(prefs.getBoolean("deepl_enabled", false));
-        swVirusTotal.setChecked(prefs.getBoolean("vt_enabled", false));
-        tilVirusTotal.getEditText().setText(prefs.getString("vt_apikey", null));
-        swSend.setChecked(prefs.getBoolean("send_enabled", false));
-        etSend.setText(prefs.getString("send_host", null));
-        swUpdates.setChecked(prefs.getBoolean("updates", true));
-        swCheckWeekly.setChecked(prefs.getBoolean("weekly", Helper.hasPlayStore(getContext())));
-        swCheckWeekly.setEnabled(swUpdates.isChecked());
-        swBeta.setChecked(prefs.getBoolean("beta", false));
-        swBeta.setEnabled(swUpdates.isChecked());
-        swChangelog.setChecked(prefs.getBoolean("show_changelog", !BuildConfig.PLAY_STORE_RELEASE));
-        swAnnouncements.setChecked(prefs.getBoolean("announcements", true));
-        swExperiments.setChecked(prefs.getBoolean("experiments", false));
-        swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
-        tvUuid.setText(prefs.getString("uuid", null));
-        swCleanupAttachments.setChecked(prefs.getBoolean("cleanup_attachments", false));
-
-        swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
-        swMainLog.setChecked(prefs.getBoolean("main_log", true));
-        swMainLogMem.setChecked(prefs.getBoolean("main_log_memory", false));
-        swMainLogMem.setEnabled(swMainLog.isChecked());
-        swProtocol.setChecked(prefs.getBoolean("protocol", false));
-        swLogInfo.setChecked(prefs.getInt("log_level", android.util.Log.WARN) <= android.util.Log.INFO);
-        swDebug.setChecked(prefs.getBoolean("debug", false));
-        swCanary.setChecked(prefs.getBoolean("leak_canary", false));
-        swTest1.setChecked(prefs.getBoolean("test1", false));
-        swTest2.setChecked(prefs.getBoolean("test2", false));
-        swTest3.setChecked(prefs.getBoolean("test3", false));
-        swTest4.setChecked(prefs.getBoolean("test4", false));
-        swTest5.setChecked(prefs.getBoolean("test5", false));
-
-        swAutostart.setChecked(Helper.isComponentEnabled(getContext(), ReceiverAutoStart.class));
-        swEmergency.setChecked(prefs.getBoolean("emergency_file", true));
-        swWorkManager.setChecked(prefs.getBoolean("work_manager", true));
-        swExternalStorage.setChecked(prefs.getBoolean("external_storage", false));
-
-        swIntegrity.setChecked(prefs.getBoolean("sqlite_integrity_check", true));
-        swWal.setChecked(prefs.getBoolean("wal", true));
-        swCheckpoints.setChecked(prefs.getBoolean("sqlite_checkpoints", true));
-        swAnalyze.setChecked(prefs.getBoolean("sqlite_analyze", true));
-        swAutoVacuum.setChecked(prefs.getBoolean("sqlite_auto_vacuum", false));
-        swSyncExtra.setChecked(prefs.getBoolean("sqlite_sync_extra", true));
-
-        int sqlite_cache = prefs.getInt("sqlite_cache", DB.DEFAULT_CACHE_SIZE);
-        Integer cache_size = DB.getCacheSizeKb(getContext());
-        if (cache_size == null)
-            cache_size = 2000;
-        tvSqliteCache.setText(getString(R.string.title_advanced_sqlite_cache,
-                NF.format(sqlite_cache),
-                Helper.humanReadableByteCount(cache_size * 1024L)));
-        sbSqliteCache.setProgress(sqlite_cache);
-
-        int chunk_size = prefs.getInt("chunk_size", Core.DEFAULT_CHUNK_SIZE);
-        tvChunkSize.setText(getString(R.string.title_advanced_chunk_size, chunk_size));
-        sbChunkSize.setProgress(chunk_size);
-
-        int thread_range = prefs.getInt("thread_range", MessageHelper.DEFAULT_THREAD_RANGE);
-        int range = (int) Math.pow(2, thread_range);
-        tvThreadRange.setText(getString(R.string.title_advanced_thread_range, range));
-        sbThreadRange.setProgress(thread_range);
-
-        swUndoManager.setChecked(prefs.getBoolean("undo_manager", false));
-        swBrowserZoom.setChecked(prefs.getBoolean("browser_zoom", false));
-        swFakeDark.setChecked(prefs.getBoolean("fake_dark", false));
-        swShowRecent.setChecked(prefs.getBoolean("show_recent", false));
-        swModSeq.setChecked(prefs.getBoolean("use_modseq", true));
-        swPreamble.setChecked(prefs.getBoolean("preamble", false));
-        swUid.setChecked(prefs.getBoolean("uid_command", false));
-        swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
-        swUidExpunge.setChecked(prefs.getBoolean("uid_expunge", false));
-        swAuthPlain.setChecked(prefs.getBoolean("auth_plain", true));
-        swAuthLogin.setChecked(prefs.getBoolean("auth_login", true));
-        swAuthNtlm.setChecked(prefs.getBoolean("auth_ntlm", true));
-        swAuthSasl.setChecked(prefs.getBoolean("auth_sasl", true));
-        swAuthApop.setChecked(prefs.getBoolean("auth_apop", false));
-        swUseTop.setChecked(prefs.getBoolean("use_top", true));
-        swKeepAlivePoll.setChecked(prefs.getBoolean("keep_alive_poll", false));
-        swEmptyPool.setChecked(prefs.getBoolean("empty_pool", true));
-        swIdleDone.setChecked(prefs.getBoolean("idle_done", true));
-        swFastFetch.setChecked(prefs.getBoolean("fast_fetch", false));
-
-        int max_backoff_power = prefs.getInt("max_backoff_power", ServiceSynchronize.DEFAULT_BACKOFF_POWER - 3);
-        int max_backoff = (int) Math.pow(2, max_backoff_power + 3);
-        tvMaxBackoff.setText(getString(R.string.title_advanced_max_backoff, max_backoff));
-        sbMaxBackOff.setProgress(max_backoff_power);
-
-        swLogarithmicBackoff.setChecked(prefs.getBoolean("logarithmic_backoff", true));
-        swExactAlarms.setChecked(prefs.getBoolean("exact_alarms", true));
-        swNativeDkim.setChecked(prefs.getBoolean("native_dkim", false));
-        swInfra.setChecked(prefs.getBoolean("infra", false));
-        swDupMsgId.setChecked(prefs.getBoolean("dup_msgids", false));
-        etKeywords.setText(prefs.getString("global_keywords", null));
-        swTestIab.setChecked(prefs.getBoolean("test_iab", false));
-
-        tvProcessors.setText(getString(R.string.title_advanced_processors, Runtime.getRuntime().availableProcessors()));
-        tvMemoryClass.setText(getString(R.string.title_advanced_memory_class,
-                class_mb + " MB",
-                class_large_mb + " MB",
-                Helper.humanReadableByteCount(mi.totalMem)));
-
-        String android_id;
         try {
-            android_id = Settings.Secure.getString(
-                    getContext().getContentResolver(),
-                    Settings.Secure.ANDROID_ID);
-            if (android_id == null)
-                android_id = "<null>";
+            if (view == null || getContext() == null)
+                return;
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+            ActivityManager am = Helper.getSystemService(getContext(), ActivityManager.class);
+            int class_mb = am.getMemoryClass();
+            int class_large_mb = am.getLargeMemoryClass();
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+
+            swSortAnswers.setChecked(prefs.getBoolean("sort_answers", false));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+                swPowerMenu.setChecked(Helper.isComponentEnabled(getContext(), ServicePowerControl.class));
+            swSendSelf.setChecked(Helper.isComponentEnabled(getContext(), ActivitySendSelf.class));
+            swExternalSearch.setChecked(Helper.isComponentEnabled(getContext(), ActivitySearch.class));
+            swExternalAnswer.setChecked(Helper.isComponentEnabled(getContext(), ActivityAnswer.class));
+            swShortcuts.setChecked(prefs.getBoolean("shortcuts", true));
+            swFts.setChecked(prefs.getBoolean("fts", false));
+
+            swClassification.setChecked(prefs.getBoolean("classification", false));
+
+            int class_min_chance = prefs.getInt("class_min_probability", 5);
+            tvClassMinProbability.setText(getString(R.string.title_advanced_class_min_chance, NF.format(class_min_chance)));
+            sbClassMinProbability.setProgress(class_min_chance);
+
+            int class_min_difference = prefs.getInt("class_min_difference", 40);
+            tvClassMinDifference.setText(getString(R.string.title_advanced_class_min_difference, NF.format(class_min_difference)));
+            sbClassMinDifference.setProgress(class_min_difference);
+
+            swShowFiltered.setChecked(prefs.getBoolean("show_filtered", false));
+
+            int selected = -1;
+            String language = prefs.getString("language", null);
+            List<String> display = new ArrayList<>();
+            display.add(getString(R.string.title_advanced_language_system));
+            for (int pos = 0; pos < languages.size(); pos++) {
+                Pair<String, String> lang = languages.get(pos);
+                display.add(lang.second);
+                if (lang.first.equals(language))
+                    selected = pos + 1;
+            }
+
+            swUpdates.setChecked(prefs.getBoolean("updates", true));
+            swCheckWeekly.setChecked(prefs.getBoolean("weekly", Helper.hasPlayStore(getContext())));
+            swCheckWeekly.setEnabled(swUpdates.isChecked());
+            swBeta.setChecked(prefs.getBoolean("beta", false));
+            swBeta.setEnabled(swUpdates.isChecked());
+            swChangelog.setChecked(prefs.getBoolean("show_changelog", !BuildConfig.PLAY_STORE_RELEASE));
+            swAnnouncements.setChecked(prefs.getBoolean("announcements", true));
+            swExperiments.setChecked(prefs.getBoolean("experiments", false));
+            swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
+            tvUuid.setText(prefs.getString("uuid", null));
+            swCleanupAttachments.setChecked(prefs.getBoolean("cleanup_attachments", false));
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, android.R.id.text1, display);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spLanguage.setAdapter(adapter);
+            if (selected >= 0)
+                spLanguage.setSelection(selected);
+
+            swLanguageTool.setChecked(prefs.getBoolean("lt_enabled", false));
+            swLanguageToolAuto.setChecked(prefs.getBoolean("lt_auto", true));
+            swLanguageToolAuto.setEnabled(swLanguageTool.isChecked());
+            swLanguageToolPicky.setChecked(prefs.getBoolean("lt_picky", false));
+            swLanguageToolPicky.setEnabled(swLanguageTool.isChecked());
+            etLanguageTool.setText(prefs.getString("lt_uri", null));
+            etLanguageToolUser.setText(prefs.getString("lt_user", null));
+            tilLanguageToolKey.getEditText().setText(prefs.getString("lt_key", null));
+            swDeepL.setChecked(prefs.getBoolean("deepl_enabled", false));
+            swVirusTotal.setChecked(prefs.getBoolean("vt_enabled", false));
+            tilVirusTotal.getEditText().setText(prefs.getString("vt_apikey", null));
+            swSend.setChecked(prefs.getBoolean("send_enabled", false));
+            etSend.setText(prefs.getString("send_host", null));
+            swOpenAi.setChecked(prefs.getBoolean("openai_enabled", false));
+            etOpenAi.setText(prefs.getString("openai_uri", null));
+            tilOpenAi.getEditText().setText(prefs.getString("openai_apikey", null));
+            etOpenAiModel.setText(prefs.getString("openai_model", null));
+
+            float temperature = prefs.getFloat("openai_temperature", 0.5f);
+            tvOpenAiTemperature.setText(getString(R.string.title_advanced_openai_temperature, NF.format(temperature)));
+            sbOpenAiTemperature.setProgress(Math.round(temperature * 10));
+            swOpenAiModeration.setChecked(prefs.getBoolean("openai_moderation", false));
+
+            swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
+            swMainLog.setChecked(prefs.getBoolean("main_log", true));
+            swMainLogMem.setChecked(prefs.getBoolean("main_log_memory", false));
+            swMainLogMem.setEnabled(swMainLog.isChecked());
+            swProtocol.setChecked(prefs.getBoolean("protocol", false));
+            swLogInfo.setChecked(prefs.getInt("log_level", android.util.Log.WARN) <= android.util.Log.INFO);
+            swDebug.setChecked(prefs.getBoolean("debug", false));
+            swCanary.setChecked(prefs.getBoolean("leak_canary", false));
+            swTest1.setChecked(prefs.getBoolean("test1", false));
+            swTest2.setChecked(prefs.getBoolean("test2", false));
+            swTest3.setChecked(prefs.getBoolean("test3", false));
+            swTest4.setChecked(prefs.getBoolean("test4", false));
+            swTest5.setChecked(prefs.getBoolean("test5", false));
+
+            swAutostart.setChecked(Helper.isComponentEnabled(getContext(), ReceiverAutoStart.class));
+            swEmergency.setChecked(prefs.getBoolean("emergency_file", true));
+            swWorkManager.setChecked(prefs.getBoolean("work_manager", true));
+            swExternalStorage.setChecked(prefs.getBoolean("external_storage", false));
+
+            swIntegrity.setChecked(prefs.getBoolean("sqlite_integrity_check", true));
+            swWal.setChecked(prefs.getBoolean("wal", true));
+            swCheckpoints.setChecked(prefs.getBoolean("sqlite_checkpoints", true));
+            swAnalyze.setChecked(prefs.getBoolean("sqlite_analyze", true));
+            swAutoVacuum.setChecked(prefs.getBoolean("sqlite_auto_vacuum", false));
+            swSyncExtra.setChecked(prefs.getBoolean("sqlite_sync_extra", true));
+
+            int sqlite_cache = prefs.getInt("sqlite_cache", DB.DEFAULT_CACHE_SIZE);
+            Integer cache_size = DB.getCacheSizeKb(getContext());
+            if (cache_size == null)
+                cache_size = 2000;
+            tvSqliteCache.setText(getString(R.string.title_advanced_sqlite_cache,
+                    NF.format(sqlite_cache),
+                    Helper.humanReadableByteCount(cache_size * 1024L)));
+            sbSqliteCache.setProgress(sqlite_cache);
+
+            int chunk_size = prefs.getInt("chunk_size", Core.DEFAULT_CHUNK_SIZE);
+            tvChunkSize.setText(getString(R.string.title_advanced_chunk_size, chunk_size));
+            sbChunkSize.setProgress(chunk_size);
+
+            int thread_range = prefs.getInt("thread_range", MessageHelper.DEFAULT_THREAD_RANGE);
+            int range = (int) Math.pow(2, thread_range);
+            tvThreadRange.setText(getString(R.string.title_advanced_thread_range, range));
+            sbThreadRange.setProgress(thread_range);
+
+            swAutoScroll.setChecked(prefs.getBoolean("autoscroll_editor", false));
+            swUndoManager.setChecked(prefs.getBoolean("undo_manager", false));
+            swBrowserZoom.setChecked(prefs.getBoolean("browser_zoom", false));
+            swFakeDark.setChecked(prefs.getBoolean("fake_dark", false));
+            etViewportHeight.setText(Integer.toString(prefs.getInt("viewport_height", 16000)));
+            swShowRecent.setChecked(prefs.getBoolean("show_recent", false));
+            swModSeq.setChecked(prefs.getBoolean("use_modseq", true));
+            swPreamble.setChecked(prefs.getBoolean("preamble", false));
+            swUid.setChecked(prefs.getBoolean("uid_command", false));
+            swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
+            swUidExpunge.setChecked(prefs.getBoolean("uid_expunge", false));
+            swAuthPlain.setChecked(prefs.getBoolean("auth_plain", true));
+            swAuthLogin.setChecked(prefs.getBoolean("auth_login", true));
+            swAuthNtlm.setChecked(prefs.getBoolean("auth_ntlm", true));
+            swAuthSasl.setChecked(prefs.getBoolean("auth_sasl", true));
+            swAuthApop.setChecked(prefs.getBoolean("auth_apop", false));
+            swUseTop.setChecked(prefs.getBoolean("use_top", true));
+            swKeepAlivePoll.setChecked(prefs.getBoolean("keep_alive_poll", false));
+            swEmptyPool.setChecked(prefs.getBoolean("empty_pool", true));
+            swIdleDone.setChecked(prefs.getBoolean("idle_done", true));
+            swFastFetch.setChecked(prefs.getBoolean("fast_fetch", false));
+
+            int max_backoff_power = prefs.getInt("max_backoff_power", ServiceSynchronize.DEFAULT_BACKOFF_POWER - 3);
+            int max_backoff = (int) Math.pow(2, max_backoff_power + 3);
+            tvMaxBackoff.setText(getString(R.string.title_advanced_max_backoff, max_backoff));
+            sbMaxBackOff.setProgress(max_backoff_power);
+
+            swLogarithmicBackoff.setChecked(prefs.getBoolean("logarithmic_backoff", true));
+            swExactAlarms.setChecked(prefs.getBoolean("exact_alarms", true));
+            swNativeDkim.setEnabled(!BuildConfig.PLAY_STORE_RELEASE);
+            swNativeDkim.setChecked(prefs.getBoolean("native_dkim", false));
+            swNativeArc.setEnabled(swNativeDkim.isEnabled() && swNativeDkim.isChecked());
+            swNativeArc.setChecked(prefs.getBoolean("native_arc", true));
+            etNativeArcWhitelist.setEnabled(swNativeDkim.isEnabled() && swNativeDkim.isChecked());
+            etNativeArcWhitelist.setText(prefs.getString("native_arc_whitelist", null));
+            swInfra.setChecked(prefs.getBoolean("infra", false));
+            swDupMsgId.setChecked(prefs.getBoolean("dup_msgids", false));
+            swThreadByRef.setChecked(prefs.getBoolean("thread_byref", true));
+            etKeywords.setText(prefs.getString("global_keywords", null));
+            swTestIab.setChecked(prefs.getBoolean("test_iab", false));
+
+            tvProcessors.setText(getString(R.string.title_advanced_processors, Runtime.getRuntime().availableProcessors()));
+            tvMemoryClass.setText(getString(R.string.title_advanced_memory_class,
+                    class_mb + " MB",
+                    class_large_mb + " MB",
+                    Helper.humanReadableByteCount(mi.totalMem)));
+
+            String android_id;
+            try {
+                android_id = Settings.Secure.getString(
+                        getContext().getContentResolver(),
+                        Settings.Secure.ANDROID_ID);
+                if (android_id == null)
+                    android_id = "<null>";
+            } catch (Throwable ex) {
+                Log.w(ex);
+                android_id = "?";
+            }
+            tvAndroidId.setText(getString(R.string.title_advanced_android_id, android_id));
+
+            tvFingerprint.setText(Helper.getFingerprint(getContext()));
+
+            Integer cursorWindowSize = null;
+            try {
+                //Field fCursorWindowSize = android.database.CursorWindow.class.getDeclaredField("sDefaultCursorWindowSize");
+                //fCursorWindowSize.setAccessible(true);
+                //cursorWindowSize = fCursorWindowSize.getInt(null);
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
+            tvCursorWindow.setText(getString(R.string.title_advanced_cursor_window,
+                    cursorWindowSize == null ? "?" : Helper.humanReadableByteCount(cursorWindowSize, false)));
+
+            cardDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         } catch (Throwable ex) {
-            Log.w(ex);
-            android_id = "?";
+            Log.e(ex);
         }
-        tvAndroidId.setText(getString(R.string.title_advanced_android_id, android_id));
-
-        tvFingerprint.setText(Helper.getFingerprint(getContext()));
-
-        Integer cursorWindowSize = null;
-        try {
-            //Field fCursorWindowSize = android.database.CursorWindow.class.getDeclaredField("sDefaultCursorWindowSize");
-            //fCursorWindowSize.setAccessible(true);
-            //cursorWindowSize = fCursorWindowSize.getInt(null);
-        } catch (Throwable ex) {
-            Log.w(ex);
-        }
-        tvCursorWindow.setText(getString(R.string.title_advanced_cursor_window,
-                cursorWindowSize == null ? "?" : Helper.humanReadableByteCount(cursorWindowSize, false)));
-
-        cardDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
     }
 
     private void updateUsage() {

@@ -252,14 +252,14 @@ public class ApplicationEx extends Application
             // Legacy
             try {
                 WorkManager.getInstance(this).cancelUniqueWork("WorkerWatchdog");
+
+                WorkerAutoUpdate.init(this);
+                WorkerCleanup.init(this);
+                WorkerDailyRules.init(this);
+                WorkerSync.init(this);
             } catch (IllegalStateException ex) {
                 Log.e(ex);
             }
-
-            WorkerAutoUpdate.init(this);
-            WorkerCleanup.init(this);
-            WorkerDailyRules.init(this);
-            WorkerSync.init(this);
         }
 
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
@@ -282,6 +282,9 @@ public class ApplicationEx extends Application
                 case "schedule":
                 case "schedule_start":
                 case "schedule_end":
+                case "schedule_start_weekend":
+                case "schedule_end_weekend":
+                case "weekend":
                 case "schedule_day0":
                 case "schedule_day1":
                 case "schedule_day2":
@@ -326,23 +329,40 @@ public class ApplicationEx extends Application
 
     @Override
     public void onTrimMemory(int level) {
-        Log.logMemory(this, "Trim memory level=" + level);
-        Map<String, String> crumb = new HashMap<>();
-        crumb.put("level", Integer.toString(level));
-        Log.breadcrumb("trim", crumb);
-        super.onTrimMemory(level);
+        try {
+            /*
+                java.lang.NoClassDefFoundError: Not a primitive type: '\u0000'
+                    at androidx.core.content.ContextCompat$Api23Impl.getSystemService(Unknown Source:0)
+                    at androidx.core.content.ContextCompat.getSystemService(SourceFile:7)
+                    at eu.faircode.email.Helper.getSystemService(Unknown Source:4)
+                    at eu.faircode.email.Log.logMemory(SourceFile:8)
+                    at eu.faircode.email.ApplicationEx.onTrimMemory(SourceFile:18)
+                    at android.app.ActivityThread.handleTrimMemory(ActivityThread.java:5453)
+             */
+            Log.logMemory(this, "Trim memory level=" + level);
+            Map<String, String> crumb = new HashMap<>();
+            crumb.put("level", Integer.toString(level));
+            Log.breadcrumb("trim", crumb);
+            super.onTrimMemory(level);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     @Override
     public void onLowMemory() {
-        Log.logMemory(this, "Low memory");
-        Map<String, String> crumb = new HashMap<>();
-        crumb.put("free", Integer.toString(Log.getFreeMemMb()));
-        Log.breadcrumb("low", crumb);
+        try {
+            Log.logMemory(this, "Low memory");
+            Map<String, String> crumb = new HashMap<>();
+            crumb.put("free", Integer.toString(Log.getFreeMemMb()));
+            Log.breadcrumb("low", crumb);
 
-        ContactInfo.clearCache(this, false);
+            ContactInfo.clearCache(this, false);
 
-        super.onLowMemory();
+            super.onLowMemory();
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     static void upgrade(Context context) {
@@ -352,7 +372,6 @@ public class ApplicationEx extends Application
             EntityLog.log(context, "Upgrading from " + version + " to " + BuildConfig.VERSION_CODE);
 
         SharedPreferences.Editor editor = prefs.edit();
-        editor.remove("max_backoff_power");
 
         if (version < BuildConfig.VERSION_CODE)
             editor.remove("crash_report_count");
@@ -682,6 +701,27 @@ public class ApplicationEx extends Application
                 editor.putBoolean("plain_only_reply", true);
         } else if (version < 2046)
             editor.remove("message_junk");
+        else if (version < 2069) {
+            if (prefs.contains("swipe_sensitivity") && !prefs.contains("swipe_sensitivity_updated")) {
+                int swipe_sensitivity = prefs.getInt("swipe_sensitivity", FragmentOptionsBehavior.DEFAULT_SWIPE_SENSITIVITY);
+                if (swipe_sensitivity > 0) {
+                    swipe_sensitivity--;
+                    if (swipe_sensitivity == FragmentOptionsBehavior.DEFAULT_SWIPE_SENSITIVITY)
+                        editor.remove("swipe_sensitivity");
+                    else
+                        editor.putInt("swipe_sensitivity", swipe_sensitivity - 1)
+                                .putBoolean("swipe_sensitivity_updated", true);
+                }
+            }
+        } else if (version < 2075) {
+            for (String name : new String[]{"seen", "unflagged", "unknown", "snoozed", "deleted"})
+                if (prefs.contains("filter_" + name))
+                    for (String _type : new String[]{EntityFolder.ARCHIVE, EntityFolder.TRASH, EntityFolder.JUNK}) {
+                        String type = _type.toLowerCase(Locale.ROOT);
+                        if (!prefs.contains("filter_" + type + "_" + name))
+                            editor.putBoolean("filter_" + type + "_" + name, prefs.getBoolean("filter_" + name, false));
+                    }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");

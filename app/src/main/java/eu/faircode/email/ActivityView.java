@@ -25,7 +25,6 @@ import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 import android.annotation.SuppressLint;
-import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -193,6 +192,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private static final int REQUEST_RULES_ACCOUNT = 2001;
     private static final int REQUEST_RULES_FOLDER = 2002;
+    private static final int REQUEST_DEBUG_INFO = 7000;
 
     @Override
     @SuppressLint("MissingSuperCall")
@@ -246,6 +246,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 " portrait rows=" + portrait2 + " cols=" + portrait2c + " min=" + portrait_min_size +
                 " landscape cols=" + landscape + " min=" + landscape);
         boolean duo = Helper.isSurfaceDuo();
+        boolean close_pane = prefs.getBoolean("close_pane", !duo);
+        boolean open_pane = (!close_pane && prefs.getBoolean("open_pane", false));
         boolean nav_categories = prefs.getBoolean("nav_categories", false);
 
         // 1=small, 2=normal, 3=large, 4=xlarge
@@ -281,7 +283,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     content_frame.setLayoutParams(lparam);
                 }
                 // https://docs.microsoft.com/en-us/dual-screen/android/duo-dimensions
-                content_separator.getLayoutParams().width = Helper.dp2pixels(this, 34);
+                int seam = (Helper.isSurfaceDuo2() ? 26 : 34);
+                content_separator.getLayoutParams().width = Helper.dp2pixels(this, seam);
             } else {
                 int column_width = prefs.getInt("column_width", 67);
                 ViewGroup.LayoutParams lparam = content_pane.getLayoutParams();
@@ -708,8 +711,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         // Initialize
 
         if (content_pane != null) {
-            content_separator.setVisibility(duo ? View.INVISIBLE : View.GONE);
-            content_pane.setVisibility(duo ? View.INVISIBLE : View.GONE);
+            content_separator.setVisibility(duo || open_pane ? View.INVISIBLE : View.GONE);
+            content_pane.setVisibility(duo || open_pane ? View.INVISIBLE : View.GONE);
         }
 
         if (getSupportFragmentManager().getFragments().size() == 0 &&
@@ -1136,6 +1139,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     if (resultCode == RESULT_OK && data != null)
                         onMenuRules(data.getBundleExtra("args"));
                     break;
+                case REQUEST_DEBUG_INFO:
+                    if (resultCode == RESULT_OK && data != null)
+                        onDebugInfo(data.getBundleExtra("args"));
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -1482,7 +1489,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                 sb.append(line).append("\r\n");
                         }
 
-                        return Log.getDebugInfo(context, R.string.title_crash_info_remark, null, sb.toString()).id;
+                        return Log.getDebugInfo(context, "crash", R.string.title_crash_info_remark, null, sb.toString(), null).id;
                     } finally {
                         file.delete();
                     }
@@ -1980,8 +1987,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             } else if (action.startsWith("thread")) {
                 long id = Long.parseLong(action.split(":", 2)[1]);
                 boolean ignore = intent.getBooleanExtra("ignore", false);
+                long group = intent.getLongExtra("group", -1L);
                 if (ignore)
-                    ServiceUI.ignore(this, id);
+                    ServiceUI.ignore(this, id, group);
                 intent.putExtra("id", id);
                 onViewThread(intent);
 
@@ -2138,10 +2146,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private void onMenuRulesFolder(Bundle args) {
         args.putInt("icon", R.drawable.twotone_filter_alt_24);
-        args.putString("title", getString(R.string.title_edit_rules));
+        args.putString("title", getString(R.string.title_select));
         args.putLongArray("disabled", new long[0]);
 
-        FragmentDialogFolder fragment = new FragmentDialogFolder();
+        FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
         fragment.setArguments(args);
         fragment.setTargetActivity(this, REQUEST_RULES_FOLDER);
         fragment.show(getSupportFragmentManager(), "rules:folder");
@@ -2203,22 +2211,31 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onDebugInfo() {
+        FragmentDialogDebug fragment = new FragmentDialogDebug();
+        fragment.setArguments(new Bundle());
+        fragment.setTargetActivity(this, REQUEST_DEBUG_INFO);
+        fragment.show(getSupportFragmentManager(), "debug");
+    }
+
+    private void onDebugInfo(Bundle args) {
+        Log.logBundle(args);
         new SimpleTask<Long>() {
             @Override
             protected void onPreExecute(Bundle args) {
-                ToastEx.makeText(ActivityView.this, "Debug info ...", Toast.LENGTH_LONG).show();
+                ToastEx.makeText(ActivityView.this, R.string.title_debug_info, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected Long onExecute(Context context, Bundle args) throws IOException, JSONException {
-                return Log.getDebugInfo(context, R.string.title_debug_info_remark, null, null).id;
+                return Log.getDebugInfo(context, "main", R.string.title_debug_info_remark, null, null, args).id;
             }
 
             @Override
             protected void onExecuted(Bundle args, Long id) {
-                startActivity(new Intent(ActivityView.this, ActivityCompose.class)
-                        .putExtra("action", "edit")
-                        .putExtra("id", id));
+                if (id != null)
+                    startActivity(new Intent(ActivityView.this, ActivityCompose.class)
+                            .putExtra("action", "edit")
+                            .putExtra("id", id));
             }
 
             @Override
@@ -2229,7 +2246,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     Log.unexpectedError(getSupportFragmentManager(), ex);
             }
 
-        }.execute(this, new Bundle(), "debug:info");
+        }.execute(this, args, "debug:info");
     }
 
     private void onShowLog() {
@@ -2323,8 +2340,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             if (unified && "unified".equals(startup)) {
                 getSupportFragmentManager().popBackStack("unified", 0);
                 return;
-            } else
+            } else {
+                getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean foldernav = prefs.getBoolean("foldernav", false);
@@ -2484,65 +2503,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             if (expires == null)
                 return true;
             return (expires.getTime() < new Date().getTime());
-        }
-    }
-
-    public static class FragmentDialogFirst extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            LayoutInflater inflater = LayoutInflater.from(getContext());
-            View dview = inflater.inflate(R.layout.dialog_first, null);
-            ImageButton ibBatteryInfo = dview.findViewById(R.id.ibBatteryInfo);
-            ImageButton ibReformatInfo = dview.findViewById(R.id.ibReformatInfo);
-
-            ibBatteryInfo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.viewFAQ(v.getContext(), 39);
-                }
-            });
-
-            ibReformatInfo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.viewFAQ(v.getContext(), 35);
-                }
-            });
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            prefs.edit().putBoolean("first", false).apply();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogRate extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            return new AlertDialog.Builder(getContext())
-                    .setMessage(R.string.title_issue)
-                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Helper.viewFAQ(getContext(), 0);
-                        }
-                    })
-                    .setNegativeButton(R.string.title_no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Helper.view(getContext(), Helper.getIntentRate(getContext()));
-                        }
-                    })
-                    .create();
         }
     }
 

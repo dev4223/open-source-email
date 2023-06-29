@@ -117,6 +117,7 @@ All pro features are convenience or advanced features.
 * Reply templates ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq179))
 * Accept/decline calendar invitations
 * Add message to calendar
+* Automatically generate vCard attachments
 * Filter rules ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
 * Automatic message classification ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq163))
 * Search indexing ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
@@ -245,7 +246,7 @@ Error reporting is disabled by default, see also [the privacy policy](https://gi
 
 ## License
 
-Copyright &copy; 2018-2022 Marcel Bokhorst. All rights reserved.
+Copyright &copy; 2018-2023 Marcel Bokhorst. All rights reserved.
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.txt)
 

@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.mail.internet.InternetAddress;
+
 @Entity(
         tableName = EntityOperation.TABLE_NAME,
         foreignKeys = {
@@ -95,6 +97,7 @@ public class EntityOperation {
     static final String RAW = "raw";
     static final String BODY = "body";
     static final String ATTACHMENT = "attachment";
+    static final String DETACH = "detach";
     static final String SYNC = "sync";
     static final String SUBSCRIBE = "subscribe";
     static final String SEND = "send";
@@ -229,6 +232,16 @@ public class EntityOperation {
                 EntityFolder target = db.folder().getFolder(jargs.getLong(0));
                 if (source == null || target == null || source.id.equals(target.id))
                     return;
+
+                if (message.from != null && message.from.length == 1 &&
+                        EntityFolder.USER.equals(target.type)) {
+                    String email = ((InternetAddress) message.from[0]).getAddress();
+                    if (!TextUtils.isEmpty(email)) {
+                        EntityContact contact = db.contact().getContact(target.account, EntityContact.TYPE_FROM, email);
+                        if (contact != null)
+                            db.contact().setContactFolder(contact.id, target.id);
+                    }
+                }
 
                 if (EntityFolder.JUNK.equals(target.type) &&
                         Objects.equals(source.account, target.account)) {
@@ -516,6 +529,9 @@ public class EntityOperation {
             } else if (ATTACHMENT.equals(name))
                 db.attachment().setProgress(jargs.getLong(0), 0);
 
+            else if (DETACH.equals(name))
+                db.message().setMessageUiHide(message.id, true);
+
             queue(context, message.account, message.folder, message.id, name, jargs);
 
         } catch (JSONException ex) {
@@ -727,7 +743,7 @@ public class EntityOperation {
                     break;
                 }
 
-        int count = db.operation().deleteOperation(fid, SYNC);
+        int count = db.operation().deleteOperations(fid, SYNC);
 
         Map<String, String> crumb = new HashMap<>();
         crumb.put("folder", Long.toString(fid));
@@ -764,7 +780,7 @@ public class EntityOperation {
         }
 
         if (force)
-            db.operation().deleteOperation(fid, SYNC);
+            db.operation().deleteOperations(fid, SYNC);
 
         // TODO: replace sync parameters?
         if (db.operation().getOperationCount(fid, SYNC) == 0) {
@@ -782,6 +798,18 @@ public class EntityOperation {
 
         if (foreground && folder.sync_state == null) // Show spinner
             db.folder().setFolderSyncState(fid, "requested");
+
+        if (force && foreground && EntityFolder.DRAFTS.equals(folder.type)) {
+            EntityAccount account = db.account().getAccount(folder.account);
+            if (account.protocol == EntityAccount.TYPE_IMAP) {
+                List<EntityMessage> orphans = db.message().getDraftOrphans(folder.id);
+                if (orphans != null) {
+                    EntityLog.log(context, "Draft orphans=" + orphans.size());
+                    for (EntityMessage orphan : orphans)
+                        EntityOperation.queue(context, orphan, EntityOperation.ADD);
+                }
+            }
+        }
 
         if (foreground && EntityFolder.SENT.equals(folder.type)) {
             EntityAccount account = db.account().getAccount(folder.account);
@@ -832,6 +860,15 @@ public class EntityOperation {
             if (MOVE.equals(name) || DELETE.equals(name))
                 db.message().setMessageUiHide(message, false);
 
+            if (MOVE.equals(name))
+                try {
+                    JSONArray jargs = new JSONArray(args);
+                    long target = jargs.getLong(0);
+                    db.operation().deleteOperations(target, PURGE);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+
             if (SEEN.equals(name)) {
                 EntityMessage m = db.message().getMessage(message);
                 if (m != null) {
@@ -864,7 +901,7 @@ public class EntityOperation {
         }
 
         if (MOVE.equals(name)) {
-            int count = db.operation().deleteOperation(folder, PURGE);
+            int count = db.operation().deleteOperations(folder, PURGE);
             if (count > 0)
                 sync(context, folder, false);
         }
@@ -899,6 +936,9 @@ public class EntityOperation {
             } catch (JSONException ex) {
                 Log.e(ex);
             }
+
+        if (DETACH.equals(name) && message != null)
+            db.message().setMessageUiHide(message, false);
 
         if (SYNC.equals(name))
             db.folder().setFolderSyncState(folder, null);

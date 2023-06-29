@@ -108,6 +108,7 @@ public class EntityIdentity {
     public String cc;
     public String bcc;
     public String internal;
+    public String uri; // linked contact
     @NonNull
     public Boolean unicode = false;
     @NonNull
@@ -167,6 +168,10 @@ public class EntityIdentity {
 
         if (TextUtils.isEmpty(sender_extra_regex)) {
             // Domain
+            if ("secure.mailbox.org".equalsIgnoreCase(cother[1]))
+                cother[1] = "mailbox.org";
+            if ("secure.mailbox.org".equalsIgnoreCase(cemail[1]))
+                cemail[1] = "mailbox.org";
             if (!cother[1].equalsIgnoreCase(cemail[1]))
                 return false;
 
@@ -228,6 +233,7 @@ public class EntityIdentity {
         json.put("cc", cc);
         json.put("bcc", bcc);
         json.put("internal", internal);
+        json.put("uri", uri);
 
         json.put("unicode", unicode);
         json.put("octetmime", octetmime);
@@ -310,6 +316,8 @@ public class EntityIdentity {
             identity.bcc = json.getString("bcc");
         if (json.has("internal") && !json.isNull("internal"))
             identity.internal = json.getString("internal");
+        if (json.has("uri") && !json.isNull("uri"))
+            identity.uri = json.getString("uri");
 
         if (json.has("unicode"))
             identity.unicode = json.getBoolean("unicode");
@@ -366,6 +374,7 @@ public class EntityIdentity {
                 Objects.equals(i1.cc, other.cc) &&
                 Objects.equals(i1.bcc, other.bcc) &&
                 Objects.equals(i1.internal, other.internal) &&
+                Objects.equals(i1.uri, other.uri) &&
                 Objects.equals(i1.unicode, other.unicode) &&
                 Objects.equals(i1.octetmime, other.octetmime) &&
                 // plain_only

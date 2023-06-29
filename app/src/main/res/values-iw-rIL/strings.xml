@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_search">חיפוש ב־FairEmail</string>
+    <string name="app_send_self">שליחה לעצמי</string>
     <string name="app_changelog">יומן שינויים</string>
     <string name="app_welcome">FairEmail הוא יישומון בקוד פתוח שמתמקד בפרטיות ואבטחת מידע. משום כך, חלק מהיכולות כנראה תעבודנה אחרת ממה שהתרגלת.</string>
     <string name="app_limitations">למשל, הודעות מעוצבות מחדש כדי להסיר רכיבים חשודים ולשפר את היכולת לקרוא אותם, נוסף על כך, יש לאשר פתיחת קישורים לשיפור האבטחה. את שני אלו ניתן להשבית במידת הצורך.</string>
@@ -102,6 +103,7 @@
     <string name="title_block">חסימת %1$s</string>
     <string name="title_block_sender">חסימת השולח</string>
     <string name="title_block_sender_domain">חסימת שם התחום ‚%1$s’</string>
+    <string name="title_block_sender_remark">חסימה משמעה העברה אוטומטית לתיקיית הזבל</string>
     <string name="title_block_sender_hint">        חסימת מען היא תכונה חינמית.
         חסימת שם תחום כמען משתמשת בכללי סינון, שזאת יכולת למנויי פרו.
     </string>
@@ -237,6 +239,8 @@
     <string name="title_setup_permissions_notify_explanation">נדרשות הרשאות להתראות כדי להציג התראות להודעות חדשות בשורת המצב</string>
     <string name="title_setup_permission_why">אילו הרשאות נחוצות ומדוע?</string>
     <string name="title_setup_permission_import_contacts">איך אפשר לייבא אנשי קשר?</string>
+    <string name="title_setup_import_graph_contact">אנשי קשר מ־Outlook</string>
+    <string name="title_setup_import_graph_new">אנשי קשר חדשים: %1$s</string>
     <string name="title_setup_doze">השבתת מיטובי סוללה</string>
     <string name="title_setup_doze_remark">כדי לשלוח ולקבל הודעות בצורה מהימנה ברקע</string>
     <string name="title_setup_doze_explanation">יש להשבית את מיטובי הסוללה עבור היישומון כדי לוודא ששליחת וקבלת הדוא״ל ברקע מהימנות</string>
@@ -247,7 +251,7 @@
     <string name="title_setup_doze_battery">שימוש גבוה בסוללה?</string>
     <string name="title_setup_doze_stopped">הסנכרון נפסק?</string>
     <string name="title_setup_doze_device">זה כנראה אילוץ של המכשיר הזה</string>
-    <string name="title_setup_alarm_12">היישומון לא יעבוד</string>
+    <string name="title_setup_alarm_12">היישומון לא יעבוד כראוי</string>
     <string name="title_setup_inexact">התראות ותזכורות מושבתות</string>
     <string name="title_setup_background">הגבלות רקע פעילות</string>
     <string name="title_setup_data">חיסכון בתעבורת נתונים פעיל</string>
@@ -260,6 +264,7 @@
     <string name="title_setup_done">בוצע</string>
     <string name="title_setup_still">עדיין לא בוצע</string>
     <string name="title_setup_error">שגיאה</string>
+    <string name="title_setup_manual_setup">הגדרה ידנית</string>
     <string name="title_setup_pop">להשתמש ב־POP3 (לא מומלץ)</string>
     <string name="title_setup_recent">להשתמש ב‚אחרונים’ למגוון לקוחות דוא״ל</string>
     <string name="title_setup_configuring">חשבון מוגדר &#8230;</string>
@@ -327,9 +332,10 @@
     <string name="title_setup_defaults">שחזור בררות מחדל</string>
     <string name="title_setup_reset_questions">איפוס שאלות</string>
     <string name="title_setup_reset_general">שאלות כלליות</string>
-    <string name="title_setup_reset_full">הצגת ההודעה המקורית</string>
-    <string name="title_setup_reset_images">הצגת תמונות</string>
     <string name="title_setup_reset_links">אישור קישורים</string>
+    <string name="title_setup_reset_files">צפייה בקבצים</string>
+    <string name="title_setup_reset_images">הצגת תמונות</string>
+    <string name="title_setup_reset_full">הצגת ההודעה המקורית</string>
     <string name="title_check_gmail_oauth">חשבונות ה־Gmail שלך ימשיכו לעבוד גם אחרי 30 במאי 2022</string>
     <string name="title_check_gmail_password">חלק מחשבונות ה־Gmail שלך כנראה יפסיקו לעבוד אחרי 30 במאי 2022</string>
     <string name="title_check_outlook_oauth">חשבונות ה־Outlook שלך ימשיכו לעבוד גם אחרי 1 באוקטובר 2022</string>
@@ -358,6 +364,8 @@
     <string name="title_advanced_optimize">מיטוב אוטומטית</string>
     <string name="title_advanced_always">תמיד לקבל הודעות מהחשבונות האלו</string>
     <string name="title_advanced_schedule">לוח זמנים</string>
+    <string name="title_advanced_schedule_workdays">ימי השבוע</string>
+    <string name="title_advanced_schedule_weekend">סוף השבוע</string>
     <string name="title_advanced_advanced">מתקדם</string>
     <string name="title_advanced_quick_sync">סנכרון מהיר</string>
     <string name="title_advanced_no_date">הודעות ללא תאריך</string>
@@ -370,6 +378,7 @@
     <string name="title_advanced_sync_folders">סנכרון רשימת התיקיות</string>
     <string name="title_advanced_sync_folders_poll">סנכרון רשימת התיקיות באופן פעיל</string>
     <string name="title_advanced_sync_shared_folders">סנכרון רשימות תיקיות משותפות</string>
+    <string name="title_advanced_sync_added">הפעלת סנכרון לתיקיות חדשות של המשתמש</string>
     <string name="title_advanced_subscriptions">ניהול מינוי על תיקיות</string>
     <string name="title_advanced_check_authentication">בדיקת אימות ההודעה</string>
     <string name="title_advanced_check_tls">בדיקת אבטחת שכבת התעבורה (TLS)</string>
@@ -391,14 +400,18 @@
     <string name="title_advanced_send_chips">הצגת בועיות כתובות</string>
     <string name="title_advanced_send_reminders">הצגת תזכורות</string>
     <string name="title_advanced_send_delayed">השהיית שליחת הודעות</string>
-    <string name="title_advanced_attach_new">הוספת קבצים משותפים לטיוטה חדשה</string>
+    <string name="title_advanced_attach_new">יצירת הודעת טיוטה לכתובות וקבצים משותפים</string>
+    <string name="title_advanced_answer_caption">הגדרות כפתור מענה</string>
     <string name="title_advanced_answer_default">לחיצה קצרה על כפתור המענה:</string>
     <string name="title_advanced_answer_action">לחיצה ארוכה על כפתור המענה:</string>
+    <string name="title_advanced_answer_hint">ניתן להגדיר את פעולות כפתור המענה בעמוד לשונית הגדרות השליחה</string>
+    <string name="title_advanced_answer_warning">לא כל הפעולות אפשריות ללא תפריט בחירה!</string>
     <string name="title_advanced_send_pending">הצגת סמלי שליחה מושהית שאינם בולטים</string>
     <string name="title_advanced_auto_save_paragraph">לשמור טיוטה אוטומטית אחרי כל פרק</string>
     <string name="title_advanced_auto_save_dot">לשמור טיוטה אוטומטית אחרי כל משפט</string>
     <string name="title_advanced_compose_color">צבע טקסט כברירת מחדל</string>
     <string name="title_advanced_compose_font">גופן ברירת המחדל</string>
+    <string name="title_advanced_compose_monospaced">להשתמש בגופן ברוחב אחיד להודעות בטקסט פשוט</string>
     <string name="title_advanced_auto_identity">בחירת זהויות להודעות חדשות אוטומטית</string>
     <string name="title_advanced_prefix_once">ליצור קידומת לנושא רק פעם אחת במענה או העברה</string>
     <string name="title_advanced_prefix_count">הוספת מונה לקידומת תגובה</string>
@@ -409,6 +422,7 @@
     <string name="title_advanced_quote_reply">ציטוט הטקסט לתגובה</string>
     <string name="title_advanced_limit_reply">הגבלת מספר הציטוטים המקוננים</string>
     <string name="title_advanced_resize_reply">שינוי גודל התמונות בטקסט התגובה</string>
+    <string name="title_advanced_resize_paste">שינוי גודל תמונה מודבקת</string>
     <string name="title_advanced_signature_location">מיקום החתימה</string>
     <string name="title_advanced_signature_new">להשתמש בחתימה להודעות חדשות</string>
     <string name="title_advanced_signature_reply">להשתמש בחתימה לתגובות</string>
@@ -452,12 +466,14 @@
     <string name="title_advanced_caption_message_header">כותרת ההודעה</string>
     <string name="title_advanced_caption_message_body">גוף ההודעה</string>
     <string name="title_advanced_caption_file">קובץ</string>
+    <string name="title_advanced_caption_integrations">שילובים</string>
     <string name="title_advanced_portrait">מצב אנכי</string>
     <string name="title_advanced_landscape">מצב אופקי</string>
     <string name="title_advanced_two_row">להשתמש בשתי שורות</string>
     <string name="title_advanced_two_col">להשתמש בשתי עמודות</string>
     <string name="title_advanced_min_screen_size">גודל המסך המזערי לפיצול המסך</string>
     <string name="title_advanced_close_pane">לצמצם שורה או עמודה בעת סגירת דיון</string>
+    <string name="title_advanced_open_pane">התחלה עם שתי שורות או עמודות</string>
     <string name="title_advanced_column_width">רוחב עמודה / גובה שורה של הודעה: %1$s %%</string>
     <string name="title_advanced_hide_toolbar">להסתיר את סרגל הכלים בעת גלילה בין הודעות</string>
     <string name="title_advanced_nav_options">הצגת אפשרויות תפריט הניווט</string>
@@ -482,6 +498,7 @@
     <string name="title_advanced_date_week">קיבוץ לפי שבוע במקום לפי יום</string>
     <string name="title_advanced_date_fixed">להציג כותרת תאריך מקובעת למעלה</string>
     <string name="title_advanced_date_bold">הצגת תאריך בהדגשה</string>
+    <string name="title_advanced_date_time">תמיד להציג גם את התאריך וגם את השעה</string>
     <string name="title_advanced_threading">דיונים בשרשור</string>
     <string name="title_advanced_threading_unread">הצגת מספר ההודעות שלא נקראו בדיונים</string>
     <string name="title_advanced_indentation">הזחה שמאלית/ימנית להודעות שהתקבלו/נשלחו בדיונים</string>
@@ -522,6 +539,7 @@
     <string name="title_advanced_preview">תצוגה מקדימה של הודעה</string>
     <string name="title_advanced_preview_italic">תצוגה מקדימה של ההודעה בכתב נטוי</string>
     <string name="title_advanced_preview_lines">מספר השורות בתצוגה המקדימה</string>
+    <string name="title_advanced_align_header">ליישר אנכית מילות מפתח, טקסט של תצוגה מקדימה ופתקיות</string>
     <string name="title_advanced_addresses">הרחבת פרטי הכתובת כברירת מחדל</string>
     <string name="title_advanced_unzip">הצגת תוכן הקבצים המצורפים הדחוסים</string>
     <string name="title_advanced_attachments_alt">הצגת הקבצים המצורפים אחרי טקסט ההודעה</string>
@@ -597,7 +615,9 @@
     <string name="title_advanced_auto_important">להפוך הודעות שסומנו בכוכב לחשובות אוטומטית</string>
     <string name="title_advanced_cancel_snooze">ביטול נודניק בעת העברת הודעות</string>
     <string name="title_advanced_auto_block_sender">לחסום את השולח אוטומטית בעת דיווח על ספאם</string>
+    <string name="title_advanced_auto_hide_answer">להסתיר את כפתור המענה אוטומטית בעת הגלילה</string>
     <string name="title_advanced_swipe_reply">החלקת הודעות מורחבות לימין פותחת מענה</string>
+    <string name="title_advanced_move_thread_sent">בעת העברת דיון, להעביר גם את ההודעות שנשלחו</string>
     <string name="title_advanced_default_snooze">זמן בררת המחדל לדחיית/השהיית תזכורות</string>
     <string name="title_advanced_default_folder">בחירת תיקיית ברירת מחדל</string>
     <string name="title_advanced_notifications">ניהול התראות</string>
@@ -641,6 +661,7 @@
     <string name="title_advanced_notifications_background">להשתמש בשירות רקע לסנכרון הודעות</string>
     <string name="title_advanced_notifications_background_hint">שירות רקע יכול להיעצר על ידי Android בכל רגע נתון, אך אינו דורש התראה בשורת המצב</string>
     <string name="title_advanced_confirm_links">אישור פתיחת קישור</string>
+    <string name="title_advanced_confirm_files">אישור צפייה בקבצים</string>
     <string name="title_advanced_sanitize_links">הסרת משתני מעקב כברירת מחדל</string>
     <string name="title_advanced_sanitize_links_hint">רק בעת אישור קישורים</string>
     <string name="title_advanced_check_links_dbl">לבדוק קישורים חשודים מול רשימת שמות תחום חסומים</string>
@@ -692,6 +713,7 @@
         אפשר למצוא מפתחות ואישורים בדרך כלל תחת מתקדם - הצפנה ופרטי גישה.
     </string>
     <string name="title_advanced_power_menu">הוספת פעולות לתפריט הכיבוי של Android</string>
+    <string name="title_advanced_send_self">הוספת ‚שליחה לעצמי’ לתפריט השיתוף של Android</string>
     <string name="title_advanced_external_search">לאפשר ליישומונים אחרים לחפש בהודעות</string>
     <string name="title_advanced_sort_answers">סידור תבניות המענה לפי תדירות השימוש</string>
     <string name="title_advanced_shortcuts">הצגת אנשי קשר בשימוש תדיר בתפריט השיתוף של Android</string>
@@ -700,6 +722,7 @@
     <string name="title_advanced_classification">סיווג הודעות</string>
     <string name="title_advanced_class_min_chance">סבירות מזערית בין מחלקות: %1$s %%</string>
     <string name="title_advanced_class_min_difference">הפרש מזערי בין מחלקות: %1$s %%</string>
+    <string name="title_advanced_show_filtered">הצגת סמל מסנן כאשר כללים חלים</string>
     <string name="title_advanced_language">שפה</string>
     <string name="title_advanced_language_system">מערכת</string>
     <string name="title_advanced_lt">שילוב מול LanguageTool</string>
@@ -708,6 +731,11 @@
     <string name="title_advanced_lt_key">מפתח API (רשות)</string>
     <string name="title_advanced_deepl">שילוב של DeepL</string>
     <string name="title_advanced_virus_total">שילוב של VirusTotal</string>
+    <string name="title_advanced_send">שילוב מול ‚Send’</string>
+    <string name="title_advanced_openai">שילוב מול OpenAI (ChatGPT)</string>
+    <string name="title_advanced_openai_model">דגם</string>
+    <string name="title_advanced_openai_temperature">טמפרטורה: %1$s</string>
+    <string name="title_advanced_openai_moderation">ניהול תוכן</string>
     <string name="title_advanced_sdcard">ארצה להשתמש בכרטיס SD</string>
     <string name="title_advanced_watchdog">לבדוק מדי פעם אם FairEmail עדיין פעיל</string>
     <string name="title_advanced_updates">איתור עדכונים ב־GitHub</string>
@@ -753,6 +781,9 @@
     <string name="title_advanced_auto_identity_hint">תיבחר הזהות האחרונה בה נעשה שימוש כאשר נבחר נמען להודעות חדשות</string>
     <string name="title_advanced_send_reminders_hint">להציג אזהרה כאשר טקסט ההודעה או הנושא ריקים או כאשר קובץ לא צורף לכאורה</string>
     <string name="title_advanced_reply_move_hint">שרת הדוא״ל עדיין יכול להוסיף את ההודעות לתיקיית ההודעות שנשלחו</string>
+    <string name="title_advanced_compose_color_hint">צבעים בהירים או כהים מדי יובילו להודעות בלתי קריאות בצד המקבל</string>
+    <string name="title_advanced_write_below_hint">נמענים עלולים להחמיץ את התגובה שלך, למשל כאשר הודעה ארוכה יותר מקוצרת</string>
+    <string name="title_advanced_attach_new_hint">אם לא, להוסיף כתובות או קבצים משותפים להודעת הטיוטה הנוכחית</string>
     <string name="title_advanced_usenet_hint">להוסיף ‚--’ בין הטקסט והחתימה</string>
     <string name="title_advanced_remove_signature_hint">יכול להוביל למעט מדי או יותר מדי טקסט שיוסר</string>
     <string name="title_advanced_metered_hint">חיבורים מוגבלים הם בדרך כלל חיבורים סלולריים או רשת אלחוטית בתשלום</string>
@@ -799,6 +830,7 @@
     <string name="title_advanced_sender_hint">רוב הספקים לא מאפשרים כתובות מוען שעברו שינוי</string>
     <string name="title_advanced_bcc_hint">הכתובת לא תופיע אך תתווסף בעת השליחה</string>
     <string name="title_advanced_internal_hint">תופיע אזהרה בעת שליחה לשם תחום אחר</string>
+    <string name="title_advanced_uri">פרטי הקשר הנבחרים ישמשו כקובצי vCard מצורפים</string>
     <string name="title_advanced_e2e_encryption">אפשרויות להצפנה מקצה לקצה</string>
     <string name="title_advanced_display_harmful_hint">השבתת האפשרות הזאת עלולה לפגוע בפרטיות שלך</string>
     <string name="title_advanced_display_hidden_hint">יכול להוביל לטקסטים שנראים מוזר או משוכפלים</string>
@@ -830,6 +862,8 @@
     <string name="title_advanced_cleanup_hint">פעולה זו תמחק את כל הקבצים הזמניים</string>
     <string name="title_advanced_never_favorite">לעולם לא להציב במועדפים</string>
     <string name="title_advanced_edit_name">עריכת שם</string>
+    <string name="title_advanced_create_alias">יצירת כינוי</string>
+    <string name="title_advanced_create_alias_remark">במקרים רבים, יש לאמת כתובת כינוי דרך אתר ספק הדוא״ל תחילה</string>
     <string name="title_create_folder">יצירת תיקייה</string>
     <string name="title_create_folder_name">שם תיקייה</string>
     <string name="title_create_folder_parent">תיקיית הורה</string>
@@ -847,6 +881,7 @@
     <string name="title_advanced_sender_regex">ביטוי רגולרי ללכידת שם המשתמש של כתובות דוא״ל נכנסות</string>
     <string name="title_identity_reply_to">כתובת למענה</string>
     <string name="title_identity_internal">שמות תחום פנימיים (עם פסיקים מפרידים)</string>
+    <string name="title_identity_uri">קישור פרטי קשר</string>
     <string name="title_identity_unicode">לאפשר UTF-8 בכותרות הודעות</string>
     <string name="title_identity_unicode_remark">רוב השרתים לא תומכים בזה</string>
     <string name="title_identity_octetmime">לאפשר 8BITMIME</string>
@@ -900,9 +935,14 @@
     <string name="title_primary_identity">עיקרי (זהות בררת המחדל)</string>
     <string name="title_self_identity">הסרת כתובת הדוא״ל בעת מענה</string>
     <string name="title_leave_on_server">להשאיר הודעות על השרת</string>
+    <string name="title_client_delete">למחוק הודעות באופן פעיל לאחר ההורדה</string>
     <string name="title_leave_deleted">להשאיר הודעות שנמחקו על השרת</string>
     <string name="title_leave_on_device">להשאיר הודעות במכשיר</string>
     <string name="title_max_messages">מספר ההודעות המרבי להורדה (ריק בשביל כולן)</string>
+    <string name="title_max_messages_keep">זה מספר ההודעות המרבי שיישמר במכשיר</string>
+    <string name="title_max_messages_remark">        נא למלא מספר חיובי כדי להוריד את ההודעות בסוף (יותר נפוץ)
+        ומספר שלילי כדי להוריד את ההודעות בהתחלה (פחות נפוץ)
+    </string>
     <string name="title_keep_poll_interval">משך תשאול (דקות)</string>
     <string name="title_keep_alive_interval">הפרשים בין Keep-alive (דקות)</string>
     <string name="title_keep_alive_noop">הפעלת IMAP IDLE מחדש באופן תדיר</string>
@@ -1034,6 +1074,8 @@
     <string name="title_unified_folder">הצגה בדואר נכנס מאוחד</string>
     <string name="title_navigation_folder">הצגה בתפריט הניווט</string>
     <string name="title_navigation_folder_hide">הסתרה בתפריט הניווט</string>
+    <string name="title_unified_inbox_add">הוספה לדואר הנכנס המאוחר</string>
+    <string name="title_unified_inbox_delete">מחיקה מהדואר הנכנס המאוחד</string>
     <string name="title_synchronize_folder">סנכרון (קבלת הודעות)</string>
     <string name="title_poll_folder">לבדוק תקופתיות במקום לסנכרן באופן רציף</string>
     <string name="title_poll_folder_remark">רוב שרתי הדוא״ל מאפשרים הודעות דחיפה למגוון מצומצם של תיקיות בלבד!</string>
@@ -1226,6 +1268,7 @@
     <string name="title_ask_show_image_hint">תמונות שמזוהות כתמונות מעקב לא תוצגנה</string>
     <string name="title_ask_show_amp">להציג תצורת AMP של ההודעה?</string>
     <string name="title_ask_show_amp_hint">הודעות AMP תוכננו להיות דינמיות ולתקשר מול האינטרנט ולכן בהתאם לתכנון במקור עשויות לעקוב אחריך</string>
+    <string name="title_ask_view_file">לצפות בקובץ %1$s?</string>
     <string name="title_ask_delete_local">למחוק הודעות מקומיות? ההודעות תישארנה על השרת המרוחק.</string>
     <string name="title_ask_help">סיוע בשיפור FairEmail</string>
     <string name="title_ask_reporting">לשלוח דוחות שגיאה?</string>
@@ -1245,6 +1288,7 @@
     </string>
     <string name="title_compose">כתיבת הודעה</string>
     <string name="title_submitter">נשלח על ידי:</string>
+    <string name="title_signed_by">נחתם על ידי:</string>
     <string name="title_delivered_to">נמסר אל:</string>
     <string name="title_from">מאת:</string>
     <string name="title_to">אל:</string>
@@ -1344,6 +1388,7 @@
     <string name="title_translating">מתורגם&#8230;</string>
     <string name="title_translate_formal">להשתמש בשפה רשמית</string>
     <string name="title_translate_small">להשתמש בגופן קטן לטקסט המקור</string>
+    <string name="title_translate_replace">החלפת טקסט המקור בטקסט מתורגם</string>
     <string name="title_translate_html">שימור עיצוב</string>
     <string name="title_translate_html_hint">יצרוך יותר תווים</string>
     <string name="title_translate_usage">שימוש: %1$s / %2$s (%3$d %%)</string>
@@ -1381,6 +1426,7 @@
     <string name="title_attachment_keywords">מצורף,מצ״ב,מצ\"ב,צירפתי,צרופה,קובץ,מצורפת,מצרפת,מצרף</string>
     <string name="title_attachment_reminder">התכוונת להוסיף קובץ?</string>
     <string name="title_attachment_warning">חשד לסכנה: %1$s</string>
+    <string name="title_attachment_filename">לקוחות דוא״ל אחרים מסוימים לא יכולים לטפל בשמות קובץ של יותר מ־60 תווים</string>
     <string name="title_plain_reminder">כל העיצוב יאבד</string>
     <string name="title_dsn_reminder">הקפצות קשיחות פוגעות במוניטין של המוען המקורי!</string>
     <string name="title_size_reminder">ההודעה (%1$s) גדולה ממגבלת השרת (%2$s)</string>
@@ -1395,6 +1441,7 @@
     <string name="title_verify">אימות</string>
     <string name="title_encrypt">הצפנה</string>
     <string name="title_decrypt">פענוח</string>
+    <string name="title_reset_message_questions">איפוס שאלות הקישור</string>
     <string name="title_resync">סנכרון מחדש</string>
     <string name="title_charset">הצפנה</string>
     <string name="title_charset_auto">אוטומטי</string>
@@ -1453,6 +1500,7 @@
     <string name="title_search_with_size">גודל ההודעה עובר את</string>
     <string name="title_search_in_trash">באשפה</string>
     <string name="title_search_in_junk">בספאם</string>
+    <string name="title_search_with_range">טווח תאריכים</string>
     <string name="title_search_with_before">לפני</string>
     <string name="title_search_with_after">אחרי</string>
     <string name="title_search_device_first">חיפוש במכשיר תחילה</string>
@@ -1466,6 +1514,7 @@
     <string name="title_search_flag_size">גודל &gt; %1$s</string>
     <string name="title_search_device">חיפוש במכשיר</string>
     <string name="title_search_server">חיפוש בשרת</string>
+    <string name="title_search_server_wait">בהמתנה לשרת</string>
     <string name="title_search_in">חיפוש בתוך</string>
     <string name="title_search_sender">חיפוש מוען</string>
     <string name="title_search_delete">למחוק את החיפוש השמור?</string>
@@ -1484,7 +1533,10 @@
     <string name="title_sort_on_attachments">קבצים מצורפים</string>
     <string name="title_sort_on_hidden">מוסתר</string>
     <string name="title_sort_ascending">הישנים בהתחלה</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">סדר</string>
+    <string name="title_sort_on_name">שם</string>
+    <string name="title_sort_on_order">סדר</string>
+    <string name="title_sort_on_applied">מניין החלה</string>
+    <string name="title_sort_on_last_applied">החלה אחרונה</string>
     <string name="title_filter">סינון החוצה</string>
     <string name="title_filter_seen">נקראו</string>
     <string name="title_filter_unflagged">ללא כוכב</string>
@@ -1540,7 +1592,9 @@
     <string name="title_rule_snooze">השהיה</string>
     <string name="title_rule_flag">הוספת כוכב</string>
     <string name="title_rule_importance">הגדרת חשיבות</string>
-    <string name="title_rule_keyword">הוספת מילת מפתח</string>
+    <string name="title_rule_keyword">מילת מפתח</string>
+    <string name="title_rule_keyword_add">הוספה</string>
+    <string name="title_rule_keyword_delete">מחיקה</string>
     <string name="title_rule_move">העברה</string>
     <string name="title_rule_copy">עותק (תווית)</string>
     <string name="title_rule_answer">תגובה/העברה</string>
@@ -1551,11 +1605,13 @@
     <string name="title_rule_caption">עריכת כלל</string>
     <string name="title_rule_title">הכלל חל על</string>
     <string name="title_rule_name">שם</string>
+    <string name="title_rule_group">קבוצה</string>
     <string name="title_rule_order">סדר</string>
     <string name="title_rule_enabled">פעיל</string>
     <string name="title_rule_daily">להריץ יומית (בלבד)</string>
     <string name="title_rule_age">הודעות מלפני (ימים)</string>
     <string name="title_rule_stop">להפסיק לעבד כללים אחרי הפעלת הכלל הזה</string>
+    <string name="title_rule_stop_remark">אם הכלל הזה הוא חלק מקבוצה, עיבוד כל הכללים בקבוצה הזאת ייעצר</string>
     <string name="title_rule_sender">המוען מכיל</string>
     <string name="title_rule_sender_known">המוען באנשי הקשר</string>
     <string name="title_rule_recipient">הנמען מכיל</string>
@@ -1570,6 +1626,7 @@
     <string name="title_rule_time_before">התקבל לפני</string>
     <string name="title_rule_time_rel">זמן יחסי (של הקבלה) בין</string>
     <string name="title_rule_time_every_day">כל יום</string>
+    <string name="title_rule_younger">הודעות בגיל של פחות מאשר (שעות)</string>
     <string name="title_rule_regex">ביטוי רגולרי</string>
     <string name="title_rule_and">וגם</string>
     <string name="title_rule_action">פעולה</string>
@@ -1597,6 +1654,7 @@
     <string name="title_rule_keyword_missing">מילת מפתח חסרה</string>
     <string name="title_rule_automation_hint">פעולה זו תשלח את ה־intent‏ ‚%1$s’ עם התוספות ‚%2$s’</string>
     <string name="title_rule_delete_hint">מחיקה לצמיתות היא בלתי הפיכה, לכן כדאי לוודא שתנאי הכלל נכונים!</string>
+    <string name="title_rule_edit_group">עריכת קבוצה&#8230;</string>
     <string name="title_rule_execute">לבצע כעת</string>
     <string name="title_rule_applied">הודעות שיושפעו: %1$d</string>
     <string name="title_rule_check">בדיקה</string>
@@ -1708,6 +1766,7 @@
     <string name="title_legend_avatar">סמל ייצוגי</string>
     <string name="title_legend_show_quotes">הצגת ציטוטים</string>
     <string name="title_legend_show_junk">התנהגות כספאם</string>
+    <string name="title_legend_not_junk">להתייחס כלא ספאם</string>
     <string name="title_legend_create_rule">יצירת כלל</string>
     <string name="title_legend_show_unsubscribe">ביטול מינוי לרשימה</string>
     <string name="title_legend_show_images">הצגת תמונות</string>
@@ -1739,13 +1798,17 @@
     <string name="title_hint_folder_sync">כדי להגביל שימוש בסוללה וברשת לא כל התיקיות ולא כל ההודעות יסונכרנו כבררת מחדל</string>
     <string name="title_hint_airplane">מצב טיסה מופעל</string>
     <string name="title_hint_notifications">אין הרשאות להתראות</string>
+    <string name="title_hint_battery_optimizations">מיטובי סוללה עדיין פעילים</string>
     <string name="title_hint_support">יש לך לך שאלה או טענה, נא להשתמש בתפריט התמיכה לקבלת עזרה</string>
     <string name="title_hint_message_actions">החלקה שמאלה לאשפה, החלקה ימינה לארעיון (אם זמין), ניתן להגדיר את פעולות ההחלקה בהגדרות החשבון</string>
     <string name="title_hint_message_selection">לחיצה ארוכה על הודעה מתחילה בחירה במגוון הודעות, יש להחזיק ולהחליק כלפי מעלה או מטה כדי לבחור הודעות נוספות</string>
-    <string name="title_hint_message_junk">ההודעות האלו נמצאות בתיקיית הספאם בשרת הדוא״ל. כמובן שהיישומון לא יכול למנוע מהודעות ספאם להישלח אליך.</string>
+    <string name="title_hint_message_junk">        לקוח דוא״ל, בגדול, מציג הודעות משרת דוא״ל.
+        שרת דוא״ל אחראי על מיגור דואר זבל, לא לקוח הדוא״ל.
+        אם יוצא לך לקבל המון דואר זבל, נא ליצור קשר עם ספק הדוא״ל שלך, אין טעם להאשים את היישומון!
+    </string>
     <string name="title_hint_important">חשוב</string>
     <string name="title_hint_sync">משיכת הודעות עשויה לארוך זמן מה כתלות במהירות הספק, חיבור האינטרנט, המכשיר ומספר ההודעות. היישומון עשוי להגיב בכבדות בזמן משיכת ההודעות.</string>
-    <string name="title_hint_sync_note">כבררת מחדל, לא כל ההודעות תימשכנה כדי להגביל את ניצולת האחסון והסוללה. אפשר לשנות את זה בלחיצה ארוכה על תיקייה ברשימת התיקיות ובחירה ב‚סנכרון עוד’.</string>
+    <string name="title_hint_sync_note">כבררת מחדל, לא כל ההודעות תימשכנה כדי להגביל את ניצולת האחסון והסוללה. אפשר לשנות את זה בלחיצה ארוכה על תיקייה ברשימת התיקיות ובחירה ב‚משיכת הודעות נוספות’.</string>
     <string name="title_hint_battery">מאחר ש־FairEmail כבררת מחדל תמיד מקבל הודעות, Android ידווח על FairEmail כפעיל תמיד. לכן זה עשוי להיראות כאילו FairEmail תמיד צורך סוללה למרות שזה לא המצב.</string>
     <string name="title_hint_reformat">כבררת מחדל, FairEmail מעצבת מחדש הודעות למטרות פרטיות ואבטחה. כדי לצפות בהודעה המקורית, יש לגעת בסמל ‚מסך מלא’ מעל לטקסט ההודעה.</string>
     <string name="title_hint_design">העיצוב אינו מפריע אלא מאפשר יעילות גבוהה באופן מכוון. יש מגוון אפשרויות להתאים את המראה, אך לדאבוננו לא ניתן לדאוג לרווחתם של כולם בו־זמנית.</string>
@@ -1807,7 +1870,11 @@
     <string name="title_via">דרך: %1$s</string>
     <string name="title_1hour">שעה</string>
     <string name="title_1day">יום</string>
-    <string name="title_1week">שבוע</string>
+    <string name="title_more_overflow">עוד &#8230;</string>
+    <string name="title_today_at">היום ב־%1$s</string>
+    <string name="title_tomorrow_at">מחר ב־%1$s</string>
+    <string name="title_day_at_time">%1$s ב־%2$s</string>
+    <string name="title_next_week">בשעה הזאת בשבוע הבא</string>
     <string name="title_now">עכשיו</string>
     <string name="title_after">אחרי %1$s</string>
     <string name="title_reset">איפוס</string>
@@ -1860,6 +1927,7 @@
     <string name="title_debug_info">פרטי ניפוי שגיאות</string>
     <string name="title_debug_info_remark">נא לתאר את התקלה ולציין את מועדה:</string>
     <string name="title_crash_info_remark">נא לתאר באנגלית מה עשית כשהיישומון קרס:</string>
+    <string name="title_debug_info_contact">לאחרונה יצרנו קשר סביב הבעיה הזאת</string>
     <string name="title_unexpected_info_remark">נא לתאר באנגלית מה עשית כשהופיעה השגיאה:</string>
     <string name="title_widget_title_count">מונה הודעות חדשות</string>
     <string name="title_widget_title_list">רשימת הודעות</string>
@@ -1879,6 +1947,7 @@
     <string name="title_widget_separator_lines">הצגת קווים מפרידים</string>
     <string name="title_widget_semi_transparent">רקע שקוף למחצה</string>
     <string name="title_widget_count_top">להציג מניין הודעות שלא נקראו למעלה</string>
+    <string name="title_widget_subject_lines">מספר שורות הנושא המרבי</string>
     <string name="title_widget_avatars">הצגת תמונות אנשי קשר</string>
     <string name="title_widget_refresh">הצגת כפתור רענון הודעות</string>
     <string name="title_widget_compose">הצגת כפתור כתיבת הודעה חדשה</string>
@@ -2032,6 +2101,7 @@
     <string-array name="encryptNames">
         <item>אין</item>
         <item>חתימה בלבד עם PGP</item>
+        <item>הצפנת PGP בלבד</item>
         <item>חתימה והצפנה עם PGP</item>
         <item>חתימה בלבד עם S/MIME</item>
         <item>חתימה והצפנה עם S/MIME</item>

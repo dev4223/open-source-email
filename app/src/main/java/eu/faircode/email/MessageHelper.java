@@ -22,11 +22,15 @@ package eu.faircode.email;
 import static android.system.OsConstants.ENOSPC;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.CalendarContract;
+import android.provider.ContactsContract;
 import android.system.ErrnoException;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -94,6 +98,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.Normalizer;
 import java.text.ParsePosition;
@@ -147,6 +152,13 @@ import biweekly.Biweekly;
 import biweekly.ICalendar;
 import biweekly.component.VEvent;
 import biweekly.property.Method;
+import ezvcard.VCard;
+import ezvcard.VCardVersion;
+import ezvcard.io.text.VCardWriter;
+import ezvcard.parameter.AddressType;
+import ezvcard.parameter.EmailType;
+import ezvcard.parameter.TelephoneType;
+import ezvcard.property.Email;
 
 public class MessageHelper {
     private boolean ensuredEnvelope = false;
@@ -180,6 +192,16 @@ public class MessageHelper {
     private static final int FORMAT_FLOWED_LINE_LENGTH = 72; // characters
     private static final int MAX_DIAGNOSTIC = 250; // characters
     private static final int DKIM_MIN_TEXT = 100; // characters
+    private static final int DKIM_MIN_KEY_LENGTH = 1024; //  bits
+
+    private static final String DKIM_SIGNATURE = "DKIM-Signature";
+    private static final String ARC_SEAL = "ARC-Seal";
+    private static final String ARC_AUTHENTICATION_RESULTS = "ARC-Authentication-Results";
+    private static final String ARC_MESSAGE_SIGNATURE = "ARC-Message-Signature";
+
+    static final List<String> ARC_WHITELIST_DEFAULT = Collections.unmodifiableList(Arrays.asList(
+            "google.com", "microsoft.com"
+    ));
 
     private static final String DOCTYPE = "<!DOCTYPE";
     private static final String HTML_START = "<html>";
@@ -198,7 +220,8 @@ public class MessageHelper {
             "no-reply",
             "donotreply",
             "do.not.reply",
-            "do-not-reply"
+            "do-not-reply",
+            "nicht.antworten"
     ));
 
     static final String FLAG_FORWARDED = "$Forwarded";
@@ -260,6 +283,7 @@ public class MessageHelper {
         System.setProperty("mail.mime.encodefilename", "false");
         System.setProperty("mail.mime.decodeparameters", "true");
         System.setProperty("mail.mime.encodeparameters", "true");
+        //System.setProperty("mail.mime.parameters.strict", "false");
         System.setProperty("mail.mime.allowutf8", "false"); // InternetAddress, (MimeBodyPart: session), MimeUtility
         System.setProperty("mail.mime.cachemultipart", "true");
 
@@ -349,19 +373,8 @@ public class MessageHelper {
             imessage.addHeader("Sensitivity", "Company-Confidential");
 
         // References
-        if (message.references != null) {
-            // https://tools.ietf.org/html/rfc5322#section-2.1.1
-            // Each line of characters MUST be no more than 998 characters ... , excluding the CRLF.
-            String references = message.references;
-            int maxlen = MAX_HEADER_LENGTH - "References: ".length();
-            int sp = references.indexOf(' ');
-            while (references.length() > maxlen && sp > 0) {
-                Log.i("Dropping reference=" + references.substring(0, sp));
-                references = references.substring(sp);
-                sp = references.indexOf(' ');
-            }
-            imessage.addHeader("References", references);
-        }
+        if (message.references != null)
+            imessage.addHeader("References", limitReferences(message.references));
 
         if (message.inreplyto != null)
             imessage.addHeader("In-Reply-To", message.inreplyto);
@@ -797,6 +810,17 @@ public class MessageHelper {
         return new InternetAddress(email, name, StandardCharsets.UTF_8.name());
     }
 
+    static String limitReferences(String references) {
+        int maxlen = MAX_HEADER_LENGTH - "References: ".length();
+        int sp = references.indexOf(' ');
+        while (references.length() > maxlen && sp > 0) {
+            Log.i("Dropping reference=" + references.substring(0, sp));
+            references = references.substring(sp);
+            sp = references.indexOf(' ');
+        }
+        return references;
+    }
+
     static Pair<String, String> getExtra(String email, String extra) {
         String name = null;
         int comma = extra.indexOf(',');
@@ -1015,6 +1039,7 @@ public class MessageHelper {
                 reply.removeAttr("fairemail");
 
                 DB db = DB.getInstance(context);
+
                 try {
                     db.beginTransaction();
 
@@ -1068,6 +1093,189 @@ public class MessageHelper {
                     Log.w(ex);
                 } finally {
                     db.endTransaction();
+                }
+
+                if (ActivityBilling.isPro(context)) {
+                    VCard vcard = null;
+
+                    if (identity.uri != null &&
+                            Helper.hasPermission(context, Manifest.permission.READ_CONTACTS)) {
+                        vcard = new VCard();
+
+                        ContentResolver resolver = context.getContentResolver();
+                        try (Cursor cursor = resolver.query(Uri.parse(identity.uri),
+                                new String[]{
+                                        ContactsContract.Contacts._ID,
+                                        ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+                                }, null, null, null)) {
+                            if (cursor.moveToFirst()) {
+                                String contactId = cursor.getString(0);
+                                String display = cursor.getString(1);
+
+                                vcard.setFormattedName(display);
+
+                                try (Cursor email = resolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                                        new String[]{
+                                                ContactsContract.CommonDataKinds.Email.TYPE,
+                                                ContactsContract.CommonDataKinds.Email.ADDRESS
+                                        },
+                                        ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                                        new String[]{contactId}, null)) {
+                                    while (email.moveToNext()) {
+                                        int type = email.getInt(0);
+                                        String address = email.getString(1);
+
+                                        switch (type) {
+                                            case ContactsContract.CommonDataKinds.Email.TYPE_HOME:
+                                                vcard.addEmail(address, EmailType.HOME);
+                                                break;
+                                            case ContactsContract.CommonDataKinds.Email.TYPE_WORK:
+                                                vcard.addEmail(address, EmailType.WORK);
+                                                break;
+                                            case ContactsContract.CommonDataKinds.Email.TYPE_MOBILE:
+                                                vcard.addEmail(new Email(address));
+                                                break;
+                                        }
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+
+                                try (Cursor address = resolver.query(ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
+                                        new String[]{
+                                                ContactsContract.CommonDataKinds.StructuredPostal.TYPE,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.STREET,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.POBOX,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.CITY,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,
+                                                ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,
+                                        },
+                                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                        new String[]{contactId}, null)) {
+                                    while (address.moveToNext()) {
+                                        int type = address.getInt(0);
+                                        if (type != ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME &&
+                                                type != ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK)
+                                            continue;
+
+                                        ezvcard.property.Address a = new ezvcard.property.Address();
+                                        if (!address.isNull(1))
+                                            a.setStreetAddress(address.getString(1));
+                                        if (!address.isNull(2))
+                                            a.setPoBox(address.getString(2));
+                                        if (!address.isNull(3))
+                                            a.setLocality(address.getString(3));
+                                        if (!address.isNull(4))
+                                            a.setPostalCode(address.getString(4));
+                                        if (!address.isNull(5))
+                                            a.setCountry(address.getString(5));
+                                        if (!address.isNull(6))
+                                            a.setLabel(address.getString(6));
+
+                                        switch (type) {
+                                            case ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME:
+                                                a.setParameter("TYPE", AddressType.HOME.getValue());
+                                                break;
+                                            case ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK:
+                                                a.setParameter("TYPE", AddressType.WORK.getValue());
+                                                break;
+                                        }
+
+                                        vcard.addAddress(a);
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+
+                                try (Cursor web = resolver.query(ContactsContract.Data.CONTENT_URI,
+                                        new String[]{
+                                                ContactsContract.CommonDataKinds.Website.TYPE,
+                                                ContactsContract.CommonDataKinds.Website.URL
+                                        },
+                                        ContactsContract.Data.CONTACT_ID + " = " + contactId +
+                                                " AND " + ContactsContract.Contacts.Data.MIMETYPE + " = '" + ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE + "'",
+                                        null, null)) {
+                                    while (web.moveToNext()) {
+                                        int type = web.getInt(0);
+                                        String url = web.getString(1);
+                                        vcard.addUrl(url);
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+
+                                try (Cursor phones = resolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                        new String[]{
+                                                ContactsContract.CommonDataKinds.Phone.TYPE,
+                                                ContactsContract.CommonDataKinds.Phone.NUMBER
+                                        },
+                                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId,
+                                        null, null)) {
+                                    while (phones.moveToNext()) {
+                                        int type = phones.getInt(0);
+                                        String number = phones.getString(1);
+                                        switch (type) {
+                                            case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
+                                                vcard.addTelephoneNumber(number, TelephoneType.HOME);
+                                                break;
+                                            case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
+                                                vcard.addTelephoneNumber(number, TelephoneType.WORK);
+                                                break;
+                                            case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
+                                                vcard.addTelephoneNumber(number, TelephoneType.CELL);
+                                                break;
+                                        }
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+                            }
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
+                    }
+
+                    try {
+                        db.beginTransaction();
+
+                        for (EntityAttachment attachment : new ArrayList<>(attachments))
+                            if (attachment.cid != null && attachment.cid.startsWith(EntityAttachment.VCARD_PREFIX)) {
+                                db.attachment().deleteAttachment(attachment.id);
+                                attachments.remove(attachment);
+                            }
+
+                        if (vcard != null) {
+                            EntityAttachment attachment = new EntityAttachment();
+                            attachment.message = message.id;
+                            attachment.sequence = db.attachment().getAttachmentSequence(message.id) + 1;
+                            attachment.name = "contact.vcf";
+                            attachment.type = "text/vcard";
+                            attachment.disposition = Part.ATTACHMENT;
+                            attachment.cid = EntityAttachment.VCARD_PREFIX + Math.abs(identity.uri.hashCode());
+                            attachment.size = null;
+                            attachment.progress = 0;
+                            attachment.id = db.attachment().insertAttachment(attachment);
+
+                            File file = attachment.getFile(context);
+                            try (VCardWriter writer = new VCardWriter(file, VCardVersion.V3_0)) {
+                                writer.write(vcard);
+                            }
+
+                            attachment.size = file.length();
+                            attachment.progress = null;
+                            attachment.available = true;
+                            db.attachment().setDownloaded(attachment.id, attachment.size);
+
+                            attachments.add(attachment);
+                        }
+
+                        db.setTransactionSuccessful();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    } finally {
+                        db.endTransaction();
+                    }
                 }
             }
         }
@@ -1666,7 +1874,12 @@ public class MessageHelper {
         }
 
         // Common reference
-        if (thread == null && refs.size() > 0) {
+        boolean thread_byref = prefs.getBoolean("thread_byref", true);
+        if (thread == null && refs.size() > 0 && thread_byref) {
+            // For example
+            //   Message-ID: <organization/project/pull/nnn/issue_event/xxx@github.com>
+            //   In-Reply-To: <organization/project/pull/nnn@github.com>
+            //   References: <organization/project/pull/nnn@github.com>
             String ref = refs.get(0);
             if (!Objects.equals(ref, msgid))
                 thread = account + ":" + ref;
@@ -1829,8 +2042,10 @@ public class MessageHelper {
                 return true;
 
             // Google
+            // Feedback-ID: nnnnnnn:user:proton
             header = imessage.getHeader("Feedback-ID", null);
-            if (header != null)
+            if (header != null &&
+                    !header.endsWith(":user:proton")) // How privacy-friendly is this anyway?
                 return true;
 
             header = imessage.getHeader("Precedence", null);
@@ -1956,41 +2171,6 @@ public class MessageHelper {
         return (spf.trim().toLowerCase(Locale.ROOT).startsWith("pass"));
     }
 
-    boolean checkDKIMRequirements() throws MessagingException {
-        ensureHeaders();
-
-        // https://datatracker.ietf.org/doc/html/rfc6376/
-        String[] headers = imessage.getHeader("DKIM-Signature");
-        if (headers == null || headers.length < 1)
-            return false;
-
-        for (String header : headers) {
-            Map<String, String> kv = getKeyValues(MimeUtility.unfold(header));
-
-            // Algorithm
-            // https://tools.ietf.org/id/draft-ietf-dcrup-dkim-usage-03.html#rfc.section.4.3
-            String a = kv.get("a");
-            if ("rsa-sha1".equals(a))
-                return false;
-
-            // Hashed body length
-            Integer l = Helper.parseInt(kv.get("l"));
-            if (l != null && l == 0) {
-                Log.w("DKIM body length=" + l);
-                return false;
-            }
-
-            // Hashed header fields
-            String h = kv.get("h");
-            if (h == null) {
-                Log.w("DKIM header fields missing");
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     @NonNull
     List<String> verifyDKIM(Context context) {
         List<String> signers = new ArrayList<>();
@@ -2006,200 +2186,304 @@ public class MessageHelper {
             }
 
             // https://datatracker.ietf.org/doc/html/rfc6376/
-            String[] headers = amessage.getHeader("DKIM-Signature");
+            String[] headers = amessage.getHeader(DKIM_SIGNATURE);
             if (headers == null || headers.length < 1)
                 return signers;
 
             for (String header : headers) {
-                Map<String, String> kv = getKeyValues(MimeUtility.unfold(header));
-
-                String a = kv.get("a");
-                String halgo;
-                String salgo;
-                if ("rsa-sha1".equals(a)) {
-                    halgo = "SHA-1";
-                    salgo = "SHA1withRSA";
-                } else if ("rsa-sha256".equals(a)) {
-                    halgo = "SHA-256";
-                    salgo = "SHA256withRSA";
-                } else {
-                    // TODO: Ed25519
-                    Log.i("DKIM a=" + a);
-                    continue;
-                }
-
-                try {
-                    String signer = kv.get("d");
-                    String dns = kv.get("s") + "._domainkey." + signer;
-                    Log.i("DKIM lookup " + dns);
-                    DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, dns, "txt");
-                    if (records.length == 0)
-                        continue;
-
-                    Log.i("DKIM got " + records[0].name);
-                    Map<String, String> dk = getKeyValues(records[0].name);
-
-                    String canonic = kv.get("c");
-                    Log.i("DKIM canonicalization=" + canonic);
-                    if (canonic == null)
-                        canonic = "simple/simple";
-                    String[] c = canonic.split("/");
-
-                    StringBuilder head = new StringBuilder();
-
-                    String hs = kv.get("h");
-                    Log.i("DKIM headers=" + hs);
-
-                    boolean from = false;
-                    List<String> keys = new ArrayList<>();
-                    if (hs != null)
-                        for (String key : hs.split(":")) {
-                            keys.add(key.trim());
-                            from = (from || "from".equalsIgnoreCase(key.trim()));
-                        }
-                    if (!from)
-                        throw new IllegalArgumentException("from missing: " + hs);
-
-                    keys.add("DKIM-Signature");
-
-                    Map<String, Integer> index = new Hashtable<>();
-                    for (String key : keys) {
-                        // https://datatracker.ietf.org/doc/html/rfc6376/#section-5.4.2
-                        String _key = key.toLowerCase(Locale.ROOT);
-                        Integer idx = index.get(_key);
-                        idx = (idx == null ? 1 : idx + 1);
-                        index.put(_key, idx);
-
-                        String[] values = ("DKIM-Signature".equals(key)
-                                ? new String[]{header}
-                                : amessage.getHeader(key));
-                        if (values == null || idx > values.length) {
-                            // https://datatracker.ietf.org/doc/html/rfc6376/#section-5.4
-                            Log.i("DKIM missing header=" +
-                                    key + "[" + idx + "/" + (values == null ? null : values.length) + "]");
-                            continue;
-                        }
-
-                        String value = values[values.length - idx];
-                        if ("DKIM-Signature".equals(key)) {
-                            int b = value.lastIndexOf("b=");
-                            int s = value.indexOf(";", b + 2);
-                            value = value.substring(0, b + 2) + (s < 0 ? "" : value.substring(s));
-                        } else
-                            Log.i("DKIM " + key + "=" + value.replaceAll("\\r?\\n", "|"));
-
-                        if ("simple".equals(c[0])) {
-                            if ("DKIM-Signature".equals(key))
-                                head.append(key).append(": ").append(value);
-                            else {
-                                // Find original header/name (case sensitive)
-                                int _idx = values.length - idx;
-                                Enumeration<Header> oheaders = amessage.getAllHeaders();
-                                while (oheaders.hasMoreElements()) {
-                                    Header oheader = oheaders.nextElement();
-                                    if (key.equalsIgnoreCase(oheader.getName())) {
-                                        if (_idx-- == 0) {
-                                            head.append(oheader.getName()).append(": ")
-                                                    .append(oheader.getValue());
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        } else if ("relaxed".equals(c[0])) {
-                            value = MimeUtility.unfold(value);
-                            head.append(_key).append(':')
-                                    .append(value.replaceAll("\\s+", " ").trim());
-                        } else
-                            throw new IllegalArgumentException(c[0]);
-
-                        if (!"DKIM-Signature".equals(key))
-                            head.append("\r\n");
-                    }
-                    Log.i("DKIM head=" + head.toString().replace("\r\n", "|"));
-
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    Helper.copy(amessage.getRawInputStream(), bos);
-                    String body = bos.toString(); // TODO: charset?
-                    if ("simple".equals(c[c.length > 1 ? 1 : 0])) {
-                        if (TextUtils.isEmpty(body))
-                            body = "\r\n";
-                        else if (!body.endsWith("\r\n"))
-                            body += "\r\n";
-                        else {
-                            while (body.endsWith("\r\n\r\n"))
-                                body = body.substring(0, body.length() - 2);
-                        }
-                    } else if ("relaxed".equals(c[c.length > 1 ? 1 : 0])) {
-                        if (TextUtils.isEmpty(body))
-                            body = "";
-                        else {
-                            body = body.replaceAll("[ \\t]+\r\n", "\r\n");
-                            body = body.replaceAll("[ \\t]+", " ");
-                            while (body.endsWith("\r\n\r\n"))
-                                body = body.substring(0, body.length() - 2);
-                            if ("\r\n".equals(body))
-                                body = "";
-                        }
-                    } else
-                        throw new IllegalArgumentException(c[1]);
-
-                    String length = kv.get("l");
-                    if (!TextUtils.isEmpty(length) && TextUtils.isDigitsOnly(length)) {
-                        int l = Integer.parseInt(length);
-                        if (l < DKIM_MIN_TEXT)
-                            throw new IllegalArgumentException("Body length " + l + " < " + DKIM_MIN_TEXT);
-                        if (l < body.length())
-                            body = body.substring(0, l);
-                    }
-
-                    Log.i("DKIM body=" + body.replace("\r\n", "|"));
-
-                    byte[] bh = MessageDigest.getInstance(halgo).digest(body.getBytes());  // TODO: charset?
-                    Log.i("DKIM bh=" + Base64.encodeToString(bh, Base64.NO_WRAP) + "/" + kv.get("bh"));
-
-                    String pubkey = dk.get("p");
-                    if (pubkey == null)
-                        continue;
-
-                    String p = pubkey.replaceAll("\\s+", "");
-                    Log.i("DKIM pubkey=" + p);
-
-                    X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.decode(p, Base64.DEFAULT));
-                    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                    PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
-                    Signature sig = Signature.getInstance(salgo); // a=
-
-                    String hash = kv.get("b");
-                    if (hash == null)
-                        continue;
-                    String s = hash.replaceAll("\\s+", "");
-                    Log.i("DKIM signature=" + s);
-
-                    byte[] signature = Base64.decode(s, Base64.DEFAULT);
-
-                    sig.initVerify(pubKey);
-                    sig.update(head.toString().getBytes());
-
-                    boolean verified = sig.verify(signature);
-                    Log.i("DKIM valid=" + verified +
-                            " dns=" + dns +
-                            " from=" + formatAddresses(getFrom()));
-
-                    if (verified &&
-                            !signers.contains(signer))
-                        signers.add(signer);
-                } catch (Throwable ex) {
-                    Log.e("DKIM", ex);
-                }
+                String signer = verifySignatureHeader(context, header, DKIM_SIGNATURE, amessage);
+                if (signer != null && !signers.contains(signer))
+                    signers.add(signer);
             }
 
             Log.i("DKIM signers=" + TextUtils.join(",", signers));
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean native_arc = prefs.getBoolean("native_arc", true);
+            String native_arc_whitelist = prefs.getString("native_arc_whitelist", null);
+            List<String> whitelist = (TextUtils.isEmpty(native_arc_whitelist)
+                    ? ARC_WHITELIST_DEFAULT
+                    : Arrays.asList(native_arc_whitelist.split(",")));
+            if (signers.size() == 0 && native_arc && whitelist.size() > 0) {
+                // https://datatracker.ietf.org/doc/html/rfc8617#section-5.2
+                boolean ok = true; // Until it is not
+                Map<Integer, String> as = new HashMap<>();
+                Map<Integer, String> aar = new HashMap<>();
+                Map<Integer, String> ams = new HashMap<>();
+
+                // 1. Collect all ARC Sets currently attached to the message
+                for (String n : new String[]{ARC_SEAL, ARC_AUTHENTICATION_RESULTS, ARC_MESSAGE_SIGNATURE}) {
+                    Map<Integer, String> map;
+                    if (ARC_SEAL.equals(n))
+                        map = as;
+                    else if (ARC_AUTHENTICATION_RESULTS.equals(n))
+                        map = aar;
+                    else if (ARC_MESSAGE_SIGNATURE.equals(n))
+                        map = ams;
+                    else
+                        throw new IllegalArgumentException(n);
+
+                    headers = amessage.getHeader(n);
+                    if (headers != null) {
+                        for (String header : headers) {
+                            Map<String, String> kv = getKeyValues(MimeUtility.unfold(header));
+                            Integer i = Helper.parseInt(kv.get("i"));
+                            if (i == null || map.containsKey(i)) {
+                                // 3.A. Each ARC Set MUST contain exactly one each of the three ARC header fields
+                                Log.i("ARC duplicate " + n + "@" + i);
+                                ok = false;
+                                break;
+                            }
+                            map.put(i, header);
+                        }
+                    }
+
+                    if (!ok)
+                        break;
+                }
+
+                if (ok)
+                    ok = (as.size() > 0 && as.size() <= 50 &&
+                            as.size() == aar.size() && as.size() == ams.size());
+
+                if (ok)
+                    for (int i = 1; i <= as.size(); i++) {
+                        // 3.B. The instance values of the ARC Sets MUST form a continuous sequence from 1..N with no gaps or repetition
+                        if (!as.containsKey(i) || !aar.containsKey(i) || !ams.containsKey(i)) {
+                            ok = false;
+                            break;
+                        }
+                        // 2. If the Chain Validation Status of the highest instance value ARC Set is "fail",
+                        //    then the Chain Validation Status is "fail"
+                        // 3.C. The "cv" value for all ARC-Seal header fields MUST NOT be "fail".
+                        //      For ARC Sets with instance values > 1, the values MUST be "pass".
+                        //      For the ARC Set with instance value = 1, the value MUST be "none".
+                        Map<String, String> kv = getKeyValues(MimeUtility.unfold(as.get(i)));
+                        String cv = kv.get("cv");
+                        if (!(i == 1 ? "none" : "pass").equalsIgnoreCase(cv)) {
+                            Log.i("ARC cv#" + i + "=" + cv);
+                            ok = false;
+                            break;
+                        }
+                    }
+                Log.i("ARC as=" + as.size() + " aar=" + aar.size() + " ams=" + ams.size() + " ok=" + ok);
+
+                // 4. Validate the AMS with the greatest instance value (most recent).
+                //    If validation fails, then the Chain Validation Status is "fail", and the algorithm stops here.
+                if (ok) {
+                    String arc = ams.get(ams.size());
+                    String signer = verifySignatureHeader(context, arc, ARC_MESSAGE_SIGNATURE, amessage);
+                    if (signer != null && !signers.contains(signer)) {
+                        boolean whitelisted = (whitelist.contains(signer) ||
+                                "*".equals(native_arc_whitelist));
+                        Log.i("ARC signer=" + signer + " whitelisted=" + whitelisted);
+                        if (whitelisted)
+                            signers.add(signer);
+                    }
+                }
+            }
+
         } catch (Throwable ex) {
             Log.e("DKIM", ex);
         }
 
         return signers;
+    }
+
+    private String verifySignatureHeader(Context context, String header, String name, MimeMessage amessage) {
+        Map<String, String> kv = getKeyValues(MimeUtility.unfold(header));
+
+        String a = kv.get("a");
+        String halgo;
+        String salgo;
+        if ("rsa-sha1".equals(a)) {
+            halgo = "SHA-1";
+            salgo = "SHA1withRSA";
+        } else if ("rsa-sha256".equals(a)) {
+            halgo = "SHA-256";
+            salgo = "SHA256withRSA";
+        } else {
+            // TODO: Ed25519
+            Log.i("DKIM a=" + a);
+            return null;
+        }
+
+        try {
+            String signer = kv.get("d");
+            String dns = kv.get("s") + "._domainkey." + signer;
+            Log.i("DKIM lookup " + dns);
+            DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, dns, "txt");
+            if (records.length == 0)
+                return null;
+
+            Log.i("DKIM got " + records[0].response);
+            Map<String, String> dk = getKeyValues(records[0].response);
+
+            String canonic = kv.get("c");
+            Log.i("DKIM canonicalization=" + canonic);
+            if (canonic == null)
+                canonic = "simple/simple";
+            String[] c = canonic.split("/");
+
+            StringBuilder head = new StringBuilder();
+
+            String hs = kv.get("h");
+            Log.i("DKIM headers=" + hs);
+
+            boolean from = false;
+            List<String> keys = new ArrayList<>();
+            if (hs != null)
+                for (String key : hs.split(":")) {
+                    keys.add(key.trim());
+                    from = (from || "from".equalsIgnoreCase(key.trim()));
+                }
+            if (!from)
+                throw new IllegalArgumentException("from missing: " + hs);
+
+            keys.add(name);
+
+            Map<String, Integer> index = new Hashtable<>();
+            for (String key : keys) {
+                // https://datatracker.ietf.org/doc/html/rfc6376/#section-5.4.2
+                String _key = key.toLowerCase(Locale.ROOT);
+                Integer idx = index.get(_key);
+                idx = (idx == null ? 1 : idx + 1);
+                index.put(_key, idx);
+
+                String[] values = (name.equals(key)
+                        ? new String[]{header}
+                        : amessage.getHeader(key));
+                if (values == null || idx > values.length) {
+                    // https://datatracker.ietf.org/doc/html/rfc6376/#section-5.4
+                    Log.i("DKIM missing header=" +
+                            key + "[" + idx + "/" + (values == null ? null : values.length) + "]");
+                    continue;
+                }
+
+                String value = values[values.length - idx];
+                if (name.equals(key)) {
+                    int b = value.lastIndexOf("b=");
+                    int s = value.indexOf(";", b + 2);
+                    value = value.substring(0, b + 2) + (s < 0 ? "" : value.substring(s));
+                } else
+                    Log.i("DKIM " + key + "=" + value.replaceAll("\\r?\\n", "|"));
+
+                if ("simple".equals(c[0])) {
+                    if (name.equals(key))
+                        head.append(key).append(": ").append(value);
+                    else {
+                        // Find original header/name (case sensitive)
+                        int _idx = values.length - idx;
+                        Enumeration<Header> oheaders = amessage.getAllHeaders();
+                        while (oheaders.hasMoreElements()) {
+                            Header oheader = oheaders.nextElement();
+                            if (key.equalsIgnoreCase(oheader.getName())) {
+                                if (_idx-- == 0) {
+                                    head.append(oheader.getName()).append(": ")
+                                            .append(oheader.getValue());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else if ("relaxed".equals(c[0])) {
+                    value = MimeUtility.unfold(value);
+                    head.append(_key).append(':')
+                            .append(value.replaceAll("\\s+", " ").trim());
+                } else
+                    throw new IllegalArgumentException(c[0]);
+
+                if (!name.equals(key))
+                    head.append("\r\n");
+            }
+            Log.i("DKIM head=" + head.toString().replace("\r\n", "|"));
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            Helper.copy(amessage.getRawInputStream(), bos);
+            String body = bos.toString(); // TODO: charset?
+            if ("simple".equals(c[c.length > 1 ? 1 : 0])) {
+                if (TextUtils.isEmpty(body))
+                    body = "\r\n";
+                else if (!body.endsWith("\r\n"))
+                    body += "\r\n";
+                else {
+                    while (body.endsWith("\r\n\r\n"))
+                        body = body.substring(0, body.length() - 2);
+                }
+            } else if ("relaxed".equals(c[c.length > 1 ? 1 : 0])) {
+                if (TextUtils.isEmpty(body))
+                    body = "";
+                else {
+                    body = body.replaceAll("[ \\t]+\r\n", "\r\n");
+                    body = body.replaceAll("[ \\t]+", " ");
+                    while (body.endsWith("\r\n\r\n"))
+                        body = body.substring(0, body.length() - 2);
+                    if ("\r\n".equals(body))
+                        body = "";
+                }
+            } else
+                throw new IllegalArgumentException(c[1]);
+
+            String length = kv.get("l");
+            if (!TextUtils.isEmpty(length) && TextUtils.isDigitsOnly(length)) {
+                int l = Integer.parseInt(length);
+                if (l < DKIM_MIN_TEXT)
+                    throw new IllegalArgumentException("Body length " + l + " < " + DKIM_MIN_TEXT);
+                if (l < body.length())
+                    body = body.substring(0, l);
+            }
+
+            Log.i("DKIM body=" + body.replace("\r\n", "|"));
+
+            byte[] bh = MessageDigest.getInstance(halgo).digest(body.getBytes());  // TODO: charset?
+            Log.i("DKIM bh=" + Base64.encodeToString(bh, Base64.NO_WRAP) + "/" + kv.get("bh"));
+
+            String pubkey = dk.get("p");
+            if (pubkey == null)
+                return null;
+
+            String p = pubkey.replaceAll("\\s+", "");
+            Log.i("DKIM pubkey=" + p);
+
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.decode(p, Base64.DEFAULT));
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
+            Signature sig = Signature.getInstance(salgo); // a=
+
+            // https://stackoverflow.com/a/43984402/1794097
+            if (pubKey instanceof RSAPublicKey)
+                try {
+                    int keylen = ((RSAPublicKey) pubKey).getModulus().bitLength();
+                    Log.i("DKIM RSA pubkey length=" + keylen);
+                    if (keylen < DKIM_MIN_KEY_LENGTH)
+                        throw new IllegalArgumentException("RSA pubkey length " + keylen + " < " + DKIM_MIN_KEY_LENGTH);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+
+            String hash = kv.get("b");
+            if (hash == null)
+                return null;
+            String s = hash.replaceAll("\\s+", "");
+            Log.i("DKIM signature=" + s);
+
+            byte[] signature = Base64.decode(s, Base64.DEFAULT);
+
+            sig.initVerify(pubKey);
+            sig.update(head.toString().getBytes());
+
+            boolean verified = sig.verify(signature);
+            Log.i("DKIM valid=" + verified +
+                    " dns=" + dns +
+                    " from=" + formatAddresses(getFrom()));
+
+            if (verified)
+                return signer;
+        } catch (Throwable ex) {
+            Log.e("DKIM", ex);
+        }
+
+        return null;
     }
 
     Address[] getMailFrom(String[] headers) {
@@ -2616,9 +2900,9 @@ public class MessageHelper {
         }
 
         // (qmail nnn invoked by uid nnn); 1 Jan 2022 00:00:00 -0000
-        // by <host name> (Postfix, from userid nnn)
+        // Postfix: by <host name> (<name>, from userid nnn)
         if (header.matches(".*\\(qmail \\d+ invoked by uid \\d+\\).*") ||
-                header.matches(".*\\(Postfix, from userid \\d+\\).*")) {
+                header.matches(".*\\(.*, from userid \\d+\\).*")) {
             Log.i("--- phrase");
             return true;
         }
@@ -2667,7 +2951,7 @@ public class MessageHelper {
 
         // Check Microsoft front end transport (proxy)
         // https://social.technet.microsoft.com/wiki/contents/articles/50370.exchange-2016-what-is-the-front-end-transport-service-on-the-mailbox-role.aspx
-        if (kv.containsKey("via")) {
+        if (kv.containsKey("via") && false) {
             String via = kv.get("via").toString();
             if ("Frontend Transport".equals(via)) {
                 Log.i("--- frontend via=" + via);
@@ -3016,7 +3300,7 @@ public class MessageHelper {
         return email;
     }
 
-    static String decodeMime(String text) {
+    public static String decodeMime(String text) {
         if (text == null)
             return null;
 
@@ -3066,7 +3350,9 @@ public class MessageHelper {
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1374149
             if (!"ISO-2022-JP".equalsIgnoreCase(p1.charset) &&
                     p1.charset != null && p1.charset.equalsIgnoreCase(p2.charset) &&
-                    p1.encoding != null && p1.encoding.equalsIgnoreCase(p2.encoding)) {
+                    p1.encoding != null && p1.encoding.equalsIgnoreCase(p2.encoding) &&
+                    p1.text != null && !p1.text.endsWith("=")) {
+                /*
                 try {
                     byte[] b1 = decodeWord(p1.text, p1.encoding, p1.charset);
                     byte[] b2 = decodeWord(p2.text, p2.encoding, p2.charset);
@@ -3086,6 +3372,7 @@ public class MessageHelper {
                 } catch (Throwable ex) {
                     Log.w(ex);
                 }
+                */
                 p1.text += p2.text;
                 parts.remove(p + 1);
             } else
@@ -3310,6 +3597,7 @@ public class MessageHelper {
             parts.addAll(extra);
 
             for (PartHolder h : parts) {
+/*
                 int size = h.part.getSize();
                 if (size > 100 * 1024 * 1024)
                     Log.e("Unreasonable message size=" + size);
@@ -3317,6 +3605,7 @@ public class MessageHelper {
                     warnings.add(context.getString(R.string.title_insufficient_memory, size));
                     return null;
                 }
+*/
 
                 if (Boolean.parseBoolean(System.getProperty("fairemail.preamble"))) {
                     String preamble = h.contentType.getParameter("preamble");
@@ -3661,7 +3950,7 @@ public class MessageHelper {
             return null;
         }
 
-        void downloadAttachment(Context context, EntityAttachment local) throws IOException, MessagingException {
+        void downloadAttachment(Context context, EntityAttachment local, EntityFolder folder) throws IOException, MessagingException {
             List<EntityAttachment> remotes = getAttachments();
 
             // Some servers order attachments randomly
@@ -3723,10 +4012,10 @@ public class MessageHelper {
             if (index < 0)
                 throw new IllegalArgumentException("Attachment not found");
 
-            downloadAttachment(context, index, local);
+            downloadAttachment(context, index, local, folder);
         }
 
-        void downloadAttachment(Context context, int index, EntityAttachment local) throws MessagingException, IOException {
+        void downloadAttachment(Context context, int index, EntityAttachment local, EntityFolder folder) throws MessagingException, IOException {
             Log.i("downloading attachment id=" + local.id + " index=" + index + " " + local);
 
             // Get data
@@ -3784,20 +4073,22 @@ public class MessageHelper {
                     throw ex;
                 }
 
-                if ("message/rfc822".equals(local.type))
-                    decodeRfc822(context, local, 1);
+                if (folder == null || !EntityFolder.isOutgoing(folder.type)) {
+                    if ("message/rfc822".equals(local.type))
+                        decodeRfc822(context, local, 1);
 
-                else if ("text/calendar".equals(local.type) && ActivityBilling.isPro(context))
-                    decodeICalendar(context, local);
+                    else if ("text/calendar".equals(local.type) && ActivityBilling.isPro(context))
+                        decodeICalendar(context, local);
 
-                else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && local.isCompressed()) {
-                    decodeCompressed(context, local, 1);
+                    else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && local.isCompressed()) {
+                        decodeCompressed(context, local, 1);
 
-                } else if (Helper.isTnef(local.type, local.name))
-                    decodeTNEF(context, local, 1);
+                    } else if (Helper.isTnef(local.type, local.name))
+                        decodeTNEF(context, local, 1);
 
-                else if ("msg".equalsIgnoreCase(Helper.getExtension(local.name)))
-                    decodeOutlook(context, local, 1);
+                    else if ("msg".equalsIgnoreCase(Helper.getExtension(local.name)))
+                        decodeOutlook(context, local, 1);
+                }
             }
         }
 
@@ -4085,6 +4376,7 @@ public class MessageHelper {
                     }
 
                     CalendarHelper.insert(context, icalendar, event,
+                            CalendarContract.Events.STATUS_TENTATIVE,
                             selectedAccount, selectedName, message);
                 }
             } catch (Throwable ex) {
@@ -4393,6 +4685,20 @@ public class MessageHelper {
                             if (bp.isMimeType("multipart/signed") || bp.isMimeType("multipart/encrypted")) {
                                 part = (MimePart) bp;
                                 break;
+                            } else if (bp.isMimeType("application/pgp-encrypted") && i + 1 < mp.getCount()) {
+                                // Workaround Outlook problem
+                                //  --_xxxoutlookfr_
+                                // Content-Type: text/plain; charset="us-ascii"
+                                //
+                                // --_xxxoutlookfr_
+                                // Content-Type: application/pgp-encrypted; name="ATT00001"
+                                // Content-Disposition: attachment; filename="ATT00001";
+                                //
+                                // --_xxxoutlookfr_
+                                // Content-Type: application/octet-stream; name="encrypted.asc"
+                                // Content-Disposition: attachment; filename="encrypted.asc";
+                                getMessageParts(part, mp.getBodyPart(i + 1), parts, EntityAttachment.PGP_MESSAGE);
+                                return parts;
                             }
                         }
                     } else {
@@ -4657,6 +4963,13 @@ public class MessageHelper {
                 filename = null;
             }
 
+            int size = Integer.MAX_VALUE;
+            try {
+                size = part.getSize();
+            } catch (MessagingException ex) {
+                Log.w(ex);
+            }
+
             ContentType contentType;
             try {
                 // From the body structure
@@ -4671,7 +4984,8 @@ public class MessageHelper {
 
             String ct = contentType.getBaseType();
             if (("text/plain".equalsIgnoreCase(ct) || "text/html".equalsIgnoreCase(ct)) &&
-                    !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename)) {
+                    !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename) &&
+                    (size <= MAX_MESSAGE_SIZE || size == Integer.MAX_VALUE)) {
                 parts.text.add(new PartHolder(part, contentType));
             } else {
                 // Workaround for NIL message content type
@@ -4680,6 +4994,16 @@ public class MessageHelper {
                     plain.setParameterList(contentType.getParameterList());
                     Log.w("Converting from " + contentType + " to " + plain);
                     parts.text.add(new PartHolder(part, plain));
+                }
+
+                if (("text/plain".equalsIgnoreCase(ct) || "text/html".equalsIgnoreCase(ct)) &&
+                        TextUtils.isEmpty(Helper.getExtension(filename))) {
+                    if (TextUtils.isEmpty(filename))
+                        filename = "body";
+                    if ("text/plain".equalsIgnoreCase(ct))
+                        filename += ".txt";
+                    if ("text/html".equalsIgnoreCase(ct))
+                        filename += ".html";
                 }
 
                 if (Report.isDeliveryStatus(ct) ||
@@ -4717,6 +5041,8 @@ public class MessageHelper {
                     }
 
                 apart.attachment = new EntityAttachment();
+                if (part instanceof IMAPBodyPart)
+                    apart.attachment.section = ((IMAPBodyPart) part).getSectionId();
                 apart.attachment.disposition = apart.disposition;
                 apart.attachment.name = apart.filename;
                 apart.attachment.type = contentType.getBaseType().toLowerCase(Locale.ROOT);
@@ -5155,21 +5481,27 @@ public class MessageHelper {
     static boolean isNoReply(Address address) {
         if (address instanceof InternetAddress) {
             String email = ((InternetAddress) address).getAddress();
-            String username = UriHelper.getEmailUser(email);
-            String domain = UriHelper.getEmailDomain(email);
+            if (isNoReply(email))
+                return true;
+        }
+        return false;
+    }
 
-            if (!TextUtils.isEmpty(username)) {
-                username = username.toLowerCase(Locale.ROOT);
-                for (String value : DO_NOT_REPLY)
-                    if (username.contains(value))
-                        return true;
-            }
-            if (!TextUtils.isEmpty(domain)) {
-                domain = domain.toLowerCase(Locale.ROOT);
-                for (String value : DO_NOT_REPLY)
-                    if (domain.startsWith(value))
-                        return true;
-            }
+    static boolean isNoReply(String email) {
+        String username = UriHelper.getEmailUser(email);
+        if (!TextUtils.isEmpty(username)) {
+            username = username.toLowerCase(Locale.ROOT);
+            for (String value : DO_NOT_REPLY)
+                if (username.contains(value))
+                    return true;
+        }
+
+        String domain = UriHelper.getEmailDomain(email);
+        if (!TextUtils.isEmpty(domain)) {
+            domain = domain.toLowerCase(Locale.ROOT);
+            for (String value : DO_NOT_REPLY)
+                if (domain.startsWith(value))
+                    return true;
         }
 
         return false;

@@ -21,9 +21,6 @@ package eu.faircode.email;
 
 import static android.app.Activity.RESULT_OK;
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -40,7 +37,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -48,17 +44,12 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FragmentOptionsBehavior extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private View view;
@@ -71,8 +62,8 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swConversationActionsReplies;
     private SwitchCompat swLanguageDetection;
     private EditText etDefaultSnooze;
-    private SwitchCompat swPhotoPicker;
     private SwitchCompat swPull;
+    private SwitchCompat swPullAll;
     private SwitchCompat swAutoScroll;
     private SwitchCompat swQuickFilter;
     private SwitchCompat swQuickScroll;
@@ -103,30 +94,34 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swAutoUnflag;
     private SwitchCompat swResetImportance;
     private SwitchCompat swThreadSentTrash;
+    private SwitchCompat swPhotoPicker;
     private SwitchCompat swFlagSnoozed;
     private SwitchCompat swAutoImportant;
     private SwitchCompat swResetSnooze;
     private SwitchCompat swAutoBlockSender;
     private SwitchCompat swAutoHideAnswer;
     private SwitchCompat swSwipeReply;
+    private SwitchCompat swMoveThreadSent;
     private Button btnDefaultFolder;
     private TextView tvDefaultFolder;
 
+    private boolean accessibility;
+
     final static int MAX_SWIPE_SENSITIVITY = 10;
-    final static int DEFAULT_SWIPE_SENSITIVITY = 7;
+    final static int DEFAULT_SWIPE_SENSITIVITY = 6;
 
     final static int REQUEST_DEFAULT_FOLDER = 1;
 
     private final static String[] RESET_OPTIONS = new String[]{
             "restore_on_launch", "sync_on_launch", "double_back", "conversation_actions", "conversation_actions_replies", "language_detection",
             "photo_picker", "default_snooze",
-            "pull", "autoscroll", "quick_filter", "quick_scroll", "quick_actions", "swipe_sensitivity", "foldernav",
+            "pull", "pull_all", "autoscroll", "quick_filter", "quick_scroll", "quick_actions", "swipe_sensitivity", "foldernav",
             "doubletap", "swipenav", "volumenav", "reversed", "swipe_close", "swipe_move",
             "autoexpand", "expand_first", "expand_all", "expand_one", "collapse_multiple",
             "autoclose", "onclose", "autoclose_unseen", "autoclose_send", "collapse_marked",
             "undo_timeout",
             "autoread", "flag_snoozed", "autounflag", "auto_important", "reset_importance", "thread_sent_trash",
-            "reset_snooze", "auto_block_sender", "auto_hide_answer", "swipe_reply", "default_folder"
+            "reset_snooze", "auto_block_sender", "auto_hide_answer", "swipe_reply", "move_thread_sent", "default_folder"
     };
 
     @Override
@@ -148,8 +143,8 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swConversationActionsReplies = view.findViewById(R.id.swConversationActionsReplies);
         swLanguageDetection = view.findViewById(R.id.swLanguageDetection);
         etDefaultSnooze = view.findViewById(R.id.etDefaultSnooze);
-        swPhotoPicker = view.findViewById(R.id.swPhotoPicker);
         swPull = view.findViewById(R.id.swPull);
+        swPullAll = view.findViewById(R.id.swPullAll);
         swAutoScroll = view.findViewById(R.id.swAutoScroll);
         swQuickFilter = view.findViewById(R.id.swQuickFilter);
         swQuickScroll = view.findViewById(R.id.swQuickScroll);
@@ -180,14 +175,18 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swAutoUnflag = view.findViewById(R.id.swAutoUnflag);
         swResetImportance = view.findViewById(R.id.swResetImportance);
         swThreadSentTrash = view.findViewById(R.id.swThreadSentTrash);
+        swPhotoPicker = view.findViewById(R.id.swPhotoPicker);
         swFlagSnoozed = view.findViewById(R.id.swFlagSnoozed);
         swAutoImportant = view.findViewById(R.id.swAutoImportant);
         swResetSnooze = view.findViewById(R.id.swResetSnooze);
         swAutoBlockSender = view.findViewById(R.id.swAutoBlockSender);
         swAutoHideAnswer = view.findViewById(R.id.swAutoHideAnswer);
         swSwipeReply = view.findViewById(R.id.swSwipeReply);
+        swMoveThreadSent = view.findViewById(R.id.swMoveThreadSent);
         btnDefaultFolder = view.findViewById(R.id.btnDefaultFolder);
         tvDefaultFolder = view.findViewById(R.id.tvDefaultFolder);
+
+        accessibility = Helper.isAccessibilityEnabled(getContext());
 
         setOptions();
 
@@ -273,18 +272,18 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
-        swPhotoPicker.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ? View.GONE : View.VISIBLE);
-        swPhotoPicker.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("photo_picker", checked).apply();
-            }
-        });
-
         swPull.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("pull", checked).apply();
+                swPullAll.setEnabled(checked);
+            }
+        });
+
+        swPullAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("pull_all", checked).apply();
             }
         });
 
@@ -525,6 +524,14 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
+        swPhotoPicker.setVisibility(Helper.hasPhotoPicker() ? View.VISIBLE : View.GONE);
+        swPhotoPicker.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("photo_picker", checked).apply();
+            }
+        });
+
         swFlagSnoozed.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -564,6 +571,13 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("swipe_reply", checked).apply();
+            }
+        });
+
+        swMoveThreadSent.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("move_thread_sent", checked).apply();
             }
         });
 
@@ -635,88 +649,94 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     }
 
     private void setOptions() {
-        if (view == null || getContext() == null)
-            return;
+        try {
+            if (view == null || getContext() == null)
+                return;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        swRestoreOnLaunch.setChecked(prefs.getBoolean("restore_on_launch", false));
-        swSyncOnlaunch.setChecked(prefs.getBoolean("sync_on_launch", false));
-        swDoubleBack.setChecked(prefs.getBoolean("double_back", false));
-        swConversationActions.setChecked(prefs.getBoolean("conversation_actions", Helper.isGoogle()));
-        swConversationActionsReplies.setChecked(prefs.getBoolean("conversation_actions_replies", true));
-        swConversationActionsReplies.setEnabled(swConversationActions.isChecked());
-        swLanguageDetection.setChecked(prefs.getBoolean("language_detection", false));
+            swRestoreOnLaunch.setChecked(prefs.getBoolean("restore_on_launch", false));
+            swSyncOnlaunch.setChecked(prefs.getBoolean("sync_on_launch", false));
+            swDoubleBack.setChecked(prefs.getBoolean("double_back", false));
+            swConversationActions.setChecked(prefs.getBoolean("conversation_actions", Helper.isGoogle()));
+            swConversationActionsReplies.setChecked(prefs.getBoolean("conversation_actions_replies", true));
+            swConversationActionsReplies.setEnabled(swConversationActions.isChecked());
+            swLanguageDetection.setChecked(prefs.getBoolean("language_detection", false));
 
-        int default_snooze = prefs.getInt("default_snooze", 1);
-        etDefaultSnooze.setText(default_snooze == 1 ? null : Integer.toString(default_snooze));
-        etDefaultSnooze.setHint("1");
+            int default_snooze = prefs.getInt("default_snooze", 1);
+            etDefaultSnooze.setText(default_snooze == 1 ? null : Integer.toString(default_snooze));
+            etDefaultSnooze.setHint("1");
 
-        swPhotoPicker.setChecked(prefs.getBoolean("photo_picker", false));
+            swPull.setChecked(prefs.getBoolean("pull", true));
+            swPullAll.setChecked(prefs.getBoolean("pull_all", false));
+            swPullAll.setEnabled(swPull.isChecked());
+            swAutoScroll.setChecked(prefs.getBoolean("autoscroll", false));
+            swQuickFilter.setChecked(prefs.getBoolean("quick_filter", false));
+            swQuickScroll.setChecked(prefs.getBoolean("quick_scroll", true));
+            swQuickActions.setChecked(prefs.getBoolean("quick_actions", true));
 
-        swPull.setChecked(prefs.getBoolean("pull", true));
-        swAutoScroll.setChecked(prefs.getBoolean("autoscroll", false));
-        swQuickFilter.setChecked(prefs.getBoolean("quick_filter", false));
-        swQuickScroll.setChecked(prefs.getBoolean("quick_scroll", true));
-        swQuickActions.setChecked(prefs.getBoolean("quick_actions", true));
+            int swipe_sensitivity = prefs.getInt("swipe_sensitivity", DEFAULT_SWIPE_SENSITIVITY);
+            sbSwipeSensitivity.setProgress(swipe_sensitivity);
 
-        int swipe_sensitivity = prefs.getInt("swipe_sensitivity", DEFAULT_SWIPE_SENSITIVITY);
-        sbSwipeSensitivity.setProgress(swipe_sensitivity);
+            swFolderNav.setChecked(prefs.getBoolean("foldernav", false));
 
-        swFolderNav.setChecked(prefs.getBoolean("foldernav", false));
+            swDoubleTap.setChecked(prefs.getBoolean("doubletap", false));
+            swSwipeNav.setChecked(prefs.getBoolean("swipenav", true));
+            swVolumeNav.setChecked(prefs.getBoolean("volumenav", false));
+            swReversed.setChecked(prefs.getBoolean("reversed", false));
+            swSwipeClose.setChecked(prefs.getBoolean("swipe_close", false));
+            swSwipeMove.setChecked(prefs.getBoolean("swipe_move", false));
 
-        swDoubleTap.setChecked(prefs.getBoolean("doubletap", false));
-        swSwipeNav.setChecked(prefs.getBoolean("swipenav", true));
-        swVolumeNav.setChecked(prefs.getBoolean("volumenav", false));
-        swReversed.setChecked(prefs.getBoolean("reversed", false));
-        swSwipeClose.setChecked(prefs.getBoolean("swipe_close", false));
-        swSwipeMove.setChecked(prefs.getBoolean("swipe_move", false));
+            swAutoExpand.setChecked(prefs.getBoolean("autoexpand", true));
+            swExpandFirst.setChecked(prefs.getBoolean("expand_first", true));
+            swExpandFirst.setEnabled(swAutoExpand.isChecked());
+            swExpandAll.setChecked(prefs.getBoolean("expand_all", false));
+            swExpandOne.setChecked(prefs.getBoolean("expand_one", true));
+            swExpandOne.setEnabled(!swExpandAll.isChecked());
+            swCollapseMultiple.setChecked(prefs.getBoolean("collapse_multiple", true));
 
-        swAutoExpand.setChecked(prefs.getBoolean("autoexpand", true));
-        swExpandFirst.setChecked(prefs.getBoolean("expand_first", true));
-        swExpandFirst.setEnabled(swAutoExpand.isChecked());
-        swExpandAll.setChecked(prefs.getBoolean("expand_all", false));
-        swExpandOne.setChecked(prefs.getBoolean("expand_one", true));
-        swExpandOne.setEnabled(!swExpandAll.isChecked());
-        swCollapseMultiple.setChecked(prefs.getBoolean("collapse_multiple", true));
+            swAutoClose.setChecked(prefs.getBoolean("autoclose", true));
 
-        swAutoClose.setChecked(prefs.getBoolean("autoclose", true));
+            String onClose = prefs.getString("onclose", "");
+            String[] onCloseValues = getResources().getStringArray(R.array.onCloseValues);
+            for (int pos = 0; pos < onCloseValues.length; pos++)
+                if (onCloseValues[pos].equals(onClose)) {
+                    spOnClose.setSelection(pos);
+                    break;
+                }
 
-        String onClose = prefs.getString("onclose", "");
-        String[] onCloseValues = getResources().getStringArray(R.array.onCloseValues);
-        for (int pos = 0; pos < onCloseValues.length; pos++)
-            if (onCloseValues[pos].equals(onClose)) {
-                spOnClose.setSelection(pos);
-                break;
-            }
+            tvOnClose.setEnabled(!swAutoClose.isChecked());
+            spOnClose.setEnabled(!swAutoClose.isChecked());
 
-        tvOnClose.setEnabled(!swAutoClose.isChecked());
-        spOnClose.setEnabled(!swAutoClose.isChecked());
+            swAutoCloseUnseen.setChecked(prefs.getBoolean("autoclose_unseen", false));
+            swAutoCloseSend.setChecked(prefs.getBoolean("autoclose_send", false));
+            swCollapseMarked.setChecked(prefs.getBoolean("collapse_marked", true));
 
-        swAutoCloseUnseen.setChecked(prefs.getBoolean("autoclose_unseen", false));
-        swAutoCloseSend.setChecked(prefs.getBoolean("autoclose_send", false));
-        swCollapseMarked.setChecked(prefs.getBoolean("collapse_marked", true));
+            int undo_timeout = prefs.getInt("undo_timeout", 5000);
+            int[] undoValues = getResources().getIntArray(R.array.undoValues);
+            for (int pos = 0; pos < undoValues.length; pos++)
+                if (undoValues[pos] == undo_timeout) {
+                    spUndoTimeout.setSelection(pos);
+                    break;
+                }
 
-        int undo_timeout = prefs.getInt("undo_timeout", 5000);
-        int[] undoValues = getResources().getIntArray(R.array.undoValues);
-        for (int pos = 0; pos < undoValues.length; pos++)
-            if (undoValues[pos] == undo_timeout) {
-                spUndoTimeout.setSelection(pos);
-                break;
-            }
+            swAutoRead.setChecked(prefs.getBoolean("autoread", false));
+            swAutoUnflag.setChecked(prefs.getBoolean("autounflag", false));
+            swResetImportance.setChecked(prefs.getBoolean("reset_importance", false));
+            swThreadSentTrash.setChecked(prefs.getBoolean("thread_sent_trash", true));
 
-        swAutoRead.setChecked(prefs.getBoolean("autoread", false));
-        swAutoUnflag.setChecked(prefs.getBoolean("autounflag", false));
-        swResetImportance.setChecked(prefs.getBoolean("reset_importance", false));
-        swThreadSentTrash.setChecked(prefs.getBoolean("thread_sent_trash", true));
-
-        swFlagSnoozed.setChecked(prefs.getBoolean("flag_snoozed", false));
-        swAutoImportant.setChecked(prefs.getBoolean("auto_important", false));
-        swResetSnooze.setChecked(prefs.getBoolean("reset_snooze", true));
-        swAutoBlockSender.setChecked(prefs.getBoolean("auto_block_sender", true));
-        swAutoHideAnswer.setChecked(prefs.getBoolean("auto_hide_answer", true));
-        swSwipeReply.setChecked(prefs.getBoolean("swipe_reply", false));
-        tvDefaultFolder.setText(prefs.getString("default_folder", null));
+            swPhotoPicker.setChecked(prefs.getBoolean("photo_picker", true));
+            swFlagSnoozed.setChecked(prefs.getBoolean("flag_snoozed", false));
+            swAutoImportant.setChecked(prefs.getBoolean("auto_important", false));
+            swResetSnooze.setChecked(prefs.getBoolean("reset_snooze", true));
+            swAutoBlockSender.setChecked(prefs.getBoolean("auto_block_sender", true));
+            swAutoHideAnswer.setChecked(prefs.getBoolean("auto_hide_answer", !accessibility));
+            swSwipeReply.setChecked(prefs.getBoolean("swipe_reply", false));
+            swMoveThreadSent.setChecked(prefs.getBoolean("move_thread_sent", false));
+            tvDefaultFolder.setText(prefs.getString("default_folder", null));
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     private void onDefaultFolder(Uri uri) {
@@ -725,124 +745,5 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             prefs.edit().remove("default_folder").apply();
         else
             prefs.edit().putString("default_folder", uri.toString()).apply();
-    }
-
-    public static class FragmentDialogSwipes extends FragmentDialogBase {
-        private Spinner spLeft;
-        private Spinner spRight;
-        private ArrayAdapter<EntityFolder> adapter;
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_swipes, null);
-            spLeft = dview.findViewById(R.id.spLeft);
-            spRight = dview.findViewById(R.id.spRight);
-
-            adapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<EntityFolder>());
-            adapter.setDropDownViewResource(R.layout.spinner_item1_dropdown);
-
-            spLeft.setAdapter(adapter);
-            spRight.setAdapter(adapter);
-
-            List<EntityFolder> folders = FragmentAccount.getFolderActions(getContext());
-
-            EntityFolder trash = new EntityFolder();
-            trash.id = 2L;
-            trash.name = getString(R.string.title_trash);
-            folders.add(1, trash);
-
-            EntityFolder archive = new EntityFolder();
-            archive.id = 1L;
-            archive.name = getString(R.string.title_archive);
-            folders.add(1, archive);
-
-            adapter.addAll(folders);
-
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            int leftPos = prefs.getInt("swipe_left_default", 2); // Trash
-            int rightPos = prefs.getInt("swipe_right_default", 1); // Archive
-
-            spLeft.setSelection(leftPos);
-            spRight.setSelection(rightPos);
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            prefs.edit()
-                                    .putInt("swipe_left_default", spLeft.getSelectedItemPosition())
-                                    .putInt("swipe_right_default", spRight.getSelectedItemPosition())
-                                    .apply();
-
-                            EntityFolder left = (EntityFolder) spLeft.getSelectedItem();
-                            EntityFolder right = (EntityFolder) spRight.getSelectedItem();
-
-                            if ((left != null && EntityMessage.SWIPE_ACTION_HIDE.equals(left.id)) ||
-                                    (right != null && EntityMessage.SWIPE_ACTION_HIDE.equals(right.id)))
-                                prefs.edit()
-                                        .putBoolean("message_tools", true)
-                                        .putBoolean("button_hide", true)
-                                        .apply();
-
-                            Bundle args = new Bundle();
-                            args.putLong("left", left == null ? 0 : left.id);
-                            args.putLong("right", right == null ? 0 : right.id);
-
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long left = args.getLong("left");
-                                    long right = args.getLong("right");
-
-                                    DB db = DB.getInstance(context);
-                                    try {
-                                        db.beginTransaction();
-
-                                        List<EntityAccount> accounts = db.account().getAccounts();
-                                        for (EntityAccount account : accounts)
-                                            if (account.protocol == EntityAccount.TYPE_IMAP)
-                                                db.account().setAccountSwipes(
-                                                        account.id,
-                                                        getAction(context, left, account.id),
-                                                        getAction(context, right, account.id));
-
-                                        db.setTransactionSuccessful();
-                                    } finally {
-                                        db.endTransaction();
-                                    }
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onExecuted(Bundle args, Void data) {
-                                    ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Log.unexpectedError(getParentFragmentManager(), ex);
-                                }
-
-                                private Long getAction(Context context, long selection, long account) {
-                                    if (selection < 0)
-                                        return selection;
-                                    else if (selection == 0)
-                                        return null;
-                                    else {
-                                        DB db = DB.getInstance(context);
-                                        String type = (selection == 2 ? EntityFolder.TRASH : EntityFolder.ARCHIVE);
-                                        EntityFolder archive = db.folder().getFolderByType(account, type);
-                                        return (archive == null ? null : archive.id);
-                                    }
-                                }
-                            }.execute(getContext(), getViewLifecycleOwner(), args, "dialog:swipe");
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
-        }
     }
 }

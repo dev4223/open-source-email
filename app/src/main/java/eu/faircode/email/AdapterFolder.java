@@ -109,6 +109,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private int colorUnread;
     private int colorControlNormal;
     private int colorSeparator;
+    private boolean debug;
 
     private String search = null;
     private List<Long> disabledIds = new ArrayList<>();
@@ -416,9 +417,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                                 ? textColorPrimary : textColorSecondary));
                 ibSync.setEnabled(folder.last_sync != null);
 
-                tvKeywords.setText(BuildConfig.DEBUG ?
+                tvKeywords.setText(debug ?
                         (folder.separator == null ? "" : folder.separator + " ") +
                                 (folder.namespace == null ? "" : folder.namespace + " ") +
+                                (folder.flags == null ? null : TextUtils.join(" ", folder.flags) + " ") +
                                 TextUtils.join(" ", folder.keywords) : null);
                 tvKeywords.setVisibility(show_flagged ? View.VISIBLE : View.GONE);
 
@@ -674,6 +676,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 submenu.add(Menu.FIRST, R.string.title_synchronize_batch_disable, 3, R.string.title_synchronize_batch_disable);
                 submenu.add(Menu.FIRST, R.string.title_notify_batch_enable, 4, R.string.title_notify_batch_enable);
                 submenu.add(Menu.FIRST, R.string.title_notify_batch_disable, 5, R.string.title_notify_batch_disable);
+                submenu.add(Menu.FIRST, R.string.title_unified_inbox_add, 6, R.string.title_unified_inbox_add);
+                submenu.add(Menu.FIRST, R.string.title_unified_inbox_delete, 7, R.string.title_unified_inbox_delete);
                 submenu.add(Menu.FIRST, R.string.title_navigation_folder, 6, R.string.title_navigation_folder);
                 submenu.add(Menu.FIRST, R.string.title_navigation_folder_hide, 7, R.string.title_navigation_folder_hide);
                 submenu.add(Menu.FIRST, R.string.title_synchronize_more, 8, R.string.title_synchronize_more);
@@ -708,6 +712,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             return true;
                         } else if (itemId == R.string.title_notify_batch_disable) {
                             onActionEnableNotify(false);
+                            return true;
+                        } else if (itemId == R.string.title_unified_inbox_add) {
+                            onActionUnifiedInbox(true);
+                            return true;
+                        } else if (itemId == R.string.title_unified_inbox_delete) {
+                            onActionUnifiedInbox(false);
                             return true;
                         } else if (itemId == R.string.title_navigation_folder) {
                             onActionEnableNavigationMenu(true);
@@ -942,6 +952,42 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "enable");
+                }
+
+                private void onActionUnifiedInbox(boolean add) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", folder.id);
+                    args.putBoolean("add", add);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) throws Throwable {
+                            long id = args.getLong("id");
+                            boolean add = args.getBoolean("add");
+
+                            DB db = DB.getInstance(context);
+                            try {
+                                db.beginTransaction();
+                                List<EntityFolder> childs = db.folder().getChildFolders(id);
+                                if (childs == null)
+                                    return null;
+
+                                for (EntityFolder child : childs)
+                                    db.folder().setFolderUnified(child.id, add);
+
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "unified");
                 }
 
                 private void onActionEnableNavigationMenu(boolean enabled) {
@@ -1322,6 +1368,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         this.colorUnread = (highlight_unread ? colorHighlight : Helper.resolveColor(context, R.attr.colorUnread));
         this.colorControlNormal = Helper.resolveColor(context, R.attr.colorControlNormal);
         this.colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
+        this.debug = prefs.getBoolean("debug", false);
 
         setHasStableIds(true);
 

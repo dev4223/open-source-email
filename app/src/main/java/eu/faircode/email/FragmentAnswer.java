@@ -42,6 +42,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -58,12 +60,14 @@ import com.google.android.material.snackbar.Snackbar;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FragmentAnswer extends FragmentBase {
     private ViewGroup view;
     private EditText etName;
-    private EditText etGroup;
+    private EditText etLabel;
+    private AutoCompleteTextView etGroup;
     private CheckBox cbStandard;
     private CheckBox cbReceipt;
     private CheckBox cbFavorite;
@@ -76,6 +80,8 @@ public class FragmentAnswer extends FragmentBase {
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
     private Group grpReady;
+
+    private ArrayAdapter<String> adapterGroup;
 
     private long id = -1;
     private long copy = -1;
@@ -115,6 +121,7 @@ public class FragmentAnswer extends FragmentBase {
 
         // Get controls
         etName = view.findViewById(R.id.etName);
+        etLabel = view.findViewById(R.id.etLabel);
         etGroup = view.findViewById(R.id.etGroup);
         cbStandard = view.findViewById(R.id.cbStandard);
         cbReceipt = view.findViewById(R.id.cbReceipt);
@@ -130,6 +137,10 @@ public class FragmentAnswer extends FragmentBase {
 
         pbWait = view.findViewById(R.id.pbWait);
         grpReady = view.findViewById(R.id.grpReady);
+
+        adapterGroup = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
+        etGroup.setThreshold(1);
+        etGroup.setAdapter(adapterGroup);
 
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -187,6 +198,7 @@ public class FragmentAnswer extends FragmentBase {
         // Initialize
         FragmentDialogTheme.setBackground(context, view, true);
 
+        etLabel.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         cbExternal.setVisibility(View.GONE);
         cbSnippet.setVisibility(View.GONE);
         grpReady.setVisibility(View.GONE);
@@ -245,6 +257,8 @@ public class FragmentAnswer extends FragmentBase {
                     args.putCharSequence("spanned", spanned);
                 }
 
+                args.putStringArrayList("groups", new ArrayList<>(db.answer().getGroups()));
+
                 return answer;
             }
 
@@ -259,6 +273,7 @@ public class FragmentAnswer extends FragmentBase {
 
                 if (savedInstanceState == null) {
                     etName.setText(answer == null ? args.getString("subject") : answer.name);
+                    etLabel.setText(answer == null ? null : answer.label);
                     etGroup.setText(answer == null ? null : answer.group);
                     cbStandard.setChecked(answer == null ? false : answer.standard);
                     cbReceipt.setChecked(answer == null ? false : answer.receipt);
@@ -269,6 +284,9 @@ public class FragmentAnswer extends FragmentBase {
                     btnColor.setColor(answer == null ? null : answer.color);
                     etText.setText((Spanned) args.getCharSequence("spanned"));
                 }
+
+                adapterGroup.clear();
+                adapterGroup.addAll(args.getStringArrayList("groups"));
 
                 if (answer == null)
                     bottom_navigation.getMenu().removeItem(R.id.action_delete);
@@ -417,6 +435,7 @@ public class FragmentAnswer extends FragmentBase {
         Bundle args = new Bundle();
         args.putLong("id", id);
         args.putString("name", etName.getText().toString().trim());
+        args.putString("label", etLabel.getText().toString().trim());
         args.putString("group", etGroup.getText().toString().trim());
         args.putBoolean("standard", cbStandard.isChecked());
         args.putBoolean("receipt", cbReceipt.isChecked());
@@ -442,6 +461,7 @@ public class FragmentAnswer extends FragmentBase {
             protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
                 String name = args.getString("name");
+                String label = args.getString("label");
                 String group = args.getString("group");
                 boolean standard = args.getBoolean("standard");
                 boolean receipt = args.getBoolean("receipt");
@@ -454,6 +474,8 @@ public class FragmentAnswer extends FragmentBase {
 
                 if (TextUtils.isEmpty(name))
                     throw new IllegalArgumentException(context.getString(R.string.title_no_name));
+                if (TextUtils.isEmpty(label))
+                    label = null;
                 if (TextUtils.isEmpty(group))
                     group = null;
                 if (color == Color.TRANSPARENT)
@@ -477,6 +499,7 @@ public class FragmentAnswer extends FragmentBase {
                         answer = db.answer().getAnswer(id);
 
                     answer.name = name;
+                    answer.label = label;
                     answer.group = group;
                     answer.standard = standard;
                     answer.receipt = receipt;

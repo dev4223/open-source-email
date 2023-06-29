@@ -58,6 +58,7 @@ public class EntityLog {
     public Long time;
     @NonNull
     public Type type = Type.General;
+    public Long thread;
     public Long account;
     public Long folder;
     public Long message;
@@ -66,7 +67,7 @@ public class EntityLog {
 
     public enum Type {General, Statistics, Scheduling, Network, Account, Protocol, Classification, Notification, Rules, Cloud, Debug}
 
-    static void log(final Context context, String data) {
+    public static void log(final Context context, String data) {
         log(context, Type.General, data);
     }
 
@@ -127,6 +128,7 @@ public class EntityLog {
         final EntityLog entry = new EntityLog();
         entry.time = new Date().getTime();
         entry.type = type;
+        entry.thread = Thread.currentThread().getId();
         entry.account = account;
         entry.folder = folder;
         entry.message = message;

@@ -136,9 +136,9 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
 
         // Process title
         final Uri uriTitle;
-        if (title != null && PatternsCompat.WEB_URL.matcher(title).matches()) {
-            String t = title.replaceAll("\\s+", "");
-            Uri u = Uri.parse(title.contains("://") ? t : "http://" + t);
+        String t = (title == null ? null : title.replaceAll("\\s+", ""));
+        if (t != null && PatternsCompat.WEB_URL.matcher(t).matches()) {
+            Uri u = Uri.parse(t.contains("://") ? t : "http://" + t);
             String host = u.getHost(); // Capture1.PNG
             uriTitle = (UriHelper.hasTld(context, host) ? u : null);
         } else
@@ -213,7 +213,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
             @Override
             public void onClick(View v) {
                 Package pkg = (Package) spOpenWith.getSelectedItem();
-                Log.i("Open title uri=" + uri + " with=" + pkg);
+                Log.i("Open title uri=" + uriTitle + " with=" + pkg);
                 boolean tabs = (pkg != null && pkg.tabs);
                 Helper.view(context, uriTitle, !tabs, !tabs);
             }
@@ -342,11 +342,10 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Package pkg = (Package) parent.getAdapter().getItem(position);
-                if (pkg.browser)
-                    prefs.edit()
-                            .putString("open_with_pkg", pkg.name)
-                            .putBoolean("open_with_tabs", pkg.tabs)
-                            .apply();
+                prefs.edit()
+                        .putString("open_with_pkg", pkg.name)
+                        .putBoolean("open_with_tabs", pkg.tabs)
+                        .apply();
             }
 
             @Override
@@ -747,17 +746,32 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         } else
             grpOpenWith.setVisibility(View.GONE);
 
+        dview.post(new Runnable() {
+            @Override
+            public void run() {
+                Helper.hideKeyboard(etLink);
+            }
+        });
+
         Log.i("Open link dialog uri=" + uri);
         return new AlertDialog.Builder(context)
                 .setView(dview)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Uri uri = Uri.parse(etLink.getText().toString());
+                        if (chost != null &&
+                                cbNotAgain.getVisibility() == View.VISIBLE && cbNotAgain.isChecked())
+                            prefs.edit()
+                                    .putBoolean(chost + ".link_view", false)
+                                    .putBoolean(chost + ".link_sanitize",
+                                            cbSanitize.getVisibility() == View.VISIBLE && cbSanitize.isChecked())
+                                    .apply();
+
+                        Uri theUri = Uri.parse(etLink.getText().toString());
                         Package pkg = (Package) spOpenWith.getSelectedItem();
-                        Log.i("Open link uri=" + uri + " with=" + pkg);
+                        Log.i("Open link uri=" + theUri + " with=" + pkg);
                         boolean tabs = (pkg != null && pkg.tabs);
-                        Helper.view(context, uri, !tabs, !tabs);
+                        Helper.view(context, theUri, !tabs, !tabs);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -769,16 +783,24 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                 .setNeutralButton(R.string.title_browse, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        if (chost != null &&
+                                cbNotAgain.getVisibility() == View.VISIBLE && cbNotAgain.isChecked())
+                            prefs.edit()
+                                    .putBoolean(chost + ".link_view", true)
+                                    .putBoolean(chost + ".link_sanitize",
+                                            cbSanitize.getVisibility() == View.VISIBLE && cbSanitize.isChecked())
+                                    .apply();
+
                         // https://developer.android.com/training/basics/intents/sending#AppChooser
-                        Uri uri = Uri.parse(etLink.getText().toString());
-                        Log.i("Open link with uri=" + uri);
-                        Intent view = new Intent(Intent.ACTION_VIEW, UriHelper.fix(uri));
+                        Uri theUri = Uri.parse(etLink.getText().toString());
+                        Log.i("Open link with uri=" + theUri);
+                        Intent view = new Intent(Intent.ACTION_VIEW, UriHelper.fix(theUri));
                         Intent chooser = Intent.createChooser(view, context.getString(R.string.title_select_app));
                         try {
                             startActivity(chooser);
                         } catch (ActivityNotFoundException ex) {
                             Log.w(ex);
-                            Helper.view(context, uri, true, true);
+                            Helper.view(context, theUri, true, true);
                         }
                     }
                 })

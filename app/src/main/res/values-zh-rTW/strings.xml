@@ -199,7 +199,6 @@
     <string name="title_setup_doze_battery">很耗電嗎？</string>
     <string name="title_setup_doze_stopped">不會同步？</string>
     <string name="title_setup_doze_device">此裝置可能需要這項設定</string>
-    <string name="title_setup_alarm_12">程序將無法工作</string>
     <string name="title_setup_inexact">闹钟 &amp; 提醒權限已被停用</string>
     <string name="title_setup_background">背景活動限制已啟用</string>
     <string name="title_setup_data">數據節省模式已啟用</string>
@@ -273,9 +272,9 @@
     <string name="title_setup_defaults">恢復預設</string>
     <string name="title_setup_reset_questions">重設問題提示</string>
     <string name="title_setup_reset_general">一般問題提示</string>
-    <string name="title_setup_reset_full">顯示原始訊息</string>
-    <string name="title_setup_reset_images">顯示圖片</string>
     <string name="title_setup_reset_links">確認連結</string>
+    <string name="title_setup_reset_images">顯示圖片</string>
+    <string name="title_setup_reset_full">顯示原始訊息</string>
     <string name="title_check_gmail_oauth">你的Gmail帳號將會在2022年5月30日後持續運作</string>
     <string name="title_check_gmail_password">您的部分 Gmail 帳戶可能會在 2022 年 5 月 30 日之後不可使用</string>
     <string name="title_check_outlook_oauth">您的Outlook帳戶將於2022年10月1日後繼續運作</string>
@@ -336,7 +335,6 @@
     <string name="title_advanced_send_chips">卡片化顯示地址</string>
     <string name="title_advanced_send_reminders">顯示提醒</string>
     <string name="title_advanced_send_delayed">延後傳送訊息</string>
-    <string name="title_advanced_attach_new">將分享的檔案加至新建草稿中</string>
     <string name="title_advanced_answer_action">長按答覆按鈕以</string>
     <string name="title_advanced_send_pending">顯示低存在感的傳送延後圖示</string>
     <string name="title_advanced_auto_save_paragraph">每個段落後自動儲存草稿</string>
@@ -1332,7 +1330,8 @@
     <string name="title_sort_on_attachments">附件</string>
     <string name="title_sort_on_hidden">隱藏</string>
     <string name="title_sort_ascending">舊訊息優先</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">順序</string>
+    <string name="title_sort_on_name">名稱</string>
+    <string name="title_sort_on_order">順序</string>
     <string name="title_filter">篩選</string>
     <string name="title_filter_seen">已讀取</string>
     <string name="title_filter_unflagged">未加星號</string>
@@ -1381,7 +1380,8 @@
     <string name="title_rule_snooze">延後</string>
     <string name="title_rule_flag">加上星號</string>
     <string name="title_rule_importance">設定重要性</string>
-    <string name="title_rule_keyword">新增關鍵字</string>
+    <string name="title_rule_keyword_add">新增</string>
+    <string name="title_rule_keyword_delete">刪除</string>
     <string name="title_rule_move">移動</string>
     <string name="title_rule_copy">複製 (標籤)</string>
     <string name="title_rule_answer">回覆/轉寄</string>
@@ -1392,6 +1392,7 @@
     <string name="title_rule_caption">編輯規則</string>
     <string name="title_rule_title">規則套用至</string>
     <string name="title_rule_name">名稱</string>
+    <string name="title_rule_group">群組</string>
     <string name="title_rule_order">順序</string>
     <string name="title_rule_enabled">啟用</string>
     <string name="title_rule_stop">在執行此規則後停止後續規則的處理</string>
@@ -1575,7 +1576,6 @@
     <string name="title_hint_message_selection">長按一則訊息以開始選擇多則訊息； 按住並向上或向下滑動以選擇更多訊息</string>
     <string name="title_hint_important">重要</string>
     <string name="title_hint_sync">下載訊息可能會花費一些時間，具體取決於供應商的速度、互聯網連線、使用的裝置和訊息的數量。在下載訊息期間，應用程式的響應可能會變慢。</string>
-    <string name="title_hint_sync_note">出於限制儲存空間、電池以及數據用量的目的，預設情況下只有部分訊息會被下載。 此情況可藉由長按資料夾清單中的資料夾項並選擇\"提取更多訊息\"來改變。</string>
     <string name="title_hint_battery">由於預設情況下 FairEmail 會時刻接收訊息，因此 Android 會將 FairEmail 回報為始終處於活動中。看似 FairEmail 一直在消耗電量，但事實並非如此 。</string>
     <string name="title_hint_reformat">出於隱私和安全原因，FairEmail 預設重排訊息。 要檢視原始訊息，請輕觸訊息本文上方的“鋪滿螢幕”圖示。</string>
     <string name="title_hint_design">本程式介面設計並非意圖使您分心，而是意圖保持高度的實用性。 程式內有許多可供自訂外觀的選項，但請您理解，這些自訂項所提供的內容不可能令得每個人都完全滿意。</string>
@@ -1630,7 +1630,6 @@
     <string name="title_via">透過：%1$s</string>
     <string name="title_1hour">1 小時</string>
     <string name="title_1day">1 天</string>
-    <string name="title_1week">1 週</string>
     <string name="title_now">立刻</string>
     <string name="title_after">在 %1$s 之後</string>
     <string name="title_reset">重設</string>
@@ -1850,6 +1849,7 @@
     <string-array name="encryptNames">
         <item>沒有</item>
         <item>僅 PGP 簽名</item>
+        <item>PGP encrypt-only</item>
         <item>PGP 簽名+加密</item>
         <item>僅 S/MIME 簽名</item>
         <item>S/MIME 簽名+加密</item>

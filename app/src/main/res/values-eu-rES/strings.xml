@@ -194,7 +194,6 @@
     <string name="title_setup_doze_battery">Bateria-erabilera handia?</string>
     <string name="title_setup_doze_stopped">Sinkronizazioa gelditu da?</string>
     <string name="title_setup_doze_device">Beharrezkoa da hau gailu honetarako</string>
-    <string name="title_setup_alarm_12">Aplikazioak ez du funtzionatuko</string>
     <string name="title_setup_inexact">Alarmak eta oroigarriak desgaituta daude</string>
     <string name="title_setup_background">Bigarren planoko mugak indarrean daude</string>
     <string name="title_setup_data">Datuen aurreztailea gaituta dago</string>
@@ -264,9 +263,9 @@
     <string name="title_setup_defaults">Berrezarri balio lehenetsiak</string>
     <string name="title_setup_reset_questions">Berrezarri galderak</string>
     <string name="title_setup_reset_general">Galdera orokorrak</string>
-    <string name="title_setup_reset_full">Erakutsi jatorrizko mezuak</string>
-    <string name="title_setup_reset_images">Erakutsi irudiak</string>
     <string name="title_setup_reset_links">Baieztatu loturak</string>
+    <string name="title_setup_reset_images">Erakutsi irudiak</string>
+    <string name="title_setup_reset_full">Erakutsi jatorrizko mezuak</string>
     <string name="title_advanced_hint_title">Aukera aurreratu gehiago</string>
     <string name="title_advanced_hint_message">        Aukera aurreratuetan sartzen ari zara.
         Aukera guztiek maiz erabilitako balio estandarrak dituzte, eta zuk bestela nahi ezean ez dago hauek aldatzeko beharrik.
@@ -319,7 +318,6 @@
     <string name="title_advanced_send_chips">Erakutsi helbideen bonboiloak</string>
     <string name="title_advanced_send_reminders">Erakutsi oroigarriak</string>
     <string name="title_advanced_send_delayed">Atzeratu mezuen bidalketa</string>
-    <string name="title_advanced_attach_new">Gehitu partekatutako fitxategiak zirriborro berri batera</string>
     <string name="title_advanced_compose_font">Tipografia lehenetsia</string>
     <string name="title_advanced_prefix_once">Jarri aurrizkia mintzagaiari behin bakarrik erantzun edo birbidaltzean</string>
     <string name="title_advanced_prefix_count">Gehitu kontua erantzunaren aurrizkian</string>
@@ -1134,7 +1132,8 @@
     <string name="title_sort_on_attachments">Eranskinak</string>
     <string name="title_sort_on_hidden">Ezkutuan</string>
     <string name="title_sort_ascending">Zaharrena lehena</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Ordena</string>
+    <string name="title_sort_on_name">Izena</string>
+    <string name="title_sort_on_order">Ordena</string>
     <string name="title_filter">Iragazi</string>
     <string name="title_filter_seen">Irakurrita</string>
     <string name="title_filter_unflagged">Izarrik gabe</string>
@@ -1180,7 +1179,8 @@
     <string name="title_rule_snooze">Atzeratu</string>
     <string name="title_rule_flag">Gehitu izarra</string>
     <string name="title_rule_importance">Ezarri garrantzia</string>
-    <string name="title_rule_keyword">Gehitu gako-hitza</string>
+    <string name="title_rule_keyword_add">Gehitu</string>
+    <string name="title_rule_keyword_delete">Ezabatu</string>
     <string name="title_rule_move">Eraman</string>
     <string name="title_rule_copy">Kopiatu (etiketa)</string>
     <string name="title_rule_answer">Erantzun/birbidali</string>
@@ -1191,6 +1191,7 @@
     <string name="title_rule_caption">Editatu araua</string>
     <string name="title_rule_title">Araua honi aplikatzen zaio</string>
     <string name="title_rule_name">Izena</string>
+    <string name="title_rule_group">Taldea</string>
     <string name="title_rule_order">Ordena</string>
     <string name="title_rule_enabled">Gaituta</string>
     <string name="title_rule_stop">Utzi arauak prozesatzeari behi arau hau exekutatuta</string>
@@ -1366,10 +1367,8 @@
     <string name="title_hint_support">Galdera edo arazoren bat baduzu, erabili laguntza menua laguntza jasotzeko</string>
     <string name="title_hint_message_actions">Pasatu hatza ezkerrera zakarrontzira botatzeko, pasatu hatza eskuinera artxibatzeko (eskuragarri badago). Hatza pasatzeko ekintzak kontuaren ezarpenetan konfiguratu daitezke</string>
     <string name="title_hint_message_selection">Sakatu luze mezu bat hainbat mezu hautatzen hasteko. Mantendu eta pasatu hatza gora edo behera mezu gehiago hautatzeko</string>
-    <string name="title_hint_message_junk">Mezu horiek posta elektronikoko zerbitzariaren spam posta-karpetan daude. Jakina, aplikazioak ezin du saihestu spam mezuak bidaltzea.</string>
     <string name="title_hint_important">Garrantzitsua</string>
     <string name="title_hint_sync">Mezuak deskargatzeak denbora hartu dezake, hornitzailearen abiadura, internet konexioa, gailua eta mezu kopuruaren arabera. Mezuak deskargatu bitartean aplikazioa motel erantzun lezake.</string>
-    <string name="title_hint_sync_note">Lehenespenez, mezu guztiak ez dira deskargatuko biltegiratzeko espazioaren, bateriaren eta datuen erabilera mugatzeko. Hau alda dezakezu karpeten zerrendan dagoen karpeta baten gainean luze sakatuta eta \'Sinkronizatu gehiago\' aukeratuta.</string>
     <string name="title_hint_battery">FairEmail-ek berez mezuak beti jasotzen dituenez, Android-ek esaten du FairEmai beti aktibo dagoela. Ematen du FairEmail bateriako energia beti erabiltzen ari dela, baina hori ez da horrela.</string>
     <string name="title_hint_reformat">Besterik esan ezean, FairEmail-ek mezuen formatua aldatzen du pribatutasuna eta segurtasuna babesteko. Jatorrizko mezua ikusteko, sakatu mezuaren gaineko \'pantaila osoa\' ikonoa.</string>
     <string name="title_hint_design">Diseinuak ez du arreta galarazten, baina oso funtzionala da. Itxura pertsonalizatzeko aukera asko daude, baina, mesedez, uler ezazu ezinezkoa dela denak aldi berean zoriontsu egitea.</string>
@@ -1418,7 +1417,6 @@
     <string name="title_via">Honen bidez: %1$s</string>
     <string name="title_1hour">Ordu 1</string>
     <string name="title_1day">Egun 1</string>
-    <string name="title_1week">aste 1</string>
     <string name="title_now">Orain</string>
     <string name="title_after">%1$s eta gero</string>
     <string name="title_reset">Berrezarri</string>
@@ -1634,6 +1632,7 @@
     <string-array name="encryptNames">
         <item>Bat ere ez</item>
         <item>PGP sinadura soilik</item>
+        <item>PGP encrypt-only</item>
         <item>PGP sinadura eta zifratzea</item>
         <item>S/MIME sinadura soilik</item>
         <item>S/MIME sinadura eta zifratzea</item>

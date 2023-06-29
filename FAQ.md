@@ -81,6 +81,7 @@ Related questions:
 * Change the swipe left/right target: (Main) Settings, tab page Behavior, Set swipe actions (*)
 * Change password: (Main) Settings, tap Manual setup, tap Accounts, tap account, change password
 * Set a signature: (Main) Settings, tap Manual setup, tap Identities, tap identity, Edit signature.
+* Set a default CC or BCC address: (Main) Settings, tap Manual setup, tap Identities, tap identity, tap Advanced.
 * Add CC and BCC addresses: tap the people's icon at the end of the subject
 * Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
 * Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
@@ -181,7 +182,7 @@ The cause might be [changes in Android 7 Nougat](https://ericsink.com/entries/sq
 * &#x2714; ~~Pinch zoom~~
 * &#x2714; ~~More compact folder view~~
 * &#x2714; ~~Compose lists~~
-* &#x274C; ~~Compose tables~~ (the Android editor doesn't suppor tables)
+* &#x274C; ~~Compose tables~~ (the Android editor doesn't support tables)
 * &#x2714; ~~Pinch zoom text size~~
 * &#x2714; ~~Display GIFs~~
 * &#x2714; ~~Themes~~
@@ -389,6 +390,11 @@ Anything on this list is in random order and *might* be added in the near future
 * [(187) Are colored stars synchronized across devices?](#user-content-faq187)
 * [(188) Why is Google backup disabled?](#user-content-faq188)
 * [(189) What is cloud sync?](#user-content-faq189)
+* [(190) How do I use OpenAI (ChatGPT)?](#user-content-faq190)
+* [(191) How do I download and keep older messages on my device?](#user-content-faq191)
+* [(192) How can I resolve 'Couldn't connect to host, port: ...; timeout ...;' ?](#user-content-faq192)
+* [(193) How can I import Outlook contacts?](#user-content-faq193)
+* [(194) How can I set up automatic deletion of old messages?](#user-content-faq194)
 
 [I have another question.](#user-content-get-support)
 
@@ -402,7 +408,7 @@ The following Android permissions are **required**:
 * *have full network access* (INTERNET): to send and receive via the internet
 * *view network connections* (ACCESS_NETWORK_STATE): to monitor connectivity changes (mobile data, WiFi)
 * *run at startup* (RECEIVE_BOOT_COMPLETED): to start sending and receiving on device start
-* *run foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
+* *run foreground service* (FOREGROUND_SERVICE/DATA_SYNC): to run a foreground service on Android 9 Pie and later, see also the next question
 * *schedule exact alarm* (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later), for example to snooze messages
 * *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while performing actions, like synchronization of messages
 * *use fingerprint hardware* (USE_FINGERPRINT) and *use biometric hardware* (USE_BIOMETRIC): to use biometric authentication (fingerprint, face unlock, etc)
@@ -419,6 +425,7 @@ The following Android permissions are **optional**:
 * *read the contents of your shared storage (SD card)* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 * Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)
 * Android 5.1 Lollipop and before: *Read profile* (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)
+* GitHub version only: *read and write calendar data* (READ_CALENDAR/WRITE_CALENDAR): to [auto-store invitations](#user-content-faq186)
 
 [Optional permissions](https://developer.android.com/training/permissions/requesting) are supported on Android 6 Marshmallow and later only.
 On earlier Android versions you will be asked to grant the permissions on installing FairEmail.
@@ -817,6 +824,8 @@ and setting the user name field to your main email address.
 
 Note that you can copy an identity by long pressing it in the list of identities (via *Manual setup and account options* in the main settings page).
 
+**In many cases, an alias address must first be verified via the website of the mail provider**
+
 Alternatively, you can enable *Allow editing sender address* in the advanced settings of an existing identity to edit the username when composing a new message,
 if your provider allows this. Considering the email address test@example.org you can use these special username formats:
 
@@ -959,7 +968,7 @@ Signed-only or encrypted-only messages are not a good idea, please see here abou
 * [OpenPGP Considerations Part II](https://www.openkeychain.org/openpgp-considerations-part-ii)
 * [OpenPGP Considerations Part III Autocrypt](https://www.openkeychain.org/openpgp-considerations-part-iii-autocrypt)
 
-Signed-only messages are supported, encrypted-only messages are not supported.
+Signed-only messages are supported, and encrypted-only messages are supported since version 1.2053.
 
 Common errors:
 
@@ -1063,6 +1072,12 @@ How to extract a public key from a S/MIME certificate:
 
 ```
 openssl pkcs12 -in filename.pfx/p12 -clcerts -nokeys -out cert.pem
+```
+
+You can verify the signature of a raw message file (EML file) like this:
+
+```
+openssl smime -verify <xxx.eml
 ```
 
 You can decode S/MIME signatures, etc, [here](https://lapo.it/asn1js/).
@@ -1491,6 +1506,7 @@ Please [see here](#user-content-faq41) for the error *... Handshake failed ...*.
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
 The error *... connect failed: EACCES (Permission denied) ...* means that  *Restrict data usage* was disabled in the Android MIUI app settings for FairEmail.
+On Samsung, and possible other devices, also check: Android settings > Battery > Battery manager / Unmonitored apps.
 
 Possible causes are:
 
@@ -1736,9 +1752,12 @@ There are quick settings (settings tiles) available to:
 
 * globally enable/disable synchronization
 * show the number of new messages and marking them as seen (not read)
+* clear all app data
 
 Quick settings require Android 7.0 Nougat or later.
 The usage of settings tiles is explained [here](https://support.google.com/android/answer/9083864).
+
+Note that not all devices (manufacturers) support settings tiles, for example, Rephone doesn't.
 
 <br />
 
@@ -1936,6 +1955,10 @@ In these cases you might want to synchronize periodically, for example each hour
 Note that polling frequently (more than every 30-60 minutes) will likely use more battery power than synchronizing always
 because connecting to the server and comparing the local and remote messages are expensive operations.
 
+If you know that the connection (reception) is bad, it might be worthwhile to decrease the timeout value in the connection-settings tab page to 10–20 seconds,
+so that the app discovers earlier that no connection is possible,
+so that the mechanism as described in [this FAQ](#user-content-faq123) is used faster.
+
 [On some devices](https://dontkillmyapp.com/) it is necessary to *disable* battery optimizations (setup step 3) to keep connections to email servers open.
 In fact, leaving battery optimizations enabled can result in extra battery usage for all devices, even though this sounds contradictory!
 
@@ -1993,9 +2016,6 @@ an account will automatically be switched to periodically checking for new messa
 * The email server does not support push messages
 * The keep-alive interval is lower than 12 minutes
 
-In addition, the trash and spam folders will be automatically set to checking for new messages
-after three successive [too many simultaneous connections](#user-content-faq23) errors.
-
 <br />
 
 <a name="faq40"></a>
@@ -2019,6 +2039,9 @@ To reduce data usage, you could change these advanced receive settings:
 
 By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection.
 You can change this in the connection settings.
+
+You could enable to download only plain text only parts, but all messages will be without formatting (styling),
+and besides that, a plain text only part is not always sent, and worse, it is sometimes only a part of the message text, containing HTML and CCS.
 
 <br />
 
@@ -2211,7 +2234,9 @@ and within an account with special, system folders on top, followed by folders s
 Within each category the folders are sorted on (display) name.
 You can set the display name by long pressing a folder in the folder list and selecting *Edit properties*.
 
-The navigation (hamburger) menu item *Order folders* in the settings can be used to manually order the folders.
+The navigation (hamburger) menu item *Order folders* in the settings, or,
+alternatively, a button in the *Extra* section at the bottom of the main settings tab page,
+can be used to manually order the folders.
 
 <br />
 
@@ -2580,7 +2605,11 @@ You'll need to give a rule a name and you'll need to define the order in which a
 
 You can disable a rule and you can stop processing other rules after a rule has been executed, which can be used to create a *not* condition.
 
-Since version 1.2018 there is a rule option to run rules daily on messages older than defined.
+Since version 1.2061 rules can be part of a named group.
+Group names will be displayed in the list of rules.
+If a rule is part of a group, stop processing means stop processing the group.
+
+Since version 1.2018 there is a rule option to run rules daily on messages (around 1:00am) older than xxx.
 
 The following rule conditions are available:
 
@@ -2603,6 +2632,8 @@ Note that email addresses are formatted like this:
 ``
 "Somebody" <somebody@example.org>
 ``
+
+When using a regex, you need to take care to match the complete address.
 
 Note that message texts are normalized when not using a regex, which means that all whitespaces (spaces, tabs, line breaks, etc) are replaced by a single space.
 This makes it easier to match texts on multiple lines or when the line break is at different places.
@@ -2680,6 +2711,7 @@ You can enable downloading message headers in the connection settings and check 
 
 Some common header conditions (regex):
 
+* *.&ast;To:.&ast;undisclosed-recipients.&ast;*
 * *.&ast;Auto-Submitted:.&ast;* [RFC3834](https://tools.ietf.org/html/rfc3834)
 * *.&ast;List-Unsubscribe:.&ast;* [RFC3834](https://datatracker.ietf.org/doc/html/rfc2369)
 * *.&ast;Content-Type:.&ast;multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
@@ -2716,6 +2748,7 @@ $$lowpriority$ (since version 1.1958)
 $$highpriority$ (since version 1.1958)
 $$signed$ (since version 1.1981)
 $$encrypted$ (since version 1.1981)
+$$aligned$ (since version 1.2049)
 ```
 
 Note that *regex* should be disabled and that there should be no white space.
@@ -2737,12 +2770,16 @@ Note that not all email servers support IMAP keywords.
 
 The automation action will broadcast the intent *eu.faircode.email.AUTOMATION* with the following string extras:
 
-* *name*
+* *rule*
 * *sender*
 * *subject*
 * *received* (ISO 8601 date/time)
 
 An app like Tasker can listen for this intent and perform some action.
+
+<br />
+
+You can long-press a rule in the list of rules to copy it, which can be useful if you need a rule with the same condition but a different action.
 
 <br />
 
@@ -2755,6 +2792,15 @@ you can do this with filter rules with an absolute time condition on a 'jump' ar
 The filter rules will move the messages to a (sub) archive folder as a second step.
 
 The POP3 protocol does not support setting keywords and moving or copying messages.
+
+<br />
+
+Since version 1.2061 it is possible to execute rules with an automation app, like for example Tasker.
+
+
+```
+(adb shell) am start-foreground-service -a eu.faircode.email.RULE --es account <account name> -es rule <unique rule name>
+```
 
 Using rules is a pro feature.
 
@@ -3146,10 +3192,12 @@ Note that original messages are shown exactly as they are, which means also that
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq92)
 
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature
-and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client.
+and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers,
+not of an email client, which is basically a viewer for messages on an email server.
 Servers generally have more memory and computing power, so they are much better suited to this task than battery-powered devices.
-Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client.
-Moreover, email servers have access to information, like the IP address, etc of the connecting server, which an email client has no access to.
+Also, you'll want spam filtered for all your email clients, possibly including web email, not just for one email client on one device.
+Moreover, email servers have access to information, like the IP address, etc. of the connecting server, which an email client has no access to.
+Furthermore, an email server can inspect all messages of all email accounts, while an email client can inspect messages in your email account only.
 
 If you are receiving a significant amount of spam, the first thing you should do is consider switching to another email provider.
 Some email servers excell at filtering spam, and others are really bad at it.
@@ -3848,7 +3896,7 @@ FairEmail fetches a message in two steps:
 
 Directly after the first step new messages will be notified.
 However, only until after the second step the message text will be available.
-FairEmail updates exiting notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
+FairEmail updates existing notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
 
 Since there is no guarantee that a message text will always be fetched directly after a message header,
 it is not possible to guarantee that a new message notification with a preview text will always be sent to a wearable.
@@ -3866,6 +3914,10 @@ when the setting *Notifications*, *Apps installed in the future* is turned off i
 Some companion apps ignore [local only](https://developer.android.com/training/wearables/notifications/bridger#non-bridged) notifications,
 causing the summary notification (*nnn new messages*) to be bridged.
 Unfortunately, it is not possible to workaround this problem.
+
+Ongoing notifications shouldn't be bridged, but some companion apps bridge all notifications.
+This results in the "monitoring" status bar notification to be bridged.
+The workaround is to disable this notification, see [this FAQ](#user-content-faq2).
 
 <br />
 
@@ -3912,7 +3964,11 @@ so you cannot use FairEmail or any other email client to access Tildamail.
 
 **Criptext** uses a proprietary email protocol
 and [does not directly support IMAP](https://www.reddit.com/r/privacy/comments/chs82k/comment/ewrxxcn/),
-so you cannot use FairEmail or any other Android email client to access Criptext.
+so you cannot use FairEmail or any other email email client to access Criptext.
+
+**OnMail** uses a proprietary email protocol
+and [does not support IMAP](https://support.onmail.com/hc/en-us/articles/360048879012-How-do-I-connect-my-OnMail-address-to-a-third-party-email-app-),
+so you cannot use FairEmail or any other email client to access OnMail, except for one (but please read the privacy policy carefully).
 
 <br />
 
@@ -4024,7 +4080,7 @@ Individual messages will rarely be trashed and mostly this happens by accident.
 Showing trashed messages in conversations makes it easier to find them back.
 
 You can permanently delete a message using the message three-dots *delete* menu, which will remove the message from the conversation.
-Note that this irreversible.
+Note that this is irreversible.
 
 Similarly, drafts are shown in conversations to find them back in the context where they belong.
 It is easy to read through the received messages before continuing to write the draft later.
@@ -4395,6 +4451,8 @@ You might need to change [the Gmail IMAP settings](https://mail.google.com/mail/
 
 * When I mark a message in IMAP as deleted: Auto-Expunge off - Wait for the client to update the server.
 * When a message is marked as deleted and expunged from the last visible IMAP folder: Immediately delete the message forever
+
+<img alt="External image" src="https://github.com/M66B/FairEmail/blob/master/images/Gmail_IMAP_delete_settings.png" width="600" height="333" />
 
 Note that archived messages can be deleted only by moving them to the trash folder first.
 
@@ -4858,10 +4916,10 @@ Related questions:
 * The Play Store version does not support Android Auto, see [this FAQ](#user-content-faq165) for more information
 * The Play Store version does not support Amazon devices with Android 5 Lollipop because there are critical bugs in this Android version of Amazon
 * The Play Store version does not support Gravatars/Libravatars due to Play Store policies
-* The Play Store version does not support auto storing iCalendar invitations, see [this FAQ](#user-content-faq186) for more information
+* The Play Store version does not support auto-storing iCalendar invitations, see [this FAQ](#user-content-faq186) for more information
 * The Play Store version is released about once a month only because I am tired of 1-star ratings for *Too many updates*. If you want to receive more updates, you can join the [Play Store test program](https://play.google.com/apps/testing/eu.faircode.email).
 * The GitHub version will check for [updates on GitHub](https://github.com/M66B/FairEmail/releases) and is updated more frequently, but updates need to be installed manually
-* The GitHub version has some different links, some more options (like sharing the HTML of a message) and some different default values (more geared to advanced users)
+* The GitHub version has some different links, some more features and options, and some different default values (more geared to advanced users)
 * The GitHub version can be installed as an update over the Play store version, whereas the F-Droid build can't (see below for more details)
 * The F-Droid build does not support OAuth, see [this FAQ](#user-content-faq147) about why not
 * The F-Droid build does not include [Google Play Billing](https://developer.android.com/google/play/billing/integrate), so Play store purchases cannot be reused
@@ -4871,7 +4929,10 @@ The Play store and GitHub version are signed with the [same digital signature](h
 The F-Droid build is signed by the F-Droid organization with a different digital key.
 This means you can't update the F-Droid build with the Play store or GitHub version or the other way around without reinstalling.
 However, it is possible to install the GitHub version over the Play store version,
-and the Play store app will do the same, when auto updating isn't disabled for the app in the app description.
+and the Play store app will do the same, when auto-updating isn't disabled for the app in the app description.
+
+The version in the [Play Store test program](https://play.google.com/apps/testing/eu.faircode.email) is more often updated,
+but not all GitHub releases will be released as Play Store test version.
 
 <br />
 
@@ -4998,6 +5059,14 @@ Templates can have the following options:
 * *Snippet*: template will be used as text fragment (since version 1.1857)
 * *Hide from menus*: template will be hidden (disabled)
 
+Since version 1.2068 it is possible to send a template message with an intent:
+
+```
+(adb shell) am start-foreground-service -a eu.faircode.email.TEMPLATE --es template <template name> --es identity <identity display name> --es to <email address> --es cc <email address> --es subject <subject>
+```
+
+**Important**: you need to configure a display name for the identity, and use this to identify the identity.
+
 <br />
 
 <a name="faq180"></a>
@@ -5044,15 +5113,18 @@ This feature was added in version 1.1942 and is available in non Play store vers
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq182)
 
-When clicking on a link, a confirmation dialog will be shown. You can select how to open a link below *Open with*.
+When clicking on a link, by default, a confirmation dialog will be shown.
 The available browser(s) will be listed and if a browser supports [Custom Tabs](https://developer.chrome.com/docs/android/custom-tabs/), it will be listed twice,
 once with an "open external" icon (the browser will be started standalone, independent of the app)
-and once without this icon (the browser will be started embedded as "Custom Tab", dependent of the app).
+and once without this icon (the browser will be started embedded as "Custom Tab", dependent on the app).
+
 In addition, *Select app* will be listed, which means that the link will be handed over to Android, which will select how to open the link.
 In most cases, this will be with the default browser, which you can select in the Android settings.
 If there is choice, Android will ask you how to open the link. You can select *Always* or *Just Once*.
 If you want to reset *Always*, please [see here](https://support.google.com/pixelphone/answer/6271667) about how to.
 Note that Android will always use the default browser as selected in the Android settings and therefore will never ask which browser to use.
+
+You can confirm with *Ok* or select *Open with*, which behaves in the same way as the *Select app* option.
 
 If you ticked *Do not ask this again for [domain name]*, you can undo this by using the *Reset questions* button in the miscellaneous settings tab page of the app.
 
@@ -5154,7 +5226,7 @@ Amazon never responded to an issue reported about this.
 * Grant permissions via setup step 2 of the main settings screen
 * Select a calendar in the accounts settings under *Manual setup and account options* (you can use the *Reset* button to disable storing invitations)
 
-New invitations will be stored automatically as *tentative*, with no alarms and reminders set.
+New invitations, with both a start and end date, will be stored automatically as *tentative*, with no alarms and reminders set.
 If you accept or decline an invitation, the status will be updated accordingly, after the accept/decline message has been sent successfully.
 Received updates and cancellations will be processed as well.
 
@@ -5172,6 +5244,8 @@ This is a pro feature.
 <a name="faq187"></a>
 **(187) Are colored stars synchronized across devices?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq187)
+
 Colored stars can't be stored on email servers because email protocols do not support this.
 In other words, the color of stars is stored on your device only, and won't be synchronized across devices.
 
@@ -5180,15 +5254,26 @@ In other words, the color of stars is stored on your device only, and won't be s
 <a name="faq188"></a>
 **(188) Why is Google backup disabled?**
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq188)
+
 Google backup is disabled to prevent privacy-sensitive information, like account credentials and email addresses,
 from [automatically being sent to Google](https://developer.android.com/guide/topics/data/autobackup).
 
+In theory, there is client-side encryption, but there is no specification available about what this means.
+Moreover, many people do not trust Google.
+
 Unfortunately, it is not possible to enable cloud backup for other backup software without enabling Google backup.
+Whether Google backup is enabled needs to be specified in the app manifest. So, unfortunately, it isn't possible to add an option for this.
+
+As a replacement, you can back up and restore all settings, including the account settings and credentials, via the backup-settings tab page.
+This backup export uses a proper encryption method, [see here](#user-content-faq36).
 
 <br />
 
 <a name="faq189"></a>
 **(189) What is cloud sync?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq189)
 
 Cloud sync is meant to synchronize configuration data across devices.
 It can be used to restore configuration data onto a new device too.
@@ -5215,11 +5300,133 @@ Existing accounts or identities will never be deleted
 Please note that accounts are only considered the same if they are cloud synced and never if the same account is configured on different devices.
 
 All data is [end-to-end encrypted](https://en.wikipedia.org/wiki/End-to-end_encryption),
-which means that the cloud server can't see the data contents.
+which means that the cloud server, currently powered by AWS, can't see the data contents.
 The used encryption method is [AES-GCM-SIV](https://en.wikipedia.org/wiki/AES-GCM-SIV)
 using a 256 bit key derived from the username and password with [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) using SHA256 and 310,000 iterations.
 
 Cloud sync is an experimental feature. It is not available for the Play Store version of the app, yet.
+
+<br>
+
+<a name="faq190"></a>
+**(190) How do I use OpenAI (ChatGPT)?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq190)
+
+OpenAI can only be used if configured and enabled, and the app does not use third-party libraries to avoid tracking when OpenAI is not used.
+
+**Setup**
+
+* Create an account [here](https://platform.openai.com/signup)
+* Create an API key [here](https://platform.openai.com/account/api-keys)
+* Copy the API key and paste it in the corresponding field of the miscellaneous-settings tab page
+* Enable the OpenAI switch
+
+<br>
+
+**Usage**
+
+Tap on the robot button in the top action bar of the message editor.
+The text in the message editor (if any) and the first part of the message being replied to (if any)
+will be used for [chat completion](https://platform.openai.com/docs/guides/chat/introduction).
+If text is selected in the message editor, only the selected text will be used, and it will be replaced by the answer.
+A maximum of 1,000 characters of the message being replied to will be used to avoid exceeding the token limit.
+
+For example: create a new draft and enter the text "*How far is the sun?*", and tap on the robot button in the top action bar.
+
+<br>
+
+OpenAI isn't very fast, so be patient. Sometimes a timeout error occurs because the app is not receiving a response from OpenAI.
+
+You can select the [model](https://platform.openai.com/docs/models/overview),
+configure the [temperature](https://platform.openai.com/docs/api-reference/chat/create#chat/create-temperature)
+and enable [moderation](https://platform.openai.com/docs/api-reference/moderations) in the miscellaneous-settings tab page.
+
+If you have access to GPT-4, you can change the model name to [gpt-4](https://platform.openai.com/docs/models/gpt-4) in the miscellaneous-settings tab page.
+There is currently a [waitlist](https://openai.com/waitlist/gpt-4-api) for API GPT-4 access.
+
+Please read the [privacy policy](https://openai.com/policies/privacy-policy) of OpenAI,
+and perhaps [this article](https://katedowninglaw.com/2023/03/10/openais-massive-data-grab/)
+and [this article](https://www.ncsc.gov.uk/blog-post/chatgpt-and-large-language-models-whats-the-risk) too.
+
+This feature is experimental and available in the GitHub version only and requires version 1.2053 or later.
+
+<br>
+
+<a name="faq191"></a>
+**(191) How do I download and keep older messages on my device?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq191)
+
+You can download and keep older messages in the unified inbox folders by using *Fetch more messages* in the three-dots overflow menu of the start screen.
+For other folders, you can long press the folder in the folder list of the account (tap on the account name in the navigation menu = left side menu).
+Please read the remark in the confirmation dialog box.
+
+Note that starred (favorite) messages will be kept on your device "forever".
+
+Instead of downloading many messages to your device, consider [searching for messages on the email server](#user-content-faq13).
+
+<br>
+
+<a name="faq192"></a>
+**(192) How can I resolve 'Couldn't connect to host, port: ...; timeout ...;' ?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq192)
+
+This error message means that the app didn't receive a response from the email server.
+The email server might not be responding, for example because it is offline for maintenance, or the response might not arrive, for example due to internet connectivity issues.
+
+So, please check if your email provider didn't announce server maintenance, and if your internet connection is working correctly. Also, try to switch to mobile data or Wi-Fi.
+
+If you are using a VPN, firewall, ad blocker, or similar, please try to disable it, or make an exception for FairEmail. Email servers often block connections via a VPN.
+
+<br>
+
+<a name="faq193"></a>
+**(193) How can I import Outlook contacts?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq193)
+
+If there are one or more Outlook or Office 365 accounts configured,
+there will be a button in the main settings screen in setup step 2 to download Outlook contacts (since version 1.2076).
+After tapping on this button, you can select the account to download contacts for.
+Microsoft will ask for permission to read the contacts,
+and after granting this permission, the app will download the contacts with an email address into the local contacts' database.
+
+In the message editor, type the first few letters of the email address or name in any of the email address fields, and the downloaded addresses will be suggested.
+
+For privacy and security reasons, FairEmail doesn't have permissions to write into the Android address book, and also not to write in the address book of Outlook.
+This means that contacts can be downloaded as local contacts only, and can't be synchronized two ways.
+If you are looking to synchronize your Outlook contacts with the Android address book, you should look for a sync app in the Play Store which can do this.
+
+<br>
+
+<a name="faq194"></a>
+**(194) How can I set up automatic deletion of old messages?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/FAQ.md%23user-content-faq194)
+
+To set up automatic deletion of old messages:
+
+* Tap on the account name in the navigation menu (left side menu)
+* Long press the folder you want to set up auto deletion for, and select to edit the folder properties
+* Near the bottom of the properties screen, there is an option to enable auto deletion
+
+Messages in the trash and spam folder will be **permanently** deleted, and messages in other folders will be moved to the trash folder.
+
+Unread, starred and snoozed messages and messages younger than 24 hours will not be automatically deleted.
+You can enable auto deletion of unread messages in the receive-settings tab page (option *Delete old unread messages*).
+
+Note that it isn't a good idea to automatically delete recent messages, especially not for the spam folder because there might be legitimate messages in the spam folder.
+There is a button or menu item (depending on the screen size) in the top action bar/menu of the trash and spam folder to empty the folder.
+This way there is at least a visual check.
+
+Auto deletion will be done on a full sync only.
+For the inboxes, you can use *Force sync* in the three-dots overflow menu of the start screen.
+For other folders, you can long press the folder in the folder list of the account (*not* the navigation menu), and select *Synchronize now* in the pop-up menu.
+You can also pull down the messages list of any folder to sync it, and repeat this again within 30 seconds for a full sync.
+
+<br>
 
 <h2><a name="get-support"></a>Get support</h2>
 
@@ -5278,4 +5485,4 @@ GitHub issues are disabled due to frequent misusage.
 
 <br />
 
-Copyright &copy; 2018-2022 Marcel Bokhorst.
+Copyright &copy; 2018-2023 Marcel Bokhorst.

@@ -102,6 +102,7 @@ public class EntityMessage implements Serializable {
     static final Integer PGP_SIGNONLY = 2;
     static final Integer SMIME_SIGNENCRYPT = 3;
     static final Integer SMIME_SIGNONLY = 4;
+    static final Integer PGP_ENCRYPTONLY = 5;
 
     static final Integer PRIORITIY_LOW = 0;
     static final Integer PRIORITIY_NORMAL = 1;
@@ -269,7 +270,10 @@ public class EntityMessage implements Serializable {
     }
 
     String getLink() {
-        return "message://email.faircode.eu/link/#" + id;
+        // adb shell pm set-app-links --package eu.faircode.email 0 all
+        // adb shell pm verify-app-links --re-verify eu.faircode.email
+        // adb shell pm get-app-links eu.faircode.email
+        return "https://link.fairemail.net/#" + id;
     }
 
     boolean isPlainOnly() {
@@ -355,6 +359,10 @@ public class EntityMessage implements Serializable {
 
     boolean isForwarded() {
         return hasKeyword(MessageHelper.FLAG_FORWARDED);
+    }
+
+    boolean isFiltered() {
+        return hasKeyword(MessageHelper.FLAG_FILTERED);
     }
 
     boolean isSigned() {
@@ -497,6 +505,7 @@ public class EntityMessage implements Serializable {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean hide_timezone = prefs.getBoolean("hide_timezone", false);
         boolean language_detection = prefs.getBoolean("language_detection", false);
+        String compose_font = prefs.getString("compose_font", "");
         String l = (language_detection ? language : null);
 
         DateFormat DTF = (hide_timezone
@@ -547,6 +556,8 @@ public class EntityMessage implements Serializable {
 
         Element div = document.createElement("div")
                 .attr("fairemail", "reply");
+        if (!TextUtils.isEmpty(compose_font))
+            div.attr("style", "font-family: " + StyleHelper.getFamily(compose_font));
         if (separate)
             div.appendElement("hr");
         div.appendChild(p);

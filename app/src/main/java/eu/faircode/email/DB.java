@@ -68,7 +68,7 @@ import javax.mail.internet.InternetAddress;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 271,
+        version = 281,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -168,6 +168,26 @@ public abstract class DB extends RoomDatabase {
             } catch (SQLiteDatabaseCorruptException ex) {
                 Log.e(ex);
                 dbfile.delete();
+            } catch (Throwable ex) {
+                Log.e(ex);
+                /*
+                    java.lang.String, java.lang.String, android.os.Bundle)' on a null object reference
+                        at android.provider.Settings$NameValueCache.getStringForUser(Settings.java:3002)
+                        at android.provider.Settings$Global.getStringForUser(Settings.java:16253)
+                        at android.provider.Settings$Global.getString(Settings.java:16241)
+                        at android.database.sqlite.SQLiteCompatibilityWalFlags.initIfNeeded(SQLiteCompatibilityWalFlags.java:105)
+                        at android.database.sqlite.SQLiteCompatibilityWalFlags.isLegacyCompatibilityWalEnabled(SQLiteCompatibilityWalFlags.java:57)
+                        at android.database.sqlite.SQLiteDatabase.<init>(SQLiteDatabase.java:321)
+                        at android.database.sqlite.SQLiteDatabase.openDatabase(SQLiteDatabase.java:788)
+                        at android.database.sqlite.SQLiteDatabase.openDatabase(SQLiteDatabase.java:737)
+                        at eu.faircode.email.DB.init(SourceFile:61)
+                        at androidx.room.RoomDatabase$Builder.build(SourceFile:274)
+                        at eu.faircode.email.DB.getInstance(SourceFile:106)
+                        at eu.faircode.email.DB.setupViewInvalidation(SourceFile:1)
+                        at eu.faircode.email.ApplicationEx.onCreate(SourceFile:140)
+                        at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1229)
+                        at android.app.ActivityThread.handleBindApplication(ActivityThread.java:6719)
+                 */
             }
         }
 
@@ -178,6 +198,8 @@ public abstract class DB extends RoomDatabase {
                 try (Cursor cursor = db.rawQuery("PRAGMA wal_autocheckpoint=" + DB_CHECKPOINT + ";", null)) {
                     cursor.moveToNext(); // required
                 }
+            } catch (Throwable ex) {
+                Log.e(ex);
             }
         }
 
@@ -2297,8 +2319,8 @@ public abstract class DB extends RoomDatabase {
                         logMigration(startVersion, endVersion);
                         db.execSQL("CREATE INDEX `index_account_synchronize` ON `account` (`synchronize`)");
                         db.execSQL("CREATE INDEX `index_account_category` ON `account` (`category`)");
-                        db.execSQL("DROP VIEW IF EXISTS `account_view`");
-                        db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
+                        //db.execSQL("DROP VIEW IF EXISTS `account_view`");
+                        //db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
                     }
                 }).addMigrations(new Migration(214, 215) {
                     @Override
@@ -2761,7 +2783,72 @@ public abstract class DB extends RoomDatabase {
                         db.execSQL("UPDATE account SET partial_fetch = 0, raw_fetch = 1" +
                                 " WHERE host = 'imap.mail.yahoo.com' OR host = 'imap.aol.com'");
                     }
-                }).addMigrations(new Migration(998, 999) {
+                }).addMigrations(new Migration(271, 272) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE account SET partial_fetch = 1, raw_fetch = 0" +
+                                " WHERE host = 'imap.mail.yahoo.com' OR host = 'imap.aol.com'");
+                    }
+                }).addMigrations(new Migration(272, 273) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `client_delete` INTEGER NOT NULL DEFAULT 0");
+                    }
+                }).addMigrations(new Migration(273, 274) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `answer` ADD COLUMN `label` TEXT");
+                        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_answer_label` ON `answer` (`label`)");
+                    }
+                }).addMigrations(new Migration(274, 275) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `contact` ADD COLUMN `folder` INTEGER");
+                    }
+                }).addMigrations(new Migration(275, 276) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `log` ADD COLUMN `thread` INTEGER");
+                    }
+                }).addMigrations(new Migration(276, 277) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `uri` TEXT");
+                    }
+                }).addMigrations(new Migration(277, 278) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `rule` ADD COLUMN `group` TEXT");
+                    }
+                }).addMigrations(new Migration(278, 279) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `summary` INTEGER NOT NULL DEFAULT 0");
+                        db.execSQL("DROP VIEW IF EXISTS `account_view`");
+                        db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
+                    }
+                }).addMigrations(new Migration(279, 280) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `folder` ADD COLUMN `flags` TEXT");
+                    }
+                }).addMigrations(new Migration(280, 281) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `attachment` ADD COLUMN `section` TEXT");
+                    }
+                })
+                .addMigrations(new Migration(998, 999) {
                     @Override
                     public void migrate(@NonNull SupportSQLiteDatabase db) {
                         logMigration(startVersion, endVersion);

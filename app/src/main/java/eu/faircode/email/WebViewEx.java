@@ -48,9 +48,11 @@ import java.util.Objects;
 public class WebViewEx extends WebView implements DownloadListener, View.OnLongClickListener {
     private int height;
     private int maxHeight;
+    private int viewportHeight;
     private IWebView intf;
     private Runnable onPageLoaded;
     private String hash;
+    private Boolean images;
 
     private static String userAgent = null;
 
@@ -60,6 +62,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
         super(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        this.viewportHeight = prefs.getInt("viewport_height", 16000);
         boolean overview_mode = prefs.getBoolean("overview_mode", false);
         boolean safe_browsing = prefs.getBoolean("safe_browsing", false);
 
@@ -90,7 +93,9 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     }
 
     void init(int height, int maxHeight, float size, Pair<Integer, Integer> position, boolean force_light, IWebView intf) {
-        Log.i("Init height=" + height + "/" + maxHeight + " size=" + size);
+        Log.i("Init height=" + height + "/" + maxHeight + " size=" + size +
+                " viewport=" + viewportHeight +
+                " accelerated=" + isHardwareAccelerated());
 
         if (maxHeight == 0) {
             Log.e("WebView max height zero");
@@ -188,7 +193,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
                 @Override
                 public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
                     Log.i("Scroll (x,y)=" + scrollX + "," + scrollY);
-                    intf.onScrollChange(scrollX, scrollY);
+                    intf.onScrollChange(scrollX - oldScrollX, scrollY - oldScrollY, scrollX, scrollY);
                 }
             });
     }
@@ -224,10 +229,14 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
         try {
             // Prevent flickering
-            String h = (data == null ? null : Helper.md5(data.getBytes()));
-            if (Objects.equals(hash, h))
-                return;
-            this.hash = h;
+            boolean i = getSettings().getLoadsImagesAutomatically();
+            if (Objects.equals(this.images, i)) {
+                String h = (data == null ? null : Helper.md5(data.getBytes()));
+                if (Objects.equals(this.hash, h))
+                    return;
+                this.hash = h;
+            } else
+                this.images = i;
         } catch (Throwable ex) {
             Log.w(ex);
         }
@@ -244,7 +253,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // Unable to create layer for WebViewEx, size 1088x16384 max size 16383 color type 4 has context 1)
-        int limitHeight = MeasureSpec.makeMeasureSpec(16000, MeasureSpec.AT_MOST);
+        int limitHeight = MeasureSpec.makeMeasureSpec(viewportHeight, MeasureSpec.AT_MOST);
         super.onMeasure(widthMeasureSpec, limitHeight);
 
         int mh = getMeasuredHeight();
@@ -316,18 +325,20 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
                 intercept = (yoff > 0 || dy >= 0) && (yoff < bottom || dy <= 0);
             }
 
-            int xrange = computeHorizontalScrollRange();
-            int xextend = computeHorizontalScrollExtent();
-            boolean canScrollHorizontal = (xrange > xextend);
-            if (canScrollHorizontal) {
-                int right = xrange - xextend;
-                int xoff = computeHorizontalScrollOffset();
-                int ldx = xoff - lastXoff;
-                float dx = lastX - event.getX();
-                intercept = (xoff > 0 || dx >= 0) &&
-                        (xoff < right || dx <= 0) &&
-                        (Math.signum(dx) == Math.signum(ldx));
-                lastXoff = xoff;
+            if (!intercept) {
+                int xrange = computeHorizontalScrollRange();
+                int xextend = computeHorizontalScrollExtent();
+                boolean canScrollHorizontal = (xrange > xextend);
+                if (canScrollHorizontal) {
+                    int right = xrange - xextend;
+                    int xoff = computeHorizontalScrollOffset();
+                    int ldx = xoff - lastXoff;
+                    float dx = lastX - event.getX();
+                    intercept = (xoff > 0 || dx >= 0) &&
+                            (xoff < right || dx <= 0) &&
+                            (Math.signum(dx) == Math.signum(ldx));
+                    lastXoff = xoff;
+                }
             }
         }
         getParent().requestDisallowInterceptTouchEvent(intercept || event.getPointerCount() > 1);
@@ -410,7 +421,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
         void onScaleChanged(float newScale);
 
-        void onScrollChange(int scrollX, int scrollY);
+        void onScrollChange(int dx, int dy, int scrollX, int scrollY);
 
         boolean onOpenLink(String url);
     }

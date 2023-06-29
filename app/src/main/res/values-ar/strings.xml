@@ -183,7 +183,6 @@
     <string name="title_setup_doze_battery">استخدام عالي للبطارية؟</string>
     <string name="title_setup_doze_stopped">المزامنة توقفت؟</string>
     <string name="title_setup_doze_device">ربما يكون هذا مطلوبا لهذا الجهاز</string>
-    <string name="title_setup_alarm_12">التطبيق لن يعمل</string>
     <string name="title_setup_inexact">تم تعطيل المنبهات &amp; والتذكيرات</string>
     <string name="title_setup_background">القيود الخلفية مفعلة</string>
     <string name="title_setup_data">وضع حفظ البيانات قد فعل</string>
@@ -261,9 +260,9 @@
     <string name="title_setup_defaults">استعادة الأوضاع الافتراضية</string>
     <string name="title_setup_reset_questions">إعادة تعيين الأسئلة</string>
     <string name="title_setup_reset_general">أسئلة عامّة</string>
-    <string name="title_setup_reset_full">إظهار الرسائل الأصلية</string>
-    <string name="title_setup_reset_images">إظهار الصور</string>
     <string name="title_setup_reset_links">تأكيد الروابط</string>
+    <string name="title_setup_reset_images">إظهار الصور</string>
+    <string name="title_setup_reset_full">إظهار الرسائل الأصلية</string>
     <string name="title_check_gmail_oauth">سوف تستمر حسابات جيميل الخاصة بك في العمل بعد 30 مايو 2022</string>
     <string name="title_check_gmail_password">بعض حسابات الجيميل الخاصة بك قد تتوقف عن العمل بعد 30 مايو 2022</string>
     <string name="title_check_outlook_oauth">ستستمر حسابات Outlook في العمل بعد 1 أكتوبر 2022</string>
@@ -499,7 +498,8 @@
     <string name="title_sort_on_sender">المُرسِل</string>
     <string name="title_sort_on_subject">الموضوع</string>
     <string name="title_sort_on_size">الحجم</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">الترتيب</string>
+    <string name="title_sort_on_name">الإسم</string>
+    <string name="title_sort_on_order">الترتيب</string>
     <string name="title_zoom">حجم النص</string>
     <string name="title_select_all">اختيار الكل</string>
     <string name="title_language_all">الكل</string>
@@ -514,7 +514,8 @@
     <string name="title_rule_seen">علامة كـ مقروء</string>
     <string name="title_rule_unseen">وضع علامة كغير مقروء</string>
     <string name="title_rule_flag">إضافة نجمة</string>
-    <string name="title_rule_keyword">إضافة كلمة مفتاحية</string>
+    <string name="title_rule_keyword_add">إضافة</string>
+    <string name="title_rule_keyword_delete">حذف</string>
     <string name="title_rule_move">نقل</string>
     <string name="title_rule_name">الإسم</string>
     <string name="title_rule_order">الترتيب</string>

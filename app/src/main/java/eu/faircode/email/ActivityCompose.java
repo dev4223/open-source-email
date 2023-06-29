@@ -39,6 +39,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.preference.PreferenceManager;
 
+import org.jsoup.nodes.Document;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +78,7 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
             Intent intent = getIntent();
 
             String action = intent.getAction();
+            boolean shared = (isShared(action) && !intent.hasExtra("fair:account"));
             boolean widget = (action != null && action.startsWith("widget:"));
 
             String[] tos = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
@@ -87,7 +90,7 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         .putExtra("tab", "backup");
                 startActivity(setup);
-            } else if (!isShared(action) && !widget) {
+            } else if (!shared && !widget) {
                 Intent parent = getParentActivityIntent();
                 if (parent != null)
                     if (shouldUpRecreateTask(parent))
@@ -103,7 +106,16 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             prefs.edit().remove("last_composing").apply();
 
-            finishAndRemoveTask();
+            try {
+                if (shared || widget) {
+                    Helper.excludeFromRecents(this);
+                    finishAffinity();
+                } else
+                    finishAndRemoveTask();
+            } catch (Throwable ex) {
+                Log.e(ex);
+                finish();
+            }
         }
     }
 
@@ -210,8 +222,12 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
                         html = HtmlHelper.toHtml((Spanned) body, this);
                     else {
                         String text = body.toString();
-                        if (!TextUtils.isEmpty(text))
+                        if (!TextUtils.isEmpty(text)) {
                             html = "<span>" + text.replaceAll("\\r?\\n", "<br>") + "</span>";
+                            Document d = JsoupEx.parse(html);
+                            HtmlHelper.autoLink(d, true);
+                            html = d.body().html();
+                        }
                     }
             }
 
@@ -260,11 +276,17 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
         boolean attach_new = prefs.getBoolean("attach_new", true);
 
         if (!attach_new && !create &&
-                args.size() == 1 && args.containsKey("attachments")) {
+                args.size() == 1 &&
+                (args.containsKey("to") ||
+                        args.containsKey("attachments"))) {
             List<Fragment> fragments = fm.getFragments();
-            if (fragments.size() == 1) {
-                ((FragmentCompose) fragments.get(0)).onSharedAttachments(
-                        args.getParcelableArrayList("attachments"));
+            if (fragments.size() == 1 &&
+                    fragments.get(0) instanceof FragmentCompose) {
+                FragmentCompose fragment = ((FragmentCompose) fragments.get(0));
+                if (args.containsKey("to"))
+                    fragment.onAddTo(args.getString("to"));
+                else if (args.containsKey("attachments"))
+                    fragment.onSharedAttachments(args.getParcelableArrayList("attachments"));
                 return;
             }
         }

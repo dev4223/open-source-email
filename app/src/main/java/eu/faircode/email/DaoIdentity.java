@@ -33,7 +33,7 @@ public interface DaoIdentity {
     LiveData<List<TupleIdentityView>> liveIdentityView();
 
     @Query("SELECT identity.*" +
-            ", account.name AS accountName, account.category AS accountCategory, account.synchronize AS accountSynchronize" +
+            ", account.name AS accountName, account.category AS accountCategory, account.color AS accountColor, account.synchronize AS accountSynchronize" +
             ", folder.id AS drafts" +
             " FROM identity" +
             " JOIN account ON account.id = identity.account" +
@@ -41,7 +41,7 @@ public interface DaoIdentity {
     LiveData<List<TupleIdentityEx>> liveIdentities();
 
     @Query("SELECT identity.*" +
-            ", account.name AS accountName, account.category AS accountCategory, account.synchronize AS accountSynchronize" +
+            ", account.name AS accountName, account.category AS accountCategory, account.color AS accountColor, account.synchronize AS accountSynchronize" +
             ", folder.id AS drafts" +
             " FROM identity" +
             " JOIN account ON account.id = identity.account" +
@@ -51,7 +51,7 @@ public interface DaoIdentity {
     LiveData<List<TupleIdentityEx>> liveComposableIdentities();
 
     @Query("SELECT identity.*" +
-            ", account.name AS accountName, account.category AS accountCategory, account.synchronize AS accountSynchronize" +
+            ", account.name AS accountName, account.category AS accountCategory, account.color AS accountColor, account.synchronize AS accountSynchronize" +
             ", folder.id AS drafts" +
             " FROM identity" +
             " JOIN account ON account.id = identity.account" +
@@ -86,8 +86,18 @@ public interface DaoIdentity {
     @Query("SELECT * FROM identity WHERE id = :id")
     EntityIdentity getIdentity(long id);
 
+    @Query("SELECT identity.* FROM identity" +
+            " JOIN account ON account.id = identity.account" +
+            " JOIN folder ON folder.account = identity.account AND folder.type = '" + EntityFolder.DRAFTS + "'" +
+            " WHERE account.`primary` AND account.synchronize" +
+            " AND identity.`primary` AND identity.synchronize")
+    EntityIdentity getPrimaryIdentity();
+
     @Query("SELECT * FROM identity WHERE uuid = :uuid")
     EntityIdentity getIdentityByUUID(String uuid);
+
+    @Query("SELECT * FROM identity WHERE display = :display")
+    List<EntityIdentity> getIdentityByDisplayName(String display);
 
     @Insert
     long insertIdentity(EntityIdentity identity);
@@ -119,9 +129,9 @@ public interface DaoIdentity {
             " SET password = :password, auth_type = :new_auth_type, provider = :provider" +
             " WHERE account = :account" +
             " AND user = :user" +
-            " AND auth_type = :auth_type" +
+            " AND (auth_type = :auth_type OR :auth_type IS NULL)" +
             " AND NOT (password IS :password AND auth_type IS :new_auth_type AND provider = :provider)")
-    int setIdentityPassword(long account, String user, String password, int auth_type, int new_auth_type, String provider);
+    int setIdentityPassword(long account, String user, String password, Integer auth_type, int new_auth_type, String provider);
 
     @Query("UPDATE identity" +
             " SET fingerprint = :fingerprint" +
@@ -134,6 +144,9 @@ public interface DaoIdentity {
 
     @Query("UPDATE identity SET encrypt = :encrypt WHERE id = :id AND NOT (encrypt IS :encrypt)")
     int setIdentityEncrypt(long id, int encrypt);
+
+    @Query("UPDATE identity SET sign_default = 0, encrypt_default = 0 WHERE encrypt = 0")
+    int resetIdentityPGP();
 
     @Query("UPDATE identity SET sign_key = :sign_key WHERE id = :id AND NOT (sign_key IS :sign_key)")
     int setIdentitySignKey(long id, Long sign_key);

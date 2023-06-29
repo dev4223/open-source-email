@@ -43,6 +43,7 @@ import com.sun.mail.util.MessageRemovedIOException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.nodes.Document;
 
 import java.io.File;
 import java.io.IOException;
@@ -717,7 +718,14 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         Argument args = ss.generateSequence(terms, utf8 ? StandardCharsets.UTF_8.name() : null);
         args.writeAtom("ALL");
 
-        Response[] responses = protocol.command("SEARCH", args); // no CHARSET !
+        // https://www.rfc-editor.org/rfc/rfc3501#section-6.4.4
+        Response[] responses = protocol.command("SEARCH" + (utf8 ? " CHARSET UTF-8" : ""), args);
+        if (responses != null && responses.length > 0 && !responses[responses.length - 1].isOK()) {
+            // Normally "NO", but some servers respond with "BAD Could not parse command"
+            if (!BuildConfig.PLAY_STORE_RELEASE)
+                Log.e(responses[responses.length - 1].toString());
+            responses = protocol.command("SEARCH", args);
+        }
         if (responses == null || responses.length == 0)
             throw new ProtocolException("No response from server");
         for (Response response : responses)
@@ -832,11 +840,18 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             try {
                 File file = EntityMessage.getFile(context, message.id);
                 if (file.exists()) {
+                    String selector = criteria.getJsoup();
+                    if (selector != null) {
+                        Document d = JsoupEx.parse(file);
+                        return (d.select(selector).size() > 0);
+                    }
+
                     String html = Helper.readText(file);
                     if (criteria.in_html) {
                         if (html.contains(criteria.query))
                             return true;
                     }
+
                     if (criteria.in_message) {
                         // This won't match <p>An <b>example</b><p> when searching for "An example"
                         if (contains(html, criteria.query, partial, true)) {
@@ -992,6 +1007,15 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         private static final String CC = "cc:";
         private static final String BCC = "bcc:";
         private static final String KEYWORD = "keyword:";
+        private static final String JSOUP_PREFIX = "jsoup:";
+
+        String getJsoup() {
+            if (query == null)
+                return null;
+            if (!query.startsWith(JSOUP_PREFIX))
+                return null;
+            return query.substring(JSOUP_PREFIX.length());
+        }
 
         boolean onServer() {
             if (query == null)
@@ -1028,6 +1052,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     search = Normalizer
                             .normalize(search, Normalizer.Form.NFKD)
                             .replaceAll("[^\\p{ASCII}]", "");
+                    if (TextUtils.isEmpty(search)) {
+                        String msg = "Cannot convert to ASCII: " + query;
+                        Log.e(msg);
+                        throw new IllegalArgumentException(msg);
+                    }
                 }
 
                 List<String> word = new ArrayList<>();

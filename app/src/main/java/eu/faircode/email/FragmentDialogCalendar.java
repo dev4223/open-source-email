@@ -47,7 +47,10 @@ public class FragmentDialogCalendar extends FragmentDialogBase {
         final Context context = getContext();
         final ContentResolver resolver = context.getContentResolver();
 
-        String selectedCalendar = getArguments().getString("calendar");
+        Bundle args = getArguments();
+        boolean forevent = args.getBoolean("forevent");
+
+        String selectedCalendar = args.getString("calendar");
         String selectedAccount;
         String selectedName;
         try {
@@ -122,21 +125,21 @@ public class FragmentDialogCalendar extends FragmentDialogBase {
             }
         });
 
-        builder.setNegativeButton(R.string.title_reset, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                getArguments().putLong("id", -1);
-                getArguments().putString("account", null);
-                getArguments().putString("type", null);
-                sendResult(RESULT_OK);
-            }
-        });
+        if (!forevent)
+            builder.setNegativeButton(R.string.title_reset, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    getArguments().putLong("id", -1);
+                    getArguments().putString("account", null);
+                    getArguments().putString("type", null);
+                    sendResult(RESULT_OK);
+                }
+            });
 
         builder.setPositiveButton(android.R.string.cancel, null);
 
         return builder.create();
     }
-
 
     private class Calendar {
         private long id;
@@ -152,14 +155,14 @@ public class FragmentDialogCalendar extends FragmentDialogBase {
             this.type = type;
             this.primary = primary;
             this.visible = visible;
-            this.name = (Objects.equals(account, name) ? null : name);
+            this.name = name;
         }
 
         String getTitle() {
             return (this.visible ? "" : "(") +
                     (this.account == null ? "-" : this.account) +
                     (BuildConfig.DEBUG && false ? ":" + (this.type == null ? "-" : this.type) : "") +
-                    (TextUtils.isEmpty(this.name) ? "" : ":" + this.name) +
+                    (TextUtils.isEmpty(this.name) || Objects.equals(this.account, this.name) ? "" : ":" + this.name) +
                     (this.visible ? "" : ")") +
                     " " + (this.primary ? "*" : "");
         }

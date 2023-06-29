@@ -48,7 +48,7 @@ public interface DaoMessage {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
-            ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
+            ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
@@ -127,7 +127,7 @@ public interface DaoMessage {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
-            ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
+            ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, f.inherited_type AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
@@ -199,7 +199,7 @@ public interface DaoMessage {
     @Transaction
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
-            ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
+            ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
@@ -505,7 +505,7 @@ public interface DaoMessage {
 
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, identity.color AS accountColor" +
-            ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
+            ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
@@ -536,7 +536,7 @@ public interface DaoMessage {
     @Transaction
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, account.category AS accountCategory, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
-            ", account.notify AS accountNotify, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
+            ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
@@ -734,6 +734,7 @@ public interface DaoMessage {
     @Query("UPDATE message SET receipt_request = :receipt_request WHERE id = :id AND NOT (receipt_request IS :receipt_request)")
     int setMessageReceiptRequest(long id, Boolean receipt_request);
 
+    @Transaction
     @Query("UPDATE message SET notifying = :notifying WHERE id = :id AND NOT (notifying IS :notifying)")
     int setMessageNotifying(long id, int notifying);
 
@@ -788,6 +789,7 @@ public interface DaoMessage {
     @Transaction
     @Query("UPDATE message SET ui_hide = 1" +
             " WHERE folder = :folder" +
+            " AND NOT ui_flagged" +
             " AND id NOT IN (" +
             "    SELECT id FROM message" +
             "    WHERE folder = :folder" +
@@ -795,9 +797,11 @@ public interface DaoMessage {
             "    LIMIT :keep)")
     int setMessagesUiHide(long folder, int keep);
 
+    @Transaction
     @Query("UPDATE message SET ui_ignored = :ui_ignored WHERE id = :id AND NOT (ui_ignored IS :ui_ignored)")
     int setMessageUiIgnored(long id, boolean ui_ignored);
 
+    @Transaction
     @Query("UPDATE message SET ui_silent = :ui_silent WHERE id = :id AND NOT (ui_silent IS :ui_silent)")
     int setMessageUiSilent(long id, boolean ui_silent);
 
@@ -985,6 +989,14 @@ public interface DaoMessage {
             " AND uid IS NULL" +
             " AND NOT EXISTS" +
             "  (SELECT * FROM operation" +
+            "  WHERE operation.message = message.id)")
+    List<EntityMessage> getDraftOrphans(long folder);
+
+    @Query("SELECT * FROM message" +
+            " WHERE folder = :folder" +
+            " AND uid IS NULL" +
+            " AND NOT EXISTS" +
+            "  (SELECT * FROM operation" +
             "  WHERE operation.message = message.id" +
             "  AND operation.name = '" + EntityOperation.EXISTS + "')")
     List<EntityMessage> getSentOrphans(long folder);
@@ -1012,6 +1024,7 @@ public interface DaoMessage {
     @Transaction
     @Query("DELETE FROM message" +
             " WHERE folder = :folder" +
+            " AND NOT ui_flagged" +
             " AND id NOT IN (" +
             "    SELECT id FROM message" +
             "    WHERE folder = :folder" +

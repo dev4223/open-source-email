@@ -25,12 +25,12 @@ import android.Manifest;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.RemoteAction;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -58,6 +58,7 @@ import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -92,7 +93,6 @@ import android.view.ViewAnimationUtils;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -145,7 +145,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.webkit.WebViewFeature;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
@@ -264,6 +263,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean date;
     private boolean date_week;
     private boolean date_fixed;
+    private boolean date_time;
     private boolean cards;
     private boolean shadow_unread;
     private boolean shadow_border;
@@ -292,6 +292,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private String sender_ellipsize;
     private String subject_ellipsize;
 
+    private boolean show_filtered;
     private boolean keywords_header;
     private boolean labels_header;
     private boolean flags;
@@ -299,6 +300,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean preview;
     private boolean preview_italic;
     private int preview_lines;
+    private boolean align_header;
     private boolean large_buttons;
     private int message_zoom;
     private boolean attachments_alt;
@@ -324,7 +326,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private boolean gotoTop = false;
     private Integer gotoPos = null;
-    private boolean firstClick = false;
     private AsyncPagedListDiffer<TupleMessageEx> differ;
     private Map<Long, Integer> keyPosition = new HashMap<>();
     private Map<Integer, Long> positionKey = new HashMap<>();
@@ -338,6 +339,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private NumberFormat NF = NumberFormat.getNumberInstance();
     private DateFormat TF;
     private DateFormat DTF;
+    private DateFormat DTFS;
 
     private static final ExecutorService executorDiffer =
             Helper.getBackgroundExecutor(0, "differ");
@@ -668,8 +670,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
                             if (ddss.length > 0) {
-                                int s = buffer.getSpanStart(ddss[0]);
-                                properties.setValue("quotes", message.id, buffer.charAt(s) != '0');
+                                int f = buffer.getSpanFlags(ddss[0]);
+                                properties.setValue("quotes", message.id, (f & Spanned.SPAN_USER) == 0);
                                 properties.setHeight(message.id, null);
                                 bindBody(message, false);
                                 return true;
@@ -1093,6 +1095,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibTrash.setOnLongClickListener(this);
                 ibJunk.setOnClickListener(this);
                 ibInbox.setOnClickListener(this);
+                ibInbox.setOnLongClickListener(this);
                 ibMore.setOnClickListener(this);
                 ibTools.setOnClickListener(this);
 
@@ -1209,6 +1212,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibTrash.setOnLongClickListener(null);
                 ibJunk.setOnClickListener(null);
                 ibInbox.setOnClickListener(null);
+                ibInbox.setOnLongClickListener(null);
                 ibMore.setOnClickListener(null);
                 ibTools.setOnClickListener(null);
 
@@ -1415,7 +1419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 boolean verified = (auths == 3 && (!check_tls || Boolean.TRUE.equals(message.tls)));
 
-                if (message.dkim == null && message.spf == null && message.dkim == null)
+                if (message.dkim == null && message.spf == null && message.dmarc == null)
                     ibAuth.setImageLevel(1);
                 else
                     ibAuth.setImageLevel(auths + 2);
@@ -1476,11 +1480,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     message.totalSize != null && ("size".equals(sort) || "attachments".equals(sort))
                             ? View.VISIBLE : View.GONE);
             SpannableStringBuilder time;
-            if (date_week)
+            if (date_time)
+                time = new SpannableStringBuilderEx(DTFS.format(message.received));
+            else if (date_week)
                 time = new SpannableStringBuilderEx(Helper.getRelativeDateSpanString(context, message.received));
             else
                 time = new SpannableStringBuilderEx(
-                        (date || date_fixed) && FragmentMessages.SORT_DATE_HEADER.contains(sort)
+                        (date && !date_fixed && FragmentMessages.SORT_DATE_HEADER.contains(sort)) ||
+                                (date_fixed && "time".equals(sort))
                                 ? TF.format(message.received)
                                 : Helper.getRelativeTimeSpanString(context, message.received));
             if (show_recent && message.recent)
@@ -1517,7 +1524,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             ivFound.setVisibility(message.ui_found && found ? View.VISIBLE : View.GONE);
-            ivClassified.setVisibility(message.auto_classified ? View.VISIBLE : View.GONE);
+            ivClassified.setImageResource(message.isFiltered()
+                    ? R.drawable.twotone_filter_alt_24 : R.drawable.twotone_push_pin_24);
+            ivClassified.setVisibility(message.auto_classified || (show_filtered && message.isFiltered())
+                    ? View.VISIBLE : View.GONE);
 
             int snoozy = (message.ui_snoozed != null && message.ui_snoozed == Long.MAX_VALUE
                     ? R.drawable.twotone_visibility_off_24
@@ -2982,8 +2992,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 }
 
                                 @Override
-                                public void onScrollChange(int scrollX, int scrollY) {
-                                    properties.setPosition(message.id, new Pair<Integer, Integer>(scrollX, scrollY));
+                                public void onScrollChange(int dx, int dy, int scrollX, int scrollY) {
+                                    properties.setPosition(message.id, new Pair<>(dx, dy), new Pair<>(scrollX, scrollY));
                                 }
 
                                 @Override
@@ -3182,12 +3192,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     // Format message
                     if (show_full) {
-                        if (HtmlHelper.truncate(document, HtmlHelper.MAX_FULL_TEXT_SIZE))
+                        if (HtmlHelper.truncate(document, HtmlHelper.MAX_FULL_TEXT_SIZE)) {
                             document.body()
-                                    .appendElement("br")
                                     .appendElement("p")
                                     .appendElement("em")
                                     .text(context.getString(R.string.title_truncated));
+                            document.body()
+                                    .appendElement("p")
+                                    .appendElement("big")
+                                    .appendElement("a")
+                                    .attr("href", "external:")
+                                    .text(context.getString(R.string.title_show_full));
+                        }
 
                         if (message.isPlainOnly()) {
                             document.select("body")
@@ -3321,7 +3337,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 continue;
 
                             if (show_quotes) {
-                                ssb.insert(s - 1, "\n0");
+                                ssb.insert(s - 1, "\n ");
                                 ssb.setSpan(
                                         new DynamicDrawableSpan() {
                                             @Override
@@ -3329,12 +3345,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                 return d;
                                             }
                                         },
-                                        s, s + 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                                        s, s + 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE | Spanned.SPAN_USER);
                             } else {
                                 for (Object span : ssb.getSpans(s, e, Object.class))
                                     ssb.removeSpan(span);
                                 ssb.delete(s, e);
-                                ssb.insert(s - 1, "\n1");
+                                ssb.insert(s - 1, "\n ");
                                 ssb.setSpan(
                                         new DynamicDrawableSpan() {
                                             @Override
@@ -3369,9 +3385,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     // Show images
                     ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.INVISIBLE);
 
-                    boolean verifiable = message.isVerifiable();
-                    boolean encrypted = message.isEncrypted() || args.getBoolean("inline_encrypted");
-                    boolean unlocked = message.isUnlocked();
+                    boolean inline = args.getBoolean("inline_encrypted");
+                    boolean verifiable = message.isVerifiable() && !inline;
+                    boolean encrypted = message.isEncrypted() || inline;
+                    boolean unlocked = message.isUnlocked() && !inline;
+                    properties.setValue("inline_encrypted", message.id, inline);
 
                     // Show AMP
                     boolean has_amp = args.getBoolean("has_amp");
@@ -3388,7 +3406,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             !EntityFolder.OUTBOX.equals(message.folderType)
                             ? View.VISIBLE : View.GONE);
 
-                    boolean reformatted_hint = prefs.getBoolean("reformatted_hint", true);
+                    boolean reformatted_hint = prefs.getBoolean("reformatted_hint", hasWebView);
                     tvReformatted.setVisibility(reformatted_hint ? View.VISIBLE : View.GONE);
 
                     boolean signed_data = args.getBoolean("signed_data");
@@ -3835,6 +3853,42 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 return;
             }
 
+            if (action == R.id.ibCalendar &&
+                    Helper.hasPermission(context, Manifest.permission.WRITE_CALENDAR)) {
+                Bundle args = new Bundle();
+                args.putLong("message", message.id);
+                args.putLong("account", message.account);
+
+                new SimpleTask<String>() {
+                    @Override
+                    protected String onExecute(Context context, Bundle args) throws Throwable {
+                        long aid = args.getLong("account");
+
+                        DB db = DB.getInstance(context);
+                        EntityAccount account = db.account().getAccount(aid);
+                        return (account == null ? null : account.calendar);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, String calendar) {
+                        args.putString("calendar", calendar);
+                        args.putBoolean("forevent", true);
+
+                        FragmentDialogCalendar fragment = new FragmentDialogCalendar();
+                        fragment.setArguments(args);
+                        fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_CALENDAR);
+                        fragment.show(parentFragment.getParentFragmentManager(), "insert:calendar");
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    }
+                }.execute(context, owner, args, "insert:calendar");
+
+                return;
+            }
+
             Bundle args = new Bundle();
             args.putLong("id", message.id);
             args.putInt("action", action);
@@ -3857,6 +3911,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (attachment.available && "text/calendar".equals(attachment.getMimeType())) {
                             File file = attachment.getFile(context);
                             ICalendar icalendar = Biweekly.parse(file).first();
+                            CalendarScale scale = (icalendar.getCalendarScale() == null
+                                    ? CalendarScale.gregorian()
+                                    : icalendar.getCalendarScale());
                             VEvent event = icalendar.getEvents().get(0);
 
                             if (action == R.id.ibCalendar) {
@@ -4036,7 +4093,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             // https://icalendar.org/validator.html
                             ICalendar response = new ICalendar();
-                            response.setCalendarScale(CalendarScale.gregorian());
+                            response.setCalendarScale(scale);
                             response.setMethod(Method.REPLY);
                             response.addEvent(ev);
 
@@ -4481,13 +4538,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return;
                     }
 
-                    firstClick = !firstClick;
+                    boolean firstClick = !properties.getValue("firstClick", message.id);
+                    properties.setValue("firstClick", message.id, firstClick);
                     if (firstClick) {
                         ApplicationEx.getMainHandler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
+                                boolean firstClick = properties.getValue("firstClick", message.id);
                                 if (firstClick) {
-                                    firstClick = false;
+                                    properties.setValue("firstClick", message.id, false);
                                     lbm.sendBroadcast(viewThread);
                                     properties.setValue("selected", message.id, true);
                                 }
@@ -4562,6 +4621,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             } else if (id == R.id.tvFolder) {
                 onGotoFolder(message);
                 return true;
+            } else if (id == R.id.ibInbox) {
+                boolean inJunk = EntityFolder.JUNK.equals(message.folderType);
+                if (inJunk)
+                    onActionJunk(message);
+                return inJunk;
             } else if (id == R.id.ibImportance) {
                 int importance = (((message.ui_importance == null ? 1 : message.ui_importance) + 2) % 3);
                 onMenuSetImportance(message, importance);
@@ -4619,7 +4683,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             properties.setSize(message.id, null);
                             properties.setHeight(message.id, null);
-                            properties.setPosition(message.id, null);
+                            properties.setPosition(message.id, null, null);
 
                             if (itemId == R.string.title_fit_width && wvBody instanceof WebView)
                                 ((WebView) wvBody).getSettings().setLoadWithOverviewMode(enabled);
@@ -4958,6 +5022,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onHelp(TupleMessageEx message) {
+            if (message.error != null &&
+                    message.error.contains("535 5.7.3 Authentication unsuccessful")) {
+                Intent intent = new Intent(context, ActivityError.class);
+                intent.setAction("535:" + message.identity);
+                intent.putExtra("title", "535 5.7.3 Authentication unsuccessful");
+                intent.putExtra("message", message.error);
+                intent.putExtra("provider", "outlookgraph");
+                intent.putExtra("account", message.account);
+                intent.putExtra("protocol", message.accountProtocol);
+                intent.putExtra("identity", message.identity);
+                intent.putExtra("authorize", true);
+                intent.putExtra("personal", message.identityName);
+                intent.putExtra("address", message.identityEmail);
+                intent.putExtra("faq", 14);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                return;
+            }
+
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibError);
 
             int order = 0;
@@ -5191,11 +5274,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onInsertContact(String name, String email) {
-            if (TextUtils.isEmpty(name)) {
-                int at = email.indexOf('@');
-                if (at > 0)
-                    name = email.substring(0, at);
-            }
+            if (TextUtils.isEmpty(name))
+                name = UriHelper.getEmailUser(email);
 
             // https://developer.android.com/training/contacts-provider/modify-data
             Intent insert = new Intent();
@@ -5347,12 +5427,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     froms.add(from);
                     int at = from.indexOf('@');
                     String domain = (at < 0 ? from : from.substring(at));
-                    domains.add(domain);
+                    if (!Objects.equals(from, domain))
+                        domains.add(domain);
                 }
                 cbNotAgainSender.setText(context.getString(R.string.title_no_ask_for_again,
                         TextUtils.join(", ", froms)));
                 cbNotAgainDomain.setText(context.getString(R.string.title_no_ask_for_again,
                         TextUtils.join(", ", domains)));
+                cbNotAgainDomain.setVisibility(domains.size() > 0 ? View.VISIBLE : View.GONE);
             }
 
             cbNotAgainDomain.setEnabled(false);
@@ -5471,7 +5553,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             properties.setSize(message.id, null);
             properties.setHeight(message.id, null);
-            properties.setPosition(message.id, null);
+            properties.setPosition(message.id, null, null);
 
             if (full)
                 setupTools(message, false, false);
@@ -5665,7 +5747,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionDecrypt(TupleMessageEx message, boolean auto) {
-            int encrypt = (message.encrypt == null ? EntityMessage.PGP_SIGNENCRYPT /* Inline */ : message.encrypt);
+            boolean inline = properties.getValue("inline_encrypted", message.id);
+            int encrypt = (message.encrypt == null || inline ? EntityMessage.PGP_SIGNENCRYPT /* Inline */ : message.encrypt);
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
@@ -5768,7 +5851,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putBoolean("cancopy", true);
             args.putBoolean("similar", false);
 
-            FragmentDialogFolder fragment = new FragmentDialogFolder();
+            FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
             fragment.setArguments(args);
             fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_MOVE);
             fragment.show(parentFragment.getParentFragmentManager(), "message:move");
@@ -5834,6 +5917,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 onActionDelete(message);
             else
                 properties.move(message.id, EntityFolder.TRASH);
+        }
+
+        private void onActionDeleteAttachments(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+
+            FragmentDialogDeleteAttachments fragment = new FragmentDialogDeleteAttachments();
+            fragment.setArguments(args);
+            fragment.show(parentFragment.getParentFragmentManager(), "attachments:delete");
         }
 
         private void onActionDelete(TupleMessageEx message) {
@@ -5944,6 +6036,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .setEnabled(message.uid != null && !message.folderReadOnly)
                     .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
+            popupMenu.getMenu().findItem(R.id.menu_delete_attachments)
+                    .setEnabled(message.uid != null && !message.folderReadOnly)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP && !Helper.isPlayStoreInstall());
+
             popupMenu.getMenu().findItem(R.id.menu_delete)
                     .setEnabled(message.uid == null || !message.folderReadOnly)
                     .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
@@ -5962,6 +6058,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_force_light).setChecked(force_light);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
+            popupMenu.getMenu().findItem(R.id.menu_share_link).setVisible(BuildConfig.DEBUG);
             popupMenu.getMenu().findItem(R.id.menu_pin).setVisible(pin);
             popupMenu.getMenu().findItem(R.id.menu_event).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(hasWebView && message.content);
@@ -6039,6 +6136,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else if (itemId == R.id.menu_copy_to) {
                         onActionMove(message, true);
                         return true;
+                    } else if (itemId == R.id.menu_delete_attachments) {
+                        onActionDeleteAttachments(message);
+                        return true;
                     } else if (itemId == R.id.menu_delete) {
                         onActionDelete(message);
                         return true;
@@ -6069,6 +6169,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else if (itemId == R.id.menu_share) {
                         onMenuShare(message, false);
                         return true;
+                    } else if (itemId == R.id.menu_share_link) {
+                        onMenuShareLink(message);
+                        return true;
                     } else if (itemId == R.id.menu_pin) {
                         onMenuPin(message);
                         return true;
@@ -6092,6 +6195,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return true;
                     } else if (itemId == R.id.menu_thread_info) {
                         onMenuThreadInfo(message);
+                        return true;
+                    } else if (itemId == R.id.menu_reset_questions) {
+                        onMenuResetQuestions(message);
                         return true;
                     } else if (itemId == R.id.menu_resync) {
                         onMenuResync(message);
@@ -6164,20 +6270,53 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ToastEx.makeText(context, Log.formatThrowable(ex), Toast.LENGTH_LONG).show();
                 }
             } else {
-                if ("full".equals(uri.getScheme())) {
+                String scheme = uri.getScheme();
+                if ("full".equals(scheme)) {
                     TupleMessageEx message = getMessage();
                     if (message != null)
                         onShow(message, true);
                     return (message != null);
+                } else if ("external".equals(scheme)) {
+                    TupleMessageEx message = getMessage();
+                    if (message == null)
+                        return false;
+
+                    Bundle args = new Bundle();
+                    args.putLong("id", message.id);
+
+                    new SimpleTask<Uri>() {
+                        @Override
+                        protected Uri onExecute(Context context, Bundle args) throws Throwable {
+                            long id = args.getLong("id");
+
+                            File source = EntityMessage.getFile(context, id);
+
+                            File dir = Helper.ensureExists(new File(context.getFilesDir(), "shared"));
+                            File target = new File(dir, id + ".html");
+
+                            Helper.copy(source, target);
+
+                            return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, target);
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Uri uri) {
+                            Helper.share(context, uri, "text/html", null);
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "message:external");
+
+                    return true;
                 }
 
                 if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
                     return false;
 
                 boolean confirm_links = prefs.getBoolean("confirm_links", true);
-                Uri guri = UriHelper.guessScheme(uri);
-                String scheme = guri.getScheme();
-                String host = guri.getHost();
 
                 String chost = FragmentDialogOpenLink.getConfirmHost(uri);
                 boolean sanitize_links = prefs.getBoolean("sanitize_links", false);
@@ -6192,8 +6331,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     fragment.setArguments(args);
                     fragment.show(parentFragment.getParentFragmentManager(), "open:link");
                 } else {
-                    boolean tabs = prefs.getBoolean("open_with_tabs", true);
-                    Helper.view(context, UriHelper.guessScheme(uri), !tabs, !tabs);
+                    boolean link_view = prefs.getBoolean(chost + ".link_view", false);
+                    boolean link_sanitize = prefs.getBoolean(chost + ".link_sanitize", false);
+
+                    if (link_sanitize && UriHelper.isHyperLink(uri)) {
+                        Uri sanitized = UriHelper.sanitize(uri);
+                        if (sanitized != null)
+                            uri = sanitized;
+                        Log.i("Open sanitized=" + uri);
+                    }
+
+                    if (link_view) {
+                        Log.i("Open view=" + uri);
+                        Intent view = new Intent(Intent.ACTION_VIEW, UriHelper.fix(uri));
+                        Intent chooser = Intent.createChooser(view, context.getString(R.string.title_select_app));
+                        try {
+                            context.startActivity(chooser);
+                        } catch (ActivityNotFoundException ex) {
+                            Log.w(ex);
+                            Helper.view(context, uri, true, true);
+                        }
+                    } else {
+                        boolean tabs = prefs.getBoolean("open_with_tabs", true);
+                        Helper.view(context, UriHelper.guessScheme(uri), !tabs, !tabs);
+                    }
                 }
             }
 
@@ -6538,6 +6699,67 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         }
 
+        private void onMenuResetQuestions(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) throws Throwable {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    SharedPreferences.Editor editor = prefs.edit();
+
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    if (attachments != null)
+                        for (EntityAttachment attachment : attachments) {
+                            String ext = Helper.getExtension(attachment.name);
+                            if (ext == null)
+                                continue;
+                            editor.remove(ext.toLowerCase(Locale.ROOT) + ".confirm_files");
+                        }
+
+                    if (message.content) {
+                        Document d = JsoupEx.parse(message.getFile(context));
+                        for (Element a : d.select("a")) {
+                            String href = a.attr("href");
+                            if (TextUtils.isEmpty(href))
+                                continue;
+
+                            Uri uri = Uri.parse(href);
+                            if (uri == null || !UriHelper.isHyperLink(uri))
+                                continue;
+
+                            String host = uri.getHost();
+                            if (TextUtils.isEmpty(host))
+                                continue;
+
+                            editor.remove(host + ".confirm_link");
+                        }
+                    }
+
+                    editor.apply();
+
+                    return null;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, Void data) {
+                    ToastEx.makeText(context, R.string.title_completed, Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                }
+            }.execute(context, owner, args, "reset");
+        }
+
         private void onMenuResync(TupleMessageEx message) {
             Bundle args = new Bundle();
             args.putLong("id", message.id);
@@ -6630,7 +6852,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         public boolean onMenuItemClick(MenuItem item) {
                             properties.setSize(message.id, null);
                             properties.setHeight(message.id, null);
-                            properties.setPosition(message.id, null);
+                            properties.setPosition(message.id, null, null);
 
                             args.putString("charset", item.getIntent().getStringExtra("charset"));
 
@@ -6683,7 +6905,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onMenuAlt(TupleMessageEx message) {
             properties.setSize(message.id, null);
             properties.setHeight(message.id, null);
-            properties.setPosition(message.id, null);
+            properties.setPosition(message.id, null, null);
 
             Bundle args = new Bundle();
             args.putLong("id", message.id);
@@ -6930,6 +7152,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:share");
+        }
+
+        private void onMenuShareLink(TupleMessageEx message) {
+            String link = message.getLink();
+            String title = context.getString(R.string.title_share_link_open);
+            String html = "<a href=\"" + link + "\">" + Html.escapeHtml(title) + "<a/>";
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, link);
+            intent.putExtra(Intent.EXTRA_HTML_TEXT, html);
+            context.startActivity(intent);
         }
 
         private void onMenuPin(TupleMessageEx message) {
@@ -7285,13 +7520,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             int start = tvBody.getSelectionStart();
             int end = tvBody.getSelectionEnd();
-            if (start == end)
-                return null;
 
             if (start < 0)
                 start = 0;
             if (end < 0)
                 end = 0;
+
+            if (start == end)
+                return null;
 
             if (start > end) {
                 int tmp = start;
@@ -7352,6 +7588,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             context.getString(expanded ? R.string.title_accessibility_collapse : R.string.title_accessibility_expand)));
                 ibExpander.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
+                info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibAnswer,
+                        context.getString(R.string.title_reply)));
+
+                info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibArchive,
+                        context.getString(R.string.title_archive)));
+
+                info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibTrash,
+                        context.getString(R.string.title_trash)));
+
                 if (ibAvatar.getVisibility() == View.VISIBLE && ibAvatar.isEnabled())
                     info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibAvatar,
                             context.getString(R.string.title_accessibility_view_contact)));
@@ -7390,6 +7635,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 if (action == R.id.ibExpander) {
                     onToggleMessage(message);
+                    return true;
+                } else if (action == R.id.ibAnswer) {
+                    onActionAnswer(message, view);
+                    return true;
+                } else if (action == R.id.ibArchive) {
+                    onActionArchive(message);
+                    return true;
+                } else if (action == R.id.ibTrash) {
+                    onActionTrash(message, false);
                     return true;
                 } else if (action == R.id.ibAvatar) {
                     onViewContact(message);
@@ -7544,6 +7798,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
         this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+        this.DTFS = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
 
         ConnectionHelper.NetworkState state = ConnectionHelper.getNetworkState(context);
         this.suitable = state.isSuitable();
@@ -7592,6 +7847,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.date = prefs.getBoolean("date", true);
         this.date_week = prefs.getBoolean("date_week", false);
         this.date_fixed = (!date && prefs.getBoolean("date_fixed", false));
+        this.date_time = prefs.getBoolean("date_time", false);
         this.cards = prefs.getBoolean("cards", true);
         this.shadow_unread = prefs.getBoolean("shadow_unread", false);
         this.shadow_border = prefs.getBoolean("shadow_border", true);
@@ -7628,6 +7884,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.sender_ellipsize = prefs.getString("sender_ellipsize", "end");
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "full");
+        this.show_filtered = prefs.getBoolean("show_filtered", false);
         this.keywords_header = prefs.getBoolean("keywords_header", false);
         this.labels_header = prefs.getBoolean("labels_header", true);
         this.flags = prefs.getBoolean("flags", true);
@@ -7635,6 +7892,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.preview = prefs.getBoolean("preview", false);
         this.preview_italic = prefs.getBoolean("preview_italic", true);
         this.preview_lines = prefs.getInt("preview_lines", 1);
+        this.align_header = prefs.getBoolean("align_header", false);
         this.message_zoom = prefs.getInt("message_zoom", 100);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.thumbnails = prefs.getBoolean("thumbnails", true);
@@ -7689,11 +7947,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("uid changed", next.id);
 
-                    // Download body when needed
-                    if (!next.content &&
-                            prev.uid == null && next.uid != null && // once only
-                            properties.getValue("expanded", next.id))
-                        EntityOperation.queue(context, next, EntityOperation.BODY);
+                    if (prev.uid == null && next.uid != null) { // once only
+                        // Mark seen when needed
+                        if (!Boolean.TRUE.equals(next.ui_seen) && next.accountAutoSeen)
+                            EntityOperation.queue(context, next, EntityOperation.SEEN, true);
+
+                        // Download body when needed
+                        if (!next.content && properties.getValue("expanded", next.id))
+                            EntityOperation.queue(context, next, EntityOperation.BODY);
+                    }
                 }
                 if (!Objects.equals(prev.msgid, next.msgid)) {
                     // debug info
@@ -7988,6 +8250,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     log("accountColor changed", next.id);
                 }
                 // accountNotify
+                // accountSummary
                 // accountAutoSeen
                 if (!prev.folderName.equals(next.folderName)) {
                     same = false;
@@ -8372,7 +8635,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(viewType, parent, false), viewType);
+        View view = inflater.inflate(viewType, parent, false);
+        if (align_header &&
+                (viewType == R.layout.item_message_compact ||
+                        viewType == R.layout.item_message_normal)) {
+            View v = view.findViewById(R.id.ibAvatar);
+            ConstraintLayout.LayoutParams lparam = (ConstraintLayout.LayoutParams) v.getLayoutParams();
+            lparam.bottomToBottom = R.id.tvNotes;   // tvFolder
+            for (int id : new int[]{R.id.tvLabels, R.id.tvExpand, R.id.tvPreview, R.id.tvNotes}) {
+                v = view.findViewById(id);
+                lparam = (ConstraintLayout.LayoutParams) v.getLayoutParams();
+                lparam.startToEnd = R.id.ibAvatar;
+            }
+        }
+        return new ViewHolder(view, viewType);
     }
 
     @Override
@@ -8569,7 +8845,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         int getHeight(long id, int defaultHeight);
 
-        void setPosition(long id, Pair<Integer, Integer> position);
+        void setPosition(long id, Pair<Integer, Integer> delta, Pair<Integer, Integer> position);
 
         Pair<Integer, Integer> getPosition(long id);
 
@@ -8598,515 +8874,5 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void refresh();
 
         void finish();
-    }
-
-    public static class FragmentDialogNotes extends FragmentDialogBase {
-        private ViewButtonColor btnColor;
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Bundle args = getArguments();
-            final long id = args.getLong("id");
-            final String notes = args.getString("notes");
-
-            final Context context = getContext();
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            final Integer color = (TextUtils.isEmpty(notes)
-                    ? prefs.getInt("note_color", Color.TRANSPARENT)
-                    : args.getInt("color"));
-
-            View view = LayoutInflater.from(context).inflate(R.layout.dialog_notes, null);
-            final EditText etNotes = view.findViewById(R.id.etNotes);
-            btnColor = view.findViewById(R.id.btnColor);
-
-            etNotes.setText(notes);
-            btnColor.setColor(color);
-
-            etNotes.selectAll();
-
-            btnColor.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Helper.hideKeyboard(etNotes);
-
-                    Bundle args = new Bundle();
-                    args.putInt("color", btnColor.getColor());
-                    args.putString("title", getString(R.string.title_color));
-                    args.putBoolean("reset", true);
-
-                    FragmentDialogColor fragment = new FragmentDialogColor();
-                    fragment.setArguments(args);
-                    fragment.setTargetFragment(FragmentDialogNotes.this, 1);
-                    fragment.show(getParentFragmentManager(), "notes:color");
-                }
-            });
-
-            final SimpleTask<Void> task = new SimpleTask<Void>() {
-                @Override
-                protected Void onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
-                    String notes = args.getString("notes");
-                    Integer color = args.getInt("color");
-
-                    if ("".equals(notes.trim()))
-                        notes = null;
-
-                    if (color == Color.TRANSPARENT)
-                        color = null;
-
-                    DB db = DB.getInstance(context);
-                    try {
-                        db.beginTransaction();
-
-                        EntityMessage message = db.message().getMessage(id);
-                        if (message == null)
-                            return null;
-
-                        db.message().setMessageNotes(message.id, notes, color);
-
-                        if (TextUtils.isEmpty(message.msgid))
-                            return null;
-
-                        List<EntityMessage> messages =
-                                db.message().getMessagesBySimilarity(message.account, message.id, message.msgid, message.hash);
-                        if (messages == null)
-                            return null;
-
-                        for (EntityMessage m : messages)
-                            db.message().setMessageNotes(m.id, notes, color);
-
-                        db.setTransactionSuccessful();
-                    } finally {
-                        db.endTransaction();
-                    }
-
-                    return null;
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, Void data) {
-                    WorkerFts.init(context, false);
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(getParentFragmentManager(), ex);
-                }
-            };
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                    .setView(view)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Bundle args = new Bundle();
-                            args.putLong("id", id);
-                            args.putString("notes", etNotes.getText().toString());
-                            args.putInt("color", btnColor.getColor());
-
-                            task.execute(getContext(), getActivity(), args, "message:note");
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null);
-
-            if (!TextUtils.isEmpty(notes))
-                builder.setNeutralButton(R.string.title_reset, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Bundle args = new Bundle();
-                        args.putLong("id", id);
-                        args.putString("notes", "");
-                        args.putInt("color", Color.TRANSPARENT);
-
-                        task.execute(getContext(), getActivity(), args, "message:note");
-                    }
-                });
-
-            return builder.create();
-        }
-
-        @Override
-        public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-
-            try {
-                if (resultCode == RESULT_OK && data != null) {
-                    Bundle args = data.getBundleExtra("args");
-                    int color = args.getInt("color");
-                    btnColor.setColor(color);
-
-                    Context context = getContext();
-                    if (context != null) {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        prefs.edit().putInt("note_color", color).apply();
-                    }
-                }
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-        }
-    }
-
-    public static class FragmentDialogKeywordManage extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final long id = getArguments().getLong("id");
-
-            final Context context = getContext();
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_keyword_manage, null);
-            final RecyclerView rvKeyword = dview.findViewById(R.id.rvKeyword);
-            final FloatingActionButton fabAdd = dview.findViewById(R.id.fabAdd);
-            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
-
-            rvKeyword.setHasFixedSize(false);
-            final LinearLayoutManager llm = new LinearLayoutManager(context);
-            rvKeyword.setLayoutManager(llm);
-
-            final AdapterKeyword adapter = new AdapterKeyword(context, getViewLifecycleOwner());
-            rvKeyword.setAdapter(adapter);
-
-            fabAdd.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Bundle args = new Bundle();
-                    args.putLong("id", id);
-
-                    FragmentDialogKeywordAdd fragment = new FragmentDialogKeywordAdd();
-                    fragment.setArguments(args);
-                    fragment.show(getParentFragmentManager(), "keyword:add");
-                }
-            });
-
-            pbWait.setVisibility(View.VISIBLE);
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            DB db = DB.getInstance(context);
-            db.message().liveMessageKeywords(id).observe(getViewLifecycleOwner(), new Observer<TupleKeyword.Persisted>() {
-                @Override
-                public void onChanged(TupleKeyword.Persisted data) {
-                    if (data == null)
-                        data = new TupleKeyword.Persisted();
-
-                    String global = prefs.getString("global_keywords", null);
-                    if (global != null) {
-                        List<String> available = new ArrayList<>();
-                        available.addAll(Arrays.asList(global.split(" ")));
-                        if (data.available != null)
-                            available.addAll(Arrays.asList(data.available));
-                        data.available = available.toArray(new String[0]);
-                    }
-
-                    pbWait.setVisibility(View.GONE);
-                    adapter.set(id, TupleKeyword.from(context, data));
-                }
-            });
-
-            return new AlertDialog.Builder(context)
-                    .setIcon(R.drawable.twotone_label_important_24)
-                    .setTitle(R.string.title_manage_keywords)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .create();
-        }
-
-        @Override
-        public void onResume() {
-            super.onResume();
-            Dialog dialog = getDialog();
-            dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-            //dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-    }
-
-    public static class FragmentDialogKeywordAdd extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final long id = getArguments().getLong("id");
-
-            final Context context = getContext();
-
-            View view = LayoutInflater.from(context).inflate(R.layout.dialog_keyword_add, null);
-            final EditText etKeyword = view.findViewById(R.id.etKeyword);
-            etKeyword.setText(null);
-
-            return new AlertDialog.Builder(context)
-                    .setView(view)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String keyword = MessageHelper.sanitizeKeyword(etKeyword.getText().toString());
-                            if (!TextUtils.isEmpty(keyword)) {
-                                Bundle args = new Bundle();
-                                args.putLong("id", id);
-                                args.putString("keyword", keyword);
-
-                                new SimpleTask<Void>() {
-                                    @Override
-                                    protected Void onExecute(Context context, Bundle args) {
-                                        long id = args.getLong("id");
-                                        String keyword = args.getString("keyword");
-
-                                        DB db = DB.getInstance(context);
-                                        try {
-                                            db.beginTransaction();
-
-                                            EntityMessage message = db.message().getMessage(id);
-                                            if (message == null)
-                                                return null;
-
-                                            EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, true);
-
-                                            db.setTransactionSuccessful();
-                                        } finally {
-                                            db.endTransaction();
-                                        }
-
-                                        ServiceSynchronize.eval(context, "keyword=" + keyword);
-
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onException(Bundle args, Throwable ex) {
-                                        Log.unexpectedError(getParentFragmentManager(), ex);
-                                    }
-                                }.execute(getContext(), getActivity(), args, "keyword:add");
-                            }
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
-        }
-
-        @Override
-        public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-    }
-
-    public static class FragmentDialogLabelsManage extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final long id = getArguments().getLong("id");
-            String self = getArguments().getString("self");
-            String[] labels = getArguments().getStringArray("labels");
-            final String[] folders = getArguments().getStringArray("folders");
-
-            List<String> l = new ArrayList<>();
-            if (self != null)
-                l.add(self);
-            if (labels != null)
-                l.addAll(Arrays.asList(labels));
-
-            boolean[] checked = new boolean[folders.length];
-            for (int i = 0; i < folders.length; i++)
-                if (l.contains(folders[i]))
-                    checked[i] = true;
-
-            return new AlertDialog.Builder(getContext())
-                    .setIcon(R.drawable.twotone_label_24)
-                    .setTitle(R.string.title_manage_labels)
-                    .setMultiChoiceItems(folders, checked, new DialogInterface.OnMultiChoiceClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                            Bundle args = new Bundle();
-                            args.putLong("id", id);
-                            args.putString("label", folders[which]);
-                            args.putBoolean("set", isChecked);
-
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long id = args.getLong("id");
-                                    String label = args.getString("label");
-                                    boolean set = args.getBoolean("set");
-
-                                    DB db = DB.getInstance(context);
-                                    EntityMessage message = db.message().getMessage(id);
-                                    if (message == null)
-                                        return null;
-
-                                    EntityOperation.queue(context, message, EntityOperation.LABEL, label, set);
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Log.unexpectedError(getParentFragmentManager(), ex);
-                                }
-                            }.execute(FragmentDialogLabelsManage.this, args, "label:set");
-                        }
-                    })
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogPrint extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Context context = getContext();
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_print, null);
-            CheckBox cbHeader = dview.findViewById(R.id.cbHeader);
-            CheckBox cbImages = dview.findViewById(R.id.cbImages);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-            cbHeader.setChecked(prefs.getBoolean("print_html_header", true));
-            cbHeader.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    prefs.edit().putBoolean("print_html_header", isChecked).apply();
-                }
-            });
-
-            cbImages.setChecked(prefs.getBoolean("print_html_images", true));
-            cbImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    prefs.edit().putBoolean("print_html_images", isChecked).apply();
-                }
-            });
-
-            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    prefs.edit().putBoolean("print_html_confirmed", isChecked).apply();
-                }
-            });
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    })
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogButtons extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final Context context = getContext();
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_buttons, null);
-            final CheckBox cbSeen = dview.findViewById(R.id.cbSeen);
-            final CheckBox cbHide = dview.findViewById(R.id.cbHide);
-            final CheckBox cbImportance = dview.findViewById(R.id.cbImportance);
-            final CheckBox cbJunk = dview.findViewById(R.id.cbJunk);
-            final CheckBox cbTrash = dview.findViewById(R.id.cbTrash);
-            final CheckBox cbArchive = dview.findViewById(R.id.cbArchive);
-            final CheckBox cbMove = dview.findViewById(R.id.cbMove);
-            final CheckBox cbCopy = dview.findViewById(R.id.cbCopy);
-            final CheckBox cbNotes = dview.findViewById(R.id.cbNotes);
-            final CheckBox cbRule = dview.findViewById(R.id.cbRule);
-            final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
-            final CheckBox cbSearch = dview.findViewById(R.id.cbSearch);
-            final CheckBox cbSearchText = dview.findViewById(R.id.cbSearchText);
-            final CheckBox cbTranslate = dview.findViewById(R.id.cbTranslate);
-            final CheckBox cbFullScreen = dview.findViewById(R.id.cbFullScreen);
-            final CheckBox cbForceLight = dview.findViewById(R.id.cbForceLight);
-            final CheckBox cbEvent = dview.findViewById(R.id.cbEvent);
-            final CheckBox cbShare = dview.findViewById(R.id.cbShare);
-            final CheckBox cbPin = dview.findViewById(R.id.cbPin);
-            final CheckBox cbPrint = dview.findViewById(R.id.cbPrint);
-            final CheckBox cbHeaders = dview.findViewById(R.id.cbHeaders);
-            final CheckBox cbRaw = dview.findViewById(R.id.cbRaw);
-            final CheckBox cbUnsubscribe = dview.findViewById(R.id.cbUnsubscribe);
-
-            cbTranslate.setVisibility(DeepL.isAvailable(context) ? View.VISIBLE : View.GONE);
-            cbPin.setVisibility(Shortcuts.can(context) ? View.VISIBLE : View.GONE);
-
-            cbSeen.setChecked(prefs.getBoolean("button_seen", false));
-            cbHide.setChecked(prefs.getBoolean("button_hide", false));
-            cbImportance.setChecked(prefs.getBoolean("button_importance", false));
-            cbJunk.setChecked(prefs.getBoolean("button_junk", true));
-            cbTrash.setChecked(prefs.getBoolean("button_trash", true));
-            cbArchive.setChecked(prefs.getBoolean("button_archive", true));
-            cbMove.setChecked(prefs.getBoolean("button_move", true));
-            cbCopy.setChecked(prefs.getBoolean("button_copy", false));
-            cbNotes.setChecked(prefs.getBoolean("button_notes", false));
-            cbRule.setChecked(prefs.getBoolean("button_rule", false));
-            cbKeywords.setChecked(prefs.getBoolean("button_keywords", false));
-            cbSearch.setChecked(prefs.getBoolean("button_search", false));
-            cbSearchText.setChecked(prefs.getBoolean("button_search_text", false));
-            cbTranslate.setChecked(prefs.getBoolean("button_translate", true));
-            cbFullScreen.setChecked(prefs.getBoolean("button_full_screen", false));
-            cbForceLight.setChecked(prefs.getBoolean("button_force_light", true));
-            cbEvent.setChecked(prefs.getBoolean("button_event", false));
-            cbShare.setChecked(prefs.getBoolean("button_share", false));
-            cbPin.setChecked(prefs.getBoolean("button_pin", false));
-            cbPrint.setChecked(prefs.getBoolean("button_print", false));
-            cbHeaders.setChecked(prefs.getBoolean("button_headers", false));
-            cbRaw.setChecked(prefs.getBoolean("button_raw", false));
-            cbUnsubscribe.setChecked(prefs.getBoolean("button_unsubscribe", true));
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putBoolean("button_seen", cbSeen.isChecked());
-                            editor.putBoolean("button_hide", cbHide.isChecked());
-                            editor.putBoolean("button_importance", cbImportance.isChecked());
-                            editor.putBoolean("button_junk", cbJunk.isChecked());
-                            editor.putBoolean("button_trash", cbTrash.isChecked());
-                            editor.putBoolean("button_archive", cbArchive.isChecked());
-                            editor.putBoolean("button_move", cbMove.isChecked());
-                            editor.putBoolean("button_copy", cbCopy.isChecked());
-                            editor.putBoolean("button_notes", cbNotes.isChecked());
-                            editor.putBoolean("button_rule", cbRule.isChecked());
-                            editor.putBoolean("button_keywords", cbKeywords.isChecked());
-                            editor.putBoolean("button_search", cbSearch.isChecked());
-                            editor.putBoolean("button_search_text", cbSearchText.isChecked());
-                            editor.putBoolean("button_translate", cbTranslate.isChecked());
-                            editor.putBoolean("button_full_screen", cbFullScreen.isChecked());
-                            editor.putBoolean("button_force_light", cbForceLight.isChecked());
-                            editor.putBoolean("button_event", cbEvent.isChecked());
-                            editor.putBoolean("button_share", cbShare.isChecked());
-                            editor.putBoolean("button_pin", cbPin.isChecked());
-                            editor.putBoolean("button_print", cbPrint.isChecked());
-                            editor.putBoolean("button_headers", cbHeaders.isChecked());
-                            editor.putBoolean("button_raw", cbRaw.isChecked());
-                            editor.putBoolean("button_unsubscribe", cbUnsubscribe.isChecked());
-                            editor.apply();
-                            sendResult(Activity.RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            sendResult(Activity.RESULT_CANCELED);
-                        }
-                    })
-                    .create();
-        }
     }
 }

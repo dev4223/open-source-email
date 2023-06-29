@@ -19,6 +19,8 @@ package eu.faircode.email;
     Copyright 2018-2023 by Marcel Bokhorst (M66B)
 */
 
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GRAPH;
+
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -46,6 +48,8 @@ import androidx.preference.PreferenceManager;
 
 import com.sun.mail.smtp.SMTPSendFailedException;
 import com.sun.mail.util.TraceOutputStream;
+
+import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -469,11 +473,34 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                                     if (ex instanceof AuthenticationFailedException &&
                                             ex.getMessage() != null &&
                                             ex.getMessage().contains("535 5.7.3 Authentication unsuccessful")) {
-                                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Helper.SUPPORT_URI))
-                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        PendingIntent piFix = PendingIntentCompat.getActivity(
-                                                this, PI_FIX, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                        builder.setContentIntent(piFix);
+                                        EntityIdentity identity = db.identity().getIdentity(message.identity);
+                                        if (identity == null) {
+                                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Helper.SUPPORT_URI))
+                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            PendingIntent piFix = PendingIntentCompat.getActivity(
+                                                    this, PI_FIX, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                            builder.setContentIntent(piFix);
+                                        } else {
+                                            EntityAccount account = db.account().getAccount(identity.account);
+                                            int protocol = (account == null ? -1 : account.protocol);
+
+                                            Intent intent = new Intent(this, ActivityError.class);
+                                            intent.setAction("535:" + identity.id);
+                                            intent.putExtra("title", ex.getMessage());
+                                            intent.putExtra("message", Log.formatThrowable(ex, "\n", false));
+                                            intent.putExtra("provider", "outlookgraph");
+                                            intent.putExtra("account", identity.account);
+                                            intent.putExtra("protocol", protocol);
+                                            intent.putExtra("identity", identity.id);
+                                            intent.putExtra("authorize", true);
+                                            intent.putExtra("personal", identity.name);
+                                            intent.putExtra("address", identity.user);
+                                            intent.putExtra("faq", 14);
+                                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            PendingIntent pi = PendingIntentCompat.getActivity(
+                                                    this, ActivityError.PI_ERROR, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                            builder.setContentIntent(pi);
+                                        }
                                     }
 
                                     nm.notify("send:" + message.id,
@@ -555,7 +582,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         ServiceSend.start(this);
     }
 
-    private void onSend(EntityMessage message) throws MessagingException, IOException {
+    private void onSend(EntityMessage message) throws JSONException, MessagingException, IOException {
         DB db = DB.getInstance(this);
 
         // Check if cancelled by user or by errors
@@ -714,124 +741,129 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         // Create transport
         long start, end;
         Long max_size = null;
-        EmailService iservice = new EmailService(
-                this, ident.getProtocol(), ident.realm, ident.encryption, ident.insecure, ident.unicode, debug);
-        try {
-            iservice.setUseIp(ident.use_ip, ident.ehlo);
-            if (!message.isSigned() && !message.isEncrypted())
-                iservice.set8BitMime(ident.octetmime);
+        if (ident.auth_type == AUTH_TYPE_GRAPH) {
+            start = new Date().getTime();
+            MicrosoftGraph.send(ServiceSend.this, ident, imessage);
+            end = new Date().getTime();
+        } else {
+            EmailService iservice = new EmailService(
+                    this, ident.getProtocol(), ident.realm, ident.encryption, ident.insecure, ident.unicode, debug);
+            try {
+                iservice.setUseIp(ident.use_ip, ident.ehlo);
+                if (!message.isSigned() && !message.isEncrypted())
+                    iservice.set8BitMime(ident.octetmime);
 
-            // 0=Read receipt
-            // 1=Delivery receipt
-            // 2=Read+delivery receipt
+                // 0=Read receipt
+                // 1=Delivery receipt
+                // 2=Read+delivery receipt
 
-            if (message.receipt_request != null && message.receipt_request) {
-                int receipt_type = prefs.getInt("receipt_type", 2);
-                if (receipt_type == 1 || receipt_type == 2) // Delivery receipt
-                    iservice.setDsnNotify("SUCCESS,FAILURE,DELAY");
-            }
+                if (message.receipt_request != null && message.receipt_request) {
+                    int receipt_type = prefs.getInt("receipt_type", 2);
+                    if (receipt_type == 1 || receipt_type == 2) // Delivery receipt
+                        iservice.setDsnNotify("SUCCESS,FAILURE,DELAY");
+                }
 
-            // Connect transport
-            db.identity().setIdentityState(ident.id, "connecting");
-            iservice.connect(ident);
-            if (BuildConfig.DEBUG && false)
-                throw new IOException("Test");
-            db.identity().setIdentityState(ident.id, "connected");
+                // Connect transport
+                db.identity().setIdentityState(ident.id, "connecting");
+                iservice.connect(ident);
+                if (BuildConfig.DEBUG && false)
+                    throw new IOException("Test");
+                db.identity().setIdentityState(ident.id, "connected");
 
-            if (ident.max_size == null)
                 max_size = iservice.getMaxSize();
 
-            List<Address> recipients = new ArrayList<>();
-            if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
-                Address[] all = imessage.getAllRecipients();
-                if (all != null)
-                    recipients.addAll(Arrays.asList(all));
-            } else {
-                String to = imessage.getHeader("Resent-To", ",");
-                if (to != null)
-                    for (Address a : InternetAddress.parse(to))
-                        recipients.add(a);
+                List<Address> recipients = new ArrayList<>();
+                if (message.headers == null || !Boolean.TRUE.equals(message.resend)) {
+                    Address[] all = imessage.getAllRecipients();
+                    if (all != null)
+                        recipients.addAll(Arrays.asList(all));
+                } else {
+                    String to = imessage.getHeader("Resent-To", ",");
+                    if (to != null)
+                        for (Address a : InternetAddress.parse(to))
+                            recipients.add(a);
 
-                String cc = imessage.getHeader("Resent-Cc", ",");
-                if (cc != null)
-                    for (Address a : InternetAddress.parse(cc))
-                        recipients.add(a);
+                    String cc = imessage.getHeader("Resent-Cc", ",");
+                    if (cc != null)
+                        for (Address a : InternetAddress.parse(cc))
+                            recipients.add(a);
 
-                String bcc = imessage.getHeader("Resent-Bcc", ",");
-                if (bcc != null)
-                    for (Address a : InternetAddress.parse(bcc))
-                        recipients.add(a);
-            }
+                    String bcc = imessage.getHeader("Resent-Bcc", ",");
+                    if (bcc != null)
+                        for (Address a : InternetAddress.parse(bcc))
+                            recipients.add(a);
+                }
 
-            if (protocol && BuildConfig.DEBUG) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                imessage.writeTo(bos);
-                for (String line : bos.toString().split("\n"))
-                    EntityLog.log(this, line);
-            }
+                if (protocol && BuildConfig.DEBUG) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    imessage.writeTo(bos);
+                    for (String line : bos.toString().split("\n"))
+                        EntityLog.log(this, line);
+                }
 
-            String via = "via " + ident.host + "/" + ident.user +
-                    " recipients=" + TextUtils.join(", ", recipients);
+                String via = "via " + ident.host + "/" + ident.user +
+                        " recipients=" + TextUtils.join(", ", recipients);
 
-            iservice.setReporter(new TraceOutputStream.IReport() {
-                private int progress = -1;
-                private long last = SystemClock.elapsedRealtime();
+                iservice.setReporter(new TraceOutputStream.IReport() {
+                    private int progress = -1;
+                    private long last = SystemClock.elapsedRealtime();
 
-                @Override
-                public void report(int pos, int total) {
-                    int p = (total == 0 ? 0 : 100 * pos / total);
-                    if (p > progress) {
-                        progress = p;
-                        long now = SystemClock.elapsedRealtime();
-                        if (now > last + PROGRESS_UPDATE_INTERVAL) {
-                            last = now;
-                            lastProgress = progress;
-                            if (NotificationHelper.areNotificationsEnabled(nm))
-                                nm.notify(NotificationHelper.NOTIFICATION_SEND, getNotificationService(false));
+                    @Override
+                    public void report(int pos, int total) {
+                        int p = (total == 0 ? 0 : 100 * pos / total);
+                        if (p > progress) {
+                            progress = p;
+                            long now = SystemClock.elapsedRealtime();
+                            if (now > last + PROGRESS_UPDATE_INTERVAL) {
+                                last = now;
+                                lastProgress = progress;
+                                if (NotificationHelper.areNotificationsEnabled(nm))
+                                    nm.notify(NotificationHelper.NOTIFICATION_SEND, getNotificationService(false));
+                            }
                         }
                     }
+                });
+
+                // Send message
+                EntityLog.log(this, "Sending " + via);
+                start = new Date().getTime();
+                iservice.getTransport().sendMessage(imessage, recipients.toArray(new Address[0]));
+                end = new Date().getTime();
+                EntityLog.log(this, "Sent " + via + " elapse=" + (end - start) + " ms");
+            } catch (MessagingException ex) {
+                iservice.dump(ident.email);
+                Log.e(ex);
+
+                if (ex instanceof SMTPSendFailedException) {
+                    SMTPSendFailedException sem = (SMTPSendFailedException) ex;
+                    ex = new SMTPSendFailedException(
+                            sem.getCommand(),
+                            sem.getReturnCode(),
+                            getString(R.string.title_service_auth, sem.getMessage()),
+                            sem.getNextException(),
+                            sem.getValidSentAddresses(),
+                            sem.getValidUnsentAddresses(),
+                            sem.getInvalidAddresses());
                 }
-            });
 
-            // Send message
-            EntityLog.log(this, "Sending " + via);
-            start = new Date().getTime();
-            iservice.getTransport().sendMessage(imessage, recipients.toArray(new Address[0]));
-            end = new Date().getTime();
-            EntityLog.log(this, "Sent " + via + " elapse=" + (end - start) + " ms");
-        } catch (MessagingException ex) {
-            iservice.dump(ident.email);
-            Log.e(ex);
+                if (sid != null)
+                    db.message().deleteMessage(sid);
 
-            if (ex instanceof SMTPSendFailedException) {
-                SMTPSendFailedException sem = (SMTPSendFailedException) ex;
-                ex = new SMTPSendFailedException(
-                        sem.getCommand(),
-                        sem.getReturnCode(),
-                        getString(R.string.title_service_auth, sem.getMessage()),
-                        sem.getNextException(),
-                        sem.getValidSentAddresses(),
-                        sem.getValidUnsentAddresses(),
-                        sem.getInvalidAddresses());
+                db.identity().setIdentityError(ident.id, Log.formatThrowable(ex));
+
+                throw ex;
+            } catch (Throwable ex) {
+                iservice.dump(ident.email);
+                throw ex;
+            } finally {
+                iservice.close();
+                if (lastProgress >= 0) {
+                    lastProgress = -1;
+                    if (NotificationHelper.areNotificationsEnabled(nm))
+                        nm.notify(NotificationHelper.NOTIFICATION_SEND, getNotificationService(false));
+                }
+                db.identity().setIdentityState(ident.id, null);
             }
-
-            if (sid != null)
-                db.message().deleteMessage(sid);
-
-            db.identity().setIdentityError(ident.id, Log.formatThrowable(ex));
-
-            throw ex;
-        } catch (Throwable ex) {
-            iservice.dump(ident.email);
-            throw ex;
-        } finally {
-            iservice.close();
-            if (lastProgress >= 0) {
-                lastProgress = -1;
-                if (NotificationHelper.areNotificationsEnabled(nm))
-                    nm.notify(NotificationHelper.NOTIFICATION_SEND, getNotificationService(false));
-            }
-            db.identity().setIdentityState(ident.id, null);
         }
 
         try {
@@ -868,8 +900,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             }
 
             // Update identity
-            if (max_size != null)
-                db.identity().setIdentityMaxSize(ident.id, max_size);
+            db.identity().setIdentityMaxSize(ident.id, max_size);
             db.identity().setIdentityConnected(ident.id, new Date().getTime());
             db.identity().setIdentityError(ident.id, null);
 
@@ -932,6 +963,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                     VEvent event = icalendar.getEvents().get(0);
                     EntityMessage message = db.message().getMessage(sid);
                     CalendarHelper.update(this, event, message);
+
                     break;
                 } catch (Throwable ex) {
                     Log.e(ex);

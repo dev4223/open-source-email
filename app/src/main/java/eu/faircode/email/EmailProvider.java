@@ -22,6 +22,7 @@ package eu.faircode.email;
 import static android.system.OsConstants.ECONNREFUSED;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.system.ErrnoException;
@@ -29,6 +30,7 @@ import android.text.TextUtils;
 import android.util.Xml;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import com.sun.mail.util.LineInputStream;
 
@@ -99,6 +101,7 @@ public class EmailProvider implements Parcelable {
     public Server smtp = new Server();
     public Server pop;
     public OAuth oauth;
+    public OAuth graph;
     public UserType user = UserType.EMAIL;
     public String username;
     public StringBuilder documentation; // html
@@ -111,6 +114,7 @@ public class EmailProvider implements Parcelable {
 
     private static final int SCAN_TIMEOUT = 10 * 1000; // milliseconds
     private static final int ISPDB_TIMEOUT = 10 * 1000; // milliseconds
+    private static final int MS_TIMEOUT = 10 * 1000; // milliseconds
 
     private static final List<String> PROPRIETARY = Collections.unmodifiableList(Arrays.asList(
             "protonmail.ch",
@@ -124,7 +128,8 @@ public class EmailProvider implements Parcelable {
             "cyberfear.com",
             "skiff.com",
             "tildamail.com",
-            "criptext.com"
+            "criptext.com",
+            "onmail.com"
     ));
 
     private EmailProvider() {
@@ -305,6 +310,19 @@ public class EmailProvider implements Parcelable {
                         provider.oauth.redirectUri = xml.getAttributeValue(null, "redirectUri");
                         provider.oauth.privacy = xml.getAttributeValue(null, "privacy");
                         provider.oauth.prompt = xml.getAttributeValue(null, "prompt");
+                    } else if ("graph".equals(name)) {
+                        provider.graph = new OAuth();
+                        provider.graph.enabled = getAttributeBooleanValue(xml, "enabled", false);
+                        provider.graph.askAccount = getAttributeBooleanValue(xml, "askAccount", false);
+                        provider.graph.clientId = xml.getAttributeValue(null, "clientId");
+                        provider.graph.clientSecret = xml.getAttributeValue(null, "clientSecret");
+                        provider.graph.scopes = xml.getAttributeValue(null, "scopes").split(",");
+                        provider.graph.authorizationEndpoint = xml.getAttributeValue(null, "authorizationEndpoint");
+                        provider.graph.tokenEndpoint = xml.getAttributeValue(null, "tokenEndpoint");
+                        provider.graph.tokenScopes = getAttributeBooleanValue(xml, "tokenScopes", false);
+                        provider.graph.redirectUri = xml.getAttributeValue(null, "redirectUri");
+                        provider.graph.privacy = xml.getAttributeValue(null, "privacy");
+                        provider.graph.prompt = xml.getAttributeValue(null, "prompt");
                     } else if ("parameter".equals(name)) {
                         if (provider.oauth.parameters == null)
                             provider.oauth.parameters = new LinkedHashMap<>();
@@ -413,7 +431,7 @@ public class EmailProvider implements Parcelable {
                 for (EmailProvider provider : providers)
                     if (provider.mx != null)
                         for (String mx : provider.mx)
-                            if (record.name.matches(mx))
+                            if (record.response.matches(mx))
                                 return Arrays.asList(provider);
         } catch (Throwable ex) {
             Log.w(ex);
@@ -463,8 +481,8 @@ public class EmailProvider implements Parcelable {
             }
 
             for (DnsHelper.DnsRecord record : records)
-                if (!TextUtils.isEmpty(record.name)) {
-                    String target = record.name.toLowerCase(Locale.ROOT);
+                if (!TextUtils.isEmpty(record.response)) {
+                    String target = record.response.toLowerCase(Locale.ROOT);
                     EntityLog.log(context, "MX target=" + target);
 
                     for (EmailProvider provider : providers) {
@@ -496,7 +514,7 @@ public class EmailProvider implements Parcelable {
 
             for (DnsHelper.DnsRecord record : records)
                 try {
-                    String target = record.name.toLowerCase(Locale.ROOT);
+                    String target = record.response.toLowerCase(Locale.ROOT);
                     InetAddress.getByName(target);
 
                     EmailProvider mx1 = new EmailProvider(domain);
@@ -540,9 +558,15 @@ public class EmailProvider implements Parcelable {
                 if (provider.enabled &&
                         provider.imap.host.equals(candidate.imap.host) ||
                         provider.smtp.host.equals(candidate.smtp.host)) {
-                    EntityLog.log(context, "Replacing auto config by profile=" + provider.name);
+                    EntityLog.log(context, "Replacing auto config host by profile=" + provider.name);
                     return Arrays.asList(provider);
-                }
+                } else if (provider.enabled && provider.mx != null)
+                    for (String mx : provider.mx)
+                        if ((candidate.imap.host != null && candidate.imap.host.matches(mx)) ||
+                                (candidate.smtp.host != null && candidate.smtp.host.matches(mx))) {
+                            EntityLog.log(context, "Replacing auto config MC by profile=" + provider.name);
+                            return Arrays.asList(provider);
+                        }
 
             // https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview
             if (candidate.imap.host != null &&
@@ -602,6 +626,14 @@ public class EmailProvider implements Parcelable {
             // Check ISPDB
             Log.i("Provider from ISPDB domain=" + domain);
             result.add(fromISPDB(context, domain, email, intf));
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
+
+        try {
+            // Check Microsoft auto discovery
+            Log.i("Provider from MS domain=" + domain);
+            result.add(fromMSAutodiscovery(context, domain, email, intf));
         } catch (Throwable ex) {
             Log.w(ex);
         }
@@ -838,61 +870,240 @@ public class EmailProvider implements Parcelable {
     }
 
     @NonNull
+    private static EmailProvider fromMSAutodiscovery(Context context, String domain, String email, IDiscovery intf) throws UnknownHostException {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean open_safe = prefs.getBoolean("open_safe", false);
+
+        // https://learn.microsoft.com/en-us/Exchange/architecture/client-access/autodiscover
+        // https://github.com/gronke/email-autodiscover/blob/master/mail/autodiscover.xml
+        // Example: https://mail.de/autodiscover/autodiscover.xml
+        for (String link : Misc.getMSUrls(context, domain, email))
+            try {
+                URL url = new URL(link);
+                return getMSAutodiscovery(context, domain, url, true, intf);
+            } catch (Throwable ex) {
+                Log.i(ex);
+            }
+
+        throw new UnknownHostException(domain);
+    }
+
+    private static EmailProvider getMSAutodiscovery(Context context, String domain, URL url, boolean unsafe, IDiscovery intf) throws IOException, XmlPullParserException {
+        EmailProvider provider = new EmailProvider(domain);
+
+        HttpURLConnection request = null;
+        try {
+            Log.i("Fetching " + url);
+            intf.onStatus("MS " + url);
+
+            request = (HttpURLConnection) url.openConnection();
+            request.setRequestMethod("GET");
+            request.setReadTimeout(MS_TIMEOUT);
+            request.setConnectTimeout(MS_TIMEOUT);
+            request.setDoInput(true);
+            ConnectionHelper.setUserAgent(context, request);
+
+            if (unsafe && request instanceof HttpsURLConnection) {
+                ((HttpsURLConnection) request).setHostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String hostname, SSLSession session) {
+                        return true;
+                    }
+                });
+            }
+
+            request.connect();
+
+            int status = request.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK)
+                throw new FileNotFoundException("Error " + status + ": " + request.getResponseMessage());
+
+            // https://developer.android.com/reference/org/xmlpull/v1/XmlPullParser
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xml = factory.newPullParser();
+            xml.setInput(new InputStreamReader(request.getInputStream()));
+
+            EntityLog.log(context, "Parsing " + url);
+
+            boolean isAccount = false;
+            boolean isEmail = false;
+            boolean isSettings = false;
+            boolean isProtocol = false;
+            boolean isImap = false;
+            boolean isSmtp = false;
+            String host = null;
+            Integer port = null;
+            int eventType = xml.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    String name = xml.getName();
+                    if ("Account".equals(name)) {
+                        // <AccountType>email</AccountType>
+                        isAccount = true;
+                    } else if ("AccountType".equals(name) && isAccount) {
+                        // <AccountType>email</AccountType>
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT && "email".equals(xml.getText()))
+                            isEmail = true;
+                        continue;
+                    } else if ("Action".equals(name) && isAccount) {
+                        // <Action>settings</Action>
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT && "settings".equals(xml.getText()))
+                            isSettings = true;
+                        continue;
+                    } else if ("Protocol".equals(name) && isAccount) {
+                        // <AccountType>email</AccountType>
+                        isProtocol = true;
+                    } else if (isAccount && isEmail && isSettings && isProtocol) {
+                        if ("Type".equals(name)) {
+                            // <AccountType>email</AccountType>
+                            eventType = xml.next();
+                            if (eventType == XmlPullParser.TEXT) {
+                                String type = xml.getText();
+                                if ("IMAP".equals(type))
+                                    isImap = true;
+                                else if ("SMTP".equals(type))
+                                    isSmtp = true;
+                            }
+                            continue;
+                        } else if ("Server".equals(name)) {
+                            eventType = xml.next();
+                            if (eventType == XmlPullParser.TEXT)
+                                host = xml.getText();
+                            continue;
+                        } else if ("Port".equals(name)) {
+                            eventType = xml.next();
+                            if (eventType == XmlPullParser.TEXT) {
+                                String p = xml.getText();
+                                if (TextUtils.isDigitsOnly(p))
+                                    port = Integer.parseInt(p);
+                            }
+                            continue;
+                        }
+                    }
+                } else if (eventType == XmlPullParser.END_TAG) {
+                    String name = xml.getName();
+                    if ("Account".equals(name)) {
+                        isAccount = false;
+                        isEmail = false;
+                        isSettings = false;
+                    } else if ("Protocol".equals(name)) {
+                        if (isProtocol && host != null && port != null) {
+                            if (isImap) {
+                                provider.imap.score = 20;
+                                provider.imap.host = host;
+                                provider.imap.port = port;
+                                provider.imap.starttls = (provider.imap.port == 143);
+                            } else if (isSmtp) {
+                                provider.smtp.score = 20;
+                                provider.smtp.host = host;
+                                provider.smtp.port = port;
+                                provider.smtp.starttls = (provider.smtp.port == 587);
+                            }
+                        }
+                        isProtocol = false;
+                        isImap = false;
+                        isSmtp = false;
+                        host = null;
+                        port = null;
+                    }
+                }
+
+                eventType = xml.next();
+            }
+
+            provider.validate();
+            Log.e("MS=" + url);
+
+            return provider;
+        } finally {
+            if (request != null)
+                request.disconnect();
+        }
+    }
+
+    @NonNull
     private static EmailProvider fromDNS(Context context, String domain, Discover discover, IDiscovery intf) throws UnknownHostException {
         // https://tools.ietf.org/html/rfc6186
         EmailProvider provider = new EmailProvider(domain);
 
         if (discover == Discover.ALL || discover == Discover.IMAP) {
-            try {
-                // Identifies an IMAP server where TLS is initiated directly upon connection to the IMAP server.
-                intf.onStatus("SRV imaps " + domain);
-                DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_imaps._tcp." + domain, "srv");
-                if (records.length == 0)
-                    throw new UnknownHostException(domain);
-                // ... service is not supported at all at a particular domain by setting the target of an SRV RR to "."
-                provider.imap.score = 50;
-                provider.imap.host = records[0].name;
-                provider.imap.port = records[0].port;
-                provider.imap.starttls = false;
-                EntityLog.log(context, "_imaps._tcp." + domain + "=" + provider.imap);
-            } catch (UnknownHostException ignored) {
-                // Identifies an IMAP server that MAY ... require the MUA to use the "STARTTLS" command
-                intf.onStatus("SRV imap " + domain);
-                DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_imap._tcp." + domain, "srv");
-                if (records.length == 0)
-                    throw new UnknownHostException(domain);
-                provider.imap.score = 50;
-                provider.imap.host = records[0].name;
-                provider.imap.port = records[0].port;
-                provider.imap.starttls = (provider.imap.port == 143);
-                EntityLog.log(context, "_imap._tcp." + domain + "=" + provider.imap);
-            }
+            intf.onStatus("SRV imap " + domain);
+
+            // Identifies an IMAP server where TLS is initiated directly upon connection to the IMAP server.
+            List<DnsHelper.DnsRecord> list = new ArrayList<>();
+            list.addAll(Arrays.asList(DnsHelper.lookup(context, "_imap._tcp." + domain, "srv")));
+            list.addAll(Arrays.asList(DnsHelper.lookup(context, "_imaps._tcp." + domain, "srv")));
+
+            // ... service is not supported at all at a particular domain by setting the target of an SRV RR to "."
+            for (DnsHelper.DnsRecord record : new ArrayList<>(list))
+                if (TextUtils.isEmpty(record.response) || ".".equals(record.response))
+                    list.remove(record);
+
+            if (list.size() == 0)
+                throw new UnknownHostException(domain);
+
+            Collections.sort(list, new Comparator<DnsHelper.DnsRecord>() {
+                @Override
+                public int compare(DnsHelper.DnsRecord d1, DnsHelper.DnsRecord d2) {
+                    int p = -Integer.compare(d1.priority, d2.priority);
+                    if (p != 0)
+                        return p;
+                    int w = -Integer.compare(d1.weight, d2.weight);
+                    if (w != 0)
+                        return w;
+                    return -Boolean.compare(d1.query.startsWith("_imaps._tcp."), d2.query.startsWith("_imaps._tcp."));
+                }
+            });
+
+            DnsHelper.DnsRecord pref = list.get(0);
+
+            provider.imap.score = 50;
+            provider.imap.host = pref.response;
+            provider.imap.port = pref.port;
+            provider.imap.starttls = (!pref.query.startsWith("_imaps._tcp.") && pref.port == 143);
+            EntityLog.log(context, pref.query + "=" + provider.imap);
         }
 
-        if (discover == Discover.ALL || discover == Discover.SMTP)
-            try {
-                // Note that this covers connections both with and without Transport Layer Security (TLS)
-                intf.onStatus("SRV smtp " + domain);
-                DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_submission._tcp." + domain, "srv");
-                if (records.length == 0)
-                    throw new UnknownHostException(domain);
-                provider.smtp.score = 50;
-                provider.smtp.host = records[0].name;
-                provider.smtp.port = records[0].port;
-                provider.smtp.starttls = (provider.smtp.port == 587);
-                EntityLog.log(context, "_submission._tcp." + domain + "=" + provider.smtp);
-            } catch (UnknownHostException ignored) {
-                // https://tools.ietf.org/html/rfc8314
-                intf.onStatus("SRV smtps " + domain);
-                DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_submissions._tcp." + domain, "srv");
-                if (records.length == 0)
-                    throw new UnknownHostException(domain);
-                provider.smtp.score = 50;
-                provider.smtp.host = records[0].name;
-                provider.smtp.port = records[0].port;
-                provider.smtp.starttls = false;
-                EntityLog.log(context, "_submissions._tcp." + domain + "=" + provider.smtp);
-            }
+        if (discover == Discover.ALL || discover == Discover.SMTP) {
+            intf.onStatus("SRV smtp " + domain);
+            // https://tools.ietf.org/html/rfc8314
+
+            List<DnsHelper.DnsRecord> list = new ArrayList<>();
+            // Note that this covers connections both with and without Transport Layer Security (TLS)
+            list.addAll(Arrays.asList(DnsHelper.lookup(context, "_submission._tcp." + domain, "srv")));
+            list.addAll(Arrays.asList(DnsHelper.lookup(context, "_submissions._tcp." + domain, "srv")));
+
+            for (DnsHelper.DnsRecord record : new ArrayList<>(list))
+                if (TextUtils.isEmpty(record.response) || ".".equals(record.response))
+                    list.remove(record);
+
+            if (list.size() == 0)
+                throw new UnknownHostException(domain);
+
+            Collections.sort(list, new Comparator<DnsHelper.DnsRecord>() {
+                @Override
+                public int compare(DnsHelper.DnsRecord d1, DnsHelper.DnsRecord d2) {
+                    int p = -Integer.compare(d1.priority, d2.priority);
+                    if (p != 0)
+                        return p;
+                    int w = -Integer.compare(d1.weight, d2.weight);
+                    if (w != 0)
+                        return w;
+                    // submission is being preferred
+                    return -Boolean.compare(d1.query.startsWith("_submission._tcp."), d2.query.startsWith("_submission._tcp."));
+                }
+            });
+
+            DnsHelper.DnsRecord pref = list.get(0);
+
+            provider.smtp.score = 50;
+            provider.smtp.host = pref.response;
+            provider.smtp.port = pref.port;
+            provider.smtp.starttls = (!pref.query.startsWith("_submissions._tcp.") && pref.port == 587);
+            EntityLog.log(context, pref.query + "=" + provider.smtp);
+        }
 
         provider.validate();
 

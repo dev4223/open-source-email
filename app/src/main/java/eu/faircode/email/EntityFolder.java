@@ -125,7 +125,8 @@ public class EntityFolder extends EntityOrder implements Serializable {
     public Boolean notify = false;
 
     public Integer total; // messages on server
-    public String[] keywords;
+    public String[] flags; // system flags
+    public String[] keywords; // user flags
 
     @NonNull
     public Long selected_last = 0L;
@@ -206,6 +207,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
         put("archief", new TypeScore(EntityFolder.ARCHIVE, 100)); // Dutch
         put("Архив", new TypeScore(EntityFolder.ARCHIVE, 100));
         put("Wszystkie", new TypeScore(EntityFolder.ARCHIVE, 100)); // Polish
+        put("Arkiv", new TypeScore(EntityFolder.ARCHIVE, 100)); // Norwegian
 
         put("draft", new TypeScore(EntityFolder.DRAFTS, 100));
         put("concept", new TypeScore(EntityFolder.DRAFTS, 100));
@@ -322,7 +324,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
     void inheritFrom(EntityFolder parent) {
         if (parent == null)
             return;
-        if (!EntityFolder.USER.equals(parent.type))
+        if (!EntityFolder.USER.equals(type))
             return;
 
         this.synchronize = parent.synchronize;

@@ -31,6 +31,7 @@ import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -74,8 +75,11 @@ public class EntityAttachment {
     static final Integer SMIME_SIGNED_DATA = 7;
     static final Integer SMIME_CONTENT = 8;
 
+    static final String VCARD_PREFIX = BuildConfig.APPLICATION_ID + ".vcard.";
+
     @PrimaryKey(autoGenerate = true)
     public Long id;
+    public String section;
     @NonNull
     public Long message;
     @NonNull
@@ -94,6 +98,9 @@ public class EntityAttachment {
     public Boolean available = false;
     public String media_uri;
     public String error;
+
+    @Ignore
+    public boolean selected = false;
 
     // Gmail sends inline images as attachments with a name and cid
 
@@ -224,6 +231,9 @@ public class EntityAttachment {
         if ("audio/mid".equals(type))
             return "audio/midi";
 
+        if ("audio-x/wav".equals(type))
+            return "audio/wav";
+
         // https://www.rfc-editor.org/rfc/rfc3555.txt
         if ("image/jpg".equals(type) || "video/jpeg".equals(type))
             return "image/jpeg";
@@ -231,6 +241,10 @@ public class EntityAttachment {
         if (!TextUtils.isEmpty(type) &&
                 (type.endsWith("/pdf") || type.endsWith("/x-pdf")))
             return "application/pdf";
+
+        if ("text/v-calendar".equals(type) ||
+                "text/x-vcalendar".equals(type))
+            return "text/calendar";
 
         String extension = Helper.getExtension(name);
         if (extension == null)
@@ -279,6 +293,9 @@ public class EntityAttachment {
 
         if ("pptx".equals(extension))
             return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+        if ("ppsx".equals(extension))
+            return "application/vnd.openxmlformats-officedocument.presentationml.slideshow";
 
         // OpenOffice
 
@@ -339,8 +356,7 @@ public class EntityAttachment {
                 "application/x-zip-compressed".equals(type))
             return "application/zip"; //
 
-        if ("text/plain".equals(type) &&
-                ("ics".equals(extension) || "vcs".equals(extension)))
+        if ("ics".equals(extension) || "vcs".equals(extension))
             return "text/calendar";
 
         if ("text/plain".equals(type) && "ovpn".equals(extension))
@@ -416,7 +432,8 @@ public class EntityAttachment {
     public boolean equals(Object obj) {
         if (obj instanceof EntityAttachment) {
             EntityAttachment other = (EntityAttachment) obj;
-            return (this.message.equals(other.message) &&
+            return (Objects.equals(this.section, other.section) &&
+                    this.message.equals(other.message) &&
                     this.sequence.equals(other.sequence) &&
                     Objects.equals(this.name, other.name) &&
                     this.type.equals(other.type) &&

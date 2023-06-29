@@ -4,9 +4,240 @@
 
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
 
+### [Ubirajara](https://en.wikipedia.org/wiki/Ubirajara_jubatus)
+
+### 1.2078 - 2023-06-27
+
+* Added notes to message list widget
+* Added create alias dialog (long press identity)
+* Added option for larger count for new message count widget
+* Added deleting attachments (horizontal three-dots menu above the message text)
+* Added translating subject in message editor when it is focussed
+* Inheriting identity color from account color
+* Using selected font for reply header and signature too
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2077 - 2023-06-14
+
+* Fixed all reported bugs
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2076 - 2023-06-13
+
+* Android 14 compatibility
+* Added downloading Outlook contacts (main settings)
+* Added categories for [Disconnect's tracker protection lists](https://github.com/disconnectme/disconnect-tracking-protection) (privacy settings)
+* Updated build tools and libraries
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### [Tratayenia](https://en.wikipedia.org/wiki/Tratayenia)
+
+### 1.2075 - 2023-06-08
+
+* Added option to add send-to-self to Android's share menu
+* Added separate filter settings for archive, trash and spam folder
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2074 - 2023-06-03
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2073 - 2023-05-30
+
+* Added file viewing confirmation
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2072 - 2023-05-29
+
+* Fixed [badge count](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq106)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2071 - 2023-05-27
+
+* Fixed photo picker for some devices
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2070 - 2023-05-20
+
+* Added option to start with two columns/rows
+* Added option to show both date and time in message headers
+* Added option to replace source text by translated text
+* Added support for reminders in events
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### [Saltopus](https://en.wikipedia.org/wiki/Saltopus)
+
+### 1.2069 - 2023-05-09
+
+* Added support for Surface Duo 2
+* Added auto scroll to message editor for Android 14
+* Improved swipe left/right sensitivity
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2068 - 2023-04-29
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2067 - 2023-04-22
+
+* Fixed attaching files with a long name
+* Small improvements and minor bug fixes
+
+### 1.2066 - 2023-04-21
+
+* Fixed all reported bugs
+* Added younger than rule condition
+* Added option to show filter icon when rules were applied
+* Added warning for long attachment file names
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2065 - 2023-04-16
+
+* Fixed extra new lines
+* Small improvements and minor bug fixes
+
+### 1.2064 - 2023-04-15
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+
+### 1.2063 - 2023-04-13
+
+* Fixed sending via Outlook graph in some cases
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2062 - 2023-04-12
+
+* Fixed importing settings
+* Added advanced account option for summary only notifications
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2061 - 2023-04-10
+
+* Added filter rule groups (stop processing per group)
+* Added executing of filter rules by automation apps, see [the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71)
+* Improved auto-discovery via DNS SRV records
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Material Components](https://github.com/material-components/material-components-android)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2060 - 2023-04-01
+
+* Added draft message printing
+* Added copy filter rule to another account/folder
+* Added linking contacts to identities to attach vCards
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### [Rahonavis](https://en.wikipedia.org/wiki/Rahonavis)
+
+### 1.2059 - 2023-03-24
+
+* Fixed all reported bugs
+
+### 1.2058 - 2023-03-22
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2057 - 2023-03-19
+
+* Added an option to use the monospaced font when writing a plain text only messages
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2056 - 2023-03-17
+
+* Fixed decoding of subject in some cases
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2055 - 2023-03-16
+
+* Added option to configure the number of widget subject lines
+* Added remembering last used folder for contacts
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2054 - 2023-03-14
+
+* Added rule action option to delete keywords
+* Small improvements and minor bug fixes
+* Updated build tools (NDK)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2053 - 2023-03-13
+
+* Added PGP encrypt-only
+* Added weekend scheduling (receive-settings tab page)
+* Added reply template sorting options
+* Added display option to vertically align keywords, preview, and notes
+* Improved [OpenAI (ChatGPT) integration](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq190)
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2052 - 2023-03-08
+
+* Added experimental [OpenAI (ChatGPT) integration](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq190)
+* Small improvements and minor bug fixes
+
 ### [Quetecsaurus](https://en.wikipedia.org/wiki/Quetecsaurus)
 
-### Next version
+### 1.2051 - 2023-03-05
+
+* Fixed changing auth type
+* Small improvements and minor bug fixes
+
+### 1.2050 - 2023-03-05
+
+* Fixed updating Microsoft Graph tokens
+* Small improvements and minor bug fixes
+
+### 1.2049 - 2023-03-04
+
+* Fixed refreshing Microsoft Graph tokens
+
+### 1.2048 - 2023-03-04
+
+* Fixed 'Other provider' setup wizard
+
+### 1.2047 - 2023-03-04
+
+* Fixed authenticating Yahoo/AOL accounts
+* Small improvements and minor bug fixes
+* Updated translations
+
+### 1.2046 - 2023-03-04
 
 * Added sort options for filter rules
 * Added option to disable auto hiding of answer button

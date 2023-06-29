@@ -109,6 +109,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.FetchProfile;
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -118,12 +119,15 @@ import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.StoreClosedException;
 import javax.mail.UIDFolder;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.AndTerm;
 import javax.mail.search.ComparisonTerm;
@@ -135,7 +139,7 @@ import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SentDateTerm;
 
-import me.leolin.shortcutbadger.ShortcutBadger;
+import me.leolin.shortcutbadger.ShortcutBadgerAlt;
 
 class Core {
     static final int DEFAULT_CHUNK_SIZE = 50;
@@ -494,7 +498,7 @@ class Core {
                                     break;
 
                                 case EntityOperation.RAW:
-                                    onRaw(context, jargs, folder, message, (IMAPFolder) ifolder);
+                                    onRaw(context, jargs, account, folder, message, (IMAPFolder) ifolder);
                                     break;
 
                                 case EntityOperation.BODY:
@@ -503,6 +507,10 @@ class Core {
 
                                 case EntityOperation.ATTACHMENT:
                                     onAttachment(context, jargs, folder, message, op, (IMAPFolder) ifolder);
+                                    break;
+
+                                case EntityOperation.DETACH:
+                                    onDetach(context, jargs, account, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder, state);
                                     break;
 
                                 case EntityOperation.EXISTS:
@@ -1935,7 +1943,7 @@ class Core {
         db.message().setMessageHeaders(message.id, helper.getHeaders());
     }
 
-    private static void onRaw(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, IOException, JSONException {
+    private static void onRaw(Context context, JSONArray jargs, EntityAccount account, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, IOException, JSONException {
         // Download raw message
         DB db = DB.getInstance(context);
 
@@ -1944,10 +1952,23 @@ class Core {
             if (imessage == null)
                 throw new MessageRemovedException();
 
+            EntityLog.log(context, "Downloading raw id=" + message.id + " subject=" + message.subject);
             File file = message.getRawFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                 imessage.writeTo(os);
             }
+
+            Properties props = MessageHelper.getSessionProperties(account.unicode);
+            Session isession = Session.getInstance(props, null);
+
+            MessageHelper helper;
+            try (InputStream is = new FileInputStream(file)) {
+                helper = new MessageHelper(new MimeMessage(isession, is), context);
+            }
+
+            // Yahoo is returning incorrect messages
+            if (!Objects.equals(message.msgid, helper.getMessageID()))
+                throw new MessagingException("Incorrect msgid=" + message.msgid + "/" + helper.getMessageID());
 
             db.message().setMessageRaw(message.id, true);
         }
@@ -1993,7 +2014,10 @@ class Core {
     }
 
     private static void onBody(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, IOException {
-        boolean plain_text = jargs.optBoolean(0);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean download_plain = prefs.getBoolean("download_plain", false);
+
+        boolean plain_text = jargs.optBoolean(0, download_plain);
         String charset = (jargs.isNull(1) ? null : jargs.optString(1, null));
 
         if (message.uid == null)
@@ -2062,10 +2086,105 @@ class Core {
         MessageHelper.MessageParts parts = helper.getMessageParts();
 
         // Download attachment
-        parts.downloadAttachment(context, attachment);
+        parts.downloadAttachment(context, attachment, folder);
 
         if (attachment.size != null)
             EntityLog.log(context, "Operation attachment size=" + attachment.size);
+    }
+
+    private static void onDetach(Context context, JSONArray jargs, EntityAccount account, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder, State state) throws JSONException, MessagingException, IOException {
+        DB db = DB.getInstance(context);
+
+        JSONArray jids = jargs.getJSONArray(0);
+        List<Long> ids = new ArrayList<>();
+        for (int i = 0; i < jids.length(); i++)
+            ids.add(jids.getLong(i));
+
+        if (message.uid == null)
+            throw new IllegalArgumentException("Delete attachments uid missing");
+
+        EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+
+        // Get message
+        Message imessage = ifolder.getMessageByUID(message.uid);
+        if (imessage == null)
+            throw new MessageRemovedException();
+
+        String msgid = EntityMessage.generateMessageId();
+        String ref = (TextUtils.isEmpty(message.references)
+                ? message.msgid
+                : message.references + " " + message.msgid);
+        MimeMessage icopy = new MimeMessageEx((MimeMessage) imessage, msgid);
+        icopy.addHeader("References", MessageHelper.limitReferences(ref));
+        MessageHelper helper = new MessageHelper(icopy, context);
+        MessageHelper.MessageParts parts = helper.getMessageParts();
+        List<MessageHelper.AttachmentPart> aparts = parts.getAttachmentParts();
+
+        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+        for (EntityAttachment attachment : attachments)
+            if (ids.contains(attachment.id)) {
+                Part apart = aparts.get(attachment.sequence - 1).part;
+                if (!deletePart(icopy, apart))
+                    throw new IllegalArgumentException("Attachment part not found");
+            }
+
+        ifolder.appendMessages(new Message[]{icopy});
+
+        Long uid = findUid(context, account, ifolder, msgid);
+        if (uid != null) {
+            JSONArray fargs = new JSONArray();
+            fargs.put(uid);
+            onFetch(context, fargs, folder, istore, ifolder, state);
+        }
+
+        if (trash == null) {
+            imessage.setFlag(Flags.Flag.DELETED, true);
+            expunge(context, ifolder, Arrays.asList(imessage));
+        } else {
+            EntityOperation.queue(context, message, EntityOperation.MOVE, trash.id);
+        }
+    }
+
+    static boolean deletePart(Part part, Part attachment) throws MessagingException, IOException {
+        boolean deleted = false;
+        if (part.isMimeType("multipart/*")) {
+            Multipart multipart = (Multipart) part.getContent();
+            for (int i = 0; i < multipart.getCount(); i++) {
+                Part child = multipart.getBodyPart(i);
+                if (child == attachment) {
+                    String fileName = child.getFileName();
+                    String contentType = child.getContentType();
+                    String disposition = child.getDisposition();
+
+                    if (fileName != null && !fileName.startsWith("deleted"))
+                        fileName = "deleted" + (TextUtils.isEmpty(fileName) ? "" : "_" + fileName);
+                    if (TextUtils.isEmpty(contentType))
+                        contentType = "application/octet-stream";
+                    if (TextUtils.isEmpty(disposition))
+                        disposition = Part.ATTACHMENT;
+
+                    multipart.removeBodyPart(i);
+
+                    BodyPart placeholderPart = new MimeBodyPart();
+                    placeholderPart.setContent("", contentType);
+                    placeholderPart.setFileName(fileName);
+                    placeholderPart.setDisposition(disposition);
+                    multipart.addBodyPart(placeholderPart);
+
+                    deleted = true;
+                } else {
+                    if (deletePart(child, attachment))
+                        deleted = true;
+                }
+            }
+        }
+
+        if (part instanceof MimeMessage)
+            ((MimeMessage) part).saveChanges();
+        else if (part instanceof Multipart)
+            part.setDataHandler(part.getDataHandler());
+
+        return deleted;
     }
 
     private static void onBody(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, POP3Folder ifolder, POP3Store istore) throws MessagingException, IOException {
@@ -2073,8 +2192,8 @@ class Core {
             throw new IllegalArgumentException("Not INBOX");
 
         Map<EntityMessage, Message> map = findMessages(context, folder, Arrays.asList(message), istore, ifolder);
-        if (map.size() == 0)
-            throw new MessageRemovedException("Message not found");
+        if (map.get(message) == null)
+            throw new IllegalArgumentException("Message not found msgid=" + message.msgid);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean download_plain = prefs.getBoolean("download_plain", false);
@@ -2114,14 +2233,14 @@ class Core {
             return;
 
         Map<EntityMessage, Message> map = findMessages(context, folder, Arrays.asList(message), istore, ifolder);
-        if (map.size() == 0)
-            throw new MessageRemovedException("Message not found");
+        if (map.get(message) == null)
+            throw new IllegalArgumentException("Message not found msgid=" + message.msgid);
 
         MessageHelper helper = new MessageHelper((MimeMessage) map.entrySet().iterator().next().getValue(), context);
         MessageHelper.MessageParts parts = helper.getMessageParts();
 
         // Download attachment
-        parts.downloadAttachment(context, attachment);
+        parts.downloadAttachment(context, attachment, folder);
 
         if (attachment.size != null)
             EntityLog.log(context, "Operation attachment size=" + attachment.size);
@@ -2139,18 +2258,24 @@ class Core {
             throw new IllegalArgumentException("exists without msgid");
 
         // Search for message
-        Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
-        if (imessages == null || imessages.length == 0)
-            try {
-                // Needed for Outlook
-                imessages = ifolder.search(
-                        new AndTerm(
-                                new SentDateTerm(ComparisonTerm.GE, new Date()),
-                                new HeaderTerm(MessageHelper.HEADER_CORRELATION_ID, message.msgid)));
-            } catch (Throwable ex) {
-                Log.e(ex);
-                // Seznam: Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
-            }
+        Message[] imessages = (account.isOutlook())
+                ? ifolder.search(new HeaderTerm("X-Microsoft-Original-Message-ID", message.msgid))
+                : ifolder.search(new MessageIDTerm(message.msgid));
+
+        // Fallback
+        if (false)
+            if (imessages == null || imessages.length == 0)
+                try {
+                    // Needed for Outlook
+                    imessages = ifolder.search(
+                            new AndTerm(
+                                    new SentDateTerm(ComparisonTerm.GE, new Date()),
+                                    new HeaderTerm(MessageHelper.HEADER_CORRELATION_ID, message.msgid)));
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                    // iCloud: NO [UNAVAILABLE] Unexpected exception
+                    // Seznam: Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
+                }
 
         // Some email servers are slow with adding sent messages
         if (retry)
@@ -2917,24 +3042,28 @@ class Core {
         // Deferred rule (download headers, body, etc)
         DB db = DB.getInstance(context);
 
-        long id = jargs.getLong(0);
-        if (id < 0) {
-            List<EntityRule> rules = db.rule().getEnabledRules(message.folder, true);
-            for (EntityRule rule : rules)
-                if (rule.matches(context, message, null, null)) {
-                    rule.execute(context, message);
-                    if (rule.stop)
-                        break;
-                }
-        } else {
-            EntityRule rule = db.rule().getRule(id);
-            if (rule == null)
-                throw new IllegalArgumentException("Rule not found id=" + id);
+        try {
+            db.beginTransaction();
 
-            if (!message.content)
-                throw new IllegalArgumentException("Message without content id=" + rule.id + ":" + rule.name);
+            long id = jargs.getLong(0);
+            if (id < 0) {
+                EntityLog.log(context, "Executing deferred daily rules for message=" + message.id);
+                List<EntityRule> rules = db.rule().getEnabledRules(message.folder, true);
+                EntityRule.run(context, rules, message, null, null);
+            } else {
+                EntityRule rule = db.rule().getRule(id);
+                if (rule == null)
+                    throw new IllegalArgumentException("Rule not found id=" + id);
 
-            rule.execute(context, message);
+                if (!message.content)
+                    throw new IllegalArgumentException("Message without content id=" + rule.id + ":" + rule.name);
+
+                rule.execute(context, message);
+            }
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
     }
 
@@ -3011,7 +3140,7 @@ class Core {
                     imessages.length > 0 && folder.last_sync_count != null &&
                     imessages.length == folder.last_sync_count) {
                 // Check if last message known as new messages indicator
-                MessageHelper helper = new MessageHelper((MimeMessage) imessages[imessages.length - 1], context);
+                MessageHelper helper = new MessageHelper((MimeMessage) imessages[reversed ? 0 : imessages.length - 1], context);
                 String msgid = helper.getPOP3MessageID();
                 if (msgid != null) {
                     int count = db.message().countMessageByMsgId(folder.id, msgid, true);
@@ -3022,9 +3151,33 @@ class Core {
                 }
             }
 
+            // Index IDs
+            int flagged = 0;
+            Map<String, TupleUidl> uidlTuple = new HashMap<>();
+            Map<String, TupleUidl> msgIdTuple = new HashMap<>();
+            for (TupleUidl id : ids) {
+                if (id.ui_flagged && !id.ui_hide)
+                    flagged++;
+
+                if (id.uidl != null) {
+                    if (uidlTuple.containsKey(id.uidl))
+                        Log.w(account.name + " POP duplicate uidl/msgid=" + id.uidl + "/" + id.msgid);
+                    uidlTuple.put(id.uidl, id);
+                }
+
+                if (id.msgid != null) {
+                    if (msgIdTuple.containsKey(id.msgid))
+                        Log.w(account.name + " POP duplicate msgid/uidl=" + id.msgid + "/" + id.uidl);
+                    msgIdTuple.put(id.msgid, id);
+                }
+            }
+
+            max = Math.min(max + flagged, imessages.length);
+
             EntityLog.log(context, account.name + " POP" +
                     " device=" + ids.size() +
                     " server=" + imessages.length +
+                    " flagged=" + flagged +
                     " max=" + max + "/" + account.max_messages +
                     " reversed=" + reversed +
                     " last=" + folder.last_sync_count +
@@ -3032,24 +3185,6 @@ class Core {
                     " uidl=" + hasUidl);
 
             if (sync) {
-                // Index IDs
-                Map<String, TupleUidl> uidlTuple = new HashMap<>();
-                for (TupleUidl id : ids) {
-                    if (id.uidl != null && id.msgid != null) {
-                        if (uidlTuple.containsKey(id.uidl))
-                            Log.w(account.name + " POP duplicate uidl/msgid=" + id.uidl + "/" + id.msgid);
-                        uidlTuple.put(id.uidl, id);
-                    }
-                }
-
-                Map<String, TupleUidl> msgIdTuple = new HashMap<>();
-                for (TupleUidl id : ids)
-                    if (id.msgid != null) {
-                        if (msgIdTuple.containsKey(id.msgid))
-                            Log.w(account.name + " POP duplicate msgid/uidl=" + id.msgid + "/" + id.uidl);
-                        msgIdTuple.put(id.msgid, id);
-                    }
-
                 // Fetch UIDLs
                 if (hasUidl) {
                     FetchProfile ifetch = new FetchProfile();
@@ -3201,8 +3336,10 @@ class Core {
 
                         message.tls = helper.getTLS();
                         message.dkim = MessageHelper.getAuthentication("dkim", authentication);
-                        if (Boolean.TRUE.equals(message.dkim))
-                            message.dkim = helper.checkDKIMRequirements();
+                        if (Boolean.TRUE.equals(message.dkim) &&
+                                native_dkim && !BuildConfig.PLAY_STORE_RELEASE &&
+                                TextUtils.isEmpty(message.signedby))
+                            message.dkim = false;
                         message.spf = MessageHelper.getAuthentication("spf", authentication);
                         if (message.spf == null && helper.getSPF())
                             message.spf = true;
@@ -3285,7 +3422,7 @@ class Core {
                             if (Boolean.TRUE.equals(message.blocklist)) {
                                 EntityLog.log(context, account.name + " POP blocklist=" +
                                         MessageHelper.formatAddresses(message.from));
-                                continue;
+                                message.ui_hide = true;
                             }
                         }
 
@@ -3309,7 +3446,7 @@ class Core {
                                 EntityLog.log(context, account.name + " POP blocked=" +
                                         MessageHelper.formatAddresses(message.from));
 
-                                continue;
+                                message.ui_hide = true;
                             }
                         }
 
@@ -3358,7 +3495,7 @@ class Core {
                         try {
                             for (EntityAttachment attachment : parts.getAttachments())
                                 if (attachment.subsequence == null)
-                                    parts.downloadAttachment(context, attachment);
+                                    parts.downloadAttachment(context, attachment, folder);
                         } catch (Throwable ex) {
                             Log.w(ex);
                         }
@@ -3377,6 +3514,9 @@ class Core {
                             } catch (Throwable ex) {
                                 Log.w(ex);
                             }
+
+                        if (!account.leave_on_server && account.client_delete)
+                            imessage.setFlag(Flags.Flag.DELETED, true);
 
                         EntityContact.received(context, account, folder, message);
                     } catch (FolderClosedException ex) {
@@ -3419,8 +3559,9 @@ class Core {
                 int hidden = db.message().setMessagesUiHide(folder.id, Math.abs(account.max_messages));
                 int deleted = db.message().deleteMessagesKeep(folder.id, Math.abs(account.max_messages) + 100);
                 EntityLog.log(context, account.name + " POP" +
-                        " cleanup max=" + account.max_messages + "" +
-                        " hidden=" + hidden + " deleted=" + deleted);
+                        " cleanup max=" + account.max_messages +
+                        " hidden=" + hidden +
+                        " deleted=" + deleted);
             }
 
             folder.last_sync_count = imessages.length;
@@ -3488,7 +3629,32 @@ class Core {
 
             db.folder().setFolderSyncState(folder.id, "syncing");
 
-            String[] userFlags = ifolder.getPermanentFlags().getUserFlags();
+            Flags flags = ifolder.getPermanentFlags();
+
+            try {
+                List<String> f = new ArrayList<>();
+                if (flags != null) {
+                    if (flags.contains(Flags.Flag.ANSWERED))
+                        f.add("\\Answered");
+                    if (flags.contains(Flags.Flag.DELETED))
+                        f.add("\\Deleted");
+                    if (flags.contains(Flags.Flag.DRAFT))
+                        f.add("\\Draft");
+                    if (flags.contains(Flags.Flag.FLAGGED))
+                        f.add("\\Flagged");
+                    if (flags.contains(Flags.Flag.RECENT))
+                        f.add("\\Recent");
+                    if (flags.contains(Flags.Flag.SEEN))
+                        f.add("\\Seen");
+                    if (flags.contains(Flags.Flag.USER))
+                        f.add("\\*");
+                }
+                db.folder().setFolderFlags(folder.id, DB.Converters.fromStringArray(f.toArray(new String[0])));
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+            String[] userFlags = flags.getUserFlags();
             if (userFlags != null && userFlags.length > 0) {
                 List<String> keywords = new ArrayList<>(Arrays.asList(userFlags));
                 Collections.sort(keywords);
@@ -3558,8 +3724,9 @@ class Core {
             Log.i(folder.name + " sync=" + new Date(sync_time) + " keep=" + new Date(keep_time));
 
             // Delete old local messages
+            long delete_time = new Date().getTime() - 3600 * 1000L;
             if (auto_delete) {
-                List<Long> tbds = db.message().getMessagesBefore(folder.id, sync_time, keep_time, delete_unseen);
+                List<Long> tbds = db.message().getMessagesBefore(folder.id, delete_time, keep_time, delete_unseen);
                 Log.i(folder.name + " local tbd=" + tbds.size());
                 EntityFolder trash = db.folder().getFolderByType(folder.account, EntityFolder.TRASH);
                 for (Long tbd : tbds) {
@@ -3572,7 +3739,7 @@ class Core {
                             EntityOperation.queue(context, message, EntityOperation.MOVE, trash.id);
                 }
             } else {
-                int old = db.message().deleteMessagesBefore(folder.id, sync_time, keep_time, delete_unseen);
+                int old = db.message().deleteMessagesBefore(folder.id, delete_time, keep_time, delete_unseen);
                 Log.i(folder.name + " local old=" + old);
             }
 
@@ -3604,7 +3771,6 @@ class Core {
                         : new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
 
                 SearchTerm searchTerm = dateTerm;
-                Flags flags = ifolder.getPermanentFlags();
                 if (sync_nodate && !account.isOutlook())
                     searchTerm = new OrTerm(searchTerm, new ReceivedDateTerm(ComparisonTerm.LT, new Date(365 * 24 * 3600 * 1000L)));
                 if (sync_unseen && flags.contains(Flags.Flag.SEEN))
@@ -4297,8 +4463,10 @@ class Core {
 
             message.tls = helper.getTLS();
             message.dkim = MessageHelper.getAuthentication("dkim", authentication);
-            if (Boolean.TRUE.equals(message.dkim))
-                message.dkim = helper.checkDKIMRequirements();
+            if (Boolean.TRUE.equals(message.dkim) &&
+                    native_dkim && !BuildConfig.PLAY_STORE_RELEASE &&
+                    TextUtils.isEmpty(message.signedby))
+                message.dkim = false;
             message.spf = MessageHelper.getAuthentication("spf", authentication);
             if (message.spf == null && helper.getSPF())
                 message.spf = true;
@@ -4551,11 +4719,6 @@ class Core {
                 db.endTransaction();
             }
 
-            if (BuildConfig.DEBUG &&
-                    message.signedby == null &&
-                    Boolean.TRUE.equals(message.dkim))
-                EntityOperation.queue(context, message, EntityOperation.FLAG, true, android.graphics.Color.RED);
-
             try {
                 EntityContact.received(context, account, folder, message);
 
@@ -4679,7 +4842,7 @@ class Core {
 
             if (!Helper.equal(message.keywords, keywords) &&
                     !folder.read_only &&
-                    ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
+                    (ifolder.getPermanentFlags().contains(Flags.Flag.USER) || keywords.length > 0)) {
                 update = true;
                 message.keywords = keywords;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid +
@@ -4881,10 +5044,12 @@ class Core {
     }
 
     private static EntityIdentity matchIdentity(Context context, EntityFolder folder, EntityMessage message) {
-        DB db = DB.getInstance(context);
-
         if (EntityFolder.DRAFTS.equals(folder.type))
             return null;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int level = prefs.getInt("log_level", android.util.Log.INFO);
+        boolean log = (level <= android.util.Log.INFO || BuildConfig.DEBUG);
 
         List<Address> addresses = new ArrayList<>();
         if (folder.isOutgoing()) {
@@ -4914,19 +5079,45 @@ class Core {
         if (identities != null) {
             for (Address address : addresses)
                 for (EntityIdentity identity : identities)
-                    if (identity.sameAddress(address))
+                    if (identity.sameAddress(address)) {
+                        if (log)
+                            Log.i("Matched same" +
+                                    " identity=" + identity.email +
+                                    " address=" + ((InternetAddress) address).getAddress() +
+                                    " folder=" + folder.name);
                         return identity;
+                    }
 
             for (Address address : addresses)
                 for (EntityIdentity identity : identities)
-                    if (identity.similarAddress(address))
+                    if (identity.similarAddress(address)) {
+                        if (log)
+                            Log.i("Matched similar" +
+                                    " identity=" + identity.email +
+                                    " regex=" + identity.sender_extra_regex +
+                                    " address=" + ((InternetAddress) address).getAddress() +
+                                    " folder=" + folder.name);
                         return identity;
+                    }
 
             if (deliveredto != null)
                 for (EntityIdentity identity : identities)
-                    if (identity.sameAddress(deliveredto) || identity.similarAddress(deliveredto))
+                    if (identity.sameAddress(deliveredto) || identity.similarAddress(deliveredto)) {
+                        if (log)
+                            Log.i("Matched deliveredto" +
+                                    " identity=" + identity.email +
+                                    " regex=" + identity.sender_extra_regex +
+                                    " address=" + ((InternetAddress) deliveredto).getAddress() +
+                                    " folder=" + folder.name);
                         return identity;
+                    }
         }
+
+        if (log)
+            Log.i("Matched none" +
+                    " addresses=" + MessageHelper.formatAddresses(addresses.toArray(new Address[0])) +
+                    " deliveredto=" + (deliveredto == null ? null : ((InternetAddress) deliveredto).getAddress()) +
+                    " folder=" + folder.name);
 
         return null;
     }
@@ -4946,19 +5137,16 @@ class Core {
 
         if (account.protocol == EntityAccount.TYPE_IMAP && folder.read_only)
             return;
-        if (!ActivityBilling.isPro(context))
-            return;
+
+        boolean pro = ActivityBilling.isPro(context);
 
         DB db = DB.getInstance(context);
         try {
             boolean executed = false;
-            for (EntityRule rule : rules)
-                if (rule.matches(context, message, headers, html)) {
-                    rule.execute(context, message);
-                    executed = true;
-                    if (rule.stop)
-                        break;
-                }
+            if (pro) {
+                int applied = EntityRule.run(context, rules, message, headers, html);
+                executed = (applied > 0);
+            }
 
             if (EntityFolder.INBOX.equals(folder.type))
                 if (message.from != null) {
@@ -5107,7 +5295,7 @@ class Core {
                     if (state.getNetworkState().isUnmetered() ||
                             (attachment.size != null && attachment.size < maxSize))
                         try {
-                            parts.downloadAttachment(context, attachment);
+                            parts.downloadAttachment(context, attachment, folder);
                             if (stats != null && attachment.size != null)
                                 stats.attachments += attachment.size;
                         } catch (Throwable ex) {
@@ -5188,6 +5376,11 @@ class Core {
         boolean redacted = ((biometrics || !TextUtils.isEmpty(pin)) && !biometric_notify);
         if (redacted)
             notify_summary = true;
+        if (notify_screen_on &&
+                !(BuildConfig.DEBUG ||
+                        Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU ||
+                        Helper.hasPermission(context, "android.permission.TURN_SCREEN_ON")))
+            notify_screen_on = false;
 
         Log.i("Notify messages=" + messages.size() +
                 " biometrics=" + biometrics + "/" + biometric_notify +
@@ -5256,6 +5449,13 @@ class Core {
                         " ignored=" + message.ui_ignored +
                         " hide=" + message.ui_hide);
             else {
+                // Prevent reappearing notifications
+                EntityMessage msg = db.message().getMessage(message.id);
+                if (msg == null || msg.ui_ignored) {
+                    Log.i("Notify skip id=" + message.id + " msg=" + (msg != null));
+                    continue;
+                }
+
                 Integer current = newMessages.get(group);
                 newMessages.put(group, current == null ? 1 : current + 1);
 
@@ -5317,10 +5517,15 @@ class Core {
                 continue;
             }
 
+            boolean summary = (notify_summary ||
+                    (group != 0 &&
+                            groupMessages.get(group).size() > 0 &&
+                            groupMessages.get(group).get(0).accountSummary));
+
             // Build notifications
             List<NotificationCompat.Builder> notifications = getNotificationUnseen(context,
                     group, groupMessages.get(group),
-                    notify_summary, current - prev, current,
+                    summary, current - prev, current,
                     redacted);
 
             Log.i("Notify group=" + group +
@@ -5359,7 +5564,7 @@ class Core {
                 if ((id == 0 && !prev.equals(current)) || add.contains(id)) {
                     // https://developer.android.com/training/wearables/notifications/bridger#non-bridged
                     if (id == 0) {
-                        if (!notify_summary)
+                        if (!summary)
                             builder.setLocalOnly(true);
                     } else {
                         if (wearable_preview ? id < 0 : update.contains(id))
@@ -5381,7 +5586,7 @@ class Core {
                             nm.notify(tag, NotificationHelper.NOTIFICATION_TAGGED, notification);
                         // https://github.com/leolin310148/ShortcutBadger/wiki/Xiaomi-Device-Support
                         if (id == 0 && badge && Helper.isXiaomi())
-                            ShortcutBadger.applyNotification(context, notification, current);
+                            ShortcutBadgerAlt.applyNotification(context, notification, current);
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
@@ -5523,6 +5728,9 @@ class Core {
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                             .setAllowSystemGeneratedContextualActions(false);
 
+            if (group != 0 && messages.size() > 0)
+                builder.setSubText(messages.get(0).accountName);
+
             if (notify_summary) {
                 builder.setOnlyAlertOnce(new_messages <= 0);
 
@@ -5618,6 +5826,7 @@ class Core {
             // Build pending intents
             Intent thread = new Intent(context, ActivityView.class);
             thread.setAction("thread:" + message.id);
+            thread.putExtra("group", group);
             thread.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             thread.putExtra("account", message.account);
             thread.putExtra("folder", message.folder);
@@ -5864,6 +6073,7 @@ class Core {
                     message.from != null && message.from.length > 0 &&
                     db.folder().getOutbox() != null) {
                 Intent reply = new Intent(context, ServiceUI.class)
+                        .setPackage(BuildConfig.APPLICATION_ID)
                         .setAction("reply:" + message.id)
                         .putExtra("group", group);
                 PendingIntent piReply = PendingIntentCompat.getService(
@@ -6169,7 +6379,7 @@ class Core {
                 return false;
 
             semaphore.release();
-            yield();
+            microWait();
             return true;
         }
 
@@ -6214,7 +6424,7 @@ class Core {
 
             if (!backingoff) {
                 thread.interrupt();
-                yield();
+                microWait();
             }
         }
 
@@ -6229,7 +6439,7 @@ class Core {
             serial++;
         }
 
-        private void yield() {
+        private void microWait() {
             try {
                 // Give interrupted thread some time to acquire wake lock
                 Thread.sleep(YIELD_DURATION);

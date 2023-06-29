@@ -247,7 +247,6 @@
     <string name="title_setup_doze_battery">Visoka poraba energije?</string>
     <string name="title_setup_doze_stopped">Se je sinhronizacija ustavila?</string>
     <string name="title_setup_doze_device">To je verjetno zahtevano za to napravo.</string>
-    <string name="title_setup_alarm_12">Program ne bo deloval.</string>
     <string name="title_setup_inexact">Budilke in opomniki so onemogočeni.</string>
     <string name="title_setup_background">Omejitve v ozadju so omogočene.</string>
     <string name="title_setup_data">Ohranjevalnik podatkov je omogočen.</string>
@@ -327,9 +326,9 @@
     <string name="title_setup_defaults">Obnovi privzeto</string>
     <string name="title_setup_reset_questions">Ponastavi vprašanja</string>
     <string name="title_setup_reset_general">Splošna vprašanja</string>
-    <string name="title_setup_reset_full">Prikaži izvirna sporočila</string>
-    <string name="title_setup_reset_images">Prikaži slike</string>
     <string name="title_setup_reset_links">Potrdi povezave</string>
+    <string name="title_setup_reset_images">Prikaži slike</string>
+    <string name="title_setup_reset_full">Prikaži izvirna sporočila</string>
     <string name="title_check_gmail_oauth">Vaši računi Gmail bodo še naprej delovali po 30. maju 2022.</string>
     <string name="title_check_gmail_password">Nekateri od vaših računov Gmail bodo morda prenehali delovati po 30. maju 2022.</string>
     <string name="title_check_outlook_oauth">Vaši računi Outlook bodo še naprej delovali po 1. okrobru 2022.</string>
@@ -390,7 +389,6 @@
     <string name="title_advanced_send_chips">Prikaži mehurčke za naslove</string>
     <string name="title_advanced_send_reminders">Prikaži opomnike</string>
     <string name="title_advanced_send_delayed">Odloži pošiljanje sporočil</string>
-    <string name="title_advanced_attach_new">Dodaj datoteke v souporabi k novemu osnutku</string>
     <string name="title_advanced_answer_default">Kratek pritisk na gumb za odgovor bo:</string>
     <string name="title_advanced_answer_action">Dolg pritisk na gumb za odgovor bo:</string>
     <string name="title_advanced_send_pending">Prikaži nevsiljivo ikono zakasnelega pošiljanja</string>
@@ -1480,7 +1478,8 @@
     <string name="title_sort_on_attachments">Prilogah</string>
     <string name="title_sort_on_hidden">Skrito</string>
     <string name="title_sort_ascending">Najprej najstarejša</string>
-    <string name="title_sort_on_order" comment="title_sort_on_order&#10;Sort options for rules: rule sequence order">Vrstni red</string>
+    <string name="title_sort_on_name">Ime</string>
+    <string name="title_sort_on_order">Vrstni red</string>
     <string name="title_filter">Izključi</string>
     <string name="title_filter_seen">Prebrana</string>
     <string name="title_filter_unflagged">Brez zvezdice</string>
@@ -1536,7 +1535,8 @@
     <string name="title_rule_snooze">Dremež</string>
     <string name="title_rule_flag">Dodaj zvezdico</string>
     <string name="title_rule_importance">Nastavi pomembnost</string>
-    <string name="title_rule_keyword">Dodaj ključno besedo</string>
+    <string name="title_rule_keyword_add">Dodaj</string>
+    <string name="title_rule_keyword_delete">Izbriši</string>
     <string name="title_rule_move">Premakni</string>
     <string name="title_rule_copy">Kopiraj (oznako)</string>
     <string name="title_rule_answer">Odgovori/Posreduj</string>
@@ -1547,6 +1547,7 @@
     <string name="title_rule_caption">Uredi pravilo</string>
     <string name="title_rule_title">Pravilo velja za</string>
     <string name="title_rule_name">Ime</string>
+    <string name="title_rule_group">Skupina</string>
     <string name="title_rule_order">Vrstni red</string>
     <string name="title_rule_enabled">Omogočeno</string>
     <string name="title_rule_daily">Zaženi (samo) dnevno</string>
@@ -1738,10 +1739,8 @@
     <string name="title_hint_support">Če imate vprašanje ali težavo, uporabite meni za podporo, da pridobite pomoč.</string>
     <string name="title_hint_message_actions">Povlecite levo za premik v smeti; povlecite desno za arhiviranje (če je na voljo).  Dejanja vlečenja lahko nastavite v nastavitvah računa.</string>
     <string name="title_hint_message_selection">Dolg pritisk na sporočilo omogoča izbiro več sporočil; držite in povlecite gor in dol za izbiro več sporočil.</string>
-    <string name="title_hint_message_junk">Ta sporočila so v mapi z vsiljeno pošto e-poštnega strežnika.  Očitno program ne more preprečiti pošiljanja vsiljene pošte.</string>
     <string name="title_hint_important">Pomembno</string>
     <string name="title_hint_sync">Prejemanje sporočil lahko traja nekaj časa, odvisno od hitrosti ponudnika, internetne povezave, naprave in števila sporočil.  Med prejemanjem sporočil se lahko program počasneje odziva.</string>
-    <string name="title_hint_sync_note">Privzeto vsa sporočila ne bodo prejeta zaradi omejitve porabe prostora, energije in podatkov.  To lahko spremenite z dolgim pritiskom na mapo na seznamu map in pritiskom na \'Sinhroniziraj več\'.</string>
     <string name="title_hint_battery">Ker FairEmail privzeto vedno prejema sporočila, ga bo Android obravnaval kot vedno dejavnega.  Zato je lahko videti, da FairEmail vedno porablja energijo, kar pa seveda ni res.</string>
     <string name="title_hint_reformat">Privzeto FairEmail preoblikuje sporočila zaradi zaščite zasebnosti in varnosti.  Za ogled izvirnega sporočila se dotaknite ikone \'Celoten zaslon\' nad besedilom sporočila.</string>
     <string name="title_hint_design">Oblika namerno ni moteča in je zelo funkcionalna.  Ostaja veliko možnosti za prilagajanje videza, vendar je treba razumeti, da je nemogoče ustreči vsem.</string>
@@ -1803,7 +1802,6 @@
     <string name="title_via">Preko: %1$s</string>
     <string name="title_1hour">1 ura</string>
     <string name="title_1day">1 dan</string>
-    <string name="title_1week">1 teden</string>
     <string name="title_now">Zdaj</string>
     <string name="title_after">Po %1$s</string>
     <string name="title_reset">Ponastavi</string>
@@ -2035,6 +2033,7 @@
     <string-array name="encryptNames">
         <item>Brez</item>
         <item>Samo podpiši (PGP)</item>
+        <item>PGP encrypt-only</item>
         <item>Podpiši in šifriraj (PGP)</item>
         <item>Samo podpiši (S/MIME)</item>
         <item>Podpiši in šifriraj (S/MIME)</item>
