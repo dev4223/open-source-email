@@ -1291,7 +1291,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAddressMetaBottom.setVisibility(View.GONE);
             paddingSubjectBottom.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
-            grpAttachments.setVisibility(View.GONE);
         }
 
         @SuppressLint("WrongConstant")
@@ -7875,8 +7874,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.suitable = state.isSuitable();
         this.unmetered = state.isUnmetered();
 
-        this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
-        this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
         this.colorCardBackground = Helper.resolveColor(context, R.attr.colorCardBackground);
         boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
         this.colorStripeWidth = Helper.dp2pixels(context, color_stripe_wide ? 12 : 6);
