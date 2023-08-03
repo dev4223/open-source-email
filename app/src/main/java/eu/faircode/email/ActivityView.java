@@ -160,6 +160,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private boolean searching = false;
     private int lastBackStackCount = 0;
     private Snackbar lastSnackbar = null;
+    private Intent lastThread = null;
 
     static final int PI_UNIFIED = 1;
     static final int PI_WHY = 2;
@@ -719,8 +720,16 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 !getIntent().hasExtra(Intent.EXTRA_PROCESS_TEXT))
             init();
 
-        if (savedInstanceState != null)
+        lastThread = null;
+        if (savedInstanceState != null) {
             drawerToggle.setDrawerIndicatorEnabled(savedInstanceState.getBoolean("fair:toggle"));
+
+            Intent thread = savedInstanceState.getParcelable("fair:thread");
+            if (thread != null && content_pane != null) {
+                getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                onViewThread(thread);
+            }
+        }
 
         checkFirst();
         checkBanner();
@@ -791,6 +800,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         outState.putParcelable("fair:intent", getIntent());
         outState.putBoolean("fair:toggle", drawerToggle == null || drawerToggle.isDrawerIndicatorEnabled());
         outState.putBoolean("fair:searching", searching);
+        outState.putParcelable("fair:thread", lastThread);
         super.onSaveInstanceState(outState);
     }
 
@@ -1337,9 +1347,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean close_pane = prefs.getBoolean("close_pane", !Helper.isSurfaceDuo());
                 boolean thread = "thread".equals(getSupportFragmentManager().getBackStackEntryAt(count - 1).getName());
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content_pane);
+
                 int visibility = (!thread || fragment == null ? (close_pane ? View.GONE : View.INVISIBLE) : View.VISIBLE);
                 content_separator.setVisibility(visibility);
                 content_pane.setVisibility(visibility);
+
+                if (!thread)
+                    lastThread = null;
             }
         }
     }
@@ -1387,6 +1401,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         final Snackbar snackbar = Snackbar.make(content, title, Snackbar.LENGTH_INDEFINITE)
                 .setGestureInsetBottomIgnored(true);
+        Helper.setSnackbarLines(snackbar, 7);
 
         lastSnackbar = snackbar;
 
@@ -1932,6 +1947,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         String action = intent.getAction();
         if (action != null) {
+            lastThread = null;
+
             if (action.startsWith("unified")) {
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
@@ -1986,11 +2003,33 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             } else if (action.startsWith("thread")) {
                 long id = Long.parseLong(action.split(":", 2)[1]);
+                long account = intent.getLongExtra("account", -1);
+                long folder = intent.getLongExtra("folder", -1);
+                String type = intent.getStringExtra("type");
                 boolean ignore = intent.getBooleanExtra("ignore", false);
                 long group = intent.getLongExtra("group", -1L);
                 if (ignore)
                     ServiceUI.ignore(this, id, group);
                 intent.putExtra("id", id);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityView.this);
+                boolean notify_open_folder = prefs.getBoolean("notify_open_folder", false);
+                if (account > 0 && folder > 0 && !TextUtils.isEmpty(type) && notify_open_folder) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+                        Bundle args = new Bundle();
+                        args.putLong("account", account);
+                        args.putLong("folder", folder);
+                        args.putString("type", type);
+
+                        FragmentMessages fragment = new FragmentMessages();
+                        fragment.setArguments(args);
+
+                        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("messages");
+                        fragmentTransaction.commit();
+                    }
+                }
                 onViewThread(intent);
 
             } else if (action.startsWith("widget")) {
@@ -2397,6 +2436,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onViewThread(Intent intent) {
+        lastThread = intent;
         boolean found = intent.getBooleanExtra("found", false);
 
         if (lastSnackbar != null && lastSnackbar.isShown())

@@ -102,6 +102,7 @@ import android.view.ScrollCaptureCallback;
 import android.view.ScrollCaptureSession;
 import android.view.SubMenu;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -336,7 +337,8 @@ public class FragmentMessages extends FragmentBase
     private boolean threading;
     private boolean swipenav;
     private boolean seekbar;
-    private boolean thread_sent_trash;
+    private boolean move_thread_all;
+    private boolean move_thread_sent;
     private boolean actionbar;
     private int actionbar_delete_id;
     private int actionbar_archive_id;
@@ -346,6 +348,7 @@ public class FragmentMessages extends FragmentBase
     private String onclose;
     private boolean quick_scroll;
     private boolean addresses;
+    private boolean hide_attachments;
     private boolean auto_hide_answer;
     private boolean swipe_reply;
     private boolean quick_actions;
@@ -400,7 +403,6 @@ public class FragmentMessages extends FragmentBase
 
     private static final int MAX_MORE = 100; // messages
     private static final int MAX_SEND_RAW = 50; // messages
-    private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
     private static final float LUMINANCE_THRESHOLD = 0.7f;
     private static final int ITEM_CACHE_SIZE = 10; // Default: 2 items
 
@@ -431,9 +433,10 @@ public class FragmentMessages extends FragmentBase
     private static final int REQUEST_QUICK_ACTIONS = 27;
     static final int REQUEST_BLOCK_SENDERS = 28;
     static final int REQUEST_CALENDAR = 29;
+    static final int REQUEST_EDIT_SUBJECT = 30;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
-    static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
+    static final String ACTION_VERIFYDECRYPT = BuildConfig.APPLICATION_ID + ".VERIFYDECRYPT";
     static final String ACTION_KEYWORDS = BuildConfig.APPLICATION_ID + ".KEYWORDS";
 
     private static final long REVIEW_ASK_DELAY = 14 * 24 * 3600 * 1000L; // milliseconds
@@ -487,8 +490,8 @@ public class FragmentMessages extends FragmentBase
                 args.getBoolean("force_threading"));
         swipenav = prefs.getBoolean("swipenav", true);
         seekbar = prefs.getBoolean("seekbar", false);
-        thread_sent_trash = (prefs.getBoolean("thread_sent_trash", true) &&
-                !EntityFolder.SENT.equals(type));
+        move_thread_all = prefs.getBoolean("move_thread_all", false);
+        move_thread_sent = (move_thread_all || prefs.getBoolean("move_thread_sent", false));
         actionbar = prefs.getBoolean("actionbar", true);
         boolean actionbar_swap = prefs.getBoolean("actionbar_swap", false);
         actionbar_delete_id = (actionbar_swap ? R.id.action_archive : R.id.action_delete);
@@ -499,12 +502,13 @@ public class FragmentMessages extends FragmentBase
         onclose = (autoclose ? null : prefs.getString("onclose", null));
         quick_scroll = prefs.getBoolean("quick_scroll", true);
         addresses = prefs.getBoolean("addresses", false);
-        auto_hide_answer = prefs.getBoolean("auto_hide_answer", !accessibility);
+        hide_attachments = prefs.getBoolean("hide_attachments", false);
+        auto_hide_answer = prefs.getBoolean("auto_hide_answer", false);
         swipe_reply = prefs.getBoolean("swipe_reply", false);
         quick_actions = prefs.getBoolean("quick_actions", true);
 
-        colorPrimary = Helper.resolveColor(getContext(), R.attr.colorPrimary);
-        colorAccent = Helper.resolveColor(getContext(), R.attr.colorAccent);
+        colorPrimary = Helper.resolveColor(getContext(), androidx.appcompat.R.attr.colorPrimary);
+        colorAccent = Helper.resolveColor(getContext(), androidx.appcompat.R.attr.colorAccent);
         colorSeparator = Helper.resolveColor(getContext(), R.attr.colorSeparator);
         colorWarning = Helper.resolveColor(getContext(), R.attr.colorWarning);
 
@@ -643,9 +647,7 @@ public class FragmentMessages extends FragmentBase
         tvNotifications.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), ActivitySetup.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                v.getContext().startActivity(intent);
+                new FragmentDialogNotifications().show(getParentFragmentManager(), "notifications");
             }
         });
 
@@ -1376,7 +1378,7 @@ public class FragmentMessages extends FragmentBase
                 args.putString("thread", thread);
                 args.putLong("id", id);
                 args.putString("type", folderType);
-                args.putBoolean("thread_sent_trash", thread_sent_trash);
+                args.putBoolean("move_thread_sent", move_thread_sent);
                 args.putBoolean("filter_archive", filter_archive);
 
                 new SimpleTask<ArrayList<MessageTarget>>() {
@@ -1386,7 +1388,7 @@ public class FragmentMessages extends FragmentBase
                         String thread = args.getString("thread");
                         long id = args.getLong("id");
                         String type = args.getString("type");
-                        boolean thread_sent_trash = args.getBoolean("thread_sent_trash");
+                        boolean move_thread_sent = args.getBoolean("move_thread_sent");
                         boolean filter_archive = args.getBoolean("filter_archive");
 
                         ArrayList<MessageTarget> result = new ArrayList<>();
@@ -1413,7 +1415,7 @@ public class FragmentMessages extends FragmentBase
                                         !EntityFolder.DRAFTS.equals(sourceFolder.type) && !EntityFolder.OUTBOX.equals(sourceFolder.type) &&
                                         !(EntityFolder.SENT.equals(sourceFolder.type) && EntityFolder.ARCHIVE.equals(targetFolder.type)) &&
                                         !(EntityFolder.SENT.equals(sourceFolder.type) && EntityFolder.JUNK.equals(targetFolder.type)) &&
-                                        (!EntityFolder.SENT.equals(sourceFolder.type) || !EntityFolder.TRASH.equals(targetFolder.type) || thread_sent_trash) &&
+                                        (!EntityFolder.SENT.equals(sourceFolder.type) || !EntityFolder.TRASH.equals(targetFolder.type) || move_thread_sent) &&
                                         !EntityFolder.TRASH.equals(sourceFolder.type) && !EntityFolder.JUNK.equals(sourceFolder.type))
                                     result.add(new MessageTarget(context, threaded, account, sourceFolder, account, targetFolder));
                             }
@@ -2137,6 +2139,7 @@ public class FragmentMessages extends FragmentBase
                                 args.putLong("account", account);
                                 args.putString("thread", thread);
                                 args.putLong("id", id);
+                                args.putBoolean("move_thread_sent", move_thread_sent);
                                 args.putBoolean("filter_archive", filter_archive);
                                 args.putLongArray("disabled", new long[]{folder});
 
@@ -2349,6 +2352,57 @@ public class FragmentMessages extends FragmentBase
         }.execute(this, args, "messages:refresh");
     }
 
+    private void onExpunge() {
+        new AlertDialog.Builder(view.getContext())
+                .setIcon(R.drawable.twotone_warning_24)
+                .setTitle(R.string.title_expunge)
+                .setMessage(R.string.title_expunge_remark)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        expunge();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                })
+                .show();
+    }
+
+    private void expunge() {
+        Bundle args = new Bundle();
+        args.putLong("id", folder);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+
+                DB db = DB.getInstance(context);
+                EntityFolder folder = db.folder().getFolder(id);
+                if (folder == null)
+                    return null;
+
+                EntityOperation.queue(context, folder, EntityOperation.EXPUNGE);
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "messages:expunge");
+
+    }
+
     private AdapterMessage.IProperties iProperties = new AdapterMessage.IProperties() {
         @Override
         public void setValue(String key, String value) {
@@ -2418,6 +2472,8 @@ public class FragmentMessages extends FragmentBase
             else {
                 if ("addresses".equals(name))
                     return addresses;
+                else if ("hide_attachments".equals(name))
+                    return hide_attachments;
             }
             return false;
         }
@@ -2860,7 +2916,7 @@ public class FragmentMessages extends FragmentBase
                 if (isCurrentlyActive)
                     selectionPredicate.setEnabled(false);
                 else
-                    getMainHandler().postDelayed(enableSelection, SWIPE_DISABLE_SELECT_DURATION);
+                    getMainHandler().postDelayed(enableSelection, ViewConfiguration.getLongPressTimeout() + 100);
             }
 
             Context context = getContext();
@@ -4540,7 +4596,8 @@ public class FragmentMessages extends FragmentBase
         args.putString("type", type);
         args.putBoolean("block", block);
         args.putLongArray("ids", getSelection());
-        args.putBoolean("thread_sent_trash", thread_sent_trash);
+        args.putBoolean("move_thread_all", move_thread_all);
+        args.putBoolean("move_thread_sent", move_thread_sent);
         args.putBoolean("filter_archive", filter_archive);
 
         new SimpleTask<ArrayList<MessageTarget>>() {
@@ -4549,7 +4606,8 @@ public class FragmentMessages extends FragmentBase
                 String type = args.getString("type");
                 boolean block = args.getBoolean("block");
                 long[] ids = args.getLongArray("ids");
-                boolean thread_sent_trash = args.getBoolean("thread_sent_trash");
+                boolean move_thread_all = args.getBoolean("move_thread_all");
+                boolean move_thread_sent = args.getBoolean("move_thread_sent");
                 boolean filter_archive = args.getBoolean("filter_archive");
 
                 ArrayList<MessageTarget> result = new ArrayList<>();
@@ -4574,16 +4632,20 @@ public class FragmentMessages extends FragmentBase
                         List<EntityMessage> messages = db.message().getMessagesByThread(
                                 message.account, message.thread,
                                 threading ? null : id,
-                                EntityFolder.TRASH.equals(targetFolder.type) ? null : message.folder);
+                                move_thread_all || move_thread_sent ? null : message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
                             if (sourceFolder == null ||
                                     sourceFolder.read_only ||
                                     sourceFolder.id.equals(targetFolder.id))
                                 continue;
+
+                            if (!threaded.folder.equals(message.folder) &&
+                                    !(move_thread_all ||
+                                            (move_thread_sent && EntityFolder.SENT.equals(sourceFolder.type))))
+                                continue;
+
                             if (EntityFolder.TRASH.equals(targetFolder.type)) {
-                                if (EntityFolder.SENT.equals(sourceFolder.type) && !thread_sent_trash)
-                                    continue;
                                 if (EntityFolder.ARCHIVE.equals(sourceFolder.type) && filter_archive)
                                     continue;
                                 if (EntityFolder.JUNK.equals(sourceFolder.type) && !threaded.folder.equals(message.folder))
@@ -4627,6 +4689,9 @@ public class FragmentMessages extends FragmentBase
         args.putBoolean("cancopy", true);
         args.putLongArray("disabled", Helper.toLongArray(disabled));
         args.putLongArray("messages", getSelection());
+        args.putBoolean("move_thread_all", move_thread_all);
+        args.putBoolean("move_thread_sent", move_thread_sent);
+        args.putBoolean("filter_archive", filter_archive);
 
         FragmentDialogSelectFolder fragment = new FragmentDialogSelectFolder();
         fragment.setArguments(args);
@@ -4643,6 +4708,9 @@ public class FragmentMessages extends FragmentBase
                 long[] ids = args.getLongArray("ids");
                 long tid = args.getLong("folder");
                 boolean copy = args.getBoolean("copy");
+                boolean move_thread_all = args.getBoolean("move_thread_all");
+                boolean move_thread_sent = args.getBoolean("move_thread_sent");
+                boolean filter_archive = args.getBoolean("filter_archive");
 
                 ArrayList<MessageTarget> result = new ArrayList<>();
 
@@ -4668,13 +4736,26 @@ public class FragmentMessages extends FragmentBase
                             continue;
 
                         List<EntityMessage> messages = db.message().getMessagesByThread(
-                                message.account, message.thread, threading ? null : id, message.folder);
+                                message.account, message.thread, threading ? null : id,
+                                move_thread_all || move_thread_sent ? null : message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
                             if (sourceFolder == null ||
                                     sourceFolder.read_only ||
                                     sourceFolder.id.equals(targetFolder.id))
                                 continue;
+
+                            if (!threaded.folder.equals(message.folder) &&
+                                    !(move_thread_all ||
+                                            (move_thread_sent && EntityFolder.SENT.equals(sourceFolder.type))))
+                                continue;
+
+                            if (EntityFolder.TRASH.equals(targetFolder.type)) {
+                                if (EntityFolder.ARCHIVE.equals(sourceFolder.type) && filter_archive)
+                                    continue;
+                                if (EntityFolder.JUNK.equals(sourceFolder.type) && !threaded.folder.equals(message.folder))
+                                    continue;
+                            }
 
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder).setCopy(copy));
                         }
@@ -4712,11 +4793,9 @@ public class FragmentMessages extends FragmentBase
                 long aid = args.getLong("account");
                 String thread = args.getString("thread");
                 long id = args.getLong("id");
+                boolean move_thread_sent = args.getBoolean("move_thread_sent");
                 boolean filter_archive = args.getBoolean("filter_archive");
                 long tid = args.getLong("folder");
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean move_thread_sent = prefs.getBoolean("move_thread_sent", false);
 
                 ArrayList<MessageTarget> result = new ArrayList<>();
 
@@ -5050,7 +5129,7 @@ public class FragmentMessages extends FragmentBase
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
         IntentFilter iff = new IntentFilter();
         iff.addAction(ACTION_STORE_RAW);
-        iff.addAction(ACTION_DECRYPT);
+        iff.addAction(ACTION_VERIFYDECRYPT);
         iff.addAction(ACTION_KEYWORDS);
         lbm.registerReceiver(receiver, iff);
 
@@ -5064,11 +5143,6 @@ public class FragmentMessages extends FragmentBase
 
         updateAirplaneMode(ConnectionHelper.airplaneMode(context));
         context.registerReceiver(airplanemode, new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED));
-
-        boolean canNotify =
-                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                        hasPermission(Manifest.permission.POST_NOTIFICATIONS));
-        grpNotifications.setVisibility(canNotify ? View.GONE : View.VISIBLE);
 
         boolean isIgnoring = !Boolean.FALSE.equals(Helper.isIgnoringOptimizations(context));
         //boolean canSchedule = AlarmManagerCompatEx.canScheduleExactAlarms(context);
@@ -5094,6 +5168,7 @@ public class FragmentMessages extends FragmentBase
                                     ;
 
         prefs.registerOnSharedPreferenceChangeListener(this);
+        onSharedPreferenceChanged(prefs, "notifications_reminder");
         onSharedPreferenceChanged(prefs, "pro");
 
         if (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER) {
@@ -5149,6 +5224,16 @@ public class FragmentMessages extends FragmentBase
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (grpNotifications != null && "notifications_reminder".equals(key)) {
+            boolean canNotify =
+                    (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                            hasPermission(Manifest.permission.POST_NOTIFICATIONS));
+            if (canNotify)
+                prefs.edit().remove("notifications_reminder").apply();
+            boolean notifications_reminder = prefs.getBoolean("notifications_reminder", true);
+            grpNotifications.setVisibility(canNotify || !notifications_reminder ? View.GONE : View.VISIBLE);
+        }
+
         if (grpSupport != null &&
                 ("pro".equals(key) || "banner_hidden".equals(key))) {
             boolean pro = ActivityBilling.isPro(getContext());
@@ -5614,7 +5699,7 @@ public class FragmentMessages extends FragmentBase
 
             boolean filter_active = (filter_seen || filter_unflagged || filter_unknown ||
                     (language_detection && !TextUtils.isEmpty(filter_language)));
-            int filterColor = Helper.resolveColor(context, R.attr.colorAccent);
+            int filterColor = Helper.resolveColor(context, androidx.appcompat.R.attr.colorAccent);
             float filterLighten = 0.7f - (float) ColorUtils.calculateLuminance(filterColor);
             if (filterLighten > 0)
                 filterColor = ColorUtils.blendARGB(filterColor, Color.WHITE, filterLighten);
@@ -5749,6 +5834,9 @@ public class FragmentMessages extends FragmentBase
             menu.findItem(R.id.menu_sync_more).setVisible(folder);
             menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
             menu.findItem(R.id.menu_force_send).setVisible(outbox);
+
+            menu.findItem(R.id.menu_expunge).setVisible(viewType == AdapterMessage.ViewType.FOLDER &&
+                    (!perform_expunge || BuildConfig.DEBUG));
 
             menu.findItem(R.id.menu_edit_properties).setVisible(viewType == AdapterMessage.ViewType.FOLDER && !outbox);
 
@@ -5893,6 +5981,9 @@ public class FragmentMessages extends FragmentBase
             return true;
         } else if (itemId == R.id.menu_force_send) {
             onSwipeRefresh();
+            return true;
+        } else if (itemId == R.id.menu_expunge) {
+            onExpunge();
             return true;
         } else if (itemId == R.id.menu_edit_properties) {
             onMenuEditProperties();
@@ -7168,7 +7259,7 @@ public class FragmentMessages extends FragmentBase
             args.putLong("account", account);
             args.putString("thread", thread);
             args.putLong("id", id);
-            args.putBoolean("thread_sent_trash", thread_sent_trash);
+            args.putBoolean("move_thread_sent", move_thread_sent);
             args.putBoolean("filter_archive", filter_archive);
 
             new SimpleTask<ActionData>() {
@@ -7177,7 +7268,7 @@ public class FragmentMessages extends FragmentBase
                     long aid = args.getLong("account");
                     String thread = args.getString("thread");
                     long id = args.getLong("id");
-                    boolean thread_sent_trash = args.getBoolean("thread_sent_trash");
+                    boolean move_thread_sent = args.getBoolean("move_thread_sent");
                     boolean filter_archive = args.getBoolean("filter_archive");
 
                     EntityAccount account;
@@ -7214,7 +7305,7 @@ public class FragmentMessages extends FragmentBase
                             if (!folder.read_only &&
                                     !EntityFolder.DRAFTS.equals(folder.type) &&
                                     !EntityFolder.OUTBOX.equals(folder.type) &&
-                                    (!EntityFolder.SENT.equals(folder.type) || thread_sent_trash) &&
+                                    (!EntityFolder.SENT.equals(folder.type) || move_thread_sent) &&
                                     !EntityFolder.TRASH.equals(folder.type) &&
                                     !EntityFolder.JUNK.equals(folder.type))
                                 trashable = true;
@@ -7297,10 +7388,12 @@ public class FragmentMessages extends FragmentBase
     }
 
     private void updateCompose() {
-        if (!accessibility &&
-                (viewType == AdapterMessage.ViewType.UNIFIED ||
-                        viewType == AdapterMessage.ViewType.FOLDER))
-            if (scrolling)
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            return;
+
+        if (viewType == AdapterMessage.ViewType.UNIFIED ||
+                viewType == AdapterMessage.ViewType.FOLDER)
+            if (auto_hide_answer && scrolling && !accessibility)
                 fabCompose.hide();
             else
                 fabCompose.show();
@@ -8215,8 +8308,8 @@ public class FragmentMessages extends FragmentBase
                 String action = intent.getAction();
                 if (ACTION_STORE_RAW.equals(action))
                     onStoreRaw(intent);
-                else if (ACTION_DECRYPT.equals(action))
-                    onDecrypt(intent);
+                else if (ACTION_VERIFYDECRYPT.equals(action))
+                    onVerifyDecrypt(intent);
                 else if (ACTION_KEYWORDS.equals(action))
                     onKeywords(intent);
             }
@@ -8248,7 +8341,7 @@ public class FragmentMessages extends FragmentBase
             startActivityForResult(Helper.getChooser(context, create), REQUEST_RAW);
     }
 
-    private void onDecrypt(Intent intent) {
+    private void onVerifyDecrypt(Intent intent) {
         long id = intent.getLongExtra("id", -1);
         boolean auto = intent.getBooleanExtra("auto", false);
         int type = intent.getIntExtra("type", EntityMessage.ENCRYPT_NONE);
@@ -8256,6 +8349,7 @@ public class FragmentMessages extends FragmentBase
         final Bundle args = new Bundle();
         args.putLong("id", id);
         args.putInt("type", type);
+        args.putBoolean("auto", auto);
 
         if (EntityMessage.SMIME_SIGNONLY.equals(type))
             onSmime(args);
@@ -8286,7 +8380,7 @@ public class FragmentMessages extends FragmentBase
 
                 @Override
                 protected void onExecuted(Bundle args, EntityIdentity identity) {
-                    Boolean auto = args.getBoolean("auto");
+                    boolean auto = args.getBoolean("auto");
                     if (auto && identity == null)
                         return;
 
@@ -8468,6 +8562,10 @@ public class FragmentMessages extends FragmentBase
                 case REQUEST_CALENDAR:
                     if (resultCode == RESULT_OK)
                         onInsertCalendar(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_EDIT_SUBJECT:
+                    if (resultCode == RESULT_OK)
+                        onEditSubject(data.getBundleExtra("args"));
                     break;
             }
         } catch (Throwable ex) {
@@ -8896,6 +8994,10 @@ public class FragmentMessages extends FragmentBase
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
+                boolean auto = args.getBoolean("auto");
+                if (auto)
+                    return;
+
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
@@ -9200,6 +9302,7 @@ public class FragmentMessages extends FragmentBase
 
                     int count = -1;
                     boolean decoded = false;
+                    Throwable last = null;
                     while (!decoded)
                         try (FileInputStream fis = new FileInputStream(input)) {
                             // Create parser
@@ -9232,6 +9335,7 @@ public class FragmentMessages extends FragmentBase
                                             args.putString("algo", algo);
                                         } catch (CMSException ex) {
                                             Log.w(ex);
+                                            last = ex;
                                         }
                                         break; // only one try
                                     }
@@ -9247,6 +9351,7 @@ public class FragmentMessages extends FragmentBase
                                         break;
                                     } catch (CMSException ex) {
                                         Log.w(ex);
+                                        last = ex;
                                     }
                                 } else
                                     break; // out of recipients
@@ -9258,7 +9363,9 @@ public class FragmentMessages extends FragmentBase
                     if (!decoded) {
                         if (message.identity != null)
                             db.identity().setIdentitySignKeyAlias(message.identity, null);
-                        throw new IllegalArgumentException(context.getString(R.string.title_unknown_key));
+                        String msg = (last == null ? null : last.getMessage());
+                        throw new IllegalArgumentException(context.getString(R.string.title_unknown_key) +
+                                (TextUtils.isEmpty(msg) ? "" : " (" + msg + ")"));
                     }
                 }
 
@@ -9280,6 +9387,7 @@ public class FragmentMessages extends FragmentBase
                                 .setGestureInsetBottomIgnored(true).show();
                     } else
                         try {
+                            boolean auto = args.getBoolean("auto");
                             String sender = args.getString("sender");
                             Date time = (Date) args.getSerializable("time");
                             boolean known = args.getBoolean("known");
@@ -9303,7 +9411,7 @@ public class FragmentMessages extends FragmentBase
                             if (known && !record.isExpired(time) && match && valid)
                                 Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG)
                                         .setGestureInsetBottomIgnored(true).show();
-                            else {
+                            else if (!auto) {
                                 LayoutInflater inflator = LayoutInflater.from(getContext());
                                 View dview = inflator.inflate(R.layout.dialog_certificate, null);
                                 TextView tvCertificateInvalid = dview.findViewById(R.id.tvCertificateInvalid);
@@ -9425,6 +9533,10 @@ public class FragmentMessages extends FragmentBase
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
+                boolean auto = args.getBoolean("auto");
+                if (auto)
+                    return;
+
                 if (ex instanceof IllegalArgumentException ||
                         ex instanceof CMSException || ex instanceof KeyChainException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
@@ -9921,6 +10033,34 @@ public class FragmentMessages extends FragmentBase
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "insert:calendar");
+    }
+
+    private void onEditSubject(Bundle args) {
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                String subject = args.getString("subject");
+
+                DB db = DB.getInstance(context);
+
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    return null;
+
+                if (TextUtils.isEmpty(subject))
+                    subject = null;
+
+                EntityOperation.queue(context, message, EntityOperation.SUBJECT, subject);
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "edit:subject");
     }
 
     private void onMoveAskAcross(final ArrayList<MessageTarget> result) {
@@ -10423,6 +10563,7 @@ public class FragmentMessages extends FragmentBase
         Boolean hasTrash;
         Boolean hasJunk;
         Boolean isInbox;
+        Boolean isSent;
         Boolean isArchive;
         Boolean isTrash;
         Boolean isJunk;
@@ -10453,7 +10594,7 @@ public class FragmentMessages extends FragmentBase
             if (read_only)
                 return false;
             return (hasJunk && !isJunk && !isDrafts) ||
-                    (hasPop && !hasImap);
+                    (hasPop && isInbox && !isSent && !hasImap);
         }
 
         boolean canTrash() {
@@ -10531,6 +10672,7 @@ public class FragmentMessages extends FragmentBase
                     isInbox = true;
 
                 result.isInbox = (result.isInbox == null ? isInbox : result.isInbox && isInbox);
+                result.isSent = (result.isSent == null ? isSent : result.isSent && isSent);
                 result.isArchive = (result.isArchive == null ? isArchive : result.isArchive && isArchive);
                 result.isTrash = (result.isTrash == null ? isTrash : result.isTrash && isTrash);
                 result.isJunk = (result.isJunk == null ? isJunk : result.isJunk && isJunk);
@@ -10607,6 +10749,7 @@ public class FragmentMessages extends FragmentBase
             }
 
             if (result.isInbox == null) result.isInbox = false;
+            if (result.isSent == null) result.isSent = false;
             if (result.isArchive == null) result.isArchive = false;
             if (result.isTrash == null) result.isTrash = false;
             if (result.isJunk == null) result.isJunk = false;

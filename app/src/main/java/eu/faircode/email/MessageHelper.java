@@ -66,6 +66,9 @@ import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.UnsupportedZipFeatureException;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -77,6 +80,7 @@ import org.simplejavamail.outlookmessageparser.model.OutlookFileAttachment;
 import org.simplejavamail.outlookmessageparser.model.OutlookMessage;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -84,6 +88,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -2150,9 +2155,13 @@ public class MessageHelper {
             if (val.length > 0) {
                 if ("fail".equals(val[0]))
                     result = false;
-                else if ("pass".equals(val[0]))
+                else if ("pass".equals(val[0])) {
+                    // https://www.rfc-editor.org/rfc/rfc7489#section-3.1.1
+                    if ("dkim".equals(type))
+                        return true;
                     if (result == null)
                         result = true;
+                }
             }
         }
 
@@ -2302,8 +2311,10 @@ public class MessageHelper {
         } else if ("rsa-sha256".equals(a)) {
             halgo = "SHA-256";
             salgo = "SHA256withRSA";
+        } else if ("ed25519-sha256".equals(a)) {
+            halgo = "SHA-256";
+            salgo = "Ed25519";
         } else {
-            // TODO: Ed25519
             Log.i("DKIM a=" + a);
             return null;
         }
@@ -2445,10 +2456,30 @@ public class MessageHelper {
             String p = pubkey.replaceAll("\\s+", "");
             Log.i("DKIM pubkey=" + p);
 
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.decode(p, Base64.DEFAULT));
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            String hash = kv.get("b");
+            if (hash == null)
+                return null;
+            String s = hash.replaceAll("\\s+", "");
+            Log.i("DKIM signature=" + s);
+
+            byte[] data = head.toString().getBytes();
+            byte[] key = Base64.decode(p, Base64.DEFAULT);
+            byte[] signature = Base64.decode(s, Base64.DEFAULT);
+
+            if ("Ed25519".equals(salgo)) {
+                if (false) {
+                    // https://www.rfc-editor.org/rfc/rfc8037#page-9
+                    data = "eyJhbGciOiJFZERTQSJ9.RXhhbXBsZSBvZiBFZDI1NTE5IHNpZ25pbmc".getBytes(StandardCharsets.UTF_8);
+                    key = Base64.decode("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo", Base64.URL_SAFE);
+                    signature = Base64.decode("hgyY0il_MGCjP0JzlnLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki4iylGjg5BhVsPt9g7sVvpAr_MuM0KAg", Base64.URL_SAFE);
+                }
+                key = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key).getEncoded();
+            }
+
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(key);
+            KeyFactory keyFactory = KeyFactory.getInstance("Ed25519".equals(salgo) ? "Ed25519" : "RSA");
             PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
-            Signature sig = Signature.getInstance(salgo); // a=
+            Signature sig = Signature.getInstance("Ed25519".equals(salgo) ? "EdDSA" : salgo); // a=
 
             // https://stackoverflow.com/a/43984402/1794097
             if (pubKey instanceof RSAPublicKey)
@@ -2461,19 +2492,12 @@ public class MessageHelper {
                     Log.e(ex);
                 }
 
-            String hash = kv.get("b");
-            if (hash == null)
-                return null;
-            String s = hash.replaceAll("\\s+", "");
-            Log.i("DKIM signature=" + s);
-
-            byte[] signature = Base64.decode(s, Base64.DEFAULT);
-
             sig.initVerify(pubKey);
-            sig.update(head.toString().getBytes());
+            sig.update(data);
 
             boolean verified = sig.verify(signature);
             Log.i("DKIM valid=" + verified +
+                    " algo=" + salgo +
                     " dns=" + dns +
                     " from=" + formatAddresses(getFrom()));
 
@@ -3798,7 +3822,7 @@ public class MessageHelper {
                             Log.w(ex);
                         }
 
-                        if (cs == null) {
+                        if (cs == null || StandardCharsets.ISO_8859_1.equals(cs)) {
                             // <meta charset="utf-8" />
                             // <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                             String excerpt = result.substring(0, Math.min(MAX_META_EXCERPT, result.length()));
@@ -3824,20 +3848,21 @@ public class MessageHelper {
                                         if (StandardCharsets.US_ASCII.equals(c))
                                             break;
 
-                                        // Check if really UTF-8
-                                        if (StandardCharsets.UTF_8.equals(c) && !CharsetHelper.isUTF8(result)) {
-                                            Log.w("Charset meta=" + meta + " !isUTF8");
-                                            break;
-                                        }
-
                                         // 16 bits charsets cannot be converted to 8 bits
                                         if (CHARSET16.contains(c)) {
                                             Log.w("Charset meta=" + meta);
                                             break;
                                         }
 
+                                        // Check if really UTF-8
+                                        if (StandardCharsets.UTF_8.equals(c) && !CharsetHelper.isUTF8(result)) {
+                                            Log.w("Charset meta=" + meta + " !isUTF8");
+                                            break;
+                                        }
+
+                                        // Check if same as detected charset
                                         Charset detected = CharsetHelper.detect(result, c);
-                                        if (c.equals(detected))
+                                        if (c.equals(detected) && !StandardCharsets.ISO_8859_1.equals(cs))
                                             break;
 
                                         // Common detected/meta
@@ -4098,23 +4123,9 @@ public class MessageHelper {
             if (TextUtils.isEmpty(boundary))
                 throw new ParseException("Signed boundary missing");
 
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            apart.part.writeTo(bos);
-            String raw = new String(bos.toByteArray(), StandardCharsets.ISO_8859_1);
-            String[] parts = raw.split("\\r?\\n" + Pattern.quote("--" + boundary) + "\\r?\\n");
-            if (parts.length < 2)
-                throw new ParseException("Signed part missing");
-
-            // PGP: https://datatracker.ietf.org/doc/html/rfc3156#section-5
-            // S/MIME: https://datatracker.ietf.org/doc/html/rfc8551#section-3.1.1
-            String c = parts[1]
-                    .replaceAll("\\r?\\n", "\r\n"); // normalize new lines
-            if (EntityAttachment.PGP_CONTENT.equals(apart.encrypt))
-                c = c.replaceAll(" +$", ""); // trim trailing spaces
-
             File file = local.getFile(context);
-            try (OutputStream os = new FileOutputStream(file)) {
-                os.write(c.getBytes(StandardCharsets.ISO_8859_1));
+            try (OutputStream os = new BufferedOutputStream(new CanonicalizingStream(new FileOutputStream(file), apart.encrypt, boundary))) {
+                apart.part.writeTo(os);
             }
 
             DB db = DB.getInstance(context);
@@ -4984,7 +4995,7 @@ public class MessageHelper {
 
             String ct = contentType.getBaseType();
             if (("text/plain".equalsIgnoreCase(ct) || "text/html".equalsIgnoreCase(ct)) &&
-                    !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename) &&
+                    !Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
                     (size <= MAX_MESSAGE_SIZE || size == Integer.MAX_VALUE)) {
                 parts.text.add(new PartHolder(part, contentType));
             } else {
@@ -5253,19 +5264,27 @@ public class MessageHelper {
                 .replaceAll("[^\\p{ASCII}]", "");
     }
 
-    static String sanitizeEmail(String email) {
-        if (email == null)
-            return null;
+    static InternetAddress buildAddress(String email, String name, boolean suggest) {
+        try {
+            InternetAddress address = (email == null ? new InternetAddress() : new InternetAddress(email));
 
-        if (email.contains("<") && email.contains(">"))
-            try {
-                InternetAddress address = new InternetAddress(email);
-                return address.getAddress();
-            } catch (AddressException ex) {
-                Log.e(ex);
+            if (suggest && !TextUtils.isEmpty(name) &&
+                    TextUtils.isEmpty(address.getPersonal())) {
+                try {
+                    address.setPersonal(name, StandardCharsets.UTF_8.name());
+                } catch (UnsupportedEncodingException ex) {
+                    Log.i(ex);
+                }
             }
 
-        return email;
+            if (TextUtils.isEmpty(address.getAddress()) && TextUtils.isEmpty(address.getAddress()))
+                return null;
+
+            return address;
+        } catch (AddressException ex) {
+            Log.e(ex);
+            return null;
+        }
     }
 
     static String sanitizeName(String name) {
@@ -5769,6 +5788,103 @@ public class MessageHelper {
 
         static boolean isFeedbackReport(String type) {
             return "message/feedback-report".equalsIgnoreCase(type);
+        }
+    }
+
+    static class CanonicalizingStream extends FilterOutputStream {
+        private OutputStream os;
+        private int content;
+        private String boundary;
+
+        private int boundaries = 0;
+        private boolean carriage = false;
+        private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        private static final byte[] CRLF = "\r\n".getBytes(StandardCharsets.ISO_8859_1);
+
+        // PGP: https://datatracker.ietf.org/doc/html/rfc3156#section-5
+        // S/MIME: https://datatracker.ietf.org/doc/html/rfc8551#section-3.1.1
+
+        public CanonicalizingStream(OutputStream out, int content, String boundary) {
+            super(out);
+            this.os = out;
+            this.content = content;
+            this.boundary = (boundary == null ? null : "--" + boundary);
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            this.write(new byte[]{(byte) b}, 0, 1);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            this.write(b, 0, b.length);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            for (int i = off; i < off + len; i++) {
+                byte k = b[i];
+                if (k == '\r')
+                    carriage = true;
+                else {
+                    if (k == '\n') {
+                        if (writeBuffer())
+                            buffer.write(CRLF);
+                    } else {
+                        if (carriage) {
+                            if (writeBuffer())
+                                buffer.write(CRLF);
+                        }
+                        buffer.write(k);
+                    }
+                    carriage = false;
+                }
+            }
+        }
+
+        @Override
+        public void flush() throws IOException {
+            flushBuffer();
+            super.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            flushBuffer();
+            super.close();
+        }
+
+        private boolean writeBuffer() throws IOException {
+            try {
+                String line = new String(buffer.toByteArray(), StandardCharsets.ISO_8859_1);
+
+                if (boundary != null) {
+                    if (boundary.equals(line.trim())) {
+                        boundaries++;
+                        return false;
+                    }
+                    if (boundaries != 1)
+                        return false;
+                }
+
+                if (EntityAttachment.PGP_CONTENT.equals(content) || boundary == null)
+                    line = line.replaceAll(" +$", "");
+
+                os.write(line.getBytes(StandardCharsets.ISO_8859_1));
+
+                return true;
+            } finally {
+                buffer.reset();
+            }
+        }
+
+        private void flushBuffer() throws IOException {
+            if (boundary != null && boundaries < 1)
+                throw new IOException("Signed part missing");
+            if (buffer.size() > 0)
+                writeBuffer();
         }
     }
 }

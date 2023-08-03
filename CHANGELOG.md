@@ -6,6 +6,80 @@ For support you can use [the contact form](https://contact.faircode.eu/?product=
 
 ### [Ubirajara](https://en.wikipedia.org/wiki/Ubirajara_jubatus)
 
+### Next version
+
+* Updated [Bouncy Castle](https://www.bouncycastle.org/)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2089 - 2023-08-01
+
+* Fixed S/MIME encrypt+sign
+* Fixed selecting images on older Android versions
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2088 - 2023-07-28
+
+* Improved Android 14 compatibility
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2087 - 2023-07-19
+
+* Fixed duplicate sent messages for Outlook in some cases
+* Small improvements and minor bug fixes
+
+### 1.2086 - 2023-07-19
+
+* Added option to disable message list widget title
+* Fixed duplicate sent messages for Outlook in some cases
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2085 - 2023-07-14
+
+* Improved Android 14 compatibility
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2083 - 2023-07-10
+
+* Added collapsible attachment section
+* Added support for *multipart/digest* messages
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2082 - 2023-07-07
+
+* Added a workaround for a server bug
+* Fixed crash introduced in version 1.2081
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2081 - 2023-07-06
+
+* Added an option to auto-verify signed messages
+* Added an option to use the identity color for bottom action bar
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2080 - 2023-07-03
+
+* Fixed PGP and S/MIME signed messages in some cases
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2079 - 2023-06-30
+
+* Targeting Android 14
+* Added option to sync all folders (pull down to refresh account/folder list)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
 ### 1.2078 - 2023-06-27
 
 * Added notes to message list widget

@@ -26,7 +26,6 @@ import static android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -157,6 +156,7 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.OutputEncryptor;
+import org.bouncycastle.operator.RuntimeOperatorException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.Store;
@@ -290,6 +290,7 @@ public class FragmentCompose extends FragmentBase {
     private boolean media = true;
     private boolean compact = false;
     private int zoom = 0;
+    private boolean nav_color;
     private boolean lt_enabled;
     private boolean lt_auto;
 
@@ -355,6 +356,7 @@ public class FragmentCompose extends FragmentBase {
         media = prefs.getBoolean("compose_media", true);
         compact = prefs.getBoolean("compose_compact", false);
         zoom = prefs.getInt("compose_zoom", compact ? 0 : 1);
+        nav_color = prefs.getBoolean("send_nav_color", false);
 
         lt_enabled = LanguageTool.isEnabled(context);
         lt_auto = LanguageTool.isAuto(context);
@@ -1130,13 +1132,13 @@ public class FragmentCompose extends FragmentBase {
                         colEmail = cursor.getColumnIndex("email");
 
                     String name = cursor.getString(colName);
-                    String email = MessageHelper.sanitizeEmail(cursor.getString(colEmail));
-                    if (name == null || !suggest_names)
+                    String email = cursor.getString(colEmail);
+
+                    InternetAddress address = MessageHelper.buildAddress(email, name, suggest_names);
+                    if (address == null)
                         return email;
-                    else {
-                        Address address = new InternetAddress(email, name, StandardCharsets.UTF_8.name());
-                        return MessageHelper.formatAddressesCompose(new Address[]{address});
-                    }
+
+                    return MessageHelper.formatAddressesCompose(new Address[]{address});
                 } catch (Throwable ex) {
                     Log.e(ex);
                     return ex.toString();
@@ -3285,10 +3287,14 @@ public class FragmentCompose extends FragmentBase {
                         int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
                         int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
                         if (colEmail >= 0 && colName >= 0) {
-                            String email = MessageHelper.sanitizeEmail(cursor.getString(colEmail));
+                            String email = cursor.getString(colEmail);
                             String name = cursor.getString(colName);
 
-                            args.putString("email", email);
+                            InternetAddress selected = MessageHelper.buildAddress(email, name, suggest_names);
+                            if (selected == null)
+                                return null;
+
+                            args.putString("email", selected.getAddress());
 
                             try {
                                 db.beginTransaction();
@@ -3313,7 +3319,7 @@ public class FragmentCompose extends FragmentBase {
                                 if (address != null)
                                     list.addAll(Arrays.asList(address));
 
-                                list.add(new InternetAddress(email, suggest_names ? name : null, StandardCharsets.UTF_8.name()));
+                                list.add(selected);
 
                                 if (requestCode == REQUEST_CONTACT_TO)
                                     draft.to = list.toArray(new Address[0]);
@@ -3494,7 +3500,7 @@ public class FragmentCompose extends FragmentBase {
             // https://developer.android.com/reference/android/provider/MediaStore#ACTION_PICK_IMAGES
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean photo_picker = prefs.getBoolean("photo_picker", true);
-            if (photo_picker)
+            if (photo_picker && Helper.hasPhotoPicker())
                 try {
                     Log.i("Using photo picker");
                     pickImages.launch(new PickVisualMediaRequest.Builder()
@@ -3835,7 +3841,8 @@ public class FragmentCompose extends FragmentBase {
                         };
                         bpContent.setContent(imessage.getContent(), imessage.getContentType());
 
-                        try (OutputStream out = new FileOutputStream(input)) {
+                        try (OutputStream out = new MessageHelper.CanonicalizingStream(
+                                new BufferedOutputStream(new FileOutputStream(input)), EntityAttachment.PGP_CONTENT, null)) {
                             bpContent.writeTo(out);
                         }
                     } else {
@@ -4248,9 +4255,15 @@ public class FragmentCompose extends FragmentBase {
 
                 // Build content
                 File sinput = new File(tmp, draft.id + ".smime_sign");
-                try (FileOutputStream fos = new FileOutputStream(sinput)) {
-                    bpContent.writeTo(fos);
-                }
+                if (EntityMessage.SMIME_SIGNONLY.equals(type))
+                    try (OutputStream os = new MessageHelper.CanonicalizingStream(
+                            new BufferedOutputStream(new FileOutputStream(sinput)), EntityAttachment.SMIME_CONTENT, null)) {
+                        bpContent.writeTo(os);
+                    }
+                else
+                    try (FileOutputStream fos = new FileOutputStream(sinput)) {
+                        bpContent.writeTo(fos);
+                    }
 
                 if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
                     EntityAttachment cattachment = new EntityAttachment();
@@ -4481,9 +4494,13 @@ public class FragmentCompose extends FragmentBase {
                                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                         .putExtra("tab", "encryption"));
                             else {
+                                EntityIdentity identity = (EntityIdentity) spIdentity.getSelectedItem();
+
                                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), vwAnchor);
                                 popupMenu.getMenu().add(Menu.NONE, R.string.title_send_dialog, 1, R.string.title_send_dialog);
-                                popupMenu.getMenu().add(Menu.NONE, R.string.title_advanced_manage_certificates, 2, R.string.title_advanced_manage_certificates);
+                                if (identity != null)
+                                    popupMenu.getMenu().add(Menu.NONE, R.string.title_reset_sign_key, 2, R.string.title_reset_sign_key);
+                                popupMenu.getMenu().add(Menu.NONE, R.string.title_advanced_manage_certificates, 3, R.string.title_advanced_manage_certificates);
 
                                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                                     @Override
@@ -4497,6 +4514,41 @@ public class FragmentCompose extends FragmentBase {
                                             fragment.setTargetFragment(FragmentCompose.this, REQUEST_SEND);
                                             fragment.show(getParentFragmentManager(), "compose:send");
                                             return true;
+                                        } else if (itemId == R.string.title_reset_sign_key) {
+                                            Bundle args = new Bundle();
+                                            args.putLong("id", identity.id);
+
+                                            new SimpleTask<Void>() {
+                                                @Override
+                                                protected void onPostExecute(Bundle args) {
+                                                    ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
+                                                }
+
+                                                @Override
+                                                protected Void onExecute(Context context, Bundle args) throws Throwable {
+                                                    long id = args.getLong("id");
+
+                                                    DB db = DB.getInstance(context);
+                                                    try {
+                                                        db.beginTransaction();
+
+                                                        db.identity().setIdentitySignKey(id, null);
+                                                        db.identity().setIdentitySignKeyAlias(id, null);
+                                                        db.identity().setIdentityEncrypt(id, 0);
+
+                                                        db.setTransactionSuccessful();
+                                                    } finally {
+                                                        db.endTransaction();
+                                                    }
+
+                                                    return null;
+                                                }
+
+                                                @Override
+                                                protected void onException(Bundle args, Throwable ex) {
+                                                    Log.unexpectedError(getParentFragmentManager(), ex);
+                                                }
+                                            }.execute(FragmentCompose.this, args, "identity:reset");
                                         } else if (itemId == R.string.title_advanced_manage_certificates) {
                                             startActivity(new Intent(getContext(), ActivitySetup.class)
                                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -4513,10 +4565,43 @@ public class FragmentCompose extends FragmentBase {
                     });
                     snackbar.show();
                 } else {
-                    boolean expected =
-                            (ex instanceof OperatorCreationException &&
-                                    ex.getCause() instanceof InvalidKeyException);
-                    Log.unexpectedError(getParentFragmentManager(), ex, !expected);
+                    if (ex instanceof RuntimeOperatorException &&
+                            ex.getMessage() != null &&
+                            ex.getMessage().contains("Memory allocation failed")) {
+                        /*
+                            org.bouncycastle.operator.RuntimeOperatorException: exception obtaining signature: android.security.KeyStoreException: Memory allocation failed
+                                at org.bouncycastle.operator.jcajce.JcaContentSignerBuilder$1.getSignature(Unknown Source:31)
+                                at org.bouncycastle.cms.SignerInfoGenerator.generate(Unknown Source:95)
+                                at org.bouncycastle.cms.CMSSignedDataGenerator.generate(SourceFile:2)
+                                at org.bouncycastle.cms.CMSSignedDataGenerator.generate(SourceFile:1)
+                                at eu.faircode.email.FragmentCompose$62.onExecute(SourceFile:74)
+                                at eu.faircode.email.FragmentCompose$62.onExecute(SourceFile:1)
+                                at eu.faircode.email.SimpleTask$2.run(SourceFile:72)
+                                at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:462)
+                                at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+                                at eu.faircode.email.Helper$PriorityFuture.run(Unknown Source:2)
+                                at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+                                at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+                                at java.lang.Thread.run(Thread.java:919)
+                            Caused by: java.security.SignatureException: android.security.KeyStoreException: Memory allocation failed
+                                at android.security.keystore.AndroidKeyStoreSignatureSpiBase.engineSign(AndroidKeyStoreSignatureSpiBase.java:333)
+                                at java.security.Signature$Delegate.engineSign(Signature.java:1418)
+                                at java.security.Signature.sign(Signature.java:739)
+                                at org.bouncycastle.operator.jcajce.JcaContentSignerBuilder$1.getSignature(Unknown Source:2)
+                                ... 12 more
+                            Caused by: android.security.KeyStoreException: Memory allocation failed
+                                at android.security.KeyStore.getKeyStoreException(KeyStore.java:1303)
+                                at android.security.keystore.KeyStoreCryptoOperationChunkedStreamer.doFinal(KeyStoreCryptoOperationChunkedStreamer.java:224)
+                                at android.security.keystore.AndroidKeyStoreSignatureSpiBase.engineSign(AndroidKeyStoreSignatureSpiBase.java:328)
+                         */
+                        // https://issuetracker.google.com/issues/199605614
+                        Log.unexpectedError(getParentFragmentManager(), new IllegalArgumentException("Key too large for Android", ex));
+                    } else {
+                        boolean expected =
+                                (ex instanceof OperatorCreationException &&
+                                        ex.getCause() instanceof InvalidKeyException);
+                        Log.unexpectedError(getParentFragmentManager(), ex, !expected);
+                    }
                 }
             }
         }.serial().execute(this, args, "compose:s/mime");
@@ -5459,7 +5544,7 @@ public class FragmentCompose extends FragmentBase {
                                         String from = ((InternetAddress) preferred).getAddress();
                                         String name = ((InternetAddress) preferred).getPersonal();
                                         EntityLog.log(context, "Preferred=" + name + " <" + from + ">");
-                                        if (TextUtils.isEmpty(from) || from.equals(recognized.email))
+                                        if (TextUtils.isEmpty(from) || from.equalsIgnoreCase(recognized.email))
                                             from = null;
                                         if (!recognized.reply_extra_name ||
                                                 TextUtils.isEmpty(name) || name.equals(recognized.name))
@@ -6252,21 +6337,21 @@ public class FragmentCompose extends FragmentBase {
 
             boolean threading = prefs.getBoolean("threading", true);
             if (threading)
-                db.message().liveUnreadThread(data.draft.account, data.draft.thread).observe(getViewLifecycleOwner(), new Observer<List<EntityMessage>>() {
+                db.message().liveUnreadThread(data.draft.account, data.draft.thread).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                     private int lastDiff = 0;
-                    private List<EntityMessage> base = null;
+                    private List<Long> base = null;
 
                     @Override
-                    public void onChanged(List<EntityMessage> messages) {
-                        if (messages == null)
+                    public void onChanged(List<Long> ids) {
+                        if (ids == null)
                             return;
 
                         if (base == null) {
-                            base = messages;
+                            base = ids;
                             return;
                         }
 
-                        int diff = (messages.size() - base.size());
+                        int diff = (ids.size() - base.size());
                         if (diff > lastDiff) {
                             lastDiff = diff;
                             String msg = getResources().getQuantityString(
@@ -6277,21 +6362,51 @@ public class FragmentCompose extends FragmentBase {
                             snackbar.setAction(R.string.title_show, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    EntityMessage message = messages.get(0);
-                                    boolean notify_remove = prefs.getBoolean("notify_remove", true);
+                                    Bundle args = new Bundle();
+                                    args.putLong("id", ids.get(0));
 
-                                    Intent thread = new Intent(v.getContext(), ActivityView.class);
-                                    thread.setAction("thread:" + message.id);
-                                    // No group
-                                    thread.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    thread.putExtra("account", message.account);
-                                    thread.putExtra("folder", message.folder);
-                                    thread.putExtra("thread", message.thread);
-                                    thread.putExtra("filter_archive", true);
-                                    thread.putExtra("ignore", notify_remove);
+                                    new SimpleTask<EntityMessage>() {
+                                        @Override
+                                        protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+                                            long id = args.getLong("id");
 
-                                    v.getContext().startActivity(thread);
-                                    getActivity().finish();
+                                            DB db = DB.getInstance(context);
+                                            EntityMessage message = db.message().getMessage(id);
+                                            if (message != null) {
+                                                EntityFolder folder = db.folder().getFolder(message.id);
+                                                if (folder != null)
+                                                    args.putString("type", folder.type);
+                                            }
+
+                                            return message;
+                                        }
+
+                                        @Override
+                                        protected void onExecuted(Bundle args, EntityMessage message) {
+                                            boolean notify_remove = prefs.getBoolean("notify_remove", true);
+
+                                            String type = args.getString("type");
+
+                                            Intent thread = new Intent(v.getContext(), ActivityView.class);
+                                            thread.setAction("thread:" + message.id);
+                                            // No group
+                                            thread.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            thread.putExtra("account", message.account);
+                                            thread.putExtra("folder", message.folder);
+                                            thread.putExtra("type", type);
+                                            thread.putExtra("thread", message.thread);
+                                            thread.putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(type));
+                                            thread.putExtra("ignore", notify_remove);
+
+                                            v.getContext().startActivity(thread);
+                                            getActivity().finish();
+                                        }
+
+                                        @Override
+                                        protected void onException(Bundle args, Throwable ex) {
+                                            Log.unexpectedError(getParentFragmentManager(), ex);
+                                        }
+                                    }.execute(FragmentCompose.this, args, "compose:unread");
                                 }
                             });
                             snackbar.show();
@@ -7347,7 +7462,7 @@ public class FragmentCompose extends FragmentBase {
                 final long id = args.getLong("id");
                 final boolean show_images = args.getBoolean("show_images", false);
 
-                int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+                int colorPrimary = Helper.resolveColor(context, androidx.appcompat.R.attr.colorPrimary);
                 final int colorBlockquote = Helper.resolveColor(context, R.attr.colorBlockquote, colorPrimary);
                 int quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
                 int quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
@@ -7678,16 +7793,22 @@ public class FragmentCompose extends FragmentBase {
     private AdapterView.OnItemSelectedListener identitySelected = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            EntityIdentity identity = (EntityIdentity) parent.getAdapter().getItem(position);
+            final Context context = parent.getContext();
+            TupleIdentityEx identity = (TupleIdentityEx) parent.getAdapter().getItem(position);
 
             int at = (identity == null ? -1 : identity.email.indexOf('@'));
             etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
             tvDomain.setText(at < 0 ? null : identity.email.substring(at));
             grpExtra.setVisibility(identity != null && identity.sender_extra ? View.VISIBLE : View.GONE);
 
+            if (identity != null && nav_color) {
+                Integer color = (identity.color == null ? identity.accountColor : identity.color);
+                bottom_navigation.setBackgroundColor(color == null
+                        ? Helper.resolveColor(context, androidx.appcompat.R.attr.colorPrimary) : color);
+            }
+
             Spanned signature = null;
             if (identity != null && !TextUtils.isEmpty(identity.signature)) {
-                final Context context = getContext();
                 Document d = HtmlHelper.sanitizeCompose(context, identity.signature, true);
                 signature = HtmlHelper.fromDocument(context, d, new HtmlHelper.ImageGetterEx() {
                     @Override

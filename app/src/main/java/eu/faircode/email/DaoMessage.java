@@ -278,7 +278,7 @@ public interface DaoMessage {
             " AND ui_hide")
     LiveData<List<Long>> liveHiddenThread(long account, String thread);
 
-    @Query("SELECT message.* FROM message" +
+    @Query("SELECT message.id FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
             " WHERE message.account = :account" +
             " AND message.thread = :thread" +
@@ -288,7 +288,7 @@ public interface DaoMessage {
             " AND folder.type <> '" + EntityFolder.ARCHIVE + "'" +
             " AND NOT ui_seen" +
             " AND NOT ui_hide")
-    LiveData<List<EntityMessage>> liveUnreadThread(long account, String thread);
+    LiveData<List<Long>> liveUnreadThread(long account, String thread);
 
     static String FTS_STATS = "SELECT SUM(fts) AS fts, COUNT(*) AS total FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
@@ -1008,7 +1008,7 @@ public interface DaoMessage {
             " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged" +
             " AND stored < :sync_time" + // moved, browsed
-            " AND ui_snoozed IS NULL")
+            " AND (ui_snoozed IS NULL OR ui_snoozed =" + Long.MAX_VALUE+")")
     List<Long> getMessagesBefore(long folder, long sync_time, long keep_time, boolean unseen);
 
     @Query("DELETE FROM message" +
@@ -1018,7 +1018,7 @@ public interface DaoMessage {
             " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged" +
             " AND stored < :sync_time" + // moved, browsed
-            " AND ui_snoozed IS NULL")
+            " AND (ui_snoozed IS NULL OR ui_snoozed = " + Long.MAX_VALUE + ")")
     int deleteMessagesBefore(long folder, long sync_time, long keep_time, boolean unseen);
 
     @Transaction

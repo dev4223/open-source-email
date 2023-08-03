@@ -129,7 +129,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.search.AndTerm;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.FlagTerm;
 import javax.mail.search.HeaderTerm;
@@ -547,6 +546,10 @@ class Core {
                                     onDownload(context, jargs, account, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder, state);
                                     break;
 
+                                case EntityOperation.SUBJECT:
+                                    onSubject(context, jargs, account, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder, state);
+                                    break;
+
                                 default:
                                     throw new IllegalArgumentException("Unknown operation=" + op.name);
                             }
@@ -634,6 +637,8 @@ class Core {
                                 (op.tries >= LOCAL_RETRY_MAX &&
                                         EntityOperation.BODY.equals(op.name)) ||
                                 EntityOperation.ATTACHMENT.equals(op.name) ||
+                                EntityOperation.DETACH.equals(op.name) ||
+                                EntityOperation.SUBJECT.equals(op.name) ||
                                 ((op.tries >= LOCAL_RETRY_MAX || attachments > 0) &&
                                         EntityOperation.ADD.equals(op.name)) ||
                                 (op.tries >= LOCAL_RETRY_MAX &&
@@ -2140,9 +2145,8 @@ class Core {
         if (trash == null) {
             imessage.setFlag(Flags.Flag.DELETED, true);
             expunge(context, ifolder, Arrays.asList(imessage));
-        } else {
+        } else
             EntityOperation.queue(context, message, EntityOperation.MOVE, trash.id);
-        }
     }
 
     static boolean deletePart(Part part, Part attachment) throws MessagingException, IOException {
@@ -2258,24 +2262,14 @@ class Core {
             throw new IllegalArgumentException("exists without msgid");
 
         // Search for message
-        Message[] imessages = (account.isOutlook())
-                ? ifolder.search(new HeaderTerm("X-Microsoft-Original-Message-ID", message.msgid))
-                : ifolder.search(new MessageIDTerm(message.msgid));
+        // Alternative, inconsistent for Outlook: X-Microsoft-Original-Message-ID
+        Message[] imessages = ifolder.search(account.isOutlook()
+                ? new HeaderTerm(MessageHelper.HEADER_CORRELATION_ID, message.msgid)
+                : new MessageIDTerm(message.msgid));
 
-        // Fallback
-        if (false)
-            if (imessages == null || imessages.length == 0)
-                try {
-                    // Needed for Outlook
-                    imessages = ifolder.search(
-                            new AndTerm(
-                                    new SentDateTerm(ComparisonTerm.GE, new Date()),
-                                    new HeaderTerm(MessageHelper.HEADER_CORRELATION_ID, message.msgid)));
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                    // iCloud: NO [UNAVAILABLE] Unexpected exception
-                    // Seznam: Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
-                }
+        // Searching for random header:
+        //   iCloud: NO [UNAVAILABLE] Unexpected exception
+        //   Seznam: Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
 
         // Some email servers are slow with adding sent messages
         if (retry)
@@ -3074,6 +3068,42 @@ class Core {
 
         MimeMessage imessage = (MimeMessage) ifolder.getMessageByUID(uid);
         downloadMessage(context, account, folder, istore, ifolder, imessage, message.id, state, new SyncStats());
+    }
+
+    private static void onSubject(Context context, JSONArray jargs, EntityAccount account, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder, State state) throws JSONException, MessagingException, IOException {
+        DB db = DB.getInstance(context);
+
+        String subject = (jargs.isNull(0) ? null : jargs.getString(0));
+
+        EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+
+        // Get message
+        Message imessage = ifolder.getMessageByUID(message.uid);
+        if (imessage == null)
+            throw new MessageRemovedException();
+
+        String msgid = EntityMessage.generateMessageId();
+        String ref = (TextUtils.isEmpty(message.references)
+                ? message.msgid
+                : message.references + " " + message.msgid);
+        MimeMessage icopy = new MimeMessageEx((MimeMessage) imessage, msgid);
+        icopy.setSubject(subject); // Update or delete subject
+        icopy.addHeader("References", MessageHelper.limitReferences(ref));
+
+        ifolder.appendMessages(new Message[]{icopy});
+
+        Long uid = findUid(context, account, ifolder, msgid);
+        if (uid != null) {
+            JSONArray fargs = new JSONArray();
+            fargs.put(uid);
+            onFetch(context, fargs, folder, istore, ifolder, state);
+        }
+
+        if (trash == null) {
+            imessage.setFlag(Flags.Flag.DELETED, true);
+            expunge(context, ifolder, Arrays.asList(imessage));
+        } else
+            EntityOperation.queue(context, message, EntityOperation.MOVE, trash.id);
     }
 
     private static void onSynchronizeMessages(
@@ -4277,6 +4307,7 @@ class Core {
         boolean notify_known = prefs.getBoolean("notify_known", false);
         boolean native_dkim = prefs.getBoolean("native_dkim", false);
         boolean experiments = prefs.getBoolean("experiments", false);
+        boolean mdn = prefs.getBoolean("mdn", experiments);
         boolean pro = ActivityBilling.isPro(context);
 
         long uid = ifolder.getUID(imessage);
@@ -4614,7 +4645,7 @@ class Core {
             List<Header> headers = (needsHeaders ? helper.getAllHeaders() : null);
             String body = (needsBody ? parts.getHtml(context, download_plain) : null);
 
-            if (experiments && helper.isReport())
+            if (mdn && helper.isReport())
                 try {
                     MessageHelper.Report r = parts.getReport();
                     boolean client_id = prefs.getBoolean("client_id", true);
@@ -5830,6 +5861,7 @@ class Core {
             thread.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             thread.putExtra("account", message.account);
             thread.putExtra("folder", message.folder);
+            thread.putExtra("type", message.folderType);
             thread.putExtra("thread", message.thread);
             thread.putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(message.folderType));
             thread.putExtra("ignore", notify_remove);
@@ -5945,23 +5977,25 @@ class Core {
 
             if (notify_trash &&
                     perform_expunge &&
-                    message.accountProtocol == EntityAccount.TYPE_IMAP &&
-                    db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null) {
-                Intent trash = new Intent(context, ServiceUI.class)
-                        .setAction("trash:" + message.id)
-                        .putExtra("group", group);
-                PendingIntent piTrash = PendingIntentCompat.getService(
-                        context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
-                NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
-                        R.drawable.twotone_delete_24,
-                        context.getString(R.string.title_advanced_notify_action_trash),
-                        piTrash)
-                        .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
-                        .setShowsUserInterface(false)
-                        .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionTrash.build());
+                    message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                EntityFolder folder = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+                if (folder != null && !folder.id.equals(message.folder)) {
+                    Intent trash = new Intent(context, ServiceUI.class)
+                            .setAction("trash:" + message.id)
+                            .putExtra("group", group);
+                    PendingIntent piTrash = PendingIntentCompat.getService(
+                            context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
+                    NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
+                            R.drawable.twotone_delete_24,
+                            context.getString(R.string.title_advanced_notify_action_trash),
+                            piTrash)
+                            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
+                            .setShowsUserInterface(false)
+                            .setAllowGeneratedReplies(false);
+                    mbuilder.addAction(actionTrash.build());
 
-                wactions.add(actionTrash.build());
+                    wactions.add(actionTrash.build());
+                }
             }
 
             if (notify_trash &&
@@ -5985,42 +6019,46 @@ class Core {
             }
 
             if (notify_junk &&
-                    message.accountProtocol == EntityAccount.TYPE_IMAP &&
-                    db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null) {
-                Intent junk = new Intent(context, ServiceUI.class)
-                        .setAction("junk:" + message.id)
-                        .putExtra("group", group);
-                PendingIntent piJunk = PendingIntentCompat.getService(
-                        context, ServiceUI.PI_JUNK, junk, PendingIntent.FLAG_UPDATE_CURRENT);
-                NotificationCompat.Action.Builder actionJunk = new NotificationCompat.Action.Builder(
-                        R.drawable.twotone_report_24,
-                        context.getString(R.string.title_advanced_notify_action_junk),
-                        piJunk)
-                        .setShowsUserInterface(false)
-                        .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionJunk.build());
+                    message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                EntityFolder folder = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
+                if (folder != null && !folder.id.equals(message.folder)) {
+                    Intent junk = new Intent(context, ServiceUI.class)
+                            .setAction("junk:" + message.id)
+                            .putExtra("group", group);
+                    PendingIntent piJunk = PendingIntentCompat.getService(
+                            context, ServiceUI.PI_JUNK, junk, PendingIntent.FLAG_UPDATE_CURRENT);
+                    NotificationCompat.Action.Builder actionJunk = new NotificationCompat.Action.Builder(
+                            R.drawable.twotone_report_24,
+                            context.getString(R.string.title_advanced_notify_action_junk),
+                            piJunk)
+                            .setShowsUserInterface(false)
+                            .setAllowGeneratedReplies(false);
+                    mbuilder.addAction(actionJunk.build());
 
-                wactions.add(actionJunk.build());
+                    wactions.add(actionJunk.build());
+                }
             }
 
             if (notify_archive &&
-                    message.accountProtocol == EntityAccount.TYPE_IMAP &&
-                    db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null) {
-                Intent archive = new Intent(context, ServiceUI.class)
-                        .setAction("archive:" + message.id)
-                        .putExtra("group", group);
-                PendingIntent piArchive = PendingIntentCompat.getService(
-                        context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
-                NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
-                        R.drawable.twotone_archive_24,
-                        context.getString(R.string.title_advanced_notify_action_archive),
-                        piArchive)
-                        .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_ARCHIVE)
-                        .setShowsUserInterface(false)
-                        .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionArchive.build());
+                    message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                EntityFolder folder = db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE);
+                if (folder != null && !folder.id.equals(message.folder)) {
+                    Intent archive = new Intent(context, ServiceUI.class)
+                            .setAction("archive:" + message.id)
+                            .putExtra("group", group);
+                    PendingIntent piArchive = PendingIntentCompat.getService(
+                            context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
+                    NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
+                            R.drawable.twotone_archive_24,
+                            context.getString(R.string.title_advanced_notify_action_archive),
+                            piArchive)
+                            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_ARCHIVE)
+                            .setShowsUserInterface(false)
+                            .setAllowGeneratedReplies(false);
+                    mbuilder.addAction(actionArchive.build());
 
-                wactions.add(actionArchive.build());
+                    wactions.add(actionArchive.build());
+                }
             }
 
             if (notify_move &&
@@ -6028,7 +6066,7 @@ class Core {
                 EntityAccount account = db.account().getAccount(message.account);
                 if (account != null && account.move_to != null) {
                     EntityFolder folder = db.folder().getFolder(account.move_to);
-                    if (folder != null) {
+                    if (folder != null && !folder.id.equals(message.folder)) {
                         Intent move = new Intent(context, ServiceUI.class)
                                 .setAction("move:" + message.id)
                                 .putExtra("group", group);
@@ -6051,6 +6089,7 @@ class Core {
                 List<TupleIdentityEx> identities = db.identity().getComposableIdentities(message.account);
                 if (identities != null && identities.size() > 0) {
                     Intent reply = new Intent(context, ActivityCompose.class)
+                            .setAction("reply:" + message.id)
                             .putExtra("action", "reply")
                             .putExtra("reference", message.id)
                             .putExtra("group", group);
