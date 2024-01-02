@@ -90,6 +90,8 @@
     <string name="title_block_sender_hint">It blokkearjen fan in ôfstjoerder is in fergeze funksje.
 It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in pro-funksje is.    </string>
     <string name="title_blocked_senders">Blokkearre ôfstjoerders</string>
+    <string name="title_unblock_all">Alle deblokkearje</string>
+    <string name="title_unblock_all_remark">Dit sil alle listen en opsjes, dy\'t resultearje kinne yn it blokkearjen fan de ôfstjoerders, werstelle</string>
     <plurals name="title_ask_block_sender">
         <item quantity="one">Ofstjoerder fan %1$s berjocht blokkearje?</item>
         <item quantity="other">Ofstjoerder fan %1$s berjochten blokkearje?</item>
@@ -161,6 +163,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_setup_quick_smtp">SMTP-server om berjochten te ferstjoeren</string>
     <string name="title_setup_quick_certificates">Serversertifikaten</string>
     <string name="title_setup_wizard">Assistint</string>
+    <string name="title_setup_wizard_intro">Yn de measte gefallen kin de wizardknop brûkt wurde om in account ta te foegjen, oars kinne de serveradressen hânmjittich ynfierd of wizige wurde fia de hânmjittige ynstelling</string>
     <string name="title_setup_wizard_tutorials">Hantliedingen</string>
     <string name="title_setup_wizard_multiple">De assistint kin meardere kearen brûkt wurde om meardere accounts yn te stellen.</string>
     <string name="title_setup_wizard_new">Ik haw in nij e-mailadres nedich</string>
@@ -189,6 +192,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_setup_oauth_rationale">Autorisearje tagong ta jo %1$s-account</string>
     <string name="title_setup_oauth_update">Autorisearje in besteand account opnij (oars in nij account oanmeitsje)</string>
     <string name="title_setup_oauth_updated">Accountautorisaasje is bywurke</string>
+    <string name="title_setup_oauth_brave">By it gebrûk fan de Brave-browser, moatte jo de opsje yn de ynstellingen fan Brave om app-keppelingen yn apps bûten Brave iepenje te litten ynskeakelje</string>
     <string name="title_setup_oauth_authorize">Autorisearje</string>
     <string name="title_setup_select_account">Selektearje account</string>
     <string name="title_setup_instructions">Ynstallaasjeynstruksjes</string>
@@ -372,6 +376,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_suggest_sent">Adressen fûn yn ferstjoerde berjochten foarstelle</string>
     <string name="title_advanced_suggest_received">Adressen fûn yn ûntfangen berjochten foarstelle</string>
     <string name="title_advanced_suggest_frequently">Sortearje foarstelle adressen op gebrûksfrekwinsje</string>
+    <string name="title_advanced_suggest_account">Suggestjes beheine ta aktuele account</string>
     <string name="title_advanced_alt_re_fwd">Alternatyf antwurd/trochstjoere foarfoechsel</string>
     <string name="title_advanced_send_chips">Adresballonnen toane</string>
     <string name="title_advanced_send_nav_color">Brûk de identiteitskleur foar de ûnderste aksjebalke</string>
@@ -384,6 +389,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_answer_hint">De aksjes fan de antwurdknop kinne ek konfigurearre wurde op it ljepblêd ferstjoerynstellingen</string>
     <string name="title_advanced_answer_warning">Net alle aksjes binne mooglik sûnder in seleksjemenu!</string>
     <string name="title_advanced_send_pending">Net-opfallend piktogram foar útsteld ferstjoere toane</string>
+    <string name="title_advanced_save_revisions">Konseptrevyzjes foar ûngedien meitsje en opnij útfiere bewarje</string>
     <string name="title_advanced_auto_save_paragraph">Automatysk in konsept bewarje nei elke alinea</string>
     <string name="title_advanced_auto_save_dot">Automatysk in konsept bewarje nei elke sin</string>
     <string name="title_advanced_compose_color">Standert tekstkleur</string>
@@ -419,6 +425,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_lookup_mx">Kontrolearje e-mailadressen fan ûntfangers foar ferstjoeren</string>
     <string name="title_advanced_metered">Mjitten ferbiningen brûke</string>
     <string name="title_advanced_download">Berjochten en bylagen automatysk downloade op in mjitten ferbining oant</string>
+    <string name="title_advanced_download_limited">Ek tapasse op net mjitten ferbiningen</string>
     <string name="title_advanced_roaming">Download berjochten en bylagen wylst roaming</string>
     <string name="title_advanced_rlah">Roam lykas thús</string>
     <string name="title_advanced_download_headers">Download alle berjochtkoppen</string>
@@ -429,10 +436,14 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_vpn_only">Allinnich fia in VPN ferbine</string>
     <string name="title_advanced_timeout">Timeout foar ferbining (sekonden)</string>
     <string name="title_advanced_prefer_ip4">Foarkar IPv4 boppe IPv6</string>
+    <string name="title_advanced_ssl_update">Bywurke SSL-provider brûke</string>
     <string name="title_advanced_ssl_harden">SSL-ferbiningen ferhurdzje</string>
     <string name="title_advanced_ssl_harden_strict">TLS 1.3 fereaskje</string>
     <string name="title_advanced_cert_strict">Strange sertifikaatkontrôle</string>
+    <string name="title_advanced_check_names">Hostnammen mei serversertifikaten fergelykje</string>
     <string name="title_advanced_open_safe">Allinnich befeilige ferbiningen iepenje</string>
+    <string name="title_advanced_http_redirect">Ferbiningsomlieding tastean</string>
+    <string name="title_advanced_bouncy_castle">Brûk de feilige socketprovider fan Bouncy Castle (JSSE)</string>
     <string name="title_advanced_manage_connectivity">Konnektiviteit beheare</string>
     <string name="title_advanced_caption_general">Algemien</string>
     <string name="title_advanced_caption_navigation">Navigaasje</string>
@@ -489,6 +500,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_libravatars">Libravatars toane</string>
     <string name="title_advanced_favicons">Favicons toane</string>
     <string name="title_advanced_favicons_partial">Allinnich de earste %1$s fan de webside scanne</string>
+    <string name="title_advanced_favicons_manifest">Webapp-manifesten scannen</string>
     <string name="title_advanced_generated_icons">Generearre ikoanen toane</string>
     <string name="title_advanced_identicons">Identykons toane</string>
     <string name="title_advanced_circular">Rûne ikoanen toane</string>
@@ -500,6 +512,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_only_name">Allinnich kontaktnammen toane</string>
     <string name="title_advanced_distinguish_contacts">Understreekje de ôfstjoerder wannear de ôfstjoerder bekend is as lokaal ‘oan’-kontakt</string>
     <string name="title_advanced_show_recipients">Untfangers yn berjochtkop toane</string>
+    <string name="title_advanced_reverse_addresses">Untfanger foar ferstjoerde berjochten toane</string>
     <string name="title_advanced_font_size_sender">Tekstgrutte ôfstjoerder</string>
     <string name="title_advanced_sender_ellipsize">Wannear nedich, de ôfstjoerder ynkoartsje</string>
     <string name="title_advanced_subject_top">Underwerp boppe ôfstjoerder toane</string>
@@ -522,7 +535,9 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_unzip">Ynhâld fan komprimearre bylagen toane</string>
     <string name="title_advanced_attachments_alt">Bylagen nei de berjochttekst toane</string>
     <string name="title_advanced_thumbnails">Miniatuerôfbylding nei de berjochttekst toane</string>
+    <string name="title_advanced_pdf_preview">PDF-miniatueren toane</string>
     <string name="title_advanced_message_text_zoom2">Standert zoom berjochttekst: %1$s %%</string>
+    <string name="title_advanced_editor_text_zoom">Berjochttekst ek yn de berjochtbewurker zoome</string>
     <string name="title_advanced_overview_mode">Zoom orizjinele berjochten om op it skerm te passen</string>
     <string name="title_advanced_hyphenation">Automatyske keppeltekens brûke</string>
     <string name="title_advanced_contrast">Heech kontrast foar berjochttekst brûke</string>
@@ -547,6 +562,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_navbar_colorize">Kleurje de Android-navigaasjebalke yn</string>
     <string name="title_advanced_list_count">It tal berjochten of petearen yn de boppeste aksjebalke toane</string>
     <string name="title_advanced_bundled_fonts">Bondele lettertypen brûke</string>
+    <string name="title_advanced_narrow_fonts">Smelle lettertypen brûke</string>
     <string name="title_advanced_parse_classes">Stylblêden ferwurkje</string>
     <string name="title_advanced_authentication">Autentikaasjewarskôgingen toane</string>
     <string name="title_advanced_authentication_hint">De ûnderlizzende kontrôles kinne konfigurearre wurde yn de ûntfangstynstellingen</string>
@@ -567,6 +583,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_double_tap">Dûbeltikke om berjocht lêzen/net lêzen te markearjen</string>
     <string name="title_advanced_swipenav">Fei nei links/rjochts om nei folgjende/foarige petear te gean</string>
     <string name="title_advanced_volumenav">Folume omheech/omleech om nei folgjende/foarige petear te gean</string>
+    <string name="title_advanced_up_down">Brûk de pylken omheech/omleech foar it folgjende/foarige petear</string>
     <string name="title_advanced_reversed">Navigaasjerjochting omkeare</string>
     <string name="title_advanced_swipe_close">Fei omleech om petear te sluten</string>
     <string name="title_advanced_swipe_move">Fei omheech om petear te ferpleatsen</string>
@@ -615,6 +632,10 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_notify_preview">Foarbyld fan berjocht yn notifikaasjes toane</string>
     <string name="title_advanced_notify_preview_all">Foarbyld fan alle tekst</string>
     <string name="title_advanced_notify_preview_only">Notifikaasjes allinnich mei in foarbyldtekst toane</string>
+    <string name="title_advanced_notify_transliterate">Transliterearje nei it Latynske alfabet</string>
+    <string name="title_advanced_notify_ascii">Allinnich ASCII-tekst
+Titel foar in optsje om teksten yn meldingen nei ASCII te konvertearjen
+https://en.wikipedia.org/wiki/ASCII</string>
     <string name="title_advanced_notify_actions">Notifikaasje-aksjes</string>
     <string name="title_advanced_notify_action_trash">Jiskefet</string>
     <string name="title_advanced_notify_action_delete">Fuortsmite</string>
@@ -633,6 +654,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_wearable_preview">Allinnich notifikaasjes mei berjochtfoarbyld nei wearables stjoere</string>
     <string name="title_advanced_notify_messaging">Brûk notifikaasjeformaat fan Android-berjochtestyl</string>
     <string name="title_advanced_biometrics_notify">Toan notifikaasjeynhâld by it gebrûk fan biometryske ferifikaasje</string>
+    <string name="title_advanced_notify_open_folder">Map iepenje by it iepenjen fan nij berjocht</string>
     <string name="title_advanced_light">Notifikaasjeljocht brûke</string>
     <string name="title_advanced_sound">Meldingslûd selektearje</string>
     <string name="title_advanced_notify_screen_on">Skeakelje it skerm koart yn foar nije berjochtmeldingen</string>
@@ -667,6 +689,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_mnemonic_hint">Elk e-mailberjocht ûntfongen mei de ûndersteande wurden yn de ûnderwerprigel sil automatysk en daliks de app-gegevens fuortsmite</string>
     <string name="title_advanced_clear_all">Smyt de app-gegevens fuort</string>
     <string name="title_advanced_clear_all_remark">De app-gegevens wurde ûnomkearber fuortsmiten!</string>
+    <string name="title_advanced_default_encryption">De standert fersiferingsmetoade (PGP of S/MIME) wurdt per identiteit bewarre nei it ferstjoeren fan in ûndertekene of fersifere berjocht.
+         De fersiferingsmetoade kin foar ferstjoering selektearre wurde yn it dialoochfinster mei ferstjoeropsjes (hâld de knop Fertsjoere lang yndrukt).    </string>
     <string name="title_advanced_sign_default">Standert ûndertekenje</string>
     <string name="title_advanced_encrypt_default">Standert fersiferje</string>
     <string name="title_advanced_encrypt_auto">Automatysk fersiferje wannear’t alle kaaien fan de ûntfanger beskikber binne</string>
@@ -692,19 +716,24 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     </string>
     <string name="title_advanced_power_menu">Aksjes oan it Android-powermenu tafoegje</string>
     <string name="title_advanced_send_self">‘Nei josels stjoere’ oan it Android-dielmenu tafoegje</string>
-    <string name="title_advanced_external_search">Oare apps tastean om yn berjochten te sykjen</string>
+    <string name="title_advanced_external_search">Foegje ‘FairEmail sykje’ ta oan Android-tekstseleksjemenu</string>
     <string name="title_advanced_sort_answers">Antwurdsjabloanen op brûksfrekwinse sortearje</string>
     <string name="title_advanced_shortcuts">Faak brûkte kontakten yn Android-dielmenu toane</string>
+    <string name="title_advanced_ical_tentative">Untfongen útnûgingen as foarearst bewarje</string>
     <string name="title_advanced_fts">Sykyndeks opbouwe</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d berjochten yndeksearre (%3$s)</string>
     <string name="title_advanced_classification">Berjochten klassifisearje</string>
     <string name="title_advanced_class_min_chance">Minimale klasse kâns: %1$s %%</string>
     <string name="title_advanced_class_min_difference">Minimum klasse ferskil: %1$s %%</string>
     <string name="title_advanced_show_filtered">In filterpiktogram toane wannear’t rigels tapast waarden</string>
+    <string name="title_advanced_haptic_feedback">Haptysk kommentaar by wichtige aksjes</string>
     <string name="title_advanced_language">Taal</string>
     <string name="title_advanced_language_system">Systeem</string>
     <string name="title_advanced_lt">LanguageTool-yntegraasje</string>
+    <string name="title_advanced_lt_sentence">Kontrolearje elke sin</string>
     <string name="title_advanced_lt_auto">Alinea nei in nije rigel kontrolearje</string>
+    <string name="title_advanced_lt_highlight">De tekst dy’t kontrolearre wurdt markearje</string>
+    <string name="title_advanced_lt_description">Toan pop-up mei probleembeskriuwing</string>
     <string name="title_advanced_lt_user">Brûkersnamme (opsjoneel)</string>
     <string name="title_advanced_lt_key">API-kaai (opsjoneel)</string>
     <string name="title_advanced_deepl">DeepL-yntegraasje</string>
@@ -757,6 +786,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_pull_all_hint">By it nei ûnder lûken fan de mappen- of accountlist</string>
     <string name="title_advanced_suggest_names_hint">Wannear útskeakele, wurde allinnich e-mailadressen brûkt by it selektearjen fan kontakten</string>
     <string name="title_advanced_suggest_local_hint">Njonken kontakten levere troch Android. Kontaktgegevens wurde allinnich bewarre foar nij ferstjoerde of ûntfangen berjochten wannear’t dit ynskeakele is.</string>
+    <string name="title_advanced_suggest_account_hint">Dit jildt allinnich foar lokale kontakten, omdat kontakten yn it Android-adresboek net keppele binne oan spesifike accounts</string>
     <string name="title_advanced_auto_identity_hint">Dit sil de lêst brûkte identiteit selektearje by it selektearjen fan in ûntfanger foar nije berjochten</string>
     <string name="title_advanced_send_reminders_hint">Toan in warskôging as de tekst fan it berjocht of it ûnderwerp leech is of as in bylage miskien mist</string>
     <string name="title_advanced_reply_move_hint">De e-mailserver koe de berjochten noch hieltyd tafoegje oan de map ferstjoerde berjochten</string>
@@ -860,6 +890,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_identity_reply_to">Antwurdzje op adres</string>
     <string name="title_identity_internal">Ynterne domeinnammen (komma skieden)</string>
     <string name="title_identity_uri">Kontakt keppelje</string>
+    <string name="title_identity_sensitivity">Standert gefoelichheid</string>
     <string name="title_identity_unicode">UTF-8 in berjochtkoppen tastean</string>
     <string name="title_identity_unicode_remark">De measte servers stypje dit net</string>
     <string name="title_identity_octetmime">8BITMIME tastean</string>
@@ -982,6 +1013,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_service_port">Kontrolearje it poartenûmer</string>
     <string name="title_service_protocol">Kontrolearje it protokol (SSL/TLS of STARTTLS)</string>
     <string name="title_service_error10">Dizze account moat opnij ferifiearre wurde, wat dien wurde kin fia de flugge ynstallaasjewizard</string>
+    <string name="title_certificate_error">As gefolch fan it Play Store-belied fan Google, is it net langer mooglik om net-feilige ferbiningen mei e-mailservers mei sertifikaatproblemen te stypjen foar de ferzje fan FairEmail dyt yn de Play Store \'utjûn wurdt.
+        Dêrom kin dit probleem allinnich oplost wurde troch jo e-mailprovider - de boppe steande flaterynformaasje kin harren helpe dit probleem op te lossen.    </string>
     <string name="title_advanced_browse">Blêdzje troch berjochten op de server</string>
     <string name="title_advanced_expand_read">Markearje berjochten by útklappen as lêzen</string>
     <string name="title_synchronize_now">No syngronisearje</string>
@@ -996,6 +1029,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_synchronize_batch_disable">Syngronisaasje útskeakelje</string>
     <string name="title_notify_batch_enable">Meldingen foar nije berjochten ynskeakelje</string>
     <string name="title_notify_batch_disable">Meldingen foar nije berjochten útskeakelje</string>
+    <string name="title_download_batch_enable">Teksten en bylagen downloade</string>
+    <string name="title_download_batch_disable">Allinnich koppen downloade</string>
     <string name="title_delete_local">Lokale berjochten fuortsmite</string>
     <string name="title_delete_browsed">Trochsneupe/sochte berjochten fuortsmite</string>
     <string name="title_expunge">Opromje</string>
@@ -1011,6 +1046,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_delete_channel">Meldingskanaal fuortsmite</string>
     <string name="title_insert_contact">Kontakt tafoegje</string>
     <string name="title_edit_contact">Kontakt bewurkje</string>
+    <string name="title_delete_contact">Kontakt fuortsmite?</string>
     <string name="title_contact_email">E-mailberjocht</string>
     <string name="title_contact_name">Namme</string>
     <string name="title_contact_group">Groep</string>
@@ -1114,6 +1150,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_importance_low">Leech</string>
     <string name="title_importance_normal">Normaal</string>
     <string name="title_importance_high">Heech</string>
+    <string name="title_important">Wichtich</string>
+    <string name="title_unimportant">Net wichtich</string>
     <string name="title_search_in_text">Sykje yn tekst&#8230;</string>
     <string name="title_forward">Trochstjoere</string>
     <string name="title_resend">Opnij ferstjoere</string>
@@ -1132,8 +1170,10 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_print_header">Koptekst ôfdrukke</string>
     <string name="title_print_images">Ofbyldingen ôfdrukke</string>
     <string name="title_print_images_remark">Ofbyldingen downloade kin wat tiid duorje</string>
+    <string name="title_print_block_quotes">Bloksitaatlinen ôfdrukke</string>
+    <string name="title_print_margins">In marzje tafoegje</string>
     <string name="title_show_headers">Kopteksten toane</string>
-    <string name="title_share_as_html">As HTML diele</string>
+    <string name="title_show_html">Bron toane</string>
     <string name="title_raw_save">Rûch berjocht bewarje</string>
     <string name="title_raw_send">As bylage stjoere</string>
     <string name="title_raw_send_message">Berjocht</string>
@@ -1163,6 +1203,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_quick_actions_snooze">Slommerje</string>
     <string name="title_quick_actions_clear">Seleksje nei aksje wiskje</string>
     <string name="title_trash">Jiskefet</string>
+    <string name="title_trash_selection">Seleksje fuortsmite</string>
     <string name="title_copy">Kopiearje&#8230;</string>
     <string name="title_copy_to">Kopiearje nei&#8230;</string>
     <string name="title_subscribe">Abonnearje</string>
@@ -1177,6 +1218,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_unsubscribe">Ofmelde</string>
     <string name="title_message_rule">Regel meitsje</string>
     <string name="title_no_junk">Net net-winske</string>
+    <string name="title_edit_subject">Underwerp &#8230; bewurkje</string>
     <string name="title_move_to">Ferpleatse nei&#8230;</string>
     <string name="title_move_to_folder">Ferpleatse nei&#8230;</string>
     <string name="title_move_to_account">Ferpleatse nei %1$s&#8230;</string>
@@ -1203,7 +1245,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_receipt_subject">Lêsbefêstiging: %1$s</string>
     <string name="title_receipt_text">Dizze lêsbefêstiging befêstiget allinnich dat it berjocht werjûn is. Der is gjin garânsje dat de ûntfanger de ynhâld fan it berjocht lêzen hat.</string>
     <string name="title_no_answers">Gjin antwurdsjabloanen definiearre</string>
-    <string name="title_no_viewer_caption">Gjin viewer-app beskikber foar %1$s</string>
+    <string name="title_no_viewer_caption">Gjin viewer-app beskikber</string>
     <string name="title_no_viewer_name">Ynhâldsnamme</string>
     <string name="title_no_viewer_type">Ynhâldstype</string>
     <string name="title_no_viewer_search">App sykje</string>
@@ -1344,6 +1386,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_add_image_privacy">Privacygefoelige gegevens fuortsmite</string>
     <string name="title_add_image_privacy_remark">Geografyske lokaasje, searjenûmers, bestânsnammen, ensfh.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_add_image_resize_remark">Grutte oanpasse wurdt stipe foar: %1$s</string>
+    <string name="title_add_image_select_remark">De Android-fotokiezer jout bestânsnammen net langer troch</string>
     <string name="title_add_image_select">Bestân selektearje</string>
     <string name="title_add_attachment">Bylage tafoegje</string>
     <string name="title_attachment_file">Bestân tafoegje</string>
@@ -1355,6 +1399,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_image_dialog">Ofbyldingsopsjes toane</string>
     <string name="title_style_toolbar">Stylarkbalke</string>
     <string name="title_media_toolbar">Media-arkbalke</string>
+    <string name="title_manage_android_contacts">Android-kontakten beheare</string>
     <string name="title_manage_local_contacts">Lokale kontakten beheare</string>
     <string name="title_insert_contact_group">Kontaktgroep tafoegje</string>
     <string name="title_insert_template">Sjabloan ynfoegje</string>
@@ -1367,6 +1412,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_translate_formal">Formele foarm brûke</string>
     <string name="title_translate_small">Brûk in lyts lettertype foar de boarnetekst</string>
     <string name="title_translate_replace">Boarnetekst ferfange troch oersette tekst</string>
+    <string name="title_translate_highlight">De tekst dy’t oerset wurdt markearje</string>
     <string name="title_translate_html">Opmaak behâlde</string>
     <string name="title_translate_html_hint">Dit sil mear tekens ferbrûke</string>
     <string name="title_translate_usage">Gebrûk: %1$s / %2$s (%3$d %%)</string>
@@ -1457,6 +1503,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_search_hint">        Sykje sil earst sjen nei berjochten dy’t op jo apparaat bewarre binne.
         Om ek op de server te sykjen, tikje op de knop ‘Opnij sykje’.
     </string>
+    <string name="title_search_hint_fts">Gebrûk fan de sykyndeks: allinnich hiele wurden</string>
     <string name="title_search_index_hint">Sykjen fia de sykyndeks is fluch, mar sil allinnich hiele wurden fine.</string>
     <string name="title_search_text_hint">Sykje nei tekst yn berjochten, as der in grut oantal berjochten binne, wurket miskien net op guon servers</string>
     <string name="title_search_text_unsupported">‘%s’ betsjut dat de e-mailserver it sykjen yn berjochtteksten net stipet</string>
@@ -1469,6 +1516,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_search_in_keywords">Yn kaaiwurden (wannear stipe)</string>
     <string name="title_search_in_message">Yn berjochttekst</string>
     <string name="title_search_in_notes">Yn lokale notysjes</string>
+    <string name="title_search_in_filenames">Yn bestânsnammen (allinnich op apparaat)</string>
     <string name="title_search_with">Sykje beheine ta</string>
     <string name="title_search_with_unseen">Net lêzen</string>
     <string name="title_search_with_flagged">Mei stjer</string>
@@ -1561,6 +1609,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_answer_placeholder_firstname">Foarnamme fan ôfstjoerder</string>
     <string name="title_answer_placeholder_lastname">Efternamme ôfstjoerder</string>
     <string name="title_answer_placeholder_date">Hjoeddeistige datum</string>
+    <string name="title_answer_placeholder_weekday">Dei fan de wike</string>
     <string name="title_rule_noop">Gjin aksje</string>
     <string name="title_rule_seen">As lêzen markearje</string>
     <string name="title_rule_unseen">As net lêzen markearje</string>
@@ -1572,6 +1621,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_rule_keyword">Kaaiwurd</string>
     <string name="title_rule_keyword_add">Tafoegje</string>
     <string name="title_rule_keyword_delete">Fuortsmite</string>
+    <string name="title_rule_notes">Lokale notysjes</string>
     <string name="title_rule_move">Ferpleatse</string>
     <string name="title_rule_copy">Kopiearje (label)</string>
     <string name="title_rule_answer">Beäntwurdzje/trochstjoere</string>
@@ -1630,7 +1680,10 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_rule_answer_missing">Sjabloan ûntbrekt</string>
     <string name="title_rule_keyword_missing">Kaaiwurd ûntbrekt</string>
     <string name="title_rule_automation_hint">Dit sil de bedoeling ‘%1$s’ mei de ekstra’s ‘%2$s’ stjoere</string>
+    <string name="title_rule_notes_missing">Lokale notysjes ûntbrekke</string>
+    <string name="title_rule_url_missing">URL ûntbrekt of is net jildich</string>
     <string name="title_rule_delete_hint">Permanint fuortsmite kin net ûngedien makke wurde, dus soargje derfoar dat de betingsten fan de regel korrekt binne!</string>
+    <string name="title_rule_url_hint">Jo kinne de folgjende plakhâlders brûke: %1$s</string>
     <string name="title_rule_edit_group">Groep bewurkje&#8230;</string>
     <string name="title_rule_execute">No útfiere</string>
     <string name="title_rule_applied">Belutsen berjochten: %1$d</string>
@@ -1650,6 +1703,11 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_rule_use_as_alarm">As alarm brûke</string>
     <string name="title_rule_alarm_hint">Dit sil ‘net steure’-regels negearje</string>
     <string name="title_rule_alarm_duration">Maksimale alarmdoer (sekonden)</string>
+    <string name="title_rule_alarm_title">Alarm</string>
+    <string name="title_rule_alarm_stop">Stop</string>
+    <string name="title_code_line_numbers">Rigelnûmers toane</string>
+    <string name="title_code_enable_links">Keppelingen ynskeakelje</string>
+    <string name="title_code_pretty">Krease ôfdruk</string>
     <string name="title_legend_section_synchronize">Syngronisearje</string>
     <string name="title_legend_section_folders">Mappen</string>
     <string name="title_legend_section_messages">Berjochten</string>
@@ -1775,6 +1833,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_hint_folder_sync">Om batterij- en netwurkgebrûk te beheinen sille net alle mappen en net alle berjochten standert syngronisearre wurde</string>
     <string name="title_hint_airplane">Fleantúchmodus is ynskeakele</string>
     <string name="title_hint_notifications">Gjin meldingsrjochten</string>
+    <string name="title_hint_notifications_remark">Meldingsrjochten binne fereaske foar (account)meldingen. Meldingen foar nije berjochten kinne útskeakele wurde yn de ynstellingen.</string>
     <string name="title_hint_battery_optimizations">Batterij-optimalisaasjes noch hieltyd ynskeakele</string>
     <string name="title_hint_support">As jo in fraach of in probleem hawwe, brûk dan it stipemenu om help te krijen</string>
     <string name="title_hint_message_actions">Fei links nei jiskefet; Fei rjochts nei argyf (as beskikber); De fei-aksjes kinne ynsteld wurde yn de accountynstellingen</string>
@@ -1843,6 +1902,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_no_ask_again">Freegje dit net wer</string>
     <string name="title_no_ask_for_again">Freegje dit net wer foar %1$s</string>
     <string name="title_no_body">Gjin berjochttekst fûn</string>
+    <string name="title_large_body">Dit berjocht is hiel grut en dit kin problemen feroarsaakje!</string>
     <string name="title_no_charset">Net stipe kodearring: %1$s</string>
     <string name="title_via">Fia: %1$s</string>
     <string name="title_1hour">1 oere</string>
@@ -1862,6 +1922,8 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_loading">Lade&#8230;</string>
     <string name="title_fetching_again">Berjocht opnij fan de server ophelje</string>
     <string name="title_go_back">Gean werom</string>
+    <string name="title_global_default">Globale standertwearde brûke</string>
+    <string name="title_not_existing">Dit bericht bestiet net mear op de e-mailserver</string>
     <string name="title_conversation_actions">Aksjes</string>
     <string name="title_conversation_action_reply">Beäntwurdzje mei: ‘%1$s’</string>
     <string name="title_conversation_action_copy">Kopiearje: ‘%1$s’</string>
@@ -1906,6 +1968,9 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_debug_info_issue">Probleembeskriuwing (fereaske)</string>
     <string name="title_debug_info_issue_remark">Details, lykas de skatte tiid fan it probleem, de eksakte flatermelding, ensfh., binne wichtich</string>
     <string name="title_debug_info_contact">Wy hawwe koartlyn kontakt han oer dit probleem</string>
+    <string name="title_debug_info_send">Daliks ferstjoere</string>
+    <string name="title_debug_info_send_remark">Normaal sil de debugynfo earst bewarre wurde as konseptberjocht, sadat jo kontrolearje kinne wat der ferstjoerd wurdt</string>
+    <string name="title_debug_info_question">Brûk de ynfoknop allinnich as jo in fraach hawwe</string>
     <string name="title_unexpected_info_remark">Beskriuw wat jo dien hawwe doe’t de app ferûngelokke:</string>
     <string name="title_widget_title_count">Oantal nije berjochten</string>
     <string name="title_widget_title_list">Berjochtlist</string>
@@ -1918,6 +1983,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_widget_account_all">Alle</string>
     <string name="title_widget_folder">Map</string>
     <string name="title_widget_folder_unified">Kombinearre Postfek YN-mappen</string>
+    <string name="title_widget_folder_notifying">Mappen mei nije berjochtmeldingen</string>
     <string name="title_widget_unseen">Allinnich net-lêzen berjochten</string>
     <string name="title_widget_flagged">Allinnich berjochten mei stjer</string>
     <string name="title_widget_font_size">Tekstgrutte</string>
@@ -1932,6 +1998,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_widget_refresh">Knop foar it ferfarskjen fan berjochten toane</string>
     <string name="title_widget_compose">Knop foar it opstellen fan in nij berjocht toane</string>
     <string name="title_widget_background">Eftergrûnkleur</string>
+    <string name="title_widget_icon">Piktogramkleur</string>
     <string name="title_widget_day_night">Donker systeemtema folgje</string>
     <string name="title_compat_dark">Google hat de donkere modus fuortsmiten foar Android-ferzjes foar ferzje 10</string>
     <!-- Thunderbird -->

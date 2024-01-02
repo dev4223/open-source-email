@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.ActionBar.DISPLAY_SHOW_CUSTOM;
@@ -62,6 +62,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.preference.PreferenceManager;
 
@@ -135,6 +136,33 @@ public class FragmentBase extends Fragment {
     protected void setSubtitle(CharSequence subtitle) {
         this.subtitle = subtitle;
         updateSubtitle();
+    }
+
+    protected void setActionBarListener(final LifecycleOwner owner, final View.OnClickListener listener) {
+        final AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity == null)
+            return;
+
+        final ActionBar actionbar = activity.getSupportActionBar();
+        if (actionbar == null)
+            return;
+
+        if ((actionbar.getDisplayOptions() & DISPLAY_SHOW_CUSTOM) == 0)
+            return;
+
+        final View custom = actionbar.getCustomView();
+        if (custom == null)
+            return;
+
+        owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+            public void onAny() {
+                Lifecycle.State state = owner.getLifecycle().getCurrentState();
+                custom.setOnClickListener(state.isAtLeast(Lifecycle.State.STARTED) ? listener : null);
+                if (Lifecycle.State.DESTROYED.equals(state))
+                    owner.getLifecycle().removeObserver(this);
+            }
+        });
     }
 
     @Override
@@ -508,14 +536,14 @@ public class FragmentBase extends Fragment {
         Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         create.addCategory(Intent.CATEGORY_OPENABLE);
         create.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        create.setType(attachment.type);
+        create.setType(attachment.getMimeType());
         create.putExtra(Intent.EXTRA_TITLE, attachment.name);
         Helper.openAdvanced(context, create);
         PackageManager pm = context.getPackageManager();
-        if (create.resolveActivity(pm) == null) { // system whitelisted
-            Log.w("SAF missing");
-            ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
-        } else
+        if (create.resolveActivity(pm) == null) // system whitelisted
+            Log.unexpectedError(getParentFragmentManager(),
+                    new IllegalArgumentException(context.getString(R.string.title_no_saf)), 25);
+        else
             startActivityForResult(Helper.getChooser(context, create), REQUEST_ATTACHMENT);
     }
 
@@ -528,10 +556,10 @@ public class FragmentBase extends Fragment {
         Intent tree = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         Helper.openAdvanced(context, tree);
         PackageManager pm = context.getPackageManager();
-        if (tree.resolveActivity(pm) == null) { // system whitelisted
-            Log.w("SAF missing");
-            ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
-        } else
+        if (tree.resolveActivity(pm) == null) // system whitelisted
+            Log.unexpectedError(getParentFragmentManager(),
+                    new IllegalArgumentException(context.getString(R.string.title_no_saf)), 25);
+        else
             startActivityForResult(Helper.getChooser(context, tree), REQUEST_ATTACHMENTS);
     }
 
@@ -606,12 +634,10 @@ public class FragmentBase extends Fragment {
                         return;
                     }
 
-                if (ex instanceof IllegalArgumentException ||
+                boolean report = !(ex instanceof IllegalArgumentException ||
                         ex instanceof FileNotFoundException ||
-                        ex instanceof SecurityException)
-                    ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                        ex instanceof SecurityException);
+                Log.unexpectedError(getParentFragmentManager(), ex, report);
             }
         }.execute(this, args, "attachment:save");
     }
@@ -697,12 +723,10 @@ public class FragmentBase extends Fragment {
                         return;
                     }
 
-                if (ex instanceof IllegalArgumentException ||
+                boolean report = !(ex instanceof IllegalArgumentException ||
                         ex instanceof FileNotFoundException ||
-                        ex instanceof SecurityException)
-                    ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                        ex instanceof SecurityException);
+                Log.unexpectedError(getParentFragmentManager(), ex, report);
             }
         }.execute(this, args, "attachments:save");
     }
@@ -710,7 +734,7 @@ public class FragmentBase extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void handle(RecoverableSecurityException ex) {
         new AlertDialog.Builder(getContext())
-                .setMessage(ex.getMessage())
+                .setMessage(new ThrowableWrapper(ex).getSafeMessage())
                 .setPositiveButton(ex.getUserAction().getTitle(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

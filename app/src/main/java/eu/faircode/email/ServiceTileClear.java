@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.TargetApi;
@@ -25,6 +25,13 @@ import android.os.Build;
 @TargetApi(Build.VERSION_CODES.N)
 public class ServiceTileClear extends ServiceTileBase {
     public void onClick() {
-        startActivityAndCollapse(ActivityClear.getIntent(this));
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                startActivityAndCollapse(ActivityClear.getIntent(this));
+            else
+                startActivityAndCollapse(ActivityClear.getPendingIntent(this));
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 }

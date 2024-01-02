@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Notification;
@@ -144,6 +144,7 @@ public class ServiceExternal extends Service {
     private Notification getNotification() {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, "service")
+                        .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_DEFERRED)
                         .setSmallIcon(R.drawable.baseline_compare_arrows_white_24)
                         .setContentTitle(getString(R.string.tile_synchronize))
                         .setAutoCancel(false)
@@ -287,11 +288,7 @@ public class ServiceExternal extends Service {
         if (to == null || to.length == 0)
             throw new IllegalArgumentException("No to recipients: " + toName);
 
-        EntityFolder outbox = db.folder().getOutbox();
-        if (outbox == null) {
-            outbox = EntityFolder.getOutbox();
-            outbox.id = db.folder().insertFolder(outbox);
-        }
+        EntityFolder outbox = EntityFolder.getOutbox(context);
 
         Address[] from = new Address[]{
                 new InternetAddress(identity.get(0).email, identity.get(0).name, StandardCharsets.UTF_8.name())};

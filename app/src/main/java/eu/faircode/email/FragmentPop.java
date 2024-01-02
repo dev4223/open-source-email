@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -41,6 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -81,7 +82,8 @@ public class FragmentPop extends FragmentBase {
     private TextView tvPasswordStorage;
 
     private EditText etName;
-    private EditText etCategory;
+    private ArrayAdapter<String> adapterCategory;
+    private AutoCompleteTextView etCategory;
     private ViewButtonColor btnColor;
     private TextView tvColorPro;
 
@@ -247,6 +249,10 @@ public class FragmentPop extends FragmentBase {
             }
         });
 
+        adapterCategory = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
+        etCategory.setThreshold(1);
+        etCategory.setAdapter(adapterCategory);
+
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -346,6 +352,11 @@ public class FragmentPop extends FragmentBase {
 
         // Initialize
         Helper.setViewsEnabled(view, false);
+
+        if (!SSLHelper.customTrustManager()) {
+            Helper.hide(cbInsecure);
+            Helper.hide(tvInsecureRemark);
+        }
 
         if (id < 0)
             tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
@@ -747,7 +758,7 @@ public class FragmentPop extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else {
                     tvError.setText(Log.formatThrowable(ex, false));
@@ -787,11 +798,20 @@ public class FragmentPop extends FragmentBase {
                 long id = args.getLong("id");
 
                 DB db = DB.getInstance(context);
+
+                List<String> categories = db.account().getAccountCategories();
+                if (categories == null)
+                    categories = new ArrayList<>();
+                args.putStringArrayList("categories", new ArrayList<>(categories));
+
                 return db.account().getAccount(id);
             }
 
             @Override
             protected void onExecuted(Bundle args, final EntityAccount account) {
+                adapterCategory.clear();
+                adapterCategory.addAll(args.getStringArrayList("categories"));
+
                 if (savedInstanceState == null) {
                     JSONObject jcondition = new JSONObject();
                     try {
@@ -1048,6 +1068,11 @@ public class FragmentPop extends FragmentBase {
         flag.id = EntityMessage.SWIPE_ACTION_FLAG;
         flag.name = getString(R.string.title_flag);
         folders.add(flag);
+
+        EntityFolder importance = new EntityFolder();
+        importance.id = EntityMessage.SWIPE_ACTION_IMPORTANCE;
+        importance.name = getString(R.string.title_set_importance);
+        folders.add(importance);
 
         EntityFolder snooze = new EntityFolder();
         snooze.id = EntityMessage.SWIPE_ACTION_SNOOZE;

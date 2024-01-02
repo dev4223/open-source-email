@@ -1,6 +1,6 @@
 ## Attribution
 
-FairEmail uses:
+FairEmail uses parts or all of:
 
 * [JavaMail](https://projects.eclipse.org/projects/ee4j.javamail). Copyright (c) 1997-2018 Oracle® and/or its affiliates. All rights reserved. [GPLv2+CE license](https://javaee.github.io/javamail/JavaMail-License).
 * [jsoup](https://jsoup.org/). Copyright © 2009 - 2017 Jonathan Hedley. [MIT license](https://jsoup.org/license).
@@ -47,3 +47,10 @@ FairEmail uses:
 * [MaterialDings](https://github.com/Accusoft/MaterialDings). Copyright (c) 2018 Accusoft Corporation. [MIT License](https://github.com/Accusoft/MaterialDings/blob/master/LICENSE.md).
 * [Send](https://github.com/timvisee/send). [Mozilla Public License 2.0](https://github.com/timvisee/send/blob/master/LICENSE).
 * [DetectHtml](https://github.com/dbennett455/DetectHtml). [The MIT License](https://github.com/dbennett455/DetectHtml/blob/master/LICENSE).
+* [Liberation Sans Narrow font](https://github.com/liberationfonts/liberation-sans-narrow). Copyright (C) 1989, 1991 Free Software Foundation, Inc. [GNU General Public License version 2 with exceptions](https://fedoraproject.org/wiki/Licensing/LiberationFontLicense).
+* [Prism](https://github.com/PrismJS/prism). Copyright (c) 2012 Lea Verou. [MIT LICENSE](https://github.com/PrismJS/prism/blob/master/LICENSE).
+* [Jayway JsonPath](https://github.com/json-path/JsonPath). Copyright 2011 the original author or authors. [Apache License 2.0](https://github.com/json-path/JsonPath/blob/master/LICENSE).
+* [tinylog 2](https://github.com/tinylog-org/tinylog). Copyright 2016-2023 Martin Winandy. [Apache License 2.0](https://github.com/tinylog-org/tinylog/blob/v2.7/license.txt).
+* [Brave Lists](https://github.com/brave/adblock-lists). [Mozilla Public License Version 2.0](https://github.com/brave/adblock-lists/blob/master/LICENSE).
+* [AG Filters Registry](https://github.com/AdguardTeam/FiltersRegistry). [GNU Lesser General Public License Version 3](https://github.com/AdguardTeam/FiltersRegistry/blob/master/LICENSE).
+* [Certificate transparency for Android and JVM](https://github.com/appmattus/certificatetransparency). Copyright 2023 Appmattus Limited. [Apache License 2.0](https://github.com/appmattus/certificatetransparency/blob/main/LICENSE.md).

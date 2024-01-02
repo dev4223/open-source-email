@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ContentResolver;
@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Spanned;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -69,6 +70,16 @@ public class ActivityDSN extends ActivityBase {
         load();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void load() {
         Uri uri = getIntent().getData();
         Log.i("DSN uri=" + uri);
@@ -107,7 +118,8 @@ public class ActivityDSN extends ActivityBase {
                         bos.write(buffer, 0, length);
 
                     String headers = MessageHelper.decodeMime(bos.toString(StandardCharsets.UTF_8.name()));
-                    result.headers = HtmlHelper.highlightHeaders(context, headers, false);
+                    result.headers = HtmlHelper.highlightHeaders(context,
+                            null, null, null, headers, false);
                 }
 
                 return result;

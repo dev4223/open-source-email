@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -39,13 +39,14 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -77,6 +78,8 @@ public class FragmentDialogPrint extends FragmentDialogBase {
         View dview = LayoutInflater.from(context).inflate(R.layout.dialog_print, null);
         CheckBox cbHeader = dview.findViewById(R.id.cbHeader);
         CheckBox cbImages = dview.findViewById(R.id.cbImages);
+        CheckBox cbBlockQuotes = dview.findViewById(R.id.cbBlockQuotes);
+        CheckBox cbMargin = dview.findViewById(R.id.cbMargin);
         CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
         cbHeader.setChecked(prefs.getBoolean("print_html_header", true));
@@ -92,6 +95,22 @@ public class FragmentDialogPrint extends FragmentDialogBase {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 prefs.edit().putBoolean("print_html_images", isChecked).apply();
+            }
+        });
+
+        cbBlockQuotes.setChecked(prefs.getBoolean("print_html_block_quotes", true));
+        cbBlockQuotes.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("print_html_block_quotes", isChecked).apply();
+            }
+        });
+
+        cbMargin.setChecked(prefs.getBoolean("print_html_margins", true));
+        cbMargin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.edit().putBoolean("print_html_margins", isChecked).apply();
             }
         });
 
@@ -128,9 +147,13 @@ public class FragmentDialogPrint extends FragmentDialogBase {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         boolean print_html_header = prefs.getBoolean("print_html_header", true);
         boolean print_html_images = prefs.getBoolean("print_html_images", true);
+        boolean print_html_block_quotes = prefs.getBoolean("print_html_block_quotes", true);
+        boolean print_html_margins = prefs.getBoolean("print_html_margins", true);
 
         args.putBoolean("print_html_header", print_html_header);
         args.putBoolean("print_html_images", print_html_images);
+        args.putBoolean("print_html_block_quotes", print_html_block_quotes);
+        args.putBoolean("print_html_margins", print_html_margins);
 
         new SimpleTask<String[]>() {
             @Override
@@ -139,6 +162,8 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                 boolean headers = args.getBoolean("headers");
                 boolean print_html_header = args.getBoolean("print_html_header");
                 boolean print_html_images = args.getBoolean("print_html_images");
+                boolean print_html_block_quotes = args.getBoolean("print_html_block_quotes");
+                boolean print_html_margins = args.getBoolean("print_html_margins");
                 CharSequence selected = args.getCharSequence("selected");
                 boolean draft = args.getBoolean("draft");
 
@@ -148,6 +173,10 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                 DB db = DB.getInstance(context);
                 EntityMessage message = db.message().getMessage(id);
                 if (message == null || !message.content)
+                    return null;
+
+                EntityFolder folder = db.folder().getFolder(message.folder);
+                if (folder == null)
                     return null;
 
                 File file = message.getFile(context);
@@ -168,12 +197,28 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                 if (message.isPlainOnly() && monospaced_pre)
                     HtmlHelper.restorePre(document);
 
+                if (!print_html_block_quotes)
+                    for (Element bq : document.select("blockquote")) {
+                        String style = bq.attr("style");
+                        bq.attr("style", HtmlHelper.mergeStyles(style,
+                                "border: none !important;" +
+                                        "margin-left: 0; margin-right: 0;" +
+                                        "padding-left: 0; padding-right: 0;"));
+                    }
+
+                if (print_html_margins) {
+                    Element body = document.body();
+                    String style = body.attr("style");
+                    body.attr("style", HtmlHelper.mergeStyles(style,
+                            "margin: 1cm !important;")); // 0.4 inch
+                }
+
                 HtmlHelper.markText(document);
 
                 HtmlHelper.embedInlineImages(context, id, document, true);
 
                 // onPageFinished will not be called if not all images can be loaded
-                File dir = new File(context.getFilesDir(), "images");
+                File dir = Helper.ensureExists(context, "images");
                 List<Future<Void>> futures = new ArrayList<>();
                 Elements imgs = document.select("img");
                 for (int i = 0; i < imgs.size(); i++) {
@@ -187,7 +232,7 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                             if (out.exists() && out.length() > 0)
                                 continue;
                         } else {
-                            out.delete();
+                            Helper.secureDelete(out);
                             continue;
                         }
 
@@ -280,11 +325,13 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                     if (message.received != null && !draft) {
                         DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
+                        boolean sent = (EntityFolder.SENT.equals(folder.type) && message.sent != null);
+
                         Element span = document.createElement("span");
                         Element strong = document.createElement("strong");
-                        strong.text(context.getString(R.string.title_received));
+                        strong.text(context.getString(sent ? R.string.title_sent : R.string.title_received));
                         span.appendChild(strong);
-                        span.appendText(" " + DTF.format(message.received));
+                        span.appendText(" " + DTF.format(sent ? message.sent : message.received));
                         span.appendElement("br");
                         header.appendChild(span);
                     }
@@ -322,7 +369,8 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                     document.body().prependChild(header);
                 }
 
-                return new String[]{message.subject, document.body().html()};
+                args.putLong("received", message.received);
+                return new String[]{message.subject, document.html()};
             }
 
             @Override
@@ -335,6 +383,9 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                 final Context context = activity.getOriginalContext();
                 boolean print_html_images = args.getBoolean("print_html_images");
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean safe_browsing = prefs.getBoolean("safe_browsing", false);
+
                 // https://developer.android.com/training/printing/html-docs.html
                 printWebView = new WebView(context);
 
@@ -342,6 +393,13 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                 settings.setUserAgentString(WebViewEx.getUserAgent(context, printWebView));
                 settings.setLoadsImagesAutomatically(print_html_images);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+                if (WebViewEx.isFeatureSupported(context, WebViewFeature.SAFE_BROWSING_ENABLE))
+                    WebSettingsCompat.setSafeBrowsingEnabled(settings, safe_browsing);
+                if (WebViewEx.isFeatureSupported(context, WebViewFeature.ATTRIBUTION_REGISTRATION_BEHAVIOR))
+                    WebSettingsCompat.setAttributionRegistrationBehavior(settings, WebSettingsCompat.ATTRIBUTION_BEHAVIOR_DISABLED);
+
+                settings.setJavaScriptEnabled(false);
                 settings.setAllowFileAccess(true);
 
                 printWebView.setWebViewClient(new WebViewClient() {
@@ -360,9 +418,10 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                             }
 
                             PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
-                            String jobName = activity.getString(R.string.app_name);
+                            String jobName = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                    .format(args.getLong("received"));
                             if (!TextUtils.isEmpty(data[0]))
-                                jobName += " - " + data[0];
+                                jobName += " " + data[0];
 
                             Log.i("Print queue job=" + jobName);
                             PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
@@ -370,13 +429,32 @@ public class FragmentDialogPrint extends FragmentDialogBase {
                             EntityLog.log(context, "Print queued job=" + job.getInfo());
                         } catch (Throwable ex) {
                             try {
-                                Log.unexpectedError(fm, ex, !(ex instanceof ActivityNotFoundException));
-                            } catch (IllegalStateException exex) {
-                                ToastEx.makeText(context, Log.formatThrowable(ex), Toast.LENGTH_LONG).show();
+                                // android.content.ActivityNotFoundException: No Activity found to handle null
+                                // 	at android.app.Instrumentation.checkStartActivityResult(Instrumentation.java:2206)
+                                // 	at android.app.Activity.startIntentSenderForResultInner(Activity.java:6020)
+                                // 	at android.app.Activity.startIntentSenderForResult(Activity.java:5983)
+                                // 	at androidx.activity.ComponentActivity.startIntentSenderForResult(SourceFile:2)
+                                // 	at android.app.Activity.startIntentSenderForResult(Activity.java:5938)
+                                // 	at androidx.activity.ComponentActivity.startIntentSenderForResult(SourceFile:1)
+                                // 	at android.app.Activity.startIntentSender(Activity.java:6186)
+                                // 	at android.app.Activity.startIntentSender(Activity.java:6152)
+                                // 	at android.print.PrintManager.print(PrintManager.java:538)
+                                // 	at eu.faircode.email.FragmentDialogPrint$7$2.onPageFinished(SourceFile:127)
+                                boolean report = !(ex instanceof ActivityNotFoundException);
+                                if (ex instanceof ActivityNotFoundException)
+                                    ex = new Throwable("A system app or component required for printing is missing." +
+                                            " Is the print spooler still enabled?", ex);
+                                Log.unexpectedError(fm, ex, report);
+                            } catch (Throwable exex) {
+                                Log.e(exex);
                             }
                         } finally {
                             printWebView = null;
                         }
+                    }
+
+                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                        Log.w("Print error " + errorCode + ":" + description);
                     }
                 });
 

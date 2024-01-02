@@ -1,5 +1,25 @@
 #include <jni.h>
 #include <android/log.h>
+
+/*
+    This file is part of FairEmail.
+
+    FairEmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FairEmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+*/
+
 #include <cstdio>
 
 #include <errno.h>
@@ -12,8 +32,16 @@
 #include "compact_enc_det/compact_enc_det.h"
 #include "cld_3/src/nnet_language_identifier.h"
 
+int log_level = ANDROID_LOG_DEBUG;
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_eu_faircode_email_Log_jni_1set_1log_1level(JNIEnv *env, jclass clazz, jint level) {
+    log_level = level;
+}
+
 void log_android(int prio, const char *fmt, ...) {
-    if (prio >= ANDROID_LOG_DEBUG) {
+    if (prio >= log_level) {
         char line[1024];
         va_list argptr;
         va_start(argptr, fmt);
@@ -24,8 +52,62 @@ void log_android(int prio, const char *fmt, ...) {
 }
 
 extern "C"
-JNIEXPORT jobject JNICALL
+JNIEXPORT jstring JNICALL
+Java_eu_faircode_email_ThrowableWrapper_jni_1get_1safe_1message(
+        JNIEnv *env, jclass clazz, jthrowable ex) {
+    jclass cls = env->FindClass("java/lang/Throwable");
+    jmethodID mid = env->GetMethodID(cls, "getMessage", "()Ljava/lang/String;");
+    return (jstring) env->CallObjectMethod(ex, mid);
+}
 
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_eu_faircode_email_ThrowableWrapper_jni_1get_1safe_1stack_1trace_1string(
+        JNIEnv *env, jclass clazz, jthrowable ex) {
+    jclass cls = env->FindClass("android/util/Log");
+    jmethodID mid = env->GetStaticMethodID(cls, "getStackTraceString",
+                                           "(Ljava/lang/Throwable;)Ljava/lang/String;");
+    return (jstring) env->CallStaticObjectMethod(cls, mid, ex);
+}
+
+extern "C"
+JNIEXPORT jlongArray JNICALL
+Java_eu_faircode_email_Log_jni_1safe_1runtime_1stats(JNIEnv *env, jclass clazz) {
+    jclass clsRuntime = env->FindClass("java/lang/Runtime");
+    jmethodID mid = env->GetStaticMethodID(clsRuntime, "getRuntime", "()Ljava/lang/Runtime;");
+    jobject jruntime = env->CallStaticObjectMethod(clsRuntime, mid);
+
+    jmethodID midTotalMemory = env->GetMethodID(clsRuntime, "totalMemory", "()J");
+    jlong totalMemory = env->CallLongMethod(jruntime, midTotalMemory);
+
+    jmethodID midFreeMemory = env->GetMethodID(clsRuntime, "freeMemory", "()J");
+    jlong freeMemory = env->CallLongMethod(jruntime, midFreeMemory);
+
+    jmethodID midMaxMemory = env->GetMethodID(clsRuntime, "maxMemory", "()J");
+    jlong maxMemory = env->CallLongMethod(jruntime, midMaxMemory);
+
+    jmethodID midAvailableProcessors = env->GetMethodID(clsRuntime, "availableProcessors", "()I");
+    jlong availableProcessors = env->CallIntMethod(jruntime, midAvailableProcessors);
+
+    jclass clsDebug = env->FindClass("android/os/Debug");
+    jmethodID midGetNativeHeapAllocatedSize = env->GetStaticMethodID(clsDebug, "getNativeHeapAllocatedSize", "()J");
+    jlong getNativeHeapAllocatedSize = env->CallStaticLongMethod(clsDebug, midGetNativeHeapAllocatedSize);
+
+    jlongArray result = env->NewLongArray(5);
+    if (result == NULL)
+        return NULL; /* out of memory error thrown */
+
+    env->SetLongArrayRegion(result, 0, 1, &totalMemory);
+    env->SetLongArrayRegion(result, 1, 1, &freeMemory);
+    env->SetLongArrayRegion(result, 2, 1, &maxMemory);
+    env->SetLongArrayRegion(result, 3, 1, &availableProcessors);
+    env->SetLongArrayRegion(result, 4, 1, &getNativeHeapAllocatedSize);
+
+    return result;
+}
+
+extern "C"
+JNIEXPORT jobject JNICALL
 Java_eu_faircode_email_CharsetHelper_jni_1detect_1charset(
         JNIEnv *env, jclass type,
         jbyteArray _octets, jstring _ref, jstring _lang) {
@@ -103,7 +185,7 @@ Java_eu_faircode_email_TextHelper_jni_1detect_1language(
             jlanguage,
             (jfloat) result.probability,
             (jint) result.is_reliable,
-            (jfloat) result.is_reliable);
+            (jfloat) result.proportion);
 }
 
 extern "C"

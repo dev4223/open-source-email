@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
@@ -40,7 +40,6 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.AlignmentSpan;
 import android.text.style.BackgroundColorSpan;
@@ -59,11 +58,11 @@ import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.Patterns;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.util.PatternsCompat;
@@ -72,6 +71,7 @@ import androidx.preference.PreferenceManager;
 import com.steadystate.css.dom.CSSMediaRuleImpl;
 import com.steadystate.css.dom.CSSStyleRuleImpl;
 import com.steadystate.css.dom.MediaListImpl;
+import com.steadystate.css.dom.Property;
 import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
 import com.steadystate.css.parser.selectors.ClassConditionImpl;
@@ -124,6 +124,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Address;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeUtility;
@@ -427,7 +428,7 @@ public class HtmlHelper {
             Log.e(ex);
             Document document = Document.createShell("");
             Element strong = document.createElement("strong");
-            strong.text(android.util.Log.getStackTraceString(ex));
+            strong.text(new ThrowableWrapper(ex).getSafeStackTraceString());
             document.body().appendChild(strong);
             return document;
         }
@@ -441,7 +442,7 @@ public class HtmlHelper {
             Log.e(ex);
             Document document = Document.createShell("");
             Element strong = document.createElement("strong");
-            strong.text(android.util.Log.getStackTraceString(ex));
+            strong.text(new ThrowableWrapper(ex).getSafeStackTraceString());
             document.body().appendChild(strong);
             return document;
         }
@@ -539,7 +540,7 @@ public class HtmlHelper {
             sheets = parseStyles(parsed.head().select("style"));
 
         Safelist safelist = Safelist.relaxed()
-                .addTags("hr", "abbr", "big", "font", "dfn", "del", "s", "tt", "mark")
+                .addTags("hr", "abbr", "big", "font", "dfn", "del", "s", "tt", "mark", "address")
                 .addAttributes(":all", "class")
                 .addAttributes(":all", "style")
                 .addAttributes("span", "dir")
@@ -572,6 +573,16 @@ public class HtmlHelper {
             safelist.addAttributes(":all", "x-computed");
 
         final Document document = new Cleaner(safelist).clean(parsed);
+
+        if (BuildConfig.DEBUG)
+            for (Element e : document.select("span:matchesOwn(^UUID: " + Helper.REGEX_UUID + ")")) {
+                String t = e.text();
+                int sp = t.indexOf(' ');
+                if (sp < 0)
+                    continue;
+                String uuid = t.substring(sp + 1);
+                e.html("UUID: <a href='" + BuildConfig.BUGSNAG_URI + uuid + "'>" + uuid + "</a>");
+            }
 
         // Remove tracking pixels
         if (disable_tracking)
@@ -652,7 +663,7 @@ public class HtmlHelper {
             // Class style
             String tag = element.tagName();
             String clazz = element.className();
-            String style = processStyles(tag, clazz, null, sheets);
+            String style = processStyles(context, tag, clazz, null, sheets);
 
             // Element style
             style = mergeStyles(style, element.attr("style"));
@@ -695,9 +706,9 @@ public class HtmlHelper {
                             .trim()
                             .toLowerCase(Locale.ROOT);
                     String value = param.substring(colon + 1)
+                            .replace("!important", "")
                             .trim()
                             .toLowerCase(Locale.ROOT)
-                            .replace("!important", "")
                             .replaceAll("\\s+", " ");
                     kv.put(key, value);
                 }
@@ -1100,6 +1111,14 @@ public class HtmlHelper {
             hs.attr("x-line-after", "true");
         }
 
+        // Replace addresses by link
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/address
+        // https://en.wikipedia.org/wiki/Geo_URI_scheme
+        for (Element address : document.select("address"))
+            if (address.select("a").size() == 0)
+                address.tagName("a")
+                        .attr("href", "geo:0,0?q=" + Uri.encode(address.text()));
+
         // Paragraphs
         for (Element p : document.select("p")) {
             p.tagName("div");
@@ -1452,10 +1471,7 @@ public class HtmlHelper {
                 if (!TextUtils.isEmpty(span.attr("color")))
                     span.tagName("font");
 
-        if (document.body() == null) {
-            Log.e("Sanitize without body");
-            document.normalise();
-        }
+        document.body(); // Normalise document
 
         return document;
     }
@@ -1530,82 +1546,91 @@ public class HtmlHelper {
                     }
 
                     Matcher matcher = pattern.matcher(text);
-                    if (matcher.find()) {
-                        Element span = document.createElement("span");
+                    if (matcher.find())
+                        try {
+                            Element span = document.createElement("span");
 
-                        int pos = 0;
-                        do {
-                            boolean linked = false;
-                            Node parent = tnode.parent();
-                            while (parent != null) {
-                                if ("a".equals(parent.nodeName())) {
-                                    linked = true;
-                                    break;
+                            int pos = 0;
+                            do {
+                                boolean linked = false;
+                                Node parent = tnode.parent();
+                                while (parent != null) {
+                                    if ("a".equals(parent.nodeName())) {
+                                        linked = true;
+                                        break;
+                                    }
+                                    parent = parent.parent();
                                 }
-                                parent = parent.parent();
-                            }
 
-                            String group = matcher.group();
-                            int start = matcher.start();
-                            int end = matcher.end();
+                                String group = matcher.group();
+                                int start = matcher.start();
+                                int end = matcher.end();
+                                if (start < pos || start > end) {
+                                    Log.e("Autolink pos=" + pos +
+                                            " start=" + start + " end=" + end +
+                                            " len=" + group.length() + "/" + text.length());
+                                    return;
+                                }
 
-                            // Workarounds
-                            if (group.endsWith(".")) {
-                                end--;
-                                group = group.substring(0, group.length() - 1);
-                            }
-                            if (group.startsWith("(")) {
-                                start++;
-                                group = group.substring(1);
-                            }
-                            if (group.endsWith(")")) {
-                                end--;
-                                group = group.substring(0, group.length() - 1);
-                            }
-                            if (end < text.length() && text.charAt(end) == '$') {
-                                end++;
-                                group += '$';
-                            }
+                                // Workarounds
+                                if (group.endsWith(".")) {
+                                    end--;
+                                    group = group.substring(0, group.length() - 1);
+                                }
+                                if (group.startsWith("(")) {
+                                    start++;
+                                    group = group.substring(1);
+                                }
+                                if (group.endsWith(")")) {
+                                    end--;
+                                    group = group.substring(0, group.length() - 1);
+                                }
+                                if (end < text.length() && text.charAt(end) == '$') {
+                                    end++;
+                                    group += '$';
+                                }
 
-                            boolean email = group.contains("@") && !group.contains(":");
-                            Log.i("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
-                                    " linked=" + linked + " email=" + email + " count=" + links);
+                                boolean email = group.contains("@") && !group.contains(":");
+                                Log.i("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
+                                        " linked=" + linked + " email=" + email + " count=" + links);
 
-                            if (linked)
-                                span.appendText(text.substring(pos, end));
-                            else {
-                                span.appendText(text.substring(pos, start));
-
-                                Element a = document.createElement("a");
-                                if (BuildConfig.DEBUG && GPA_PATTERN.matcher(group).matches())
-                                    a.attr("href", BuildConfig.GPA_URI + group);
+                                if (linked)
+                                    span.appendText(text.substring(pos, end));
                                 else {
-                                    String url = (email ? "mailto:" : "") + group;
-                                    if (outbound)
-                                        try {
-                                            Uri uri = UriHelper.guessScheme(Uri.parse(url));
-                                            a.attr("href", uri.toString());
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
+                                    span.appendText(text.substring(pos, start));
+
+                                    Element a = document.createElement("a");
+                                    if (BuildConfig.DEBUG && GPA_PATTERN.matcher(group).matches())
+                                        a.attr("href", BuildConfig.GPA_URI + group);
+                                    else {
+                                        String url = (email ? "mailto:" : "") + group;
+                                        if (outbound)
+                                            try {
+                                                Uri uri = UriHelper.guessScheme(Uri.parse(url));
+                                                a.attr("href", uri.toString());
+                                            } catch (Throwable ex) {
+                                                Log.e(ex);
+                                                a.attr("href", url);
+                                            }
+                                        else
                                             a.attr("href", url);
-                                        }
-                                    else
-                                        a.attr("href", url);
+                                    }
+                                    a.text(group);
+                                    span.appendChild(a);
+
+                                    links++;
                                 }
-                                a.text(group);
-                                span.appendChild(a);
 
-                                links++;
-                            }
+                                pos = end;
+                            } while (links < MAX_AUTO_LINK && matcher.find());
 
-                            pos = end;
-                        } while (links < MAX_AUTO_LINK && matcher.find());
+                            span.appendText(text.substring(pos));
 
-                        span.appendText(text.substring(pos));
-
-                        tnode.before(span);
-                        tnode.text("");
-                    }
+                            tnode.before(span);
+                            tnode.text("");
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
                 }
             }
 
@@ -1752,17 +1777,17 @@ public class HtmlHelper {
         return sheets;
     }
 
-    static String processStyles(String tag, String clazz, String style, List<CSSStyleSheet> sheets) {
+    static String processStyles(Context context, String tag, String clazz, String style, List<CSSStyleSheet> sheets) {
         for (CSSStyleSheet sheet : sheets)
-            if (isScreenMedia(sheet.getMedia())) {
-                style = processStyles(null, clazz, style, sheet.getCssRules(), Selector.SAC_ELEMENT_NODE_SELECTOR);
-                style = processStyles(tag, clazz, style, sheet.getCssRules(), Selector.SAC_ELEMENT_NODE_SELECTOR);
-                style = processStyles(tag, clazz, style, sheet.getCssRules(), Selector.SAC_CONDITIONAL_SELECTOR);
+            if (isScreenMedia(context, sheet.getMedia())) {
+                style = processStyles(context, null, clazz, style, sheet.getCssRules(), Selector.SAC_ELEMENT_NODE_SELECTOR);
+                style = processStyles(context, tag, clazz, style, sheet.getCssRules(), Selector.SAC_ELEMENT_NODE_SELECTOR);
+                style = processStyles(context, tag, clazz, style, sheet.getCssRules(), Selector.SAC_CONDITIONAL_SELECTOR);
             }
         return style;
     }
 
-    private static String processStyles(String tag, String clazz, String style, CSSRuleList rules, int stype) {
+    private static String processStyles(Context context, String tag, String clazz, String style, CSSRuleList rules, int stype) {
         for (int i = 0; rules != null && i < rules.getLength(); i++) {
             CSSRule rule = rules.item(i);
             switch (rule.getType()) {
@@ -1781,11 +1806,18 @@ public class HtmlHelper {
                                     style = mergeStyles(style, srule.getStyle().getCssText(), false);
                                 break;
                             case Selector.SAC_CONDITIONAL_SELECTOR:
-                                ConditionalSelectorImpl cselector = (ConditionalSelectorImpl) selector;
-                                if (cselector.getCondition().getConditionType() == SAC_CLASS_CONDITION) {
-                                    ClassConditionImpl ccondition = (ClassConditionImpl) cselector.getCondition();
-                                    if (clazz.equalsIgnoreCase(ccondition.getValue()))
-                                        style = mergeStyles(style, srule.getStyle().getCssText(), false);
+                                if (!TextUtils.isEmpty(clazz)) {
+                                    ConditionalSelectorImpl cselector = (ConditionalSelectorImpl) selector;
+                                    if (cselector.getCondition().getConditionType() == SAC_CLASS_CONDITION) {
+                                        ClassConditionImpl ccondition = (ClassConditionImpl) cselector.getCondition();
+                                        String value = ccondition.getValue();
+                                        for (String cls : clazz.split("\\s+"))
+                                            if (cls.equalsIgnoreCase(value)) {
+                                                style = mergeStyles(style, srule.getStyle().getCssText(), false);
+                                                break;
+                                            }
+
+                                    }
                                 }
                                 break;
                         }
@@ -1794,25 +1826,39 @@ public class HtmlHelper {
 
                 case CSSRule.MEDIA_RULE:
                     CSSMediaRuleImpl mrule = (CSSMediaRuleImpl) rule;
-                    if (isScreenMedia(mrule.getMedia()))
-                        style = processStyles(tag, clazz, style, mrule.getCssRules(), stype);
+                    if (isScreenMedia(context, mrule.getMedia()))
+                        style = processStyles(context, tag, clazz, style, mrule.getCssRules(), stype);
                     break;
             }
         }
         return style;
     }
 
-    private static boolean isScreenMedia(MediaList media) {
+    private static boolean isScreenMedia(Context context, MediaList media) {
         // https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries
         // https://developers.google.com/gmail/design/reference/supported_css#supported_types
         if (media instanceof MediaListImpl) {
             MediaListImpl _media = (MediaListImpl) media;
             for (int i = 0; i < _media.getLength(); i++) {
-                String query = _media.mediaQuery(i).getCssText(null);
-                if ("all".equals(query) ||
-                        "screen".equals(query) || "only screen".equals(query))
-                    return true;
+                String type = _media.mediaQuery(i).getMedia();
+
+                boolean hasMaxWidth = false;
+                List<Property> props = _media.mediaQuery(i).getProperties();
+                if (props != null)
+                    for (Property prop : props) {
+                        if ("max-width".equals(prop.getName()) ||
+                                "max-device-width".equals(prop.getName())) {
+                            hasMaxWidth = true;
+                            break;
+                        }
+                    }
+                if (!hasMaxWidth)
+                    if ("all".equals(type) || "screen".equals(type) || _media.mediaQuery(i).isNot()) {
+                        Log.i("Using media=" + media.getMediaText());
+                        return true;
+                    }
             }
+            Log.i("Not using media=" + media.getMediaText());
         } else
             Log.e("Media class=" + media.getClass().getName());
         return false;
@@ -1881,9 +1927,12 @@ public class HtmlHelper {
                 baseParams.remove(key);
             }
 
-        for (String key : baseParams.keySet())
-            if (!STYLE_NO_INHERIT.contains(key) || element)
+        for (String key : baseParams.keySet()) {
+            String value = baseParams.get(key);
+            boolean important = (value != null && value.contains("!important"));
+            if (!STYLE_NO_INHERIT.contains(key) || element || important)
                 result.put(key, baseParams.get(key));
+        }
 
         return TextUtils.join(";", result.values());
     }
@@ -2357,7 +2406,7 @@ public class HtmlHelper {
                 if (attachment != null && attachment.available) {
                     File file = attachment.getFile(context);
                     if (local) {
-                        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+                        Uri uri = FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file, attachment.name);
                         img.attr("src", uri.toString());
                         Log.i("Inline image uri=" + uri);
                     } else {
@@ -2542,6 +2591,31 @@ public class HtmlHelper {
     private static String _getText(Document d) {
         truncate(d, MAX_FULL_TEXT_SIZE);
 
+        for (Element e : d.select("*")) {
+            String style = e.attr("style");
+            if (TextUtils.isEmpty(style))
+                continue;
+
+            String[] params = style.split(";");
+            for (String param : params) {
+                int colon = param.indexOf(':');
+                if (colon <= 0)
+                    continue;
+                String key = param.substring(0, colon)
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+                String value = param.substring(colon + 1)
+                        .replace("!important", "")
+                        .trim()
+                        .toLowerCase(Locale.ROOT)
+                        .replaceAll("\\s+", " ");
+                if ("display".equals(key) && "none".equals(value)) {
+                    e.remove();
+                    break;
+                }
+            }
+        }
+
         for (Element bq : d.select("blockquote"))
             bq.prependChild(new TextNode("> "));
 
@@ -2660,6 +2734,46 @@ public class HtmlHelper {
     }
 
     static void removeSignatures(Document d) {
+        // https://jsoup.org/apidocs/org/jsoup/select/Selector.html
+
+        // <div class="fairemail_signature">
+        d.body().select(".fairemail_signature").remove();
+
+        // <div data-smartmail="gmail_signature">
+        // <div data-smartmail="gmail_signature" dir="auto">
+        // <div dir="ltr" class="gmail_signature" data-smartmail="gmail_signature">
+        d.body().select("div[data-smartmail=gmail_signature]").remove();
+
+        // Outlook: <div id="Signature" data-lt-sig-active="">
+        d.body().select("div#Signature").select("[data-lt-sig-active]").remove();
+
+        // Outlook/mobile <div id="ms-outlook-mobile-signature" dir="auto">
+        d.body().select("div#ms-outlook-mobile-signature").remove();
+
+        // Yahoo/Android: <div id="ymail_android_signature">
+        d.body().select("div#ymail_android_signature").remove();
+
+        // Spark: <div name="messageSignatureSection">
+        d.body().select("div[name=messageSignatureSection]").remove();
+
+        // BlackBerry: <div id="blackberry_signature_BBPPID" name="BB10" dir="auto">
+        d.body().select("div#blackberry_signature_BBPPID").remove();
+
+        // <div class="moz-signature">
+        // <pre class="moz-signature" cols="72">
+        d.body().select("div.moz-signature").remove();
+        d.body().select("pre.moz-signature").remove();
+
+        // Apple: <br id="lineBreakAtBeginningOfSignature"> <div dir="ltr">
+        for (Element br : d.body().select("br#lineBreakAtBeginningOfSignature")) {
+            Element next = br.nextElementSibling();
+            if (next != null && "div".equals(next.tagName())) {
+                br.remove();
+                next.remove();
+            }
+        }
+
+        // Usenet style signature
         d.body().filter(new NodeFilter() {
             private boolean remove = false;
             private boolean noremove = false;
@@ -2721,6 +2835,13 @@ public class HtmlHelper {
 
         SpannableStringBuilder ssb = fromDocument(context, d, null, null);
 
+        for (UnderlineSpan span : ssb.getSpans(0, ssb.length(), UnderlineSpan.class)) {
+            int start = ssb.getSpanStart(span);
+            int end = ssb.getSpanEnd(span);
+            ssb.insert(end, "_");
+            ssb.insert(start, "_");
+        }
+
         for (StyleSpan span : ssb.getSpans(0, ssb.length(), StyleSpan.class)) {
             int start = ssb.getSpanStart(span);
             int end = ssb.getSpanEnd(span);
@@ -2731,13 +2852,6 @@ public class HtmlHelper {
                 ssb.insert(end, "*");
                 ssb.insert(start, "*");
             }
-        }
-
-        for (UnderlineSpan span : ssb.getSpans(0, ssb.length(), UnderlineSpan.class)) {
-            int start = ssb.getSpanStart(span);
-            int end = ssb.getSpanEnd(span);
-            ssb.insert(end, "_");
-            ssb.insert(start, "_");
         }
 
         for (URLSpan span : ssb.getSpans(0, ssb.length(), URLSpan.class)) {
@@ -2821,11 +2935,13 @@ public class HtmlHelper {
         return ssb.toString();
     }
 
-    static Spanned highlightHeaders(Context context, String headers, boolean blocklist) {
+    static Spanned highlightHeaders(Context context, Address[] from, Address[] to, Long time, String headers, boolean blocklist) {
         SpannableStringBuilder ssb = new SpannableStringBuilderEx(headers.replaceAll("\\t", " "));
         int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
         int colorVerified = Helper.resolveColor(context, R.attr.colorVerified);
         int colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
+        int colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
+        float stroke = context.getResources().getDisplayMetrics().density;
 
         int index = 0;
         for (String line : headers.split("\n")) {
@@ -2837,6 +2953,10 @@ public class HtmlHelper {
             index += line.length() + 1;
         }
 
+        ssb.append("\n\uFFFC"); // Object replacement character
+        ssb.setSpan(new LineSpan(colorSeparator, stroke, 0), ssb.length() - 1, ssb.length(), 0);
+        ssb.append('\n');
+
         try {
             // https://datatracker.ietf.org/doc/html/rfc2821#section-4.4
             final DateFormat DTF = Helper.getDateTimeInstance(context, DateFormat.SHORT, DateFormat.MEDIUM);
@@ -2845,8 +2965,9 @@ public class HtmlHelper {
             ByteArrayInputStream bis = new ByteArrayInputStream(headers.getBytes());
             InternetHeaders iheaders = new InternetHeaders(bis, true);
 
-            String dh = iheaders.getHeader("Date", null);
             Date tx = null;
+
+            String dh = iheaders.getHeader("Date", null);
             try {
                 if (dh != null)
                     tx = mdf.parse(dh);
@@ -2854,6 +2975,26 @@ public class HtmlHelper {
                 Log.w(ex);
             }
 
+            if (tx != null) {
+                ssb.append('\n');
+                int s = ssb.length();
+                ssb.append(DTF.format(tx));
+                ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+            }
+
+            if (from != null) {
+                ssb.append('\n');
+                int s = ssb.length();
+                ssb.append("from");
+                ssb.setSpan(new ForegroundColorSpan(textColorLink), s, ssb.length(), 0);
+                ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+                ssb.append(' ').append(MessageHelper.formatAddresses(from, true, false));
+            }
+
+            if (tx != null || from != null)
+                ssb.append('\n');
+
+            Date rx = null;
             String[] received = iheaders.getHeader("Received");
             if (received != null && received.length > 0) {
                 for (int i = received.length - 1; i >= 0; i--) {
@@ -2861,7 +3002,6 @@ public class HtmlHelper {
                     String h = MimeUtility.unfold(received[i]);
 
                     int semi = h.lastIndexOf(';');
-                    Date rx = null;
                     if (semi > 0) {
                         rx = mdf.parse(h, new ParsePosition(semi + 1));
                         h = h.substring(0, semi);
@@ -2871,10 +3011,9 @@ public class HtmlHelper {
                     ssb.append('#').append(Integer.toString(received.length - i));
                     if (rx != null) {
                         ssb.append(' ').append(DTF.format(rx));
-                        if (tx != null) {
-                            long ms = rx.getTime() - tx.getTime();
-                            ssb.append(" \u0394").append(DateUtils.formatElapsedTime(ms / 1000));
-                        }
+                        if (tx != null)
+                            ssb.append(" \u0394")
+                                    .append(Helper.formatDuration(rx.getTime() - tx.getTime()));
                     }
                     ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
 
@@ -2914,8 +3053,10 @@ public class HtmlHelper {
 
                         s = ssb.length();
                         ssb.append(w[j]);
-                        if (!p && MessageHelper.RECEIVED_WORDS.contains(w[j].toLowerCase(Locale.ROOT)))
+                        if (!p && MessageHelper.RECEIVED_WORDS.contains(w[j].toLowerCase(Locale.ROOT))) {
                             ssb.setSpan(new ForegroundColorSpan(textColorLink), s, ssb.length(), 0);
+                            ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+                        }
 
                         if (w[j].endsWith(")"))
                             p = false;
@@ -2933,9 +3074,35 @@ public class HtmlHelper {
                     ssb.append("\n");
                 }
             }
+
+            if (time != null) {
+                ssb.append('\n');
+                int s = ssb.length();
+                ssb.append(DTF.format(time));
+                if (rx != null)
+                    ssb.append(" \u0394")
+                            .append(Helper.formatDuration(time - rx.getTime()));
+                ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+            }
+
+            if (to != null) {
+                ssb.append('\n');
+                int s = ssb.length();
+                ssb.append("to");
+                ssb.setSpan(new ForegroundColorSpan(textColorLink), s, ssb.length(), 0);
+                ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+                ssb.append(' ').append(MessageHelper.formatAddresses(to, true, false));
+            }
+
+            if (time != null || to != null)
+                ssb.append('\n');
         } catch (Throwable ex) {
             Log.w(ex);
         }
+
+        ssb.append("\n\uFFFC"); // Object replacement character
+        ssb.setSpan(new LineSpan(colorSeparator, stroke, 0), ssb.length() - 1, ssb.length(), 0);
+        ssb.append('\n');
 
         return ssb;
     }
@@ -2957,7 +3124,8 @@ public class HtmlHelper {
             sb.insert(0, ".*?\\b(");
             sb.append(")\\b.*?");
 
-            Pattern p = Pattern.compile(sb.toString(), Pattern.DOTALL);
+            // TODO: match für for fur
+            Pattern p = Pattern.compile(sb.toString(), Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
             NodeTraversor.traverse(new NodeVisitor() {
                 @Override
@@ -2965,9 +3133,7 @@ public class HtmlHelper {
                     if (node instanceof TextNode)
                         try {
                             TextNode tnode = (TextNode) node;
-                            String whole = tnode.getWholeText();
-                            String text = Fts4DbHelper.preprocessText(whole);
-                            String ref = (whole.length() == text.length() ? whole : text);
+                            String text = tnode.getWholeText();
 
                             Matcher result = p.matcher(text);
 
@@ -2977,7 +3143,7 @@ public class HtmlHelper {
                                 int start = result.start(1);
                                 int end = result.end(1);
 
-                                holder.appendText(ref.substring(prev, start));
+                                holder.appendText(text.substring(prev, start));
 
                                 Element span = document.createElement("span");
                                 span.attr("style", mergeStyles(
@@ -2985,7 +3151,7 @@ public class HtmlHelper {
                                         "font-size:larger !important;" +
                                                 "font-weight:bold !important;" +
                                                 "background-color:" + encodeWebColor(color) + " !important"));
-                                span.text(ref.substring(start, end));
+                                span.text(text.substring(start, end));
                                 holder.appendChild(span);
 
                                 prev = end;
@@ -2995,7 +3161,7 @@ public class HtmlHelper {
                                 return;
 
                             if (prev < text.length())
-                                holder.appendText(ref.substring(prev));
+                                holder.appendText(text.substring(prev));
 
                             tnode.before(holder);
                             tnode.text("");
@@ -3025,15 +3191,17 @@ public class HtmlHelper {
     static void cleanup(Document d) {
         // https://www.chromestatus.com/feature/5756335865987072
         // Some messages contain 100 thousands of Apple spaces
-        for (Element aspace : d.select(".Apple-converted-space")) {
-            Node next = aspace.nextSibling();
-            if (next instanceof TextNode) {
-                TextNode tnode = (TextNode) next;
-                tnode.text(" " + tnode.text());
-                aspace.remove();
-            } else
-                aspace.replaceWith(new TextNode(" "));
-        }
+        if (false)
+            for (Element aspace : d.select(".Apple-converted-space")) {
+                Node next = aspace.nextSibling();
+                if (next instanceof TextNode) {
+                    TextNode tnode = (TextNode) next;
+                    tnode.text(" " + tnode.text());
+                    aspace.remove();
+                } else
+                    aspace.replaceWith(new TextNode(" "));
+                Log.i("Replaced Apple-converted-space");
+            }
     }
 
     static void quoteLimit(Document d, int maxLevel) {
@@ -3693,15 +3861,6 @@ public class HtmlHelper {
                             setSpan(ssb, StyleHelper.getTypefaceSpan("Cousine", context), start, ssb.length());
                     } catch (Throwable ex) {
                         Log.e(ex);
-                        if (BuildConfig.DEBUG || debug) {
-                            int s = ssb.length();
-                            ssb.append(ex.toString()).append('\n')
-                                    .append(android.util.Log.getStackTraceString(ex)).append('\n');
-                            setSpan(ssb, StyleHelper.getTypefaceSpan("Cousine", context), s, ssb.length());
-                            setSpan(ssb, new RelativeSizeSpan(HtmlHelper.FONT_SMALL), s, ssb.length());
-                            int colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
-                            setSpan(ssb, new ForegroundColorSpan(colorWarning), s, ssb.length());
-                        }
                     }
 
                     if ("true".equals(element.attr("x-block")))
@@ -3858,6 +4017,12 @@ public class HtmlHelper {
                 .removeAttr("x-list-level")
                 .removeAttr("x-plain")
                 .remove("x-keep-line");
+    }
+
+    static void clearComposingText(TextView view) {
+        if (view == null)
+            return;
+        view.clearComposingText();
     }
 
     static Spanned fromHtml(@NonNull String html, Context context) {

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -28,6 +28,7 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
@@ -38,6 +39,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.TextViewCompat;
 import androidx.preference.PreferenceManager;
 
 import java.text.Collator;
@@ -120,9 +122,9 @@ public class FragmentMoveAsk extends FragmentDialogBase {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (sourceColor != null)
-                tvSourceFolders.setCompoundDrawableTintList(ColorStateList.valueOf(sourceColor));
+                TextViewCompat.setCompoundDrawableTintList(tvSourceFolders, ColorStateList.valueOf(sourceColor));
             if (targetColor != null)
-                tvTargetFolders.setCompoundDrawableTintList(ColorStateList.valueOf(targetColor));
+                TextViewCompat.setCompoundDrawableTintList(tvTargetFolders, ColorStateList.valueOf(targetColor));
         }
 
         if (notagain != null)
@@ -141,6 +143,7 @@ public class FragmentMoveAsk extends FragmentDialogBase {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        Helper.performHapticFeedback(dview, HapticFeedbackConstants.CONFIRM);
                         sendResult(Activity.RESULT_OK);
                     }
                 })

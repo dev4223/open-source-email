@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -62,6 +62,7 @@ public class FragmentDialogContactGroup extends FragmentDialogBase {
         final Spinner spGroup = dview.findViewById(R.id.spGroup);
         final Spinner spTarget = dview.findViewById(R.id.spTarget);
         final Spinner spType = dview.findViewById(R.id.spType);
+        final TextView tvNoPermission = dview.findViewById(R.id.tvNoPermission);
 
         ibInfo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,6 +70,9 @@ public class FragmentDialogContactGroup extends FragmentDialogBase {
                 Helper.view(v.getContext(), Uri.parse(Helper.URI_SUPPORT_CONTACT_GROUP), true);
             }
         });
+
+        spTarget.setSelection(focussed);
+        tvNoPermission.setVisibility(View.GONE);
 
         new SimpleTask<Cursor>() {
             @Override
@@ -81,8 +85,11 @@ public class FragmentDialogContactGroup extends FragmentDialogBase {
                         ContactsContract.Groups.ACCOUNT_TYPE,
                 };
 
+                boolean permission = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
+                args.putBoolean("permission", permission);
+
                 Cursor contacts = new MatrixCursor(projection);
-                if (Helper.hasPermission(context, Manifest.permission.READ_CONTACTS))
+                if (permission)
                     try {
                         ContentResolver resolver = context.getContentResolver();
                         contacts = resolver.query(
@@ -140,6 +147,9 @@ public class FragmentDialogContactGroup extends FragmentDialogBase {
                 });
 
                 spGroup.setAdapter(adapter);
+
+                boolean permission = args.getBoolean("permission");
+                tvNoPermission.setVisibility(permission ? View.GONE : View.VISIBLE);
             }
 
             @Override
@@ -147,8 +157,6 @@ public class FragmentDialogContactGroup extends FragmentDialogBase {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, new Bundle(), "compose:groups");
-
-        spTarget.setSelection(focussed);
 
         return new AlertDialog.Builder(context)
                 .setView(dview)

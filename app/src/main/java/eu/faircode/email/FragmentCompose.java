@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_FIRST_USER;
@@ -73,7 +73,6 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.ArrowKeyMovementMethod;
-import android.text.style.BackgroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
@@ -81,6 +80,7 @@ import android.text.style.URLSpan;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -117,7 +117,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
+import androidx.core.graphics.ColorUtils;
 import androidx.core.view.MenuCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
@@ -200,6 +200,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
@@ -221,7 +224,6 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 import javax.mail.util.ByteArrayDataSource;
 
-import biweekly.Biweekly;
 import biweekly.ICalendar;
 import biweekly.component.VEvent;
 import biweekly.property.Organizer;
@@ -292,8 +294,10 @@ public class FragmentCompose extends FragmentBase {
     private int zoom = 0;
     private boolean nav_color;
     private boolean lt_enabled;
+    private boolean lt_sentence;
     private boolean lt_auto;
 
+    private Long account = null;
     private long working = -1;
     private State state = State.NONE;
     private boolean show_images = false;
@@ -317,8 +321,10 @@ public class FragmentCompose extends FragmentBase {
     static final int REDUCED_IMAGE_SIZE = 1440; // pixels
     private static final int REDUCED_IMAGE_QUALITY = 90; // percent
     // http://regex.info/blog/lightroom-goodies/jpeg-quality
+    private static final int COPY_ATTACHMENT_TIMEOUT = 60; // seconds
 
     private static final int MAX_QUOTE_LEVEL = 5;
+    private static final int MAX_REASONABLE_SIZE = 5 * 1024 * 1024;
 
     private static final int REQUEST_CONTACT_TO = 1;
     private static final int REQUEST_CONTACT_CC = 2;
@@ -359,6 +365,7 @@ public class FragmentCompose extends FragmentBase {
         nav_color = prefs.getBoolean("send_nav_color", false);
 
         lt_enabled = LanguageTool.isEnabled(context);
+        lt_sentence = LanguageTool.isSentence(context);
         lt_auto = LanguageTool.isAuto(context);
 
         if (compose_color != Color.TRANSPARENT && Helper.isDarkTheme(context))
@@ -438,6 +445,7 @@ public class FragmentCompose extends FragmentBase {
         final boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
         final boolean suggest_received = prefs.getBoolean("suggest_received", false);
         final boolean suggest_frequently = prefs.getBoolean("suggest_frequently", false);
+        final boolean suggest_account = prefs.getBoolean("suggest_account", false);
         final boolean cc_bcc = prefs.getBoolean("cc_bcc", false);
         final boolean circular = prefs.getBoolean("circular", true);
 
@@ -670,7 +678,7 @@ public class FragmentCompose extends FragmentBase {
         etBody.addTextChangedListener(StyleHelper.getTextWatcher(etBody));
 
         etBody.addTextChangedListener(new TextWatcher() {
-            private boolean save = false;
+            private Integer save = null;
             private Integer added = null;
             private boolean inserted = false;
             private Pair<Integer, Integer> lt = null;
@@ -692,10 +700,11 @@ public class FragmentCompose extends FragmentBase {
                     char c = text.charAt(index);
                     char b = text.charAt(index - 1);
 
-                    save = (auto_save_paragraph && c == '\n' && b != '\n') ||
-                            (auto_save_dot && Helper.isEndChar(c) && !Helper.isEndChar(b));
-                    if (save)
+                    if ((auto_save_paragraph && c == '\n' && b != '\n') ||
+                            (auto_save_dot && Helper.isEndChar(c) && !Helper.isEndChar(b))) {
                         Log.i("Save=" + index);
+                        save = index;
+                    }
 
                     if (c == '\n') {
                         Log.i("Added=" + index);
@@ -734,15 +743,32 @@ public class FragmentCompose extends FragmentBase {
                         added = null;
                     }
 
-                if (save)
+                if (save != null)
                     try {
+                        if (lt == null && lt_sentence &&
+                                Helper.isSentenceChar(text.charAt(save))) {
+                            int start = save;
+                            while (start > 0 &&
+                                    text.charAt(start - 1) != '\n' &&
+                                    !(Character.isWhitespace(text.charAt(start)) &&
+                                            Helper.isSentenceChar(text.charAt(start - 1))))
+                                start--;
+                            while (start < save)
+                                if (Character.isWhitespace(text.charAt(start)))
+                                    start++;
+                                else
+                                    break;
+                            if (start < save)
+                                lt = new Pair<>(start, save + 1);
+                        }
+
                         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                             Bundle extras = new Bundle();
                             extras.putBoolean("silent", true);
                             onAction(R.id.action_save, extras, "paragraph");
                         }
                     } finally {
-                        save = false;
+                        save = null;
                     }
 
                 if (lt != null)
@@ -833,15 +859,46 @@ public class FragmentCompose extends FragmentBase {
         ibWriteAboveBelow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(v.getContext());
-                boolean write_below = !prefs.getBoolean("write_below", false);
-                prefs.edit().putBoolean("write_below", write_below).apply();
-                ibWriteAboveBelow.setImageLevel(write_below ? 1 : 0);
-                ToastEx.makeText(v.getContext(),
-                        write_below
-                                ? R.string.title_advanced_write_below
-                                : R.string.title_advanced_write_above,
-                        Toast.LENGTH_LONG).show();
+                Bundle args = new Bundle();
+                args.putLong("id", working);
+
+                new SimpleTask<Boolean>() {
+                    @Override
+                    protected Boolean onExecute(Context context, Bundle args) throws Throwable {
+                        long id = args.getLong("id");
+
+                        DB db = DB.getInstance(context);
+                        EntityMessage draft = db.message().getMessage(id);
+                        if (draft == null)
+                            return null;
+
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                        boolean write_below = prefs.getBoolean("write_below", false);
+                        boolean wb = (draft == null || draft.write_below == null ? write_below : draft.write_below);
+
+                        wb = !wb;
+                        db.message().setMessageWriteBelow(id, wb);
+
+                        return wb;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, Boolean wb) {
+                        if (wb == null)
+                            return;
+
+                        ibWriteAboveBelow.setImageLevel(wb ? 1 : 0);
+                        ToastEx.makeText(v.getContext(), wb
+                                        ? R.string.title_advanced_write_below
+                                        : R.string.title_advanced_write_above,
+                                Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(getParentFragmentManager(), ex);
+                    }
+                }.execute(FragmentCompose.this, args, "compose:below");
             }
         });
 
@@ -1141,7 +1198,7 @@ public class FragmentCompose extends FragmentBase {
                     return MessageHelper.formatAddressesCompose(new Address[]{address});
                 } catch (Throwable ex) {
                     Log.e(ex);
-                    return ex.toString();
+                    return new ThrowableWrapper(ex).toSafeString();
                 }
             }
         });
@@ -1211,9 +1268,11 @@ public class FragmentCompose extends FragmentBase {
 
                     List<EntityContact> items = new ArrayList<>();
                     if (suggest_sent)
-                        items.addAll(db.contact().searchContacts(null, EntityContact.TYPE_TO, wildcard));
+                        items.addAll(db.contact().searchContacts(
+                                suggest_account ? FragmentCompose.this.account : null, EntityContact.TYPE_TO, wildcard));
                     if (suggest_received)
-                        for (EntityContact item : db.contact().searchContacts(null, EntityContact.TYPE_FROM, wildcard))
+                        for (EntityContact item : db.contact().searchContacts(
+                                suggest_account ? FragmentCompose.this.account : null, EntityContact.TYPE_FROM, wildcard))
                             if (!MessageHelper.isNoReply(item.email))
                                 items.add(item);
                     for (EntityContact item : items) {
@@ -1471,6 +1530,8 @@ public class FragmentCompose extends FragmentBase {
 
                 db.message().setMessageUiEncrypt(draft.id, draft.ui_encrypt);
 
+                db.message().setMessageSensitivity(draft.id, identity.sensitivity < 1 ? null : identity.sensitivity);
+
                 return draft.ui_encrypt;
             }
 
@@ -1515,7 +1576,7 @@ public class FragmentCompose extends FragmentBase {
             }
 
             private void convertRef(boolean plain) {
-                etBody.clearComposingText();
+                HtmlHelper.clearComposingText(etBody);
 
                 Bundle args = new Bundle();
                 args.putLong("id", working);
@@ -1599,11 +1660,12 @@ public class FragmentCompose extends FragmentBase {
             }
 
             private void deleteRef() {
-                etBody.clearComposingText();
+                HtmlHelper.clearComposingText(etBody);
 
                 Bundle extras = new Bundle();
                 extras.putString("html", HtmlHelper.toHtml(etBody.getText(), getContext()));
                 extras.putBoolean("show", true);
+                extras.putBoolean("refdelete", true);
                 onAction(R.id.action_save, extras, "refdelete");
             }
         });
@@ -1869,6 +1931,7 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_media).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_compact).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_contact_group).setEnabled(state == State.LOADED);
+        menu.findItem(R.id.menu_manage_android_contacts).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_manage_local_contacts).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_answer_insert).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_answer_create).setEnabled(state == State.LOADED);
@@ -1981,7 +2044,10 @@ public class FragmentCompose extends FragmentBase {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_encrypt) {
+        if (itemId == android.R.id.home) {
+            onExit();
+            return true;
+        } else if (itemId == R.id.menu_encrypt) {
             onMenuEncrypt();
             return true;
         } else if (itemId == R.id.menu_translate) {
@@ -2013,6 +2079,9 @@ public class FragmentCompose extends FragmentBase {
             return true;
         } else if (itemId == R.id.menu_contact_group) {
             onMenuContactGroup();
+            return true;
+        } else if (itemId == R.id.menu_manage_android_contacts) {
+            onMenuManageAndroidContacts();
             return true;
         } else if (itemId == R.id.menu_manage_local_contacts) {
             onMenuManageLocalContacts();
@@ -2174,7 +2243,8 @@ public class FragmentCompose extends FragmentBase {
     private void setZoom() {
         final Context context = getContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        int message_zoom = prefs.getInt("message_zoom", 100);
+        boolean editor_zoom = prefs.getBoolean("editor_zoom", true);
+        int message_zoom = (editor_zoom ? prefs.getInt("message_zoom", 100) : 100);
         float textSize = Helper.getTextSize(context, zoom);
         if (textSize != 0) {
             etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * message_zoom / 100f);
@@ -2265,6 +2335,11 @@ public class FragmentCompose extends FragmentBase {
 
     private void onMenuContactGroup() {
         onMenuContactGroup(view.findFocus());
+    }
+
+    private void onMenuManageAndroidContacts() {
+        Intent intent = new Intent(Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_URI);
+        startActivity(intent);
     }
 
     private void onMenuManageLocalContacts() {
@@ -2434,7 +2509,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuAnswerCreate() {
-        etBody.clearComposingText();
+        HtmlHelper.clearComposingText(etBody);
 
         Bundle args = new Bundle();
         args.putString("subject", etSubject.getText().toString());
@@ -2448,8 +2523,11 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuIdentitySelect() {
+        Bundle args = new Bundle();
+        args.putBoolean("add", true);
+
         FragmentDialogSelectIdentity fragment = new FragmentDialogSelectIdentity();
-        fragment.setArguments(new Bundle());
+        fragment.setArguments(args);
         fragment.setTargetFragment(this, REQUEST_SELECT_IDENTITY);
         fragment.show(getParentFragmentManager(), "select:identity");
     }
@@ -2584,14 +2662,6 @@ public class FragmentCompose extends FragmentBase {
                 OpenAI.Message[] completions =
                         OpenAI.completeChat(context, model, result.toArray(new OpenAI.Message[0]), temperature, 1);
 
-                try {
-                    Pair<Double, Double> usage = OpenAI.getGrants(context);
-                    args.putDouble("used", usage.first);
-                    args.putDouble("granted", usage.second);
-                } catch (Throwable ex) {
-                    Log.w(ex);
-                }
-
                 return completions;
             }
 
@@ -2651,7 +2721,8 @@ public class FragmentCompose extends FragmentBase {
         boolean canTranslate;
         if (subjectHasFocus) {
             CharSequence text = etSubject.getText();
-            canTranslate = (text != null && !TextUtils.isEmpty(text.toString().trim()));
+            canTranslate = (DeepL.canTranslate(context) &&
+                    text != null && !TextUtils.isEmpty(text.toString().trim()));
         } else {
             int s = etBody.getSelectionStart();
             Editable edit = etBody.getText();
@@ -2662,7 +2733,8 @@ public class FragmentCompose extends FragmentBase {
                 etBody.setSelection(s - 1, s - 1);
 
             Pair<Integer, Integer> paragraph = StyleHelper.getParagraph(etBody);
-            canTranslate = (DeepL.canTranslate(context) && paragraph != null);
+            canTranslate = (DeepL.canTranslate(context) &&
+                    paragraph != null);
         }
 
         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), anchor);
@@ -2679,7 +2751,6 @@ public class FragmentCompose extends FragmentBase {
                 ssb.append(" (").append(NF.format(lang.frequency)).append(")");
                 ssb.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL),
                         start, ssb.length(), 0);
-
             }
 
             MenuItem item = popupMenu.getMenu()
@@ -2726,6 +2797,8 @@ public class FragmentCompose extends FragmentBase {
 
                         @Override
                         protected void onExecuted(Bundle args, DeepL.Translation translation) {
+                            if (etSubject == null)
+                                return;
                             etSubject.setText(translation.translated_text);
                         }
 
@@ -2733,13 +2806,13 @@ public class FragmentCompose extends FragmentBase {
                         protected void onException(Bundle args, Throwable ex) {
                             Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
                         }
-                    }.serial().execute(FragmentCompose.this, args, "compose:translate");
+                    }.execute(FragmentCompose.this, args, "compose:translate");
                 } else {
                     final Pair<Integer, Integer> paragraph = StyleHelper.getParagraph(etBody);
                     if (paragraph == null)
                         return;
 
-                    etBody.clearComposingText();
+                    HtmlHelper.clearComposingText(etBody);
 
                     Editable edit = etBody.getText();
                     CharSequence text = edit.subSequence(paragraph.first, paragraph.second);
@@ -2749,15 +2822,19 @@ public class FragmentCompose extends FragmentBase {
                     args.putCharSequence("text", text);
 
                     new SimpleTask<DeepL.Translation>() {
-                        private Object highlightSpan;
+                        private HighlightSpan highlightSpan;
                         private Toast toast = null;
 
                         @Override
                         protected void onPreExecute(Bundle args) {
-                            int textColorHighlight = Helper.resolveColor(getContext(), android.R.attr.textColorHighlight);
-                            highlightSpan = new BackgroundColorSpan(textColorHighlight);
-                            etBody.getText().setSpan(highlightSpan, paragraph.first, paragraph.second,
-                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            boolean deepl_highlight = prefs.getBoolean("deepl_highlight", true);
+                            if (deepl_highlight) {
+                                int textColorHighlight = Helper.resolveColor(getContext(), android.R.attr.textColorHighlight);
+                                highlightSpan = new HighlightSpan(textColorHighlight);
+                                etBody.getText().setSpan(highlightSpan, paragraph.first, paragraph.second,
+                                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
+                            }
                             toast = ToastEx.makeText(context, R.string.title_translating, Toast.LENGTH_SHORT);
                             toast.show();
                         }
@@ -2856,7 +2933,7 @@ public class FragmentCompose extends FragmentBase {
                             etBody.setSelection(paragraph.second);
                             Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
                         }
-                    }.serial().execute(FragmentCompose.this, args, "compose:translate");
+                    }.execute(FragmentCompose.this, args, "compose:translate");
                 }
             }
         });
@@ -2865,7 +2942,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onLanguageTool(int start, int end, boolean silent) {
-        etBody.clearComposingText();
+        HtmlHelper.clearComposingText(etBody);
 
         Log.i("LT running enabled=" + etBody.isSuggestionsEnabled());
 
@@ -2874,14 +2951,16 @@ public class FragmentCompose extends FragmentBase {
 
         new SimpleTask<List<LanguageTool.Suggestion>>() {
             private Toast toast = null;
-            private BackgroundColorSpan highlightSpan = null;
+            private HighlightSpan highlightSpan = null;
 
             @Override
             protected void onPreExecute(Bundle args) {
                 if (silent) {
-                    if (!BuildConfig.PLAY_STORE_RELEASE) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    boolean lt_highlight = prefs.getBoolean("lt_highlight", !BuildConfig.PLAY_STORE_RELEASE);
+                    if (lt_highlight) {
                         int textColorHighlight = Helper.resolveColor(getContext(), android.R.attr.textColorHighlight);
-                        highlightSpan = new BackgroundColorSpan(textColorHighlight);
+                        highlightSpan = new HighlightSpan(textColorHighlight);
                         etBody.getText().setSpan(highlightSpan, start, end,
                                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
                     }
@@ -2931,10 +3010,10 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (!silent) {
                     Throwable exex = new Throwable("LanguageTool", ex);
-                    Log.unexpectedError(getParentFragmentManager(), exex, false);
+                    Log.unexpectedError(getParentFragmentManager(), exex, !(ex instanceof IOException));
                 }
             }
-        }.serial().execute(this, args, "compose:lt");
+        }.execute(this, args, "compose:lt");
     }
 
     private void onActionRecordAudio() {
@@ -3145,7 +3224,7 @@ public class FragmentCompose extends FragmentBase {
                 onPgp(intent);
             } catch (Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else {
                     Log.e(ex);
@@ -3484,10 +3563,10 @@ public class FragmentCompose extends FragmentBase {
                 });
                 snackbar.show();
             } else {
-                File dir = Helper.ensureExists(new File(context.getFilesDir(), "photo"));
+                File dir = Helper.ensureExists(context, "photo");
                 File file = new File(dir, working + "_" + new Date().getTime() + ".jpg");
                 try {
-                    photoURI = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+                    photoURI = FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(intent, REQUEST_TAKE_PHOTO);
                 } catch (Throwable ex) {
@@ -3515,7 +3594,7 @@ public class FragmentCompose extends FragmentBase {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.setType("image/*");
+            intent.setType("*/*");
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             if (intent.resolveActivity(pm) == null) // GET_CONTENT whitelisted
                 noStorageAccessFramework();
@@ -3534,7 +3613,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onAddAttachment(List<Uri> uris, String[] types, boolean image, int resize, boolean privacy, boolean focus) {
-        etBody.clearComposingText();
+        HtmlHelper.clearComposingText(etBody);
 
         Bundle args = new Bundle();
         args.putLong("id", working);
@@ -3574,7 +3653,7 @@ public class FragmentCompose extends FragmentBase {
                     EntityAttachment attachment = addAttachment(context, id, uri, type, image, resize, privacy);
                     if (attachment == null)
                         continue;
-                    if (!image)
+                    if (!image || !attachment.isImage())
                         continue;
 
                     File file = attachment.getFile(context);
@@ -3615,18 +3694,20 @@ public class FragmentCompose extends FragmentBase {
 
                 String html = HtmlHelper.toHtml(s, context);
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean write_below = prefs.getBoolean("write_below", false);
-
                 EntityMessage draft = db.message().getMessage(id);
                 if (draft != null) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean write_below = prefs.getBoolean("write_below", false);
+
+                    boolean wb = (draft == null || draft.write_below == null ? write_below : draft.write_below);
+
                     File file = draft.getFile(context);
                     Elements ref = JsoupEx.parse(file).select("div[fairemail=reference]");
 
                     Document doc = JsoupEx.parse(html);
 
                     for (Element e : ref)
-                        if (write_below && draft.wasforwardedfrom == null)
+                        if (wb && draft.wasforwardedfrom == null)
                             doc.body().prependChild(e);
                         else
                             doc.body().appendChild(e);
@@ -3794,7 +3875,7 @@ public class FragmentCompose extends FragmentBase {
                     throw new IllegalArgumentException(context.getString(R.string.title_from_missing));
 
                 // Create files
-                File tmp = Helper.ensureExists(new File(context.getFilesDir(), "encryption"));
+                File tmp = Helper.ensureExists(context, "encryption");
                 File input = new File(tmp, draft.id + "_" + session + ".pgp_input");
                 File output = new File(tmp, draft.id + "_" + session + ".pgp_output");
 
@@ -4054,7 +4135,7 @@ public class FragmentCompose extends FragmentBase {
                                 return null;
                             } else if (OpenPgpApi.ACTION_ENCRYPT.equals(data.getAction()) ||
                                     OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
-                                input.delete();
+                                Helper.secureDelete(input);
 
                                 // send message
                                 args.putInt("action", largs.getInt("action"));
@@ -4068,7 +4149,7 @@ public class FragmentCompose extends FragmentBase {
                             return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                         case OpenPgpApi.RESULT_CODE_ERROR:
-                            input.delete();
+                            Helper.secureDelete(input);
                             db.identity().setIdentitySignKey(identity.id, null);
                             OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
                             if (error != null &&
@@ -4083,7 +4164,7 @@ public class FragmentCompose extends FragmentBase {
                             throw new IllegalStateException("OpenPgp unknown result code=" + resultCode);
                     }
                 } finally {
-                    output.delete();
+                    Helper.secureDelete(output);
                 }
             }
 
@@ -4122,7 +4203,7 @@ public class FragmentCompose extends FragmentBase {
                 if (ex instanceof IllegalArgumentException
                         || ex instanceof GeneralSecurityException /* InvalidKeyException */) {
                     Log.i(ex);
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 } else if (ex instanceof OperationCanceledException) {
                     Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_INDEFINITE)
@@ -4162,7 +4243,7 @@ public class FragmentCompose extends FragmentBase {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean check_certificate = prefs.getBoolean("check_certificate", true);
 
-                File tmp = Helper.ensureExists(new File(context.getFilesDir(), "encryption"));
+                File tmp = Helper.ensureExists(context, "encryption");
 
                 DB db = DB.getInstance(context);
 
@@ -4314,7 +4395,7 @@ public class FragmentCompose extends FragmentBase {
                 CMSSignedData cmsSignedData = cmsGenerator.generate(cmsData);
                 byte[] signedMessage = cmsSignedData.getEncoded();
 
-                sinput.delete();
+                Helper.secureDelete(sinput);
 
                 // Build signature
                 if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
@@ -4466,7 +4547,7 @@ public class FragmentCompose extends FragmentBase {
                     cmsEnvelopedData.toASN1Structure().encodeTo(os);
                 }
 
-                einput.delete();
+                Helper.secureDelete(einput);
 
                 db.attachment().setDownloaded(attachment.id, encrypted.length());
 
@@ -4483,7 +4564,7 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE)
+                    Snackbar snackbar = Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_INDEFINITE)
                             .setGestureInsetBottomIgnored(true);
                     Helper.setSnackbarLines(snackbar, 7);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
@@ -4754,6 +4835,15 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onSelectIdentity(Bundle args) {
+        long id = args.getLong("id");
+        if (id < 0) {
+            getContext().startActivity(new Intent(getContext(), ActivitySetup.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    .putExtra("manual", true)
+                    .putExtra("scroll", true));
+            return;
+        }
+
         new SimpleTask<EntityIdentity>() {
             @Override
             protected EntityIdentity onExecute(Context context, Bundle args) throws Throwable {
@@ -4877,7 +4967,7 @@ public class FragmentCompose extends FragmentBase {
             }
 
         // Workaround underlines left by Android
-        etBody.clearComposingText();
+        HtmlHelper.clearComposingText(etBody);
 
         Editable e = etBody.getText();
         boolean notext = e.toString().trim().isEmpty();
@@ -4979,8 +5069,25 @@ public class FragmentCompose extends FragmentBase {
                 if (is == null)
                     throw new FileNotFoundException(uri.toString());
 
+                final InputStream reader = is;
                 byte[] buffer = new byte[Helper.BUFFER_SIZE];
-                for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
+                Callable<Integer> readTask = new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws Exception {
+                        return reader.read(buffer);
+                    }
+                };
+
+                while (true) {
+                    Future<Integer> future = Helper.getDownloadTaskExecutor().submit(readTask);
+                    int len = future.get(COPY_ATTACHMENT_TIMEOUT, TimeUnit.SECONDS);
+                    if (len == -1)
+                        break;
+                    if (len == 0) {
+                        Thread.sleep(500L);
+                        continue;
+                    }
+
                     size += len;
                     os.write(buffer, 0, len);
 
@@ -5017,8 +5124,7 @@ public class FragmentCompose extends FragmentBase {
                 // content://eu.faircode.email/photo/nnn.jpg
                 File tmp = new File(context.getFilesDir(), uri.getPath());
                 Log.i("Deleting " + tmp);
-                if (!tmp.delete())
-                    Log.w("Error deleting " + tmp);
+                Helper.secureDelete(tmp);
             } else
                 Log.i("Authority=" + uri.getAuthority());
 
@@ -5093,90 +5199,107 @@ public class FragmentCompose extends FragmentBase {
 
     private static void resizeAttachment(Context context, EntityAttachment attachment, int resize) throws IOException {
         File file = attachment.getFile(context);
-        if (file.exists() /* upload cancelled */ &&
-                ("image/jpeg".equals(attachment.type) || "image/png".equals(attachment.type))) {
-            ExifInterface exifSaved;
-            try {
-                exifSaved = new ExifInterface(file);
-            } catch (Throwable ex) {
-                Log.w(ex);
-                exifSaved = null;
-            }
+        if (!file.exists()) // Upload cancelled;
+            return;
 
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        if (!"image/jpg".equals(attachment.type) &&
+                !"image/jpeg".equals(attachment.type) &&
+                !"image/png".equals(attachment.type) &&
+                !"image/webp".equals(attachment.type)) {
+            Log.i("Skipping resize of type=" + attachment.type);
+            return;
+        }
 
-            int factor = 1;
-            while (options.outWidth / factor > resize ||
-                    options.outHeight / factor > resize)
-                factor *= 2;
+        ExifInterface exifSaved;
+        try {
+            exifSaved = new ExifInterface(file);
+        } catch (Throwable ex) {
+            Log.w(ex);
+            exifSaved = null;
+        }
 
-            Matrix rotation = ("image/jpeg".equals(attachment.type) ? ImageHelper.getImageRotation(file) : null);
-            Log.i("Image type=" + attachment.type + " rotation=" + rotation);
-            if (factor > 1 || rotation != null) {
-                options.inJustDecodeBounds = false;
-                options.inSampleSize = factor;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.getAbsolutePath(), options);
 
-                Log.i("Image target size=" + resize + " factor=" + factor + " source=" + options.outWidth + "x" + options.outHeight);
-                Bitmap resized = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-                if (resized != null) {
-                    Log.i("Image result size=" + resized.getWidth() + "x" + resized.getHeight() + " rotation=" + rotation);
+        int factor = 1;
+        while (options.outWidth / factor > resize ||
+                options.outHeight / factor > resize)
+            factor *= 2;
 
-                    if (rotation != null) {
-                        Bitmap rotated = Bitmap.createBitmap(resized, 0, 0, resized.getWidth(), resized.getHeight(), rotation, true);
-                        resized.recycle();
-                        resized = rotated;
-                    }
+        Matrix rotation = ("image/jpeg".equals(attachment.type) ? ImageHelper.getImageRotation(file) : null);
+        Log.i("Image type=" + attachment.type + " rotation=" + rotation);
+        if (factor > 1 || rotation != null) {
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = factor;
 
-                    File tmp = new File(file.getAbsolutePath() + ".tmp");
-                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
-                        Bitmap.CompressFormat format = ("image/jpeg".equals(attachment.type)
-                                ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG);
-                        if (!resized.compress(format, REDUCED_IMAGE_QUALITY, out))
-                            throw new IOException("compress");
+            Log.i("Image target size=" + resize + " factor=" + factor + " source=" + options.outWidth + "x" + options.outHeight);
+            Bitmap resized = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            if (resized != null) {
+                Log.i("Image result size=" + resized.getWidth() + "x" + resized.getHeight() + " rotation=" + rotation);
+
+                if (rotation != null) {
+                    Bitmap rotated = Bitmap.createBitmap(resized, 0, 0, resized.getWidth(), resized.getHeight(), rotation, true);
+                    resized.recycle();
+                    resized = rotated;
+                }
+
+                Bitmap.CompressFormat format;
+                if ("image/jpg".equals(attachment.type) ||
+                        "image/jpeg".equals(attachment.type))
+                    format = Bitmap.CompressFormat.JPEG;
+                else if ("image/png".equals(attachment.type))
+                    format = Bitmap.CompressFormat.PNG;
+                else if ("image/webp".equals(attachment.type))
+                    format = Bitmap.CompressFormat.WEBP;
+                else
+                    throw new IllegalArgumentException("Invalid format type=" + attachment.type);
+
+                File tmp = new File(file.getAbsolutePath() + ".tmp");
+                try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
+                    if (!resized.compress(format, REDUCED_IMAGE_QUALITY, out))
+                        throw new IOException("compress");
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                    Helper.secureDelete(tmp);
+                } finally {
+                    resized.recycle();
+                }
+
+                if (tmp.exists() && tmp.length() > 0) {
+                    Helper.secureDelete(file);
+                    tmp.renameTo(file);
+                }
+
+                DB db = DB.getInstance(context);
+                db.attachment().setDownloaded(attachment.id, file.length());
+
+                if (exifSaved != null)
+                    try {
+                        ExifInterface exif = new ExifInterface(file);
+
+                        // Preserve time
+                        if (exifSaved.hasAttribute(ExifInterface.TAG_DATETIME_ORIGINAL))
+                            exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL,
+                                    exifSaved.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL));
+                        if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_DATESTAMP))
+                            exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP,
+                                    exifSaved.getAttribute(ExifInterface.TAG_GPS_DATESTAMP));
+
+                        // Preserve location
+                        double[] latlong = exifSaved.getLatLong();
+                        if (latlong != null)
+                            exif.setLatLong(latlong[0], latlong[1]);
+
+                        // Preserve altitude
+                        if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE) &&
+                                exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE_REF))
+                            exif.setAltitude(exifSaved.getAltitude(0));
+
+                        exif.saveAttributes();
                     } catch (Throwable ex) {
                         Log.w(ex);
-                        tmp.delete();
-                    } finally {
-                        resized.recycle();
                     }
-
-                    if (tmp.exists() && tmp.length() > 0) {
-                        file.delete();
-                        tmp.renameTo(file);
-                    }
-
-                    DB db = DB.getInstance(context);
-                    db.attachment().setDownloaded(attachment.id, file.length());
-
-                    if (exifSaved != null)
-                        try {
-                            ExifInterface exif = new ExifInterface(file);
-
-                            // Preserve time
-                            if (exifSaved.hasAttribute(ExifInterface.TAG_DATETIME_ORIGINAL))
-                                exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL,
-                                        exifSaved.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL));
-                            if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_DATESTAMP))
-                                exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP,
-                                        exifSaved.getAttribute(ExifInterface.TAG_GPS_DATESTAMP));
-
-                            // Preserve location
-                            double[] latlong = exifSaved.getLatLong();
-                            if (latlong != null)
-                                exif.setLatLong(latlong[0], latlong[1]);
-
-                            // Preserve altitude
-                            if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE) &&
-                                    exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE_REF))
-                                exif.setAltitude(exifSaved.getAltitude(0));
-
-                            exif.saveAttributes();
-                        } catch (Throwable ex) {
-                            Log.w(ex);
-                        }
-                }
             }
         }
     }
@@ -5237,6 +5360,7 @@ public class FragmentCompose extends FragmentBase {
                     throw new OperationCanceledException(context.getString(R.string.title_no_composable));
 
                 data.draft = db.message().getMessage(id);
+                boolean wb = (data.draft == null || data.draft.write_below == null ? write_below : data.draft.write_below);
                 if (data.draft == null || data.draft.ui_hide) {
                     // New draft
                     if ("edit".equals(action))
@@ -5394,6 +5518,8 @@ public class FragmentCompose extends FragmentBase {
 
                     if (receipt_default)
                         data.draft.receipt_request = true;
+
+                    data.draft.sensitivity = (selected.sensitivity < 1 ? null : selected.sensitivity);
 
                     Document document = Document.createShell("");
 
@@ -5686,19 +5812,20 @@ public class FragmentCompose extends FragmentBase {
                             if (data.draft.bcc != null)
                                 recipients.addAll(Arrays.asList(data.draft.bcc));
 
-                            if (EntityMessage.PGP_SIGNONLY.equals(ref.ui_encrypt) ||
-                                    EntityMessage.PGP_SIGNENCRYPT.equals(ref.ui_encrypt)) {
-                                if (PgpHelper.isOpenKeychainInstalled(context) &&
-                                        selected.sign_key != null &&
-                                        PgpHelper.hasPgpKey(context, recipients, true))
-                                    data.draft.ui_encrypt = ref.ui_encrypt;
-                            } else if (EntityMessage.SMIME_SIGNONLY.equals(ref.ui_encrypt) ||
-                                    EntityMessage.SMIME_SIGNENCRYPT.equals(ref.ui_encrypt)) {
-                                if (ActivityBilling.isPro(context) &&
-                                        selected.sign_key_alias != null &&
-                                        SmimeHelper.hasSmimeKey(context, recipients, true))
-                                    data.draft.ui_encrypt = ref.ui_encrypt;
-                            }
+                            if (!BuildConfig.DEBUG)
+                                if (EntityMessage.PGP_SIGNONLY.equals(ref.ui_encrypt) ||
+                                        EntityMessage.PGP_SIGNENCRYPT.equals(ref.ui_encrypt)) {
+                                    if (PgpHelper.isOpenKeychainInstalled(context) &&
+                                            selected.sign_key != null &&
+                                            PgpHelper.hasPgpKey(context, recipients, true))
+                                        data.draft.ui_encrypt = ref.ui_encrypt;
+                                } else if (EntityMessage.SMIME_SIGNONLY.equals(ref.ui_encrypt) ||
+                                        EntityMessage.SMIME_SIGNENCRYPT.equals(ref.ui_encrypt)) {
+                                    if (ActivityBilling.isPro(context) &&
+                                            selected.sign_key_alias != null &&
+                                            SmimeHelper.hasSmimeKey(context, recipients, true))
+                                        data.draft.ui_encrypt = ref.ui_encrypt;
+                                }
                         }
 
                         // Reply template
@@ -5747,8 +5874,6 @@ public class FragmentCompose extends FragmentBase {
                             // Reply/forward
                             Element reply = document.createElement("div");
                             reply.attr("fairemail", "reference");
-
-                            reply.appendElement("br");
 
                             // Build reply header
                             boolean separate_reply = prefs.getBoolean("separate_reply", false);
@@ -5802,7 +5927,7 @@ public class FragmentCompose extends FragmentBase {
                             for (Element element : e.select("*")) {
                                 String tag = element.tagName();
                                 String clazz = element.attr("class");
-                                String style = HtmlHelper.processStyles(tag, clazz, null, sheets);
+                                String style = HtmlHelper.processStyles(context, tag, clazz, null, sheets);
                                 style = HtmlHelper.mergeStyles(style, element.attr("style"));
                                 if (!TextUtils.isEmpty(style))
                                     element.attr("style", style);
@@ -5821,7 +5946,7 @@ public class FragmentCompose extends FragmentBase {
                                 e.tagName("p");
                             reply.appendChild(e);
 
-                            if (write_below && data.draft.wasforwardedfrom == null)
+                            if (wb && data.draft.wasforwardedfrom == null)
                                 document.body().prependChild(reply);
                             else
                                 document.body().appendChild(reply);
@@ -5900,9 +6025,9 @@ public class FragmentCompose extends FragmentBase {
 
                         File file = attachment.getFile(context);
                         Helper.copy(ics, file);
-                        ics.delete();
+                        Helper.secureDelete(ics);
 
-                        ICalendar icalendar = Biweekly.parse(file).first();
+                        ICalendar icalendar = CalendarHelper.parse(context, file);
                         VEvent event = icalendar.getEvents().get(0);
                         Organizer organizer = event.getOrganizer();
                         if (organizer != null) {
@@ -6042,13 +6167,13 @@ public class FragmentCompose extends FragmentBase {
                         File refFile = data.draft.getRefFile(context);
                         if (refFile.exists()) {
                             ref.html(Helper.readText(refFile));
-                            refFile.delete();
+                            Helper.secureDelete(refFile);
                         }
 
                         // Possibly external draft
 
                         for (Element e : ref)
-                            if (write_below && data.draft.wasforwardedfrom == null)
+                            if (wb && data.draft.wasforwardedfrom == null)
                                 doc.body().prependChild(e);
                             else
                                 doc.body().appendChild(e);
@@ -6458,7 +6583,7 @@ public class FragmentCompose extends FragmentBase {
                           at android.content.ContentResolver.openInputStream(ContentResolver.java:1187)
                           at eu.faircode.email.FragmentCompose.addAttachment(SourceFile:27)
                      */
-            Snackbar.make(view, ex.toString(), Snackbar.LENGTH_LONG)
+            Snackbar.make(view, new ThrowableWrapper(ex).toSafeString(), Snackbar.LENGTH_LONG)
                     .setGestureInsetBottomIgnored(true).show();
         } else {
             if (ex instanceof IOException &&
@@ -6537,6 +6662,7 @@ public class FragmentCompose extends FragmentBase {
             boolean discard_delete = prefs.getBoolean("discard_delete", true);
             boolean write_below = prefs.getBoolean("write_below", false);
             boolean save_drafts = prefs.getBoolean("save_drafts", true);
+            boolean save_revisions = prefs.getBoolean("save_revisions", true);
             int send_delayed = prefs.getInt("send_delayed", 0);
 
             DB db = DB.getInstance(context);
@@ -6708,7 +6834,8 @@ public class FragmentCompose extends FragmentBase {
                     if (extras.containsKey("html"))
                         dirty = true;
 
-                    if (below != write_below &&
+                    boolean wb = (draft == null || draft.write_below == null ? write_below : draft.write_below);
+                    if (below != wb &&
                             doc.body().childrenSize() > 0 &&
                             draft.wasforwardedfrom == null)
                         dirty = true;
@@ -6742,7 +6869,7 @@ public class FragmentCompose extends FragmentBase {
                             Document c = JsoupEx.parse(body);
 
                             for (Element e : ref)
-                                if (write_below && draft.wasforwardedfrom == null)
+                                if (wb && draft.wasforwardedfrom == null)
                                     c.body().prependChild(e);
                                 else
                                     c.body().appendChild(e);
@@ -6752,11 +6879,14 @@ public class FragmentCompose extends FragmentBase {
                             Helper.writeText(draft.getFile(context, draft.revision), c.html());
 
                             d = JsoupEx.parse(extras.getString("html"));
+
+                            if (extras.getBoolean("refdelete"))
+                                addSignature(context, d, draft, identity);
                         } else {
                             d = JsoupEx.parse(body); // Save
 
                             for (Element e : ref)
-                                if (write_below && draft.wasforwardedfrom == null)
+                                if (wb && draft.wasforwardedfrom == null)
                                     d.body().prependChild(e);
                                 else
                                     d.body().appendChild(e);
@@ -6767,8 +6897,10 @@ public class FragmentCompose extends FragmentBase {
                         body = d.html();
 
                         // Create new revision
-                        draft.revisions++;
-                        draft.revision = draft.revisions;
+                        if (save_revisions) {
+                            draft.revisions++;
+                            draft.revision = draft.revisions;
+                        }
 
                         Helper.writeText(draft.getFile(context, draft.revision), body);
                     } else
@@ -6830,7 +6962,10 @@ public class FragmentCompose extends FragmentBase {
                         }
                     }
 
-                    Helper.writeText(draft.getFile(context), body);
+                    File f = draft.getFile(context);
+                    Helper.writeText(f, body);
+                    if (f.length() > MAX_REASONABLE_SIZE)
+                        args.putBoolean("large", true);
 
                     String full = HtmlHelper.getFullText(body);
                     draft.preview = HtmlHelper.getPreview(full);
@@ -6943,7 +7078,7 @@ public class FragmentCompose extends FragmentBase {
                                             R.string.title_address_duplicate,
                                             TextUtils.join(", ", dup)));
                             } catch (AddressException ex) {
-                                args.putString("address_error", ex.getMessage());
+                                args.putString("address_error", new ThrowableWrapper(ex).getSafeMessage());
                             }
 
                             if (draft.to == null && draft.cc == null && draft.bcc == null &&
@@ -7093,12 +7228,7 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                     } else if (action == R.id.action_send) {
-                        EntityFolder outbox = db.folder().getOutbox();
-                        if (outbox == null) {
-                            Log.w("Outbox missing");
-                            outbox = EntityFolder.getOutbox();
-                            outbox.id = db.folder().insertFolder(outbox);
-                        }
+                        EntityFolder outbox = EntityFolder.getOutbox(context);
 
                         // Delay sending message
                         if (draft.ui_snoozed == null && send_delayed != 0) {
@@ -7147,8 +7277,10 @@ public class FragmentCompose extends FragmentBase {
                             feedback = context.getString(R.string.title_queued_at, DTF.format(draft.ui_snoozed));
                         }
 
-                        getMainHandler().post(new Runnable() {
-                            public void run() {
+                        getMainHandler().post(new RunnableEx("compose:toast") {
+                            public void delegate() {
+                                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                                    Helper.performHapticFeedback(view, HapticFeedbackConstants.CONFIRM);
                                 ToastEx.makeText(context, feedback, Toast.LENGTH_LONG).show();
                             }
                         });
@@ -7208,6 +7340,9 @@ public class FragmentCompose extends FragmentBase {
 
             bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision > 1);
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision < draft.revisions);
+
+            if (args.getBoolean("large"))
+                ToastEx.makeText(getContext(), R.string.title_large_body, Toast.LENGTH_LONG).show();
 
             if (args.getBundle("extras").getBoolean("silent")) {
                 etBody.setTag(null);
@@ -7348,7 +7483,7 @@ public class FragmentCompose extends FragmentBase {
                     address.validate();
                 } catch (AddressException ex) {
                     throw new AddressException(context.getString(R.string.title_address_parse_error,
-                            MessageHelper.formatAddressesCompose(new Address[]{address}), ex.getMessage()));
+                            MessageHelper.formatAddressesCompose(new Address[]{address}), new ThrowableWrapper(ex).getSafeMessage()));
                 }
         }
 
@@ -7402,6 +7537,8 @@ public class FragmentCompose extends FragmentBase {
         boolean write_below = prefs.getBoolean("write_below", false);
         String compose_font = prefs.getString("compose_font", "");
 
+        boolean wb = (draft == null || draft.write_below == null ? write_below : draft.write_below);
+
         Element div = document.createElement("div");
         div.attr("fairemail", "signature");
         if (!TextUtils.isEmpty(compose_font))
@@ -7424,7 +7561,7 @@ public class FragmentCompose extends FragmentBase {
         else if (ref.size() == 0 || signature_location == 2) // bottom
             document.body().appendChild(div);
         else if (signature_location == 1) // below text
-            if (write_below && draft.wasforwardedfrom == null)
+            if (wb && draft.wasforwardedfrom == null)
                 document.body().appendChild(div);
             else
                 ref.first().before(div);
@@ -7583,10 +7720,12 @@ public class FragmentCompose extends FragmentBase {
                 boolean ref_hint = prefs.getBoolean("compose_reference", true);
                 boolean write_below = prefs.getBoolean("write_below", false);
 
+                boolean wb = (draft == null || draft.write_below == null ? write_below : draft.write_below);
+
                 tvReference.setText(text[1]);
                 tvReference.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 grpReferenceHint.setVisibility(text[1] == null || !ref_hint ? View.GONE : View.VISIBLE);
-                ibWriteAboveBelow.setImageLevel(write_below ? 1 : 0);
+                ibWriteAboveBelow.setImageLevel(wb ? 1 : 0);
                 ibWriteAboveBelow.setVisibility(text[1] == null ||
                         draft.wasforwardedfrom != null || BuildConfig.PLAY_STORE_RELEASE
                         ? View.GONE : View.VISIBLE);
@@ -7597,7 +7736,7 @@ public class FragmentCompose extends FragmentBase {
 
                 setBodyPadding();
 
-                if (refedit && write_below)
+                if (refedit && wb)
                     etBody.setSelection(etBody.length());
 
                 if (state == State.LOADED)
@@ -7617,7 +7756,7 @@ public class FragmentCompose extends FragmentBase {
                 if (postShow != null)
                     getMainHandler().post(postShow);
 
-                if (lt_auto)
+                if (lt_sentence || lt_auto)
                     onLanguageTool(0, etBody.length(), true);
             }
 
@@ -7730,6 +7869,9 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void performSearch(boolean next) {
+        if (etSearch == null || etBody == null)
+            return;
+
         clearSearch();
 
         searchIndex = (next ? searchIndex + 1 : 1);
@@ -7751,7 +7893,7 @@ public class FragmentCompose extends FragmentBase {
             Context context = etBody.getContext();
             int color = Helper.resolveColor(context, R.attr.colorHighlight);
             SpannableString ss = new SpannableString(etBody.getText());
-            ss.setSpan(new BackgroundColorSpan(color),
+            ss.setSpan(new HighlightSpan(color),
                     pos, pos + query.length(), Spannable.SPAN_COMPOSING);
             ss.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_LARGE),
                     pos, pos + query.length(), Spannable.SPAN_COMPOSING);
@@ -7787,7 +7929,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void clearSearch() {
-        etBody.clearComposingText();
+        HtmlHelper.clearComposingText(etBody);
     }
 
     private AdapterView.OnItemSelectedListener identitySelected = new AdapterView.OnItemSelectedListener() {
@@ -7795,6 +7937,7 @@ public class FragmentCompose extends FragmentBase {
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             final Context context = parent.getContext();
             TupleIdentityEx identity = (TupleIdentityEx) parent.getAdapter().getItem(position);
+            FragmentCompose.this.account = (identity == null ? null : identity.account);
 
             int at = (identity == null ? -1 : identity.email.indexOf('@'));
             etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
@@ -7805,6 +7948,33 @@ public class FragmentCompose extends FragmentBase {
                 Integer color = (identity.color == null ? identity.accountColor : identity.color);
                 bottom_navigation.setBackgroundColor(color == null
                         ? Helper.resolveColor(context, androidx.appcompat.R.attr.colorPrimary) : color);
+
+                ColorStateList itemColor;
+                if (color == null)
+                    itemColor = ContextCompat.getColorStateList(context, R.color.action_foreground);
+                else {
+                    Integer icolor = null;
+                    float lum = (float) ColorUtils.calculateLuminance(color);
+                    if (lum > Helper.BNV_LUMINANCE_THRESHOLD)
+                        icolor = Color.BLACK;
+                    else if ((1.0f - lum) > Helper.BNV_LUMINANCE_THRESHOLD)
+                        icolor = Color.WHITE;
+                    if (icolor == null)
+                        itemColor = ContextCompat.getColorStateList(context, R.color.action_foreground);
+                    else
+                        itemColor = new ColorStateList(
+                                new int[][]{
+                                        new int[]{android.R.attr.state_enabled},
+                                        new int[]{}
+                                },
+                                new int[]{
+                                        icolor,
+                                        Color.GRAY
+                                }
+                        );
+                }
+                bottom_navigation.setItemIconTintList(itemColor);
+                bottom_navigation.setItemTextColor(itemColor);
             }
 
             Spanned signature = null;
@@ -7853,6 +8023,7 @@ public class FragmentCompose extends FragmentBase {
                 switch (event.getKeyCode()) {
                     case KeyEvent.KEYCODE_S:
                     case KeyEvent.KEYCODE_ENTER:
+                    case KeyEvent.KEYCODE_NUMPAD_ENTER:
                         onAction(R.id.action_check, "key");
                         return true;
                     case KeyEvent.KEYCODE_B:
@@ -7890,12 +8061,16 @@ public class FragmentCompose extends FragmentBase {
     @NonNull
     private static UriInfo getInfo(Uri uri, Context context) {
         UriInfo result = new UriInfo();
+
+        // https://stackoverflow.com/questions/76094229/android-13-photo-video-picker-file-name-from-the-uri-is-garbage
+        DocumentFile dfile = null;
         try {
-            DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
+            dfile = DocumentFile.fromSingleUri(context, uri);
             if (dfile != null) {
                 result.name = dfile.getName();
                 result.type = dfile.getType();
                 result.size = dfile.length();
+                EntityLog.log(context, "UriInfo dfile " + result + " uri=" + uri);
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -7910,7 +8085,7 @@ public class FragmentCompose extends FragmentBase {
             try {
                 new ContentType(result.type);
             } catch (ParseException ex) {
-                Log.w(ex);
+                Log.w(new Throwable(result.type, ex));
                 result.type = null;
             }
 
@@ -7923,6 +8098,8 @@ public class FragmentCompose extends FragmentBase {
         if (result.size != null && result.size <= 0)
             result.size = null;
 
+        EntityLog.log(context, "UriInfo result " + result + " uri=" + uri);
+
         return result;
     }
 
@@ -7933,6 +8110,12 @@ public class FragmentCompose extends FragmentBase {
 
         boolean isImage() {
             return ImageHelper.isImage(type);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "name=" + name + " type=" + type + " size=" + size;
         }
     }
 

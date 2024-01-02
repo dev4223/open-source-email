@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -69,12 +69,14 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSuggestSent;
     private SwitchCompat swSuggestReceived;
     private SwitchCompat swSuggestFrequently;
+    private SwitchCompat swSuggestAccount;
     private SwitchCompat swAutoIdentity;
     private Button btnLocalContacts;
     private SwitchCompat swSendChips;
     private SwitchCompat swNavColor;
     private SwitchCompat swSendReminders;
     private SwitchCompat swSendPending;
+    private SwitchCompat swSaveRevisions;
     private SwitchCompat swAutoSaveParagraph;
     private SwitchCompat swAutoSaveDot;
     private SwitchCompat swDiscardDelete;
@@ -121,9 +123,9 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
     private final static String[] RESET_OPTIONS = new String[]{
             "keyboard", "keyboard_no_fullscreen",
-            "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently", "auto_identity",
+            "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently", "suggest_account", "auto_identity",
             "send_reminders", "send_chips", "send_nav_color", "send_pending",
-            "auto_save_paragraph", "auto_save_dot", "discard_delete",
+            "save_revisions", "auto_save_paragraph", "auto_save_dot", "discard_delete",
             "send_delayed",
             "answer_single", "answer_action",
             "sound_sent",
@@ -156,12 +158,14 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swSuggestSent = view.findViewById(R.id.swSuggestSent);
         swSuggestReceived = view.findViewById(R.id.swSuggestReceived);
         swSuggestFrequently = view.findViewById(R.id.swSuggestFrequently);
+        swSuggestAccount = view.findViewById(R.id.swSuggestAccount);
         swAutoIdentity = view.findViewById(R.id.swAutoIdentity);
         btnLocalContacts = view.findViewById(R.id.btnLocalContacts);
         swSendChips = view.findViewById(R.id.swSendChips);
         swNavColor = view.findViewById(R.id.swNavColor);
         swSendReminders = view.findViewById(R.id.swSendReminders);
         swSendPending = view.findViewById(R.id.swSendPending);
+        swSaveRevisions = view.findViewById(R.id.swSaveRevisions);
         swAutoSaveParagraph = view.findViewById(R.id.swAutoSaveParagraph);
         swAutoSaveDot = view.findViewById(R.id.swAutoSaveDot);
         swDiscardDelete = view.findViewById(R.id.swDiscardDelete);
@@ -206,7 +210,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swReplyMove = view.findViewById(R.id.swReplyMove);
         swReplyMoveInbox = view.findViewById(R.id.swReplyMoveInbox);
 
-        List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext());
+        List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext(), false);
 
         List<CharSequence> fn = new ArrayList<>();
         fn.add("-");
@@ -261,6 +265,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("suggest_sent", checked).apply();
                 swSuggestFrequently.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
+                swSuggestAccount.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
                 swAutoIdentity.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
             }
         });
@@ -270,6 +275,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("suggest_received", checked).apply();
                 swSuggestFrequently.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
+                swSuggestAccount.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
                 swAutoIdentity.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
             }
         });
@@ -278,6 +284,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("suggest_frequently", checked).apply();
+            }
+        });
+
+        swSuggestAccount.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("suggest_account", checked).apply();
             }
         });
 
@@ -322,6 +335,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("send_pending", checked).apply();
+            }
+        });
+
+        swSaveRevisions.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("save_revisions", checked).apply();
             }
         });
 
@@ -722,8 +742,16 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        setOptions();
+        getMainHandler().removeCallbacks(update);
+        getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
+
+    private Runnable update = new RunnableEx("send") {
+        @Override
+        protected void delegate() {
+            setOptions();
+        }
+    };
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -754,12 +782,15 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             swSuggestReceived.setChecked(prefs.getBoolean("suggest_received", false));
             swSuggestFrequently.setChecked(prefs.getBoolean("suggest_frequently", false));
             swSuggestFrequently.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
+            swSuggestAccount.setChecked(prefs.getBoolean("suggest_account", false));
+            swSuggestAccount.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
             swAutoIdentity.setChecked(prefs.getBoolean("auto_identity", false));
             swAutoIdentity.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
             swSendChips.setChecked(prefs.getBoolean("send_chips", true));
             swNavColor.setChecked(prefs.getBoolean("send_nav_color", false));
             swSendReminders.setChecked(prefs.getBoolean("send_reminders", true));
             swSendPending.setChecked(prefs.getBoolean("send_pending", true));
+            swSaveRevisions.setChecked(prefs.getBoolean("save_revisions", true));
             swAutoSaveParagraph.setChecked(prefs.getBoolean("auto_save_paragraph", true));
             swAutoSaveDot.setChecked(prefs.getBoolean("auto_save_dot", false));
             swDiscardDelete.setChecked(prefs.getBoolean("discard_delete", true));
@@ -792,7 +823,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             btnComposeColor.setColor(prefs.getInt("compose_color", Color.TRANSPARENT));
 
             String compose_font = prefs.getString("compose_font", "");
-            List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext());
+            List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext(), false);
             for (int pos = 0; pos < fonts.size(); pos++) {
                 StyleHelper.FontDescriptor font = fonts.get(pos);
                 if (font.type.equals(compose_font)) {

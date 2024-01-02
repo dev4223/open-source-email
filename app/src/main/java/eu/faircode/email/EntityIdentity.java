@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -75,6 +75,8 @@ public class EntityIdentity {
     @NonNull
     public Boolean insecure = false;
     @NonNull
+    public Boolean dane = false;
+    @NonNull
     public Integer port;
     @NonNull
     public Integer auth_type;
@@ -121,10 +123,13 @@ public class EntityIdentity {
     public Boolean encrypt_default = false;
     @NonNull
     public Integer encrypt = 0; // Default method 0=PGP 1=S/MIME
+    public Integer receipt_type;
     @NonNull
     public Boolean delivery_receipt = false; // obsolete
     @NonNull
     public Boolean read_receipt = false; // obsolete
+    @NonNull
+    public Integer sensitivity = 0; // Normal
     @NonNull
     public Boolean store_sent = false; // obsolete
     public Long sent_folder = null; // obsolete
@@ -241,8 +246,11 @@ public class EntityIdentity {
         json.put("sign_default", sign_default);
         json.put("encrypt_default", encrypt_default);
         // not encrypt
+        if (receipt_type != null)
+            json.put("receipt_type", receipt_type);
         // delivery_receipt
         // read_receipt
+        json.put("sensitivity", sensitivity);
         // not store_sent
         // not sent_folder
         // not sign_key
@@ -330,6 +338,12 @@ public class EntityIdentity {
         if (json.has("encrypt_default"))
             identity.encrypt_default = json.getBoolean("encrypt_default");
 
+        if (json.has("receipt_type"))
+            identity.receipt_type = json.getInt("receipt_type");
+
+        if (json.has("sensitivity"))
+            identity.sensitivity = json.getInt("sensitivity");
+
         return identity;
     }
 
@@ -381,8 +395,10 @@ public class EntityIdentity {
                 Objects.equals(i1.sign_default, other.sign_default) &&
                 Objects.equals(i1.encrypt_default, other.encrypt_default) &&
                 Objects.equals(i1.encrypt, other.encrypt) &&
+                Objects.equals(i1.receipt_type, other.receipt_type) &&
                 // delivery_receipt
                 // read_receipt
+                Objects.equals(i1.sensitivity, other.sensitivity) &&
                 // store_sent
                 // sent_folder
                 Objects.equals(i1.sign_key, other.sign_key) &&

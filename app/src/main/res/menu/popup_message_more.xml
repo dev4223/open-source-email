@@ -26,12 +26,12 @@
 
         <item
             android:id="@+id/menu_set_importance"
-            android:icon="@drawable/baseline_arrow_upward_24"
+            android:icon="@drawable/twotone_north_24"
             android:title="@string/title_set_importance">
             <menu>
                 <item
                     android:id="@+id/menu_set_importance_high"
-                    android:icon="@drawable/baseline_arrow_upward_24"
+                    android:icon="@drawable/twotone_north_24"
                     android:title="@string/title_importance_high" />
                 <item
                     android:id="@+id/menu_set_importance_normal"
@@ -39,7 +39,7 @@
                     android:title="@string/title_importance_normal" />
                 <item
                     android:id="@+id/menu_set_importance_low"
-                    android:icon="@drawable/baseline_arrow_downward_24"
+                    android:icon="@drawable/twotone_south_24"
                     android:title="@string/title_importance_low" />
             </menu>
         </item>
@@ -138,9 +138,9 @@
             android:title="@string/title_show_headers" />
 
         <item
-            android:id="@+id/menu_share_as_html"
-            android:icon="@drawable/twotone_source_24"
-            android:title="@string/title_share_as_html" />
+            android:id="@+id/menu_show_html"
+            android:icon="@drawable/twotone_html_24"
+            android:title="@string/title_show_html" />
 
         <item
             android:id="@+id/menu_raw_save"
@@ -169,6 +169,11 @@
             android:id="@+id/menu_thread_info"
             android:icon="@drawable/baseline_mail_more_24"
             android:title="@string/title_thread_info" />
+
+        <item
+            android:id="@+id/menu_jsoup"
+            android:icon="@drawable/twotone_code_24"
+            android:title="@string/title_jsoup" />
 
         <item
             android:id="@+id/menu_reset_questions"

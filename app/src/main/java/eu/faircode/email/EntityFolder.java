@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -319,6 +319,9 @@ public class EntityFolder extends EntityOrder implements Serializable {
             unified = true;
             notify = true;
         }
+
+        if ("poczta.o2.pl".equals(account.host) && INBOX.equals(name))
+            poll = true;
     }
 
     void inheritFrom(EntityFolder parent) {
@@ -326,17 +329,13 @@ public class EntityFolder extends EntityOrder implements Serializable {
             return;
         if (!EntityFolder.USER.equals(type))
             return;
+        if (!EntityFolder.USER.equals(parent.type))
+            return;
 
         this.synchronize = parent.synchronize;
-        this.poll = parent.poll;
-        this.poll_factor = parent.poll_factor;
         this.download = parent.download;
-        //this.auto_classify_source = parent.auto_classify_source;
-        //this.auto_classify_target = parent.auto_classify_target;
         this.sync_days = parent.sync_days;
         this.keep_days = parent.keep_days;
-        //this.unified = parent.unified;
-        //this.navigation = parent.navigation;
         this.notify = parent.notify;
     }
 
@@ -395,13 +394,23 @@ public class EntityFolder extends EntityOrder implements Serializable {
         return result;
     }
 
-    static EntityFolder getOutbox() {
-        EntityFolder outbox = new EntityFolder();
+    @NonNull
+    static EntityFolder getOutbox(Context context) {
+        DB db = DB.getInstance(context);
+        EntityFolder outbox = db.folder().getOutbox();
+        if (outbox != null)
+            return outbox;
+
+        Log.w("Outbox missing");
+
+        outbox = new EntityFolder();
         outbox.name = "OUTBOX";
         outbox.type = EntityFolder.OUTBOX;
         outbox.synchronize = false;
         outbox.sync_days = 0;
         outbox.keep_days = 0;
+        outbox.id = db.folder().insertFolder(outbox);
+
         return outbox;
     }
 
@@ -658,6 +667,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
                     this.collapsed == other.collapsed &&
                     this.unified == other.unified &&
                     this.navigation == other.navigation &&
+                    this.count_unread == other.count_unread &&
                     this.notify == other.notify &&
                     Objects.equals(this.total, other.total) &&
                     Helper.equal(this.keywords, other.keywords) &&
@@ -706,6 +716,7 @@ public class EntityFolder extends EntityOrder implements Serializable {
         json.put("collapsed", collapsed);
         json.put("unified", unified);
         json.put("navigation", navigation);
+        json.put("count_unread", count_unread);
         json.put("notify", notify);
         return json;
     }
@@ -777,6 +788,9 @@ public class EntityFolder extends EntityOrder implements Serializable {
 
         if (json.has("navigation"))
             folder.navigation = json.getBoolean("navigation");
+
+        if (json.has("count_unread"))
+            folder.count_unread = json.getBoolean("count_unread");
 
         if (json.has("notify"))
             folder.notify = json.getBoolean("notify");

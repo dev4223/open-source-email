@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -346,7 +346,7 @@ public class FragmentFolders extends FragmentBase {
             public void onClick(View v) {
                 Boolean pop = (Boolean) v.getTag();
                 if (pop != null && pop) {
-                    Helper.viewFAQ(v.getContext(), 170, true);
+                    Helper.viewFAQ(v.getContext(), 170);
                     //ToastEx.makeText(v.getContext(), R.string.title_pop_folders, Toast.LENGTH_LONG).show();
                     return;
                 }
@@ -413,6 +413,7 @@ public class FragmentFolders extends FragmentBase {
                         intent.putExtra("account", account.id);
                         intent.putExtra("protocol", account.protocol);
                         intent.putExtra("auth_type", account.auth_type);
+                        intent.putExtra("address", account.user);
                         intent.putExtra("faq", 22);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
@@ -615,7 +616,7 @@ public class FragmentFolders extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalStateException) {
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar snackbar = Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
@@ -627,7 +628,7 @@ public class FragmentFolders extends FragmentBase {
                     });
                     snackbar.show();
                 } else if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
@@ -641,7 +642,9 @@ public class FragmentFolders extends FragmentBase {
 
         MenuItem menuSearch = menu.findItem(R.id.menu_search_folder);
         SearchView searchView = (SearchView) menuSearch.getActionView();
-        searchView.setQueryHint(getString(R.string.title_search));
+
+        if (searchView != null)
+            searchView.setQueryHint(getString(R.string.title_search));
 
         final String search = searching;
         view.post(new RunnableEx("folders:search") {
@@ -667,25 +670,26 @@ public class FragmentFolders extends FragmentBase {
             }
         });
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = newText;
-                    adapter.search(newText);
+        if (searchView != null)
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = newText;
+                        adapter.search(newText);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = query;
-                    adapter.search(query);
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = query;
+                        adapter.search(query);
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
 
         LayoutInflater infl = LayoutInflater.from(getContext());
         ImageButton ibSearch = (ImageButton) infl.inflate(R.layout.action_button, null);

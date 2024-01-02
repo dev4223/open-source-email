@@ -16,15 +16,19 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -34,16 +38,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -80,6 +89,7 @@ public class FragmentContacts extends FragmentBase {
     private boolean junk = false;
     private String searching = null;
     private long selected_account;
+    private boolean deleting = false;
 
     private AdapterContact adapter;
 
@@ -127,6 +137,138 @@ public class FragmentContacts extends FragmentBase {
         adapter = new AdapterContact(this);
         rvContacts.setAdapter(adapter);
 
+        ItemTouchHelper.Callback touchHelper = new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                return makeMovementFlags(0, ItemTouchHelper.LEFT);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onChildDraw(
+                    @NonNull Canvas canvas, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
+                    float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+                Context context = getContext();
+                if (context == null)
+                    return;
+
+                AdapterContact.ViewHolder holder = ((AdapterContact.ViewHolder) viewHolder);
+                Rect rect = holder.getItemRect();
+                int margin = Helper.dp2pixels(context, 12);
+                int size = Helper.dp2pixels(context, 24);
+
+                Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_delete_forever_24).mutate();
+                d.setTint(Helper.resolveColor(context, android.R.attr.textColorSecondary));
+
+                int half = rect.width() / 2;
+                if (dX > 0) {
+                    // Right swipe
+                    if (dX < half)
+                        d.setAlpha(Math.round(255 * Math.min(dX / (2 * margin + size), 1.0f)));
+                    else
+                        d.setAlpha(Math.round(255 * (1.0f - (dX - half) / half)));
+                    int padding = (rect.height() - size);
+                    d.setBounds(
+                            rect.left + margin,
+                            rect.top + padding / 2,
+                            rect.left + margin + size,
+                            rect.top + padding / 2 + size);
+                    d.draw(canvas);
+                } else if (dX < 0) {
+                    // Left swipe
+                    if (-dX < half)
+                        d.setAlpha(Math.round(255 * Math.min(-dX / (2 * margin + size), 1.0f)));
+                    else
+                        d.setAlpha(Math.round(255 * (1.0f - (-dX - half) / half)));
+                    int padding = (rect.height() - size);
+                    d.setBounds(
+                            rect.left + rect.width() - size - margin,
+                            rect.top + padding / 2,
+                            rect.left + rect.width() - margin,
+                            rect.top + padding / 2 + size);
+                    d.draw(canvas);
+                }
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                try {
+                    int pos = viewHolder.getAdapterPosition();
+                    long id = adapter.getItemId(pos);
+
+                    if (deleting)
+                        delete(id);
+                    else {
+                        adapter.notifyItemChanged(pos);
+
+                        Context context = getContext();
+                        if (context == null)
+                            return;
+
+                        LayoutInflater inflater = LayoutInflater.from(context);
+                        View dview = inflater.inflate(R.layout.dialog_contact_delete, null);
+                        CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+                        cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                deleting = isChecked;
+                            }
+                        });
+
+                        new AlertDialog.Builder(context)
+                                .setView(dview)
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        delete(id);
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show();
+                    }
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+
+            private void delete(long id) {
+                Bundle args = new Bundle();
+                args.putLong("id", id);
+
+                new SimpleTask<Integer>() {
+                    @Override
+                    protected Integer onExecute(Context context, Bundle args) throws Throwable {
+                        long id = args.getLong("id");
+
+                        DB db = DB.getInstance(context);
+                        return db.contact().deleteContact(id);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, Integer count) {
+                        if (count <= 0 && adapter != null)
+                            adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.e(ex);
+                        if (adapter != null)
+                            adapter.notifyDataSetChanged();
+                    }
+                }.execute(FragmentContacts.this, args, "contact:delete");
+            }
+        };
+
+        new ItemTouchHelper(touchHelper).attachToRecyclerView(rvContacts);
+
         // Initialize
         grpReady.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
@@ -140,6 +282,7 @@ public class FragmentContacts extends FragmentBase {
         outState.putBoolean("fair:junk", junk);
         outState.putString("fair:searching", searching);
         outState.putLong("fair:selected_account", selected_account);
+        outState.putBoolean("fair:deleting", deleting);
         super.onSaveInstanceState(outState);
     }
 
@@ -152,6 +295,7 @@ public class FragmentContacts extends FragmentBase {
             junk = savedInstanceState.getBoolean("fair:junk");
             searching = savedInstanceState.getString("fair:searching");
             selected_account = savedInstanceState.getLong("fair:selected_account");
+            deleting = savedInstanceState.getBoolean("fair:deleting");
 
             if (account < 0)
                 account = null;
@@ -198,7 +342,9 @@ public class FragmentContacts extends FragmentBase {
 
         MenuItem menuSearch = menu.findItem(R.id.menu_search);
         SearchView searchView = (SearchView) menuSearch.getActionView();
-        searchView.setQueryHint(getString(R.string.title_search));
+
+        if (searchView != null)
+            searchView.setQueryHint(getString(R.string.title_search));
 
         final String search = searching;
         view.post(new RunnableEx("contacts:search") {
@@ -224,25 +370,26 @@ public class FragmentContacts extends FragmentBase {
             }
         });
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = newText;
-                    adapter.search(newText);
+        if (searchView != null)
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = newText;
+                        adapter.search(newText);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = query;
-                    adapter.search(query);
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = query;
+                        adapter.search(query);
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
 
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -393,7 +540,8 @@ public class FragmentContacts extends FragmentBase {
             open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             open.setType("*/*");
             if (open.resolveActivity(pm) == null)  // system whitelisted
-                ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
+                Log.unexpectedError(getParentFragmentManager(),
+                        new IllegalArgumentException(context.getString(R.string.title_no_saf)), 25);
             else
                 startActivityForResult(Helper.getChooser(context, open), REQUEST_IMPORT);
         }
@@ -672,10 +820,8 @@ public class FragmentContacts extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                boolean report = !(ex instanceof IllegalArgumentException);
+                Log.unexpectedError(getParentFragmentManager(), ex, report);
             }
         }.execute(this, args, "contacts:name");
     }

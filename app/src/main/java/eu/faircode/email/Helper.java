@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -28,6 +28,7 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
@@ -46,6 +47,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriPermission;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ComponentInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -77,7 +79,6 @@ import android.text.Layout;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.text.format.Time;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.TransformationMethod;
 import android.util.DisplayMetrics;
@@ -95,7 +96,6 @@ import android.view.ViewParent;
 import android.view.Window;
 import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -117,11 +117,12 @@ import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
+import androidx.core.view.SoftwareKeyboardControllerCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -146,8 +147,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -184,10 +188,11 @@ public class Helper {
     private static Boolean hasWebView = null;
     private static Boolean hasPlayStore = null;
     private static Boolean hasValidFingerprint = null;
+    private static Boolean isSmartwatch = null;
+    private static String installerName = "?";
 
     static final float LOW_LIGHT = 0.6f;
 
-    static final int OPERATION_WORKERS = 3;
     static final int WAKELOCK_MAX = 30 * 60 * 1000; // milliseconds
     static final int BUFFER_SIZE = 8192; // Same as in Files class
     static final long MIN_REQUIRED_SPACE = 100 * 1000L * 1000L;
@@ -195,14 +200,16 @@ public class Helper {
     static final int AUTH_AUTOLOCK_GRACE = 15; // seconds
     static final int PIN_FAILURE_DELAY = 3; // seconds
     static final long PIN_FAILURE_DELAY_MAX = 20 * 60 * 1000L; // milliseconds
+    static final float BNV_LUMINANCE_THRESHOLD = 0.7f;
+
+    static final String PLAY_PACKAGE_NAME = "com.android.vending";
 
     static final String PGP_OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
     static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
 
-    static final String PACKAGE_CHROME = "com.android.chrome";
     static final String PACKAGE_WEBVIEW = "https://play.google.com/store/apps/details?id=com.google.android.webview";
-    static final String PRIVACY_URI = "https://github.com/M66B/FairEmail/blob/master/PRIVACY.md";
+    static final String PRIVACY_URI = "https://email.faircode.eu/privacy/";
     static final String TUTORIALS_URI = "https://github.com/M66B/FairEmail/tree/master/tutorials#main";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
     static final String SUPPORT_URI = "https://contact.faircode.eu/?product=fairemailsupport";
@@ -226,6 +233,8 @@ public class Helper {
     private static final String[] ROMAN_100 = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
     private static final String[] ROMAN_10 = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
     private static final String[] ROMAN_1 = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+
+    static final String REGEX_UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
     static final Pattern EMAIL_ADDRESS = Pattern.compile(
             "[\\S&&[^\"@]]{1,256}" +
@@ -607,7 +616,7 @@ public class Helper {
 
     static Boolean isIgnoringOptimizations(Context context) {
         try {
-            if (isArc())
+            if (isArc() || isWatch(context))
                 return true;
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
@@ -704,6 +713,32 @@ public class Helper {
     static boolean isComponentEnabled(Context context, Class<?> clazz) {
         PackageManager pm = context.getPackageManager();
         int state = pm.getComponentEnabledSetting(new ComponentName(context, clazz));
+
+        if (state == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+            try {
+                PackageInfo pi = pm.getPackageInfo(context.getPackageName(),
+                        PackageManager.GET_ACTIVITIES |
+                                PackageManager.GET_RECEIVERS |
+                                PackageManager.GET_SERVICES |
+                                PackageManager.GET_PROVIDERS |
+                                PackageManager.GET_DISABLED_COMPONENTS);
+
+                List<ComponentInfo> components = new ArrayList<>();
+                if (pi.activities != null)
+                    Collections.addAll(components, pi.activities);
+                if (pi.services != null)
+                    Collections.addAll(components, pi.services);
+                if (pi.providers != null)
+                    Collections.addAll(components, pi.providers);
+
+                for (ComponentInfo component : components)
+                    if (component.name.equals(clazz.getName()))
+                        return component.isEnabled();
+            } catch (PackageManager.NameNotFoundException ex) {
+                Log.w(ex);
+            }
+        }
+
         return (state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
     }
 
@@ -940,19 +975,28 @@ public class Helper {
     }
 
     static Intent getChooser(Context context, Intent intent) {
+        return getChooser(context, intent, false);
+    }
+
+    static Intent getChooser(Context context, Intent intent, boolean share) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean app_chooser = prefs.getBoolean("app_chooser", false);
+        boolean app_chooser_share = prefs.getBoolean("app_chooser_share", false);
+        if (share ? !app_chooser_share : !app_chooser)
+            return intent;
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             PackageManager pm = context.getPackageManager();
             if (pm.queryIntentActivities(intent, 0).size() == 1)
                 return intent;
-            else
-                return Intent.createChooser(intent, context.getString(R.string.title_select_app));
-        } else
-            return Intent.createChooser(intent, context.getString(R.string.title_select_app));
+        }
+
+        return Intent.createChooser(intent, context.getString(R.string.title_select_app));
     }
 
     static void share(Context context, File file, String type, String name) {
         // https://developer.android.com/reference/androidx/core/content/FileProvider
-        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+        Uri uri = FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file, name);
         share(context, uri, type, name);
     }
 
@@ -972,6 +1016,9 @@ public class Helper {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndTypeAndNormalize(uri, type);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        if (launchAdjacent(context, true))
+            intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT | Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if (!TextUtils.isEmpty(name))
             intent.putExtra(Intent.EXTRA_TITLE, Helper.sanitizeFilename(name));
@@ -1005,9 +1052,9 @@ public class Helper {
                 else
                     reportNoViewer(context, intent, null);
             else
-                context.startActivity(intent);
+                context.startActivity(getChooser(context, intent, true));
         } else
-            context.startActivity(intent);
+            context.startActivity(getChooser(context, intent, true));
     }
 
     static boolean isTnef(String type, String name) {
@@ -1083,6 +1130,9 @@ public class Helper {
             view.setDataAndType(uri, mimeType);
         if (task)
             view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        if (launchAdjacent(context, false))
+            view.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT | Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if ("chooser".equals(open_with_pkg) && !open_with_tabs) {
             try {
@@ -1162,16 +1212,48 @@ public class Helper {
         }
     }
 
+    private static boolean launchAdjacent(Context context, boolean document) {
+        // https://developer.android.com/guide/topics/large-screens/multi-window-support#launch_adjacent
+        Configuration config = context.getResources().getConfiguration();
+        boolean portrait = (config.orientation == Configuration.ORIENTATION_PORTRAIT);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return (prefs.getBoolean("adjacent_" + (portrait ? "portrait" : "landscape"), false) &&
+                prefs.getBoolean("adjacent_" + (document ? "documents" : "links"), document));
+    }
+
     static boolean customTabsWarmup(Context context) {
         if (context == null)
             return false;
 
         try {
-            return CustomTabsClient.connectAndInitialize(context, PACKAGE_CHROME);
+            /*
+                E AndroidRuntime: FATAL EXCEPTION: main
+                E AndroidRuntime: Process: eu.faircode.email.debug, PID: 25922
+                E AndroidRuntime: java.lang.IllegalStateException: Custom Tabs Service connected before an applicationcontext has been provided.
+                E AndroidRuntime: 	at androidx.browser.customtabs.CustomTabsServiceConnection.onServiceConnected(CustomTabsServiceConnection.java:52)
+                E AndroidRuntime: 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2198)
+                E AndroidRuntime: 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2231)
+                E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:958)
+                E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+                E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:205)
+                E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:294)
+                E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8177)
+                E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+                E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+                E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:971)
+             */
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String open_with_pkg = prefs.getString("open_with_pkg", null);
+            boolean open_with_tabs = prefs.getBoolean("open_with_tabs", true);
+            if (open_with_tabs && !TextUtils.isEmpty(open_with_pkg)) {
+                Log.i("Warming up " + open_with_pkg);
+                return CustomTabsClient.connectAndInitialize(context, open_with_pkg);
+            }
         } catch (Throwable ex) {
             Log.w(ex);
-            return false;
         }
+
+        return false;
     }
 
     static String getFAQLocale() {
@@ -1193,7 +1275,7 @@ public class Helper {
         viewFAQ(context, question, true /* Google translate */);
     }
 
-    static void viewFAQ(Context context, int question, boolean english) {
+    private static void viewFAQ(Context context, int question, boolean english) {
         // Redirection is done to prevent text editors from opening the link
         // https://email.faircode.eu/faq -> https://github.com/M66B/FairEmail/blob/master/FAQ.md
         // https://email.faircode.eu/docs -> https://github.com/M66B/FairEmail/tree/master/docs
@@ -1292,6 +1374,18 @@ public class Helper {
 
     static Intent getIntentRate(Context context) {
         return new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID));
+    }
+
+    static String getInstallerName(Context context) {
+        if ("?".equals(installerName))
+            try {
+                PackageManager pm = context.getPackageManager();
+                installerName = pm.getInstallerPackageName(BuildConfig.APPLICATION_ID);
+            } catch (Throwable ex) {
+                Log.e(ex);
+                installerName = null;
+            }
+        return installerName;
     }
 
     static long getInstallTime(Context context) {
@@ -1506,6 +1600,25 @@ public class Helper {
         return (Build.DEVICE != null) && Build.DEVICE.matches(".+_cheets|cheets_.+");
     }
 
+    static boolean isWatch(Context context) {
+        if (isSmartwatch == null)
+            isSmartwatch = _isWatch(context);
+        return isSmartwatch;
+    }
+
+    private static boolean _isWatch(Context context) {
+        try {
+            UiModeManager uimm = Helper.getSystemService(context, UiModeManager.class);
+            if (uimm == null)
+                return false;
+            int uiModeType = uimm.getCurrentModeType();
+            return (uiModeType == Configuration.UI_MODE_TYPE_WATCH);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return false;
+        }
+    }
+
     static boolean isStaminaEnabled(Context context) {
         // https://dontkillmyapp.com/sony
         if (!isSony())
@@ -1543,18 +1656,47 @@ public class Helper {
                 isSamsung() ||
                 isOnePlus() ||
                 isHuawei() ||
-                isXiaomi());
+                isXiaomi() ||
+                isMeizu() ||
+                isAsus());
     }
 
     static boolean isAndroid12() {
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
     }
 
+    static String getMIUIVersion() {
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("get", String.class);
+            get.setAccessible(true);
+            String miui = (String) get.invoke(c, "ro.miui.ui.version.code");
+            return (TextUtils.isEmpty(miui) ? null : miui);
+        } catch (Throwable ex) {
+            Log.w(ex);
+            return null;
+        }
+    }
+
+    // 0=allowed, 1=denied
+    static Integer getMIUIAutostart(Context context) {
+        try {
+            @SuppressLint("PrivateApi")
+            Class<?> c = Class.forName("android.miui.AppOpsUtils");
+            Method m = c.getDeclaredMethod("getApplicationAutoStart", Context.class, String.class);
+            m.setAccessible(true);
+            return (Integer) m.invoke(null, context, context.getPackageName());
+        } catch (Throwable ex) {
+            Log.w(ex);
+            return null;
+        }
+    }
+
     static String getUiModeType(Context context) {
         try {
             UiModeManager uimm = Helper.getSystemService(context, UiModeManager.class);
             int uiModeType = uimm.getCurrentModeType();
-            switch (uiModeType) {
+            switch (uiModeType & Configuration.UI_MODE_TYPE_MASK) {
                 case Configuration.UI_MODE_TYPE_UNDEFINED:
                     return "undefined";
                 case Configuration.UI_MODE_TYPE_NORMAL:
@@ -1566,7 +1708,7 @@ public class Helper {
                 case Configuration.UI_MODE_TYPE_TELEVISION:
                     return "television";
                 case Configuration.UI_MODE_TYPE_APPLIANCE:
-                    return "applicance";
+                    return "appliance";
                 case Configuration.UI_MODE_TYPE_WATCH:
                     return "watch";
                 case Configuration.UI_MODE_TYPE_VR_HEADSET:
@@ -1609,7 +1751,7 @@ public class Helper {
         String title = intent.getStringExtra(Intent.EXTRA_TITLE);
         Uri data = intent.getData();
         String type = intent.getType();
-        String fullName = (data == null ? intent.toString() : data.toString());
+        String fullName = (data == null ? intent.toString() : data.getLastPathSegment());
         String extension = (data == null ? null : getExtension(data.getLastPathSegment()));
 
         tvName.setText(title == null ? fullName : title);
@@ -1618,7 +1760,7 @@ public class Helper {
 
         tvType.setText(type);
 
-        tvException.setText(ex == null ? null : ex.toString());
+        tvException.setText(ex == null ? null : new ThrowableWrapper(ex).toSafeString());
         tvException.setVisibility(ex == null ? View.GONE : View.VISIBLE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
@@ -1645,7 +1787,6 @@ public class Helper {
                         context.startActivity(intent);
                     } catch (Throwable ex) {
                         Log.e(ex);
-                        ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -1736,28 +1877,62 @@ public class Helper {
                         RecyclerView.Adapter.class.isAssignableFrom(type) ||
                         TwoStateOwner.class.isAssignableFrom(type))
                     try {
-                        Log.i("Clearing " + fname);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Clearing ").append(fname);
 
                         field.setAccessible(true);
 
                         if (!ftype.isArray()) {
-                            if (Animator.class.isAssignableFrom(type)) {
-                                Animator animator = (Animator) field.get(instance);
-                                if (animator != null) {
-                                    if (animator.isStarted())
-                                        animator.cancel();
-                                    animator.setTarget(null);
+                            try {
+                                if (View.class.isAssignableFrom(type)) {
+                                    View v = (View) field.get(instance);
+                                    if (v != null) {
+                                        sb.append(" tag");
+                                        v.setTag(null);
+                                    }
                                 }
-                            }
 
-                            if (Snackbar.class.isAssignableFrom(type)) {
-                                Snackbar snackbar = (Snackbar) field.get(instance);
-                                if (snackbar != null)
-                                    snackbar.setAction(null, null);
+                                if (TextView.class.isAssignableFrom(type)) {
+                                    TextView tv = (TextView) field.get(instance);
+                                    if (tv != null) {
+                                        sb.append(" drawables");
+                                        tv.setCompoundDrawables(null, null, null, null);
+                                    }
+                                }
+
+                                if (ImageView.class.isAssignableFrom(type)) {
+                                    ImageView iv = (ImageView) field.get(instance);
+                                    if (iv != null) {
+                                        sb.append(" drawable");
+                                        iv.setImageDrawable(null);
+                                    }
+                                }
+
+                                if (Animator.class.isAssignableFrom(type)) {
+                                    Animator animator = (Animator) field.get(instance);
+                                    if (animator != null) {
+                                        sb.append(" animator");
+                                        if (animator.isStarted())
+                                            animator.cancel();
+                                        animator.setTarget(null);
+                                    }
+                                }
+
+                                if (Snackbar.class.isAssignableFrom(type)) {
+                                    Snackbar snackbar = (Snackbar) field.get(instance);
+                                    if (snackbar != null) {
+                                        sb.append(" action");
+                                        snackbar.setAction(null, null);
+                                    }
+                                }
+                            } catch (Throwable ex) {
+                                Log.e(ex);
                             }
                         }
 
                         field.set(instance, null);
+
+                        Log.i(sb.toString());
                     } catch (Throwable ex) {
                         Log.e(new Throwable(fname, ex));
                     }
@@ -1773,6 +1948,36 @@ public class Helper {
         ActivityOptions options = ActivityOptions.makeBasic();
         options.setPendingIntentBackgroundActivityLaunchAllowed(true);
         return options.toBundle();
+    }
+
+    static Fragment recreateFragment(Fragment fragment, FragmentManager fm) {
+        try {
+            Fragment.SavedState savedState = fm.saveFragmentInstanceState(fragment);
+            Bundle args = fragment.getArguments();
+
+            Fragment newFragment = fragment.getClass().newInstance();
+            newFragment.setInitialSavedState(savedState);
+            newFragment.setArguments(args);
+
+            return newFragment;
+        } catch (Throwable e) {
+            throw new RuntimeException("Cannot recreate fragment=" + fragment, e);
+        }
+    }
+
+    static void performHapticFeedback(View view, int feedbackConstant) {
+        performHapticFeedback(view, feedbackConstant, 0);
+    }
+
+    static void performHapticFeedback(@NonNull View view, int feedbackConstant, int flags) {
+        try {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+            boolean haptic_feedback = prefs.getBoolean("haptic_feedback", true);
+            if (haptic_feedback)
+                view.performHapticFeedback(feedbackConstant);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     // Graphics
@@ -1878,33 +2083,18 @@ public class Helper {
     }
 
     static void showKeyboard(final View view) {
-        final Context context = view.getContext();
-        InputMethodManager imm = Helper.getSystemService(context, InputMethodManager.class);
-        if (imm == null)
-            return;
-
-        view.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.i("showKeyboard view=" + view);
-                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-            }
-        }, 250);
+        try {
+            Log.i("showKeyboard view=" + view);
+            new SoftwareKeyboardControllerCompat(view).show();
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     static void hideKeyboard(final View view) {
-        final Context context = view.getContext();
-        InputMethodManager imm = Helper.getSystemService(context, InputMethodManager.class);
-        if (imm == null)
-            return;
-
         try {
             Log.i("hideKeyboard view=" + view);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            new SoftwareKeyboardControllerCompat(view).hide();
         } catch (Throwable ex) {
             Log.e(ex);
         }
@@ -1949,7 +2139,7 @@ public class Helper {
         try {
             return view.getContext().getResources().getResourceEntryName(id);
         } catch (Throwable ex) {
-            return ex.toString();
+            return new ThrowableWrapper(ex).toSafeString();
         }
     }
 
@@ -2065,35 +2255,60 @@ public class Helper {
     }
 
     static CharSequence getRelativeDateSpanString(Context context, long millis) {
-        Calendar cal0 = Calendar.getInstance();
-        Calendar cal1 = Calendar.getInstance();
-        cal0.setTimeInMillis(millis);
-        boolean thisMonth = (cal0.get(Calendar.MONTH) == cal1.get(Calendar.MONTH));
-        boolean thisYear = (cal0.get(Calendar.YEAR) == cal1.get(Calendar.YEAR));
-        String skeleton = (thisMonth && thisYear ? "MMM-d" : "Y-M-d");
-        String format = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
-        return new SimpleDateFormat(format).format(millis);
+        return getRelativeTimeSpanString(context, millis, false, true, false);
     }
 
     static CharSequence getRelativeTimeSpanString(Context context, long millis) {
-        long now = System.currentTimeMillis();
-        long span = Math.abs(now - millis);
-        Time nowTime = new Time();
-        Time thenTime = new Time();
-        nowTime.set(now);
-        thenTime.set(millis);
-        if (span < DateUtils.DAY_IN_MILLIS && nowTime.weekDay == thenTime.weekDay)
+        return getRelativeTimeSpanString(context, millis, true, false, false);
+    }
+
+    static CharSequence getRelativeDateTimeSpanString(Context context, long millis, boolean condensed) {
+        return getRelativeTimeSpanString(context, millis, true, true, condensed);
+    }
+
+    private static CharSequence getRelativeTimeSpanString(Context context, long millis, boolean withTime, boolean withDate, boolean condensed) {
+        Calendar cal0 = Calendar.getInstance();
+        Calendar cal1 = Calendar.getInstance();
+        cal0.setTimeInMillis(millis);
+
+        boolean thisYear = (cal0.get(Calendar.YEAR) == cal1.get(Calendar.YEAR));
+        boolean thisMonth = (cal0.get(Calendar.MONTH) == cal1.get(Calendar.MONTH));
+        boolean thisDay = (cal0.get(Calendar.DAY_OF_MONTH) == cal1.get(Calendar.DAY_OF_MONTH));
+        if (withDate) {
+            try {
+                if (condensed && thisYear && thisMonth && thisDay)
+                    return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
+                String skeleton = (thisYear ? "MMM-d" : "yyyy-M-d");
+                if (withTime) {
+                    boolean is24Hour = android.text.format.DateFormat.is24HourFormat(context);
+                    skeleton += (is24Hour ? " Hm" : " hm");
+                }
+                String format = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
+                return new SimpleDateFormat(format).format(millis);
+            } catch (Throwable ex) {
+                Log.e(ex);
+                DateFormat df = (withTime
+                        ? getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT)
+                        : getDateInstance(context, SimpleDateFormat.SHORT));
+                return df.format(millis);
+            }
+        } else if (thisYear && thisMonth && thisDay)
             return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
         else
             return DateUtils.getRelativeTimeSpanString(context, millis);
     }
 
     static String formatDuration(long ms) {
+        int sign = (ms < 0 ? -1 : 1);
+        ms = Math.abs(ms);
         int days = (int) (ms / (24 * 3600 * 1000L));
         ms = ms % (24 * 3600 * 1000L);
         long seconds = ms / 1000;
         ms = ms % 1000;
-        return (days > 0 ? days + " " : "") + DateUtils.formatElapsedTime(seconds) + "." + ms;
+        return (sign < 0 ? "-" : "") +
+                (days > 0 ? days + " " : "") +
+                DateUtils.formatElapsedTime(seconds) +
+                (ms == 0 ? "" : "." + ms);
     }
 
     static String formatNumber(Integer number, long max, NumberFormat nf) {
@@ -2234,32 +2449,6 @@ public class Helper {
             }
         }
         return false;
-    }
-
-    static boolean isSingleScript(String s) {
-        // https://en.wikipedia.org/wiki/IDN_homograph_attack
-
-        if (TextUtils.isEmpty(s))
-            return true;
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
-            return true;
-
-        int codepoint;
-        Character.UnicodeScript us;
-        Character.UnicodeScript script = null;
-        for (int i = 0; i < s.length(); ) {
-            codepoint = s.codePointAt(i);
-            i += Character.charCount(codepoint);
-            us = Character.UnicodeScript.of(codepoint);
-            if (us.equals(Character.UnicodeScript.COMMON))
-                continue;
-            if (script == null)
-                script = us;
-            else if (!us.equals(script))
-                return false;
-        }
-        return true;
     }
 
     static Integer parseInt(String text) {
@@ -2422,10 +2611,13 @@ public class Helper {
     }
 
     static boolean isEndChar(char c) {
+        return (isSentenceChar(c) ||
+                c == ',' || c == ':' || c == ';');
+    }
+
+    static boolean isSentenceChar(char c) {
         return (c == '.' /* Latin */ ||
                 c == '。' /* Chinese */ ||
-                c == ',' ||
-                c == ':' || c == ';' ||
                 c == '?' || c == '!');
     }
 
@@ -2454,15 +2646,15 @@ public class Helper {
 
     private static final Map<File, Boolean> exists = new HashMap<>();
 
-    static File ensureExists(File dir) {
+    static File ensureExists(Context context, String subdir) {
+        File dir = new File(context.getFilesDir(), subdir);
+        dir.mkdirs();
+
         synchronized (exists) {
             if (exists.containsKey(dir))
                 return dir;
             exists.put(dir, true);
         }
-
-        if (!dir.exists() && !dir.mkdirs())
-            throw new IllegalArgumentException("Failed to create=" + dir);
 
         return dir;
     }
@@ -2657,6 +2849,20 @@ public class Helper {
         return files;
     }
 
+    static void secureDelete(File file) {
+        try {
+            if (file.exists()) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    if (!file.delete())
+                        Log.w("File not found: " + file);
+                } else
+                    Files.delete(Paths.get(file.getAbsolutePath()));
+            }
+        } catch (IOException ex) {
+            Log.e(ex);
+        }
+    }
+
     static long getAvailableStorageSpace() {
         StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
         return stats.getAvailableBlocksLong() * stats.getBlockSizeLong();
@@ -2822,6 +3028,12 @@ public class Helper {
                 }
         }
         return hasValidFingerprint;
+    }
+
+    static boolean isSignedByFDroid(Context context) {
+        String signed = getFingerprint(context);
+        String fingerprint = context.getString(R.string.fingerprint_fdroid);
+        return Objects.equals(signed, fingerprint);
     }
 
     static boolean canAuthenticate(Context context) {
@@ -3320,8 +3532,8 @@ public class Helper {
             Runtime.getRuntime().gc();
             try {
                 Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ex) {
+                Log.e(ex);
             }
         }
     }

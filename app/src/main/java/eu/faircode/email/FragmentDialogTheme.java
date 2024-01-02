@@ -1,5 +1,24 @@
 package eu.faircode.email;
 
+/*
+    This file is part of FairEmail.
+
+    FairEmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FairEmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+*/
+
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -626,17 +645,25 @@ public class FragmentDialogTheme extends FragmentDialogBase {
         boolean tabular_card_bg = prefs.getBoolean("tabular_card_bg", false);
         String theme = prefs.getString("theme", "blue_orange_system");
         boolean dark = Helper.isDarkTheme(context);
-        boolean solarized = (theme != null && theme.startsWith("solarized"));
+        boolean black = (!"black".equals(theme) && theme.endsWith("black"));
+        boolean solarized = theme.startsWith("solarized");
+        boolean you = theme.startsWith("you_");
 
         if (cards) {
-            if (compose) {
-                if (!dark || solarized)
-                    view.setBackgroundColor(Helper.resolveColor(context, R.attr.colorCardBackground));
-            } else {
-                if (!dark && !solarized)
-                    view.setBackgroundColor(ContextCompat.getColor(context, beige
-                            ? R.color.lightColorBackground_cards_beige
-                            : R.color.lightColorBackground_cards));
+            if (you && (!dark || !black) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                view.setBackgroundColor(ContextCompat.getColor(context, dark
+                        ? android.R.color.system_background_dark
+                        : android.R.color.system_background_light));
+            else {
+                if (compose) {
+                    if (!dark || solarized)
+                        view.setBackgroundColor(Helper.resolveColor(context, R.attr.colorCardBackground));
+                } else {
+                    if (!dark && !solarized)
+                        view.setBackgroundColor(ContextCompat.getColor(context, beige
+                                ? R.color.lightColorBackground_cards_beige
+                                : R.color.lightColorBackground_cards));
+                }
             }
         } else {
             if (tabular_card_bg)

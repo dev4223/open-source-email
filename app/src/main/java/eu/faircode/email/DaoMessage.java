@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.database.Cursor;
@@ -51,8 +51,8 @@ public interface DaoMessage {
             ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, NULL AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
-            ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
-            ", '[' || group_concat(message.`to`, ',') || ']' AS recipients" +
+            ", '[' || substr(group_concat(message.`from`, ','), 0, 2048) || ']' AS senders" +
+            ", '[' || substr(group_concat(message.`to`, ','), 0, 2048) || ']' AS recipients" +
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
@@ -130,8 +130,8 @@ public interface DaoMessage {
             ", account.notify AS accountNotify, account.summary AS accountSummary, account.leave_deleted AS accountLeaveDeleted, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.color AS folderColor, folder.display AS folderDisplay, folder.type AS folderType, f.inherited_type AS folderInheritedType, folder.unified AS folderUnified, folder.read_only AS folderReadOnly" +
             ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.color AS identityColor, identity.synchronize AS identitySynchronize" +
-            ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
-            ", '[' || group_concat(message.`to`, ',') || ']' AS recipients" +
+            ", '[' || substr(group_concat(message.`from`, ','), 0, 2048) || ']' AS senders" +
+            ", '[' || substr(group_concat(message.`to`, ','), 0, 2048) || ']' AS recipients" +
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
@@ -292,7 +292,9 @@ public interface DaoMessage {
 
     static String FTS_STATS = "SELECT SUM(fts) AS fts, COUNT(*) AS total FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " JOIN account_view AS account ON account.id = message.account" +
             " WHERE content" +
+            " AND account.synchronize" +
             " AND folder.type <> '" + EntityFolder.OUTBOX + "'";
 
     @Query(FTS_STATS)
@@ -334,7 +336,9 @@ public interface DaoMessage {
     @Transaction
     @Query("SELECT message.id FROM message" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " JOIN account_view AS account ON account.id = message.account" +
             " WHERE NOT fts" +
+            " AND account.synchronize" +
             " AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
             " ORDER BY message.received")
     Cursor getMessageFts();
@@ -384,7 +388,7 @@ public interface DaoMessage {
             " FROM message" +
             " WHERE content" +
             " ORDER BY message.received DESC")
-    List<Long> getMessageWithContent();
+    Cursor getMessageWithContent();
 
     @Query("SELECT message.id" +
             " FROM message" +
@@ -568,7 +572,7 @@ public interface DaoMessage {
     LiveData<List<TupleMessageEx>> liveUnseenNotify();
 
     @Transaction
-    @Query("SELECT account.id AS account," +
+    @Query("SELECT account.id AS account, folder.id AS folder," +
             " COUNT(message.id) AS unseen," +
             " SUM(CASE WHEN account.created IS NULL OR message.received > account.created OR message.sent > account.created THEN NOT ui_ignored ELSE 0 END) AS notifying" +
             " FROM message" +
@@ -579,11 +583,11 @@ public interface DaoMessage {
             " AND folder.notify" +
             " AND message.notifying <> " + EntityMessage.NOTIFYING_IGNORE +
             " AND NOT (message.ui_seen OR message.ui_hide)" +
-            " GROUP BY account.id" +
-            " ORDER BY account.id")
+            " GROUP BY folder.id" +
+            " ORDER BY folder.id")
     LiveData<List<TupleMessageStats>> liveWidgetUnseen(Long account);
 
-    @Query("SELECT :account AS account," +
+    @Query("SELECT :account AS account, folder.id AS folder," +
             " COUNT(message.id) AS unseen," +
             " SUM(CASE WHEN account.created IS NULL OR message.received > account.created OR message.sent > account.created THEN NOT ui_ignored ELSE 0 END) AS notifying" +
             " FROM message" +
@@ -591,10 +595,11 @@ public interface DaoMessage {
             " JOIN folder_view AS folder ON folder.id = message.folder" +
             " WHERE (:account IS NULL OR account.id = :account)" +
             " AND account.`synchronize`" +
+            " AND (:folder IS NULL OR folder.id = :folder)" +
             " AND folder.notify" +
             " AND message.notifying <> " + EntityMessage.NOTIFYING_IGNORE +
             " AND NOT (message.ui_seen OR message.ui_hide)")
-    TupleMessageStats getWidgetUnseen(Long account);
+    TupleMessageStats getWidgetUnseen(Long account, Long folder);
 
     @Transaction
     @Query("SELECT folder, COUNT(*) AS total" +
@@ -652,9 +657,9 @@ public interface DaoMessage {
 
     @Query("SELECT uid FROM message" +
             " WHERE folder = :folder" +
-            " AND NOT ui_busy IS NULL" +
-            " AND ui_busy > :time" +
-            " AND NOT uid IS NULL")
+            " AND NOT uid IS NULL" +
+            " AND ((NOT ui_busy IS NULL AND ui_busy > :time)" +
+            " OR (EXISTS (SELECT * FROM operation WHERE operation.id = message.id)))")
     List<Long> getBusyUids(long folder, long time);
 
     @Query("SELECT id, uidl, msgid, ui_hide, ui_busy, ui_flagged FROM message" +
@@ -879,6 +884,9 @@ public interface DaoMessage {
     @Query("UPDATE message SET plain_only = :plain_only WHERE id = :id AND NOT (plain_only IS :plain_only)")
     int setMessagePlainOnly(long id, Integer plain_only);
 
+    @Query("UPDATE message SET write_below = :write_below WHERE id = :id AND NOT (write_below IS :write_below)")
+    int setMessageWriteBelow(long id, Boolean write_below);
+
     @Query("UPDATE message SET encrypt = :encrypt WHERE id = :id AND NOT (encrypt IS :encrypt)")
     int setMessageEncrypt(long id, Integer encrypt);
 
@@ -1008,7 +1016,7 @@ public interface DaoMessage {
             " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged" +
             " AND stored < :sync_time" + // moved, browsed
-            " AND (ui_snoozed IS NULL OR ui_snoozed =" + Long.MAX_VALUE+")")
+            " AND (ui_snoozed IS NULL OR ui_snoozed =" + Long.MAX_VALUE + ")")
     List<Long> getMessagesBefore(long folder, long sync_time, long keep_time, boolean unseen);
 
     @Query("DELETE FROM message" +

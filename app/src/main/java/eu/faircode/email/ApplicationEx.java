@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -42,10 +42,15 @@ import android.webkit.CookieManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.LocaleListCompat;
 import androidx.emoji2.text.DefaultEmojiCompatConfig;
 import androidx.emoji2.text.EmojiCompat;
 import androidx.emoji2.text.FontRequestEmojiCompatConfig;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.preference.PreferenceManager;
 import androidx.work.WorkManager;
 
@@ -63,6 +68,17 @@ public class ApplicationEx extends Application
 
     @Override
     protected void attachBaseContext(Context base) {
+        FairEmailLoggingProvider.setup(base);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                Log.i("App shutdown" +
+                        " version=" + BuildConfig.VERSION_NAME + BuildConfig.REVISION +
+                        " process=" + android.os.Process.myPid());
+            }
+        });
+
         super.attachBaseContext(getLocalizedContext(base));
     }
 
@@ -121,23 +137,68 @@ public class ApplicationEx extends Application
                 " process=" + android.os.Process.myPid());
         Log.logMemory(this, "App");
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final boolean crash_reports = prefs.getBoolean("crash_reports", false);
+        final boolean leak_canary = prefs.getBoolean("leak_canary", false);
+        final boolean load_emoji = prefs.getBoolean("load_emoji", true);
+
+        prev = Thread.getDefaultUncaughtExceptionHandler();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(@NonNull Thread thread, @NonNull Throwable ex) {
+                if (!crash_reports && Log.isOwnFault(ex)) {
+                    Log.e(ex);
+
+                    if (BuildConfig.BETA_RELEASE ||
+                            !Helper.isPlayStoreInstall())
+                        DebugHelper.writeCrashLog(ApplicationEx.this, ex);
+
+                    if (prev != null)
+                        prev.uncaughtException(thread, ex);
+                } else {
+                    Log.w(ex);
+                    System.exit(1);
+                }
+            }
+        });
+
+        ConnectionHelper.setupProxy(this);
+
         if (BuildConfig.DEBUG)
             UriHelper.test(this);
 
         CoalMine.install(this);
 
-        registerActivityLifecycleCallbacks(lifecycleCallbacks);
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_START)
+            public void onStart() {
+                log(true);
+            }
 
-        getMainLooper().setMessageLogging(new Printer() {
-            @Override
-            public void println(String msg) {
-                if (BuildConfig.DEBUG)
-                    Log.d("Loop: " + msg);
+            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+            public void onStop() {
+                log(false);
+            }
+
+            private void log(boolean foreground) {
+                Log.i("App foreground=" + foreground);
+                Log.breadcrumb("app", "foreground", Boolean.toString(foreground));
             }
         });
 
+        registerActivityLifecycleCallbacks(lifecycleCallbacks);
+
+        if (BuildConfig.DEBUG)
+            getMainLooper().setMessageLogging(new Printer() {
+                @Override
+                public void println(String msg) {
+                    Log.d("Loop: " + msg);
+                }
+            });
+
         if (BuildConfig.DEBUG &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && false) {
             StrictMode.VmPolicy policy = new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
                     .detectNonSdkApiUsage()
                     .penaltyListener(getMainExecutor(), new StrictMode.OnVmViolationListener() {
@@ -172,32 +233,6 @@ public class ApplicationEx extends Application
             StrictMode.setVmPolicy(policy);
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        final boolean crash_reports = prefs.getBoolean("crash_reports", false);
-        final boolean leak_canary = prefs.getBoolean("leak_canary", false);
-        final boolean load_emoji = prefs.getBoolean("load_emoji", false);
-
-        prev = Thread.getDefaultUncaughtExceptionHandler();
-
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(@NonNull Thread thread, @NonNull Throwable ex) {
-                if (!crash_reports && Log.isOwnFault(ex)) {
-                    Log.e(ex);
-
-                    if (BuildConfig.BETA_RELEASE ||
-                            !Helper.isPlayStoreInstall())
-                        Log.writeCrashLog(ApplicationEx.this, ex);
-
-                    if (prev != null)
-                        prev.uncaughtException(thread, ex);
-                } else {
-                    Log.w(ex);
-                    System.exit(1);
-                }
-            }
-        });
-
         Log.setup(this);
         CoalMine.setup(leak_canary);
 
@@ -205,7 +240,10 @@ public class ApplicationEx extends Application
 
         try {
             boolean tcp_keep_alive = prefs.getBoolean("tcp_keep_alive", false);
-            System.setProperty("fairemail.tcp_keep_alive", Boolean.toString(tcp_keep_alive));
+            if (tcp_keep_alive)
+                System.setProperty("fairemail.tcp_keep_alive", Boolean.toString(tcp_keep_alive));
+            else
+                System.clearProperty("fairemail.tcp_keep_alive");
         } catch (Throwable ex) {
             Log.e(ex);
         }
@@ -222,16 +260,17 @@ public class ApplicationEx extends Application
 
         // https://issuetracker.google.com/issues/233525229
         Log.i("Load emoji=" + load_emoji);
-        if (!load_emoji)
-            try {
-                FontRequestEmojiCompatConfig crying = DefaultEmojiCompatConfig.create(this);
-                if (crying != null) {
-                    crying.setMetadataLoadStrategy(EmojiCompat.LOAD_STRATEGY_MANUAL);
-                    EmojiCompat.init(crying);
-                }
-            } catch (Throwable ex) {
-                Log.e(ex);
+        try {
+            FontRequestEmojiCompatConfig crying = DefaultEmojiCompatConfig.create(this);
+            if (crying != null) {
+                crying.setMetadataLoadStrategy(EmojiCompat.LOAD_STRATEGY_MANUAL);
+                EmojiCompat.init(crying);
+                if (load_emoji)
+                    EmojiCompat.get().load();
             }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
 
         EmailProvider.init(this);
         EncryptionHelper.init(this);
@@ -257,12 +296,78 @@ public class ApplicationEx extends Application
                 WorkerCleanup.init(this);
                 WorkerDailyRules.init(this);
                 WorkerSync.init(this);
-            } catch (IllegalStateException ex) {
+            } catch (Throwable ex) {
                 Log.e(ex);
+
+                // Exception java.lang.RuntimeException:
+                //  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:6320)
+                //  at android.app.ActivityThread.access$1800 (ActivityThread.java:221)
+                //  at android.app.ActivityThread$H.handleMessage (ActivityThread.java:1860)
+                //  at android.os.Handler.dispatchMessage (Handler.java:102)
+                //  at android.os.Looper.loop (Looper.java:158)
+                //  at android.app.ActivityThread.main (ActivityThread.java:7225)
+                //  at java.lang.reflect.Method.invoke
+                //  at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run (ZygoteInit.java:1230)
+                //  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1120)
+                // Caused by java.lang.NullPointerException: Attempt to invoke virtual method 'int java.lang.Object.hashCode()' on a null object reference
+                //  at java.util.Collections.secondaryHash (Collections.java:3427)
+                //  at java.util.HashMap.put (HashMap.java:385)
+                //  at androidx.work.impl.WorkDatabase_Impl.getRequiredTypeConverters (WorkDatabase_Impl.java:312)
+                //  at androidx.room.RoomDatabase.init (RoomDatabase.java:272)
+                //  at androidx.room.RoomDatabase$Builder.build (RoomDatabase.java:1487)
+                //  at androidx.work.impl.WorkDatabase$Companion.create (WorkDatabase.kt:159)
+                //  at androidx.work.impl.WorkDatabase.create (WorkDatabase.kt)
+                //  at androidx.work.impl.WorkManagerImpl.<init> (WorkManagerImpl.java:259)
+                //  at androidx.work.impl.WorkManagerImpl.<init> (WorkManagerImpl.java:234)
+                //  at androidx.work.impl.WorkManagerImpl.initialize (WorkManagerImpl.java:213)
+                //  at androidx.work.impl.WorkManagerImpl.getInstance (WorkManagerImpl.java:168)
+                //  at androidx.work.WorkManager.getInstance (WorkManager.java:184)
+                //  at eu.faircode.email.ApplicationEx.onCreate (ApplicationEx.java:278)
+                //  at android.app.Instrumentation.callApplicationOnCreate (Instrumentation.java:1036)
+                //  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:6317)
             }
         }
 
-        registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        try {
+            ContextCompat.registerReceiver(this,
+                    onScreenOff,
+                    new IntentFilter(Intent.ACTION_SCREEN_OFF),
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            /*
+                Exception java.lang.RuntimeException:
+                  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:7690)
+                  at android.app.ActivityThread.-$$Nest$mhandleBindApplication
+                  at android.app.ActivityThread$H.handleMessage (ActivityThread.java:2478)
+                  at android.os.Handler.dispatchMessage (Handler.java:106)
+                  at android.os.Looper.loopOnce (Looper.java:230)
+                  at android.os.Looper.loop (Looper.java:319)
+                  at android.app.ActivityThread.main (ActivityThread.java:8893)
+                  at java.lang.reflect.Method.invoke
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:608)
+                  at com.android.internal.os.ChildZygoteInit.runZygoteServer (ChildZygoteInit.java:136)
+                  at com.android.internal.os.WebViewZygoteInit.main (WebViewZygoteInit.java:147)
+                  at java.lang.reflect.Method.invoke
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:608)
+                  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1103)
+                Caused by java.lang.SecurityException: Isolated process not allowed to call registerReceiver
+                  at android.os.Parcel.createExceptionOrNull (Parcel.java:3069)
+                  at android.os.Parcel.createException (Parcel.java:3053)
+                  at android.os.Parcel.readException (Parcel.java:3036)
+                  at android.os.Parcel.readException (Parcel.java:2978)
+                  at android.app.IActivityManager$Stub$Proxy.registerReceiverWithFeature (IActivityManager.java:6137)
+                  at android.app.ContextImpl.registerReceiverInternal (ContextImpl.java:1913)
+                  at android.app.ContextImpl.registerReceiver (ContextImpl.java:1860)
+                  at android.content.ContextWrapper.registerReceiver (ContextWrapper.java:791)
+                  at androidx.core.content.ContextCompat$Api33Impl.registerReceiver (ContextCompat.java:1239)
+                  at androidx.core.content.ContextCompat.registerReceiver (ContextCompat.java:870)
+                  at androidx.core.content.ContextCompat.registerReceiver (ContextCompat.java:821)
+                  at eu.faircode.email.ApplicationEx.onCreate (ApplicationEx.java:316)
+                  at android.app.Instrumentation.callApplicationOnCreate (Instrumentation.java:1316)
+                  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:7685)
+             */
+        }
 
         long end = new Date().getTime();
         Log.i("App created " + (end - start) + " ms");
@@ -312,6 +417,7 @@ public class ApplicationEx extends Application
                 case "debug":
                 case "log_level":
                     Log.setLevel(this);
+                    FairEmailLoggingProvider.setLevel(this);
                     break;
             }
         } catch (Throwable ex) {
@@ -731,9 +837,18 @@ public class ApplicationEx extends Application
             if (override_width)
                 editor.putBoolean("overview_mode", true);
             editor.remove("override_width");
-        } else if (version < 2089){
+        } else if (version < 2089) {
             if (!prefs.contains("auto_hide_answer"))
                 editor.putBoolean("auto_hide_answer", !Helper.isAccessibilityEnabled(context));
+        } else if (version < 2108) {
+            if (!prefs.getBoolean("updown", false))
+                editor.putBoolean("updown", false);
+        } else if (version < 2113)
+            editor.remove("send_more");
+        else if (version < 2137) {
+            // https://support.google.com/faqs/answer/6346016
+            if (!prefs.contains("cert_strict"))
+                editor.putBoolean("cert_strict", !BuildConfig.PLAY_STORE_RELEASE);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

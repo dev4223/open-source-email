@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -60,6 +60,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,7 +113,8 @@ public class FragmentAnswer extends FragmentBase {
         String compose_font = prefs.getString("compose_font", "");
         boolean compact = prefs.getBoolean("compose_compact", false);
         int zoom = prefs.getInt("compose_zoom", compact ? 0 : 1);
-        int message_zoom = prefs.getInt("message_zoom", 100);
+        boolean editor_zoom = prefs.getBoolean("editor_zoom", true);
+        int message_zoom = (editor_zoom ? prefs.getInt("message_zoom", 100) : 100);
 
         setSubtitle(R.string.title_answer_caption);
         setHasOptionsMenu(true);
@@ -364,6 +366,9 @@ public class FragmentAnswer extends FragmentBase {
             } else if (itemId == R.id.menu_placeholder_date) {
                 onMenuPlaceholder("$date$");
                 return true;
+            } else if (itemId == R.id.menu_placeholder_weekday) {
+                onMenuPlaceholder("$weekday$");
+                return true;
             }
         }
         return super.onOptionsItemSelected(item);
@@ -424,7 +429,7 @@ public class FragmentAnswer extends FragmentBase {
     }
 
     private void onActionSave() {
-        etText.clearComposingText();
+        HtmlHelper.clearComposingText(etText);
 
         // Prevent splitting placeholders
         Editable edit = etText.getText();
@@ -531,7 +536,7 @@ public class FragmentAnswer extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
@@ -638,7 +643,7 @@ public class FragmentAnswer extends FragmentBase {
     }
 
     private void onLanguageTool() {
-        etText.clearComposingText();
+        HtmlHelper.clearComposingText(etText);
 
         Bundle args = new Bundle();
         args.putCharSequence("text", etText.getText());
@@ -683,7 +688,7 @@ public class FragmentAnswer extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 Throwable exex = new Throwable("LanguageTool", ex);
-                Log.unexpectedError(getParentFragmentManager(), exex, false);
+                Log.unexpectedError(getParentFragmentManager(), exex, !(ex instanceof IOException));
             }
         }.execute(this, args, "answer:lt");
     }

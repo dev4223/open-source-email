@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -454,7 +454,7 @@ public class MessageClassifier {
 
         File file = getFile(context, false);
         File backup = getFile(context, true);
-        backup.delete();
+        Helper.secureDelete(backup);
         if (file.exists())
             file.renameTo(backup);
 
@@ -532,7 +532,7 @@ public class MessageClassifier {
             writer.endObject();
         }
 
-        backup.delete();
+        Helper.secureDelete(backup);
 
         dirty = false;
 
@@ -553,7 +553,7 @@ public class MessageClassifier {
             _load(file);
         } catch (Throwable ex) {
             Log.e(ex);
-            file.delete();
+            Helper.secureDelete(file);
             clear(context);
         }
     }

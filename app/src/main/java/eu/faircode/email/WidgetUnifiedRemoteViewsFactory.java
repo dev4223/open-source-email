@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.appwidget.AppWidgetManager;
@@ -225,7 +225,9 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
             views.setViewVisibility(R.id.stripe, hasColor && color_stripe ? View.VISIBLE : View.GONE);
 
             if (avatars) {
-                ContactInfo[] info = ContactInfo.get(context, message.account, null, message.bimi_selector, message.from);
+                ContactInfo[] info = ContactInfo.get(context,
+                        message.account, null, message.bimi_selector,
+                        message.isForwarder() ? message.submitter : message.from);
                 views.setImageViewBitmap(R.id.avatar, info.length == 0 ? null : info[0].getPhotoBitmap());
             }
             views.setViewVisibility(R.id.avatar, avatars ? View.VISIBLE : View.GONE);

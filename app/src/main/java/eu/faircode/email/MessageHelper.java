@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.system.OsConstants.ENOSPC;
@@ -69,7 +69,8 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.json.JSONObject;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -153,7 +154,6 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParameterList;
 import javax.mail.internet.ParseException;
 
-import biweekly.Biweekly;
 import biweekly.ICalendar;
 import biweekly.component.VEvent;
 import biweekly.property.Method;
@@ -177,14 +177,15 @@ public class MessageHelper {
     static final int SMALL_MESSAGE_SIZE = 192 * 1024; // bytes
     static final int DEFAULT_DOWNLOAD_SIZE = 4 * 1024 * 1024; // bytes
     static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
+    static final String HEADER_MICROSOFT_ORIGINAL_MESSAGE_ID = "X-Microsoft-Original-Message-ID";
     static final int MAX_SUBJECT_AGE = 48; // hours
     static final int DEFAULT_THREAD_RANGE = 7; // 2^7 = 128 days
     static final int MAX_UNZIP_COUNT = 20;
-    static final long MAX_UNZIP_SIZE = 1000 * 1000 * 1000L;
+    static final long MAX_UNZIP_SIZE = 10 * 1024 * 1024L;
 
-    static final List<String> UNZIP_FORMATS = BuildConfig.PLAY_STORE_RELEASE
-            ? Collections.unmodifiableList(Arrays.asList("zip"))
-            : Collections.unmodifiableList(Arrays.asList("zip, gz, tar.gz"));
+    static final List<String> UNZIP_FORMATS = Collections.unmodifiableList(Arrays.asList(
+            "zip", "gz", "tar.gz"
+    ));
 
     static final List<String> RECEIVED_WORDS = Collections.unmodifiableList(Arrays.asList(
             "from", "by", "via", "with", "id", "for"
@@ -205,7 +206,7 @@ public class MessageHelper {
     private static final String ARC_MESSAGE_SIGNATURE = "ARC-Message-Signature";
 
     static final List<String> ARC_WHITELIST_DEFAULT = Collections.unmodifiableList(Arrays.asList(
-            "google.com", "microsoft.com"
+            "google.com", "microsoft.com", "amazonses.com"
     ));
 
     private static final String DOCTYPE = "<!DOCTYPE";
@@ -335,6 +336,9 @@ public class MessageHelper {
         boolean encrypt_subject = prefs.getBoolean("encrypt_subject", false);
         boolean forward_new = prefs.getBoolean("forward_new", true);
 
+        if (identity != null && identity.receipt_type != null)
+            receipt_type = identity.receipt_type;
+
         Map<String, String> c = new HashMap<>();
         c.put("id", message.id == null ? null : Long.toString(message.id));
         c.put("encrypt", message.encrypt + "/" + message.ui_encrypt);
@@ -370,6 +374,7 @@ public class MessageHelper {
         }
 
         // Sensitivity
+        // https://datatracker.ietf.org/doc/html/rfc4021#section-2.1.55
         if (EntityMessage.SENSITIVITY_PERSONAL.equals(message.sensitivity))
             imessage.addHeader("Sensitivity", "Personal");
         else if (EntityMessage.SENSITIVITY_PRIVATE.equals(message.sensitivity))
@@ -539,10 +544,13 @@ public class MessageHelper {
                 }
 
                 // https://tools.ietf.org/html/rfc3798
+                // https://en.wikipedia.org/wiki/Return_receipt
                 if (receipt_type == 0 || receipt_type == 2) {
                     // Read receipt
                     imessage.addHeader("Disposition-Notification-To", to);
                     imessage.addHeader("Read-Receipt-To", to);
+                    if (receipt_legacy)
+                        imessage.addHeader("Return-Receipt-To", to);
                     imessage.addHeader("X-Confirm-Reading-To", to);
                 }
             }
@@ -1035,8 +1043,11 @@ public class MessageHelper {
                     document.body().prependChild(div);
                 }
 
-                document.select("div[fairemail=signature]").removeAttr("fairemail");
-                document.select("div[fairemail=reference]").removeAttr("fairemail");
+                document.select("div[fairemail=signature]")
+                        .removeAttr("fairemail")
+                        .addClass("fairemail_signature");
+                document.select("div[fairemail=reference]")
+                        .removeAttr("fairemail");
 
                 Elements reply = document.select("div[fairemail=reply]");
                 if (message.isPlainOnly())
@@ -1198,9 +1209,12 @@ public class MessageHelper {
                                                 ContactsContract.CommonDataKinds.Website.TYPE,
                                                 ContactsContract.CommonDataKinds.Website.URL
                                         },
-                                        ContactsContract.Data.CONTACT_ID + " = " + contactId +
-                                                " AND " + ContactsContract.Contacts.Data.MIMETYPE + " = '" + ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE + "'",
-                                        null, null)) {
+                                        ContactsContract.Data.CONTACT_ID + " = ?" +
+                                                " AND " + ContactsContract.Contacts.Data.MIMETYPE + " = ?",
+                                        new String[]{
+                                                contactId,
+                                                ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE
+                                        }, null)) {
                                     while (web.moveToNext()) {
                                         int type = web.getInt(0);
                                         String url = web.getString(1);
@@ -1215,8 +1229,10 @@ public class MessageHelper {
                                                 ContactsContract.CommonDataKinds.Phone.TYPE,
                                                 ContactsContract.CommonDataKinds.Phone.NUMBER
                                         },
-                                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId,
-                                        null, null)) {
+                                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                        new String[]{
+                                                contactId
+                                        }, null)) {
                                     while (phones.moveToNext()) {
                                         int type = phones.getInt(0);
                                         String number = phones.getString(1);
@@ -1263,8 +1279,10 @@ public class MessageHelper {
                             attachment.id = db.attachment().insertAttachment(attachment);
 
                             File file = attachment.getFile(context);
-                            try (VCardWriter writer = new VCardWriter(file, VCardVersion.V3_0)) {
-                                writer.write(vcard);
+                            try (OutputStream os = new FileOutputStream(file)) {
+                                try (VCardWriter writer = new VCardWriter(os, VCardVersion.V3_0)) {
+                                    writer.write(vcard);
+                                }
                             }
 
                             attachment.size = file.length();
@@ -1348,7 +1366,7 @@ public class MessageHelper {
             if (attachment.available &&
                     "text/calendar".equals(attachment.type)) {
                 File file = attachment.getFile(context);
-                ICalendar icalendar = Biweekly.parse(file).first();
+                ICalendar icalendar = CalendarHelper.parse(context, file);
                 Method method = (icalendar == null ? null : icalendar.getMethod());
                 if (method != null && method.isReply()) {
                     // https://www.rfc-editor.org/rfc/rfc6047#section-2.4
@@ -1578,6 +1596,9 @@ public class MessageHelper {
         header = MimeUtility.unfold(header);
         if (TextUtils.isEmpty(header))
             return result;
+        header = header
+                .replaceAll("<\\s*<", "<")
+                .replaceAll(">\\s*>", ">");
         for (String ref : header.split("[,\\s]+"))
             if (!result.contains(ref))
                 result.add(ref);
@@ -2087,6 +2108,8 @@ public class MessageHelper {
         if (receipt == null || receipt.length == 0)
             receipt = getAddressHeader("Read-Receipt-To");
         if (receipt == null || receipt.length == 0)
+            receipt = getAddressHeader("Return-Receipt-To");
+        if (receipt == null || receipt.length == 0)
             receipt = getAddressHeader("X-Confirm-Reading-To");
         return receipt;
     }
@@ -2123,6 +2146,7 @@ public class MessageHelper {
 
         List<String> all = new ArrayList<>();
 
+        // https://datatracker.ietf.org/doc/html/rfc8601
         String[] results = imessage.getHeader("Authentication-Results");
         if (results != null)
             all.addAll(Arrays.asList(results));
@@ -2153,9 +2177,27 @@ public class MessageHelper {
                 continue;
             String[] val = v.split("\\s+");
             if (val.length > 0) {
-                if ("fail".equals(val[0]))
+                if ("fail".equals(val[0])) {
+                    if ("dmarc".equals(type)) {
+                        // dmarc=fail (p=NONE sp=NONE dis=NONE) header.from=example.com
+                        int s = v.indexOf('(');
+                        int e = v.indexOf(')');
+                        if (s > 0 && e > s) {
+                            Boolean none = null;
+                            for (String p : v.substring(s + 1, e).split("\\s+")) {
+                                String[] kv = p.split("=");
+                                // Without getting the DMARC DNS record, it isn't possible to check the sub/domain
+                                if (kv.length == 2 &&
+                                        ("p".equalsIgnoreCase(kv[0]) || "sp".equalsIgnoreCase(kv[0])) &&
+                                        "none".equalsIgnoreCase(kv[1]))
+                                    none = (none == null || none) && "none".equalsIgnoreCase(kv[1]);
+                            }
+                            if (none != null && none)
+                                continue; // neutral
+                        }
+                    }
                     result = false;
-                else if ("pass".equals(val[0])) {
+                } else if ("pass".equals(val[0])) {
                     // https://www.rfc-editor.org/rfc/rfc7489#section-3.1.1
                     if ("dkim".equals(type))
                         return true;
@@ -2329,6 +2371,9 @@ public class MessageHelper {
 
             Log.i("DKIM got " + records[0].response);
             Map<String, String> dk = getKeyValues(records[0].response);
+            // DKIM version and key type are not always present
+            //  v=DKIM1; k=rsa; p=...
+            //  v=DKIM1; k=ed25519; p=...
 
             String canonic = kv.get("c");
             Log.i("DKIM canonicalization=" + canonic);
@@ -2466,6 +2511,7 @@ public class MessageHelper {
             byte[] key = Base64.decode(p, Base64.DEFAULT);
             byte[] signature = Base64.decode(s, Base64.DEFAULT);
 
+            // https://datatracker.ietf.org/doc/html/rfc8463
             if ("Ed25519".equals(salgo)) {
                 if (false) {
                     // https://www.rfc-editor.org/rfc/rfc8037#page-9
@@ -2473,6 +2519,7 @@ public class MessageHelper {
                     key = Base64.decode("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo", Base64.URL_SAFE);
                     signature = Base64.decode("hgyY0il_MGCjP0JzlnLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki4iylGjg5BhVsPt9g7sVvpAr_MuM0KAg", Base64.URL_SAFE);
                 }
+                data = MessageDigest.getInstance("SHA-256").digest(head.toString().getBytes());
                 key = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key).getEncoded();
             }
 
@@ -2575,6 +2622,8 @@ public class MessageHelper {
             InternetAddress iaddress = (InternetAddress) address;
             String email = iaddress.getAddress();
             String personal = iaddress.getPersonal();
+            if (!TextUtils.isEmpty(personal))
+                personal = personal.replace("\u00ad", BuildConfig.DEBUG ? "-" : ""); // soft hyphen
 
             if (TextUtils.isEmpty(email) && TextUtils.isEmpty(personal))
                 continue;
@@ -2628,11 +2677,24 @@ public class MessageHelper {
         return result.toArray(new Address[0]);
     }
 
-    Address[] getSender() throws MessagingException {
+    Address[] getSubmitter() throws MessagingException {
         Address[] sender = getAddressHeader("X-Google-Original-From");
         if (sender == null)
+            sender = getAddressHeader("Duck-Original-From");
+        if (sender == null)
+            sender = getAddressHeader("X-SimpleLogin-Original-From");
+        if (sender == null)
+            sender = getAddressHeader("X-AnonAddy-Original-From-Header");
+        if (sender == null)
             sender = getAddressHeader("Sender");
-
+        if (sender == null) {
+            Address[] from = getAddressHeader("From");
+            if (from != null && from.length == 1) {
+                String email = ((InternetAddress) from[0]).getAddress();
+                if (email != null && email.endsWith("@mozmail.com"))
+                    sender = getAddressHeader("Resent-From");
+            }
+        }
         return sender;
     }
 
@@ -2797,7 +2859,8 @@ public class MessageHelper {
         return subject
                 .trim()
                 .replace("\n", "")
-                .replace("\r", "");
+                .replace("\r", "")
+                .replace("\u00ad", BuildConfig.DEBUG ? "-" : "");  // soft hyphen
     }
 
     Long getSize() throws MessagingException {
@@ -3486,6 +3549,15 @@ public class MessageHelper {
             return "text/html".equalsIgnoreCase(contentType.getBaseType());
         }
 
+        boolean isMarkdown() {
+            return "text/markdown".equalsIgnoreCase(contentType.getBaseType());
+        }
+
+        boolean isPatch() {
+            return "text/x-diff".equalsIgnoreCase(contentType.getBaseType()) ||
+                    "text/x-patch".equalsIgnoreCase(contentType.getBaseType());
+        }
+
         boolean isReport() {
             String ct = contentType.getBaseType();
             return (Report.isDeliveryStatus(ct) ||
@@ -3635,7 +3707,12 @@ public class MessageHelper {
                     String preamble = h.contentType.getParameter("preamble");
                     if (Boolean.parseBoolean(preamble)) {
                         String text = ((MimeMultipart) h.part.getContent()).getPreamble();
-                        String html = "<h1>Preamble</h1><div x-plain=\"true\">" + HtmlHelper.formatPlainText(text) + "</div>";
+                        String html = "<div class=\"faircode_remove\">" +
+                                "<h1>Preamble</h1>" +
+                                "<div x-plain=\"true\">" +
+                                HtmlHelper.formatPlainText(text) +
+                                "</div>" +
+                                "</div>";
                         sb.append(html);
                         continue;
                     }
@@ -3892,6 +3969,21 @@ public class MessageHelper {
                         Helper.copy(h.part.getDataHandler().getInputStream(), bos);
                         result = bos.toString(override);
                     }
+                } else if (h.isMarkdown()) {
+                    try {
+                        Parser p = Parser.builder().build();
+                        org.commonmark.node.Node d = p.parse(result);
+                        HtmlRenderer r = HtmlRenderer.builder().build();
+                        result = r.render(d);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                        result = HtmlHelper.formatPlainText(Log.formatThrowable(ex));
+                    }
+                } else if (h.isPatch()) {
+                    result = "<hr>" +
+                            "<pre style=\"font-family: monospace; font-size:small;\">" +
+                            HtmlHelper.formatPlainText(result) +
+                            "</pre>";
                 } else if (h.isReport()) {
                     Report report = new Report(h.contentType.getBaseType(), result);
                     result = report.html;
@@ -4357,39 +4449,32 @@ public class MessageHelper {
                     EntityLog.log(context, "Event not processed" +
                             " permission=" + permission +
                             " account=" + (account != null) +
-                            " calendar=" + (account == null ? null : account.calendar) +
                             " folder=" + (folder != null) + ":" + (folder == null ? null : folder.type) +
-                            " received=" + received);
+                            " received=" + received +
+                            " calendar=" + (account == null ? null : account.calendar));
                     return;
                 }
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean ical_tentative = prefs.getBoolean("ical_tentative", true);
+
                 File file = local.getFile(context);
-                ICalendar icalendar = Biweekly.parse(file).first();
+                ICalendar icalendar = CalendarHelper.parse(context, file);
 
                 Method method = icalendar.getMethod();
                 VEvent event = icalendar.getEvents().get(0);
 
                 // https://www.rfc-editor.org/rfc/rfc5546#section-3.2
-                if (method == null || method.isRequest() || method.isCancel())
+                if (method != null && method.isCancel())
                     CalendarHelper.delete(context, event, message);
-
-                if (method == null || method.isRequest()) {
-                    String selectedAccount;
-                    String selectedName;
-                    try {
-                        JSONObject jselected = new JSONObject(account.calendar);
-                        selectedAccount = jselected.getString("account");
-                        selectedName = jselected.optString("name", null);
-                    } catch (Throwable ex) {
-                        Log.i(ex);
-                        selectedAccount = account.calendar;
-                        selectedName = null;
-                    }
-
-                    CalendarHelper.insert(context, icalendar, event,
-                            CalendarContract.Events.STATUS_TENTATIVE,
-                            selectedAccount, selectedName, message);
-                }
+                else if (method == null || method.isRequest()) {
+                    if (ical_tentative)
+                        CalendarHelper.insert(context, icalendar, event,
+                                CalendarContract.Events.STATUS_TENTATIVE, account, message);
+                    else
+                        EntityLog.log(context, "Tentative event not stored");
+                } else
+                    EntityLog.log(context, "Unknown event method=" + method.getValue());
             } catch (Throwable ex) {
                 Log.w(ex);
                 db.attachment().setWarning(local.id, Log.formatThrowable(ex));
@@ -4878,6 +4963,7 @@ public class MessageHelper {
                         !("mixed".equalsIgnoreCase(ct.getSubType()) ||
                                 "alternative".equalsIgnoreCase(ct.getSubType()) ||
                                 "related".equalsIgnoreCase(ct.getSubType()) ||
+                                "relative".equalsIgnoreCase(ct.getSubType()) || // typo?
                                 "report".equalsIgnoreCase(ct.getSubType()) ||
                                 "parallel".equalsIgnoreCase(ct.getSubType()) ||
                                 "digest".equalsIgnoreCase(ct.getSubType()) ||
@@ -5016,6 +5102,11 @@ public class MessageHelper {
                     if ("text/html".equalsIgnoreCase(ct))
                         filename += ".html";
                 }
+
+                if ("text/markdown".equalsIgnoreCase(ct) ||
+                        "text/x-diff".equalsIgnoreCase(ct) ||
+                        "text/x-patch".equalsIgnoreCase(ct))
+                    parts.extra.add(new PartHolder(part, contentType));
 
                 if (Report.isDeliveryStatus(ct) ||
                         Report.isDispositionNotification(ct) ||
@@ -5477,12 +5568,12 @@ public class MessageHelper {
                         getStructure(multipart.getBodyPart(i), ssb, level + 1, textColorLink);
                     } catch (Throwable ex) {
                         Log.w(ex);
-                        ssb.append(ex.toString()).append('\n');
+                        ssb.append(new ThrowableWrapper(ex).toSafeString()).append('\n');
                     }
             }
         } catch (Throwable ex) {
             Log.w(ex);
-            ssb.append(ex.toString()).append('\n');
+            ssb.append(new ThrowableWrapper(ex).toSafeString()).append('\n');
         }
     }
 
@@ -5708,7 +5799,7 @@ public class MessageHelper {
                 }
             } catch (Throwable ex) {
                 Log.e(ex);
-                report.append(TextUtils.htmlEncode(ex.toString()));
+                report.append(TextUtils.htmlEncode(new ThrowableWrapper(ex).toSafeString()));
             }
             report.append("</div>");
             this.html = report.toString();

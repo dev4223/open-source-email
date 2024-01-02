@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -178,13 +178,12 @@ public class ContactInfo {
         // Favicons
         Log.i("Cleanup avatars");
         for (String type : new String[]{"favicons", "generated"}) {
-            File[] favicons = new File(context.getFilesDir(), type).listFiles();
+            File[] favicons = Helper.ensureExists(context, type).listFiles();
             if (favicons != null)
                 for (File file : favicons)
                     if (file.lastModified() + CACHE_FAVICON_DURATION < now) {
                         Log.i("Deleting " + file);
-                        if (!file.delete())
-                            Log.w("Error deleting " + file);
+                        Helper.secureDelete(file);
                     }
         }
     }
@@ -202,7 +201,7 @@ public class ContactInfo {
             return;
 
         for (String type : new String[]{"favicons", "generated"}) {
-            final File dir = new File(context.getFilesDir(), type);
+            final File dir = Helper.ensureExists(context, type);
             Helper.getParallelExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
@@ -210,7 +209,7 @@ public class ContactInfo {
                         File[] favicons = dir.listFiles();
                         if (favicons != null)
                             for (File favicon : favicons)
-                                favicon.delete();
+                                Helper.secureDelete(favicon);
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
@@ -358,7 +357,7 @@ public class ContactInfo {
 
                 final String domain = d.toLowerCase(Locale.ROOT);
 
-                File dir = Helper.ensureExists(new File(context.getFilesDir(), "favicons"));
+                File dir = Helper.ensureExists(context, "favicons");
 
                 try {
                     // check cache
@@ -549,7 +548,7 @@ public class ContactInfo {
         String tag = (TextUtils.isEmpty(info.email) ? name : info.email);
         String etag = (TextUtils.isEmpty(info.email) ? Helper.sanitizeFilename(name + "@name") : ekey);
         if (info.bitmap == null && generated && !TextUtils.isEmpty(tag)) {
-            File dir = Helper.ensureExists(new File(context.getFilesDir(), "generated"));
+            File dir = Helper.ensureExists(context, "generated");
             File[] files = dir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File file, String name) {
@@ -640,6 +639,7 @@ public class ContactInfo {
     private static Favicon parseFavicon(URL base, int scaleToPixels, Context context) throws IOException {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean favicons_partial = prefs.getBoolean("favicons_partial", true);
+        boolean favicons_manifest = prefs.getBoolean("favicons_manifest", false);
 
         Log.i("PARSE favicon " + base);
         HttpURLConnection connection = ConnectionHelper
@@ -681,7 +681,7 @@ public class ContactInfo {
         imgs.addAll(doc.head().select("meta[itemprop=image]"));
 
         // https://developer.mozilla.org/en-US/docs/Web/Manifest/icons
-        if (imgs.size() == 0 || BuildConfig.DEBUG)
+        if (imgs.size() == 0 || favicons_manifest)
             for (Element manifest : doc.head().select("link[rel=manifest]"))
                 try {
                     String href = manifest.attr("href");
@@ -711,12 +711,14 @@ public class ContactInfo {
                                 String src = jicon.optString("src");
                                 String sizes = jicon.optString("sizes", "");
                                 String type = jicon.optString("type", "");
+                                String purpose = jicon.optString("purpose", "");
                                 if (!TextUtils.isEmpty(src)) {
                                     Element img = doc.createElement("link")
                                             .attr("rel", "manifest")
                                             .attr("href", src)
                                             .attr("sizes", sizes)
-                                            .attr("type", type);
+                                            .attr("type", type)
+                                            .attr("purpose", purpose);
                                     imgs.add(img);
                                 }
                             }
@@ -848,6 +850,9 @@ public class ContactInfo {
                 .trim();
         String type = img.attr("type")
                 .trim();
+        String purpose = img.attr("purpose")
+                .toLowerCase(Locale.ROOT)
+                .trim();
 
         int order = 0;
         if ("link".equals(img.tagName()))
@@ -855,11 +860,14 @@ public class ContactInfo {
 
         boolean isIco = (href.endsWith(".ico") || "image/x-icon".equals(type));
         boolean isSvg = (href.endsWith(".svg") || "image/svg+xml".equals(type));
-        boolean isMask = ("mask-icon".equals(rel) || img.hasAttr("mask"));
+        boolean isMask = ("mask-icon".equals(rel) || img.hasAttr("mask") || purpose.contains("mask"));
+        boolean isMonochrome = purpose.contains("monochrome");
 
-        if (isMask)
+        if (isMask || isMonochrome)
             order = -10; // Safari: "mask-icon"
         else if ("icon".equals(rel) && !isIco)
+            order += 20;
+        else if ("manifest".equals(rel))
             order += 20;
         else if ("apple-touch-icon".equals(rel) ||
                 "apple-touch-icon-precomposed".equals(rel)) {
@@ -867,7 +875,7 @@ public class ContactInfo {
             if ("mailbox.org".equals(host))
                 order += 30;
             else
-                order += 10;
+                order += 20;
         }
 
         if (isIco)
@@ -923,7 +931,11 @@ public class ContactInfo {
                 throw new FileNotFoundException("decodeStream");
             if (bitmap.getWidth() <= 1 || bitmap.getHeight() <= 1)
                 throw new IOException("Too small");
+            Log.i("GOT favicon " + url);
             return new Favicon(bitmap, url.toString());
+        } catch (Throwable ex) {
+            Log.i("GET favicon " + url + " error=" + ex.getMessage());
+            throw ex;
         } finally {
             connection.disconnect();
         }

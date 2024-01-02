@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -35,6 +36,7 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -83,6 +85,7 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -112,6 +115,7 @@ public class FragmentOAuth extends FragmentBase {
 
     private TextView tvTitle;
     private TextView tvPrivacy;
+    private TextView tvPrivacyApp;
     private EditText etName;
     private EditText etEmail;
     private EditText etTenant;
@@ -119,6 +123,7 @@ public class FragmentOAuth extends FragmentBase {
     private CheckBox cbPop;
     private CheckBox cbRecent;
     private CheckBox cbUpdate;
+    private TextView tvBrave;
     private Button btnOAuth;
     private ContentLoadingProgressBar pbOAuth;
     private TextView tvConfiguring;
@@ -134,6 +139,8 @@ public class FragmentOAuth extends FragmentBase {
     private Group grpTenant;
     private Group grpError;
 
+    private static final String FAIREMAIL_RANDOM = "fairemail.random";
+    private static final String FAIREMAIL_EXPIRE = "fairemail.expire";
     private static final int MAILRU_TIMEOUT = 20 * 1000; // milliseconds
 
     @Override
@@ -168,6 +175,7 @@ public class FragmentOAuth extends FragmentBase {
         // Get controls
         tvTitle = view.findViewById(R.id.tvTitle);
         tvPrivacy = view.findViewById(R.id.tvPrivacy);
+        tvPrivacyApp = view.findViewById(R.id.tvPrivacyApp);
         etName = view.findViewById(R.id.etName);
         etEmail = view.findViewById(R.id.etEmail);
         etTenant = view.findViewById(R.id.etTenant);
@@ -175,6 +183,7 @@ public class FragmentOAuth extends FragmentBase {
         cbPop = view.findViewById(R.id.cbPop);
         cbRecent = view.findViewById(R.id.cbRecent);
         cbUpdate = view.findViewById(R.id.cbUpdate);
+        tvBrave = view.findViewById(R.id.tvBrave);
         btnOAuth = view.findViewById(R.id.btnOAuth);
         pbOAuth = view.findViewById(R.id.pbOAuth);
         tvConfiguring = view.findViewById(R.id.tvConfiguring);
@@ -192,12 +201,23 @@ public class FragmentOAuth extends FragmentBase {
 
         // Wire controls
 
-        tvPrivacy.setVisibility(TextUtils.isEmpty(privacy) ? View.GONE : View.VISIBLE);
         tvPrivacy.setPaintFlags(tvPrivacy.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         tvPrivacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(privacy), false);
+                if (TextUtils.isEmpty(privacy))
+                    Helper.view(v.getContext(), Uri.parse(Helper.PRIVACY_URI), false);
+                else
+                    Helper.view(v.getContext(), Uri.parse(privacy), false);
+            }
+        });
+
+        tvPrivacy.setVisibility(TextUtils.isEmpty(privacy) ? View.GONE : View.VISIBLE);
+        tvPrivacyApp.setPaintFlags(tvPrivacyApp.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        tvPrivacyApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.PRIVACY_URI), false);
             }
         });
 
@@ -234,6 +254,28 @@ public class FragmentOAuth extends FragmentBase {
                     : R.drawable.google_signin_background_light));
             btnOAuth.setPaddingRelative(dp12, 0, dp12, 0);
         }
+
+
+        boolean brave = false;
+        try {
+            PackageManager pm = getContext().getPackageManager();
+            Intent intent = new Intent(Intent.ACTION_VIEW)
+                    .addCategory(Intent.CATEGORY_BROWSABLE)
+                    .setData(Uri.parse("http://example.com"));
+            int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
+            List<ResolveInfo> browsers = pm.queryIntentActivities(intent, flags);
+            for (ResolveInfo browser : browsers)
+                if (browser.activityInfo.packageName.startsWith("com.brave.browser")) {
+                    // _beta _nightly
+                    brave = true;
+                    break;
+                }
+        } catch (Throwable ex) {
+            Log.e(ex);
+            brave = true;
+        }
+
+        tvBrave.setVisibility(brave ? View.VISIBLE : View.GONE);
 
         btnOAuth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -341,7 +383,6 @@ public class FragmentOAuth extends FragmentBase {
             Log.breadcrumb("onAuthorize", "id", id);
 
             final Context context = getContext();
-            PackageManager pm = context.getPackageManager();
             EmailProvider provider = EmailProvider.getProvider(context, id);
             EmailProvider.OAuth oauth = (graph ? provider.graph : provider.oauth);
 
@@ -384,10 +425,15 @@ public class FragmentOAuth extends FragmentBase {
                     Uri.parse(authorizationEndpoint),
                     Uri.parse(tokenEndpoint));
 
+            int random = Math.abs(new SecureRandom().nextInt());
+            long expire = new Date().getTime() + 10 * 60 * 1000L;
             AuthState authState = new AuthState(serviceConfig);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String key = "oauth." + provider.id + (graph ? ":graph" : "");
-            prefs.edit().putString(key, authState.jsonSerializeString()).apply();
+            JSONObject jauthstate = authState.jsonSerialize();
+            jauthstate.put(FAIREMAIL_RANDOM, random);
+            jauthstate.put(FAIREMAIL_EXPIRE, expire);
+            prefs.edit().putString(key, jauthstate.toString()).apply();
 
             Map<String, String> params = (oauth.parameters == null
                     ? new LinkedHashMap<>()
@@ -408,7 +454,7 @@ public class FragmentOAuth extends FragmentBase {
                             ResponseTypeValues.CODE,
                             redirectUri)
                             .setScopes(oauth.scopes)
-                            .setState(provider.id + (graph ? ":graph" : ""))
+                            .setState(provider.id + ":" + random + ":" + (graph ? ":graph" : ""))
                             .setAdditionalParameters(params);
 
             if (askAccount) {
@@ -491,19 +537,32 @@ public class FragmentOAuth extends FragmentBase {
             }
 
             String id = auth.state.split(":")[0];
+            int returnedRandom = Integer.parseInt(auth.state.split(":")[1]);
+            boolean graph = auth.state.endsWith(":graph");
             final EmailProvider provider = EmailProvider.getProvider(getContext(), id);
-            EmailProvider.OAuth oauth = (auth.state.endsWith(":graph") ? provider.graph : provider.oauth);
+            EmailProvider.OAuth oauth = (graph ? provider.graph : provider.oauth);
 
             if (provider.graph != null &&
                     provider.graph.enabled &&
-                    !auth.state.endsWith(":graph"))
+                    !graph)
                 setEnabled(false);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String json = prefs.getString("oauth." + auth.state, null);
+            String key = "oauth." + provider.id + (graph ? ":graph" : "");
+            String json = prefs.getString(key, null);
+            JSONObject jauthstate = new JSONObject(json);
+            int random = jauthstate.optInt(FAIREMAIL_RANDOM, -1);
+            long expire = jauthstate.optLong(FAIREMAIL_EXPIRE, -1);
+            jauthstate.remove(FAIREMAIL_RANDOM);
             prefs.edit().remove("oauth." + auth.state).apply();
+            long now = new Date().getTime();
 
-            final AuthState authState = AuthState.jsonDeserialize(json);
+            if (random != returnedRandom)
+                throw new SecurityException("random " + random + " <> " + returnedRandom);
+            if (expire < now)
+                throw new SecurityException("Session expired " + new Date(expire) + " < " + new Date(now));
+
+            final AuthState authState = AuthState.jsonDeserialize(jauthstate);
 
             Log.i("OAuth get token provider=" + provider.id + " state=" + auth.state);
             authState.update(auth, null);
@@ -558,7 +617,7 @@ public class FragmentOAuth extends FragmentBase {
                                             new String[]{access.idToken},
                                             new AuthState[]{authState});
                                 else {
-                                    if (auth.state.endsWith(":graph")) {
+                                    if (graph) {
                                         String key0 = "oauth." + provider.id;
                                         String json0 = prefs.getString(key0, null);
                                         prefs.edit().remove(key0).apply();
@@ -1033,7 +1092,7 @@ public class FragmentOAuth extends FragmentBase {
             return;
 
         if (ex instanceof IllegalArgumentException)
-            tvError.setText(ex.getMessage());
+            tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
         else
             tvError.setText(Log.formatThrowable(ex, false));
 

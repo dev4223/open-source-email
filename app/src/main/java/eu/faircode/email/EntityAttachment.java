@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -27,7 +27,6 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -117,25 +116,26 @@ public class EntityAttachment {
         return ImageHelper.isImage(getMimeType());
     }
 
+    boolean isPDF() {
+        return "application/pdf".equals(getMimeType());
+    }
+
     boolean isCompressed() {
         if ("application/zip".equals(type))
             return true;
-        if ("application/gzip".equals(type) && !BuildConfig.PLAY_STORE_RELEASE)
+        if ("application/gzip".equals(type))
             return true;
 
         String extension = Helper.getExtension(name);
         if ("zip".equals(extension))
             return true;
-        if ("gz".equals(extension) && !BuildConfig.PLAY_STORE_RELEASE)
+        if ("gz".equals(extension))
             return true;
 
         return false;
     }
 
     boolean isGzip() {
-        if (BuildConfig.PLAY_STORE_RELEASE)
-            return false;
-
         if ("application/gzip".equals(type))
             return true;
 
@@ -164,10 +164,7 @@ public class EntityAttachment {
 
     Uri getUri(Context context) {
         File file = getFile(context);
-        if (TextUtils.isEmpty(name))
-            return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
-        else
-            return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file, name);
+        return FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file, name);
     }
 
     File getFile(Context context) {
@@ -175,7 +172,7 @@ public class EntityAttachment {
     }
 
     static File getFile(Context context, long id, String name) {
-        File dir = Helper.ensureExists(new File(getRoot(context), "attachments"));
+        File dir = getRoot(context);
         String filename = Long.toString(id);
         if (!TextUtils.isEmpty(name))
             filename += "." + Helper.sanitizeFilename(name);
@@ -188,10 +185,13 @@ public class EntityAttachment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean external_storage = prefs.getBoolean("external_storage", false);
 
-        File root = (external_storage
-                ? Helper.getExternalFilesDir(context)
-                : context.getFilesDir());
-        return root;
+        if (external_storage) {
+            File dir = new File(Helper.getExternalFilesDir(context), "attachments");
+            dir.mkdirs();
+            return dir;
+        }
+
+        return Helper.ensureExists(context, "attachments");
     }
 
     static void copy(Context context, long oldid, long newid) {
@@ -231,7 +231,8 @@ public class EntityAttachment {
         if ("audio/mid".equals(type))
             return "audio/midi";
 
-        if ("audio-x/wav".equals(type))
+        if ("audio/x-wav".equals(type) ||
+                "audio-x/wav".equals(type))
             return "audio/wav";
 
         // https://www.rfc-editor.org/rfc/rfc3555.txt
@@ -321,6 +322,9 @@ public class EntityAttachment {
         if ("ogg".equals(extension))
             return "application/ogg";
 
+        if ("wav".equals(extension))
+            return "audio/wav";
+
         // Images
 
         if ("avif".equals(extension))
@@ -386,19 +390,42 @@ public class EntityAttachment {
         File file = getFile(context);
         File zip = new File(file.getAbsolutePath() + ".zip");
 
-        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-            try (ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zip)))) {
-                out.setMethod(ZipOutputStream.DEFLATED);
-                out.setLevel(Deflater.BEST_COMPRESSION);
-                ZipEntry entry = new ZipEntry(name);
-                out.putNextEntry(entry);
+        try (ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zip)))) {
+            out.setMethod(ZipOutputStream.DEFLATED);
+            out.setLevel(Deflater.BEST_COMPRESSION);
+            ZipEntry entry = new ZipEntry(name);
+            out.putNextEntry(entry);
+            try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
                 Helper.copy(in, out);
             }
         }
 
         DB db = DB.getInstance(context);
         db.attachment().setName(id, name + ".zip", "application/zip", zip.length());
-        file.delete();
+        db.attachment().setDownloaded(id, zip.length());
+        Helper.secureDelete(file);
+    }
+
+    void zip(Context context, File[] files) throws IOException {
+        File file = getFile(context);
+        File zip = new File(file.getAbsolutePath() + ".zip");
+
+        try (ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zip)))) {
+            out.setMethod(ZipOutputStream.DEFLATED);
+            out.setLevel(Deflater.BEST_COMPRESSION);
+            for (File f : files) {
+                ZipEntry entry = new ZipEntry(f.getName());
+                out.putNextEntry(entry);
+                try (InputStream in = new BufferedInputStream(new FileInputStream(f))) {
+                    Helper.copy(in, out);
+                }
+            }
+        }
+
+        DB db = DB.getInstance(context);
+        db.attachment().setName(id, name + ".zip", "application/zip", zip.length());
+        db.attachment().setDownloaded(id, zip.length());
+        Helper.secureDelete(file);
     }
 
     public static boolean equals(List<EntityAttachment> a1, List<EntityAttachment> a2) {

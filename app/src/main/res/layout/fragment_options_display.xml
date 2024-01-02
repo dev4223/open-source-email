@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -548,7 +548,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -682,7 +682,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -810,7 +810,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -1104,6 +1104,20 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swFaviconsManifest"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:tag="nosuggest"
+                    android:text="@string/title_advanced_favicons_manifest"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swFaviconsPartial"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swGeneratedIcons"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1112,7 +1126,7 @@
                     android:text="@string/title_advanced_generated_icons"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swFaviconsPartial"
+                    app:layout_constraintTop_toBottomOf="@id/swFaviconsManifest"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1327,6 +1341,18 @@
                     app:layout_constraintTop_toBottomOf="@id/swDistinguishContacts"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swReverseAddresses"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_reverse_addresses"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swShowRecipients"
+                    app:switchPadding="12dp" />
+
                 <TextView
                     android:id="@+id/tvFontSizeSender"
                     android:layout_width="0dp"
@@ -1338,7 +1364,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swShowRecipients" />
+                    app:layout_constraintTop_toBottomOf="@id/swReverseAddresses" />
 
                 <Spinner
                     android:id="@+id/spFontSizeSender"
@@ -1662,7 +1688,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -1733,6 +1759,18 @@
                     app:layout_constraintTop_toBottomOf="@id/tvMessageZoom" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swEditorZoom"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_editor_text_zoom"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/sbMessageZoom"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swOverviewMode"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1740,7 +1778,7 @@
                     android:text="@string/title_advanced_overview_mode"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/sbMessageZoom"
+                    app:layout_constraintTop_toBottomOf="@id/swEditorZoom"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -1997,6 +2035,18 @@
                     app:layout_constraintTop_toBottomOf="@id/swAttachmentsAlt"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swPdfPreview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_pdf_preview"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swThumbnails"
+                    app:switchPadding="12dp" />
+
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpUnzip"
                     android:layout_width="0dp"
@@ -2010,7 +2060,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             app:cardBackgroundColor="?attr/colorCardBackground"
             app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
@@ -2064,6 +2114,19 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNarrowFonts"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_narrow_fonts"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swBundledFonts"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swParseClasses"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -2072,7 +2135,7 @@
                     android:text="@string/title_advanced_parse_classes"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swBundledFonts"
+                    app:layout_constraintTop_toBottomOf="@id/swNarrowFonts"
                     app:switchPadding="12dp" />
 
                 <TextView

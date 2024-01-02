@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -26,8 +26,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.LocaleList;
 import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.SuggestionSpan;
 import android.util.Pair;
@@ -42,13 +42,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class LanguageTool {
     static final String LT_URI = "https://api.languagetool.org/v2/";
@@ -71,6 +72,13 @@ public class LanguageTool {
         return (lt_enabled && lt_auto);
     }
 
+    static boolean isSentence(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean lt_enabled = prefs.getBoolean("lt_enabled", false);
+        boolean lt_sentence = prefs.getBoolean("lt_sentence", false);
+        return (lt_enabled && lt_sentence);
+    }
+
     static JSONArray getLanguages(Context context) throws IOException, JSONException {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String lt_uri = prefs.getString("lt_uri", LT_URI_PLUS);
@@ -80,7 +88,7 @@ public class LanguageTool {
         Log.i("LT uri=" + uri);
 
         URL url = new URL(uri.toString());
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoOutput(false);
         connection.setReadTimeout(LT_TIMEOUT * 1000);
@@ -241,7 +249,7 @@ public class LanguageTool {
         Log.i("LT uri=" + uri + " request=" + request);
 
         URL url = new URL(uri.toString());
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setReadTimeout(LT_TIMEOUT * 1000);
@@ -280,8 +288,11 @@ public class LanguageTool {
                     suggestion.replacements.add(jreplacement.getString("value"));
                 }
 
-                if (suggestion.replacements.size() > 0)
-                    result.add(suggestion);
+                JSONObject jrule = jmatch.optJSONObject("rule");
+                if (jrule != null)
+                    suggestion.issueType = jrule.optString("issueType");
+
+                result.add(suggestion);
             }
 
             return result;
@@ -317,7 +328,7 @@ public class LanguageTool {
         Log.i("LT uri=" + uri + " request=" + request);
 
         URL url = new URL(uri.toString());
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setReadTimeout(LT_TIMEOUT * 1000);
@@ -368,7 +379,7 @@ public class LanguageTool {
         Log.i("LT uri=" + uri);
 
         URL url = new URL(uri.toString());
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoOutput(false);
         connection.setReadTimeout(LT_TIMEOUT * 1000);
@@ -396,6 +407,8 @@ public class LanguageTool {
     }
 
     static void applySuggestions(EditText etBody, int start, int end, List<Suggestion> suggestions) {
+        if (etBody == null)
+            return;
         Editable edit = etBody.getText();
         if (edit == null)
             return;
@@ -408,19 +421,35 @@ public class LanguageTool {
 
         if (suggestions != null)
             for (LanguageTool.Suggestion suggestion : suggestions) {
-                Log.i("LT adding=" + suggestion);
-                int flags = ("Spelling mistake".equals(suggestion.title)
-                        || Build.VERSION.SDK_INT < Build.VERSION_CODES.S
-                        ? SuggestionSpan.FLAG_MISSPELLED
-                        : SuggestionSpan.FLAG_GRAMMAR_ERROR);
+                boolean misspelled = ("misspelling".equals(suggestion.issueType) ||
+                        "typographical".equals(suggestion.issueType) ||
+                        "whitespace".equals(suggestion.issueType));
+                SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                if (!TextUtils.isEmpty(suggestion.title))
+                    ssb.append(suggestion.title);
+                if (!TextUtils.isEmpty(suggestion.description)) {
+                    if (ssb.length() > 0)
+                        ssb.append(": ");
+                    ssb.append(suggestion.description);
+                }
+                if (!TextUtils.isEmpty(suggestion.issueType)) {
+                    int len = ssb.length();
+                    if (len > 0)
+                        ssb.append(" (");
+                    ssb.append(suggestion.issueType);
+                    if (len > 0)
+                        ssb.append(")");
+                }
                 SuggestionSpan span = new SuggestionSpanEx(etBody.getContext(),
-                        suggestion.replacements.toArray(new String[0]), flags);
+                        ssb.toString(),
+                        suggestion.replacements.toArray(new String[0]), misspelled);
                 int s = start + suggestion.offset;
                 int e = s + suggestion.length;
                 if (s < 0 || s > edit.length() || e < 0 || e > edit.length()) {
                     Log.w("LT " + s + "..." + e + " length=" + edit.length());
                     continue;
-                }
+                } else
+                    Log.i("LT text='" + edit.subSequence(s, e) + "' " + suggestion);
                 edit.setSpan(span, s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
     }
@@ -432,9 +461,9 @@ public class LanguageTool {
         return (!TextUtils.isEmpty(lt_user) && !TextUtils.isEmpty(lt_key));
     }
 
-    private static void checkStatus(HttpURLConnection connection) throws IOException {
+    private static void checkStatus(HttpsURLConnection connection) throws IOException {
         int status = connection.getResponseCode();
-        if (status != HttpURLConnection.HTTP_OK) {
+        if (status != HttpsURLConnection.HTTP_OK) {
             String error = "Error " + status + ": " + connection.getResponseMessage();
             try {
                 InputStream is = connection.getErrorStream();
@@ -449,39 +478,16 @@ public class LanguageTool {
     }
 
     static class Suggestion {
-        String title; // shortMessage
-        String description; // message
-        int offset;
-        int length;
-        List<String> replacements;
+        public String title; // shortMessage
+        public String description; // message
+        public int offset;
+        public int length;
+        public List<String> replacements;
+        public String issueType;
 
         @Override
         public String toString() {
-            return title;
-        }
-    }
-
-    private static class SuggestionSpanEx extends SuggestionSpan {
-        private final int underlineColor;
-        private final int underlineThickness;
-
-        public SuggestionSpanEx(Context context, String[] suggestions, int flags) {
-            super(context, suggestions, flags);
-            underlineColor = Helper.resolveColor(context,
-                    Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-                            ? android.R.attr.textColorHighlight
-                            : android.R.attr.colorError);
-            underlineThickness = Helper.dp2pixels(context, (getFlags() & FLAG_MISSPELLED) != 0 ? 2 : 1);
-        }
-
-        @Override
-        public void updateDrawState(TextPaint tp) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-                tp.bgColor = underlineColor;
-            else {
-                tp.underlineColor = underlineColor;
-                tp.underlineThickness = underlineThickness;
-            }
+            return issueType + " " + title + " " + description;
         }
     }
 }

@@ -114,6 +114,8 @@
         Блокировка домена отправителя использует фильтрующие правила, которые являются функцией pro.
     </string>
     <string name="title_blocked_senders">Заблокированные отправители</string>
+    <string name="title_unblock_all">Разблокировать всех</string>
+    <string name="title_unblock_all_remark">Будут сброшены все списки и параметры, выполняющие блокировку отправителей</string>
     <plurals name="title_ask_block_sender">
         <item quantity="one">Заблокировать отправителя %1$s сообщения?</item>
         <item quantity="few">Заблокировать отправителя %1$s сообщений?</item>
@@ -191,6 +193,7 @@
     <string name="title_setup_quick_smtp">SMTP-сервер для отправки сообщений</string>
     <string name="title_setup_quick_certificates">Сертификаты сервера</string>
     <string name="title_setup_wizard">Мастер</string>
+    <string name="title_setup_wizard_intro">В большинстве случаев для добавления учётной записи можно воспользоваться функцией мастера, в противном случае адреса серверов могут быть введены или изменены вручную с помощью функции ручной настройки</string>
     <string name="title_setup_wizard_tutorials">Обучение</string>
     <string name="title_setup_wizard_multiple">Мастер может быть использован неоднократно для настройки разных учётных записей</string>
     <string name="title_setup_wizard_new">Мне нужен новый адрес электронной почты</string>
@@ -219,6 +222,7 @@
     <string name="title_setup_oauth_rationale">Авторизовать доступ к вашей учётной записи %1$s</string>
     <string name="title_setup_oauth_update">Авторизация существующей учётной записи (или создание новой)</string>
     <string name="title_setup_oauth_updated">Авторизация учётной записи обновлена</string>
+    <string name="title_setup_oauth_brave">При использовании браузера Brave необходимо разрешить в его настройках открывать ссылки сторонними приложениями</string>
     <string name="title_setup_oauth_authorize">Авторизироваться</string>
     <string name="title_setup_select_account">Выбрать учётную запись</string>
     <string name="title_setup_instructions">Инструкция по установке</string>
@@ -336,7 +340,7 @@
     <string name="title_setup_advanced">Дополнительные настройки</string>
     <string name="title_setup_options">Параметры</string>
     <string name="title_setup_defaults">Вернуть настройки по умолчанию</string>
-    <string name="title_setup_reset_questions">Заново включить вопросы</string>
+    <string name="title_setup_reset_questions">Возобновить вопросы</string>
     <string name="title_setup_reset_general">Общие вопросы</string>
     <string name="title_setup_reset_links">Подтверждать ссылки</string>
     <string name="title_setup_reset_files">Просмотр файлов</string>
@@ -362,7 +366,7 @@
     <string name="title_advanced_section_encryption">Шифрование</string>
     <string name="title_advanced_section_notifications">Уведомления</string>
     <string name="title_advanced_section_misc">Разное</string>
-    <string name="title_advanced_section_backup">Резервное копирование</string>
+    <string name="title_advanced_section_backup">Резервирование</string>
     <string name="title_advanced_default">Все настройки имеют общеиспользуемые стандартные параметры, не нуждающиеся в изменении для использования приложения</string>
     <string name="title_advanced_receive">Получать сообщения со всех учётных записей</string>
     <string name="title_advanced_when">Когда</string>
@@ -401,6 +405,7 @@
     <string name="title_advanced_suggest_sent">Предлагать адреса, найденные в отправленных сообщениях</string>
     <string name="title_advanced_suggest_received">Предлагать адреса, найденные в полученных сообщениях</string>
     <string name="title_advanced_suggest_frequently">Сортировать предлагаемые адреса по частоте использования</string>
+    <string name="title_advanced_suggest_account">Ограничение предложений для текущей учётной записи</string>
     <string name="title_advanced_alt_re_fwd">Альтернативный префикс ответа/пересылки</string>
     <string name="title_advanced_send_chips">Показывать пузыри адреса</string>
     <string name="title_advanced_send_nav_color">Использовать цвет идентификатора для нижней панели действий</string>
@@ -413,6 +418,7 @@
     <string name="title_advanced_answer_hint">Действия кнопок ответа также могут быть настроены на вкладке настроек \"Отправка\"</string>
     <string name="title_advanced_answer_warning">Не все действия возможны без меню выбора!</string>
     <string name="title_advanced_send_pending">Показывать ненавязчивый значок задержки отправки</string>
+    <string name="title_advanced_save_revisions">Сохранять черновые версии для отмены и повтора</string>
     <string name="title_advanced_auto_save_paragraph">Автоматически сохранять черновик после каждого абзаца</string>
     <string name="title_advanced_auto_save_dot">Автоматически сохранять черновик после каждого предложения</string>
     <string name="title_advanced_compose_color">Цвет текста по умолчанию</string>
@@ -427,7 +433,7 @@
     <string name="title_advanced_write_below">Писать под текстом отправителя</string>
     <string name="title_advanced_quote_reply">Цитировать текст при ответе</string>
     <string name="title_advanced_limit_reply">Ограничивать количество вложенных кавычек</string>
-    <string name="title_advanced_resize_reply">Менять размер изображений в ответе</string>
+    <string name="title_advanced_resize_reply">Изменять размер изображений в ответе</string>
     <string name="title_advanced_resize_paste">Изменять размер вставляемых изображений</string>
     <string name="title_advanced_signature_location">Расположение подписи</string>
     <string name="title_advanced_signature_new">Использовать подпись для новых сообщений</string>
@@ -448,6 +454,7 @@
     <string name="title_advanced_lookup_mx">Проверять адрес электронной почты получателя перед отправкой</string>
     <string name="title_advanced_metered">Использовать лимитированные подключения</string>
     <string name="title_advanced_download">Автоматически загружать сообщения и вложения для лимитного подключения до</string>
+    <string name="title_advanced_download_limited">Также применять для безлимитных подключений</string>
     <string name="title_advanced_roaming">Загружать сообщения и вложения в роуминге</string>
     <string name="title_advanced_rlah">В роуминге как дома</string>
     <string name="title_advanced_download_headers">Загружать все заголовки сообщений</string>
@@ -458,10 +465,14 @@
     <string name="title_advanced_vpn_only">Подключаться только через VPN</string>
     <string name="title_advanced_timeout">Время ожидания подключения (сек.)</string>
     <string name="title_advanced_prefer_ip4">Предпочитать IPv4</string>
+    <string name="title_advanced_ssl_update">Использовать обновлённый SSL-провайдер</string>
     <string name="title_advanced_ssl_harden">Усиленные SSL-подключения</string>
     <string name="title_advanced_ssl_harden_strict">Требовать TLS 1.3</string>
     <string name="title_advanced_cert_strict">Строгая проверка сертификатов</string>
+    <string name="title_advanced_check_names">Проверять имена хостов по сертификатам сервера</string>
     <string name="title_advanced_open_safe">Только безопасные подключения</string>
+    <string name="title_advanced_http_redirect">Разрешать перенаправление подключений</string>
+    <string name="title_advanced_bouncy_castle">Использовать провайдера защищённых сокетов Bouncy Castle (JSSE)</string>
     <string name="title_advanced_manage_connectivity">Управление подключением</string>
     <string name="title_advanced_caption_general">По умолчанию</string>
     <string name="title_advanced_caption_navigation">Навигация</string>
@@ -472,7 +483,7 @@
     <string name="title_advanced_caption_message_header">Заголовок сообщения</string>
     <string name="title_advanced_caption_message_body">Текст сообщения</string>
     <string name="title_advanced_caption_file">Файл</string>
-    <string name="title_advanced_caption_integrations">Интеграции</string>
+    <string name="title_advanced_caption_integrations">Интеграция</string>
     <string name="title_advanced_portrait">Портретный режим</string>
     <string name="title_advanced_landscape">Альбомный режим</string>
     <string name="title_advanced_two_row">Использовать две строки</string>
@@ -518,6 +529,7 @@
     <string name="title_advanced_libravatars">Показывать либраватары</string>
     <string name="title_advanced_favicons">Показывать значки сайтов</string>
     <string name="title_advanced_favicons_partial">Сканировать только %1$s в начале веб-страницы</string>
+    <string name="title_advanced_favicons_manifest">Сканировать манифесты веб-приложения</string>
     <string name="title_advanced_generated_icons">Показывать сгенерированные значки</string>
     <string name="title_advanced_identicons">Показывать идентификаторы</string>
     <string name="title_advanced_circular">Использовать круглые значки</string>
@@ -529,6 +541,7 @@
     <string name="title_advanced_only_name">Показывать только имена контактов</string>
     <string name="title_advanced_distinguish_contacts">Подчёркивать отправителя, если он известен как локальный контакт \"Кому\"</string>
     <string name="title_advanced_show_recipients">Показывать получателей в заголовке сообщения</string>
+    <string name="title_advanced_reverse_addresses">Показывать получателя в отправленных сообщениях</string>
     <string name="title_advanced_font_size_sender">Размера текста поля \"Отправитель\"</string>
     <string name="title_advanced_sender_ellipsize">При необходимости сокращать имя отправителя</string>
     <string name="title_advanced_subject_top">Показывать тему выше отправителя</string>
@@ -551,7 +564,9 @@
     <string name="title_advanced_unzip">Показывать содержимое сжатых вложений</string>
     <string name="title_advanced_attachments_alt">Показывать вложения после текста сообщения</string>
     <string name="title_advanced_thumbnails">Показывать миниатюры изображений после текста сообщения</string>
+    <string name="title_advanced_pdf_preview">Показывать миниатюры PDF</string>
     <string name="title_advanced_message_text_zoom2">Масштаб текста сообщения по умолчанию: %1$s%%</string>
+    <string name="title_advanced_editor_text_zoom">Масштабировать текст сообщения в редакторе</string>
     <string name="title_advanced_overview_mode">Изменять масштаб исходных сообщений к размеру экрана</string>
     <string name="title_advanced_hyphenation">Автоматическая расстановка переносов</string>
     <string name="title_advanced_contrast">Использовать высокий контраст для текста сообщений</string>
@@ -562,7 +577,7 @@
     <string name="title_advanced_text_size">Использовать размер текста</string>
     <string name="title_advanced_text_font">Использовать шрифты</string>
     <string name="title_advanced_text_align">Использовать выравнивание текста</string>
-    <string name="title_advanced_text_titles">Показывать {HTML titles}</string>
+    <string name="title_advanced_text_titles">Показывать {заголовки HTML}</string>
     <string name="title_advanced_text_separators">Использовать разделитель строк</string>
     <string name="title_advanced_collapse_quotes">Сворачивать цитируемый текст</string>
     <string name="title_advanced_image_placeholders">Показывать места расположения изображений</string>
@@ -576,6 +591,7 @@
     <string name="title_advanced_navbar_colorize">Раскрашивать панель навигации Android</string>
     <string name="title_advanced_list_count">Показывать количество сообщений или диалогов в верхней панели действий</string>
     <string name="title_advanced_bundled_fonts">Использовать встроенные шрифты</string>
+    <string name="title_advanced_narrow_fonts">Использовать узкие шрифты</string>
     <string name="title_advanced_parse_classes">Анализировать таблицы стилей</string>
     <string name="title_advanced_authentication">Показывать предупреждения аутентификации</string>
     <string name="title_advanced_authentication_hint">Соответствующие проверки могут быть настроены в параметрах получения</string>
@@ -596,6 +612,7 @@
     <string name="title_advanced_double_tap">Двойное нажатие для отметки сообщений прочитанными/непрочитанными</string>
     <string name="title_advanced_swipenav">Смахивание влево/вправо для перехода к следующему/предыдущему диалогу</string>
     <string name="title_advanced_volumenav">Кнопки увеличения/уменьшения громкости для перехода к следующему/предыдущему диалогу</string>
+    <string name="title_advanced_up_down">Используйте стрелки вверх/вниз для перехода к следующему/предыдущему диалогу</string>
     <string name="title_advanced_reversed">Обратное направление навигации</string>
     <string name="title_advanced_swipe_close">Смахивание вниз, чтобы закрыть диалог</string>
     <string name="title_advanced_swipe_move">Смахивание вверх, чтобы переместить диалог</string>
@@ -644,6 +661,8 @@
     <string name="title_advanced_notify_preview">Предпросмотр сообщений в уведомлениях</string>
     <string name="title_advanced_notify_preview_all">Предпросмотр всего текста</string>
     <string name="title_advanced_notify_preview_only">Показывать уведомления только с предпросмотром текста</string>
+    <string name="title_advanced_notify_transliterate">Транслитерация на латиницу</string>
+    <string name="title_advanced_notify_ascii">Только ASCII-текст</string>
     <string name="title_advanced_notify_actions">Действия с уведомлениями</string>
     <string name="title_advanced_notify_action_trash">Корзина</string>
     <string name="title_advanced_notify_action_delete">Удалить</string>
@@ -662,6 +681,7 @@
     <string name="title_advanced_wearable_preview">Отправлять уведомления на носимые устройства только с предпросмотром</string>
     <string name="title_advanced_notify_messaging">Использовать стиль Android уведомления о сообщении</string>
     <string name="title_advanced_biometrics_notify">Показывать содержимое уведомлений при использовании биометрической аутентификации</string>
+    <string name="title_advanced_notify_open_folder">Открывать папку при открытии нового сообщения</string>
     <string name="title_advanced_light">Использовать индикатор уведомлений</string>
     <string name="title_advanced_sound">Выбрать звук уведомления</string>
     <string name="title_advanced_notify_screen_on">Включать экран для новых уведомлений</string>
@@ -671,6 +691,8 @@
     <string name="title_advanced_confirm_files">Подтверждать просмотр файлов</string>
     <string name="title_advanced_sanitize_links">Удалять отслеживающие элементы по умолчанию</string>
     <string name="title_advanced_sanitize_links_hint">Только при подтверждении ссылок</string>
+    <string name="title_advanced_adguard" comment="title_advanced_adguard&#10;Title for option to enable using Adguard filter list to remove tracking parameters from links">Использовать список фильтров Adguard</string>
+    <string name="title_advanced_adguard_weekly" comment="title_advanced_adguard_weekly&#10;Title for option to automatically update the Adguard filter list weekly">Еженедельное автообновление</string>
     <string name="title_advanced_check_links_dbl">Проверять списки блокировки доменов на подозрительные ссылки</string>
     <string name="title_advanced_confirm_images">Не показывать изображения по умолчанию</string>
     <string name="title_advanced_ask_images">Подтверждать отображение изображений</string>
@@ -696,6 +718,9 @@
     <string name="title_advanced_mnemonic_hint">Любое сообщение, полученное со следующими словами в строке темы, автоматически удалит данные приложения</string>
     <string name="title_advanced_clear_all">Удаление данных приложения</string>
     <string name="title_advanced_clear_all_remark">Данные приложения будут безвозвратно удалены!</string>
+    <string name="title_advanced_default_encryption">        Метод шифрования по умолчанию (PGP или S/MIME) будет сохранён для каждого идентификатора после отправки подписанного или зашифрованного сообщения.
+        Можно выбрать метод шифрования непосредственно перед отправкой в диалоговом окне \"Параметры отправки\", вызываемом долгим нажатием кнопки \"Отправить\".
+    </string>
     <string name="title_advanced_sign_default">Подписывать по умолчанию</string>
     <string name="title_advanced_encrypt_default">Шифровать по умолчанию</string>
     <string name="title_advanced_encrypt_auto">Автоматически шифровать, если доступны ключи всех получателей</string>
@@ -722,19 +747,24 @@
     </string>
     <string name="title_advanced_power_menu">Добавить действия в меню питания Android</string>
     <string name="title_advanced_send_self">Добавить \"Отправить себе\" в меню Android</string>
-    <string name="title_advanced_external_search">Разрешать другим приложениям искать в сообщениях</string>
+    <string name="title_advanced_external_search">Добавить \"Поиск в FairEmail\" в меню выделенного текста Android</string>
     <string name="title_advanced_sort_answers">Сортировать шаблоны ответов по частоте использования</string>
     <string name="title_advanced_shortcuts">Показывать часто используемые контакты в меню \"Поделиться\" Android</string>
+    <string name="title_advanced_ical_tentative">Сохранять полученные приглашения как предварительные</string>
     <string name="title_advanced_fts">Создавать индекс поиска</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d сообщений проиндексировано (%3$s)</string>
     <string name="title_advanced_classification">Классифицировать сообщения</string>
     <string name="title_advanced_class_min_chance">Минимальная вероятность класса: %1$s %%</string>
     <string name="title_advanced_class_min_difference">Минимальная разница между классами: %1$s %%</string>
     <string name="title_advanced_show_filtered">Показывать значок фильтра при применении правил</string>
+    <string name="title_advanced_haptic_feedback">Вибрация при выполнении важных действий</string>
     <string name="title_advanced_language">Язык</string>
     <string name="title_advanced_language_system">Системный</string>
     <string name="title_advanced_lt">Интеграция с LanguageTool</string>
+    <string name="title_advanced_lt_sentence">Проверять каждое предложение</string>
     <string name="title_advanced_lt_auto">Проверять абзац после новой строки</string>
+    <string name="title_advanced_lt_highlight">Выделять проверяемый текст</string>
+    <string name="title_advanced_lt_description">Показывать всплывающее уведомление с описанием проблемы</string>
     <string name="title_advanced_lt_user">Пользователь (необязательно)</string>
     <string name="title_advanced_lt_key">Ключ API (необязательно)</string>
     <string name="title_advanced_deepl">Интеграция с DeepL</string>
@@ -788,6 +818,7 @@
     <string name="title_advanced_pull_all_hint">При раскрытии папок или списка учётных записей</string>
     <string name="title_advanced_suggest_names_hint">Если отключено, при выборе контактов будут использоваться только адреса электронной почты</string>
     <string name="title_advanced_suggest_local_hint">В дополнение к контактам, предоставляемым Android. Контактные данные будут сохранены только для вновь отправленных или полученных сообщений при включении этой функции.</string>
+    <string name="title_advanced_suggest_account_hint">Относится только к локальным контактам, поскольку контакты в адресной книге Android не привязаны к определённым учётным записям</string>
     <string name="title_advanced_auto_identity_hint">Будет выбран последний идентификатор, использовавшийся для получателя новых сообщений</string>
     <string name="title_advanced_send_reminders_hint">Показывать предупреждение, если отсутствует текст сообщения, тема или, возможно, отсутствует вложение</string>
     <string name="title_advanced_reply_move_hint">Сервер электронной почты всё ещё может добавлять сообщения в папку отправленных</string>
@@ -860,6 +891,7 @@
     <string name="title_advanced_wearable_hint">Уведомления на носимое устройство отправляются только после загрузки текста сообщения</string>
     <string name="title_advanced_messaging_hint">Требуется поддержка Android Auto</string>
     <string name="title_advanced_move_hint">Целевая папка может быть указана в настройках учётной записи</string>
+    <string name="title_advanced_notify_sensitive_hint">Требуется отключить конфиденциальные уведомления в настройках Android</string>
     <string name="title_advanced_notify_no_grouping">Эта версия Android не поддерживает группировку уведомлений</string>
     <string name="title_advanced_notify_no_channels">Эта версия Android не поддерживает каналы уведомлений</string>
     <string name="title_advanced_fts_hint">Включение улучшит скорость поиска, но также увеличит расход батареи и занимаемое место в хранилище</string>
@@ -891,6 +923,7 @@
     <string name="title_identity_reply_to">Обратный адрес</string>
     <string name="title_identity_internal">Внутренние доменные имена (через запятую)</string>
     <string name="title_identity_uri">Связать контакт</string>
+    <string name="title_identity_sensitivity">Чувствительность по умолчанию</string>
     <string name="title_identity_unicode">Использовать UTF-8 в заголовках сообщений</string>
     <string name="title_identity_unicode_remark">Большинство серверов это не поддерживают</string>
     <string name="title_identity_octetmime">Использовать 8BITMIME</string>
@@ -1013,6 +1046,9 @@
     <string name="title_service_port">Пожалуйста, дважды проверьте номер порта</string>
     <string name="title_service_protocol">Пожалуйста, дважды проверьте протокол (SSL/TLS или STARTTLS)</string>
     <string name="title_service_error10">Эта учётная запись должна быть повторно аутентифицирована, что можно сделать с помощью мастер быстрой настройки</string>
+    <string name="title_certificate_error">        В соответствии с правилами Google Play Store, поддержка небезопасных подключений к почтовым серверам с проблемами сертификатов для версии FairEmail, распространяемой через Play Store, более невозможна.
+        Данную проблему может решить только провайдер электронной почты — приведённая выше информация об ошибке может помочь ему с разрешением возникшей ситуации.
+    </string>
     <string name="title_advanced_browse">Просмотр сообщений на сервере</string>
     <string name="title_advanced_expand_read">Отмечать сообщения прочитанными при развёртывании</string>
     <string name="title_synchronize_now">Синхронизировать сейчас</string>
@@ -1028,6 +1064,8 @@
     <string name="title_synchronize_batch_disable">Отключить синхронизацию</string>
     <string name="title_notify_batch_enable">Включить уведомления о новых сообщениях</string>
     <string name="title_notify_batch_disable">Отключить уведомления о новых сообщениях</string>
+    <string name="title_download_batch_enable">Загружать тексты и вложения</string>
+    <string name="title_download_batch_disable">Загружать только заголовки</string>
     <string name="title_delete_local">Удалить локальные сообщения</string>
     <string name="title_delete_browsed">Удалить просмотренные/найденные сообщения</string>
     <string name="title_expunge">Уничтожить</string>
@@ -1043,6 +1081,7 @@
     <string name="title_delete_channel">Удалить канал уведомлений</string>
     <string name="title_insert_contact">Добавить контакт</string>
     <string name="title_edit_contact">Изменить контакт</string>
+    <string name="title_delete_contact">Удалить контакт?</string>
     <string name="title_contact_email">Эл. почта</string>
     <string name="title_contact_name">Имя</string>
     <string name="title_contact_group">Группа</string>
@@ -1147,6 +1186,8 @@
     <string name="title_importance_low">Низкая</string>
     <string name="title_importance_normal">Обычная</string>
     <string name="title_importance_high">Высокая</string>
+    <string name="title_important">Важное</string>
+    <string name="title_unimportant">Неважное</string>
     <string name="title_search_in_text">Поиск в тексте&#8230;</string>
     <string name="title_forward">Переслать</string>
     <string name="title_resend">Перенаправить</string>
@@ -1165,8 +1206,10 @@
     <string name="title_print_header">Печать заголовка</string>
     <string name="title_print_images">Печать изображений</string>
     <string name="title_print_images_remark">Загрузка изображений может занять некоторое время</string>
+    <string name="title_print_block_quotes">Печатать строки в блоке цитат</string>
+    <string name="title_print_margins">Добавить отступ</string>
     <string name="title_show_headers">Показать заголовки</string>
-    <string name="title_share_as_html">Поделиться как HTML</string>
+    <string name="title_show_html">Показать исходный код</string>
     <string name="title_raw_save">Сохранить оригинал сообщения</string>
     <string name="title_raw_send">Отправить как вложение</string>
     <string name="title_raw_send_message">Сообщение</string>
@@ -1196,6 +1239,7 @@
     <string name="title_quick_actions_snooze">Отложить</string>
     <string name="title_quick_actions_clear">Очистить выбор после действия</string>
     <string name="title_trash">Корзина</string>
+    <string name="title_trash_selection">Удалить выбранное</string>
     <string name="title_copy">Копировать&#8230;</string>
     <string name="title_copy_to">Копировать в&#8230;</string>
     <string name="title_subscribe">Подписаться</string>
@@ -1210,7 +1254,7 @@
     <string name="title_unsubscribe">Отписаться</string>
     <string name="title_message_rule">Создать правило</string>
     <string name="title_no_junk">Не спам</string>
-    <string name="title_edit_subject" comment="title_edit_subject&#10;Title for menu item to edit the subject of a message">Изменить тему&#8230;</string>
+    <string name="title_edit_subject">Изменить тему&#8230;</string>
     <string name="title_move_to">Переместить в&#8230;</string>
     <string name="title_move_to_folder">Переместить в&#8230;</string>
     <string name="title_move_to_account">Переместить в %1$s&#8230;</string>
@@ -1379,6 +1423,8 @@
     <string name="title_add_image_privacy">Удалить конфиденциальные данные</string>
     <string name="title_add_image_privacy_remark">Географическое положение, серийные номера, имена файлов и т.п.</string>
     <string name="title_add_resize_pixels">&lt; %1$d пикс.</string>
+    <string name="title_add_image_resize_remark">Изменение размера поддерживается для: %1$s</string>
+    <string name="title_add_image_select_remark">Средство выбора изображений Android больше не передаёт имена файлов</string>
     <string name="title_add_image_select">Выбрать файл</string>
     <string name="title_add_attachment">Добавить вложение</string>
     <string name="title_attachment_file">Прикрепить файл</string>
@@ -1390,6 +1436,7 @@
     <string name="title_image_dialog">Параметры изображения</string>
     <string name="title_style_toolbar">Панель стилей</string>
     <string name="title_media_toolbar">Панель медиа</string>
+    <string name="title_manage_android_contacts">Управление контактами Android</string>
     <string name="title_manage_local_contacts">Управление локальными контактами</string>
     <string name="title_insert_contact_group">Добавить группу контактов</string>
     <string name="title_insert_template">Вставить шаблон</string>
@@ -1402,6 +1449,7 @@
     <string name="title_translate_formal">Использовать формальный стиль</string>
     <string name="title_translate_small">Использовать мелкий шрифт для исходного текста</string>
     <string name="title_translate_replace">Заменять исходный текст переводом</string>
+    <string name="title_translate_highlight">Выделять переводимый текст</string>
     <string name="title_translate_html">Сохранять форматирование</string>
     <string name="title_translate_html_hint">Будет использоваться больше символов</string>
     <string name="title_translate_usage">Использование: %1$s / %2$s (%3$d %%)</string>
@@ -1454,7 +1502,7 @@
     <string name="title_verify">Проверить</string>
     <string name="title_encrypt">Шифрование</string>
     <string name="title_decrypt">Расшифрование</string>
-    <string name="title_reset_message_questions">Заново включить вопросы по ссылке</string>
+    <string name="title_reset_message_questions">Возобновить вопросы о ссылке</string>
     <string name="title_resync">Синхронизировать заново</string>
     <string name="title_charset">Кодировка</string>
     <string name="title_charset_auto">Автовыбор</string>
@@ -1492,6 +1540,7 @@
     <string name="title_search_hint">        Поиск изначально ищет сообщения, хранящиеся на вашем устройстве.
         Чтобы также выполнить поиск на сервере, нажмите кнопку \"Новый поиск\".
     </string>
+    <string name="title_search_hint_fts">Использование поискового индекса: только целые слова</string>
     <string name="title_search_index_hint">Индексированный поиск быстрый, но находит только целые слова.</string>
     <string name="title_search_text_hint">Поиск содержащих определённый текст сообщений при большом их количестве может не работать на некоторых серверах</string>
     <string name="title_search_text_unsupported">\"%s\" означает, что почтовый сервер не поддерживает поиск в текстах сообщений</string>
@@ -1504,6 +1553,7 @@
     <string name="title_search_in_keywords">В ключевых словах (если возможно)</string>
     <string name="title_search_in_message">В тексте сообщения</string>
     <string name="title_search_in_notes">В локальных заметках</string>
+    <string name="title_search_in_filenames">В именах файлов (только на устройстве)</string>
     <string name="title_search_with">Ограничение поиска</string>
     <string name="title_search_with_unseen">Не прочитано</string>
     <string name="title_search_with_flagged">Избранное</string>
@@ -1597,6 +1647,7 @@
     <string name="title_answer_placeholder_firstname">Имя отправителя</string>
     <string name="title_answer_placeholder_lastname">Фамилия отправителя</string>
     <string name="title_answer_placeholder_date">Текущая дата</string>
+    <string name="title_answer_placeholder_weekday">День недели</string>
     <string name="title_rule_noop">Нет действия</string>
     <string name="title_rule_seen">Отметить прочитанным</string>
     <string name="title_rule_unseen">Отметить непрочитанным</string>
@@ -1608,6 +1659,7 @@
     <string name="title_rule_keyword">Ключевое слово</string>
     <string name="title_rule_keyword_add">Добавить</string>
     <string name="title_rule_keyword_delete">Удалить</string>
+    <string name="title_rule_notes">Локальные заметки</string>
     <string name="title_rule_move">Переместить</string>
     <string name="title_rule_copy">Копировать (пометить)</string>
     <string name="title_rule_answer">Ответить/переслать</string>
@@ -1666,7 +1718,10 @@
     <string name="title_rule_answer_missing">Шаблон отсутствует</string>
     <string name="title_rule_keyword_missing">Ключевое слово отсутствует</string>
     <string name="title_rule_automation_hint">Это отправит цель \"%1$s\" с дополнениями \"%2$s\"</string>
+    <string name="title_rule_notes_missing">Локальные заметки отсутствуют</string>
+    <string name="title_rule_url_missing">Ссылка отсутствует или неправильная</string>
     <string name="title_rule_delete_hint">Окончательное удаление является необратимым, поэтому убедитесь в корректности условий правила!</string>
+    <string name="title_rule_url_hint">Можно использовать следующие заполнители: %1$s</string>
     <string name="title_rule_edit_group">Изменить группу&#8230;</string>
     <string name="title_rule_execute">Выполнить</string>
     <string name="title_rule_applied">Затронутые сообщения: %1$d</string>
@@ -1686,6 +1741,11 @@
     <string name="title_rule_use_as_alarm">Использовать как будильник</string>
     <string name="title_rule_alarm_hint">Это игнорирует правила \"не беспокоить\"</string>
     <string name="title_rule_alarm_duration">Максимальная длительность будильника (в секундах)</string>
+    <string name="title_rule_alarm_title">Сигнал</string>
+    <string name="title_rule_alarm_stop">Остановить</string>
+    <string name="title_code_line_numbers">Показывать номера строк</string>
+    <string name="title_code_enable_links">Подчёркивать ссылки</string>
+    <string name="title_code_pretty">Форматированная печать</string>
     <string name="title_legend_section_synchronize">Синхронизация</string>
     <string name="title_legend_section_folders">Папки</string>
     <string name="title_legend_section_messages">Сообщения</string>
@@ -1811,6 +1871,7 @@
     <string name="title_hint_folder_sync">Для экономии заряда батареи и трафика по умолчанию синхронизируются не все папки и сообщения.</string>
     <string name="title_hint_airplane">Режим полета включён</string>
     <string name="title_hint_notifications">Отсутствует разрешение на отображение уведомлений</string>
+    <string name="title_hint_notifications_remark">Разрешения на уведомления также необходимы для предупреждений (учётной записи). Уведомления о новых сообщениях можно отключить в настройках.</string>
     <string name="title_hint_battery_optimizations">Оптимизация энергопотребления всё ещё включена</string>
     <string name="title_hint_support">Если у вас есть вопрос или проблема, пожалуйста, используйте меню поддержки для получения помощи.</string>
     <string name="title_hint_message_actions">Смахните влево, чтобы поместить в корзину; смахните вправо, чтобы поместить в архив (если имеется); действия жестов можно изменить в настройках учётной записи.</string>
@@ -1879,6 +1940,7 @@
     <string name="title_no_ask_again">Больше не спрашивать</string>
     <string name="title_no_ask_for_again">Больше не спрашивать для %1$s</string>
     <string name="title_no_body">В сообщении нет текста</string>
+    <string name="title_large_body">Это сообщение очень большое и может вызвать проблемы!</string>
     <string name="title_no_charset">Кодировка не поддерживается: %1$s</string>
     <string name="title_via">Через: %1$s</string>
     <string name="title_1hour">1 час</string>
@@ -1896,8 +1958,10 @@
     <string name="title_dismiss">Отклонить</string>
     <string name="title_snooze_now">Отложить</string>
     <string name="title_loading">Загрузка&#8230;</string>
-    <string name="title_fetching_again">Заново загружаем сообщения с сервера</string>
+    <string name="title_fetching_again">Повторная загрузка сообщения с сервера</string>
     <string name="title_go_back">Назад</string>
+    <string name="title_global_default">Использовать общее значение по умолчанию</string>
+    <string name="title_not_existing">Этого сообщения больше нет на почтовом сервере</string>
     <string name="title_conversation_actions">Действия</string>
     <string name="title_conversation_action_reply">Ответить на: \"%1$s\"</string>
     <string name="title_conversation_action_copy">Копировать: \"%1$s\"</string>
@@ -1943,6 +2007,9 @@
     <string name="title_debug_info_issue">Описание проблемы (обязательно)</string>
     <string name="title_debug_info_issue_remark">Важны такие детали, как предполагаемое время возникновения проблемы, точное сообщение об ошибке и т.д.</string>
     <string name="title_debug_info_contact">Недавно мы общались по поводу этой проблемы</string>
+    <string name="title_debug_info_send">Отправлять сразу</string>
+    <string name="title_debug_info_send_remark">Обычно отладочная информация сначала сохраняется в виде черновика сообщения, так что вы можете проверить, что будет отправлено</string>
+    <string name="title_debug_info_question">Пожалуйста, используйте кнопку \"Информация\", только если у вас есть вопрос</string>
     <string name="title_unexpected_info_remark">Пожалуйста, опишите, что вы делали, когда получили ошибку:</string>
     <string name="title_widget_title_count">Количество новых сообщений</string>
     <string name="title_widget_title_list">Список сообщений</string>
@@ -1955,6 +2022,7 @@
     <string name="title_widget_account_all">Все</string>
     <string name="title_widget_folder">Папка</string>
     <string name="title_widget_folder_unified">Папки единого почтового ящика</string>
+    <string name="title_widget_folder_notifying">Папки с уведомлениями о новых сообщениях</string>
     <string name="title_widget_unseen">Только непрочитанные сообщения</string>
     <string name="title_widget_flagged">Только избранные сообщения</string>
     <string name="title_widget_font_size">Размер текста</string>
@@ -1969,6 +2037,7 @@
     <string name="title_widget_refresh">Показать кнопку обновления сообщений</string>
     <string name="title_widget_compose">Показать кнопку создания нового сообщения</string>
     <string name="title_widget_background">Цвет фона</string>
+    <string name="title_widget_icon">Цвет значка</string>
     <string name="title_widget_day_night">Использовать системную тёмную тему</string>
     <string name="title_compat_dark">Google удалил тёмный режим для версий Android младше 10 версии</string>
     <!-- Thunderbird -->

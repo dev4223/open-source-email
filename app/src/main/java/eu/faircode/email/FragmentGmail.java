@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.accounts.AccountManager.newChooseAccountIntent;
@@ -76,6 +76,7 @@ public class FragmentGmail extends FragmentBase {
 
     private TextView tvTitle;
     private TextView tvPrivacy;
+    private TextView tvPrivacyApp;
     private Button btnGrant;
     private TextView tvGranted;
     private EditText etName;
@@ -122,6 +123,7 @@ public class FragmentGmail extends FragmentBase {
         // Get controls
         tvTitle = view.findViewById(R.id.tvTitle);
         tvPrivacy = view.findViewById(R.id.tvPrivacy);
+        tvPrivacyApp = view.findViewById(R.id.tvPrivacyApp);
         btnGrant = view.findViewById(R.id.btnGrant);
         tvGranted = view.findViewById(R.id.tvGranted);
         etName = view.findViewById(R.id.etName);
@@ -146,6 +148,14 @@ public class FragmentGmail extends FragmentBase {
             @Override
             public void onClick(View v) {
                 Helper.view(v.getContext(), Uri.parse(PRIVACY_URI), false);
+            }
+        });
+
+        tvPrivacyApp.setPaintFlags(tvPrivacyApp.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        tvPrivacyApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.PRIVACY_URI), false);
             }
         });
 
@@ -195,7 +205,7 @@ public class FragmentGmail extends FragmentBase {
                     startActivityForResult(intent, ActivitySetup.REQUEST_CHOOSE_ACCOUNT);
                 } catch (Throwable ex) {
                     if (ex instanceof IllegalArgumentException)
-                        tvError.setText(ex.getMessage());
+                        tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
                     else
                         tvError.setText(Log.formatThrowable(ex, false));
                     grpError.setVisibility(View.VISIBLE);
@@ -621,7 +631,7 @@ public class FragmentGmail extends FragmentBase {
                 Log.e(ex);
 
                 if (ex instanceof IllegalArgumentException)
-                    tvError.setText(ex.getMessage());
+                    tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
                 else
                     tvError.setText(Log.formatThrowable(ex, false));
                 grpError.setVisibility(View.VISIBLE);

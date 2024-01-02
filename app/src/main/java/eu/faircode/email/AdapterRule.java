@@ -16,11 +16,12 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -45,6 +46,7 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,6 +59,7 @@ import java.text.Collator;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -70,6 +73,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
     private LifecycleOwner owner;
     private LayoutInflater inflater;
 
+    private boolean debug;
     private DateFormat DF;
     private NumberFormat NF = NumberFormat.getNumberInstance();
 
@@ -82,6 +86,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
         private ImageView ivDaily;
+        private ImageView ivHeaders;
+        private ImageView ivBody;
         private TextView tvName;
         private TextView tvOrder;
         private ImageView ivStop;
@@ -97,6 +103,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
             view = itemView.findViewById(R.id.clItem);
             ivDaily = itemView.findViewById(R.id.ivDaily);
+            ivHeaders = itemView.findViewById(R.id.ivHeaders);
+            ivBody = itemView.findViewById(R.id.ivBody);
             tvName = itemView.findViewById(R.id.tvName);
             tvOrder = itemView.findViewById(R.id.tvOrder);
             ivStop = itemView.findViewById(R.id.ivStop);
@@ -117,8 +125,15 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
         }
 
         private void bindTo(TupleRuleEx rule) {
+            boolean needsHeaders = (debug || BuildConfig.DEBUG) &&
+                    EntityRule.needsHeaders(Arrays.asList(rule));
+            boolean needsBody = (debug || BuildConfig.DEBUG) &&
+                    EntityRule.needsBody(Arrays.asList(rule));
+
             view.setActivated(!rule.enabled);
             ivDaily.setVisibility(rule.daily ? View.VISIBLE : View.GONE);
+            ivHeaders.setVisibility(needsHeaders ? View.VISIBLE : View.GONE);
+            ivBody.setVisibility(needsBody ? View.VISIBLE : View.GONE);
             tvName.setText(rule.name);
             tvOrder.setText(Integer.toString(rule.order));
             ivStop.setVisibility(rule.stop ? View.VISIBLE : View.INVISIBLE);
@@ -174,7 +189,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                 tvCondition.setText(ssb);
             } catch (Throwable ex) {
-                tvCondition.setText(ex.getMessage());
+                tvCondition.setText(new ThrowableWrapper(ex).getSafeMessage());
             }
 
             try {
@@ -207,6 +222,15 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                         resend = jaction.optBoolean("resend");
                         setAction(resend ? R.string.title_rule_resend : getAction(type), to);
                     }
+                } else if (type == EntityRule.TYPE_NOTES) {
+                    String notes = jaction.getString("notes");
+                    setAction(getAction(type), notes);
+                } else if (type == EntityRule.TYPE_URL) {
+                    String url = jaction.getString("url");
+                    String method = jaction.optString("method");
+                    if (TextUtils.isEmpty(method))
+                        method = "GET";
+                    setAction(getAction(type), method + " " + url);
                 } else
                     setAction(getAction(type), null);
 
@@ -255,7 +279,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     }.execute(context, owner, args, "rule:folder");
                 }
             } catch (Throwable ex) {
-                tvAction.setText(ex.getMessage());
+                tvAction.setText(new ThrowableWrapper(ex).getSafeMessage());
             }
 
             tvLastApplied.setText(rule.last_applied == null ? "-" : DF.format(rule.last_applied));
@@ -406,7 +430,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                                         continue;
 
                                     if (rule.matches(context, message, null, null))
-                                        if (rule.execute(context, message))
+                                        if (rule.execute(context, message, null))
                                             applied++;
 
                                     db.setTransactionSuccessful();
@@ -557,6 +581,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     return R.string.title_rule_sound;
                 case EntityRule.TYPE_LOCAL_ONLY:
                     return R.string.title_rule_local_only;
+                case EntityRule.TYPE_NOTES:
+                    return R.string.title_rule_notes;
+                case EntityRule.TYPE_URL:
+                    return R.string.title_rule_url;
                 default:
                     throw new IllegalArgumentException("Unknown action type=" + type);
             }
@@ -580,6 +608,9 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
         this.context = parentFragment.getContext();
         this.owner = parentFragment.getViewLifecycleOwner();
         this.inflater = LayoutInflater.from(context);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        this.debug = prefs.getBoolean("debug", false);
 
         this.DF = Helper.getDateTimeInstance(this.context);
 
@@ -619,11 +650,16 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     order = Integer.compare(r1.order, r2.order);
 
                 if (order == 0)
-                    return collator.compare(
+                    order = collator.compare(
+                            r1.group == null ? "" : r1.group,
+                            r2.group == null ? "" : r2.group);
+
+                if (order == 0)
+                    order = collator.compare(
                             r1.name == null ? "" : r1.name,
                             r2.name == null ? "" : r2.name);
-                else
-                    return order;
+
+                return order;
             }
         });
 

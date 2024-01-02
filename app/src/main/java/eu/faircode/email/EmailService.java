@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
@@ -46,6 +46,8 @@ import com.sun.mail.util.MailConnectException;
 import com.sun.mail.util.SocketConnectException;
 import com.sun.mail.util.TraceOutputStream;
 
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -59,9 +61,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.Principal;
 import java.security.PrivateKey;
-import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -92,8 +92,6 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 // IMAP standards: https://imapwiki.org/Specs
 
@@ -105,6 +103,8 @@ public class EmailService implements AutoCloseable {
     private boolean ssl_harden;
     private boolean ssl_harden_strict;
     private boolean cert_strict;
+    private boolean cert_transparency;
+    private boolean check_names;
     private boolean useip;
     private String ehlo;
     private boolean log;
@@ -140,6 +140,10 @@ public class EmailService implements AutoCloseable {
     private final static int TCP_KEEP_ALIVE_INTERVAL = 9 * 60; // seconds
 
     private static final int APPEND_BUFFER_SIZE = 4 * 1024 * 1024; // bytes
+
+    private static final List<String> SSL_PROTOCOL_INSECURE = Collections.unmodifiableList(Arrays.asList(
+            "SSLv2", "SSLv3"
+    ));
 
     // https://developer.android.com/reference/javax/net/ssl/SSLSocket.html#protocols
     private static final List<String> SSL_PROTOCOL_BLACKLIST = Collections.unmodifiableList(Arrays.asList(
@@ -187,7 +191,9 @@ public class EmailService implements AutoCloseable {
         this.log = prefs.getBoolean("protocol", false);
         this.ssl_harden = prefs.getBoolean("ssl_harden", false);
         this.ssl_harden_strict = prefs.getBoolean("ssl_harden_strict", false);
-        this.cert_strict = prefs.getBoolean("cert_strict", !BuildConfig.PLAY_STORE_RELEASE);
+        this.cert_strict = prefs.getBoolean("cert_strict", true);
+        this.cert_transparency = prefs.getBoolean("cert_transparency", false);
+        this.check_names = prefs.getBoolean("check_names", !BuildConfig.PLAY_STORE_RELEASE);
 
         boolean auth_plain = prefs.getBoolean("auth_plain", true);
         boolean auth_login = prefs.getBoolean("auth_login", true);
@@ -195,13 +201,15 @@ public class EmailService implements AutoCloseable {
         boolean auth_sasl = prefs.getBoolean("auth_sasl", true);
         boolean auth_apop = prefs.getBoolean("auth_apop", false);
         boolean use_top = prefs.getBoolean("use_top", true);
+        boolean forget_top = prefs.getBoolean("forget_top", false);
         Log.i("Authenticate" +
                 " plain=" + auth_plain +
                 " login=" + auth_login +
                 " ntlm=" + auth_ntlm +
                 " sasl=" + auth_sasl +
                 " apop=" + auth_apop +
-                " use_top=" + use_top);
+                " use_top=" + use_top +
+                " forget_top=" + forget_top);
 
         //properties.put("mail.event.scope", "folder");
         //properties.put("mail.event.executor", executor);
@@ -216,6 +224,8 @@ public class EmailService implements AutoCloseable {
             properties.put("mail." + protocol + ".apop.enable", "true");
         if (!use_top)
             properties.put("mail." + protocol + ".disabletop", "true");
+        if (forget_top)
+            properties.put("mail." + protocol + ".forgettopheaders", "true");
 
         // SASL is attempted before other authentication methods
         properties.put("mail." + protocol + ".sasl.enable", Boolean.toString(auth_sasl));
@@ -441,7 +451,12 @@ public class EmailService implements AutoCloseable {
                     }
                 }
 
-            factory = new SSLSocketFactoryService(host, insecure, ssl_harden, strict, cert_strict, key, chain, fingerprint);
+            boolean bc = prefs.getBoolean("bouncy_castle", false);
+            boolean fips = prefs.getBoolean("bc_fips", false);
+            factory = new SSLSocketFactoryService(
+                    context, host, insecure,
+                    ssl_harden, strict, cert_strict, cert_transparency, check_names,
+                    bc, fips, key, chain, fingerprint);
             properties.put("mail." + protocol + ".ssl.socketFactory", factory);
             properties.put("mail." + protocol + ".socketFactory.fallback", "false");
             properties.put("mail." + protocol + ".ssl.checkserveridentity", "false");
@@ -608,7 +623,7 @@ public class EmailService implements AutoCloseable {
             } catch (UnknownHostException ex) {
                 String last = prefs.getString(key, null);
                 if (TextUtils.isEmpty(last))
-                    throw new MessagingException(ex.getMessage(), ex);
+                    throw ex;
                 else {
                     EntityLog.log(context, EntityLog.Type.Network, "Using " + key + "=" + last);
                     main = InetAddress.getByName(last);
@@ -637,7 +652,11 @@ public class EmailService implements AutoCloseable {
         } catch (UnknownHostException ex) {
             crumb.put("exception", ex + "\n" + android.util.Log.getStackTraceString(ex));
             Log.breadcrumb("Connection failed", crumb);
-            throw new MessagingException(ex.getMessage(), ex);
+            if (ConnectionHelper.vpnActive(context))
+                throw new MessagingException(ex.getMessage(),
+                        new Exception(context.getString(R.string.title_service_vpn), ex));
+            else
+                throw new MessagingException(ex.getMessage(), ex);
         } catch (MessagingException ex) {
             crumb.put("exception", ex + "\n" + android.util.Log.getStackTraceString(ex));
             Log.breadcrumb("Connection failed", crumb);
@@ -762,7 +781,7 @@ public class EmailService implements AutoCloseable {
 
         breadcrumbs = new RingBuffer<>(BREADCRUMBS_SIZE);
 
-        boolean trace = (debug || log || Log.isDebugLogLevel());
+        boolean trace = (debug || log);
 
         isession.setDebug(trace);
         if (trace)
@@ -774,14 +793,11 @@ public class EmailService implements AutoCloseable {
                     try {
                         if (((char) b) == '\n') {
                             String line = bos.toString();
-                            if (!line.endsWith("ignoring socket timeout"))
-                                if (log)
-                                    EntityLog.log(context, EntityLog.Type.Protocol, user + " " + line);
-                                else {
-                                    breadcrumbs.push(line);
-                                    if (BuildConfig.DEBUG)
-                                        Log.i("javamail", user + " " + line);
-                                }
+                            if (log)
+                                if (line.endsWith("ignoring socket timeout"))
+                                    Log.d("javamail", user + " " + line);
+                                else
+                                    Log.w("javamail", user + " " + line);
                             bos.reset();
                         } else
                             bos.write(b);
@@ -865,11 +881,10 @@ public class EmailService implements AutoCloseable {
     }
 
     static Map<String, String> getId(Context context) {
+        // https://www.rfc-editor.org/rfc/rfc2971.html
         Map<String, String> id = new LinkedHashMap<>();
         id.put("name", context.getString(R.string.app_name));
         id.put("version", BuildConfig.VERSION_NAME);
-        id.put("os", "Android");
-        id.put("os-version", Build.VERSION.RELEASE);
         return id;
     }
 
@@ -932,17 +947,18 @@ public class EmailService implements AutoCloseable {
     List<String> getCapabilities() throws MessagingException {
         List<String> result = new ArrayList<>();
 
-        Store store = getStore();
         Map<String, String> capabilities;
-        if (store instanceof IMAPStore)
-            capabilities = ((IMAPStore) getStore()).getCapabilities();
-        else if (store instanceof POP3Store)
-            capabilities = ((POP3Store) getStore()).getCapabilities();
+        if (iservice instanceof IMAPStore)
+            capabilities = ((IMAPStore) iservice).getCapabilities();
+        else if (iservice instanceof POP3Store)
+            capabilities = ((POP3Store) iservice).getCapabilities();
+        else if (iservice instanceof SMTPTransport)
+            capabilities = ((SMTPTransport) iservice).getExtensionParameters();
         else
             capabilities = null;
 
         if (capabilities != null)
-            result.addAll(capabilities.keySet());
+            result.addAll(capabilities.values());
 
         return result;
     }
@@ -1022,162 +1038,58 @@ public class EmailService implements AutoCloseable {
         private boolean secure;
         private boolean ssl_harden;
         private boolean ssl_harden_strict;
-        private boolean cert_strict;
         private String trustedFingerprint;
         private SSLSocketFactory factory;
         private X509Certificate certificate;
 
-        SSLSocketFactoryService(String host, boolean insecure, boolean ssl_harden, boolean ssl_harden_strict, boolean cert_strict, PrivateKey key, X509Certificate[] chain, String fingerprint) throws GeneralSecurityException {
+        SSLSocketFactoryService(Context context, String host, boolean insecure,
+                                boolean ssl_harden, boolean ssl_harden_strict, boolean cert_strict, boolean cert_transparency, boolean check_names,
+                                boolean bc, boolean fips,
+                                PrivateKey key, X509Certificate[] chain, String fingerprint) throws GeneralSecurityException {
             this.server = host;
             this.secure = !insecure;
             this.ssl_harden = ssl_harden;
             this.ssl_harden_strict = ssl_harden_strict;
-            this.cert_strict = cert_strict;
             this.trustedFingerprint = fingerprint;
 
+            TrustManager[] tms = SSLHelper.getTrustManagers(
+                    context, server, secure, cert_strict, cert_transparency, check_names, trustedFingerprint,
+                    new SSLHelper.ITrust() {
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain) {
+                            certificate = chain[0];
+                        }
+                    });
+
+            KeyManager[] km = null;
+            if (key != null && chain != null)
+                try {
+                    Log.i("Client certificate init");
+
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    ks.load(null, new char[0]);
+                    ks.setKeyEntry(server, key, new char[0], chain);
+
+                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                    kmf.init(ks, new char[0]);
+                    km = kmf.getKeyManagers();
+
+                    Log.i("Client certificate initialized");
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+
+            // https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#SSLContext
+            // https://stackoverflow.com/questions/69571364/sslcontext-getinstancetls-vulnerability
             // https://developer.android.com/about/versions/oreo/android-8.0-changes.html#security-all
-            SSLContext sslContext = SSLContext.getInstance(insecure ? "SSL" : "TLS");
-
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init((KeyStore) null);
-
-            TrustManager[] tms = tmf.getTrustManagers();
-            Log.i("Trust managers=" + (tms == null ? null : tms.length));
-
-            if (tms == null || tms.length == 0 || !(tms[0] instanceof X509TrustManager)) {
-                Log.e("Missing root trust manager");
-                sslContext.init(null, tms, null);
-            } else {
-                final X509TrustManager rtm = (X509TrustManager) tms[0];
-
-                if (tms.length > 1)
-                    for (TrustManager tm : tms)
-                        Log.e("Trust manager " + tm.getClass());
-
-                X509TrustManager tm = new X509TrustManager() {
-                    // openssl s_client -connect <host>
-
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                        if (secure)
-                            rtm.checkClientTrusted(chain, authType);
-                    }
-
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                        certificate = chain[0];
-
-                        if (secure) {
-                            // Check if selected fingerprint
-                            if (trustedFingerprint != null && matches(certificate, trustedFingerprint)) {
-                                Log.i("Trusted selected fingerprint");
-                                return;
-                            }
-
-                            // Check certificates
-                            try {
-                                Log.i("Auth type=" + authType);
-                                rtm.checkServerTrusted(chain, authType);
-                            } catch (CertificateException ex) {
-                                Principal principal = certificate.getSubjectDN();
-                                if (principal == null)
-                                    throw ex;
-                                else if (cert_strict)
-                                    throw new CertificateException(principal.getName(), ex);
-                                else if (noAnchor(ex) || isExpired(ex)) {
-                                    if (BuildConfig.PLAY_STORE_RELEASE)
-                                        Log.i(ex);
-                                    else
-                                        Log.w(ex);
-                                } else
-                                    throw new CertificateException(principal.getName(), ex);
-                            }
-
-                            // Check host name
-                            List<String> names = EntityCertificate.getDnsNames(certificate);
-                            if (EntityCertificate.matches(server, names))
-                                return;
-
-                            // Fallback: check server/certificate IP address
-                            if (!cert_strict)
-                                try {
-                                    InetAddress ip = InetAddress.getByName(server);
-                                    Log.i("Checking server ip=" + ip);
-                                    for (String name : names) {
-                                        if (name.startsWith("*."))
-                                            name = name.substring(2);
-                                        Log.i("Checking cert name=" + name);
-
-                                        try {
-                                            for (InetAddress addr : InetAddress.getAllByName(name))
-                                                if (Arrays.equals(ip.getAddress(), addr.getAddress())) {
-                                                    Log.i("Accepted " + name + " for " + server);
-                                                    return;
-                                                }
-                                        } catch (UnknownHostException ex) {
-                                            Log.w(ex);
-                                        }
-                                    }
-                                } catch (UnknownHostException ex) {
-                                    Log.w(ex);
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
-                                }
-
-                            String error = server + " not in certificate: " + TextUtils.join(",", names);
-                            Log.i(error);
-                            throw new CertificateException(error);
-                        }
-                    }
-
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return rtm.getAcceptedIssuers();
-                    }
-
-                    private boolean noAnchor(Throwable ex) {
-                        while (ex != null) {
-                            if (ex instanceof CertPathValidatorException &&
-                                    "Trust anchor for certification path not found."
-                                            .equals(ex.getMessage()))
-                                return true;
-                            ex = ex.getCause();
-                        }
-                        return false;
-                    }
-
-                    private boolean isExpired(Throwable ex) {
-                        while (ex != null) {
-                            if (ex instanceof CertPathValidatorException &&
-                                    "timestamp check failed"
-                                            .equals(ex.getMessage()))
-                                return true;
-
-                            ex = ex.getCause();
-                        }
-                        return false;
-                    }
-                };
-
-                KeyManager[] km = null;
-                if (key != null && chain != null)
-                    try {
-                        Log.i("Client certificate init");
-
-                        KeyStore ks = KeyStore.getInstance("PKCS12");
-                        ks.load(null, new char[0]);
-                        ks.setKeyEntry(server, key, new char[0], chain);
-
-                        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                        kmf.init(ks, new char[0]);
-                        km = kmf.getKeyManagers();
-
-                        Log.i("Client certificate initialized");
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                    }
-                sslContext.init(km, new TrustManager[]{tm}, null);
-            }
+            SSLContext sslContext;
+            String protocol = (insecure ? "SSL" : "TLS");
+            if (bc)
+                sslContext = SSLContext.getInstance(protocol, new BouncyCastleJsseProvider(fips));
+            else
+                sslContext = SSLContext.getInstance(protocol);
+            Log.i("Using protocol=" + protocol + " bc=" + bc + " FIPS=" + fips);
+            sslContext.init(km, tms, null);
 
             factory = sslContext.getSocketFactory();
         }
@@ -1190,12 +1102,14 @@ public class EmailService implements AutoCloseable {
 
         @Override
         public Socket createSocket(String host, int port) throws IOException {
+            ApplicationSecure.waitProviderInstalled();
             return configure(factory.createSocket(server, port));
         }
 
         @Override
         public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
             configureSocketOptions(s);
+            ApplicationSecure.waitProviderInstalled();
             return configure(factory.createSocket(s, server, port, autoClose));
         }
 
@@ -1207,6 +1121,7 @@ public class EmailService implements AutoCloseable {
 
         @Override
         public Socket createSocket(String host, int port, InetAddress clientAddress, int clientPort) throws IOException {
+            ApplicationSecure.waitProviderInstalled();
             return configure(factory.createSocket(server, port, clientAddress, clientPort));
         }
 
@@ -1221,6 +1136,8 @@ public class EmailService implements AutoCloseable {
                 SSLSocket sslSocket = (SSLSocket) socket;
 
                 if (!secure) {
+                    Log.i("SSL insecure");
+
                     // Protocols
                     sslSocket.setEnabledProtocols(sslSocket.getSupportedProtocols());
 
@@ -1232,9 +1149,11 @@ public class EmailService implements AutoCloseable {
                 } else if (ssl_harden && ssl_harden_strict &&
                         !BuildConfig.PLAY_STORE_RELEASE &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    Log.i("SSL harden strict");
+
                     // Protocols
                     List<String> protocols = new ArrayList<>();
-                    for (String protocol : sslSocket.getEnabledProtocols())
+                    for (String protocol : sslSocket.getSupportedProtocols())
                         if (SSL_PROTOCOL_BLACKLIST_STRICT.contains(protocol))
                             Log.i("SSL disabling protocol=" + protocol);
                         else
@@ -1251,9 +1170,11 @@ public class EmailService implements AutoCloseable {
                     }
                     sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
                 } else if (ssl_harden) {
+                    Log.i("SSL harden");
+
                     // Protocols
                     List<String> protocols = new ArrayList<>();
-                    for (String protocol : sslSocket.getEnabledProtocols())
+                    for (String protocol : sslSocket.getSupportedProtocols())
                         if (SSL_PROTOCOL_BLACKLIST.contains(protocol))
                             Log.i("SSL disabling protocol=" + protocol);
                         else
@@ -1270,6 +1191,17 @@ public class EmailService implements AutoCloseable {
                     }
                     sslSocket.setEnabledCipherSuites(ciphers.toArray(new String[0]));
                 } else {
+                    Log.i("SSL default");
+
+                    // Protocols
+                    List<String> protocols = new ArrayList<>();
+                    for (String protocol : sslSocket.getSupportedProtocols())
+                        if (SSL_PROTOCOL_INSECURE.contains(protocol))
+                            Log.i("SSL disabling protocol=" + protocol);
+                        else
+                            protocols.add(protocol);
+                    sslSocket.setEnabledProtocols(protocols.toArray(new String[0]));
+
                     // Ciphers
                     List<String> ciphers = new ArrayList<>();
                     ciphers.addAll(Arrays.asList(sslSocket.getEnabledCipherSuites()));
@@ -1297,25 +1229,6 @@ public class EmailService implements AutoCloseable {
         @Override
         public String[] getSupportedCipherSuites() {
             return factory.getSupportedCipherSuites();
-        }
-
-        private static boolean matches(X509Certificate certificate, @NonNull String trustedFingerprint) {
-            // Get certificate fingerprint
-            try {
-                String fingerprint = EntityCertificate.getFingerprintSha1(certificate);
-                int slash = trustedFingerprint.indexOf('/');
-                if (slash < 0)
-                    return trustedFingerprint.equals(fingerprint);
-                else {
-                    String keyId = EntityCertificate.getKeyId(certificate);
-                    if (trustedFingerprint.substring(slash + 1).equals(keyId))
-                        return true;
-                    return trustedFingerprint.substring(0, slash).equals(fingerprint);
-                }
-            } catch (Throwable ex) {
-                Log.w(ex);
-                return false;
-            }
         }
     }
 

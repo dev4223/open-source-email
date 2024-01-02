@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -410,6 +410,15 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         if (account == null || account.protocol != EntityAccount.TYPE_IMAP)
             return 0;
 
+        if (criteria == null) {
+            String sort = prefs.getString(FragmentMessages.getSort(context, viewType, browsable.type), "time");
+            boolean ascending = prefs.getBoolean(FragmentMessages.getSortOrder(context, viewType, browsable.type), false);
+            if (!"time".equals(sort) || ascending) {
+                Log.i("Boundary sort=" + sort + " ascending=" + ascending);
+                return 0;
+            }
+        }
+
         if (state.imessages == null)
             try {
                 // Check connectivity
@@ -704,7 +713,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 return r.getRest();
         }
 
-        return ex.toString();
+        return new ThrowableWrapper(ex).toSafeString();
     }
 
     private Message[] search(boolean utf8, String[] keywords, IMAPProtocol protocol, State state) throws IOException, MessagingException, ProtocolException {
@@ -831,6 +840,15 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 return true;
         }
 
+        if (criteria.in_filenames) {
+            DB db = DB.getInstance(context);
+            List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+            if (attachments != null)
+                for (EntityAttachment attachment : attachments)
+                    if (!TextUtils.isEmpty(attachment.name) && contains(attachment.name, criteria.query, true, false))
+                        return true; // Partial search to find "filename.extension"
+        }
+
         if (criteria.in_headers) {
             if (message.headers != null && message.headers.contains(criteria.query))
                 return true;
@@ -881,7 +899,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         if (TextUtils.isEmpty(text))
             return false;
 
-        text = Fts4DbHelper.breakText(text);
+        text = Fts4DbHelper.processBreakText(text);
 
         List<String> word = new ArrayList<>();
         for (String w : query.trim().split("\\s+"))
@@ -892,19 +910,23 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 if (!html && text.contains(Fts4DbHelper.preprocessText(w.substring(1))))
                     return false;
             } else
-                word.addAll(Arrays.asList(Fts4DbHelper.breakText(w).split("\\s+")));
+                word.addAll(Arrays.asList(Fts4DbHelper.processBreakText(w).split("\\s+")));
 
         if (word.size() == 0)
             return true;
 
+        // \b is limited to [0-9A-Za-z_]
+        String b = "(^|\\s+)";
+        String a = "($|\\s+)";
+
         StringBuilder sb = new StringBuilder();
-        sb.append(partial ? ".*(" : ".*?\\b(");
+        sb.append(partial ? ".*(" : ".*?" + b + "(");
         for (int i = 0; i < word.size(); i++) {
             if (i > 0)
                 sb.append("\\s+");
             sb.append(Pattern.quote(word.get(i)));
         }
-        sb.append(partial ? ").*" : ")\\b.*?");
+        sb.append(partial ? ").*" : ")" + a + ".*?");
 
         Pattern pat = Pattern.compile(sb.toString(), Pattern.DOTALL);
         return pat.matcher(text).matches();
@@ -987,6 +1009,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         boolean in_keywords = true;
         boolean in_message = true;
         boolean in_notes = true;
+        boolean in_filenames = false;
         boolean in_headers = false;
         boolean in_html = false;
         boolean with_unseen;
@@ -1045,6 +1068,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 String search = query;
 
                 if (!utf8) {
+                    // Perhaps:  Transliterator.getInstance("de-ASCII");
                     search = search
                             .replace("ß", "ss") // Eszett
                             .replace("ĳ", "ij")
@@ -1272,6 +1296,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         this.in_keywords == other.in_keywords &&
                         this.in_message == other.in_message &&
                         this.in_notes == other.in_notes &&
+                        this.in_filenames == other.in_filenames &&
                         this.in_headers == other.in_headers &&
                         this.in_html == other.in_html &&
                         this.with_unseen == other.with_unseen &&
@@ -1300,6 +1325,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             json.put("in_keywords", in_keywords);
             json.put("in_message", in_message);
             json.put("in_notes", in_notes);
+            json.put("in_filenames", in_filenames);
             json.put("in_headers", in_headers);
             json.put("in_html", in_html);
             json.put("with_unseen", with_unseen);
@@ -1347,6 +1373,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             criteria.in_keywords = json.optBoolean("in_keywords");
             criteria.in_message = json.optBoolean("in_message");
             criteria.in_notes = json.optBoolean("in_notes");
+            criteria.in_filenames = json.optBoolean("in_filenames");
             criteria.in_headers = json.optBoolean("in_headers");
             criteria.in_html = json.optBoolean("in_html");
             criteria.with_unseen = json.optBoolean("with_unseen");
@@ -1395,6 +1422,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     " keywords=" + in_keywords +
                     " message=" + in_message +
                     " notes=" + in_notes +
+                    " filenames=" + in_filenames +
                     " headers=" + in_headers +
                     " html=" + in_html +
                     " unseen=" + with_unseen +

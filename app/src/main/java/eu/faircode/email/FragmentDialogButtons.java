@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -63,6 +63,7 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         final CheckBox cbPin = dview.findViewById(R.id.cbPin);
         final CheckBox cbPrint = dview.findViewById(R.id.cbPrint);
         final CheckBox cbHeaders = dview.findViewById(R.id.cbHeaders);
+        final CheckBox cbHtml = dview.findViewById(R.id.cbHtml);
         final CheckBox cbRaw = dview.findViewById(R.id.cbRaw);
         final CheckBox cbUnsubscribe = dview.findViewById(R.id.cbUnsubscribe);
 
@@ -90,6 +91,7 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         cbPin.setChecked(prefs.getBoolean("button_pin", false));
         cbPrint.setChecked(prefs.getBoolean("button_print", false));
         cbHeaders.setChecked(prefs.getBoolean("button_headers", false));
+        cbHtml.setChecked(prefs.getBoolean("button_html", false));
         cbRaw.setChecked(prefs.getBoolean("button_raw", false));
         cbUnsubscribe.setChecked(prefs.getBoolean("button_unsubscribe", true));
 
@@ -120,6 +122,7 @@ public class FragmentDialogButtons extends FragmentDialogBase {
                         editor.putBoolean("button_pin", cbPin.isChecked());
                         editor.putBoolean("button_print", cbPrint.isChecked());
                         editor.putBoolean("button_headers", cbHeaders.isChecked());
+                        editor.putBoolean("button_html", cbHtml.isChecked());
                         editor.putBoolean("button_raw", cbRaw.isChecked());
                         editor.putBoolean("button_unsubscribe", cbUnsubscribe.isChecked());
                         editor.apply();

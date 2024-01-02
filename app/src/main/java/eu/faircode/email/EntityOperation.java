@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -337,6 +337,9 @@ public class EntityOperation {
                                 EntityFolder.TRASH.equals(target.type) ||
                                 EntityFolder.JUNK.equals(target.type))) {
                     message.ui_snoozed = null;
+                    message.ui_ignored = true;
+                    db.message().setMessageSnoozed(message.id, null);
+                    db.message().setMessageUiIgnored(message.id, true);
                     EntityMessage.snooze(context, message.id, null);
                 }
 

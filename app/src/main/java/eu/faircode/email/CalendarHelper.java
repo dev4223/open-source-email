@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ContentResolver;
@@ -31,7 +31,16 @@ import android.text.TextUtils;
 
 import androidx.preference.PreferenceManager;
 
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -41,13 +50,17 @@ import biweekly.ICalVersion;
 import biweekly.ICalendar;
 import biweekly.component.VAlarm;
 import biweekly.component.VEvent;
+import biweekly.io.ParseWarning;
 import biweekly.io.TimezoneAssignment;
 import biweekly.io.TimezoneInfo;
 import biweekly.io.WriteContext;
 import biweekly.io.scribe.property.RecurrenceRuleScribe;
+import biweekly.io.text.ICalReader;
 import biweekly.parameter.ParticipationStatus;
 import biweekly.property.Action;
 import biweekly.property.Attendee;
+import biweekly.property.ICalProperty;
+import biweekly.property.RawProperty;
 import biweekly.property.RecurrenceRule;
 import biweekly.property.Trigger;
 import biweekly.util.Duration;
@@ -76,6 +89,61 @@ public class CalendarHelper {
         return Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(cal.getTime());
     }
 
+    static ICalendar parse(Context context, File file) throws IOException {
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            // https://en.wikipedia.org/wiki/Byte_order_mark#UTF-8
+            byte[] utf8_bom = "\uFEFF".getBytes(StandardCharsets.UTF_8);
+            byte[] bom = new byte[utf8_bom.length];
+            is.mark(bom.length);
+            is.read(bom);
+            if (!Arrays.equals(bom, utf8_bom))
+                is.reset();
+
+            try (ICalReader reader = new ICalReader(is)) {
+                ICalendar icalendar = reader.readNext();
+
+                for (ParseWarning warning : reader.getWarnings())
+                    EntityLog.log(context, "Event warning " + warning);
+
+                // https://icalendar.org/validator.html
+                if (icalendar == null)
+                    throw new IOException("Invalid iCal file");
+
+                return icalendar;
+            }
+        }
+    }
+
+    static String getTimeZoneID(ICalendar icalendar, ICalProperty property) {
+        TimezoneInfo tzinfo = icalendar.getTimezoneInfo();
+        TimezoneAssignment tza = (tzinfo == null ? null : tzinfo.getTimezone(property));
+        TimeZone tz = (tza == null ? null : tza.getTimeZone());
+        String tzid = (tz == null ? null : tz.getID());
+        if (tzid == null)
+            tzid = TimeZone.getDefault().getID();
+        return tzid;
+    }
+
+    static Uri getOnlineMeetingUrl(Context context, VEvent event) {
+        try {
+            RawProperty prop = event.getExperimentalProperty("X-GOOGLE-CONFERENCE");
+            if (prop == null)
+                prop = event.getExperimentalProperty("X-MICROSOFT-ONLINEMEETINGEXTERNALLINK");
+            if (prop == null)
+                prop = event.getExperimentalProperty("X-MICROSOFT-SKYPETEAMSMEETINGURL");
+            if (prop == null)
+                return null;
+            String url = prop.getValue();
+            if (TextUtils.isEmpty(url))
+                return null;
+            Uri uri = Uri.parse(url);
+            return (uri.isHierarchical() ? uri : null);
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return null;
+        }
+    }
+
     static Long exists(Context context, String selectedAccount, String selectedName, String uid) {
         ContentResolver resolver = context.getContentResolver();
         try (Cursor cursor = resolver.query(CalendarContract.Events.CONTENT_URI,
@@ -99,16 +167,30 @@ public class CalendarHelper {
     }
 
     static Long insert(Context context, ICalendar icalendar, VEvent event, int status,
+                       EntityAccount account, EntityMessage message) {
+        String selectedAccount;
+        String selectedName;
+        try {
+            JSONObject jselected = new JSONObject(account.calendar);
+            selectedAccount = jselected.getString("account");
+            selectedName = jselected.optString("name", null);
+        } catch (Throwable ex) {
+            Log.i(ex);
+            selectedAccount = account.calendar;
+            selectedName = null;
+        }
+
+        return insert(context, icalendar, event, status, selectedAccount, selectedName, message);
+    }
+
+    static Long insert(Context context, ICalendar icalendar, VEvent event, int status,
                        String selectedAccount, String selectedName, EntityMessage message) {
+        Long existId = null;
         String uid = (event.getUid() == null ? null : event.getUid().getValue());
         if (!TextUtils.isEmpty(uid)) {
-            Long existId = exists(context, selectedAccount, selectedName, uid);
+            existId = exists(context, selectedAccount, selectedName, uid);
             if (existId != null) {
                 EntityLog.log(context, EntityLog.Type.General, message, "Event exists uid=" + uid + " id=" + existId);
-                if (BuildConfig.DEBUG)
-                    delete(context, event, message);
-                else
-                    return existId;
             }
         }
 
@@ -120,6 +202,9 @@ public class CalendarHelper {
 
         ICalDate start = (event.getDateStart() == null ? null : event.getDateStart().getValue());
         ICalDate end = (event.getDateEnd() == null ? null : event.getDateEnd().getValue());
+
+        String tzstart = getTimeZoneID(icalendar, event.getDateStart());
+        String tzend = getTimeZoneID(icalendar, event.getDateEnd());
 
         String rrule = null;
         RecurrenceRule recurrence = event.getRecurrenceRule();
@@ -165,15 +250,10 @@ public class CalendarHelper {
                 if (!TextUtils.isEmpty(organizer))
                     values.put(CalendarContract.Events.ORGANIZER, organizer);
 
-                // Assume one time zone
-                TimezoneInfo tzinfo = icalendar.getTimezoneInfo();
-                TimezoneAssignment tza = (tzinfo == null ? null : tzinfo.getTimezone(event.getDateStart()));
-                TimeZone tz = (tza == null ? null : tza.getTimeZone());
-                values.put(CalendarContract.Events.EVENT_TIMEZONE,
-                        tz == null ? TimeZone.getDefault().getID() : tz.getID());
-
                 values.put(CalendarContract.Events.DTSTART, start.getTime());
                 values.put(CalendarContract.Events.DTEND, end.getTime());
+                values.put(CalendarContract.Events.EVENT_TIMEZONE, "UTC");
+                values.put(CalendarContract.Events.EVENT_END_TIMEZONE, "UTC");
 
                 if (rrule != null)
                     values.put(CalendarContract.Events.RRULE, rrule);
@@ -186,19 +266,51 @@ public class CalendarHelper {
                     values.put(CalendarContract.Events.EVENT_LOCATION, location);
                 values.put(CalendarContract.Events.STATUS, status);
 
-                Uri uri = resolver.insert(CalendarContract.Events.CONTENT_URI, values);
-                long eventId = Long.parseLong(uri.getLastPathSegment());
-                EntityLog.log(context, EntityLog.Type.General, message, "Inserted event" +
-                        " id=" + calId + ":" + eventId +
-                        " uid=" + uid +
-                        " organizer=" + organizer +
-                        " tz=" + (tz == null ? null : tz.getID()) +
-                        " start=" + new Date(start.getTime()) +
-                        " end=" + new Date(end.getTime()) +
-                        " rrule=" + rrule +
-                        " summary=" + summary +
-                        " location=" + location +
-                        " status=" + status);
+                long eventId;
+                if (existId == null) {
+                    Uri uri = resolver.insert(CalendarContract.Events.CONTENT_URI, values);
+                    eventId = Long.parseLong(uri.getLastPathSegment());
+                    EntityLog.log(context, EntityLog.Type.General, message, "Inserted event" +
+                            " id=" + calId + ":" + eventId +
+                            " uid=" + uid +
+                            " organizer=" + organizer +
+                            " start=" + new Date(start.getTime()) + "/" + tzstart +
+                            " end=" + new Date(end.getTime()) + "/" + tzend +
+                            " rrule=" + rrule +
+                            " summary=" + summary +
+                            " location=" + location +
+                            " status=" + status);
+                } else {
+                    Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, existId);
+                    int rows = resolver.update(uri, values, null, null);
+                    EntityLog.log(context, EntityLog.Type.General, message, "Updated event" +
+                            " id=" + calId + ":" + existId +
+                            " uid=" + uid +
+                            " organizer=" + organizer +
+                            " start=" + new Date(start.getTime()) + "/" + tzstart +
+                            " end=" + new Date(end.getTime()) + "/" + tzend +
+                            " rrule=" + rrule +
+                            " summary=" + summary +
+                            " location=" + location +
+                            " status=" + status +
+                            " rows=" + rows);
+
+                    rows = resolver.delete(CalendarContract.Attendees.CONTENT_URI,
+                            CalendarContract.Attendees.EVENT_ID + " = ?",
+                            new String[]{Long.toString(existId)});
+                    EntityLog.log(context, EntityLog.Type.General, message, "Deleted event attendees for update" +
+                            " id=" + calId + ":" + existId +
+                            " rows=" + rows);
+
+                    rows = resolver.delete(CalendarContract.Reminders.CONTENT_URI,
+                            CalendarContract.Reminders.EVENT_ID + " = ?",
+                            new String[]{Long.toString(existId)});
+                    EntityLog.log(context, EntityLog.Type.General, message, "Deleted event reminders for update" +
+                            " id=" + calId + ":" + existId +
+                            " rows=" + rows);
+
+                    eventId = existId;
+                }
 
                 for (Attendee a : event.getAttendees())
                     try {
@@ -240,7 +352,7 @@ public class CalendarHelper {
 
                         Uri auri = resolver.insert(CalendarContract.Attendees.CONTENT_URI, avalues);
                         long attendeeId = Long.parseLong(auri.getLastPathSegment());
-                        EntityLog.log(context, EntityLog.Type.General, message, "Inserted attendee" +
+                        EntityLog.log(context, EntityLog.Type.General, message, "Inserted event attendee" +
                                 " id=" + eventId + ":" + attendeeId +
                                 " email=" + email +
                                 " name=" + name +
@@ -345,8 +457,22 @@ public class CalendarHelper {
                     values.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CANCELED);
                 int rows = resolver.update(updateUri, values, null, null);
 
+                int arows = 0;
+                String email = attendees.get(0).getEmail();
+                if (!TextUtils.isEmpty(email)) {
+                    ContentValues avalues = new ContentValues();
+                    avalues.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarContract.Attendees.ATTENDEE_STATUS_ACCEPTED);
+
+                    arows = resolver.update(
+                            CalendarContract.Attendees.CONTENT_URI,
+                            avalues,
+                            CalendarContract.Attendees.EVENT_ID + " =? AND " + CalendarContract.Attendees.ATTENDEE_EMAIL + " =?",
+                            new String[]{Long.toString(eventId), email});
+                }
+
                 EntityLog.log(context, EntityLog.Type.General, message,
-                        "Updated event id=" + eventId + " uid=" + uid + " rows=" + rows);
+                        "Updated event id=" + eventId + " uid=" + uid + " email=" + email +
+                                " rows=" + rows + "/" + arows);
             }
         }
     }

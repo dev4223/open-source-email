@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -68,6 +68,10 @@ public class FragmentOptions extends FragmentBase {
     private String searching = null;
     private SuggestData data = null;
 
+    private int dp24;
+
+    static final long DELAY_SETOPTIONS = 20; // ms
+
     private static final int[] TAB_PAGES = {
             R.layout.fragment_setup,
             R.layout.fragment_options_synchronize,
@@ -78,6 +82,7 @@ public class FragmentOptions extends FragmentBase {
             R.layout.fragment_options_privacy,
             R.layout.fragment_options_encryption,
             R.layout.fragment_options_notifications,
+            R.layout.fragment_options_integrations,
             R.layout.fragment_options_misc,
             R.layout.fragment_options_backup
     };
@@ -92,6 +97,7 @@ public class FragmentOptions extends FragmentBase {
             R.string.title_advanced_section_privacy,
             R.string.title_advanced_section_encryption,
             R.string.title_advanced_section_notifications,
+            R.string.title_advanced_caption_integrations,
             R.string.title_advanced_section_misc,
             R.string.title_advanced_section_backup
     };
@@ -106,6 +112,7 @@ public class FragmentOptions extends FragmentBase {
             R.drawable.twotone_account_circle_24,
             R.drawable.twotone_lock_24,
             R.drawable.twotone_notifications_24,
+            R.drawable.twotone_extension_24,
             R.drawable.twotone_more_24,
             R.drawable.twotone_save_alt_24
     };
@@ -120,6 +127,7 @@ public class FragmentOptions extends FragmentBase {
             "privacy",
             "encryption",
             "notifications",
+            "integrations",
             "misc",
             "backup"
     ));
@@ -139,19 +147,20 @@ public class FragmentOptions extends FragmentBase {
             "indentation", "date", "date_week", "date_fixed", "date_bold", "date_time", "threading", "threading_unread",
             "show_filtered",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
-            "avatars", "bimi", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
+            "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
+            "circular", "saturation", "brightness", "threshold",
             "authentication", "authentication_indicator",
-            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients",
+            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients", "reverse_addresses",
             "font_size_sender", "sender_ellipsize",
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines", "align_header",
             "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt", "thumbnails",
             "contrast", "hyphenation", "display_font", "monospaced_pre",
-            "list_count", "bundled_fonts", "parse_classes",
+            "list_count", "bundled_fonts", "narrow_fonts", "parse_classes",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_swap", "actionbar_color", "group_category",
-            "autoscroll", "swipenav", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
+            "autoscroll", "swipenav", "updown", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
             "auto_hide_answer", "swipe_reply",
             "move_thread_all", "move_thread_sent",
             "language_detection",
@@ -161,13 +170,21 @@ public class FragmentOptions extends FragmentBase {
             "show_recent",
             "biometrics",
             "default_light",
-            "vt_enabled", "vt_apikey"
+            "vt_enabled", "vt_apikey",
+            "pdf_preview", "webp"
     };
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putString("fair:searching", searching);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Context context = getContext();
+        this.dp24 = (context == null ? -48 : Helper.dp2pixels(context, 24));
     }
 
     @Override
@@ -191,7 +208,8 @@ public class FragmentOptions extends FragmentBase {
 
             @Override
             public void onPageSelected(int position) {
-                if (position > 0) {
+                if (position > 0 && position < PAGE_TITLES.length &&
+                        PAGE_TITLES[position] != R.string.title_advanced_section_backup) {
                     final Context context = getContext();
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean setup_advanced = prefs.getBoolean("setup_advanced", false);
@@ -270,7 +288,8 @@ public class FragmentOptions extends FragmentBase {
         final MenuItem menuSearch = menu.findItem(R.id.menu_search);
         final SearchView searchView = (SearchView) menuSearch.getActionView();
 
-        searchView.setQueryHint(getString(R.string.title_search));
+        if (searchView != null)
+            searchView.setQueryHint(getString(R.string.title_search));
 
         final SearchView.OnSuggestionListener onSuggestionListener = new SearchView.OnSuggestionListener() {
             @Override
@@ -290,7 +309,7 @@ public class FragmentOptions extends FragmentBase {
                     FragmentBase fragment = (FragmentBase) adapter.instantiateItem(pager, tab);
                     if (fragment instanceof FragmentSetup)
                         ((FragmentSetup) fragment).prepareSearch();
-                    fragment.scrollTo(resid, -48);
+                    fragment.scrollTo(resid, -dp24);
                     menuSearch.collapseActionView();
 
                     // Blink found text
@@ -321,127 +340,130 @@ public class FragmentOptions extends FragmentBase {
             }
         };
 
-        searchView.setOnSuggestionListener(onSuggestionListener);
+        if (searchView != null)
+            searchView.setOnSuggestionListener(onSuggestionListener);
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searching = query;
+        if (searchView != null)
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    searching = query;
 
-                CursorAdapter adapter = searchView.getSuggestionsAdapter();
-                if (adapter != null && adapter.getCount() > 0)
-                    onSuggestionListener.onSuggestionClick(0);
+                    CursorAdapter adapter = searchView.getSuggestionsAdapter();
+                    if (adapter != null && adapter.getCount() > 0)
+                        onSuggestionListener.onSuggestionClick(0);
 
-                return false;
-            }
+                    return false;
+                }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (newText != null)
-                    newText = newText.trim();
-                searching = newText;
-                suggest(newText);
-                return false;
-            }
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (newText != null)
+                        newText = newText.trim();
+                    searching = newText;
+                    suggest(newText);
+                    return false;
+                }
 
-            private void suggest(String query) {
-                Bundle args = new Bundle();
-                args.putString("query", query);
+                private void suggest(String query) {
+                    Bundle args = new Bundle();
+                    args.putString("query", query);
 
-                new SimpleTask<SuggestData>() {
-                    @Override
-                    protected SuggestData onExecute(Context context, Bundle args) {
-                        if (TextUtils.isEmpty(args.getString("query")))
-                            return data;
+                    new SimpleTask<SuggestData>() {
+                        @Override
+                        protected SuggestData onExecute(Context context, Bundle args) {
+                            if (TextUtils.isEmpty(args.getString("query")))
+                                return data;
 
-                        return (data == null ? getSuggestData(context) : data);
-                    }
+                            return (data == null ? getSuggestData(context) : data);
+                        }
 
-                    @Override
-                    protected void onExecuted(Bundle args, SuggestData result) {
-                        data = result;
-                        _suggest(args.getString("query"));
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Log.w(ex);
-                        try {
-                            // Fallback to UI thread (Android 5.1.1)
-                            data = getSuggestData(getContext());
+                        @Override
+                        protected void onExecuted(Bundle args, SuggestData result) {
+                            data = result;
                             _suggest(args.getString("query"));
-                        } catch (Throwable exex) {
-                            Log.unexpectedError(getParentFragmentManager(), exex);
-                        }
-                    }
-
-                    private SuggestData getSuggestData(Context context) {
-                        SuggestData data = new SuggestData();
-                        data.titles = new String[TAB_PAGES.length];
-                        data.views = new View[TAB_PAGES.length];
-
-                        LayoutInflater inflater = LayoutInflater.from(context);
-                        for (int tab = 0; tab < TAB_PAGES.length; tab++) {
-                            data.titles[tab] = context.getString(PAGE_TITLES[tab]);
-                            data.views[tab] = inflater.inflate(TAB_PAGES[tab], null);
                         }
 
-                        return data;
-                    }
-                }.serial().execute(FragmentOptions.this, args, "option:suggest");
-            }
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.w(ex);
+                            try {
+                                // Fallback to UI thread (Android 5.1.1)
+                                data = getSuggestData(getContext());
+                                _suggest(args.getString("query"));
+                            } catch (Throwable exex) {
+                                Log.unexpectedError(getParentFragmentManager(), exex);
+                            }
+                        }
 
-            private void _suggest(String query) {
-                MatrixCursor cursor = new MatrixCursor(new String[]{"_id", "tab", "resid", "title"});
+                        private SuggestData getSuggestData(Context context) {
+                            SuggestData data = new SuggestData();
+                            data.titles = new String[TAB_PAGES.length];
+                            data.views = new View[TAB_PAGES.length];
 
-                if (data != null &&
-                        query != null && query.length() > 1) {
-                    int id = 0;
-                    for (int tab = 0; tab < TAB_PAGES.length; tab++)
-                        id = getSuggestions(query.toLowerCase(), id, tab, data.titles[tab], data.views[tab], cursor);
+                            LayoutInflater inflater = LayoutInflater.from(context);
+                            for (int tab = 0; tab < TAB_PAGES.length; tab++) {
+                                data.titles[tab] = context.getString(PAGE_TITLES[tab]);
+                                data.views[tab] = inflater.inflate(TAB_PAGES[tab], null);
+                            }
+
+                            return data;
+                        }
+                    }.serial().execute(FragmentOptions.this, args, "option:suggest");
                 }
 
-                searchView.setSuggestionsAdapter(new SimpleCursorAdapter(
-                        searchView.getContext(),
-                        R.layout.spinner_item1_dropdown,
-                        cursor,
-                        new String[]{"title"},
-                        new int[]{android.R.id.text1},
-                        0
-                ));
-                searchView.getSuggestionsAdapter().notifyDataSetChanged();
-            }
+                private void _suggest(String query) {
+                    MatrixCursor cursor = new MatrixCursor(new String[]{"_id", "tab", "resid", "title"});
 
-            private int getSuggestions(String query, int id, int tab, String title, View view, MatrixCursor cursor) {
-                if (view == null ||
-                        ("nosuggest".equals(view.getTag()) && !BuildConfig.DEBUG))
+                    if (data != null &&
+                            query != null && query.length() > 1) {
+                        int id = 0;
+                        for (int tab = 0; tab < TAB_PAGES.length; tab++)
+                            id = getSuggestions(query.toLowerCase(), id, tab, data.titles[tab], data.views[tab], cursor);
+                    }
+
+                    searchView.setSuggestionsAdapter(new SimpleCursorAdapter(
+                            searchView.getContext(),
+                            R.layout.spinner_item1_dropdown,
+                            cursor,
+                            new String[]{"title"},
+                            new int[]{android.R.id.text1},
+                            0
+                    ));
+                    searchView.getSuggestionsAdapter().notifyDataSetChanged();
+                }
+
+                private int getSuggestions(String query, int id, int tab, String title, View view, MatrixCursor cursor) {
+                    if (view == null ||
+                            ("nosuggest".equals(view.getTag()) && !BuildConfig.DEBUG))
+                        return id;
+                    else if (view instanceof ViewGroup) {
+                        ViewGroup group = (ViewGroup) view;
+                        for (int i = 0; i <= group.getChildCount(); i++)
+                            id = getSuggestions(query, id, tab, title, group.getChildAt(i), cursor);
+                    } else if (view instanceof TextView) {
+                        String description = ((TextView) view).getText().toString();
+                        if (description.toLowerCase().contains(query)) {
+                            description = description
+                                    .replace("%%", "%")
+                                    .replaceAll("%([0-9]\\$)?[sd]", "#");
+                            String text = view.getContext().getString(R.string.title_title_description, title, description);
+                            cursor.newRow()
+                                    .add(id++)
+                                    .add(tab)
+                                    .add(view.getId())
+                                    .add(text);
+                        }
+                    }
+
                     return id;
-                else if (view instanceof ViewGroup) {
-                    ViewGroup group = (ViewGroup) view;
-                    for (int i = 0; i <= group.getChildCount(); i++)
-                        id = getSuggestions(query, id, tab, title, group.getChildAt(i), cursor);
-                } else if (view instanceof TextView) {
-                    String description = ((TextView) view).getText().toString();
-                    if (description.toLowerCase().contains(query)) {
-                        description = description
-                                .replace("%%", "%")
-                                .replaceAll("%([0-9]\\$)?[sd]", "#");
-                        String text = view.getContext().getString(R.string.title_title_description, title, description);
-                        cursor.newRow()
-                                .add(id++)
-                                .add(tab)
-                                .add(view.getId())
-                                .add(text);
-                    }
                 }
-
-                return id;
-            }
-        });
+            });
 
         if (!TextUtils.isEmpty(saved)) {
             menuSearch.expandActionView();
-            searchView.setQuery(saved, false);
+            if (searchView != null)
+                searchView.setQuery(saved, false);
         }
 
         getViewLifecycleOwner().getLifecycle().addObserver(new LifecycleObserver() {
@@ -511,8 +533,10 @@ public class FragmentOptions extends FragmentBase {
                 case 8:
                     return new FragmentOptionsNotifications();
                 case 9:
-                    return new FragmentOptionsMisc();
+                    return new FragmentOptionsIntegrations();
                 case 10:
+                    return new FragmentOptionsMisc();
+                case 11:
                     return new FragmentOptionsBackup();
                 default:
                     throw new IllegalArgumentException();

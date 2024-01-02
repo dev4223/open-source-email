@@ -12,6 +12,8 @@
     <attr name="colorThumb" format="reference" />
     <attr name="colorWarning" format="reference" />
     <attr name="colorBadge" format="reference" />
+    <attr name="colorAccept" format="reference" />
+    <attr name="colorDecline" format="reference" />
     <attr name="colorDrawerScrim" format="reference" />
     <attr name="colorDrawerText" format="reference" />
     <attr name="colorDrawerBackground" format="reference" />
@@ -31,7 +33,7 @@
         <item name="themeName">light</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
         <item name="android:windowSplashScreenBackground" tools:targetApi="s">
-            @android:color/darker_gray
+            @color/splashBackground
         </item>
         <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">
             @mipmap/ic_launcher_round
@@ -76,6 +78,9 @@
         <item name="colorWarning">@color/lightColorWarning</item>
         <item name="colorBadge">@color/red</item>
 
+        <item name="colorAccept">@color/colorEncryptDark</item>
+        <item name="colorDecline">@color/red</item>
+
         <item name="colorDrawerScrim">@color/lightColorDrawerScrim</item>
         <item name="colorDrawerText">@color/lightColorDrawerText</item>
         <item name="colorDrawerBackground">@color/lightColorDrawerBackground</item>
@@ -110,7 +115,7 @@
         <item name="themeName">dark</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
         <item name="android:windowSplashScreenBackground" tools:targetApi="s">
-            @android:color/darker_gray
+            @color/splashBackground
         </item>
         <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">
             @mipmap/ic_launcher_round
@@ -154,6 +159,9 @@
         <item name="colorThumb">@color/darkColorThumb</item>
         <item name="colorWarning">@color/darkColorWarning</item>
         <item name="colorBadge">@color/red</item>
+
+        <item name="colorAccept">@color/colorEncryptLight</item>
+        <item name="colorDecline">@color/red</item>
 
         <item name="colorDrawerScrim">@color/darkColorDrawerScrim</item>
         <item name="colorDrawerText">@color/darkColorDrawerText</item>
@@ -602,6 +610,10 @@
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
+    <style name="Theme.AppCompat.TranslucentSplash" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/splashBackground</item>
     </style>
 
     <style name="activityAnimationStyle" parent="@android:style/Animation.Activity">

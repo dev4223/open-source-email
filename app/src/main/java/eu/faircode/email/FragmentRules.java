@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -321,7 +321,9 @@ public class FragmentRules extends FragmentBase {
 
         MenuItem menuSearch = menu.findItem(R.id.menu_search);
         SearchView searchView = (SearchView) menuSearch.getActionView();
-        searchView.setQueryHint(getString(R.string.title_rules_search_hint));
+
+        if (searchView != null)
+            searchView.setQueryHint(getString(R.string.title_rules_search_hint));
 
         final String search = searching;
         view.post(new RunnableEx("rules:search") {
@@ -347,25 +349,26 @@ public class FragmentRules extends FragmentBase {
             }
         });
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = newText;
-                    adapter.search(newText);
+        if (searchView != null)
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = newText;
+                        adapter.search(newText);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                    searching = query;
-                    adapter.search(query);
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                        searching = query;
+                        adapter.search(query);
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
 
         MenuCompat.setGroupDividerEnabled(menu, true);
 
@@ -540,11 +543,8 @@ public class FragmentRules extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException ||
-                        ex instanceof FileNotFoundException)
-                    ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                boolean report = !(ex instanceof IllegalArgumentException || ex instanceof FileNotFoundException);
+                Log.unexpectedError(getParentFragmentManager(), ex, report);
             }
         }.execute(this, args, "rules:export");
     }
@@ -672,11 +672,10 @@ public class FragmentRules extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof NoStreamException)
                     ((NoStreamException) ex).report(getActivity());
-                else if (ex instanceof FileNotFoundException ||
-                        ex instanceof JSONException)
-                    ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                else {
+                    boolean report = !(ex instanceof FileNotFoundException || ex instanceof JSONException);
+                    Log.unexpectedError(getParentFragmentManager(), ex, report);
+                }
             }
         }.execute(this, args, "rules:import");
     }

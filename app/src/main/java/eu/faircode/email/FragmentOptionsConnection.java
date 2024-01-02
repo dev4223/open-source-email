@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -30,6 +30,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -46,6 +47,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -58,11 +60,28 @@ import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
 public class FragmentOptionsConnection extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private View view;
     private ImageButton ibHelp;
     private SwitchCompat swMetered;
     private Spinner spDownload;
+    private SwitchCompat swDownloadLimited;
     private SwitchCompat swRoaming;
     private SwitchCompat swRlah;
     private SwitchCompat swDownloadHeaders;
@@ -76,26 +95,40 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
     private SwitchCompat swBindSocket;
     private SwitchCompat swStandaloneVpn;
     private SwitchCompat swTcpKeepAlive;
-    private TextView tvTcpKeepAliveHint;
+    private SwitchCompat swSslUpdate;
     private SwitchCompat swSslHarden;
     private SwitchCompat swSslHardenStrict;
     private SwitchCompat swCertStrict;
+    private SwitchCompat swCertTransparency;
+    private ImageButton ibCertTransparency;
+    private SwitchCompat swCheckNames;
     private SwitchCompat swOpenSafe;
+    private SwitchCompat swHttpRedirect;
+    private SwitchCompat swBouncyCastle;
+    private SwitchCompat swFipsMode;
+    private ImageButton ibBouncyCastle;
     private Button btnManage;
     private TextView tvNetworkMetered;
     private TextView tvNetworkRoaming;
     private CardView cardDebug;
     private Button btnCiphers;
+    private EditText etHost;
+    private RadioGroup rgEncryption;
+    private EditText etPort;
+    private Button btnCheck;
     private TextView tvNetworkInfo;
 
     private Group grpValidated;
+    private Group grpCustomSsl;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "metered", "download", "roaming", "rlah",
+            "metered", "download", "download_limited", "roaming", "rlah",
             "download_headers", "download_eml", "download_plain",
             "require_validated", "require_validated_captive", "vpn_only",
             "timeout", "prefer_ip4", "bind_socket", "standalone_vpn", "tcp_keep_alive",
-            "ssl_harden", "ssl_harden_strict", "cert_strict", "open_safe"
+            "ssl_update", "ssl_harden", "ssl_harden_strict", "cert_strict", "cert_transparency", "check_names",
+            "open_safe", "http_redirect",
+            "bouncy_castle", "bc_fips"
     };
 
     @Override
@@ -111,6 +144,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         ibHelp = view.findViewById(R.id.ibHelp);
         swMetered = view.findViewById(R.id.swMetered);
         spDownload = view.findViewById(R.id.spDownload);
+        swDownloadLimited = view.findViewById(R.id.swDownloadLimited);
         swRoaming = view.findViewById(R.id.swRoaming);
         swRlah = view.findViewById(R.id.swRlah);
         swDownloadHeaders = view.findViewById(R.id.swDownloadHeaders);
@@ -124,11 +158,18 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         swBindSocket = view.findViewById(R.id.swBindSocket);
         swStandaloneVpn = view.findViewById(R.id.swStandaloneVpn);
         swTcpKeepAlive = view.findViewById(R.id.swTcpKeepAlive);
-        tvTcpKeepAliveHint = view.findViewById(R.id.tvTcpKeepAliveHint);
+        swSslUpdate = view.findViewById(R.id.swSslUpdate);
         swSslHarden = view.findViewById(R.id.swSslHarden);
         swSslHardenStrict = view.findViewById(R.id.swSslHardenStrict);
         swCertStrict = view.findViewById(R.id.swCertStrict);
+        swCertTransparency = view.findViewById(R.id.swCertTransparency);
+        ibCertTransparency = view.findViewById(R.id.ibCertTransparency);
+        swCheckNames = view.findViewById(R.id.swCheckNames);
         swOpenSafe = view.findViewById(R.id.swOpenSafe);
+        swHttpRedirect = view.findViewById(R.id.swHttpRedirect);
+        swBouncyCastle = view.findViewById(R.id.swBouncyCastle);
+        swFipsMode = view.findViewById(R.id.swFipsMode);
+        ibBouncyCastle = view.findViewById(R.id.ibBouncyCastle);
         btnManage = view.findViewById(R.id.btnManage);
 
         tvNetworkMetered = view.findViewById(R.id.tvNetworkMetered);
@@ -136,9 +177,14 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
 
         cardDebug = view.findViewById(R.id.cardDebug);
         btnCiphers = view.findViewById(R.id.btnCiphers);
+        etHost = view.findViewById(R.id.etHost);
+        rgEncryption = view.findViewById(R.id.rgEncryption);
+        etPort = view.findViewById(R.id.etPort);
+        btnCheck = view.findViewById(R.id.btnCheck);
         tvNetworkInfo = view.findViewById(R.id.tvNetworkInfo);
 
         grpValidated = view.findViewById(R.id.grpValidated);
+        grpCustomSsl = view.findViewById(R.id.grpCustomSsl);
 
         setOptions();
 
@@ -171,6 +217,13 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("download").apply();
+            }
+        });
+
+        swDownloadLimited.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("download_limited", checked).apply();
             }
         });
 
@@ -286,11 +339,22 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 try {
-                    System.setProperty("fairemail.tcp_keep_alive", Boolean.toString(checked));
+                    prefs.edit().putBoolean("tcp_keep_alive", checked).apply();
+                    if (checked)
+                        System.setProperty("fairemail.tcp_keep_alive", Boolean.toString(checked));
+                    else
+                        System.clearProperty("fairemail.tcp_keep_alive");
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
-                prefs.edit().putBoolean("tcp_keep_alive", checked).apply();
+            }
+        });
+
+        swSslUpdate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton v, boolean checked) {
+                prefs.edit().putBoolean("ssl_update", checked).commit();
+                ApplicationEx.restart(v.getContext(), "ssl_update");
             }
         });
 
@@ -319,10 +383,60 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             }
         });
 
+        swCertTransparency.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("cert_transparency", checked).apply();
+            }
+        });
+
+        ibCertTransparency.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), 201);
+            }
+        });
+
+        swCheckNames.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("check_names", checked).apply();
+            }
+        });
+
         swOpenSafe.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("open_safe", checked).apply();
+            }
+        });
+
+        swHttpRedirect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("http_redirect", checked).apply();
+            }
+        });
+
+        swBouncyCastle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("bouncy_castle", checked).apply();
+                swFipsMode.setEnabled(checked);
+            }
+        });
+
+        swFipsMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("bc_fips", checked).apply();
+            }
+        });
+
+        ibBouncyCastle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse("https://www.bouncycastle.org/"), true);
             }
         });
 
@@ -356,10 +470,142 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             }
         });
 
+        btnCheck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String host = etHost.getText().toString().trim();
+                Integer port = Helper.parseInt(etPort.getText().toString().trim());
+
+                String encryption;
+                if (rgEncryption.getCheckedRadioButtonId() == R.id.radio_starttls)
+                    encryption = "starttls";
+                else if (rgEncryption.getCheckedRadioButtonId() == R.id.radio_ssl)
+                    encryption = "ssl";
+                else
+                    encryption = "none";
+
+                int timeout = prefs.getInt("timeout", EmailService.DEFAULT_CONNECT_TIMEOUT) * 1000;
+
+                Bundle args = new Bundle();
+                args.putString("host", host);
+                args.putInt("port", port == null ? 0 : port);
+                args.putString("encryption", encryption);
+                args.putInt("timeout", timeout);
+
+                new SimpleTask<StringBuilder>() {
+                    @Override
+                    protected void onPreExecute(Bundle args) {
+                        btnCheck.setEnabled(false);
+                    }
+
+                    @Override
+                    protected void onPostExecute(Bundle args) {
+                        btnCheck.setEnabled(true);
+                    }
+
+                    @Override
+                    protected StringBuilder onExecute(Context context, Bundle args) throws Throwable {
+                        String host = args.getString("host");
+                        int port = args.getInt("port");
+                        String encryption = args.getString("encryption");
+                        int timeout = args.getInt("timeout");
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Host: ").append(host).append('\n');
+                        sb.append("Port: ").append(port).append('\n');
+                        sb.append("Encryption: ").append(encryption).append('\n');
+
+                        InetSocketAddress address = new InetSocketAddress(host, port);
+                        SocketFactory factory = (!"ssl".equals(encryption)
+                                ? SocketFactory.getDefault()
+                                : SSLSocketFactory.getDefault());
+                        try (Socket socket = factory.createSocket()) {
+                            socket.connect(address, timeout);
+                            socket.setSoTimeout(timeout);
+
+                            if (!"none".equals(encryption)) {
+                                SSLSocket sslSocket = null;
+                                try {
+                                    if ("starttls".equals(encryption))
+                                        sslSocket = ConnectionHelper.starttls(socket, host, port, context);
+                                    else
+                                        sslSocket = (SSLSocket) socket;
+
+                                    sslSocket.startHandshake();
+
+                                    SSLSession session = sslSocket.getSession();
+                                    sb.append("Protocol: ").append(session.getProtocol()).append('\n');
+                                    sb.append("Cipher: ").append(session.getCipherSuite()).append('\n');
+                                    Certificate[] certificates = session.getPeerCertificates();
+                                    List<X509Certificate> x509certs = new ArrayList<>();
+                                    if (certificates != null)
+                                        for (Certificate certificate : certificates) {
+                                            if (certificate instanceof X509Certificate) {
+                                                X509Certificate x509 = (X509Certificate) certificate;
+                                                x509certs.add(x509);
+                                                sb.append("Subject: ").append(x509.getSubjectDN()).append('\n');
+                                                for (String dns : EntityCertificate.getDnsNames(x509))
+                                                    sb.append("DNS name: ").append(dns).append('\n');
+                                            }
+                                        }
+
+                                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                                    tmf.init((KeyStore) null);
+
+                                    TrustManager[] tms = tmf.getTrustManagers();
+                                    if (tms != null && tms.length > 0 && tms[0] instanceof X509TrustManager) {
+                                        X509TrustManager tm = (X509TrustManager) tms[0];
+                                        try {
+                                            tm.checkServerTrusted(x509certs.toArray(new X509Certificate[0]), "UNKNOWN");
+                                            sb.append("Peer certificate trusted\n");
+                                        } catch (Throwable ex) {
+                                            sb.append(new ThrowableWrapper(ex).toSafeString()).append('\n');
+                                        }
+                                    }
+                                } finally {
+                                    try {
+                                        if (sslSocket != null) {
+                                            ConnectionHelper.signOff(sslSocket, port, context);
+                                            sslSocket.close();
+                                        }
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                    }
+                                }
+                            }
+                        }
+
+                        return sb;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, StringBuilder sb) {
+                        new AlertDialog.Builder(getContext())
+                                .setIcon(R.drawable.twotone_info_24)
+                                .setTitle(R.string.title_advanced_section_connection)
+                                .setMessage(sb)
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // Do nothing
+                                    }
+                                })
+                                .show();
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(getParentFragment(), ex);
+                    }
+                }.execute(FragmentOptionsConnection.this, args, "connection:check");
+            }
+        });
+
         // Initialize
         FragmentDialogTheme.setBackground(getContext(), view, false);
         tvNetworkMetered.setVisibility(View.GONE);
         tvNetworkRoaming.setVisibility(View.GONE);
+        grpCustomSsl.setVisibility(SSLHelper.customTrustManager() ? View.VISIBLE : View.GONE);
         cardDebug.setVisibility(View.GONE);
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
@@ -378,8 +624,16 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         if ("timeout".equals(key))
             return;
 
-        setOptions();
+        getMainHandler().removeCallbacks(update);
+        getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
+
+    private Runnable update = new RunnableEx("connection") {
+        @Override
+        protected void delegate() {
+            setOptions();
+        }
+    };
 
     @Override
     public void onResume() {
@@ -439,6 +693,8 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
                     break;
                 }
 
+            swDownloadLimited.setChecked(prefs.getBoolean("download_limited", false));
+
             swRoaming.setChecked(prefs.getBoolean("roaming", true));
             swRlah.setChecked(prefs.getBoolean("rlah", true));
 
@@ -459,11 +715,18 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             swBindSocket.setChecked(prefs.getBoolean("bind_socket", false));
             swStandaloneVpn.setChecked(prefs.getBoolean("standalone_vpn", false));
             swTcpKeepAlive.setChecked(prefs.getBoolean("tcp_keep_alive", false));
+            swSslUpdate.setChecked(prefs.getBoolean("ssl_update", true));
             swSslHarden.setChecked(prefs.getBoolean("ssl_harden", false));
             swSslHardenStrict.setChecked(prefs.getBoolean("ssl_harden_strict", false));
             swSslHardenStrict.setEnabled(swSslHarden.isChecked());
-            swCertStrict.setChecked(prefs.getBoolean("cert_strict", !BuildConfig.PLAY_STORE_RELEASE));
+            swCertStrict.setChecked(prefs.getBoolean("cert_strict", true));
+            swCertTransparency.setChecked(prefs.getBoolean("cert_transparency", false));
+            swCheckNames.setChecked(prefs.getBoolean("check_names", !BuildConfig.PLAY_STORE_RELEASE));
             swOpenSafe.setChecked(prefs.getBoolean("open_safe", false));
+            swHttpRedirect.setChecked(prefs.getBoolean("http_redirect", true));
+            swBouncyCastle.setChecked(prefs.getBoolean("bouncy_castle", false));
+            swFipsMode.setChecked(prefs.getBoolean("bc_fips", false));
+            swFipsMode.setEnabled(swBouncyCastle.isChecked());
         } catch (Throwable ex) {
             Log.e(ex);
         }

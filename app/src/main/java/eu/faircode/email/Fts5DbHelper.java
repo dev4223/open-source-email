@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.SuppressLint;
@@ -130,8 +130,8 @@ public class Fts5DbHelper extends SQLiteOpenHelper {
                 "SELECT term FROM message_terms" +
                         " WHERE term LIKE ?" +
                         " ORDER BY cnt" +
-                        " LIMIT " + max,
-                new String[]{query})) {
+                        " LIMIT ?",
+                new String[]{query, Integer.toString(max)})) {
             while (cursor != null && cursor.moveToNext())
                 result.add(cursor.getString(0));
         }
@@ -199,31 +199,52 @@ public class Fts5DbHelper extends SQLiteOpenHelper {
 
         String search = (sb.length() > 0 ? sb.toString() : escape(criteria.query));
 
-        String select = "";
-        if (account != null)
-            select += "account = " + account + " AND ";
-        if (folder != null)
-            select += "folder = " + folder + " AND ";
+        StringBuilder select = new StringBuilder();
+        List<String> args = new ArrayList<>();
+
+        if (account != null) {
+            select.append("account = CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(account));
+        }
+
+        if (folder != null) {
+            select.append("folder = CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(folder));
+        }
+
         if (exclude.length > 0) {
-            select += "NOT folder IN (";
+            select.append("NOT folder IN (");
             for (int i = 0; i < exclude.length; i++) {
                 if (i > 0)
-                    select += ", ";
-                select += exclude[i];
+                    select.append(", ");
+                select.append("CAST(? AS INTEGER)");
+                args.add(Long.toString(exclude[i]));
             }
-            select += ") AND ";
+            select.append(") AND ");
         }
-        if (criteria.after != null)
-            select += "time > " + criteria.after + " AND ";
-        if (criteria.before != null)
-            select += "time < " + criteria.before + " AND ";
 
-        Log.i("FTS select=" + select + " search=" + search);
+        if (criteria.after != null) {
+            select.append("time > CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(criteria.after));
+        }
+
+        if (criteria.before != null) {
+            select.append("time < CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(criteria.before));
+        }
+
+        select.append("message MATCH ?");
+        args.add(search);
+
+        Log.i("FTS select=" + select +
+                " args=" + TextUtils.join(", ", args) +
+                " query=" + criteria.query);
         List<Long> result = new ArrayList<>();
+        // TODO CASA composed SQL with placeholders
         try (Cursor cursor = db.query(
                 "message", new String[]{"rowid"},
-                select + "message MATCH ?",
-                new String[]{search},
+                select.toString(),
+                args.toArray(new String[0]),
                 null, null, "time DESC", null)) {
             while (cursor != null && cursor.moveToNext())
                 result.add(cursor.getLong(0));
@@ -257,7 +278,7 @@ public class Fts5DbHelper extends SQLiteOpenHelper {
         for (File file : db.getParentFile().listFiles())
             if (file.getName().startsWith(DATABASE_NAME)) {
                 Log.i("FTS delete=" + file);
-                file.delete();
+                Helper.secureDelete(file);
             }
     }
 }

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -114,7 +114,7 @@ public class FragmentDialogRuleCheck extends FragmentDialogBase {
                                     continue;
 
                                 if (rule.matches(context, message, null, null))
-                                    if (rule.execute(context, message))
+                                    if (rule.execute(context, message, null))
                                         applied++;
 
                                 db.setTransactionSuccessful();
@@ -136,10 +136,8 @@ public class FragmentDialogRuleCheck extends FragmentDialogBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        if (ex instanceof IllegalArgumentException)
-                            ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-                        else
-                            Log.unexpectedError(getParentFragmentManager(), ex);
+                        boolean report = !(ex instanceof IllegalArgumentException);
+                        Log.unexpectedError(getParentFragmentManager(), ex, report);
                     }
                 }.execute(FragmentDialogRuleCheck.this, args, "rule:execute");
             }
@@ -199,7 +197,7 @@ public class FragmentDialogRuleCheck extends FragmentDialogBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
-                    tvNoMessages.setText(ex.getMessage());
+                    tvNoMessages.setText(new ThrowableWrapper(ex).getSafeMessage());
                     tvNoMessages.setVisibility(View.VISIBLE);
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);

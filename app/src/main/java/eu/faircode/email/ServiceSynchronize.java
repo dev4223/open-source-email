@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -135,6 +135,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
     static final int DEFAULT_BACKOFF_POWER = 3; // 2^3=8 seconds (totally 8+2x20=48 seconds)
 
+    private static final long MSG_DELAY = 15 * 1000L; // milliseconds
     private static final long BACKUP_DELAY = 30 * 1000L; // milliseconds
     private static final long PURGE_DELAY = 30 * 1000L; // milliseconds
     private static final int QUIT_DELAY = 10; // seconds
@@ -158,7 +159,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final String ACTION_NEW_MESSAGE_COUNT = BuildConfig.APPLICATION_ID + ".NEW_MESSAGE_COUNT";
 
     private static final List<String> PREF_EVAL = Collections.unmodifiableList(Arrays.asList(
-            "enabled", "poll_interval" // restart account(s)
+            "enabled", "poll_interval", "last_daily" // restart account(s)
     ));
 
     private static final List<String> PREF_RELOAD = Collections.unmodifiableList(Arrays.asList(
@@ -170,7 +171,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "sync_folders",
             "sync_shared_folders",
             "download_headers", "download_eml",
-            "prefer_ip4", "bind_socket", "standalone_vpn", "tcp_keep_alive", "ssl_harden", "ssl_harden_strict", "cert_strict", // force reconnect
+            "prefer_ip4", "bind_socket", "standalone_vpn", "tcp_keep_alive", // force reconnect
+            "ssl_harden", "ssl_harden_strict", "cert_strict", "cert_transparency", "check_names", "bouncy_castle", "bc_fips", // force reconnect
             "experiments", "debug", "protocol", // force reconnect
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", // force reconnect
             "keep_alive_poll", "empty_pool", "idle_done", // force reconnect
@@ -212,22 +214,37 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         IntentFilter iif = new IntentFilter();
         iif.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         iif.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        registerReceiver(connectionChangedReceiver, iif);
+        ContextCompat.registerReceiver(this,
+                connectionChangedReceiver,
+                iif,
+                ContextCompat.RECEIVER_NOT_EXPORTED);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            registerReceiver(idleModeChangedReceiver, new IntentFilter(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED));
+            ContextCompat.registerReceiver(this,
+                    idleModeChangedReceiver,
+                    new IntentFilter(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED),
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            registerReceiver(dataSaverChanged, new IntentFilter(ConnectivityManager.ACTION_RESTRICT_BACKGROUND_CHANGED));
+            ContextCompat.registerReceiver(this,
+                    dataSaverChanged,
+                    new IntentFilter(ConnectivityManager.ACTION_RESTRICT_BACKGROUND_CHANGED),
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             IntentFilter suspend = new IntentFilter();
             suspend.addAction(Intent.ACTION_MY_PACKAGE_SUSPENDED);
             suspend.addAction(Intent.ACTION_MY_PACKAGE_UNSUSPENDED);
-            registerReceiver(suspendChanged, suspend);
+            ContextCompat.registerReceiver(this,
+                    suspendChanged,
+                    suspend,
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
         }
 
-        registerReceiver(batteryChanged, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        ContextCompat.registerReceiver(this,
+                batteryChanged,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED);
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -721,6 +738,15 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
         final TwoStateOwner cowner = new TwoStateOwner(this, "liveSynchronizing");
 
+        final Runnable updateNew = new Runnable() {
+            @Override
+            public void run() {
+                Log.i("Update new messages");
+                cowner.restart();
+                getMainHandler().postDelayed(this, MSG_DELAY);
+            }
+        };
+
         db.folder().liveSynchronizing().observe(this, new Observer<List<TupleFolderSync>>() {
             private List<Long> lastAccounts = new ArrayList<>();
             private List<Long> lastFolders = new ArrayList<>();
@@ -760,10 +786,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         " folders=" + folders.size() +
                         " accounts=" + accounts.size());
 
-                if (syncing == 0)
+                if (syncing == 0) {
+                    getMainHandler().removeCallbacks(updateNew);
                     cowner.start();
-                else
+                } else {
                     cowner.stop();
+                    getMainHandler().postDelayed(updateNew, MSG_DELAY);
+                }
 
                 if (!changed)
                     return;
@@ -795,7 +824,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
         // New message notifications batching
 
-        Core.NotificationData notificationData = new Core.NotificationData(this);
+        NotificationHelper.NotificationData notificationData = new NotificationHelper.NotificationData(this);
 
         MutableLiveData<List<TupleMessageEx>> mutableUnseenNotify = new MutableLiveData<>();
         db.message().liveUnseenNotify().observe(cowner, new Observer<List<TupleMessageEx>>() {
@@ -868,7 +897,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     public void delegate() {
                         try {
                             boolean fg = Boolean.TRUE.equals(foreground.getValue());
-                            Core.notifyMessages(ServiceSynchronize.this, messages, notificationData, fg);
+                            NotificationHelper.notifyMessages(ServiceSynchronize.this, messages, notificationData, fg);
                         } catch (SecurityException ex) {
                             Log.w(ex);
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
@@ -1445,6 +1474,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         // Build notification
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, "service")
+                        .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_DEFAULT)
                         .setSmallIcon(R.drawable.baseline_compare_arrows_white_24)
                         .setContentIntent(piWhy)
                         .setAutoCancel(false)
@@ -1487,6 +1517,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         intent.putExtra("account", account.id);
         intent.putExtra("protocol", account.protocol);
         intent.putExtra("auth_type", account.auth_type);
+        intent.putExtra("address", account.user);
         intent.putExtra("faq", 23);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent piAlert = PendingIntentCompat.getActivity(
@@ -1700,14 +1731,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                     // https://tools.ietf.org/html/rfc2177
                     final boolean capIdle =
-                            iservice.hasCapability("IDLE") &&
-                                    !"poczta.o2.pl".equals(account.host);
+                            iservice.hasCapability("IDLE");
                     final boolean capUtf8 =
                             iservice.hasCapability("UTF8=ACCEPT") ||
                                     iservice.hasCapability("UTF8=ONLY");
                     final boolean capNotify = iservice.hasCapability("NOTIFY");
 
                     String capabilities = TextUtils.join(" ", iservice.getCapabilities());
+                    EntityLog.log(this, EntityLog.Type.Protocol, account, capabilities);
                     if (capabilities.length() > 500)
                         capabilities = capabilities.substring(0, 500) + "...";
 

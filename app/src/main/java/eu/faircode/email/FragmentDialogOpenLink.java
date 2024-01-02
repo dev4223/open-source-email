@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
@@ -44,7 +44,6 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Pair;
@@ -71,6 +70,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 import androidx.core.net.MailTo;
+import androidx.core.text.method.LinkMovementMethodCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -81,6 +81,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,7 +122,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         boolean disconnect_links = prefs.getBoolean("disconnect_links", true);
 
         // Preload web view
-        Helper.customTabsWarmup(context);
+        //Helper.customTabsWarmup(context);
 
         final Uri uri = UriHelper.guessScheme(_uri);
 
@@ -130,7 +131,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         if (uri.isOpaque())
             sanitized = uri;
         else {
-            Uri s = UriHelper.sanitize(uri);
+            Uri s = UriHelper.sanitize(context, uri);
             sanitized = (s == null ? uri : s);
         }
 
@@ -323,6 +324,11 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         cbSanitize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                cbSanitize.setTextColor(Helper.resolveColor(context,
+                        checked ? android.R.attr.textColorSecondary : R.attr.colorWarning));
+                cbSanitize.setTypeface(
+                        checked ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+
                 Uri link = (checked ? sanitized : uri);
                 boolean secure = cbSecure.isChecked();
                 cbSecure.setTag(secure);
@@ -425,13 +431,13 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
                         tvHost.setText(ex.getClass().getName());
-                        tvOwner.setText(ex.getMessage());
+                        tvOwner.setText(new ThrowableWrapper(ex).getSafeMessage());
                     }
                 }.execute(FragmentDialogOpenLink.this, args, "link:owner");
             }
         });
 
-        tvOwnerRemark.setMovementMethod(LinkMovementMethod.getInstance());
+        tvOwnerRemark.setMovementMethod(LinkMovementMethodCompat.getInstance());
 
         btnWhois.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -469,7 +475,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                         final TextView tvWhois = dview.findViewById(R.id.tvWhois);
                         final ImageButton ibInfo = dview.findViewById(R.id.ibInfo);
 
-                        tvWhois.setMovementMethod(LinkMovementMethod.getInstance());
+                        tvWhois.setMovementMethod(LinkMovementMethodCompat.getInstance());
 
                         ibInfo.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -537,7 +543,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         } else {
             etLink.setText(format(uri, context));
             tvLink.setText(null);
-            tvSuspicious.setVisibility(Helper.isSingleScript(host) ? View.GONE : View.VISIBLE);
+            tvSuspicious.setVisibility(TextHelper.isSingleScript(host) ? View.GONE : View.VISIBLE);
         }
 
         if (check_links_dbl &&
@@ -916,11 +922,11 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         String scheme = uri.getScheme();
         if ("https".equals(scheme)) {
             String host = uri.getHost();
-            return (TextUtils.isEmpty(host) ? null : host);
+            return (TextUtils.isEmpty(host) ? null : host.toLowerCase(Locale.ROOT));
         } else if ("mailto".equals(scheme)) {
             MailTo mailto = MailTo.parse(uri);
             String to = mailto.getTo();
-            return (TextUtils.isEmpty(to) ? null : to);
+            return (TextUtils.isEmpty(to) ? null : to.toLowerCase(Locale.ROOT));
         } else
             return null;
     }

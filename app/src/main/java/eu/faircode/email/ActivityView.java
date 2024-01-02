@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
@@ -77,7 +77,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter;
-import androidx.window.layout.DisplayFeature;
 import androidx.window.layout.WindowInfoTracker;
 import androidx.window.layout.WindowLayoutInfo;
 
@@ -160,7 +159,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private boolean searching = false;
     private int lastBackStackCount = 0;
     private Snackbar lastSnackbar = null;
-    private Intent lastThread = null;
 
     static final int PI_UNIFIED = 1;
     static final int PI_WHY = 2;
@@ -245,7 +243,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         int layout = (config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK);
         Log.i("Orientation=" + config.orientation + " layout=" + layout +
                 " portrait rows=" + portrait2 + " cols=" + portrait2c + " min=" + portrait_min_size +
-                " landscape cols=" + landscape + " min=" + landscape);
+                " landscape cols=" + landscape + " min=" + landscape_min_size);
         boolean duo = Helper.isSurfaceDuo();
         boolean close_pane = prefs.getBoolean("close_pane", !duo);
         boolean open_pane = (!close_pane && prefs.getBoolean("open_pane", false));
@@ -697,9 +695,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 ibExpanderExtra.setImageLevel(minimal ? 1 /* more */ : 0 /* less */);
                 rvMenuExtra.setVisibility(minimal ? View.GONE : View.VISIBLE);
                 if (!minimal)
-                    getMainHandler().post(new Runnable() {
+                    getMainHandler().post(new RunnableEx("fullScroll") {
                         @Override
-                        public void run() {
+                        public void delegate() {
                             drawerContainer.fullScroll(View.FOCUS_DOWN);
                         }
                     });
@@ -716,20 +714,35 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             content_pane.setVisibility(duo || open_pane ? View.INVISIBLE : View.GONE);
         }
 
+        FragmentManager fm = getSupportFragmentManager();
+
+        int count = fm.getBackStackEntryCount();
+        if (count > 1 && "thread".equals(fm.getBackStackEntryAt(count - 1).getName())) {
+            Fragment fragment = fm.findFragmentByTag("thread");
+            if (fragment != null) {
+                if (fragment.getId() == (content_pane == null ? R.id.content_pane : R.id.content_frame)) {
+                    Log.i("Moving pane=" + (content_pane != null) + " fragment=" + fragment);
+                    fm.popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    Fragment newFragment = Helper.recreateFragment(fragment, fm);
+                    FragmentTransaction ft = fm.beginTransaction();
+                    ft.replace(content_pane == null ? R.id.content_frame : R.id.content_pane, newFragment, "thread")
+                            .addToBackStack("thread");
+                    ft.commit();
+                }
+
+                if (content_pane != null) {
+                    content_separator.setVisibility(View.VISIBLE);
+                    content_pane.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
         if (getSupportFragmentManager().getFragments().size() == 0 &&
                 !getIntent().hasExtra(Intent.EXTRA_PROCESS_TEXT))
             init();
 
-        lastThread = null;
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null)
             drawerToggle.setDrawerIndicatorEnabled(savedInstanceState.getBoolean("fair:toggle"));
-
-            Intent thread = savedInstanceState.getParcelable("fair:thread");
-            if (thread != null && content_pane != null) {
-                getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                onViewThread(thread);
-            }
-        }
 
         checkFirst();
         checkBanner();
@@ -800,7 +813,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         outState.putParcelable("fair:intent", getIntent());
         outState.putBoolean("fair:toggle", drawerToggle == null || drawerToggle.isDrawerIndicatorEnabled());
         outState.putBoolean("fair:searching", searching);
-        outState.putParcelable("fair:thread", lastThread);
         super.onSaveInstanceState(outState);
     }
 
@@ -897,10 +909,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }, new Callable<Boolean>() {
             @Override
             public Boolean call() {
-                if (!drawerLayout.isLocked(drawerContainer))
-                    drawerLayout.closeDrawer(drawerContainer);
-                onDebugInfo();
-                return true;
+                if (DebugHelper.isAvailable()) {
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
+                    onDebugInfo();
+                    return true;
+                } else
+                    return false;
             }
         }).setExternal(true));
 
@@ -1077,14 +1092,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     protected void onStart() {
         super.onStart();
-        if (BuildConfig.DEBUG)
+        if (!Helper.isPlayStoreInstall())
             infoTracker.addWindowLayoutInfoListener(this, Runnable::run, layoutStateChangeCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (BuildConfig.DEBUG)
+        if (!Helper.isPlayStoreInstall())
             infoTracker.removeWindowLayoutInfoListener(layoutStateChangeCallback);
     }
 
@@ -1347,13 +1362,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean close_pane = prefs.getBoolean("close_pane", !Helper.isSurfaceDuo());
                 boolean thread = "thread".equals(getSupportFragmentManager().getBackStackEntryAt(count - 1).getName());
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content_pane);
-
                 int visibility = (!thread || fragment == null ? (close_pane ? View.GONE : View.INVISIBLE) : View.VISIBLE);
                 content_separator.setVisibility(visibility);
                 content_pane.setVisibility(visibility);
-
-                if (!thread)
-                    lastThread = null;
             }
         }
     }
@@ -1494,7 +1505,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         new SimpleTask<Long>() {
             @Override
             protected Long onExecute(Context context, Bundle args) throws Throwable {
-                File file = new File(context.getFilesDir(), "crash.log");
+                File file = new File(context.getFilesDir(), DebugHelper.CRASH_LOG_NAME);
                 if (file.exists()) {
                     StringBuilder sb = new StringBuilder();
                     try {
@@ -1504,9 +1515,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                 sb.append(line).append("\r\n");
                         }
 
-                        return Log.getDebugInfo(context, "crash", R.string.title_crash_info_remark, null, sb.toString(), null).id;
+                        EntityMessage m = DebugHelper.getDebugInfo(context,
+                                "crash", R.string.title_crash_info_remark, null, sb.toString(), null);
+                        return (m == null ? null : m.id);
                     } finally {
-                        file.delete();
+                        Helper.secureDelete(file);
                     }
                 }
 
@@ -1515,11 +1528,12 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected void onExecuted(Bundle args, Long id) {
-                if (id != null)
-                    startActivity(
-                            new Intent(ActivityView.this, ActivityCompose.class)
-                                    .putExtra("action", "edit")
-                                    .putExtra("id", id));
+                if (id == null)
+                    return;
+                startActivity(
+                        new Intent(ActivityView.this, ActivityCompose.class)
+                                .putExtra("action", "edit")
+                                .putExtra("id", id));
             }
 
             @Override
@@ -1527,7 +1541,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 ToastEx.makeText(ActivityView.this,
                         Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
             }
-        }.execute(this, new Bundle(), "crash:log");
+        }.execute(this, new Bundle(), DebugHelper.CRASH_LOG_NAME);
     }
 
     private void checkUpdate(boolean always) {
@@ -1757,11 +1771,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (args.getBoolean("always"))
-                    if (ex instanceof IllegalArgumentException || ex instanceof IOException)
-                        ToastEx.makeText(ActivityView.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                    else
-                        Log.unexpectedError(getSupportFragmentManager(), ex);
+                if (args.getBoolean("always")) {
+                    boolean report = !(ex instanceof IllegalArgumentException || ex instanceof IOException);
+                    Log.unexpectedError(getSupportFragmentManager(), ex, report);
+                }
             }
         }.execute(this, args, "update:check");
     }
@@ -1947,8 +1960,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         String action = intent.getAction();
         if (action != null) {
-            lastThread = null;
-
             if (action.startsWith("unified")) {
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
@@ -2015,19 +2026,23 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean notify_open_folder = prefs.getBoolean("notify_open_folder", false);
                 if (account > 0 && folder > 0 && !TextUtils.isEmpty(type) && notify_open_folder) {
                     if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-                        getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                        if (group >= 0)
+                            getSupportFragmentManager().popBackStack("unified", 0);
+                        else {
+                            getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
-                        Bundle args = new Bundle();
-                        args.putLong("account", account);
-                        args.putLong("folder", folder);
-                        args.putString("type", type);
+                            Bundle args = new Bundle();
+                            args.putLong("account", account);
+                            args.putLong("folder", folder);
+                            args.putString("type", type);
 
-                        FragmentMessages fragment = new FragmentMessages();
-                        fragment.setArguments(args);
+                            FragmentMessages fragment = new FragmentMessages();
+                            fragment.setArguments(args);
 
-                        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("messages");
-                        fragmentTransaction.commit();
+                            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                            fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("messages");
+                            fragmentTransaction.commit();
+                        }
                     }
                 }
                 onViewThread(intent);
@@ -2266,23 +2281,61 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected Long onExecute(Context context, Bundle args) throws IOException, JSONException {
-                return Log.getDebugInfo(context, "main", R.string.title_debug_info_remark, null, null, args).id;
+                boolean send = args.getBoolean("send");
+
+                EntityMessage m = DebugHelper.getDebugInfo(context,
+                        "main", R.string.title_debug_info_remark, null, null, args);
+                if (m == null)
+                    return null;
+
+                if (send) {
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
+
+                        EntityMessage draft = db.message().getMessage(m.id);
+                        if (draft != null) {
+                            draft.folder = EntityFolder.getOutbox(context).id;
+                            db.message().updateMessage(draft);
+
+                            EntityOperation.queue(context, draft, EntityOperation.SEND);
+
+                            db.setTransactionSuccessful();
+
+                            args.putBoolean("sent", true);
+                            return null;
+                        }
+                    } finally {
+                        db.endTransaction();
+                    }
+                }
+
+                return m.id;
             }
 
             @Override
             protected void onExecuted(Bundle args, Long id) {
-                if (id != null)
-                    startActivity(new Intent(ActivityView.this, ActivityCompose.class)
-                            .putExtra("action", "edit")
-                            .putExtra("id", id));
+                if (id == null)
+                    return;
+
+                boolean sent = args.getBoolean("sent");
+                if (sent) {
+                    ToastEx.makeText(ActivityView.this, R.string.title_debug_info_send, Toast.LENGTH_LONG).show();
+                    ServiceSend.start(ActivityView.this);
+                    return;
+                }
+
+                if (id == null)
+                    return;
+                startActivity(new Intent(ActivityView.this, ActivityCompose.class)
+                        .putExtra("action", "edit")
+                        .putExtra("id", id));
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    ToastEx.makeText(ActivityView.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getSupportFragmentManager(), ex);
+                boolean report = !(ex instanceof IllegalArgumentException);
+                Log.unexpectedError(getSupportFragmentManager(), ex, report);
             }
 
         }.execute(this, args, "debug:info");
@@ -2428,6 +2481,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             criteria.in_keywords = false;
             criteria.in_message = false;
             criteria.in_notes = false;
+            criteria.in_trash = false;
         }
 
         FragmentMessages.search(
@@ -2436,14 +2490,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onViewThread(Intent intent) {
-        lastThread = intent;
         boolean found = intent.getBooleanExtra("found", false);
 
         if (lastSnackbar != null && lastSnackbar.isShown())
             lastSnackbar.dismiss();
 
-        if (!found && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            if (found) {
+                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                if (fragments.size() > 0) {
+                    Bundle args = fragments.get(fragments.size() - 1).getArguments();
+                    if (args != null && args.getBoolean("found"))
+                        getSupportFragmentManager().popBackStack();
+                }
+            } else
+                getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         Bundle args = new Bundle();
         args.putLong("account", intent.getLongExtra("account", -1));
@@ -2471,7 +2532,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(pane, fragment).addToBackStack("thread");
+        fragmentTransaction.replace(pane, fragment, "thread").addToBackStack("thread");
         fragmentTransaction.commit();
     }
 
@@ -2549,10 +2610,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private final Consumer<WindowLayoutInfo> layoutStateChangeCallback = new Consumer<WindowLayoutInfo>() {
         @Override
         public void accept(WindowLayoutInfo info) {
-            List<DisplayFeature> features = info.getDisplayFeatures();
-            Log.i("Display features=" + features.size());
-            for (DisplayFeature feature : features)
-                EntityLog.log(ActivityView.this, "Display feature bounds=" + feature.getBounds());
+            EntityLog.log(ActivityView.this, "Window layout=" + info);
         }
     };
 }

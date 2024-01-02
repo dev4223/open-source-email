@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -409,7 +409,8 @@ public class FragmentOptionsEncryption extends FragmentBase
                 open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 open.setType("*/*");
                 if (open.resolveActivity(pm) == null)  // system whitelisted
-                    ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
+                    Log.unexpectedError(getParentFragmentManager(),
+                            new IllegalArgumentException(context.getString(R.string.title_no_saf)), 25);
                 else
                     startActivityForResult(Helper.getChooser(context, open), REQUEST_IMPORT_CERTIFICATE);
             }
@@ -624,8 +625,16 @@ public class FragmentOptionsEncryption extends FragmentBase
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        setOptions();
+        getMainHandler().removeCallbacks(update);
+        getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
+
+    private Runnable update = new RunnableEx("encryption") {
+        @Override
+        protected void delegate() {
+            setOptions();
+        }
+    };
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -727,7 +736,7 @@ public class FragmentOptionsEncryption extends FragmentBase
             tvOpenPgpStatus.setText("Not connected");
         else {
             Log.e(ex);
-            tvOpenPgpStatus.setText(ex.toString());
+            tvOpenPgpStatus.setText(new ThrowableWrapper(ex).toSafeString());
         }
     }
 }

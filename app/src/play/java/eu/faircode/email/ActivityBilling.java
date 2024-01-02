@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2021 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.SuppressLint;
@@ -81,8 +81,8 @@ public class ActivityBilling extends ActivityBase implements
     static final String ACTION_PURCHASE_ERROR = BuildConfig.APPLICATION_ID + ".ACTION_PURCHASE_ERROR";
 
     private static final String SKU_TEST = "android.test.purchased";
-    private static final long MAX_SKU_CACHE_DURATION = 24 * 3600 * 1000L; // milliseconds
-    private static final long MAX_SKU_NOACK_DURATION = 24 * 3600 * 1000L; // milliseconds
+    private static final long MAX_SKU_CACHE_DURATION = 3 * 24 * 3600 * 1000L; // milliseconds
+    private static final long MAX_SKU_NOACK_DURATION = 3 * 24 * 3600 * 1000L; // milliseconds
 
     @Override
     @SuppressLint("MissingSuperCall")

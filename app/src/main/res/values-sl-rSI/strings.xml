@@ -686,7 +686,6 @@
     <string name="title_advanced_manage_keys_hint">        This will open to the Android security settings.        Keys and certificates can generally be found under Advanced - Encryption and credentials.
     </string>
     <string name="title_advanced_power_menu">Dodaj dejanja v Androidov meni za izklop</string>
-    <string name="title_advanced_external_search">Dovoli drugim programom iskati v sporočilih</string>
     <string name="title_advanced_sort_answers">Razvrsti predloge za odgovor po pogostosti uporabe</string>
     <string name="title_advanced_shortcuts">V Androidovem meniju za deljenje prikaži pogosto uporabljene stike</string>
     <string name="title_advanced_fts">Zgradi iskalno kazalo</string>
@@ -1088,6 +1087,7 @@
     <string name="title_importance_low">Nizka</string>
     <string name="title_importance_normal">Običajna</string>
     <string name="title_importance_high">Visoka</string>
+    <string name="title_important">Pomembno</string>
     <string name="title_search_in_text">Išči v besedilu &#8230;</string>
     <string name="title_forward">posredoval</string>
     <string name="title_resend">znova poslal</string>
@@ -1107,7 +1107,6 @@
     <string name="title_print_images">Natisni slike</string>
     <string name="title_print_images_remark">Prejem slik lahko traja nekaj časa</string>
     <string name="title_show_headers">Prikaži glave</string>
-    <string name="title_share_as_html">Deli kot HTML</string>
     <string name="title_raw_save">Shrani izvorno sporočilo</string>
     <string name="title_raw_send">Shrani kot prilogo</string>
     <string name="title_raw_send_message">Sporočilo</string>

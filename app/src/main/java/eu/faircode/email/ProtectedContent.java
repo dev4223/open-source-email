@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -46,7 +46,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -293,8 +292,8 @@ public class ProtectedContent {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            tvError.setText(ex.getMessage());
-                            tvErrorDetail.setText(ex.toString());
+                            tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
+                            tvErrorDetail.setText(new ThrowableWrapper(ex).toSafeString());
                             tvError.setVisibility(View.VISIBLE);
                             tvErrorDetail.setVisibility(View.VISIBLE);
                         }
@@ -388,7 +387,6 @@ public class ProtectedContent {
                                 @Override
                                 protected void onException(Bundle args, Throwable ex) {
                                     Log.e(ex);
-                                    ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                                 }
                             }.execute(context, owner, args, "protect");
                         }

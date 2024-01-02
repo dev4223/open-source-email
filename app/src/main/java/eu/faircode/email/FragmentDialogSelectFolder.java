@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -215,9 +215,34 @@ public class FragmentDialogSelectFolder extends FragmentDialogBase {
                 dismiss();
             }
         };
+
+        View.OnLongClickListener llistener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Long id = (Long) v.getTag();
+                if (id == null)
+                    return false;
+
+                Bundle args = getArguments();
+                args.putLong("folder", id);
+                args.putBoolean("copy", true);
+
+                sendResult(RESULT_OK);
+                dismiss();
+
+                return true;
+            }
+        };
+
         btnFavorite1.setOnClickListener(listener);
         btnFavorite2.setOnClickListener(listener);
         btnFavorite3.setOnClickListener(listener);
+
+        if (cancopy) {
+            btnFavorite1.setOnLongClickListener(llistener);
+            btnFavorite2.setOnLongClickListener(llistener);
+            btnFavorite3.setOnLongClickListener(llistener);
+        }
 
         ibResetFavorites.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class Whois {
     }
 
     static String get(String domain, String host, int port) throws IOException {
-        Socket socket = new Socket();
+        Socket socket = ConnectionHelper.getSocket(host, port);
         socket.connect(new InetSocketAddress(host, port), WHOIS_TIMEOUT);
         try {
             byte[] request = (domain + "\r\n").getBytes(StandardCharsets.UTF_8);

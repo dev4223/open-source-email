@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -169,6 +169,13 @@ public class FragmentRule extends FragmentBase {
 
     private TextView tvAutomation;
 
+    private EditText etNotes;
+    private ViewButtonColor btnColorNotes;
+
+    private Spinner spUrlMethod;
+    private EditText etUrl;
+    private TextView tvUrlHint;
+
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
 
@@ -186,6 +193,8 @@ public class FragmentRule extends FragmentBase {
     private Group grpAutomation;
     private Group grpDelete;
     private Group grpLocalOnly;
+    private Group grpNotes;
+    private Group grpUrl;
 
     private ArrayAdapter<String> adapterGroup;
     private ArrayAdapter<String> adapterDay;
@@ -215,6 +224,7 @@ public class FragmentRule extends FragmentBase {
     private final static int REQUEST_DATE_AFTER = 11;
     private final static int REQUEST_DATE_BEFORE = 12;
     private final static int REQUEST_FOLDER = 13;
+    private final static int REQUEST_COLOR_NOTES = 14;
 
     private static final List<String> HEADER_CONDITIONS = Collections.unmodifiableList(Arrays.asList(
             "$$seen$",
@@ -354,6 +364,13 @@ public class FragmentRule extends FragmentBase {
 
         tvAutomation = view.findViewById(R.id.tvAutomation);
 
+        etNotes = view.findViewById(R.id.etNotes);
+        btnColorNotes = view.findViewById(R.id.btnColorNotes);
+
+        spUrlMethod = view.findViewById(R.id.spUrlMethod);
+        etUrl = view.findViewById(R.id.etUrl);
+        tvUrlHint = view.findViewById(R.id.tvUrlHint);
+
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
 
         pbWait = view.findViewById(R.id.pbWait);
@@ -372,6 +389,8 @@ public class FragmentRule extends FragmentBase {
         grpAutomation = view.findViewById(R.id.grpAutomation);
         grpDelete = view.findViewById(R.id.grpDelete);
         grpLocalOnly = view.findViewById(R.id.grpLocalOnly);
+        grpNotes = view.findViewById(R.id.grpNotes);
+        grpUrl = view.findViewById(R.id.grpUrl);
 
         adapterGroup = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
         etGroup.setThreshold(1);
@@ -625,16 +644,18 @@ public class FragmentRule extends FragmentBase {
         actions.add(new Action(EntityRule.TYPE_SNOOZE, getString(R.string.title_rule_snooze)));
         actions.add(new Action(EntityRule.TYPE_FLAG, getString(R.string.title_rule_flag)));
         actions.add(new Action(EntityRule.TYPE_IMPORTANCE, getString(R.string.title_rule_importance)));
-        if (protocol == EntityAccount.TYPE_IMAP) {
+        if (protocol == EntityAccount.TYPE_IMAP)
             actions.add(new Action(EntityRule.TYPE_KEYWORD, getString(R.string.title_rule_keyword)));
-            actions.add(new Action(EntityRule.TYPE_MOVE, getString(R.string.title_rule_move)));
+        actions.add(new Action(EntityRule.TYPE_NOTES, getString(R.string.title_rule_notes)));
+        actions.add(new Action(EntityRule.TYPE_MOVE, getString(R.string.title_rule_move)));
+        if (protocol == EntityAccount.TYPE_IMAP)
             actions.add(new Action(EntityRule.TYPE_COPY, getString(R.string.title_rule_copy)));
-        }
         actions.add(new Action(EntityRule.TYPE_DELETE, getString(R.string.title_rule_delete)));
         actions.add(new Action(EntityRule.TYPE_ANSWER, getString(R.string.title_rule_answer)));
         actions.add(new Action(EntityRule.TYPE_TTS, getString(R.string.title_rule_tts)));
         actions.add(new Action(EntityRule.TYPE_SOUND, getString(R.string.title_rule_sound)));
         actions.add(new Action(EntityRule.TYPE_AUTOMATION, getString(R.string.title_rule_automation)));
+        actions.add(new Action(EntityRule.TYPE_URL, getString(R.string.title_rule_url)));
         adapterAction.addAll(actions);
 
         spAction.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -782,10 +803,27 @@ public class FragmentRule extends FragmentBase {
 
         tvAutomation.setText(getString(R.string.title_rule_automation_hint,
                 EntityRule.ACTION_AUTOMATION,
-                TextUtils.join(",", new String[]{
-                        EntityRule.EXTRA_RULE,
-                        EntityRule.EXTRA_SENDER,
-                        EntityRule.EXTRA_SUBJECT})));
+                TextUtils.join(",", EntityRule.EXTRA_ALL)));
+
+        btnColorNotes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putInt("color", btnColorNotes.getColor());
+                args.putString("title", getString(R.string.title_rule_notes));
+                args.putBoolean("reset", true);
+
+                FragmentDialogColor fragment = new FragmentDialogColor();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentRule.this, REQUEST_COLOR_NOTES);
+                fragment.show(getParentFragmentManager(), "rule:color:notes");
+            }
+        });
+
+        List<String> extras = new ArrayList<>();
+        for (String extra : EntityRule.EXTRA_ALL)
+            extras.add("$" + extra + "$");
+        tvUrlHint.setText(getString(R.string.title_rule_url_hint, TextUtils.join(", ", extras)));
 
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -822,6 +860,8 @@ public class FragmentRule extends FragmentBase {
         grpAutomation.setVisibility(View.GONE);
         grpDelete.setVisibility(View.GONE);
         grpLocalOnly.setVisibility(View.GONE);
+        grpNotes.setVisibility(View.GONE);
+        grpUrl.setVisibility(View.GONE);
 
         pbWait.setVisibility(View.VISIBLE);
 
@@ -990,6 +1030,12 @@ public class FragmentRule extends FragmentBase {
                 case REQUEST_FOLDER:
                     if (resultCode == RESULT_OK && data != null)
                         onFolderSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_COLOR_NOTES:
+                    if (resultCode == RESULT_OK && data != null) {
+                        Bundle args = data.getBundleExtra("args");
+                        btnColorNotes.setColor(args.getInt("color"));
+                    }
                     break;
             }
         } catch (Throwable ex) {
@@ -1267,7 +1313,6 @@ public class FragmentRule extends FragmentBase {
                                     etKeyword.setText(jaction.getString("keyword"));
                                     rgKeyword.check(jaction.optBoolean("set", true)
                                             ? R.id.keyword_add : R.id.keyword_delete);
-
                                     break;
 
                                 case EntityRule.TYPE_MOVE:
@@ -1318,6 +1363,24 @@ public class FragmentRule extends FragmentBase {
                                     cbAlarm.setChecked(alarm);
                                     etAlarmDuration.setEnabled(alarm);
                                     etAlarmDuration.setText(duration == 0 ? null : Integer.toString(duration));
+                                    break;
+
+                                case EntityRule.TYPE_NOTES:
+                                    etNotes.setText(jaction.getString("notes"));
+                                    btnColorNotes.setColor(
+                                            !jaction.has("color") || jaction.isNull("color")
+                                                    ? null : jaction.getInt("color"));
+                                    break;
+
+                                case EntityRule.TYPE_URL:
+                                    etUrl.setText(jaction.getString("url"));
+                                    String method = jaction.optString("method");
+                                    if (TextUtils.isEmpty(method))
+                                        method = "GET";
+                                    int pos = Arrays.asList(getResources().getStringArray(R.array.httpMethodNames))
+                                            .indexOf(method);
+                                    if (pos >= 0)
+                                        spUrlMethod.setSelection(pos);
                                     break;
                             }
 
@@ -1376,6 +1439,8 @@ public class FragmentRule extends FragmentBase {
         grpAutomation.setVisibility(type == EntityRule.TYPE_AUTOMATION ? View.VISIBLE : View.GONE);
         grpDelete.setVisibility(type == EntityRule.TYPE_DELETE ? View.VISIBLE : View.GONE);
         grpLocalOnly.setVisibility(type == EntityRule.TYPE_LOCAL_ONLY ? View.VISIBLE : View.GONE);
+        grpNotes.setVisibility(type == EntityRule.TYPE_NOTES ? View.VISIBLE : View.GONE);
+        grpUrl.setVisibility(type == EntityRule.TYPE_URL ? View.VISIBLE : View.GONE);
     }
 
     private void onActionDelete() {
@@ -1468,6 +1533,16 @@ public class FragmentRule extends FragmentBase {
                     JSONObject jdate = jcondition.optJSONObject("date");
                     JSONObject jschedule = jcondition.optJSONObject("schedule");
 
+                    JSONObject jaction = new JSONObject(action);
+                    int type = jaction.getInt("type");
+                    if (type == EntityRule.TYPE_NOTES) {
+                        String notes = jaction.optString("notes");
+                        if (notes.startsWith(EntityRule.JSOUP_PREFIX)) {
+                            jcondition.put("notes_jsoup", true);
+                            condition = jcondition.toString();
+                        }
+                    }
+
                     if (jsender == null &&
                             jrecipient == null &&
                             jsubject == null &&
@@ -1521,7 +1596,7 @@ public class FragmentRule extends FragmentBase {
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
                     if (ex instanceof IllegalArgumentException)
-                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                        Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                                 .setGestureInsetBottomIgnored(true).show();
                     else
                         Log.unexpectedError(getParentFragmentManager(), ex);
@@ -1705,6 +1780,23 @@ public class FragmentRule extends FragmentBase {
                         } catch (NumberFormatException ex) {
                             Log.e(ex);
                         }
+                    break;
+
+                case EntityRule.TYPE_NOTES:
+                    jaction.put("notes", etNotes.getText().toString());
+                    int ncolor = btnColorNotes.getColor();
+                    if (ncolor != Color.TRANSPARENT)
+                        jaction.put("color", ncolor);
+                    break;
+
+                case EntityRule.TYPE_URL:
+                    jaction.put("url", etUrl.getText().toString().trim());
+                    int pos = spUrlMethod.getSelectedItemPosition();
+                    String[] methods = getResources().getStringArray(R.array.httpMethodNames);
+                    if (pos >= 0 && pos < methods.length)
+                        jaction.put("method", methods[pos]);
+                    else
+                        jaction.put("method", "GET");
                     break;
             }
         }

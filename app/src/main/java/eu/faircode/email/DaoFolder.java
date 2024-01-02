@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import androidx.lifecycle.LiveData;
@@ -100,7 +100,7 @@ public interface DaoFolder {
             " GROUP BY folder.id")
     LiveData<List<TupleFolderEx>> liveFolders(Long account, boolean primary);
 
-    @Query("SELECT folder.*" +
+    final String queryUnified = "SELECT folder.*" +
             ", account.id AS accountId, account.pop AS accountProtocol, account.`order` AS accountOrder" +
             ", account.name AS accountName, account.category AS accountCategory, account.color AS accountColor" +
             ", account.state AS accountState, account.error AS accountError" +
@@ -117,8 +117,13 @@ public interface DaoFolder {
             " LEFT JOIN operation ON operation.folder = folder.id" +
             " WHERE account.`synchronize`" +
             " AND ((:type IS NULL AND folder.unified) OR folder.type = :type)" +
-            " GROUP BY folder.id")
+            " GROUP BY folder.id";
+
+    @Query(queryUnified)
     LiveData<List<TupleFolderEx>> liveUnified(String type);
+
+    @Query(queryUnified)
+    List<TupleFolderEx> getUnified(String type);
 
     @Query("SELECT folder.account, folder.id AS folder, unified, sync_state" +
             " FROM folder" +
@@ -169,10 +174,11 @@ public interface DaoFolder {
             " AND folder.synchronize")
     List<EntityFolder> getSynchronizingFolders(long account);
 
-    @Query("SELECT * FROM folder" +
+    @Query("SELECT folder.* FROM folder" +
+            " JOIN account_view AS account ON account.id = folder.account" +
             " WHERE folder.account = :account" +
-            " AND folder.`synchronize`" +
-            " AND folder.notify")
+            " AND folder.notify" +
+            " AND account.`synchronize`")
     List<EntityFolder> getNotifyingFolders(long account);
 
     @Query("SELECT * FROM folder" +

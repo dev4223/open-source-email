@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -38,7 +38,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,6 +46,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -61,6 +61,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.text.method.LinkMovementMethodCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
@@ -110,7 +111,8 @@ public class FragmentAccount extends FragmentBase {
     private EditText etRealm;
 
     private EditText etName;
-    private EditText etCategory;
+    private ArrayAdapter<String> adapterCategory;
+    private AutoCompleteTextView etCategory;
     private ViewButtonColor btnColor;
     private TextView tvColorPro;
 
@@ -434,6 +436,10 @@ public class FragmentAccount extends FragmentBase {
             }
         });
 
+        adapterCategory = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
+        etCategory.setThreshold(1);
+        etCategory.setAdapter(adapterCategory);
+
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -622,8 +628,10 @@ public class FragmentAccount extends FragmentBase {
         btnAutoConfig.setEnabled(false);
         pbAutoConfig.setVisibility(View.GONE);
 
-        rgEncryption.setVisibility(View.GONE);
-        cbInsecure.setVisibility(View.GONE);
+        if (!SSLHelper.customTrustManager()) {
+            Helper.hide(cbInsecure);
+            Helper.hide(tvInsecureRemark);
+        }
 
         if (id < 0)
             tilPassword.setEndIconMode(END_ICON_PASSWORD_TOGGLE);
@@ -645,7 +653,7 @@ public class FragmentAccount extends FragmentBase {
         btnHelp.setVisibility(View.GONE);
         btnSupport.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
-        tvInstructions.setMovementMethod(LinkMovementMethod.getInstance());
+        tvInstructions.setMovementMethod(LinkMovementMethodCompat.getInstance());
 
         grpServer.setVisibility(View.GONE);
         grpAuthorize.setVisibility(View.GONE);
@@ -699,7 +707,7 @@ public class FragmentAccount extends FragmentBase {
                         (ex instanceof UnknownHostException ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof IllegalArgumentException))
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
@@ -879,7 +887,7 @@ public class FragmentAccount extends FragmentBase {
                 cbIdentity.setVisibility(View.GONE);
 
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     showError(ex);
@@ -1422,6 +1430,7 @@ public class FragmentAccount extends FragmentBase {
                     for (EntityFolder folder : folders) {
                         EntityFolder existing = map.get(folder.name);
                         if (existing == null) {
+                            folder.id = null;
                             folder.account = account.id;
                             folder.setSpecials(account);
                             folder.id = db.folder().insertFolder(folder);
@@ -1512,7 +1521,7 @@ public class FragmentAccount extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     showError(ex);
@@ -1596,6 +1605,11 @@ public class FragmentAccount extends FragmentBase {
 
                 DB db = DB.getInstance(context);
 
+                List<String> categories = db.account().getAccountCategories();
+                if (categories == null)
+                    categories = new ArrayList<>();
+                args.putStringArrayList("categories", new ArrayList<>(categories));
+
                 List<EntityIdentity> identities = db.identity().getIdentities(id);
                 if (identities != null && identities.size() == 1)
                     args.putString("personal", identities.get(0).name);
@@ -1615,6 +1629,9 @@ public class FragmentAccount extends FragmentBase {
                         new ArrayAdapter<>(context, R.layout.spinner_item1, android.R.id.text1, providers);
                 aaProvider.setDropDownViewResource(R.layout.spinner_item1_dropdown);
                 spProvider.setAdapter(aaProvider);
+
+                adapterCategory.clear();
+                adapterCategory.addAll(args.getStringArrayList("categories"));
 
                 if (savedInstanceState == null) {
                     JSONObject jcondition = new JSONObject();
@@ -1895,7 +1912,11 @@ public class FragmentAccount extends FragmentBase {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_delete) {
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onSave(true);
+            return true;
+        } else if (itemId == R.id.menu_delete) {
             onMenuDelete();
             return true;
         }
@@ -2098,11 +2119,6 @@ public class FragmentAccount extends FragmentBase {
         seen.name = context.getString(R.string.title_seen);
         folders.add(seen);
 
-        EntityFolder flag = new EntityFolder();
-        flag.id = EntityMessage.SWIPE_ACTION_FLAG;
-        flag.name = context.getString(R.string.title_flag);
-        folders.add(flag);
-
         EntityFolder snooze = new EntityFolder();
         snooze.id = EntityMessage.SWIPE_ACTION_SNOOZE;
         snooze.name = context.getString(R.string.title_snooze_now);
@@ -2112,6 +2128,16 @@ public class FragmentAccount extends FragmentBase {
         hide.id = EntityMessage.SWIPE_ACTION_HIDE;
         hide.name = context.getString(R.string.title_hide);
         folders.add(hide);
+
+        EntityFolder flag = new EntityFolder();
+        flag.id = EntityMessage.SWIPE_ACTION_FLAG;
+        flag.name = context.getString(R.string.title_flag);
+        folders.add(flag);
+
+        EntityFolder importance = new EntityFolder();
+        importance.id = EntityMessage.SWIPE_ACTION_IMPORTANCE;
+        importance.name = context.getString(R.string.title_set_importance);
+        folders.add(importance);
 
         EntityFolder move = new EntityFolder();
         move.id = EntityMessage.SWIPE_ACTION_MOVE;

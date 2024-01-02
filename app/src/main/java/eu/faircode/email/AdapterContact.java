@@ -16,15 +16,18 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
@@ -41,6 +44,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
@@ -55,10 +59,15 @@ import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.mail.Address;
+import javax.mail.internet.InternetAddress;
 
 public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHolder> {
     private Fragment parentFragment;
@@ -102,6 +111,14 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
             tvTimes = itemView.findViewById(R.id.tvTimes);
             tvLast = itemView.findViewById(R.id.tvLast);
             ivFavorite = itemView.findViewById(R.id.ivFavorite);
+        }
+
+        Rect getItemRect() {
+            return new Rect(
+                    super.itemView.getLeft(),
+                    super.itemView.getTop(),
+                    super.itemView.getRight(),
+                    super.itemView.getBottom());
         }
 
         private void wire() {
@@ -244,6 +261,7 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
                     contact.type != EntityContact.TYPE_NO_JUNK)
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_advanced_never_favorite, order++, R.string.title_advanced_never_favorite);
             popupMenu.getMenu().add(Menu.NONE, R.string.title_share, order++, R.string.title_share); // should be system whitelisted
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_clipboard_copy, order++, R.string.title_clipboard_copy); // should be system whitelisted
             if (Shortcuts.can(context))
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_pin, order++, R.string.title_pin);
             popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_contact, order++, R.string.title_edit_contact);
@@ -259,6 +277,9 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
                         return true;
                     } else if (itemId == R.string.title_share) {
                         onActionShare();
+                        return true;
+                    } else if (itemId == R.string.title_clipboard_copy) {
+                        onActionCopy();
                         return true;
                     } else if (itemId == R.string.title_pin) {
                         onActionPin();
@@ -309,6 +330,27 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
                     } catch (Throwable ex) {
                         Helper.reportNoViewer(context, share, ex);
                     }
+                }
+
+                private void onActionCopy() {
+                    ClipboardManager clipboard = Helper.getSystemService(context, ClipboardManager.class);
+                    if (clipboard == null)
+                        return;
+
+                    String copy;
+                    try {
+                        InternetAddress address = new InternetAddress(contact.email, contact.name, StandardCharsets.UTF_8.name());
+                        copy = MessageHelper.formatAddresses(new Address[]{address});
+                    } catch (UnsupportedEncodingException ex) {
+                        Log.e(ex);
+                        copy = contact.email;
+                    }
+
+                    ClipData clip = ClipData.newPlainText(context.getString(R.string.app_name), copy);
+                    clipboard.setPrimaryClip(clip);
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+                        ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
                 }
 
                 private void onActionPin() {
@@ -524,6 +566,8 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
 
     @Override
     public long getItemId(int position) {
+        if (position < 0 || position >= selected.size())
+            return -1L;
         return selected.get(position).id;
     }
 

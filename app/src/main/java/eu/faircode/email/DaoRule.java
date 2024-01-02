@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import androidx.lifecycle.LiveData;
@@ -67,8 +67,12 @@ public interface DaoRule {
             " ORDER by `group` COLLATE NOCASE")
     List<String> getGroups();
 
-    @Query("SELECT COUNT(*) FROM rule")
-    int countTotal();
+    @Query("SELECT COUNT(*) FROM rule" +
+            " JOIN folder ON folder.id = rule.folder" +
+            " WHERE (:account IS NULL OR folder.account = :account)" +
+            " AND (:folder IS NULL OR folder.id = :folder)" +
+            " AND rule.enabled")
+    int countTotal(Long account, Long folder);
 
     @Insert
     long insertRule(EntityRule rule);

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -64,7 +64,8 @@ public class NoStreamException extends SecurityException {
         TextView tvUri = dview.findViewById(R.id.tvUri);
         ImageButton ibInfo = dview.findViewById(R.id.ibInfo);
 
-        tvUri.setText(uri == null ? null : uri.toString());
+        //tvUri.setText(uri == null ? null : uri.toString());
+        tvUri.setVisibility(View.GONE); // TODO CASA URI
 
         ibInfo.setOnClickListener(new View.OnClickListener() {
             @Override

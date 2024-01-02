@@ -55,7 +55,7 @@
         android:contentDescription="@string/title_legend_auto_submitted"
         app:layout_constraintStart_toEndOf="@id/ibReceipt"
         app:layout_constraintTop_toBottomOf="@id/ibExpanderAddress"
-        app:srcCompat="@drawable/twotone_remove_circle_outline_24" />
+        app:srcCompat="@drawable/twotone_person_off_24" />
 
     <eu.faircode.email.ViewImageHint
         android:id="@+id/ivBrowsed"
@@ -431,31 +431,6 @@
         app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
         app:layout_constraintTop_toBottomOf="@id/tvStored" />
 
-    <TextView
-        android:id="@+id/tvThreadTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:labelFor="@+id/tvThread"
-        android:text="@string/title_thread"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
-
-    <TextView
-        android:id="@+id/tvThread"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:text="123"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textIsSelectable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
-        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
-
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_addresses"
         android:layout_width="wrap_content"
@@ -467,8 +442,47 @@
             tvFromExTitle,tvToTitle,tvReplyToTitle,
             tvCcTitle,tvBccTitle,
             tvIdentityTitle,
-            tvSentTitle,tvStoredTitle,
-            tvLanguageTitle,tvThreadTitle" />
+            tvSentTitle,tvReceivedTitle,tvStoredTitle,
+            tvSizeExTitle,tvLanguageTitle,tvThreadTitle" />
+
+    <TextView
+        android:id="@+id/tvSubjectEx"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:text="Subject"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textIsSelectable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
+
+    <TextView
+        android:id="@+id/tvFlags"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:text="Flags"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textIsSelectable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSubjectEx" />
+
+    <TextView
+        android:id="@+id/tvKeywordsEx"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:text="Keywords"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textIsSelectable="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvFlags" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"

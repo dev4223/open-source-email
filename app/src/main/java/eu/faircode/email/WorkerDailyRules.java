@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -134,7 +134,6 @@ public class WorkerDailyRules extends Worker {
         } finally {
             semaphore.release();
             EntityLog.log(context, EntityLog.Type.Rules, "Completed daily rules");
-            ServiceSynchronize.eval(context, "daily");
         }
     }
 

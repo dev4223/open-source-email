@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GRAPH;
@@ -74,7 +74,6 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import biweekly.Biweekly;
 import biweekly.ICalendar;
 import biweekly.component.VEvent;
 import biweekly.property.Method;
@@ -93,6 +92,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             Helper.getBackgroundExecutor(1, "send");
 
     private static final int RETRY_MAX = 3;
+    private static final long RETRY_WAIT = 5000L; // milliseconds
     private static final int CONNECTIVITY_DELAY = 5000; // milliseconds
     private static final int PROGRESS_UPDATE_INTERVAL = 1000; // milliseconds
 
@@ -178,7 +178,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
         IntentFilter iif = new IntentFilter();
         iif.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         iif.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        registerReceiver(connectionChangedReceiver, iif);
+        ContextCompat.registerReceiver(this,
+                connectionChangedReceiver,
+                iif,
+                ContextCompat.RECEIVER_NOT_EXPORTED);
 
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
     }
@@ -228,6 +231,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
     private Notification getNotificationService(boolean alert) {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, "send")
+                        .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                         .setSmallIcon(R.drawable.baseline_send_white_24)
                         .setContentTitle(getString(R.string.title_notification_sending))
                         .setContentIntent(getPendingIntent(this))
@@ -451,7 +455,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                         Log.e(outbox.name, ex);
                         EntityLog.log(this, "Send " + Log.formatThrowable(ex, false));
 
-                        boolean unrecoverable = (op.tries >= RETRY_MAX ||
+                        boolean unrecoverable = (op.tries > RETRY_MAX ||
                                 ex instanceof OutOfMemoryError ||
                                 ex instanceof MessageRemovedException ||
                                 ex instanceof FileNotFoundException ||
@@ -486,13 +490,13 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
 
                                             Intent intent = new Intent(this, ActivityError.class);
                                             intent.setAction("535:" + identity.id);
-                                            intent.putExtra("title", ex.getMessage());
+                                            intent.putExtra("title", new ThrowableWrapper(ex).getSafeMessage());
                                             intent.putExtra("message", Log.formatThrowable(ex, "\n", false));
                                             intent.putExtra("provider", "outlookgraph");
                                             intent.putExtra("account", identity.account);
                                             intent.putExtra("protocol", protocol);
+                                            intent.putExtra("auth_type", AUTH_TYPE_GRAPH);
                                             intent.putExtra("identity", identity.id);
-                                            intent.putExtra("authorize", true);
                                             intent.putExtra("personal", identity.name);
                                             intent.putExtra("address", identity.user);
                                             intent.putExtra("faq", 14);
@@ -516,8 +520,10 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                             Log.w("Unrecoverable");
                             db.operation().deleteOperation(op.id);
                             ops.remove(op);
-                        } else
+                        } else {
+                            Thread.sleep(RETRY_WAIT);
                             throw ex;
+                        }
                     } finally {
                         EntityLog.log(this, "Send end op=" + op.id + "/" + op.name);
                         db.operation().setOperationState(op.id, null);
@@ -561,7 +567,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                     db.operation().deleteOperation(op.id);
                 }
 
-                EntityLog.log(this, "Send restore id=" + message.id);
+                EntityLog.log(this, "Send restore id=" + message.id + " error=" + message.error);
 
                 db.message().setMessageError(message.id, null);
                 nm.cancel("send:" + message.id, NotificationHelper.NOTIFICATION_TAGGED);
@@ -759,6 +765,8 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
 
                 if (message.receipt_request != null && message.receipt_request) {
                     int receipt_type = prefs.getInt("receipt_type", 2);
+                    if (ident.receipt_type != null)
+                        receipt_type = ident.receipt_type;
                     if (receipt_type == 1 || receipt_type == 2) // Delivery receipt
                         iservice.setDsnNotify("SUCCESS,FAILURE,DELAY");
                 }
@@ -769,6 +777,9 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 if (BuildConfig.DEBUG && false)
                     throw new IOException("Test");
                 db.identity().setIdentityState(ident.id, "connected");
+
+                EntityLog.log(this, EntityLog.Type.Protocol, ident.email + " " +
+                        TextUtils.join(" ", iservice.getCapabilities()));
 
                 max_size = iservice.getMaxSize();
 
@@ -954,7 +965,7 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
             if ("text/calendar".equals(attachment.type))
                 try {
                     File ics = attachment.getFile(this);
-                    ICalendar icalendar = Biweekly.parse(ics).first();
+                    ICalendar icalendar = CalendarHelper.parse(ServiceSend.this, ics);
 
                     Method method = icalendar.getMethod();
                     if (method == null || !method.isReply())

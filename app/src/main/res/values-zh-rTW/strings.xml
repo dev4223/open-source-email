@@ -607,7 +607,6 @@
         金鑰和證書通常可在“進階 -- 加密和憑證”下找到。
     </string>
     <string name="title_advanced_power_menu">新增控制項至 Android 電源選單</string>
-    <string name="title_advanced_external_search">允許其他程式在訊息中搜尋</string>
     <string name="title_advanced_sort_answers">篩選經常使用的回覆範本</string>
     <string name="title_advanced_shortcuts">在 Adnroid 分享選單中顯示常用的聯絡人</string>
     <string name="title_advanced_fts">建立搜尋索引</string>
@@ -969,6 +968,7 @@
     <string name="title_importance_low">低</string>
     <string name="title_importance_normal">一般</string>
     <string name="title_importance_high">高</string>
+    <string name="title_important">重要</string>
     <string name="title_search_in_text">在本文中搜尋 &#8230;</string>
     <string name="title_forward">轉寄</string>
     <string name="title_resend">重新寄出</string>
@@ -986,7 +986,6 @@
     <string name="title_print_images">列印圖片</string>
     <string name="title_print_images_remark">下載圖片可能會花費一些時間</string>
     <string name="title_show_headers">顯示標頭</string>
-    <string name="title_share_as_html">分享為 HTML</string>
     <string name="title_raw_save">保存元訊息</string>
     <string name="title_raw_send">以附件形式傳送</string>
     <string name="title_raw_send_message">訊息</string>

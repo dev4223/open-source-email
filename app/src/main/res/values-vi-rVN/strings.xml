@@ -612,7 +612,6 @@
     <string name="title_advanced_manage_keys_hint">        Cái này sẽ mở cài đặt bảo mật của Android.        Các mã khóa và chứng chỉ có thể nói chung được tìm thấy ở Nâng cao - Mã hóa và thông tin xác thực.
     </string>
     <string name="title_advanced_power_menu">Thêm các hành động vào menu nguồn của Android</string>
-    <string name="title_advanced_external_search">Cho phép các ứng dụng khác tìm kiếm trong thư</string>
     <string name="title_advanced_sort_answers">Sắp xếp mẫu thư trả lời theo tần suất sử dụng</string>
     <string name="title_advanced_shortcuts">Hiện các liên hệ hay sử dụng trong menu chia sẻ của Android</string>
     <string name="title_advanced_fts">Xây dựng mục lục tìm kiếm</string>
@@ -992,6 +991,7 @@
     <string name="title_importance_low">Thấp</string>
     <string name="title_importance_normal">Bình thường</string>
     <string name="title_importance_high">Cao</string>
+    <string name="title_important">Quan trọng</string>
     <string name="title_search_in_text">Tìm kiếm trong văn bản &#8230;</string>
     <string name="title_forward">Chuyển tiếp</string>
     <string name="title_resend">Gửi lại</string>
@@ -1009,7 +1009,6 @@
     <string name="title_print_images">In các hình ảnh</string>
     <string name="title_print_images_remark">Việc tải xuống các hình ảnh có thể mất một ít thời gian</string>
     <string name="title_show_headers">Hiện tiêu đề</string>
-    <string name="title_share_as_html">Chia sẻ dưới dạng HTML</string>
     <string name="title_raw_save">Lưu thư thô</string>
     <string name="title_raw_send">Gửi làm tệp đính kèm</string>
     <string name="title_raw_send_message">Thư</string>

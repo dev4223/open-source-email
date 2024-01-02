@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.GmailState.TYPE_GOOGLE;
@@ -173,7 +173,7 @@ public class ServiceAuthenticator extends Authenticator {
 
             EntityLog.log(context, EntityLog.Type.General, "Token" +
                     " provider=" + id + ":" + getAuthTypeName(auth_type) +
-                    " user" + user +
+                    " user=" + user +
                     " expiration=" + (expiration == null ? null : new Date(expiration)) +
                     " need=" + needsRefresh + "/" + authState.getNeedsTokenRefresh() +
                     " force=" + forceRefresh);

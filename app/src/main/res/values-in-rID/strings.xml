@@ -81,6 +81,8 @@
         Memblokir domain pengirim menggunakan aturan saring, yang merupakan fitur pro.
     </string>
     <string name="title_blocked_senders">Pengirim yang diblokir</string>
+    <string name="title_unblock_all">Buka semua blokir</string>
+    <string name="title_unblock_all_remark">Ini akan mengatur ulang semua daftar dan opsi yang dapat mengakibatkan pemblokiran pengirim</string>
     <plurals name="title_ask_block_sender">
         <item quantity="other">Blokir pengirim %1$s pesan?</item>
     </plurals>
@@ -149,6 +151,7 @@
     <string name="title_setup_quick_smtp">Server SMTP untuk mengirim pesan</string>
     <string name="title_setup_quick_certificates">Sertifikat Server</string>
     <string name="title_setup_wizard">Pemandu</string>
+    <string name="title_setup_wizard_intro">Dalam kebanyakan kasus, tombol wizard dapat digunakan untuk menambahkan akun, jika tidak, alamat server dapat dimasukkan atau diubah secara manual menggunakan opsi pengaturan manual</string>
     <string name="title_setup_wizard_tutorials">Panduan</string>
     <string name="title_setup_wizard_multiple">Panduan penginstalan dapat digunakan beberapa kali untuk mengatur banyak akun</string>
     <string name="title_setup_wizard_new">Saya perlu alamat email baru</string>
@@ -177,6 +180,7 @@
     <string name="title_setup_oauth_rationale">Izinkan akses ke akun %1$s Anda</string>
     <string name="title_setup_oauth_update">Otorisasi kembali akun yang sudah ada (jika tidak, buat akun baru)</string>
     <string name="title_setup_oauth_updated">Ulang kembali otorisasi akun</string>
+    <string name="title_setup_oauth_brave">Ketika menggunakan Brave browser, anda harus mengaktifkan pilihan di pengaturan Brave untuk mengizinkan link app membuka aplikasi di luar Brave</string>
     <string name="title_setup_oauth_authorize">Perizinan</string>
     <string name="title_setup_select_account">Pilih Akun</string>
     <string name="title_setup_instructions">Instruksi Penyiapan</string>
@@ -358,6 +362,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_suggest_sent">Sarankan alamat yang ditemukan dalam pesan terkirim</string>
     <string name="title_advanced_suggest_received">Sarankan alamat yang ditemukan dalam pesan yang diterima</string>
     <string name="title_advanced_suggest_frequently">Urutkan alamat yang disarankan pada frekuensi penggunaan</string>
+    <string name="title_advanced_suggest_account">Batasi saran untuk akun saat ini</string>
     <string name="title_advanced_alt_re_fwd">Awalan balasan/meneruskan cadangan</string>
     <string name="title_advanced_send_chips">Tampilkan bubbles alamat</string>
     <string name="title_advanced_send_nav_color">Gunakan warna penanda untuk bilah tindakan bagian bawah</string>
@@ -370,6 +375,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_answer_hint">Tombol jawaban juga dapat dikonfigurasi di halaman tab Pengaturan Kirim</string>
     <string name="title_advanced_answer_warning">Tidak semua tindakan memungkinkan tanpa menu seleksi!</string>
     <string name="title_advanced_send_pending">Tampilkan ikon tunda kirim yang tidak mengganggu</string>
+    <string name="title_advanced_save_revisions">Menyimpan revisi draf untuk dibatalkan dan diulang</string>
     <string name="title_advanced_auto_save_paragraph">Secara otomatis menyimpan draf setelah setiap paragraf</string>
     <string name="title_advanced_auto_save_dot">Secara otomatis menyimpan draf setelah setiap kalimat</string>
     <string name="title_advanced_compose_color">Warna teks bawaan</string>
@@ -405,6 +411,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_lookup_mx">Periksa alamat email penerima sebelum mengirim</string>
     <string name="title_advanced_metered">Gunakan Koneksi Terukur</string>
     <string name="title_advanced_download">Unduh pesan dan lampiran secara otomatis pada koneksi terukur hingga</string>
+    <string name="title_advanced_download_limited">Berlaku juga untuk koneksi yang tidak terukur</string>
     <string name="title_advanced_roaming">Unduh pesan dan lampiran saat roaming</string>
     <string name="title_advanced_rlah">Berkeliaran seperti di rumah</string>
     <string name="title_advanced_download_headers">Unduh semua tajuk pesan</string>
@@ -415,10 +422,14 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_vpn_only">Hubungkan hanya menggunakan VPN</string>
     <string name="title_advanced_timeout">Batas waktu terhubung (detik)</string>
     <string name="title_advanced_prefer_ip4">Direkomendasikan IPv4 daripada IPv6</string>
+    <string name="title_advanced_ssl_update">Gunakan penyedia SSL yang diperbarui</string>
     <string name="title_advanced_ssl_harden">Perkuat dengan koneksi SSL</string>
     <string name="title_advanced_ssl_harden_strict">Memerlukan TLS 1.3</string>
     <string name="title_advanced_cert_strict">Pengecekan sertifikat yang ketat</string>
+    <string name="title_advanced_check_names">Periksa nama host terhadap sertifikat server</string>
     <string name="title_advanced_open_safe">Hanya hubungan aman terbuka</string>
+    <string name="title_advanced_http_redirect">Izinkan pengalihan koneksi</string>
+    <string name="title_advanced_bouncy_castle">Gunakan penyedia soket aman Bouncy Castle (JSSE)</string>
     <string name="title_advanced_manage_connectivity">Mengelola Koneksi</string>
     <string name="title_advanced_caption_general">Umum</string>
     <string name="title_advanced_caption_navigation">Navigasi</string>
@@ -475,6 +486,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_libravatars">Tampilkan Libravatar</string>
     <string name="title_advanced_favicons">Tampilkan favicon</string>
     <string name="title_advanced_favicons_partial">Pindai hanya %1$s pertama dari laman web</string>
+    <string name="title_advanced_favicons_manifest">Pindai manifes apl web</string>
     <string name="title_advanced_generated_icons">Tampilkan ikon yang dibuat</string>
     <string name="title_advanced_identicons">Tampilkan ikon identitas</string>
     <string name="title_advanced_circular">Tampilan ikon bulat</string>
@@ -486,6 +498,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_only_name">Tampilkan nama kontak saja</string>
     <string name="title_advanced_distinguish_contacts">Garis bawahi pengirim ketika pengirim dikenal sebagai kontak lokal</string>
     <string name="title_advanced_show_recipients">Tampilkan penerima di header pesan</string>
+    <string name="title_advanced_reverse_addresses">Tunjukkan penerima pesan terkirim</string>
     <string name="title_advanced_font_size_sender">Ukuran teks pengirim</string>
     <string name="title_advanced_sender_ellipsize">Jika diperlukan, pengirim dipersingkat</string>
     <string name="title_advanced_subject_top">Tampilkan subjek di atas pengirim</string>
@@ -508,7 +521,9 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_unzip">Tampilkan konten dari lampiran terkompresi</string>
     <string name="title_advanced_attachments_alt">Tampilkan lampiran setelah teks pesan</string>
     <string name="title_advanced_thumbnails">Tampilkan thumbnail gambar setelah teks pesan</string>
+    <string name="title_advanced_pdf_preview">Tampilkan thumbnail PDF</string>
     <string name="title_advanced_message_text_zoom2">Perbesaran tulisan pesan bawaan: %1$s %%</string>
+    <string name="title_advanced_editor_text_zoom">Perbesar huruf pesan juga terdapat dalam penyunting pesan</string>
     <string name="title_advanced_overview_mode">Zoom pesan asli agar pas dengan layar</string>
     <string name="title_advanced_hyphenation">Gunakan penandahubungan otomatis</string>
     <string name="title_advanced_contrast">Gunakan kontras tinggi untuk teks pesan</string>
@@ -533,6 +548,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_navbar_colorize">Warnai Navigasi Bar Android</string>
     <string name="title_advanced_list_count">Tunjukkan jumlah pesan atau percakapan di bagian atas action bar</string>
     <string name="title_advanced_bundled_fonts">Gunakan font yang dibundel</string>
+    <string name="title_advanced_narrow_fonts">Gunakan font yang sempit</string>
     <string name="title_advanced_parse_classes">Urai Kode Gaya \"Style Sheets\"</string>
     <string name="title_advanced_authentication">Tampilkan peringatan pembuktian keaslian</string>
     <string name="title_advanced_authentication_hint">Pemeriksaan mendasar dapat di konfigurasi di pengaturan penerimaan</string>
@@ -553,6 +569,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_double_tap">Ketuk dua kali untuk menandai pesan telah dibaca/belum dibaca</string>
     <string name="title_advanced_swipenav">Geser ke kiri/kanan untuk melihat percakapan berikutnya/sebelumnya</string>
     <string name="title_advanced_volumenav">Tombol volume naik/turun untuk melihat percakapan berikutnya/sebelumnya</string>
+    <string name="title_advanced_up_down">Gunakan tanda panah naik/turun untuk ke percakapan selanjutnya/sebelumnya</string>
     <string name="title_advanced_reversed">Arah navigasi terbalik</string>
     <string name="title_advanced_swipe_close">Geser ke bawah untuk menutup percakapan</string>
     <string name="title_advanced_swipe_move">Geser ke atas untuk memindahkan percakapan</string>
@@ -601,6 +618,8 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_notify_preview">Tampilkan pratinjau pesan dalam pemberitahuan</string>
     <string name="title_advanced_notify_preview_all">Pratinjau semua teks</string>
     <string name="title_advanced_notify_preview_only">Tampilkan pemberitahuan dengan teks pratinjau saja</string>
+    <string name="title_advanced_notify_transliterate">Transliterasi ke abjad Latin</string>
+    <string name="title_advanced_notify_ascii">Hanya teks ASCII</string>
     <string name="title_advanced_notify_actions">Tindakan pemberitahuan</string>
     <string name="title_advanced_notify_action_trash">Sampah</string>
     <string name="title_advanced_notify_action_delete">Hapus</string>
@@ -619,6 +638,7 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
     <string name="title_advanced_wearable_preview">Hanya kirim pemberitahuan dengan pratinjau pesan ke perangkat wearable (jam tangan Android)</string>
     <string name="title_advanced_notify_messaging">Gunakan format notifikasi \'Gaya pesan\' Android</string>
     <string name="title_advanced_biometrics_notify">Tampilkan konten pemberitahuan ketika menggunakan otentikasi sidik jari</string>
+    <string name="title_advanced_notify_open_folder">Buka map sewaktu membuka pesan baru</string>
     <string name="title_advanced_light">Pakai lampu pemberitahuan</string>
     <string name="title_advanced_sound">Pilih suara pemberitahuan</string>
     <string name="title_advanced_notify_screen_on">Perlahan hidupkan layar untuk pemberitahuan pesan baru</string>
@@ -654,6 +674,9 @@ Kata sandi diperlukan untuk mengimpor kembali pengaturan, harap jangan sampai lu
 Contextrequest</string>
     <string name="title_advanced_clear_all">Hapus data aplikasi</string>
     <string name="title_advanced_clear_all_remark">Data aplikasi akan dihapus secara permanen!</string>
+    <string name="title_advanced_default_encryption">        Metode enkripsi default (PGP or S/MIME) akan disimpan per identitas setelah mengirim pesan yang ditandatangani atau dienkripsi.
+        Metode enkripsi dapat dipilih sebelum mengirim pada pengaturan kirim di kolom dialog (tekan lama tombol kirim).
+    </string>
     <string name="title_advanced_sign_default">Masuk secara bawaan</string>
     <string name="title_advanced_encrypt_default">Enkripsi secara bawaan</string>
     <string name="title_advanced_encrypt_auto">Enkripsi secara otomatis saat seluruh kunci penerima tersedia</string>
@@ -678,19 +701,24 @@ Alogaritma bawaan SHA256 dan AES128 didukung secara umum.    </string>
 Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kredensial.    </string>
     <string name="title_advanced_power_menu">Tambahkan aksi untuk kekuatan menu android</string>
     <string name="title_advanced_send_self">Tambahkan \'kirim ke diri sendiri\' ke menu berbagi Android</string>
-    <string name="title_advanced_external_search">Izinkan aplikasi lain untuk menelusuri pengolah pesan FairMail</string>
+    <string name="title_advanced_external_search">Tambahkan \"pencarian FairEmail\" ke menu pemilih teks Android</string>
     <string name="title_advanced_sort_answers">Urutkan template balasan berdasarkan frekuensi penggunaan</string>
     <string name="title_advanced_shortcuts">Tampilkan kontak yang sering digunakan di menu berbagi pada Android</string>
+    <string name="title_advanced_ical_tentative">Menyimpan undangan yang diterima sebagai tentatif</string>
     <string name="title_advanced_fts">Membangun indeks pencarian</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d pesan terindeks (%3$s)</string>
     <string name="title_advanced_classification">Klasifikasikan pesan</string>
     <string name="title_advanced_class_min_chance">Kelas probabilitas minimum: %1$s %%</string>
     <string name="title_advanced_class_min_difference">Minimum perbedaan kelas: %1$s %%</string>
     <string name="title_advanced_show_filtered">Tampilkan ikon filter saat aturan diterapkan</string>
+    <string name="title_advanced_haptic_feedback">Umpan balik haptic pada tindakan penting</string>
     <string name="title_advanced_language">Bahasa</string>
     <string name="title_advanced_language_system">Sistem</string>
     <string name="title_advanced_lt">Integrasi LanguageTool</string>
+    <string name="title_advanced_lt_sentence">Periksa setiap kalimat</string>
     <string name="title_advanced_lt_auto">Periksa paragraf setelah baris baru</string>
+    <string name="title_advanced_lt_highlight">Sorot teks yang sedang diperiksa</string>
+    <string name="title_advanced_lt_description">Tampilkan tampilan dengan deskripsi masalah</string>
     <string name="title_advanced_lt_user">Nama Pengguna (opsional)</string>
     <string name="title_advanced_lt_key">Kunci API (opsional)</string>
     <string name="title_advanced_deepl">Integrasi DeepL</string>
@@ -743,6 +771,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_advanced_pull_all_hint">Saat menarik folder atau daftar akun ke bawah</string>
     <string name="title_advanced_suggest_names_hint">Jika dinonaktifkan, hanya alamat email yang akan digunakan saat memilih kontak</string>
     <string name="title_advanced_suggest_local_hint">Selain kontak yang disediakan oleh Android. Data kontak akan disimpan untuk pesan yang baru dikirim atau diterima hanya ketika diaktifkan.</string>
+    <string name="title_advanced_suggest_account_hint">Ini hanya berlaku untuk daftar kontak lokal karena kontak di buku alamat Android tidak ditautkan ke akun tertentu</string>
     <string name="title_advanced_auto_identity_hint">Hal ini akan memilih identitas yang terakhir difunakan saat memilih penerima untuk pesan baru</string>
     <string name="title_advanced_send_reminders_hint">Menampilkan peringatan ketika teks pesan atau subjek kosong atau mungkin ketika lampiran pesan hilang</string>
     <string name="title_advanced_reply_move_hint">Server email bisa menambahkan pesan pada folder pesan terkirim</string>
@@ -815,6 +844,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_advanced_wearable_hint">Notifikasi hanya akan dikirimkan ke perangkat yang dapat digunakan setelah pesan teks telah terunduh</string>
     <string name="title_advanced_messaging_hint">Hal ini dibutuhkan untuk bantuan otomatis Andorid</string>
     <string name="title_advanced_move_hint">Folder target dapat dikonfigurasi dalam pengaturan akun</string>
+    <string name="title_advanced_notify_sensitive_hint">Memerlukan penonaktifan notifikasi sensitif dalam pengaturan Android</string>
     <string name="title_advanced_notify_no_grouping">Versi Android ini tidak mendukung pengelompokan notifikasi</string>
     <string name="title_advanced_notify_no_channels">Versi Android ini tidak mendukung notifikasi channel</string>
     <string name="title_advanced_fts_hint">Mengaktifkan hal ini akan meningkatkan performa pencarian, namun juga menurunkan penggunaan baterai dan ruang penyimpanan</string>
@@ -846,6 +876,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_identity_reply_to">Balas ke alamat</string>
     <string name="title_identity_internal">Nama domain internal ( dipisahkan dengan koma (,) )</string>
     <string name="title_identity_uri">Tautan kontak</string>
+    <string name="title_identity_sensitivity">sensitivitas default</string>
     <string name="title_identity_unicode">Izinkan UTF-8 di header pesan</string>
     <string name="title_identity_unicode_remark">Kebanyakan server tidak support ini</string>
     <string name="title_identity_octetmime">Izinkan 8BITMIME</string>
@@ -968,6 +999,9 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_service_port">Harap periksa kembali nomor port</string>
     <string name="title_service_protocol">Harap periksa kembali protokolnya (SSL / TLS atau STARTTLS)</string>
     <string name="title_service_error10">Akun ini perlu diautentikasi lagi, yang dapat dilakukan melalui wisaya penyiapan cepat</string>
+    <string name="title_certificate_error">Karena kebijakan Google Play Store, tidak mungkin lagi mendukung koneksi yang tidak aman ke server email dengan masalah sertifikat untuk versi FairEmail yang didistribusikan di Play Store.
+        Oleh karena itu, masalah ini hanya dapat diselesaikan oleh penyedia email Anda - informasi kesalahan di atas dapat membantu mereka menyelesaikan masalah ini.
+    </string>
     <string name="title_advanced_browse">Jelajahi pesan di server</string>
     <string name="title_advanced_expand_read">Tandai pesan telah dibaca saat memperluas</string>
     <string name="title_synchronize_now">Sinkronkan sekarang</string>
@@ -982,6 +1016,8 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_synchronize_batch_disable">Nonaktifkan sinkronisasi</string>
     <string name="title_notify_batch_enable">Aktifkan pemberitahuan pesan baru</string>
     <string name="title_notify_batch_disable">Nonaktifkan pemberitahuan pesan baru</string>
+    <string name="title_download_batch_enable">Mengunduh teks dan lampiran</string>
+    <string name="title_download_batch_disable">Unduh header saja</string>
     <string name="title_delete_local">Hapus pesan di perangkat</string>
     <string name="title_delete_browsed">Hapus histori penjelajahan/pencarian pesan</string>
     <string name="title_expunge">Hilangkan</string>
@@ -997,6 +1033,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_delete_channel">Hapus saluran pemberitahuan / notifikasi</string>
     <string name="title_insert_contact">Tambah kontak</string>
     <string name="title_edit_contact">Ubah kontak</string>
+    <string name="title_delete_contact">Hapus kontak?</string>
     <string name="title_contact_email">Surel</string>
     <string name="title_contact_name">Nama</string>
     <string name="title_contact_group">Kelompok</string>
@@ -1100,6 +1137,8 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_importance_low">Rendah</string>
     <string name="title_importance_normal">Normal</string>
     <string name="title_importance_high">Tinggi</string>
+    <string name="title_important">Penting</string>
+    <string name="title_unimportant">Tidak penting</string>
     <string name="title_search_in_text">Telusuri dalam teks &#8230;</string>
     <string name="title_forward">Teruskan</string>
     <string name="title_resend">Kirim ulang</string>
@@ -1118,8 +1157,10 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_print_header">Mencetak header</string>
     <string name="title_print_images">Mencetak gambar</string>
     <string name="title_print_images_remark">Mengunduh gambar butuh beberapa waktu</string>
+    <string name="title_print_block_quotes">Mencetak baris kutipan blok</string>
+    <string name="title_print_margins">Tambahkan margin</string>
     <string name="title_show_headers">Tampilkan Judul</string>
-    <string name="title_share_as_html">Bagikan sebagai HTML</string>
+    <string name="title_show_html">Tampilkan sumber</string>
     <string name="title_raw_save">Simpan pesan sebagai bahan</string>
     <string name="title_raw_send">Kirim sebagai lampiran</string>
     <string name="title_raw_send_message">Pesan</string>
@@ -1149,6 +1190,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_quick_actions_snooze">Tunda</string>
     <string name="title_quick_actions_clear">Hapus pilihan setelah aksi</string>
     <string name="title_trash">Sampah</string>
+    <string name="title_trash_selection">Pemilihan sampah</string>
     <string name="title_copy">Salin &#8230;</string>
     <string name="title_copy_to">Salin ke &#8230;</string>
     <string name="title_subscribe">Langganan</string>
@@ -1163,7 +1205,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_unsubscribe">Berhenti langganan</string>
     <string name="title_message_rule">Buat aturan</string>
     <string name="title_no_junk">Bukan spam</string>
-    <string name="title_edit_subject" comment="title_edit_subject&#10;Title for menu item to edit the subject of a message">Sunting subjek &#8230;</string>
+    <string name="title_edit_subject">Sunting subjek &#8230;</string>
     <string name="title_move_to">Pindahkan ke &#8230;</string>
     <string name="title_move_to_folder">Pindahkan ke &#8230;</string>
     <string name="title_move_to_account">Pindahkan ke %1$s&#8230;</string>
@@ -1331,6 +1373,8 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_add_image_privacy">Hapus privasi data sensitif</string>
     <string name="title_add_image_privacy_remark">Lokasi geografis, nomor seri, nama file, dll</string>
     <string name="title_add_resize_pixels">&lt; %1$d piksel</string>
+    <string name="title_add_image_resize_remark">Perubahan ukuran didukung untuk: %1$s</string>
+    <string name="title_add_image_select_remark">Pemilih foto Android tidak lagi melewati nama file</string>
     <string name="title_add_image_select">Pilih file</string>
     <string name="title_add_attachment">Tambahkan lampiran</string>
     <string name="title_attachment_file">Lampirkan file</string>
@@ -1342,6 +1386,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_image_dialog">Tampilkan opsi gambar</string>
     <string name="title_style_toolbar">Gaya toolbar</string>
     <string name="title_media_toolbar">Tombol media</string>
+    <string name="title_manage_android_contacts">Kelola kontak Android</string>
     <string name="title_manage_local_contacts">Kelola kontak lokal</string>
     <string name="title_insert_contact_group">Sisipkan grup kontak</string>
     <string name="title_insert_template">Sisipkan template</string>
@@ -1354,6 +1399,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_translate_formal">Gunakan format formal</string>
     <string name="title_translate_small">Gunakan font kecil untuk tulisan sumber</string>
     <string name="title_translate_replace">Ganti teks sumber dengan teks terjemahan</string>
+    <string name="title_translate_highlight">Sorot teks yang sedang diterjemah</string>
     <string name="title_translate_html">Simpan format</string>
     <string name="title_translate_html_hint">Hal ini akan menggunakan banyak karakter</string>
     <string name="title_translate_usage">Penggunaan: %1$s / %2$s (%3$d %%)</string>
@@ -1443,6 +1489,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_search_for_hint">Masukkan teks</string>
     <string name="title_search_hint">Awalnya, pencarian akan mencari pesan yang ada di perangkat Anda.
         Untuk mencari di server juga, ketuk tombol \'cari lagi\'.    </string>
+    <string name="title_search_hint_fts">Gunakan indeks pencarian: seluruh kata saja</string>
     <string name="title_search_index_hint">Cari melalui indeks pencarian lebih cepat, tetapi hanya menemukan keseluruhan kata.</string>
     <string name="title_search_text_hint">Mencari tulisan dalam pesan, bila terdapat pesan dalam jumlah besar, mungkin tidak dapat dilakukan di beberapa server</string>
     <string name="title_search_text_unsupported">\'%s\' berarti server surel tidak mendukung pencarian tulisan dalam pesan</string>
@@ -1455,6 +1502,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_search_in_keywords">Dengan kata kunci (jika mendukung)</string>
     <string name="title_search_in_message">Dalam teks pesan</string>
     <string name="title_search_in_notes">Di catatan lokal</string>
+    <string name="title_search_in_filenames">Dalam nama file (hanya pada perangkat)</string>
     <string name="title_search_with">Batasi pencarian untuk</string>
     <string name="title_search_with_unseen">Belum dibaca</string>
     <string name="title_search_with_flagged">Berbintang</string>
@@ -1547,6 +1595,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_answer_placeholder_firstname">Nama depan pengirim</string>
     <string name="title_answer_placeholder_lastname">Nama belakang pengirim</string>
     <string name="title_answer_placeholder_date">Tanggal Saat ini</string>
+    <string name="title_answer_placeholder_weekday">Hari dalam minggu</string>
     <string name="title_rule_noop">Tidak ada aksi</string>
     <string name="title_rule_seen">Tandai sudah dibaca</string>
     <string name="title_rule_unseen">Tandai belum dibaca</string>
@@ -1558,6 +1607,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_rule_keyword">Kata kunci</string>
     <string name="title_rule_keyword_add">Tambah</string>
     <string name="title_rule_keyword_delete">Hapus</string>
+    <string name="title_rule_notes">Catatan lokal</string>
     <string name="title_rule_move">Pindahkan</string>
     <string name="title_rule_copy">Salin (label)</string>
     <string name="title_rule_answer">Balas/teruskan</string>
@@ -1616,7 +1666,10 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_rule_answer_missing">Templat hilang</string>
     <string name="title_rule_keyword_missing">Kata kunci hilang</string>
     <string name="title_rule_automation_hint">Ini akan mengirim inten \'%1$s\' dengan tambahan \'%2$s\'</string>
+    <string name="title_rule_notes_missing">Catatan lokal hilang</string>
+    <string name="title_rule_url_missing">URL hilang atau tidak valid</string>
     <string name="title_rule_delete_hint">Penghapusan permanen tidak dapat dibatalkan, jadi pastikan kondisi aturan sudah benar!</string>
+    <string name="title_rule_url_hint">Anda dapat menggunakan placeholder berikut ini: %1$s</string>
     <string name="title_rule_edit_group">Ubah grup &#8230;</string>
     <string name="title_rule_execute">Eksekusi sekarang</string>
     <string name="title_rule_applied">Pesan yang terdampak: %1$d</string>
@@ -1636,6 +1689,11 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_rule_use_as_alarm">Gunakan sebagai alarm</string>
     <string name="title_rule_alarm_hint">Ini akan mengabaikan aturan \"jangan ganggu\"</string>
     <string name="title_rule_alarm_duration">Durasi alarm maksimum (seconds)</string>
+    <string name="title_rule_alarm_title">Alarm</string>
+    <string name="title_rule_alarm_stop">Berhenti</string>
+    <string name="title_code_line_numbers">Tampilkan nomor baris</string>
+    <string name="title_code_enable_links">Aktifkan tautan</string>
+    <string name="title_code_pretty">Pretty print</string>
     <string name="title_legend_section_synchronize">Sinkronisasi</string>
     <string name="title_legend_section_folders">Folder</string>
     <string name="title_legend_section_messages">Pesan</string>
@@ -1761,6 +1819,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_hint_folder_sync">Untuk membatasi penggunaan baterai dan jaringan tidak semua folder dan pesan di selaraskan secara awalan</string>
     <string name="title_hint_airplane">Mode pesawat aktif</string>
     <string name="title_hint_notifications">Tidak ada izin pemberitahuan</string>
+    <string name="title_hint_notifications_remark">Ijin pemberitahuan juga diperlukan untuk peringatan (akun). Pemberitahuan untuk pesan-pesan baru dapat dimatikan dalam pengaturan.</string>
     <string name="title_hint_battery_optimizations">Optimalisasi baterai diaktifkan</string>
     <string name="title_hint_support">Jika Anda memiliki pertanyaan atau masalah, silakan gunakan menu bantuan untuk mendapatkan bantuan</string>
     <string name="title_hint_message_actions">Geser ke kiri untuk membuang; Geser ke kanan untuk mengarsip (jika tersedia); Tindakan saat digeser dapat dikonfigurasi di pengaturan akun</string>
@@ -1828,6 +1887,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_no_ask_again">Jangan tanya ini lagi</string>
     <string name="title_no_ask_for_again">Jangan tanya ini lagi untuk %1$s</string>
     <string name="title_no_body">Teks pesan tidak ditemukan</string>
+    <string name="title_large_body">Pesan ini terlalu besar dan bisa menyebabkan masalah!</string>
     <string name="title_no_charset">Encoding tidak didukung: %1$s</string>
     <string name="title_via">Melalui: %1$s</string>
     <string name="title_1hour">1 jam</string>
@@ -1847,6 +1907,8 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_loading">Memuat &#8230;</string>
     <string name="title_fetching_again">Mengambil pesan lagi dari server</string>
     <string name="title_go_back">Kembali</string>
+    <string name="title_global_default">Gunakan setelan global</string>
+    <string name="title_not_existing">Pesan ini sudah tidak ada di server email</string>
     <string name="title_conversation_actions">Tindakan</string>
     <string name="title_conversation_action_reply">Balas dengan: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Salin: \'%1$s\'</string>
@@ -1891,6 +1953,9 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_debug_info_issue">Deskripsi masalah (wajib diisi)</string>
     <string name="title_debug_info_issue_remark">Detail, seperti perkiraan waktu masalah, pesan error yang muncul, dll. diperlukan</string>
     <string name="title_debug_info_contact">Kami baru-baru ini memiliki kontak tentang masalah ini</string>
+    <string name="title_debug_info_send">Kirim segera</string>
+    <string name="title_debug_info_send_remark">Biasanya, info debug akan terlebih dahulu disimpan sebagai pesan konsep, jadi Anda bisa memeriksa apa yang akan dikirim</string>
+    <string name="title_debug_info_question">Silakan gunakan tombol info jika Anda punya pertanyaan</string>
     <string name="title_unexpected_info_remark">Mohon jelaskan apa yang sedang Anda lakukan saat Anda mendapat pesan kesalahan:</string>
     <string name="title_widget_title_count">Hitung pesan baru</string>
     <string name="title_widget_title_list">Daftar pesan</string>
@@ -1903,6 +1968,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_widget_account_all">Semua</string>
     <string name="title_widget_folder">Folder</string>
     <string name="title_widget_folder_unified">Folder kotak masuk terpadu</string>
+    <string name="title_widget_folder_notifying">Folder dengan pemberitahuan pesan baru</string>
     <string name="title_widget_unseen">Hanya pesan yang belum dibaca</string>
     <string name="title_widget_flagged">Hanya pesan-pesan yang dibintangi</string>
     <string name="title_widget_font_size">Ukuran teks</string>
@@ -1917,6 +1983,7 @@ Memformat ulang pesan perlu waktu, tergantung dari ukuran pesan dan keceoatan pe
     <string name="title_widget_refresh">Tampilkan tombol penyegaran pesan</string>
     <string name="title_widget_compose">Tampilkan tombol pesan baru</string>
     <string name="title_widget_background">Warna latar belakang</string>
+    <string name="title_widget_icon">Warna ikon</string>
     <string name="title_widget_day_night">Ikuti tema sistem gelap</string>
     <string name="title_compat_dark">Google menghilangkan dark mode untuk versi Android sebelum 10</string>
     <!-- Thunderbird -->

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -32,6 +32,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Patterns;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -48,6 +49,8 @@ import org.jsoup.nodes.Element;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -61,6 +64,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -70,6 +74,7 @@ import javax.mail.Part;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
+import javax.net.ssl.HttpsURLConnection;
 
 @Entity(
         tableName = EntityRule.TABLE_NAME,
@@ -126,6 +131,8 @@ public class EntityRule {
     static final int TYPE_DELETE = 15;
     static final int TYPE_SOUND = 16;
     static final int TYPE_LOCAL_ONLY = 17;
+    static final int TYPE_NOTES = 18;
+    static final int TYPE_URL = 19;
 
     static final String ACTION_AUTOMATION = BuildConfig.APPLICATION_ID + ".AUTOMATION";
     static final String EXTRA_RULE = "rule";
@@ -134,17 +141,31 @@ public class EntityRule {
     static final String EXTRA_SUBJECT = "subject";
     static final String EXTRA_RECEIVED = "received";
 
-    private static final String JSOUP_PREFIX = "jsoup:";
+    static final String[] EXTRA_ALL = new String[]{
+            EXTRA_RULE, EXTRA_SENDER, EXTRA_NAME, EXTRA_SUBJECT, EXTRA_RECEIVED
+    };
+
+    static final String JSOUP_PREFIX = "jsoup:";
     private static final long SEND_DELAY = 5000L; // milliseconds
+    private static final int MAX_NOTES_LENGTH = 512; // characters
+    private static final int URL_TIMEOUT = 15 * 1000; // milliseconds
 
     static boolean needsHeaders(EntityMessage message, List<EntityRule> rules) {
+        return needsHeaders(rules);
+    }
+
+    static boolean needsHeaders(List<EntityRule> rules) {
         return needs(rules, "header");
     }
 
     static boolean needsBody(EntityMessage message, List<EntityRule> rules) {
         if (message.encrypt != null && !EntityMessage.ENCRYPT_NONE.equals(message.encrypt))
             return false;
-        return needs(rules, "body");
+        return needsBody(rules);
+    }
+
+    static boolean needsBody(List<EntityRule> rules) {
+        return needs(rules, "body") || needs(rules, "notes_jsoup");
     }
 
     private static boolean needs(List<EntityRule> rules, String what) {
@@ -170,7 +191,7 @@ public class EntityRule {
 
     static int run(Context context, List<EntityRule> rules,
                    EntityMessage message, List<Header> headers, String html)
-            throws JSONException, MessagingException {
+            throws JSONException, MessagingException, IOException {
         int applied = 0;
 
         List<String> stopped = new ArrayList<>();
@@ -178,7 +199,7 @@ public class EntityRule {
             if (rule.group != null && stopped.contains(rule.group))
                 continue;
             if (rule.matches(context, message, headers, html)) {
-                if (rule.execute(context, message))
+                if (rule.execute(context, message, html))
                     applied++;
                 if (rule.stop)
                     if (rule.group == null)
@@ -365,6 +386,9 @@ public class EntityRule {
                             return false;
                     } else if ("$dmarc".equals(keyword)) {
                         if (!Boolean.TRUE.equals(message.dmarc))
+                            return false;
+                    } else if ("$auth".equals(keyword)) {
+                        if (!Boolean.TRUE.equals(message.auth))
                             return false;
                     } else if ("$mx".equals(keyword)) {
                         if (!Boolean.TRUE.equals(message.mx))
@@ -553,8 +577,8 @@ public class EntityRule {
         return matched;
     }
 
-    boolean execute(Context context, EntityMessage message) throws JSONException {
-        boolean executed = _execute(context, message);
+    boolean execute(Context context, EntityMessage message, String html) throws JSONException, IOException {
+        boolean executed = _execute(context, message, html);
         if (this.id != null && executed) {
             DB db = DB.getInstance(context);
             db.rule().applyRule(id, new Date().getTime());
@@ -562,7 +586,7 @@ public class EntityRule {
         return executed;
     }
 
-    private boolean _execute(Context context, EntityMessage message) throws JSONException, IllegalArgumentException {
+    private boolean _execute(Context context, EntityMessage message, String html) throws JSONException, IllegalArgumentException, IOException {
         JSONObject jaction = new JSONObject(action);
         int type = jaction.getInt("type");
         EntityLog.log(context, EntityLog.Type.Rules, message,
@@ -603,6 +627,10 @@ public class EntityRule {
                 return onActionSound(context, message, jaction);
             case TYPE_LOCAL_ONLY:
                 return onActionLocalOnly(context, message, jaction);
+            case TYPE_NOTES:
+                return onActionNotes(context, message, jaction, html);
+            case TYPE_URL:
+                return onActionUrl(context, message, jaction, html);
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type + " name=" + name);
         }
@@ -680,6 +708,16 @@ public class EntityRule {
             case TYPE_SOUND:
                 return;
             case TYPE_LOCAL_ONLY:
+                return;
+            case TYPE_NOTES:
+                String notes = jargs.optString("notes");
+                if (TextUtils.isEmpty(notes))
+                    throw new IllegalArgumentException(context.getString(R.string.title_rule_notes_missing));
+                return;
+            case TYPE_URL:
+                String url = jargs.optString("url");
+                if (TextUtils.isEmpty(url) || !Patterns.WEB_URL.matcher(url).matches())
+                    throw new IllegalArgumentException(context.getString(R.string.title_rule_url_missing));
                 return;
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type);
@@ -987,11 +1025,7 @@ public class EntityRule {
                 throw new IllegalArgumentException("Rule template not found name=" + rule.name);
         }
 
-        EntityFolder outbox = db.folder().getOutbox();
-        if (outbox == null) {
-            outbox = EntityFolder.getOutbox();
-            outbox.id = db.folder().insertFolder(outbox);
-        }
+        EntityFolder outbox = EntityFolder.getOutbox(context);
 
         Address[] from = new InternetAddress[]{new InternetAddress(identity.email, identity.name, StandardCharsets.UTF_8.name())};
 
@@ -1274,6 +1308,18 @@ public class EntityRule {
         if (TextUtils.isEmpty(keyword))
             throw new IllegalArgumentException("Keyword missing rule=" + name);
 
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(message.received);
+        String year = String.format(Locale.ROOT, "%04d", calendar.get(Calendar.YEAR));
+        String month = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.MONTH) + 1);
+        String week = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.WEEK_OF_YEAR));
+        String day = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.DAY_OF_MONTH));
+
+        keyword = keyword.replace("$year$", year);
+        keyword = keyword.replace("$month$", month);
+        keyword = keyword.replace("$week$", week);
+        keyword = keyword.replace("$day$", day);
+
         EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, set);
 
         return true;
@@ -1313,6 +1359,127 @@ public class EntityRule {
 
         message.ui_local_only = true;
         db.message().setMessageUiLocalOnly(message.id, message.ui_local_only);
+
+        return true;
+    }
+
+    private boolean onActionNotes(Context context, EntityMessage message, JSONObject jargs, String html) throws JSONException {
+        String notes = jargs.getString("notes");
+        Integer color = (jargs.has("color") ? jargs.getInt("color") : null);
+
+        if (notes.startsWith(JSOUP_PREFIX)) {
+            if (html == null && message.content) {
+                File file = message.getFile(context);
+                try {
+                    html = Helper.readText(file);
+                } catch (IOException ex) {
+                    Log.e(ex);
+                }
+            }
+
+            if (html != null) {
+                Document d = JsoupEx.parse(html);
+                String selector = notes.substring(JSOUP_PREFIX.length());
+                String regex = null;
+                if (selector.endsWith(("}"))) {
+                    int b = selector.lastIndexOf('{');
+                    if (b > 0) {
+                        regex = selector.substring(b + 1, selector.length() - 1);
+                        selector = selector.substring(0, b);
+                    }
+                }
+
+                Element e = d.select(selector).first();
+                if (e == null) {
+                    notes = null;
+                    Log.w("Nothing selected Jsoup=" + selector);
+                } else {
+                    notes = e.ownText();
+                    if (!TextUtils.isEmpty(regex)) {
+                        Pattern p = Pattern.compile(regex);
+                        Matcher m = p.matcher(notes);
+                        if (m.matches() && m.groupCount() > 0)
+                            notes = m.group(1);
+                        else
+                            Log.w("Nothing selected regex=" + regex + " value=" + notes);
+                    }
+                }
+            }
+        }
+
+        if (TextUtils.isEmpty(notes))
+            notes = null;
+        else if (notes.length() > MAX_NOTES_LENGTH)
+            notes = notes.substring(0, MAX_NOTES_LENGTH);
+
+        DB db = DB.getInstance(context);
+        db.message().setMessageNotes(message.id, notes, color);
+
+        return true;
+    }
+
+    private boolean onActionUrl(Context context, EntityMessage message, JSONObject jargs, String html) throws JSONException, IOException {
+        String url = jargs.getString("url");
+        String method = jargs.optString("method");
+
+        if (TextUtils.isEmpty(method))
+            method = "GET";
+
+        InternetAddress iaddr =
+                (message.from == null || message.from.length == 0
+                        ? null : ((InternetAddress) message.from[0]));
+        String address = (iaddr == null ? null : iaddr.getAddress());
+        String personal = (iaddr == null ? null : iaddr.getPersonal());
+
+        // ISO 8601
+        DateFormat DTF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        DTF.setTimeZone(java.util.TimeZone.getTimeZone("Zulu"));
+
+        url = url.replace("$" + EXTRA_RULE + "$", Uri.encode(name == null ? "" : name));
+        url = url.replace("$" + EXTRA_SENDER + "$", Uri.encode(address == null ? "" : address));
+        url = url.replace("$" + EXTRA_NAME + "$", Uri.encode(personal == null ? "" : personal));
+        url = url.replace("$" + EXTRA_SUBJECT + "$", Uri.encode(message.subject == null ? "" : message.subject));
+        url = url.replace("$" + EXTRA_RECEIVED + "$", Uri.encode(DTF.format(message.received)));
+
+        String body = null;
+        if ("POST".equals(method) || "PUT".equals(method)) {
+            Uri u = Uri.parse(url);
+            body = u.getQuery();
+            url = u.buildUpon().clearQuery().build().toString();
+        }
+
+        Log.i("GET " + url);
+
+        HttpsURLConnection connection = null;
+        try {
+            connection = (HttpsURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod(method);
+            connection.setDoOutput(body != null);
+            connection.setReadTimeout(URL_TIMEOUT);
+            connection.setConnectTimeout(URL_TIMEOUT);
+            connection.setInstanceFollowRedirects(true);
+            ConnectionHelper.setUserAgent(context, connection);
+            connection.connect();
+
+            if (body != null)
+                connection.getOutputStream().write(body.getBytes());
+
+            int status = connection.getResponseCode();
+            if (status < 200 || status > 299) {
+                String error = "Error " + status + ": " + connection.getResponseMessage();
+                try {
+                    InputStream is = connection.getErrorStream();
+                    if (is != null)
+                        error += "\n" + Helper.readStream(is);
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+                throw new IOException(error);
+            }
+        } finally {
+            if (connection != null)
+                connection.disconnect();
+        }
 
         return true;
     }

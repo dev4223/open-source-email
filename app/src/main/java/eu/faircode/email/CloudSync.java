@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -56,6 +56,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -185,7 +186,7 @@ public class CloudSync {
 
     private static Long updateSyncdata(Context context) throws IOException, JSONException {
         DB db = DB.getInstance(context);
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "syncdata"));
+        File dir = Helper.ensureExists(context, "syncdata");
 
         Long last = null;
 
@@ -258,12 +259,22 @@ public class CloudSync {
         if (accounts == null || accounts.size() == 0)
             return;
 
+        List<String> uuidAccounts = new ArrayList<>();
+        List<String> uuidIdentities = new ArrayList<>();
+
         JSONArray jupload = new JSONArray();
 
         JSONArray jaccountuuidlist = new JSONArray();
         for (EntityAccount account : accounts)
             if (account.synchronize && !TextUtils.isEmpty(account.uuid) &&
                     account.auth_type != ServiceAuthenticator.AUTH_TYPE_GMAIL) {
+                if (uuidAccounts.contains(account.uuid)) {
+                    Log.w("Duplicate account uuid=" + account.uuid);
+                    account.uuid = UUID.randomUUID().toString();
+                    db.account().setAccountUuid(account.id, account.uuid);
+                } else
+                    uuidAccounts.add(account.uuid);
+
                 jaccountuuidlist.put(account.uuid);
 
                 JSONArray jidentitieuuids = new JSONArray();
@@ -271,6 +282,13 @@ public class CloudSync {
                 if (identities != null)
                     for (EntityIdentity identity : identities)
                         if (identity.synchronize && !TextUtils.isEmpty(identity.uuid)) {
+                            if (uuidIdentities.contains(identity.uuid)) {
+                                Log.w("Duplicate identity uuid=" + identity.uuid);
+                                identity.uuid = UUID.randomUUID().toString();
+                                db.identity().setIdentityUuid(identity.id, identity.uuid);
+                            } else
+                                uuidIdentities.add(identity.uuid);
+
                             jidentitieuuids.put(identity.uuid);
 
                             JSONObject jidentity = identity.toJSON();
@@ -334,7 +352,7 @@ public class CloudSync {
     private static void receiveRemoteData(Context context, String user, String password, long lrevision, long rrevision, JSONObject jstatus)
             throws JSONException, GeneralSecurityException, IOException, InvalidCipherTextException {
         DB db = DB.getInstance(context);
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "syncdata"));
+        File dir = Helper.ensureExists(context, "syncdata");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean cloud_receive = prefs.getBoolean("cloud_receive", false);
 

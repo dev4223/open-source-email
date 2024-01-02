@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -262,7 +262,10 @@ public class ActivitySignature extends ActivityBase {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_help) {
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.menu_help) {
             onMenuHelp();
             return true;
         } else if (itemId == R.id.menu_edit_html) {
@@ -422,7 +425,7 @@ public class ActivitySignature extends ActivityBase {
     }
 
     private String getHtml() {
-        etText.clearComposingText();
+        HtmlHelper.clearComposingText(etText);
 
         if (etText.isRaw()) {
             saved = etText.getText().toString();

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
@@ -61,6 +62,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+
+import javax.mail.Address;
 
 public class FragmentDialogTranslate extends FragmentDialogBase {
     @NonNull
@@ -120,7 +123,7 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
                         ssb.setSpan(new ForegroundColorSpan(textColorPrimary), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         Locale source = Locale.forLanguageTag(translation.detected_language);
-                        Locale target = Locale.forLanguageTag(args.getString("target"));
+                        Locale target = Locale.forLanguageTag(translation.target_language);
 
                         String lang = "[" + source.getDisplayLanguage(target) + "]\n\n";
                         ssb.insert(0, lang);
@@ -292,7 +295,7 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
                                 ssb.setSpan(new ForegroundColorSpan(textColorPrimary), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                                 Locale source = Locale.forLanguageTag(translation.detected_language);
-                                Locale target = Locale.forLanguageTag(args.getString("target"));
+                                Locale target = Locale.forLanguageTag(translation.target_language);
 
                                 String lang = "[" + source.getDisplayLanguage(target) + "] ";
                                 ssb.insert(start, lang);
@@ -318,7 +321,7 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                tvText.setText(ex.toString());
+                tvText.setText(new ThrowableWrapper(ex).toSafeString());
             }
         }.execute(this, getArguments(), "message:translate");
 
@@ -360,9 +363,18 @@ public class FragmentDialogTranslate extends FragmentDialogBase {
 
         SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, d, null, null);
 
-        if (message != null && message.subject != null) {
-            ssb.insert(0, "\n\n");
-            ssb.insert(0, message.subject);
+        if (message != null) {
+            if (!TextUtils.isEmpty(message.subject)) {
+                ssb.insert(0, "\n\n");
+                ssb.insert(0, message.subject);
+            }
+
+            List<TupleIdentityEx> identities = db.identity().getComposableIdentities(message.account);
+            Address[] from = (message.fromSelf(identities) ? message.to : message.from);
+            if (from != null && from.length > 0) {
+                ssb.insert(0, "\n\n");
+                ssb.insert(0, MessageHelper.formatAddresses(from));
+            }
         }
 
         return ssb.toString()

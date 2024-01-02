@@ -86,11 +86,13 @@
     </string>
     <string name="title_block">Blokkeer %1$s</string>
     <string name="title_block_sender">Blokkeer afzender</string>
-    <string name="title_block_sender_domain">Blokkeer domein \'%1$s\'</string>
+    <string name="title_block_sender_domain">Blokkeer domein ‘%1$s’</string>
     <string name="title_block_sender_remark">Blokkeren betekent automatisch verplaatsen naar de spammap</string>
     <string name="title_block_sender_hint">Het blokkeren van een afzender is een gratis functie.
 Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro functie is.    </string>
     <string name="title_blocked_senders">Geblokkeerde afzenders</string>
+    <string name="title_unblock_all">Alle deblokkeren</string>
+    <string name="title_unblock_all_remark">Dit zal alle lijsten en opties, die kunnen resulteren in het blokkeren van de afzenders, herstellen</string>
     <plurals name="title_ask_block_sender">
         <item quantity="one">Blokkeer afzender van één bericht?</item>
         <item quantity="other">Blokkeer de afzender van %1$s berichten?</item>
@@ -112,7 +114,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_notification_waiting">Wachten op een geschikte verbinding</string>
     <string name="title_notification_idle">Inactief</string>
     <string name="title_notification_failed">\'%1$s\' is mislukt</string>
-    <string name="title_notification_alert">Serverwaarschuwing: \'%1$s\'</string>
+    <string name="title_notification_alert">Serverwaarschuwing: ‘%1$s’</string>
     <string name="title_notification_sending_left">Resterende pogingen: %1$d</string>
     <string name="title_notification_sending_retry">Verzenden zal opnieuw worden geprobeerd bij wijzigingen in de internetverbinding of het naar beneden trekken van de outbox</string>
     <string name="title_notification_sending_failed">Verzenden naar %1$s mislukt</string>
@@ -162,6 +164,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_setup_quick_smtp">SMTP-server om berichten te verzenden</string>
     <string name="title_setup_quick_certificates">Server certificaten</string>
     <string name="title_setup_wizard">Wizard</string>
+    <string name="title_setup_wizard_intro">In de meeste gevallen kan de wizard knop gebruikt worden om een account toe te voegen, anders kunnen de serveradressen handmatig worden ingevoerd of gewijzigd via de handmatige instelling</string>
     <string name="title_setup_wizard_tutorials">Handleidingen</string>
     <string name="title_setup_wizard_multiple">De wizard kan meerdere keren gebruikt worden om meerdere accounts in te stellen</string>
     <string name="title_setup_wizard_new">Ik heb een nieuw e-mailadres nodig</string>
@@ -190,6 +193,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_setup_oauth_rationale">Autoriseer toegang tot uw %1$s account</string>
     <string name="title_setup_oauth_update">Autoriseer een bestaand account opnieuw (anders een nieuwe account aanmaken)</string>
     <string name="title_setup_oauth_updated">Accountautorisatie is bijgewerkt</string>
+    <string name="title_setup_oauth_brave">Bij het gebruik van de Brave-browser, moet u de optie in de instellingen van Brave om app-koppelingen in apps buiten Brave te laten openen inschakelen</string>
     <string name="title_setup_oauth_authorize">Autoriseren</string>
     <string name="title_setup_select_account">Selecteer account</string>
     <string name="title_setup_instructions">Installatie-instructies</string>
@@ -372,6 +376,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_suggest_sent">Suggereer adressen gevonden in verzonden berichten</string>
     <string name="title_advanced_suggest_received">Suggereer adressen gevonden in ontvangen berichten</string>
     <string name="title_advanced_suggest_frequently">Sorteer voorgestelde adressen op gebruiksfrequentie</string>
+    <string name="title_advanced_suggest_account">Suggesties beperken tot huidige account</string>
     <string name="title_advanced_alt_re_fwd">Alternatief antwoord/doorsturen voorvoegsel</string>
     <string name="title_advanced_send_chips">Toon adresballonnen</string>
     <string name="title_advanced_send_nav_color">Gebruik de identiteitskleur voor de onderste actiebalk</string>
@@ -384,6 +389,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_answer_hint">De acties van de antwoordknop kunnen ook worden geconfigureerd op het tabblad verzendinstellingen</string>
     <string name="title_advanced_answer_warning">Niet alle acties zijn mogelijk zonder een selectiemenu!</string>
     <string name="title_advanced_send_pending">Toon niet-opdringerig pictogram voor vertraagd verzenden</string>
+    <string name="title_advanced_save_revisions">Conceptrevisies opslaan voor ongedaan maken (undo) en opnieuw uitvoeren (redo)</string>
     <string name="title_advanced_auto_save_paragraph">Automatisch een concept opslaan na elke alinea</string>
     <string name="title_advanced_auto_save_dot">Automatisch een concept opslaan na elke zin</string>
     <string name="title_advanced_compose_color">Standaard tekstkleur</string>
@@ -419,6 +425,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_lookup_mx">Controleer e-mailadressen van de ontvangers voor verzenden</string>
     <string name="title_advanced_metered">Gemeten verbindingen gebruiken</string>
     <string name="title_advanced_download">Automatisch downloaden van berichten en bijlagen op een gemeten verbinding tot</string>
+    <string name="title_advanced_download_limited">Ook toepassen op ongemeten verbindingen</string>
     <string name="title_advanced_roaming">Download berichten en bijlagen tijdens roaming</string>
     <string name="title_advanced_rlah">Roam zoals thuis</string>
     <string name="title_advanced_download_headers">Download alle berichtkoppen</string>
@@ -429,10 +436,14 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_vpn_only">Alleen via een VPN verbinden</string>
     <string name="title_advanced_timeout">Verbinding timeout (seconden)</string>
     <string name="title_advanced_prefer_ip4">Geef de voorkeur aan IPv4 boven IPv6</string>
+    <string name="title_advanced_ssl_update">Bijgewerkte SSL-provider gebruiken</string>
     <string name="title_advanced_ssl_harden">Verhard SSL-verbindingen</string>
     <string name="title_advanced_ssl_harden_strict">Vereis TLS 1.3</string>
     <string name="title_advanced_cert_strict">Strenge certificaatcontrole</string>
+    <string name="title_advanced_check_names">Hostnamen met servercertificaten vergelijken</string>
     <string name="title_advanced_open_safe">Alleen beveiligde verbindingen openen</string>
+    <string name="title_advanced_http_redirect">Verbindingsomleiding toestaan</string>
+    <string name="title_advanced_bouncy_castle">Gebruik de secure socket provider van Bouncy Castle (JSSE)</string>
     <string name="title_advanced_manage_connectivity">Beheer connectiviteit</string>
     <string name="title_advanced_caption_general">Algemeen</string>
     <string name="title_advanced_caption_navigation">Navigatie</string>
@@ -489,9 +500,10 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_libravatars">Toon Libravatars</string>
     <string name="title_advanced_favicons">Toon favicons</string>
     <string name="title_advanced_favicons_partial">Alleen de eerste %1$s van de webpagina scannen</string>
-    <string name="title_advanced_generated_icons">Toon gegenereerde iconen</string>
+    <string name="title_advanced_favicons_manifest">Scan webapp-manifesten</string>
+    <string name="title_advanced_generated_icons">Toon gegenereerde pictogrammen</string>
     <string name="title_advanced_identicons">Toon identicons</string>
-    <string name="title_advanced_circular">Toon ronde iconen</string>
+    <string name="title_advanced_circular">Toon ronde pictogrammen</string>
     <string name="title_advanced_color_saturation">Verzadiging: %1$s %%</string>
     <string name="title_advanced_color_value">Helderheid: %1$s %%</string>
     <string name="title_advanced_color_threshold">Drempel letterkleur: %1$s %%</string>
@@ -500,6 +512,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_only_name">Alleen contactnamen weergeven</string>
     <string name="title_advanced_distinguish_contacts">Onderstreep de afzender wanneer de afzender bekend staat als lokaal \'aan\'-contact</string>
     <string name="title_advanced_show_recipients">Geadresseerden in berichtkop tonen</string>
+    <string name="title_advanced_reverse_addresses">Ontvanger voor verzonden berichten tonen</string>
     <string name="title_advanced_font_size_sender">Tekengrootte afzender</string>
     <string name="title_advanced_sender_ellipsize">Indien nodig, verkort de afzender</string>
     <string name="title_advanced_subject_top">Toon onderwerp boven afzender</string>
@@ -522,7 +535,9 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_unzip">Toon de inhoud van gecomprimeerde bijlagen</string>
     <string name="title_advanced_attachments_alt">Bijlagen weergeven na de berichttekst</string>
     <string name="title_advanced_thumbnails">Afbeeldingsminiaturen weergeven na de berichttekst</string>
+    <string name="title_advanced_pdf_preview">PDF-miniaturen tonen</string>
     <string name="title_advanced_message_text_zoom2">Standaard berichttekst zoom: %1$s %%</string>
+    <string name="title_advanced_editor_text_zoom">Zoom berichttekst ook in de berichteditor</string>
     <string name="title_advanced_overview_mode">Zoom oorspronkelijke berichten zodat ze op het scherm passen</string>
     <string name="title_advanced_hyphenation">Gebruik automatische koppeltekens</string>
     <string name="title_advanced_contrast">Gebruik hoge contrast voor berichttekst</string>
@@ -547,6 +562,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_navbar_colorize">Kleur de Android-navigatiebalk in</string>
     <string name="title_advanced_list_count">Toon het aantal berichten of gesprekken in de bovenste actiebalk</string>
     <string name="title_advanced_bundled_fonts">Gebruik gebundelde lettertypen</string>
+    <string name="title_advanced_narrow_fonts">Smalle lettertypen gebruiken</string>
     <string name="title_advanced_parse_classes">Stijlbladen parsen</string>
     <string name="title_advanced_authentication">Toon authenticatiewaarschuwingen</string>
     <string name="title_advanced_authentication_hint">De onderliggende controles kunnen worden geconfigureerd in de ontvangstinstellingen</string>
@@ -567,6 +583,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_double_tap">Dubbel tik om bericht gelezen/ongelezen te markeren</string>
     <string name="title_advanced_swipenav">Veeg links/rechts om naar het volgende/vorige gesprek te gaan</string>
     <string name="title_advanced_volumenav">Volume omhoog/omlaag om naar het volgende/vorige gesprek te gaan</string>
+    <string name="title_advanced_up_down">Gebruik de pijlen omhoog/omlaag voor het volgende/vorige gesprek</string>
     <string name="title_advanced_reversed">Keer navigatierichting om</string>
     <string name="title_advanced_swipe_close">Veeg naar beneden om gesprek te sluiten</string>
     <string name="title_advanced_swipe_move">Veeg omhoog om gesprek te verplaatsen</string>
@@ -581,7 +598,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_autoclose_unread">Sluit gesprekken bij het markeren van berichten als ongelezen</string>
     <string name="title_advanced_collapse_marked">Berichten samenvouwen die handmatig als gelezen of ongelezen worden gemarkeerd</string>
     <string name="title_advanced_undo">Herstel time-out</string>
-    <string name="title_advanced_quick_filter">Toon niet-opdringerige snelle filterpictogrammen</string>
+    <string name="title_advanced_quick_filter">Toon niet-opdringerige snelle filter pictogrammen</string>
     <string name="title_advanced_quick_scroll">Toon niet-opdringerige snelle scroll omhoog/omlaag pictogrammen</string>
     <string name="title_advanced_quick_actions">Toon snelle acties wanneer berichten zijn geselecteerd</string>
     <string name="title_advanced_folder_nav">Ga altijd terug naar de mappenlijst vanuit een berichtenlijst</string>
@@ -603,7 +620,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_notifications_default">Standaardkanaal</string>
     <string name="title_advanced_notifications_service">Bewakingskanaal</string>
     <string name="title_advanced_notifications_newest_first">Laat nieuwste meldingen eerst zien</string>
-    <string name="title_advanced_badge">Toon opstartpictogram met aantal nieuwe berichten</string>
+    <string name="title_advanced_badge">Toon startpictogram met aantal nieuwe berichten</string>
     <string name="title_advanced_unseen_ignored">Laat het aantal nieuwe berichten overeenkomen met het aantal meldingen</string>
     <string name="title_advanced_notify_grouping">Groepeer meldingen</string>
     <string name="title_advanced_notify_private">Notificaties privé houden wanneer het apparaat is vergrendeld</string>
@@ -615,6 +632,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_notify_preview">Toon berichtvoorbeeld in meldingen</string>
     <string name="title_advanced_notify_preview_all">Voorbeeld van alle tekst</string>
     <string name="title_advanced_notify_preview_only">Alleen meldingen met een voorbeeldtekst weergeven</string>
+    <string name="title_advanced_notify_transliterate">Translitereren naar het Latijnse alfabet</string>
+    <string name="title_advanced_notify_ascii">Alleen ASCII-tekst</string>
     <string name="title_advanced_notify_actions">Meldingsacties</string>
     <string name="title_advanced_notify_action_trash">Weggooien</string>
     <string name="title_advanced_notify_action_delete">Verwijderen</string>
@@ -633,6 +652,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_wearable_preview">Stuur alleen meldingen met een berichtvoorbeeld naar wearables</string>
     <string name="title_advanced_notify_messaging">Gebruik Android \'messaging style\' notificatieformaat</string>
     <string name="title_advanced_biometrics_notify">Toon notificatie inhoud bij het gebruik van biometrische verificatie</string>
+    <string name="title_advanced_notify_open_folder">Map openen bij het openen van nieuw bericht</string>
     <string name="title_advanced_light">Gebruik meldingslicht</string>
     <string name="title_advanced_sound">Selecteer meldingsgeluid</string>
     <string name="title_advanced_notify_screen_on">Schakel het scherm kort in voor nieuwe berichtmeldingen</string>
@@ -642,6 +662,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_confirm_files">Bevestig het bekijken van bestanden</string>
     <string name="title_advanced_sanitize_links">Verwijder standaard tracking parameters</string>
     <string name="title_advanced_sanitize_links_hint">Alleen bij het bevestigen van links</string>
+    <string name="title_advanced_adguard" comment="title_advanced_adguard&#10;Title for option to enable using Adguard filter list to remove tracking parameters from links">Gebruik Adguard filterlijst</string>
+    <string name="title_advanced_adguard_weekly" comment="title_advanced_adguard_weekly&#10;Title for option to automatically update the Adguard filter list weekly">Automatisch wekelijks downloaden</string>
     <string name="title_advanced_check_links_dbl">Controleer domeinblokkeringslijsten op verdachte links</string>
     <string name="title_advanced_confirm_images">Toon standaard geen afbeeldingen</string>
     <string name="title_advanced_ask_images">Bevestig het tonen van afbeeldingen</string>
@@ -667,6 +689,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_mnemonic_hint">Elke e-mail ontvangen met de onderstaande woorden in de onderwerpregel zal automatisch en onmiddellijk de app gegevens verwijderen</string>
     <string name="title_advanced_clear_all">Verwijder de app gegevens</string>
     <string name="title_advanced_clear_all_remark">De app gegevens worden onomkeerbaar verwijderd!</string>
+    <string name="title_advanced_default_encryption">De standaard versleutelingsmethode (PGP of S/MIME) wordt per identiteit opgeslagen na het verzenden van een ondertekend of versleuteld bericht.
+         De versleutelingsmethode kan voor verzending worden geselecteerd in het dialoogvenster met verzendopties (houd de knop Verzenden lang ingedrukt).    </string>
     <string name="title_advanced_sign_default">Standaard ondertekenen</string>
     <string name="title_advanced_encrypt_default">Standaard versleutelen</string>
     <string name="title_advanced_encrypt_auto">Automatisch versleutelen wanneer alle sleutels van de ontvanger beschikbaar zijn</string>
@@ -692,19 +716,24 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     </string>
     <string name="title_advanced_power_menu">Acties toevoegen aan het Android power menu</string>
     <string name="title_advanced_send_self">Voeg \'Stuur naar jezelf\' toe aan het Android-deelmenu</string>
-    <string name="title_advanced_external_search">Andere apps mogen zoeken in berichten</string>
+    <string name="title_advanced_external_search">Voeg ‘FairEmail zoeken’ toe aan Android-tekstselectiemenu</string>
     <string name="title_advanced_sort_answers">Sorteer antwoordsjablonen op gebruiksfrequentie</string>
     <string name="title_advanced_shortcuts">Toon veelgebruikte contacten in het Android-deelmenu</string>
+    <string name="title_advanced_ical_tentative">Ontvangen uitnodigingen als voorlopig bewaren</string>
     <string name="title_advanced_fts">Zoekindex opbouwen</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d berichten geïndexeerd (%3$s)</string>
     <string name="title_advanced_classification">Berichten classificeren</string>
     <string name="title_advanced_class_min_chance">Minimale klasse waarschijnlijkheid: %1$s %%</string>
     <string name="title_advanced_class_min_difference">Minimale klasse verschil: %1$s %%</string>
     <string name="title_advanced_show_filtered">Toon een filterpictogram wanneer regels werden toegepast</string>
+    <string name="title_advanced_haptic_feedback">Haptische feedback bij belangrijke acties</string>
     <string name="title_advanced_language">Taal</string>
     <string name="title_advanced_language_system">Systeem</string>
     <string name="title_advanced_lt">LanguageTool integratie</string>
+    <string name="title_advanced_lt_sentence">Controleer elke zin</string>
     <string name="title_advanced_lt_auto">Controleer alinea na een nieuwe regel</string>
+    <string name="title_advanced_lt_highlight">Markeer de tekst die gecontroleerd wordt</string>
+    <string name="title_advanced_lt_description">Toon popup met probleembeschrijving</string>
     <string name="title_advanced_lt_user">Gebruikersnaam (optioneel)</string>
     <string name="title_advanced_lt_key">API key (optioneel)</string>
     <string name="title_advanced_deepl">DeepL integratie</string>
@@ -758,6 +787,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_pull_all_hint">Bij het naar beneden trekken van de mappen of accountenlijst</string>
     <string name="title_advanced_suggest_names_hint">Indien uitgeschakeld, worden alleen e-mailadressen gebruikt bij het selecteren van contacten</string>
     <string name="title_advanced_suggest_local_hint">Naast contacten die door Android worden geleverd. Contactgegevens worden alleen opgeslagen voor nieuw verzonden of ontvangen berichten wanneer ingeschakeld.</string>
+    <string name="title_advanced_suggest_account_hint">Dit geldt alleen voor lokale contacten, omdat contacten in het Android-adresboek niet zijn gekoppeld aan specifieke accounts</string>
     <string name="title_advanced_auto_identity_hint">Dit zal de laatst gebruikte identiteit selecteren bij het selecteren van een ontvanger voor nieuwe berichten</string>
     <string name="title_advanced_send_reminders_hint">Toon een waarschuwing wanneer de berichttekst of het onderwerp leeg is of wanneer een bijlage zou kunnen ontbreken</string>
     <string name="title_advanced_reply_move_hint">De e-mailserver kan de berichten nog steeds toevoegen aan de map met verzonden berichten</string>
@@ -801,7 +831,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_default_folder_hint">        Android kan toestemming vragen voor toegang tot de geselecteerde map, ook al heeft de app dit niet nodig.
         U kunt het selectievenster annuleren om de standaard map te herstellen (meestal de \'Download\' map).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Herstel laatste app-status bij herstart via het launcher-pictogram binnen %1$d minuten</string>
+    <string name="title_advanced_restore_on_launch_hint">Herstel laatste app-status bij herstart via het start-pictogram binnen %1$d minuten</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
     <string name="title_advanced_expandall_hint">De antwoordknop zal niet worden weergegeven wanneer meerdere berichten worden opengeklapt omdat het dan onduidelijk is op welk bericht de knop van toepassing is</string>
     <string name="title_advanced_autoseen_hint">Automatisch berichten markeren als gelezen bij uitvouwen kan worden uitgeschakeld in de geavanceerde accountinstellingen van elk account</string>
@@ -830,6 +860,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_advanced_wearable_hint">Meldingen worden alleen verzonden naar een wearable nadat de berichttekst is gedownload</string>
     <string name="title_advanced_messaging_hint">Dit is vereist voor Android Auto ondersteuning</string>
     <string name="title_advanced_move_hint">De doelmap kan worden geconfigureerd in de accountinstellingen</string>
+    <string name="title_advanced_notify_sensitive_hint">Vereist het uitschakelen van gevoelige meldingen in de instellingen van Android</string>
     <string name="title_advanced_notify_no_grouping">Deze Android-versie ondersteunt geen meldingsgroepering</string>
     <string name="title_advanced_notify_no_channels">Deze Android-versie ondersteunt geen meldingskanalen</string>
     <string name="title_advanced_fts_hint">Dit inschakelen verbetert de zoekprestaties, maar verhoogt ook het batterij- en opslaggebruik</string>
@@ -861,6 +892,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_identity_reply_to">Antwoord op adres</string>
     <string name="title_identity_internal">Interne domeinnamen (komma gescheiden)</string>
     <string name="title_identity_uri">Koppel contact</string>
+    <string name="title_identity_sensitivity">Standaard gevoeligheid</string>
     <string name="title_identity_unicode">UTF-8 in berichtkoppen toestaan</string>
     <string name="title_identity_unicode_remark">De meeste servers ondersteunen dit niet</string>
     <string name="title_identity_octetmime">8BITMIME toestaan</string>
@@ -983,6 +1015,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_service_port">Controleer het poortnummer a.u.b.</string>
     <string name="title_service_protocol">Controleer a.u.b. het protocol (SSL/TLS of STARTTLS)</string>
     <string name="title_service_error10">Dit account moet opnieuw geverifieerd worden, wat gedaan kan worden via de snelle installatiewizard</string>
+    <string name="title_certificate_error">Als gevolg van het Play Store-beleid van Google, is het niet langer mogelijk om onveilige verbindingen met e-mailservers met certificaatproblemen te ondersteunen voor de versie van FairEmail die via de Play Store wordt gedistribueerd.
+        Daarom kan dit probleem alleen worden opgelost door uw e-mailprovider - de bovenstaande foutinformatie kan hen helpen dit probleem op te lossen.    </string>
     <string name="title_advanced_browse">Blader door berichten op de server</string>
     <string name="title_advanced_expand_read">Markeer berichten gelezen bij uitvouwen</string>
     <string name="title_synchronize_now">Nu synchroniseren</string>
@@ -997,6 +1031,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_synchronize_batch_disable">Synchronisatie uitschakelen</string>
     <string name="title_notify_batch_enable">Schakel meldingen voor nieuwe berichten in</string>
     <string name="title_notify_batch_disable">Schakel meldingen voor nieuwe berichten uit</string>
+    <string name="title_download_batch_enable">Download teksten en bijlagen</string>
+    <string name="title_download_batch_disable">Alleen koppen downloaden</string>
     <string name="title_delete_local">Verwijder lokale berichten</string>
     <string name="title_delete_browsed">Verwijder gebladerde/gezochte berichten</string>
     <string name="title_expunge">Uitwissen</string>
@@ -1012,6 +1048,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_delete_channel">Meldingskanaal verwijderen</string>
     <string name="title_insert_contact">Contact toevoegen</string>
     <string name="title_edit_contact">Contact bewerken</string>
+    <string name="title_delete_contact">Contact verwijderen?</string>
     <string name="title_contact_email">E-mail</string>
     <string name="title_contact_name">Naam</string>
     <string name="title_contact_group">Groep</string>
@@ -1115,6 +1152,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_importance_low">Laag</string>
     <string name="title_importance_normal">Normaal</string>
     <string name="title_importance_high">Hoog</string>
+    <string name="title_important">Belangrijk</string>
+    <string name="title_unimportant">Onbelangrijk</string>
     <string name="title_search_in_text">Zoek in tekst &#8230;</string>
     <string name="title_forward">Doorsturen</string>
     <string name="title_resend">Verstuur opnieuw</string>
@@ -1133,8 +1172,10 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_print_header">Kop afdrukken</string>
     <string name="title_print_images">Afbeeldingen afdrukken</string>
     <string name="title_print_images_remark">Afbeeldingen downloaden kan enige tijd duren</string>
+    <string name="title_print_block_quotes">Blokcitaatlijnen afdrukken</string>
+    <string name="title_print_margins">Een marge toevoegen</string>
     <string name="title_show_headers">Toon koppen</string>
-    <string name="title_share_as_html">Delen als HTML</string>
+    <string name="title_show_html">Bron tonen</string>
     <string name="title_raw_save">Ruw bericht opslaan</string>
     <string name="title_raw_send">Stuur als bijlage</string>
     <string name="title_raw_send_message">Bericht</string>
@@ -1164,6 +1205,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_quick_actions_snooze">Sluimeren</string>
     <string name="title_quick_actions_clear">Selectie wissen na actie</string>
     <string name="title_trash">Prullenbak</string>
+    <string name="title_trash_selection">Selectie verwijderen</string>
     <string name="title_copy">Kopieer &#8230;</string>
     <string name="title_copy_to">Kopieer naar &#8230;</string>
     <string name="title_subscribe">Abonneren</string>
@@ -1178,7 +1220,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_unsubscribe">Uitschrijven</string>
     <string name="title_message_rule">Maak regel</string>
     <string name="title_no_junk">Geen spam</string>
-    <string name="title_edit_subject" comment="title_edit_subject&#10;Title for menu item to edit the subject of a message">Bewerk onderwerp &#8230;</string>
+    <string name="title_edit_subject">Bewerk onderwerp &#8230;</string>
     <string name="title_move_to">Verplaats naar &#8230;</string>
     <string name="title_move_to_folder">Verplaats naar &#8230;</string>
     <string name="title_move_to_account">Verplaats naar %1$s &#8230;</string>
@@ -1344,6 +1386,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_add_image_privacy">Verwijder privacy gevoelige gegevens</string>
     <string name="title_add_image_privacy_remark">Geografische locatie, serienummers, bestandsnamen, etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_add_image_resize_remark">Grootte aanpassen wordt ondersteund voor: %1$s</string>
+    <string name="title_add_image_select_remark">De Android fotokiezer geeft bestandnamen niet langer door</string>
     <string name="title_add_image_select">Selecteer bestand</string>
     <string name="title_add_attachment">Bijlage toevoegen</string>
     <string name="title_attachment_file">Bestand bijvoegen</string>
@@ -1355,6 +1399,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_image_dialog">Toon afbeeldingsopties</string>
     <string name="title_style_toolbar">Stijl werkbalk</string>
     <string name="title_media_toolbar">Media werkbalk</string>
+    <string name="title_manage_android_contacts">Android-contacten beheren</string>
     <string name="title_manage_local_contacts">Beheer lokale contacten</string>
     <string name="title_insert_contact_group">Contactgroep toevoegen</string>
     <string name="title_insert_template">Sjabloon invoegen</string>
@@ -1367,6 +1412,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_translate_formal">Gebruik formele vorm</string>
     <string name="title_translate_small">Gebruik een klein lettertype voor de brontekst</string>
     <string name="title_translate_replace">Vervang brontekst door vertaalde tekst</string>
+    <string name="title_translate_highlight">Markeer de tekst die vertaald wordt</string>
     <string name="title_translate_html">Opmaak behouden</string>
     <string name="title_translate_html_hint">Dit zal meer tekens verbruiken</string>
     <string name="title_translate_usage">Gebruik: %1$s / %2$s (%3$d %%)</string>
@@ -1455,6 +1501,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_search">Zoek</string>
     <string name="title_search_for_hint">Voer tekst in</string>
     <string name="title_search_hint">In eerste instantie wordt de zoekopdracht uitgevoerd op het apparaat.Tik op de knop \'opnieuw zoeken\' om ook op de server te zoeken.</string>
+    <string name="title_search_hint_fts">Gebruik van de zoekindex: alleen hele woorden</string>
     <string name="title_search_index_hint">Zoeken via de zoekindex gaat snel, maar vindt alleen hele woorden.</string>
     <string name="title_search_text_hint">Zoeken naar tekst in berichten, wanneer er een groot aantal berichten is, werkt mogelijk niet op sommige servers</string>
     <string name="title_search_text_unsupported">\'%s\' betekent dat de mailserver het zoeken in berichtteksten niet ondersteunt</string>
@@ -1467,6 +1514,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_search_in_keywords">In sleutelwoorden (indien ondersteund)</string>
     <string name="title_search_in_message">In bericht tekst</string>
     <string name="title_search_in_notes">In lokale notities</string>
+    <string name="title_search_in_filenames">In bestandsnamen (alleen op apparaat)</string>
     <string name="title_search_with">Zoekopdracht beperken tot</string>
     <string name="title_search_with_unseen">Ongelezen</string>
     <string name="title_search_with_flagged">Met ster</string>
@@ -1559,6 +1607,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_answer_placeholder_firstname">Voornaam afzender</string>
     <string name="title_answer_placeholder_lastname">Achternaam afzender</string>
     <string name="title_answer_placeholder_date">Huidige datum</string>
+    <string name="title_answer_placeholder_weekday">Dag van de week</string>
     <string name="title_rule_noop">Geen actie</string>
     <string name="title_rule_seen">Markeer als gelezen</string>
     <string name="title_rule_unseen">Markeren als ongelezen</string>
@@ -1570,6 +1619,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_rule_keyword">Sleutelwoord</string>
     <string name="title_rule_keyword_add">Voeg toe</string>
     <string name="title_rule_keyword_delete">Verwijder</string>
+    <string name="title_rule_notes">Lokale notities</string>
     <string name="title_rule_move">Verplaatsen</string>
     <string name="title_rule_copy">Kopiëren (label)</string>
     <string name="title_rule_answer">Beantwoorden/doorsturen</string>
@@ -1628,7 +1678,10 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_rule_answer_missing">Sjabloon ontbreekt</string>
     <string name="title_rule_keyword_missing">Sleutelwoord ontbreekt</string>
     <string name="title_rule_automation_hint">Dit zal de intent \'%1$s\' sturen met de extra\'s \'%2$s\'</string>
+    <string name="title_rule_notes_missing">Lokale notities ontbreken</string>
+    <string name="title_rule_url_missing">URL ontbreekt of is ongeldig</string>
     <string name="title_rule_delete_hint">Definitieve verwijdering is onomkeerbaar, dus zorg ervoor dat de voorwaarden van de regel correct zijn!</string>
+    <string name="title_rule_url_hint">U kunt de volgende plaatshouders gebruiken: %1$s</string>
     <string name="title_rule_edit_group">Groep bewerken &#8230;</string>
     <string name="title_rule_execute">Nu uitvoeren</string>
     <string name="title_rule_applied">Beïnvloede berichten: %1$d</string>
@@ -1648,6 +1701,11 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_rule_use_as_alarm">Als alarm gebruiken</string>
     <string name="title_rule_alarm_hint">Dit zal \"niet storen\" regels negeren</string>
     <string name="title_rule_alarm_duration">Maximale alarmduur (seconden)</string>
+    <string name="title_rule_alarm_title">Alarm</string>
+    <string name="title_rule_alarm_stop">Stop</string>
+    <string name="title_code_line_numbers">Regelnummers tonen</string>
+    <string name="title_code_enable_links">Koppelingen inschakelen</string>
+    <string name="title_code_pretty">Mooie afdruk</string>
     <string name="title_legend_section_synchronize">Synchroniseren</string>
     <string name="title_legend_section_folders">Mappen</string>
     <string name="title_legend_section_messages">Berichten</string>
@@ -1773,6 +1831,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_hint_folder_sync">Om het gebruik van de batterij en het netwerk te beperken, worden niet alle mappen en niet alle berichten standaard gesynchroniseerd</string>
     <string name="title_hint_airplane">Vliegtuigmodus is ingeschakeld</string>
     <string name="title_hint_notifications">Geen meldingsrechten</string>
+    <string name="title_hint_notifications_remark">Meldingsrechten zijn vereist voor (account) meldingen. Meldingen voor nieuwe berichten kunnen worden uitgeschakeld in de instellingen.</string>
     <string name="title_hint_battery_optimizations">Batterij-optimalisaties nog steeds ingeschakeld</string>
     <string name="title_hint_support">Als u een vraag of een probleem heeft, gebruik dan het menu ondersteuning om hulp te krijgen</string>
     <string name="title_hint_message_actions">Veeg naar links om weg te gooien; Veeg naar rechts om te archiveren (indien beschikbaar); De veegacties kunnen worden geconfigureerd in de accountinstellingen</string>
@@ -1841,6 +1900,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_no_ask_again">Dit niet meer vragen</string>
     <string name="title_no_ask_for_again">Vraag dit niet opnieuw voor %1$s</string>
     <string name="title_no_body">Geen berichttekst gevonden</string>
+    <string name="title_large_body">Dit bericht is erg groot en dit kan problemen veroorzaken!</string>
     <string name="title_no_charset">Codering niet ondersteund: %1$s</string>
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 uur</string>
@@ -1860,6 +1920,8 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_loading">Laden &#8230;</string>
     <string name="title_fetching_again">Bericht opnieuw van de server ophalen</string>
     <string name="title_go_back">Ga terug</string>
+    <string name="title_global_default">Gebruik globale standaardwaarde</string>
+    <string name="title_not_existing">Dit bericht bestaat niet meer op de mailserver</string>
     <string name="title_conversation_actions">Acties</string>
     <string name="title_conversation_action_reply">Antwoord met: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Kopieer: \'%1$s\'</string>
@@ -1903,6 +1965,9 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_debug_info_issue">Probleembeschrijving (vereist)</string>
     <string name="title_debug_info_issue_remark">Details, zoals de geschatte tijd van het probleem, de exacte foutmelding, enz., zijn belangrijk</string>
     <string name="title_debug_info_contact">Onlangs hadden we contact over dit probleem</string>
+    <string name="title_debug_info_send">Onmiddellijk verzenden</string>
+    <string name="title_debug_info_send_remark">Normaal zal de debug info eerst worden opgeslagen als conceptbericht, zodat u kunt controleren wat er wordt verzonden</string>
+    <string name="title_debug_info_question">Gebruik a.u.b. de info knop als u alleen een vraag heeft</string>
     <string name="title_unexpected_info_remark">Beschrijf alstublieft wat u aan het doen was toen de foutmelding kwam:</string>
     <string name="title_widget_title_count">Aantal nieuwe berichten</string>
     <string name="title_widget_title_list">Berichtenlijst</string>
@@ -1915,6 +1980,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_widget_account_all">Alle</string>
     <string name="title_widget_folder">Map</string>
     <string name="title_widget_folder_unified">Gecombineerde postvak in mappen</string>
+    <string name="title_widget_folder_notifying">Mappen met meldingen voor nieuwe berichten</string>
     <string name="title_widget_unseen">Alleen ongelezen berichten</string>
     <string name="title_widget_flagged">Alleen berichten met een ster</string>
     <string name="title_widget_font_size">Tekstgrootte</string>
@@ -1929,6 +1995,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_widget_refresh">Toon knop voor het verversen van berichten</string>
     <string name="title_widget_compose">Toon knop voor het opstellen van een nieuw bericht</string>
     <string name="title_widget_background">Achtergrondkleur</string>
+    <string name="title_widget_icon">Pictogramkleur</string>
     <string name="title_widget_day_night">Volg donker systeemthema</string>
     <string name="title_compat_dark">Google heeft de donkere modus verwijderd voor Android-versies vóór versie 10</string>
     <!-- Thunderbird -->

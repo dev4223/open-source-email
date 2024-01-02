@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -41,7 +41,6 @@ import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.TXTRecord;
-import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import java.io.IOException;
@@ -49,6 +48,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +82,13 @@ public class DnsHelper {
 
     @NonNull
     static DnsRecord[] lookup(Context context, String name, String type, int timeout) throws UnknownHostException {
+        String filter = null;
+        int colon = type.indexOf(':');
+        if (colon > 0) {
+            filter = type.substring(colon + 1);
+            type = type.substring(0, colon);
+        }
+
         int rtype;
         switch (type) {
             case "ns":
@@ -212,9 +219,13 @@ public class DnsHelper {
                         SRVRecord srv = (SRVRecord) record;
                         result.add(new DnsRecord(srv.getTarget().toString(true), srv.getPort(), srv.getPriority(), srv.getWeight()));
                     } else if (record instanceof TXTRecord) {
+                        StringBuilder sb = new StringBuilder();
                         TXTRecord txt = (TXTRecord) record;
                         for (Object content : txt.getStrings()) {
                             String text = content.toString();
+                            if (filter != null &&
+                                    (TextUtils.isEmpty(text) || !text.toLowerCase(Locale.ROOT).startsWith(filter)))
+                                continue;
                             int i = 0;
                             int slash = text.indexOf('\\', i);
                             while (slash >= 0 && slash + 4 < text.length()) {
@@ -226,11 +237,9 @@ public class DnsHelper {
                                     i += 4;
                                 slash = text.indexOf('\\', i);
                             }
-                            if (result.size() > 0)
-                                result.get(0).response += text;
-                            else
-                                result.add(new DnsRecord(text, 0));
+                            sb.append(text);
                         }
+                        result.add(new DnsRecord(sb.toString(), 0));
                     } else if (record instanceof ARecord) {
                         ARecord a = (ARecord) record;
                         result.add(new DnsRecord(a.getAddress().getHostAddress()));
@@ -245,7 +254,9 @@ public class DnsHelper {
                 record.query = name;
 
             return result.toArray(new DnsRecord[0]);
-        } catch (TextParseException ex) {
+        } catch (Throwable ex) {
+            // TextParseException
+            // Lookup static ctor: RuntimeException("Failed to initialize resolver")
             Log.e(ex);
             return new DnsRecord[0];
         }

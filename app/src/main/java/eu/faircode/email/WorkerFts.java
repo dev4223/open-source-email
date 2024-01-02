@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -81,6 +81,8 @@ public class WorkerFts extends Worker {
                             continue;
                         }
 
+                        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+
                         String text = null;
                         if (message.content) {
                             File file = message.getFile(context);
@@ -89,7 +91,7 @@ public class WorkerFts extends Worker {
 
                         try {
                             sdb.beginTransaction();
-                            Fts4DbHelper.insert(sdb, message, text);
+                            Fts4DbHelper.insert(sdb, message, attachments, text);
                             sdb.setTransactionSuccessful();
                         } catch (SQLiteException ex) {
                             Log.w(ex);

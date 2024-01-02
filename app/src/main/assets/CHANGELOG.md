@@ -1,15 +1,411 @@
 ## Changelog
 
-&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/M66B/FairEmail/blob/master/CHANGELOG.md)
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fraw.githubusercontent.com%2FM66B%2FFairEmail%2Fmaster%2FCHANGELOG.md)
 
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
 
-### [Ubirajara](https://en.wikipedia.org/wiki/Ubirajara_jubatus)
+### [Wintonotitan](https://en.wikipedia.org/wiki/Wintonotitan)
 
-### Next version
+### 1.2146 - 2024-01-02
 
-* Updated [Bouncy Castle](https://www.bouncycastle.org/)
+* Happy New Year!
+* Added *Certificate transparency*, see [the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#faq201)
 * Small improvements and minor bug fixes
+* Updated libraries (Apache Compress, Bugsnag, Bouncy Castle, Jsoup)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2145 - 2023-12-30
+
+* Added Adguard filter list to remove tracking parameters from links, see [the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#faq200)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2144 - 2023-12-27
+
+* Using [Brave browser lists](https://github.com/brave/adblock-lists/tree/master/brave-lists) to filter URLs
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2143 - 2023-12-22
+
+* Fixed searching in single folder
+* Added button to unblock all
+* Added importance to swipe-ask popup menu
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2142 - 2023-12-20
+
+* Fixed performance issues
+* Restored storing attachments on external storage
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2141 - 2023-12-19
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2140 - 2023-12-17
+
+* Fixed sometimes failing biometric authentication
+* Switched to [tinylog](https://tinylog.org/v2/)
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2139 - 2023-12-13
+
+* Enabled TLSv1.3 by default
+* Added option to limit download size also for unmetered connections
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2138 - 2023-12-12
+
+* Fixed *No protocols enabled* error
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2137 - 2023-12-12
+
+* Optimized database for storing many messages
+* Automatically update [SSL provider](https://developer.android.com/privacy-and-security/security-gms-provider)
+* Removed custom trust manager to comply with Play Store policies (Play Store version only)
+* Removed external storage option of attachments to comply with Play Store policies (all versions)
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2136 - 2023-12-07
+
+* Preventing [XML external entity injection](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2135 - 2023-12-04
+
+* Added swipe action to change importance
+* Added group headings for important and unimportant messages
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2134 - 2023-12-02
+
+* Fixed clearing settings values
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2133 - 2023-12-01
+
+* Fixed memory leak
+* Improved [Linked Data](https://json-ld.org/) support (GitHub version only)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2132 - 2023-12-01
+
+* Added basic support for [Linked Data](https://json-ld.org/) (GitHub version only)
+* Added date/time placeholders for keyword rules (see [the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
+* Added option to disable saving revisions for undo/redo
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### [Vallibonavenatrix](https://en.wikipedia.org/wiki/Vallibonavenatrix)
+
+### 1.2131 - 2023-11-27 *
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2130 - 2023-11-25
+
+* Fixed styling of reformatted message view
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2129 - 2023-11-25
+
+* Added optional print margin
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2128 - 2023-11-19
+
+* Restored old behavior of move-to quick action
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2127 - 2023-11-16
+
+* Fixed move / quick action bar
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2126 - 2023-11-15
+
+* Fixed compatibility with Android 5 Lollipop
+* Small improvements and minor bug fixes
+
+### 1.2125 - 2023-11-15
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2124 - 2023-11-14
+
+* Fixed swipe / ask what to do
+* Added moving POP3 messages to IMAP accounts
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2123 - 2023-11-13
+
+* Added integrations-settings tab page
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2122 - 2023-11-11
+
+* Fixed swipe to mark read/unread
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2121 - 2023-11-11
+
+* Added option to disable haptic feedback
+* Fixed swipe to mark read/unread
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2120 - 2023-11-09
+
+* Added removing Gmail and Outlook style signatures (send settings)
+* Reduced database traffic
+* Small improvements and minor bug fixes
+* Updated build tools and libraries
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2119 - 2023-11-06
+
+* Added folder selection for new message count widget
+* Added dark mode, showing colors, check HTML and searching to message source view
+* Added option for ASCII-only notifications (for some smartwatches)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2118 - 2023-11-04
+
+* Added native *View source* (HTML) with syntax highlighting, etc.
+* Added configurable button for *View source*
+* Added resizing of [WebP](https://en.wikipedia.org/wiki/WebP)
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2117 - 2023-11-02
+
+* Improved identity selector
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2116 - 2023-10-30
+
+* Fixed a crash in the JSoup library on Android 7.0 and earlier
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2115 - 2023-10-30
+
+* Added option to disable storing invitations tentatively, see [the FAQ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq186)
+* Fixed time zone of some calendar events
+* Small improvements and minor bug fixes
+* Updated libraries, including [JSoup](https://jsoup.org/news/) and [Material Components](https://github.com/material-components/material-components-android)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2114 - 2023-10-25
+
+* Added tap on title/subtitle to open/switch to inbox
+* Addded option to disable showing recipient for sent messages
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2113 - 2023-10-21
+
+* Added '*More options*' to send dialog box
+* Added option to disable PDF preview (display settings)
+* Added option to suggest local contacts for the current account only (send settings)
+* Android 14: using Material You background color
+* Fixed back navigation in some circumstances
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2112 - 2023-10-16 *
+
+* Small improvements and minor bug fixes
+
+### 1.2111 - 2023-10-16
+
+* Added swipe to delete local contacts
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2110 - 2023-10-14
+
+* Added PDF thumbnail preview (mini gallery)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2109 - 2023-10-14
+
+* Small improvements and minor bug fixes
+
+### 1.2108 - 2023-10-12
+
+* Added [Liberation Sans Narrow](https://github.com/liberationfonts/liberation-sans-narrow) font (advanced display options)
+* Added *$weekday$* placeholder for templates
+* Added option to disabling printing of block quotes lines
+* Added accessibility actions to mark a message read/unread and to trash a conversation
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2107 - 2023-10-04
+
+* Added rule action to execute webhooks
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2106 - 2023-09-27
+
+* Added option to use up/down arrows for next/previous conversation
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2105 - 2023-09-23
+
+* Added advanced identity option for default [sensitivity](https://datatracker.ietf.org/doc/html/rfc4021#section-2.1.55)
+* Ignoring maximum width [media queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2104 - 2023-09-21
+
+* Improved SVG support
+* Small improvements and minor bug fixes
+* Updated libraries
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2103 - 2023-09-18 *
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2102 - 2023-09-16
+
+* Fixed back navigation search
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2101 - 2023-09-15
+
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2100 - 2023-09-14
+
+* Fixed VPN only option
+* Added option for LanguageTool problem description popup
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2099 - 2023-09-13
+
+* Fixed POP3 sync issue
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2098 - 2023-09-12
+
+* Added support for *text/markdown* message parts
+* Added support for *text/x-diff* and *text/x-patch* message parts
+* Small improvements and minor bug fixes
+* Updated libraries
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2097 - 2023-09-02
+
+* Added LanguageTool option to check every sentence
+* Added read/delivery receipt type selection to advanced identity settings
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2096 - 2023-08-31
+
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2095 - 2023-08-26
+
+* Added workaround for opening *audio/x-wav* attachments (not supported by all sound players)
+* Added batch enable/disable downloading of headers only for all child folders
+* Added notification to disable alarm sound initiated by filter rules
+* Improved CSS processing for reformatted message view
+* Restoring conversation thread on rotation changes from/to one/two rows/columns
+* Disabled Android app chooser by default because of a bug in MIUI
+* Fixed decoding of POP3 messages when *Content-Type* is missing due to truncated TOP headers
+* Fixed multi term search with non-alphanumeric characters
+* Fixed deleting of *message/rfc822* attachments (GitHub version only)
+* Fixed option to disable Android photo picker with a workaround
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2094 - 2023-08-14
+
+* Added rule action to add local notes
+* Removed a workaround for an Android issue that caused side effects
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2093 - 2023-08-14
+
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2092 - 2023-08-12
+
+* Replace [address element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/address) by [geo](https://en.wikipedia.org/wiki/Geo_URI_scheme) link
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2091 - 2023-08-05
+
+* Fixed crash
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2090 - 2023-08-04
+
+* Small improvements and minor bug fixes
+* Updated [Bouncy Castle](https://www.bouncycastle.org/)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
 * Updated [translations](https://crowdin.com/project/open-source-email)
 
 ### 1.2089 - 2023-08-01

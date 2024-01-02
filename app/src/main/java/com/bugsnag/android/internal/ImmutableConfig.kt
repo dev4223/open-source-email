@@ -18,12 +18,15 @@ import com.bugsnag.android.EventPayload
 import com.bugsnag.android.Logger
 import com.bugsnag.android.ManifestConfigLoader.Companion.BUILD_UUID
 import com.bugsnag.android.NoopLogger
+import com.bugsnag.android.Session
 import com.bugsnag.android.Telemetry
 import com.bugsnag.android.ThreadSendPolicy
 import com.bugsnag.android.errorApiHeaders
 import com.bugsnag.android.safeUnrollCauses
 import com.bugsnag.android.sessionApiHeaders
 import java.io.File
+import java.util.concurrent.Callable
+import java.util.regex.Pattern
 
 data class ImmutableConfig(
     val apiKey: String,
@@ -31,7 +34,7 @@ data class ImmutableConfig(
     val enabledErrorTypes: ErrorTypes,
     val autoTrackSessions: Boolean,
     val sendThreads: ThreadSendPolicy,
-    val discardClasses: Collection<String>,
+    val discardClasses: Collection<Pattern>,
     val enabledReleaseStages: Collection<String>?,
     val projectPackages: Collection<String>,
     val enabledBreadcrumbTypes: Set<BreadcrumbType>?,
@@ -50,6 +53,7 @@ data class ImmutableConfig(
     val maxPersistedEvents: Int,
     val maxPersistedSessions: Int,
     val maxReportedThreads: Int,
+    val threadCollectionTimeLimitMillis: Long,
     val persistenceDirectory: Lazy<File>,
     val sendLaunchCrashesSynchronously: Boolean,
     val attemptDeliveryOnCrash: Boolean,
@@ -57,7 +61,7 @@ data class ImmutableConfig(
     // results cached here to avoid unnecessary lookups in Client.
     val packageInfo: PackageInfo?,
     val appInfo: ApplicationInfo?,
-    val redactedKeys: Collection<String>
+    val redactedKeys: Collection<Pattern>
 ) {
 
     @JvmName("getErrorApiDeliveryParams")
@@ -65,8 +69,8 @@ data class ImmutableConfig(
         DeliveryParams(endpoints.notify, errorApiHeaders(payload))
 
     @JvmName("getSessionApiDeliveryParams")
-    internal fun getSessionApiDeliveryParams() =
-        DeliveryParams(endpoints.sessions, sessionApiHeaders(apiKey))
+    internal fun getSessionApiDeliveryParams(session: Session) =
+        DeliveryParams(endpoints.sessions, sessionApiHeaders(session.apiKey))
 
     /**
      * Returns whether the given throwable should be discarded
@@ -112,7 +116,11 @@ data class ImmutableConfig(
      */
     @VisibleForTesting
     internal fun shouldDiscardByErrorClass(errorClass: String?): Boolean {
-        return discardClasses.contains(errorClass)
+        return if (!errorClass.isNullOrEmpty()) {
+            discardClasses.any { it.matcher(errorClass.toString()).matches() }
+        } else {
+            false
+        }
     }
 
     /**
@@ -164,6 +172,7 @@ internal fun convertToImmutableConfig(
         maxPersistedEvents = config.maxPersistedEvents,
         maxPersistedSessions = config.maxPersistedSessions,
         maxReportedThreads = config.maxReportedThreads,
+        threadCollectionTimeLimitMillis = config.threadCollectionTimeLimitMillis,
         enabledBreadcrumbTypes = config.enabledBreadcrumbTypes?.toSet(),
         telemetry = config.telemetry.toSet(),
         persistenceDirectory = persistenceDir,
@@ -175,11 +184,34 @@ internal fun convertToImmutableConfig(
     )
 }
 
+private fun validateApiKey(value: String?) {
+    if (isInvalidApiKey(value)) {
+        DebugLogger.w(
+            "Invalid configuration. apiKey should be a 32-character hexademical string, got $value"
+        )
+    }
+}
+
+@VisibleForTesting
+fun isInvalidApiKey(apiKey: String?): Boolean {
+    if (apiKey.isNullOrEmpty()) {
+        throw IllegalArgumentException("No Bugsnag API Key set")
+    }
+    if (apiKey.length != VALID_API_KEY_LEN) {
+        return true
+    }
+    // check whether each character is hexadecimal (either a digit or a-f).
+    // this avoids using a regex to improve startup performance.
+    return !apiKey.all { it.isDigit() || it in 'a'..'f' }
+}
+
 internal fun sanitiseConfiguration(
     appContext: Context,
     configuration: Configuration,
-    connectivity: Connectivity
+    connectivity: Connectivity,
+    backgroundTaskService: BackgroundTaskService
 ): ImmutableConfig {
+    validateApiKey(configuration.apiKey)
     val packageName = appContext.packageName
     val packageManager = appContext.packageManager
     val packageInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
@@ -218,7 +250,7 @@ internal fun sanitiseConfiguration(
     }
 
     // populate buildUUID from manifest
-    val buildUuid = populateBuildUuid(appInfo)
+    val buildUuid = collectBuildUuid(appInfo, backgroundTaskService)
 
     @Suppress("SENSELESS_COMPARISON")
     if (configuration.delivery == null) {
@@ -238,15 +270,34 @@ internal fun sanitiseConfiguration(
     )
 }
 
-private fun populateBuildUuid(appInfo: ApplicationInfo?): String? {
+private fun collectBuildUuid(
+    appInfo: ApplicationInfo?,
+    backgroundTaskService: BackgroundTaskService
+): String? {
     val bundle = appInfo?.metaData
     return when {
         bundle?.containsKey(BUILD_UUID) == true -> {
-            bundle.getString(BUILD_UUID) ?: bundle.getInt(BUILD_UUID).toString()
+            (bundle.getString(BUILD_UUID) ?: bundle.getInt(BUILD_UUID).toString())
+                .takeIf { it.isNotEmpty() }
         }
+
+        appInfo != null -> {
+            try {
+                backgroundTaskService
+                    .submitTask(
+                        TaskType.IO,
+                        Callable { DexBuildIdGenerator.generateBuildId(appInfo) }
+                    )
+                    .get()
+            } catch (e: Exception) {
+                null
+            }
+        }
+
         else -> null
     }
 }
 
 internal const val RELEASE_STAGE_DEVELOPMENT = "development"
 internal const val RELEASE_STAGE_PRODUCTION = "production"
+internal const val VALID_API_KEY_LEN = 32

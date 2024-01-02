@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -41,7 +41,6 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,7 +52,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 import androidx.core.graphics.ColorUtils;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
@@ -191,8 +189,10 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         FragmentManager fm = getSupportFragmentManager();
 
         Fragment bfragment = fm.findFragmentByTag("androidx.biometric.BiometricFragment");
+        if (bfragment == null)
+            bfragment = fm.findFragmentByTag("androidx.biometric.FingerprintDialogFragment");
         if (bfragment != null) {
-            Log.e("Orphan BiometricFragment");
+            Log.e("Orphan fragment tag=" + bfragment.getTag());
             fm.beginTransaction().remove(bfragment).commitNowAllowingStateLoss();
             /*
                 java.lang.RuntimeException: Unable to start activity ComponentInfo{eu.faircode.email/eu.faircode.email.ActivitySetup}: androidx.fragment.app.Fragment$InstantiationException: Unable to instantiate fragment androidx.biometric.FingerprintDialogFragment: could not find Fragment constructor
@@ -566,7 +566,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             if (TextUtils.isEmpty(fname))
                 return uri;
 
-            File dir = Helper.ensureExists(new File(getFilesDir(), "shared"));
+            File dir = Helper.ensureExists(this, "shared");
             File file = new File(dir, fname);
 
             Log.i("Copying shared file to " + file);
@@ -574,9 +574,11 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
             if (is == null)
                 throw new FileNotFoundException(uri.toString());
 
-            Helper.copy(is, new FileOutputStream(file));
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                Helper.copy(is, fos);
+            }
 
-            return FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID, file);
+            return FileProviderEx.getUri(this, BuildConfig.APPLICATION_ID, file);
         } catch (Throwable ex) {
             Log.w(ex);
             return uri;
@@ -820,18 +822,6 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
              */
             return false;
         }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            // Delegate to fragment first
-            if (super.onOptionsItemSelected(item))
-                return true;
-            performBack();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     public void performBack() {

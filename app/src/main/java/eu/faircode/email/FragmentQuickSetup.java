@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
@@ -32,7 +32,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,6 +47,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.text.method.LinkMovementMethodCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 
@@ -69,6 +69,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private ScrollView scroll;
 
     private TextView tvPrivacy;
+    private TextView tvPrivacyApp;
     private EditText etName;
     private EditText etEmail;
     private TextInputLayout tilPassword;
@@ -140,6 +141,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
         // Get controls
         tvPrivacy = view.findViewById(R.id.tvPrivacy);
+        tvPrivacyApp = view.findViewById(R.id.tvPrivacyApp);
         etName = view.findViewById(R.id.etName);
         etEmail = view.findViewById(R.id.etEmail);
         tilPassword = view.findViewById(R.id.tilPassword);
@@ -182,6 +184,14 @@ public class FragmentQuickSetup extends FragmentBase {
             @Override
             public void onClick(View v) {
                 Helper.view(v.getContext(), Uri.parse(PRIVACY_URI), false);
+            }
+        });
+
+        tvPrivacyApp.setPaintFlags(tvPrivacyApp.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        tvPrivacyApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.PRIVACY_URI), false);
             }
         });
 
@@ -273,7 +283,7 @@ public class FragmentQuickSetup extends FragmentBase {
         tvArgument.setVisibility(View.GONE);
         tvErrorHint.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
-        tvInstructions.setMovementMethod(LinkMovementMethod.getInstance());
+        tvInstructions.setMovementMethod(LinkMovementMethodCompat.getInstance());
         btnHelp.setVisibility(View.GONE);
         cbUpdate.setChecked(update);
         cbUpdate.setVisibility(View.GONE);
@@ -578,6 +588,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                                 account.host = provider.imap.host;
                                 account.encryption = aencryption;
+                                account.insecure = BuildConfig.PLAY_STORE_RELEASE;
                                 account.port = provider.imap.port;
                                 account.auth_type = AUTH_TYPE_PASSWORD;
                                 account.user = user;
@@ -632,6 +643,7 @@ public class FragmentQuickSetup extends FragmentBase {
                                 identity.user = user;
                                 identity.password = password;
                                 identity.fingerprint = smtp_fingerprint;
+
                                 identity.use_ip = provider.useip;
                                 identity.synchronize = true;
                                 identity.primary = true;
@@ -642,11 +654,15 @@ public class FragmentQuickSetup extends FragmentBase {
                             } else {
                                 args.putLong("account", update.id);
                                 EntityLog.log(context, "Quick setup update account=" + update.name);
+
                                 db.account().setAccountSynchronize(update.id, true);
                                 db.account().setAccountPassword(update.id, password, AUTH_TYPE_PASSWORD, null);
-                                db.account().setAccountFingerprint(update.id, imap_fingerprint);
+                                db.account().setAccountFingerprint(update.id, imap_fingerprint,
+                                        BuildConfig.PLAY_STORE_RELEASE && !TextUtils.isEmpty(imap_fingerprint));
+
                                 db.identity().setIdentityPassword(update.id, update.user, password, update.auth_type, AUTH_TYPE_PASSWORD, null);
-                                db.identity().setIdentityFingerprint(update.id, smtp_fingerprint);
+                                db.identity().setIdentityFingerprint(update.id, smtp_fingerprint,
+                                        BuildConfig.PLAY_STORE_RELEASE && !TextUtils.isEmpty(smtp_fingerprint));
                             }
 
                             db.setTransactionSuccessful();
@@ -721,7 +737,7 @@ public class FragmentQuickSetup extends FragmentBase {
                     grpManual.setVisibility(View.VISIBLE);
 
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException) {
-                    tvError.setText(ex.getMessage());
+                    tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
                     grpError.setVisibility(View.VISIBLE);
 
                     getMainHandler().post(new Runnable() {

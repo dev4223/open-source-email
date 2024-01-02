@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ClipData;
@@ -207,7 +207,7 @@ public class EditTextMultiAutoComplete extends AppCompatMultiAutoCompleteTextVie
 
     @Override
     protected void replaceText(CharSequence text) {
-        clearComposingText();
+        HtmlHelper.clearComposingText(this);
 
         Editable edit = getText();
         int _end = getSelectionEnd();

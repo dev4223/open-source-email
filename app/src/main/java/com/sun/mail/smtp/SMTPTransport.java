@@ -1313,7 +1313,7 @@ public class SMTPTransport extends Transport {
 
 	    Integer _fd = null;
 	    try {
-			if (eu.faircode.email.BuildConfig.DEBUG)
+			if (eu.faircode.email.BuildConfig.DEBUG && false)
 				_fd = ParcelFileDescriptor.fromSocket(serverSocket).getFd();
 		} catch (Throwable ex) {
 			eu.faircode.email.Log.w(ex);
@@ -2652,6 +2652,10 @@ public class SMTPTransport extends Transport {
 	return extMap == null ? null :
 			extMap.get(ext.toUpperCase(Locale.ENGLISH));
     }
+
+	public Map<String, String> getExtensionParameters() {
+		return extMap;
+	}
 
     /**
      * Does the server we're connected to support the specified

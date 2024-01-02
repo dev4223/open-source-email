@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -216,7 +216,7 @@ class ImageHelper {
 
     static byte[] getHash(String email) {
         try {
-            return MessageDigest.getInstance("MD5").digest(email.getBytes());
+            return MessageDigest.getInstance("SHA256").digest(email.getBytes());
         } catch (NoSuchAlgorithmException ignored) {
             return email.getBytes();
         }
@@ -302,7 +302,8 @@ class ImageHelper {
     }
 
     static Drawable decodeImage(final Context context, final long id, String source, boolean show, int zoom, final float scale, final TextView view) {
-        return decodeImage(context, id, source, 0, 0, false, show, zoom, scale, view);
+        Drawable d = decodeImage(context, id, source, 0, 0, false, show, zoom, scale, view);
+        return animate(context, d);
     }
 
     static Drawable decodeImage(final Context context, final long id, Element img, boolean show, int zoom, final float scale, final TextView view) {
@@ -310,7 +311,8 @@ class ImageHelper {
         Integer w = Helper.parseInt(img.attr("width"));
         Integer h = Helper.parseInt(img.attr("height"));
         boolean tracking = !TextUtils.isEmpty(img.attr("x-tracking"));
-        return decodeImage(context, id, source, w == null ? 0 : w, h == null ? 0 : h, tracking, show, zoom, scale, view);
+        Drawable d = decodeImage(context, id, source, w == null ? 0 : w, h == null ? 0 : h, tracking, show, zoom, scale, view);
+        return animate(context, d);
     }
 
     private static Drawable decodeImage(final Context context, final long id,
@@ -318,6 +320,7 @@ class ImageHelper {
                                         boolean show, int zoom, final float scale, final TextView view) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean inline = prefs.getBoolean("inline_images", false);
+        boolean webp = prefs.getBoolean("webp", true);
 
         final int px = Helper.dp2pixels(context, (zoom + 1) * 24);
         final Resources res = context.getResources();
@@ -343,6 +346,10 @@ class ImageHelper {
                 if (attachment == null) {
                     Log.i("Image not found CID=" + cid);
                     Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_broken_image_24);
+                    d.setBounds(0, 0, px, px);
+                    return d;
+                } else if ("image/webp".equalsIgnoreCase(attachment.type) && !webp) {
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_warning_24);
                     d.setBounds(0, 0, px, px);
                     return d;
                 } else if (!attachment.available) {
@@ -490,7 +497,8 @@ class ImageHelper {
                         try {
                             if (slow)
                                 semaphore.acquire();
-                            d = downloadImage(context, id, source, null);
+                            String mimeType = (source.endsWith(".svg") ? "image/svg+xml" : null);
+                            d = downloadImage(context, id, source, mimeType);
                         } finally {
                             if (slow)
                                 semaphore.release();
@@ -522,10 +530,7 @@ class ImageHelper {
                             lld.setBounds(0, 0, bounds.width(), bounds.height());
                             lld.setLevel(0);
 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                if (d instanceof AnimatedImageDrawable)
-                                    ((AnimatedImageDrawable) d).start();
-                            }
+                            animate(context, d);
 
                             view.setText(view.getText());
 
@@ -645,7 +650,8 @@ class ImageHelper {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
                 try {
-                    return getScaledDrawable(context, file, null, dm.widthPixels);
+                    String mimeType = (source.endsWith(".svg") ? "image/svg+xml" : null);
+                    return getScaledDrawable(context, file, mimeType, dm.widthPixels);
                 } catch (IOException ex) {
                     Log.i(ex);
                     return null;
@@ -680,7 +686,7 @@ class ImageHelper {
                 try (FileOutputStream fos = new FileOutputStream(file)) {
                     Helper.copy(urlConnection.getInputStream(), fos);
                 }
-                return getScaledDrawable(context, file, null, dm.widthPixels);
+                return getScaledDrawable(context, file, mimeType, dm.widthPixels);
             }
 
             bm = getScaledBitmap(
@@ -785,7 +791,7 @@ class ImageHelper {
 
     @NonNull
     static File getCacheFile(Context context, long id, String source, String extension) {
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "images"));
+        File dir = Helper.ensureExists(context, "images");
         return new File(dir, id + "_" + Math.abs(source.hashCode()) + extension);
     }
 
@@ -860,6 +866,23 @@ class ImageHelper {
         }
 
         return bm;
+    }
+
+    static Drawable animate(Context context, Drawable drawable) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+            return drawable;
+
+        if (drawable instanceof AnimatedImageDrawable)
+            try {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean animate_images = prefs.getBoolean("animate_images", true);
+                if (animate_images)
+                    ((AnimatedImageDrawable) drawable).start();
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+        return drawable;
     }
 
     static Matrix getImageRotation(File file) {

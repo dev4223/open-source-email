@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -121,6 +121,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private TextView tvLibravatarPrivacy;
     private SwitchCompat swFavicons;
     private SwitchCompat swFaviconsPartial;
+    private SwitchCompat swFaviconsManifest;
     private TextView tvFaviconsHint;
     private SwitchCompat swGeneratedIcons;
     private SwitchCompat swIdenticons;
@@ -140,6 +141,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swOnlyContact;
     private SwitchCompat swDistinguishContacts;
     private SwitchCompat swShowRecipients;
+    private SwitchCompat swReverseAddresses;
     private Spinner spFontSizeSender;
     private Spinner spSenderEllipsize;
 
@@ -163,6 +165,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swHideAttachments;
     private TextView tvMessageZoom;
     private SeekBar sbMessageZoom;
+    private SwitchCompat swEditorZoom;
     private SwitchCompat swOverviewMode;
 
     private SwitchCompat swContrast;
@@ -179,9 +182,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private TextView tvUnzipHint;
     private SwitchCompat swAttachmentsAlt;
     private SwitchCompat swThumbnails;
+    private SwitchCompat swPdfPreview;
 
     private SwitchCompat swListCount;
     private SwitchCompat swBundledFonts;
+    private SwitchCompat swNarrowFonts;
     private SwitchCompat swParseClasses;
     private SwitchCompat swBackgroundColor;
     private SwitchCompat swTextColor;
@@ -205,20 +210,20 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "hide_toolbar", "nav_options", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
             "threading", "threading_unread", "indentation", "seekbar", "actionbar", "actionbar_swap", "actionbar_color",
             "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
-            "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "generated_icons", "identicons",
+            "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
             "circular", "saturation", "brightness", "threshold",
-            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients",
+            "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients", "reverse_addresses",
             "font_size_sender", "sender_ellipsize",
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background",
             "preview", "preview_italic", "preview_lines", "align_header",
             "addresses", "hide_attachments",
-            "message_zoom", "overview_mode",
+            "message_zoom", "editor_zoom", "overview_mode",
             "hyphenation", "display_font", "contrast", "monospaced_pre",
             "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images", "button_extra",
-            "unzip", "attachments_alt", "thumbnails",
-            "list_count", "bundled_fonts", "parse_classes",
+            "unzip", "attachments_alt", "thumbnails", "pdf_preview",
+            "list_count", "bundled_fonts", "narrow_fonts", "parse_classes",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles",
             "authentication", "authentication_indicator"
     };
@@ -290,6 +295,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         tvLibravatarPrivacy = view.findViewById(R.id.tvLibravatarPrivacy);
         swFavicons = view.findViewById(R.id.swFavicons);
         swFaviconsPartial = view.findViewById(R.id.swFaviconsPartial);
+        swFaviconsManifest = view.findViewById(R.id.swFaviconsManifest);
         tvFaviconsHint = view.findViewById(R.id.tvFaviconsHint);
         swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
         swIdenticons = view.findViewById(R.id.swIdenticons);
@@ -309,6 +315,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swOnlyContact = view.findViewById(R.id.swOnlyContact);
         swDistinguishContacts = view.findViewById(R.id.swDistinguishContacts);
         swShowRecipients = view.findViewById(R.id.swShowRecipients);
+        swReverseAddresses = view.findViewById(R.id.swReverseAddresses);
         spFontSizeSender = view.findViewById(R.id.spFontSizeSender);
         spSenderEllipsize = view.findViewById(R.id.spSenderEllipsize);
 
@@ -331,6 +338,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swHideAttachments = view.findViewById(R.id.swHideAttachments);
         tvMessageZoom = view.findViewById(R.id.tvMessageZoom);
         sbMessageZoom = view.findViewById(R.id.sbMessageZoom);
+        swEditorZoom = view.findViewById(R.id.swEditorZoom);
         swOverviewMode = view.findViewById(R.id.swOverviewMode);
         swContrast = view.findViewById(R.id.swContrast);
         swHyphenation = view.findViewById(R.id.swHyphenation);
@@ -346,9 +354,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         tvUnzipHint = view.findViewById(R.id.tvUnzipHint);
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
         swThumbnails = view.findViewById(R.id.swThumbnails);
+        swPdfPreview = view.findViewById(R.id.swPdfPreview);
 
         swListCount = view.findViewById(R.id.swListCount);
         swBundledFonts = view.findViewById(R.id.swBundledFonts);
+        swNarrowFonts = view.findViewById(R.id.swNarrowFonts);
         swParseClasses = view.findViewById(R.id.swParseClasses);
         swBackgroundColor = view.findViewById(R.id.swBackgroundColor);
         swTextColor = view.findViewById(R.id.swTextColor);
@@ -849,6 +859,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("favicons", checked).apply();
                 swFaviconsPartial.setEnabled(checked);
+                swFaviconsManifest.setEnabled(checked);
                 ContactInfo.clearCache(compoundButton.getContext());
             }
         });
@@ -857,6 +868,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("favicons_partial", checked).apply();
+                ContactInfo.clearCache(compoundButton.getContext());
+            }
+        });
+
+        swFaviconsManifest.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("favicons_manifest", checked).apply();
                 ContactInfo.clearCache(compoundButton.getContext());
             }
         });
@@ -997,6 +1016,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("show_recipients", checked).apply();
+            }
+        });
+
+        swReverseAddresses.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("reverse_addresses", checked).apply();
             }
         });
 
@@ -1176,6 +1202,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        swEditorZoom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("editor_zoom", checked).apply();
+            }
+        });
+
         swOverviewMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1267,7 +1300,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         });
 
         tvUnzipHint.setText(getString(R.string.compressed,
-                TextUtils.join(",", MessageHelper.UNZIP_FORMATS),
+                TextUtils.join(", ", MessageHelper.UNZIP_FORMATS),
                 Integer.toString(MessageHelper.MAX_UNZIP_COUNT),
                 Helper.humanReadableByteCount(MessageHelper.MAX_UNZIP_SIZE)));
 
@@ -1282,6 +1315,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("thumbnails", checked).apply();
+                swPdfPreview.setEnabled(checked);
+            }
+        });
+
+        swPdfPreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("pdf_preview", checked).apply();
             }
         });
 
@@ -1296,6 +1337,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("bundled_fonts", checked).apply();
+                swNarrowFonts.setEnabled(checked);
+            }
+        });
+
+        swNarrowFonts.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("narrow_fonts", checked).apply();
             }
         });
 
@@ -1389,8 +1438,16 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         if ("message_zoom".equals(key))
             return;
 
-        setOptions();
+        getMainHandler().removeCallbacks(update);
+        getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
+
+    private Runnable update = new RunnableEx("display") {
+        @Override
+        protected void delegate() {
+            setOptions();
+        }
+    };
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -1498,6 +1555,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swFavicons.setChecked(prefs.getBoolean("favicons", false));
             swFaviconsPartial.setChecked(prefs.getBoolean("favicons_partial", true));
             swFaviconsPartial.setEnabled(swFavicons.isChecked());
+            swFaviconsManifest.setChecked(prefs.getBoolean("favicons_manifest", false));
+            swFaviconsManifest.setEnabled(swFavicons.isChecked());
             swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
             swIdenticons.setChecked(prefs.getBoolean("identicons", false));
             swIdenticons.setEnabled(swGeneratedIcons.isChecked());
@@ -1524,6 +1583,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swOnlyContact.setChecked(prefs.getBoolean("only_contact", false));
             swDistinguishContacts.setChecked(prefs.getBoolean("distinguish_contacts", false));
             swShowRecipients.setChecked(prefs.getBoolean("show_recipients", false));
+            swReverseAddresses.setChecked(prefs.getBoolean("reverse_addresses", true));
 
             swSubjectTop.setChecked(prefs.getBoolean("subject_top", false));
             swSubjectItalic.setChecked(prefs.getBoolean("subject_italic", true));
@@ -1579,6 +1639,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             if (message_zoom >= 50 && message_zoom <= 250)
                 sbMessageZoom.setProgress(message_zoom - 50);
 
+            swEditorZoom.setChecked(prefs.getBoolean("editor_zoom", true));
             swOverviewMode.setChecked(prefs.getBoolean("overview_mode", false));
 
             swContrast.setChecked(prefs.getBoolean("contrast", false));
@@ -1603,9 +1664,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swUnzip.setChecked(prefs.getBoolean("unzip", !BuildConfig.PLAY_STORE_RELEASE));
             swAttachmentsAlt.setChecked(prefs.getBoolean("attachments_alt", false));
             swThumbnails.setChecked(prefs.getBoolean("thumbnails", true));
+            swPdfPreview.setChecked(prefs.getBoolean("pdf_preview", true));
+            swPdfPreview.setEnabled(swThumbnails.isChecked());
 
             swListCount.setChecked(prefs.getBoolean("list_count", false));
             swBundledFonts.setChecked(prefs.getBoolean("bundled_fonts", true));
+            swNarrowFonts.setChecked(prefs.getBoolean("narrow_fonts", false));
+            swNarrowFonts.setEnabled(swBundledFonts.isChecked());
             swParseClasses.setChecked(prefs.getBoolean("parse_classes", true));
             swBackgroundColor.setChecked(prefs.getBoolean("background_color", false));
             swTextColor.setChecked(prefs.getBoolean("text_color", true));

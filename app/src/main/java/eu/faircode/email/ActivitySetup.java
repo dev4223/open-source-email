@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -120,6 +120,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         view = LayoutInflater.from(this).inflate(R.layout.activity_setup, null);
         setContentView(view);
 
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setCustomView(R.layout.action_bar);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
@@ -208,9 +209,12 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         }, new Callable<Boolean>() {
             @Override
             public Boolean call() {
-                drawerLayout.closeDrawer(drawerContainer);
-                onDebugInfo();
-                return true;
+                if (DebugHelper.isAvailable()) {
+                    drawerLayout.closeDrawer(drawerContainer);
+                    onDebugInfo();
+                    return true;
+                } else
+                    return false;
             }
         }).setExternal(true));
 
@@ -267,13 +271,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 onEditAccount(intent);
             else if ("identities".equals(target) && id > 0)
                 onEditIdentity(intent);
-            else if ("oauth".equals(target)) {
-                FragmentOAuth fragment = new FragmentOAuth();
-                fragment.setArguments(intent.getExtras());
-                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("quick");
-                fragmentTransaction.commit();
-            } else {
+            else if ("gmail".equals(target))
+                onGmail(intent);
+            else if ("oauth".equals(target))
+                onOAuth(intent);
+            else {
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 if ("accounts".equals(target))
                     fragmentTransaction.replace(R.id.content_frame, new FragmentAccounts()).addToBackStack("accounts");
@@ -401,8 +403,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             return true;
 
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_close)
+        if (itemId == R.id.menu_close) {
             onMenuClose();
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -498,11 +502,15 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
             @Override
             protected Long onExecute(Context context, Bundle args) throws IOException, JSONException {
-                return Log.getDebugInfo(context, "setup", R.string.title_debug_info_remark, null, null, args).id;
+                EntityMessage m = DebugHelper.getDebugInfo(context,
+                        "setup", R.string.title_debug_info_remark, null, null, args);
+                return (m == null ? null : m.id);
             }
 
             @Override
             protected void onExecuted(Bundle args, Long id) {
+                if (id == null)
+                    return;
                 startActivity(new Intent(ActivitySetup.this, ActivityCompose.class)
                         .putExtra("action", "edit")
                         .putExtra("id", id));
@@ -510,10 +518,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    ToastEx.makeText(ActivitySetup.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getSupportFragmentManager(), ex);
+                boolean report = !(ex instanceof IllegalArgumentException);
+                Log.unexpectedError(getSupportFragmentManager(), ex, report);
             }
 
         }.execute(this, args, "debug:info");
@@ -553,18 +559,18 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                     boolean der = false;
                     String extension = Helper.getExtension(uri.getLastPathSegment());
-                    Log.i("Extension=" + extension);
-                    if (!"pem".equalsIgnoreCase(extension))
+                    DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
+                    String type = (dfile == null ? null : dfile.getType());
+                    // https://pki-tutorial.readthedocs.io/en/latest/mime.html
+                    if (!"pem".equalsIgnoreCase(extension) &&
+                            !"application/x-pem-file".equals(type))
                         try {
-                            DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
-                            String type = dfile.getType();
-                            Log.i("Type=" + type);
-                            if ("application/octet-stream".equals(type))
+                            if (type != null && type.startsWith("application/"))
                                 der = true;
                         } catch (Throwable ex) {
                             Log.w(ex);
                         }
-                    Log.i("DER=" + der);
+                    Log.i("Extension=" + extension + "type=" + type + " DER=" + der);
 
                     X509Certificate cert;
                     CertificateFactory fact = CertificateFactory.getInstance("X.509");
@@ -600,6 +606,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     }
 
                     return null;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, Void data) {
+                    ToastEx.makeText(ActivitySetup.this, R.string.title_completed, Toast.LENGTH_LONG).show();
                 }
 
                 @Override
@@ -749,7 +760,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         open.setType("*/*");
         if (open.resolveActivity(getPackageManager()) == null)  // system whitelisted
-            ToastEx.makeText(this, R.string.title_no_saf, Toast.LENGTH_LONG).show();
+            Log.unexpectedError(getSupportFragmentManager(),
+                    new IllegalArgumentException(getString(R.string.title_no_saf)), 25);
         else
             startActivityForResult(Helper.getChooser(this, open), REQUEST_IMPORT_CERTIFICATE);
     }

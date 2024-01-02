@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -38,7 +38,6 @@ import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,6 +61,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.text.method.LinkMovementMethodCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
@@ -72,6 +72,7 @@ import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -110,6 +111,7 @@ public class FragmentIdentity extends FragmentBase {
     private EditText etRealm;
     private CheckBox cbUseIp;
     private EditText etEhlo;
+    private ImageButton ibEhlo;
 
     private CheckBox cbSynchronize;
     private CheckBox cbPrimary;
@@ -129,6 +131,8 @@ public class FragmentIdentity extends FragmentBase {
     private TextView tvUriPro;
     private CheckBox cbSignDefault;
     private CheckBox cbEncryptDefault;
+    private Spinner spReceiptType;
+    private Spinner spSensitivity;
     private CheckBox cbUnicode;
     private CheckBox cbOctetMime;
     private EditText etMaxSize;
@@ -214,6 +218,7 @@ public class FragmentIdentity extends FragmentBase {
         etRealm = view.findViewById(R.id.etRealm);
         cbUseIp = view.findViewById(R.id.cbUseIp);
         etEhlo = view.findViewById(R.id.etEhlo);
+        ibEhlo = view.findViewById(R.id.ibEhlo);
 
         cbSynchronize = view.findViewById(R.id.cbSynchronize);
         cbPrimary = view.findViewById(R.id.cbPrimary);
@@ -233,6 +238,8 @@ public class FragmentIdentity extends FragmentBase {
         tvUriPro = view.findViewById(R.id.tvUriPro);
         cbSignDefault = view.findViewById(R.id.cbSignDefault);
         cbEncryptDefault = view.findViewById(R.id.cbEncryptDefault);
+        spReceiptType = view.findViewById(R.id.spReceiptType);
+        spSensitivity = view.findViewById(R.id.spSensitivity);
         cbUnicode = view.findViewById(R.id.cbUnicode);
         cbOctetMime = view.findViewById(R.id.cbOctetMime);
         etMaxSize = view.findViewById(R.id.etMaxSize);
@@ -244,7 +251,7 @@ public class FragmentIdentity extends FragmentBase {
         btnHelp = view.findViewById(R.id.btnHelp);
         btnSupport = view.findViewById(R.id.btnSupport);
         tvInstructions = view.findViewById(R.id.tvInstructions);
-        tvInstructions.setMovementMethod(LinkMovementMethod.getInstance());
+        tvInstructions.setMovementMethod(LinkMovementMethodCompat.getInstance());
 
         pbWait = view.findViewById(R.id.pbWait);
 
@@ -485,6 +492,13 @@ public class FragmentIdentity extends FragmentBase {
             }
         });
 
+        ibEhlo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse("https://dummy.faircode.eu/"), true);
+            }
+        });
+
         cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -509,6 +523,12 @@ public class FragmentIdentity extends FragmentBase {
                 cbSignDefault.setEnabled(!isChecked);
             }
         });
+
+        ArrayList<String> receiptNames = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.receiptNames)));
+        receiptNames.add(0, getString(R.string.title_global_default));
+        ArrayAdapter<String> radapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, receiptNames);
+        radapter.setDropDownViewResource(R.layout.spinner_item1_dropdown);
+        spReceiptType.setAdapter(radapter);
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -546,7 +566,11 @@ public class FragmentIdentity extends FragmentBase {
         Helper.setViewsEnabled(view, false);
         btnAutoConfig.setEnabled(false);
         pbAutoConfig.setVisibility(View.GONE);
-        cbInsecure.setVisibility(View.GONE);
+
+        if (!SSLHelper.customTrustManager()) {
+            Helper.hide(cbInsecure);
+            Helper.hide(tvInsecureRemark);
+        }
 
         btnAdvanced.setVisibility(View.GONE);
 
@@ -684,7 +708,7 @@ public class FragmentIdentity extends FragmentBase {
                         (ex instanceof UnknownHostException ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof IllegalArgumentException))
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
@@ -735,6 +759,8 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("uri", (String) btnUri.getTag());
         args.putBoolean("sign_default", cbSignDefault.isChecked());
         args.putBoolean("encrypt_default", cbEncryptDefault.isChecked());
+        args.putInt("receipt_type", spReceiptType.getSelectedItemPosition() - 1);
+        args.putInt("sensitivity", spSensitivity.getSelectedItemPosition());
         args.putBoolean("unicode", cbUnicode.isChecked());
         args.putBoolean("octetmime", cbOctetMime.isChecked());
         args.putString("max_size", etMaxSize.getText().toString());
@@ -820,6 +846,8 @@ public class FragmentIdentity extends FragmentBase {
                 String uri = args.getString("uri");
                 boolean sign_default = args.getBoolean("sign_default");
                 boolean encrypt_default = args.getBoolean("encrypt_default");
+                Integer receipt_type = args.getInt("receipt_type");
+                int sensitivity = args.getInt("sensitivity");
                 boolean unicode = args.getBoolean("unicode");
                 boolean octetmime = args.getBoolean("octetmime");
                 String max_size = args.getString("max_size");
@@ -909,6 +937,9 @@ public class FragmentIdentity extends FragmentBase {
                 if (TextUtils.isEmpty(signature))
                     signature = null;
 
+                if (receipt_type < 0)
+                    receipt_type = null;
+
                 Long user_max_size = (TextUtils.isEmpty(max_size) ? null : Integer.parseInt(max_size) * 1000 * 1000L);
 
                 DB db = DB.getInstance(context);
@@ -981,6 +1012,10 @@ public class FragmentIdentity extends FragmentBase {
                     if (!Objects.equals(identity.sign_default, sign_default))
                         return true;
                     if (!Objects.equals(identity.encrypt_default, encrypt_default))
+                        return true;
+                    if (!Objects.equals(identity.receipt_type, receipt_type))
+                        return true;
+                    if (!Objects.equals(identity.sensitivity, sensitivity))
                         return true;
                     if (!Objects.equals(identity.unicode, unicode))
                         return true;
@@ -1084,6 +1119,8 @@ public class FragmentIdentity extends FragmentBase {
                     identity.uri = uri;
                     identity.sign_default = sign_default;
                     identity.encrypt_default = encrypt_default;
+                    identity.receipt_type = receipt_type;
+                    identity.sensitivity = sensitivity;
                     identity.unicode = unicode;
                     identity.octetmime = octetmime;
                     identity.sent_folder = null;
@@ -1130,7 +1167,7 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
                             .setGestureInsetBottomIgnored(true).show();
                 else
                     showError(ex);
@@ -1187,7 +1224,7 @@ public class FragmentIdentity extends FragmentBase {
         outState.putInt("fair:auth", auth);
         outState.putString("fair:authprovider", provider);
         outState.putString("fair:html", signature);
-        outState.putString("fair:uri", (String) btnUri.getTag());
+        outState.putString("fair:uri", btnUri == null ? null : (String) btnUri.getTag());
         super.onSaveInstanceState(outState);
     }
 
@@ -1271,6 +1308,8 @@ public class FragmentIdentity extends FragmentBase {
                     etInternal.setText(identity == null ? null : identity.internal);
                     btnUri.setTag(identity == null ? null : identity.uri);
                     tvUriInfo.setText(identity == null ? null : getUriInfo(identity.uri));
+                    spReceiptType.setSelection(identity == null || identity.receipt_type == null ? 0 : identity.receipt_type + 1);
+                    spSensitivity.setSelection(identity == null ? 0 : identity.sensitivity);
                     cbSignDefault.setChecked(identity != null && identity.sign_default);
                     cbEncryptDefault.setChecked(identity != null && identity.encrypt_default);
                     cbUnicode.setChecked(identity != null && identity.unicode);
@@ -1423,7 +1462,11 @@ public class FragmentIdentity extends FragmentBase {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_delete) {
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onSave(true);
+            return true;
+        } else if (itemId == R.id.menu_delete) {
             onMenuDelete();
             return true;
         }

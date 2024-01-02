@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -168,6 +168,10 @@ public class DeepL {
                 }
             });
 
+            if (BuildConfig.DEBUG && TextHelper.canTransliterate())
+                languages.add(0, new Language(context.getString(R.string.title_advanced_notify_transliterate),
+                        "transliterate", false, null, true, 0));
+
             return languages;
         } catch (Throwable ex) {
             Log.e(ex);
@@ -193,6 +197,13 @@ public class DeepL {
     }
 
     public static Translation translate(CharSequence text, boolean html, String target, boolean formality, Context context) throws IOException, JSONException {
+        if ("transliterate".equals(target)) {
+            Locale detected = TextHelper.detectLanguage(context, text.toString());
+            String transliterated = TextHelper.transliterate(context, text.toString());
+            String language = Locale.getDefault().toLanguageTag();
+            return new Translation(detected == null ? language : detected.toLanguageTag(), language, transliterated);
+        }
+
         if (!ConnectionHelper.getNetworkState(context).isConnected())
             throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
@@ -336,7 +347,7 @@ public class DeepL {
     }
 
     private static String getBaseUri(String key) {
-        String domain = (key.endsWith(":fx") ? "api-free.deepl.com" : "api.deepl.com");
+        String domain = (key != null && key.endsWith(":fx") ? "api-free.deepl.com" : "api.deepl.com");
         return "https://" + domain + "/v2/";
     }
 
@@ -367,6 +378,15 @@ public class DeepL {
         public String detected_language;
         public String target_language;
         public CharSequence translated_text;
+
+        Translation() {
+        }
+
+        Translation(String detected, String target, CharSequence text) {
+            this.detected_language = detected;
+            this.target_language = target;
+            this.translated_text = text;
+        }
     }
 
     public static class FragmentDialogDeepL extends FragmentDialogBase {
@@ -379,6 +399,7 @@ public class DeepL {
             boolean formal = prefs.getBoolean("deepl_formal", true);
             boolean small = prefs.getBoolean("deepl_small", false);
             boolean replace = prefs.getBoolean("deepl_replace", false);
+            boolean highlight = prefs.getBoolean("deepl_highlight", true);
             boolean html = prefs.getBoolean("deepl_html", false);
             int subscription = prefs.getInt("deepl_subscription", BuildConfig.DEBUG ? 17 : 0);
 
@@ -389,6 +410,7 @@ public class DeepL {
             final TextView tvFormal = view.findViewById(R.id.tvFormal);
             final CheckBox cbSmall = view.findViewById(R.id.cbSmall);
             final CheckBox cbReplace = view.findViewById(R.id.cbReplace);
+            final CheckBox cbHighlight = view.findViewById(R.id.cbHighlight);
             final CheckBox cbHtml = view.findViewById(R.id.cbHtml);
             final TextView tvUsage = view.findViewById(R.id.tvUsage);
             final TextView tvPrivacy = view.findViewById(R.id.tvPrivacy);
@@ -396,7 +418,7 @@ public class DeepL {
             ibInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Helper.viewFAQ(v.getContext(), 167, true);
+                    Helper.viewFAQ(v.getContext(), 167);
                 }
             });
 
@@ -439,6 +461,7 @@ public class DeepL {
             cbSmall.setChecked(small);
             cbReplace.setChecked(replace);
             cbReplace.setEnabled(!small);
+            cbHighlight.setChecked(highlight);
             cbHtml.setChecked(html);
 
             tvUsage.setVisibility(View.GONE);
@@ -502,6 +525,7 @@ public class DeepL {
                             editor.putBoolean("deepl_formal", cbFormal.isChecked());
                             editor.putBoolean("deepl_small", cbSmall.isChecked());
                             editor.putBoolean("deepl_replace", cbReplace.isChecked());
+                            editor.putBoolean("deepl_highlight", cbHighlight.isChecked());
                             editor.putBoolean("deepl_html", cbHtml.isChecked());
                             editor.apply();
                         }

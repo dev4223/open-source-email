@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.accounts.AccountsException;
@@ -27,7 +27,6 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.net.TransportInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -37,7 +36,9 @@ import androidx.preference.PreferenceManager;
 
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.FolderClosedIOException;
+import com.sun.mail.util.LineInputStream;
 
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -47,6 +48,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
@@ -299,48 +306,52 @@ public class ConnectionHelper {
         Log.i("isMetered: active caps=" + caps);
 
         if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+            // Active network is not a VPN
+
             if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
                 Log.i("isMetered: no internet");
                 return null;
             }
+
             boolean captive = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
             if ((require_validated || (require_validated_captive && captive)) &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                     !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
                 Log.i("isMetered: not validated captive=" + captive);
                 return null;
             }
-        }
 
-        if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)) {
-            Log.i("isMetered: active restricted");
-            return null;
-        }
+            if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)) {
+                Log.i("isMetered: active restricted");
+                return null;
+            }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-                !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOREGROUND)) {
-            Log.i("isMetered: active background");
-            return null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                    !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOREGROUND)) {
+                Log.i("isMetered: active background");
+                return null;
+            }
         }
 
         if (vpn_only) {
             boolean vpn = vpnActive(context);
-            Log.i("VPN only vpn=" + vpn);
+            Log.i("isMetered: VPN only vpn=" + vpn);
             if (!vpn)
                 return null;
         }
 
-        if (standalone_vpn ||
-                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
             // NET_CAPABILITY_NOT_METERED is unreliable on older Android versions
             boolean metered = cm.isActiveNetworkMetered();
             Log.i("isMetered: active not VPN metered=" + metered);
             return metered;
         }
 
+        // Active network is a VPN
+
         Network[] networks = cm.getAllNetworks();
-        if (networks != null && networks.length == 1) {
-            // Standalone VPN
+        if (standalone_vpn && networks != null && networks.length == 1) {
+            // Internet not checked/validated
+            // Used for USB/Ethernet internet connection
             boolean metered = cm.isActiveNetworkMetered();
             Log.i("isMetered: active VPN metered=" + metered);
             return metered;
@@ -358,8 +369,20 @@ public class ConnectionHelper {
 
             Log.i("isMetered: underlying caps=" + caps);
 
+            if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                Log.i("isMetered: underlying VPN");
+                continue;
+            }
+
             if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
                 Log.i("isMetered: underlying no internet");
+                continue;
+            }
+
+            boolean captive = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
+            if ((require_validated || (require_validated_captive && captive)) &&
+                    !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                Log.i("isMetered: underlying not validated captive=" + captive);
                 continue;
             }
 
@@ -374,24 +397,19 @@ public class ConnectionHelper {
                 continue;
             }
 
-            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                Log.i("isMetered: underlying VPN transport");
-                continue;
-            }
+            underlying = true;
+            Log.i("isMetered: underlying is connected");
 
-            if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                underlying = true;
-                Log.i("isMetered: underlying is connected");
-
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
-                    Log.i("isMetered: underlying is unmetered");
-                    return false;
-                }
+            if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
+                Log.i("isMetered: underlying is unmetered");
+                return false;
             }
         }
 
-        if (!underlying)
+        if (!underlying) {
+            Log.i("isMetered: no underlying network");
             return null;
+        }
 
         // Assume metered
         Log.i("isMetered: underlying assume metered");
@@ -421,6 +439,36 @@ public class ConnectionHelper {
         }
 
         return null;
+    }
+
+    static Boolean isPrivateDnsActive(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return null;
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+        if (cm == null)
+            return null;
+        Network active = cm.getActiveNetwork();
+        if (active == null)
+            return null;
+        LinkProperties props = cm.getLinkProperties(active);
+        if (props == null)
+            return null;
+        return props.isPrivateDnsActive();
+    }
+
+    static String getPrivateDnsServerName(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return null;
+        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+        if (cm == null)
+            return null;
+        Network active = cm.getActiveNetwork();
+        if (active == null)
+            return null;
+        LinkProperties props = cm.getLinkProperties(active);
+        if (props == null)
+            return null;
+        return props.getPrivateDnsServerName();
     }
 
     static boolean isIoError(Throwable ex) {
@@ -522,6 +570,10 @@ public class ConnectionHelper {
         ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
         if (cm == null)
             return false;
+
+        // The active network doesn't necessarily have VPN transport
+        //   active=... caps=[ Transports: WIFI Capabilities: ...&NOT_VPN&...
+        //   network=... caps=[ Transports: WIFI|VPN Capabilities: ...
 
         try {
             for (Network network : cm.getAllNetworks()) {
@@ -698,8 +750,10 @@ public class ConnectionHelper {
     }
 
     static HttpURLConnection openConnectionUnsafe(Context context, URL url, int ctimeout, int rtimeout) throws IOException {
+        // https://support.google.com/faqs/answer/7188426
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean open_safe = prefs.getBoolean("open_safe", false);
+        boolean http_redirect = prefs.getBoolean("http_redirect", true);
 
         int redirects = 0;
         while (true) {
@@ -729,7 +783,7 @@ public class ConnectionHelper {
             try {
                 int status = urlConnection.getResponseCode();
 
-                if (!open_safe &&
+                if (http_redirect &&
                         (status == HttpURLConnection.HTTP_MOVED_PERM ||
                                 status == HttpURLConnection.HTTP_MOVED_TEMP ||
                                 status == HttpURLConnection.HTTP_SEE_OTHER ||
@@ -789,5 +843,131 @@ public class ConnectionHelper {
             Log.w(ex);
             return null;
         }
+    }
+
+    static SSLSocket starttls(Socket socket, String host, int port, Context context) throws IOException {
+        String response;
+        String command;
+        boolean has = false;
+
+        LineInputStream lis =
+                new LineInputStream(
+                        new BufferedInputStream(
+                                socket.getInputStream()));
+
+        if (port == 587) {
+            do {
+                response = lis.readLine();
+                if (response != null)
+                    EntityLog.log(context, EntityLog.Type.Protocol,
+                            socket.getRemoteSocketAddress() + " <" + response);
+            } while (response != null && !response.startsWith("220 "));
+
+            command = "EHLO " + EmailService.getDefaultEhlo() + "\n";
+            EntityLog.log(context, socket.getRemoteSocketAddress() + " >" + command);
+            socket.getOutputStream().write(command.getBytes());
+
+            do {
+                response = lis.readLine();
+                if (response != null) {
+                    EntityLog.log(context, EntityLog.Type.Protocol,
+                            socket.getRemoteSocketAddress() + " <" + response);
+                    if (response.contains("STARTTLS"))
+                        has = true;
+                }
+            } while (response != null &&
+                    response.length() >= 4 && response.charAt(3) == '-');
+
+            if (has) {
+                command = "STARTTLS\n";
+                EntityLog.log(context, EntityLog.Type.Protocol,
+                        socket.getRemoteSocketAddress() + " >" + command);
+                socket.getOutputStream().write(command.getBytes());
+            }
+        } else if (port == 143) {
+            do {
+                response = lis.readLine();
+                if (response != null) {
+                    EntityLog.log(context, EntityLog.Type.Protocol,
+                            socket.getRemoteSocketAddress() + " <" + response);
+                    if (response.contains("STARTTLS"))
+                        has = true;
+                }
+            } while (response != null &&
+                    !response.startsWith("* OK"));
+
+            if (has) {
+                command = "A001 STARTTLS\n";
+                EntityLog.log(context, EntityLog.Type.Protocol,
+                        socket.getRemoteSocketAddress() + " >" + command);
+                socket.getOutputStream().write(command.getBytes());
+            }
+        }
+
+        if (has) {
+            do {
+                response = lis.readLine();
+                if (response != null)
+                    EntityLog.log(context, EntityLog.Type.Protocol,
+                            socket.getRemoteSocketAddress() + " <" + response);
+            } while (response != null &&
+                    !(response.startsWith("A001 OK") || response.startsWith("220 ")));
+
+            SSLSocketFactory sslFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            return (SSLSocket) sslFactory.createSocket(socket, host, port, false);
+        } else
+            throw new SocketException("No STARTTLS");
+    }
+
+    static void signOff(Socket socket, int port, Context context) {
+        try {
+            String command = (port == 465 || port == 587 ? "QUIT" : "A002 LOGOUT");
+
+            EntityLog.log(context, EntityLog.Type.Protocol,
+                    socket.getRemoteSocketAddress() + " >" + command);
+            socket.getOutputStream().write((command + "\n").getBytes());
+
+            LineInputStream lis =
+                    new LineInputStream(
+                            new BufferedInputStream(
+                                    socket.getInputStream()));
+            String response;
+            do {
+                response = lis.readLine();
+                if (response != null)
+                    EntityLog.log(context, EntityLog.Type.Protocol,
+                            socket.getRemoteSocketAddress() + " <" + response);
+            } while (response != null);
+        } catch (IOException ex) {
+            Log.w(ex);
+        }
+    }
+
+    static void setupProxy(Context context) {
+        if (!BuildConfig.DEBUG)
+            return;
+
+        // https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html
+        ProxySelector.setDefault(new ProxySelector() {
+            @Override
+            public List<Proxy> select(URI uri) {
+                // new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("", 0));
+                Log.i("PROXY uri=" + uri);
+                return Arrays.asList(Proxy.NO_PROXY);
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ex) {
+                Log.e("PROXY uri=" + uri + " sa=" + sa, ex);
+            }
+        });
+    }
+
+    public static Socket getSocket(String host, int port) {
+        if (BuildConfig.DEBUG) {
+            Proxy proxy = ProxySelector.getDefault().select(URI.create("socket://" + host + ":" + port)).get(0);
+            return new Socket(proxy);
+        } else
+            return new Socket();
     }
 }

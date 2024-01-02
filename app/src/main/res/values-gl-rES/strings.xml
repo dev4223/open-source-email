@@ -625,7 +625,6 @@
     <string name="title_advanced_manage_keys_hint">Isto abrirá os axustes de seguridade de Android        As chaves e os certificados atópanse normalmente baixo Avanzado - Cifrado e credenciais.
     </string>
     <string name="title_advanced_power_menu">Engadir accións ao menú de enerxía de Android</string>
-    <string name="title_advanced_external_search">Permitir que outras aplicacións poidan buscar nas mensaxes</string>
     <string name="title_advanced_sort_answers">Ordenar os padróns por frecuencia de uso</string>
     <string name="title_advanced_shortcuts">Amosar os contactos frecuentes no menú de compartir de Android</string>
     <string name="title_advanced_fts">Crear o índice de busca</string>
@@ -989,6 +988,7 @@
     <string name="title_importance_low">Baixa</string>
     <string name="title_importance_normal">Normal</string>
     <string name="title_importance_high">Alta</string>
+    <string name="title_important">Importante</string>
     <string name="title_search_in_text">Procurar no texto &#8230;</string>
     <string name="title_forward">Reenviar</string>
     <string name="title_resend">Reenviar</string>
@@ -1006,7 +1006,6 @@
     <string name="title_print_images">Imprimir imaxes</string>
     <string name="title_print_images_remark">As descargas de imaxes levan algún tempo</string>
     <string name="title_show_headers">Mostrar cabeceiras</string>
-    <string name="title_share_as_html">Compartir como HTML</string>
     <string name="title_raw_save">Gardar a mensaxe en cru (raw)</string>
     <string name="title_raw_send">Enviar como anexo</string>
     <string name="title_raw_send_message">Mensaxe</string>

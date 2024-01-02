@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
@@ -320,56 +320,73 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
 
         @Override
         public void onClick(View view) {
-            if (view.getId() == R.id.btnHelp)
-                Helper.viewFAQ(context, 22);
-            else {
+            if (view.getId() == R.id.btnHelp) {
                 int pos = getAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION)
-                    return;
-
-                TupleAccountEx account = items.get(pos);
-                if (account.tbd != null)
-                    return;
-
-                if (view.getId() == R.id.ibInbox) {
-                    Bundle args = new Bundle();
-                    args.putLong("id", account.id);
-
-                    new SimpleTask<EntityFolder>() {
-                        @Override
-                        protected EntityFolder onExecute(Context context, Bundle args) {
-                            long id = args.getLong("id");
-
-                            DB db = DB.getInstance(context);
-                            return db.folder().getFolderByType(id, EntityFolder.INBOX);
-                        }
-
-                        @Override
-                        protected void onExecuted(Bundle args, EntityFolder inbox) {
-                            if (inbox == null)
-                                return;
-
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                            lbm.sendBroadcast(
-                                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                            .putExtra("account", inbox.account)
-                                            .putExtra("folder", inbox.id)
-                                            .putExtra("type", inbox.type));
-
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                        }
-                    }.execute(context, owner, args, "account:inbox");
-                } else {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                    lbm.sendBroadcast(
-                            new Intent(settings ? ActivitySetup.ACTION_EDIT_ACCOUNT : ActivityView.ACTION_VIEW_FOLDERS)
-                                    .putExtra("id", account.id)
-                                    .putExtra("protocol", account.protocol));
+                TupleAccountEx account = (pos == RecyclerView.NO_POSITION ? null : items.get(pos));
+                if (account == null)
+                    Helper.viewFAQ(context, 22);
+                else {
+                    Intent intent = new Intent(context, ActivityError.class);
+                    intent.putExtra("title", "Test");
+                    intent.putExtra("message", account.error);
+                    intent.putExtra("provider", account.provider);
+                    intent.putExtra("account", account.id);
+                    intent.putExtra("protocol", account.protocol);
+                    intent.putExtra("auth_type", account.auth_type);
+                    intent.putExtra("personal", "personal");
+                    intent.putExtra("address", "address");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
                 }
+                return;
+            }
+
+            int pos = getAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION)
+                return;
+
+            TupleAccountEx account = items.get(pos);
+            if (account.tbd != null)
+                return;
+
+            if (view.getId() == R.id.ibInbox) {
+                Bundle args = new Bundle();
+                args.putLong("id", account.id);
+
+                new SimpleTask<EntityFolder>() {
+                    @Override
+                    protected EntityFolder onExecute(Context context, Bundle args) {
+                        long id = args.getLong("id");
+
+                        DB db = DB.getInstance(context);
+                        return db.folder().getFolderByType(id, EntityFolder.INBOX);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityFolder inbox) {
+                        if (inbox == null)
+                            return;
+
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                        lbm.sendBroadcast(
+                                new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                        .putExtra("account", inbox.account)
+                                        .putExtra("folder", inbox.id)
+                                        .putExtra("type", inbox.type));
+
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    }
+                }.execute(context, owner, args, "account:inbox");
+            } else {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                lbm.sendBroadcast(
+                        new Intent(settings ? ActivitySetup.ACTION_EDIT_ACCOUNT : ActivityView.ACTION_VIEW_FOLDERS)
+                                .putExtra("id", account.id)
+                                .putExtra("protocol", account.protocol));
             }
         }
 
@@ -391,9 +408,12 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
             popupMenu.getMenu().add(Menu.NONE, 0, order++, ss).setEnabled(false);
 
-            if (settings)
+            if (settings) {
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_enabled, order++, R.string.title_enabled)
                         .setCheckable(true).setChecked(account.synchronize);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_account_ondemand, order++, R.string.title_account_ondemand)
+                        .setCheckable(true).setChecked(account.ondemand);
+            }
             popupMenu.getMenu().add(Menu.NONE, R.string.title_primary, order++, R.string.title_primary)
                     .setCheckable(true).setChecked(account.primary);
 
@@ -420,8 +440,10 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_log, order++, R.string.title_log);
             }
 
-            if (debug)
+            if (debug || BuildConfig.DEBUG) {
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_reset, order++, R.string.title_reset);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_oauth_authorize, order++, R.string.title_setup_oauth_authorize);
+            }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -429,6 +451,9 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                     int itemId = item.getItemId();
                     if (itemId == R.string.title_enabled) {
                         onActionSync(!item.isChecked());
+                        return true;
+                    } else if (itemId == R.string.title_account_ondemand) {
+                        onActionOnDemand(!item.isChecked());
                         return true;
                     } else if (itemId == R.string.title_primary) {
                         onActionPrimary(!item.isChecked());
@@ -459,6 +484,9 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                         return true;
                     } else if (itemId == R.string.title_reset) {
                         onActionReset();
+                        return true;
+                    } else if (itemId == R.string.title_setup_oauth_authorize) {
+                        onActionAuthorize();
                         return true;
                     }
                     return false;
@@ -502,6 +530,38 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                             Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "account:enable");
+                }
+
+                private void onActionOnDemand(boolean enable) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", account.id);
+                    args.putBoolean("enable", enable);
+
+                    new SimpleTask<Boolean>() {
+                        @Override
+                        protected Boolean onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+                            boolean enable = args.getBoolean("enable");
+
+                            DB db = DB.getInstance(context);
+                            try {
+                                db.beginTransaction();
+
+                                db.account().setAccountOnDemand(id, enable);
+
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
+
+                            return enable;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "account:ondemand");
                 }
 
                 private void onActionPrimary(boolean primary) {
@@ -682,6 +742,20 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                             Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "account:reset");
+                }
+
+                private void onActionAuthorize() {
+                    Intent intent = new Intent(context, ActivityError.class);
+                    intent.putExtra("title", "Test");
+                    intent.putExtra("message", account.error);
+                    intent.putExtra("provider", account.provider);
+                    intent.putExtra("account", account.id);
+                    intent.putExtra("protocol", account.protocol);
+                    intent.putExtra("auth_type", account.auth_type);
+                    intent.putExtra("personal", "personal");
+                    intent.putExtra("address", "address");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
                 }
 
                 private void onDelete() {

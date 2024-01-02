@@ -608,7 +608,6 @@
         Ključevi i certifikati mogu se pronaći pod Napredno - Šifriranje i vjerodajnice.
     </string>
     <string name="title_advanced_power_menu">Dodaj radnje u Androidov izbornik napajanja</string>
-    <string name="title_advanced_external_search">Dopusti drugim aplikacijama da pretražuju u porukama</string>
     <string name="title_advanced_sort_answers">Razvrstaj predloške odgovora prema učestalosti korištenja</string>
     <string name="title_advanced_shortcuts">Prikaži često korištene kontakte u Androidovom izborniku za dijeljenje</string>
     <string name="title_advanced_fts">Gradi registar pretrage</string>
@@ -979,6 +978,7 @@
     <string name="title_importance_low">Nizak</string>
     <string name="title_importance_normal">Normalno</string>
     <string name="title_importance_high">Visoko</string>
+    <string name="title_important">Važno</string>
     <string name="title_search_in_text">Traži u tekstu &#8230;</string>
     <string name="title_forward">Naprijed</string>
     <string name="title_resend">Ponovno pošalji</string>
@@ -996,7 +996,6 @@
     <string name="title_print_images">Ispis slika</string>
     <string name="title_print_images_remark">Preuzimanje slika može malo potrajati</string>
     <string name="title_show_headers">Pokaži zaglavlje</string>
-    <string name="title_share_as_html">Podijeli kao HTML</string>
     <string name="title_raw_save">Spremi sirovu poruku</string>
     <string name="title_raw_send">Pošalji kao prilog</string>
     <string name="title_raw_send_message">Poruka</string>

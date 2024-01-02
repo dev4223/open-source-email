@@ -16,11 +16,12 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -49,6 +50,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +61,7 @@ import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.textfield.TextInputLayout;
@@ -284,6 +287,15 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                 "cloud_activated".equals(key) ||
                 "cloud_busy".equals(key) ||
                 "cloud_last_sync".equals(key)) {
+            getMainHandler().removeCallbacks(update);
+            getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
+        }
+    }
+
+    private Runnable update = new RunnableEx("backup") {
+        @Override
+        protected void delegate() {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             String user = prefs.getString("cloud_user", null);
             String password = prefs.getString("cloud_password", null);
             boolean auth = !(TextUtils.isEmpty(user) || TextUtils.isEmpty(password));
@@ -300,8 +312,9 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
             grpLogin.setVisibility(auth ? View.GONE : View.VISIBLE);
             grpActivate.setVisibility(auth && !activated && !busy ? View.VISIBLE : View.GONE);
             grpLogout.setVisibility(auth ? View.VISIBLE : View.GONE);
+
         }
-    }
+    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -623,6 +636,8 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                         (ex instanceof IllegalArgumentException ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof SecurityException);
+                if (ex instanceof SecurityException)
+                    ex = new Throwable("No write permission has been granted by the file selector", ex);
                 Log.unexpectedError(getParentFragmentManager(), ex, !expected);
             }
         }.execute(this, args, "setup:export");
@@ -642,6 +657,9 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                     if ("k9s".equals(ext)) {
                         handleK9Import(uri);
                         return;
+                    } else if ("mobileconfig".equals(ext)) {
+                        handleAppleImport(uri);
+                        return;
                     }
                 }
             } catch (Throwable ex) {
@@ -651,6 +669,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
         final int colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
 
         View dview = LayoutInflater.from(context).inflate(R.layout.dialog_import_progress, null);
+        ProgressBar pbWait = dview.findViewById(R.id.pbWait);
         TextView tvLog = dview.findViewById(R.id.tvLog);
         tvLog.setText(null);
 
@@ -659,6 +678,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(dview)
                 .setPositiveButton(android.R.string.ok, null)
+                .setCancelable(false)
                 .setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialogInterface) {
@@ -673,7 +693,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                                 editor.putString(key, (String) value);
                         }
 
-                        editor.apply();
+                        editor.commit();
                     }
                 })
                 .show();
@@ -698,6 +718,11 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
             private SpannableStringBuilder ssb = new SpannableStringBuilderEx();
 
             @Override
+            protected void onPreExecute(Bundle args) {
+                pbWait.setVisibility(View.VISIBLE);
+            }
+
+            @Override
             protected void onProgress(CharSequence status, Bundle data) {
                 ssb.append(status).append("\n");
                 tvLog.setText(ssb);
@@ -705,6 +730,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
 
             @Override
             protected void onPostExecute(Bundle args) {
+                pbWait.setVisibility(View.GONE);
                 ok.setEnabled(true);
             }
 
@@ -729,6 +755,9 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                         " settings=" + import_settings);
 
                 NoStreamException.check(uri, context);
+
+                ServiceSynchronize.stop(context);
+                ServiceSend.stop(context);
 
                 StringBuilder data = new StringBuilder();
                 Log.i("Reading URI=" + uri);
@@ -1128,13 +1157,18 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                                 continue;
 
+                            if ("tcp_keep_alive".equals(key))
+                                continue;
+
                             // Prevent restart
                             if ("secure".equals(key) ||
                                     "load_emoji".equals(key) ||
                                     "shortcuts".equals(key) ||
                                     "language".equals(key) ||
-                                    "wal".equals(key))
+                                    "wal".equals(key)) {
+                                postProgress("Skipping " + key + "=" + jsetting.get("value"));
                                 continue;
+                            }
 
                             if ("theme".equals(key) || "beige".equals(key)) {
                                 defer.put(key, jsetting.get("value"));
@@ -1142,6 +1176,8 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                             }
 
                             if (key != null && key.startsWith("widget."))
+                                continue;
+                            if (key != null && key.startsWith("unset."))
                                 continue;
 
                             if ("external_search".equals(key)) {
@@ -1175,6 +1211,8 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                                 case "float":
                                     if (value instanceof Double)
                                         editor.putFloat(key, ((Double) value).floatValue());
+                                    else if (value instanceof Integer)
+                                        editor.putFloat(key, ((Integer) value).floatValue());
                                     else
                                         editor.putFloat(key, (Float) value);
                                     break;
@@ -1193,7 +1231,9 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                                             editor.putInt(key, i);
                                     } else if (value instanceof Long)
                                         editor.putLong(key, (Long) value);
-                                    else if (value instanceof Float || value instanceof Double)
+                                    else if (value instanceof Double)
+                                        editor.putFloat(key, ((Double) value).floatValue());
+                                    else if (value instanceof Float)
                                         editor.putFloat(key, (Float) value);
                                     else if (value instanceof String)
                                         editor.putString(key, (String) value);
@@ -1239,7 +1279,6 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                     db.endTransaction();
                 }
 
-                ServiceSynchronize.eval(context, "import");
                 Log.i("Imported data");
 
                 SpannableStringBuilder ssb = new SpannableStringBuilderEx();
@@ -1250,10 +1289,18 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
             }
 
             @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ServiceSynchronize.eval(context, "import");
+            }
+
+            @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof NoStreamException)
                     ((NoStreamException) ex).report(getActivity());
                 else {
+                    if (ex instanceof SecurityException)
+                        ex = new Throwable("No read permission has been granted by the file selector", ex);
+
                     SpannableStringBuilder ssb = new SpannableStringBuilderEx();
                     if (ex.getCause() instanceof BadPaddingException /* GCM: AEADBadTagException */)
                         ssb.append(getString(R.string.title_setup_password_invalid));
@@ -1264,7 +1311,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                         ssb.setSpan(new ForegroundColorSpan(colorWarning), 0, ssb.length(), 0);
                         ssb.append("\n\n");
                     }
-                    ssb.append(ex.toString());
+                    ssb.append(new ThrowableWrapper(ex).toSafeString());
                     onProgress(ssb, null);
                 }
             }
@@ -1472,12 +1519,190 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
         }.execute(this, args, "setup:k9");
     }
 
+    private void handleAppleImport(Uri uri) {
+        Bundle args = new Bundle();
+        args.putParcelable("uri", uri);
+
+        ViewModelExport vme = new ViewModelProvider(getActivity()).get(ViewModelExport.class);
+        args.putString("password", vme.getPassword());
+
+        new SimpleTask<EntityAccount>() {
+            @Override
+            protected EntityAccount onExecute(Context context, Bundle args) throws Throwable {
+                Uri uri = args.getParcelable("uri");
+                String password = args.getString("password");
+
+                EntityAccount account = new EntityAccount();
+                EntityIdentity identity = new EntityIdentity();
+
+                ContentResolver resolver = context.getContentResolver();
+                InputStream is = resolver.openInputStream(uri);
+                if (is == null)
+                    throw new FileNotFoundException(uri.toString());
+                try (InputStream bis = new BufferedInputStream(is)) {
+                    XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                    XmlPullParser xml = factory.newPullParser();
+                    xml.setInput(new InputStreamReader(bis));
+
+                    account.auth_type = AUTH_TYPE_PASSWORD;
+                    account.password = password;
+                    account.encryption = EmailService.ENCRYPTION_STARTTLS;
+                    account.synchronize = false;
+                    account.primary = false;
+
+                    identity.auth_type = AUTH_TYPE_PASSWORD;
+                    identity.password = password;
+                    identity.encryption = EmailService.ENCRYPTION_STARTTLS;
+                    identity.synchronize = false;
+                    identity.primary = true;
+
+                    // https://developer.apple.com/documentation/devicemanagement/mail
+                    String key = null;
+                    int eventType = xml.getEventType();
+                    while (eventType != XmlPullParser.END_DOCUMENT) {
+                        if (eventType == XmlPullParser.START_TAG) {
+                            String name = xml.getName();
+                            if ("key".equals(name)) {
+                                eventType = xml.next();
+                                key = (eventType == XmlPullParser.TEXT ? xml.getText() : null);
+                            } else if (key != null &&
+                                    ("string".equals(name) || "integer".equals(name))) {
+                                eventType = xml.next();
+                                if (eventType == XmlPullParser.TEXT) {
+                                    String value = xml.getText();
+                                    eventType = xml.next();
+                                    if (eventType == XmlPullParser.END_TAG) {
+                                        Log.i("mobileconfig " + key + "=" + value);
+                                        switch (key) {
+                                            case "allowMailDrop":
+                                                break;
+                                            case "disableMailRecentsSyncing":
+                                                break;
+
+                                            case "EmailAccountDescription":
+                                                account.name = value;
+                                                break;
+                                            case "EmailAccountName":
+                                                identity.name = value;
+                                                break;
+                                            case "EmailAccountType": // required
+                                                if ("EmailTypeIMAP".equals(value))
+                                                    account.protocol = EntityAccount.TYPE_IMAP;
+                                                else if ("EmailTypePOP".equals(value))
+                                                    account.protocol = EntityAccount.TYPE_POP;
+                                                break;
+                                            case "EmailAddress":
+                                                String[] email = value.split(",");
+                                                if (email.length > 0)
+                                                    identity.email = email[0];
+                                                break;
+
+                                            case "IncomingMailServerAuthentication": // required
+                                                // EmailAuthNone, EmailAuthPassword, EmailAuthCRAMMD5, EmailAuthNTLM, EmailAuthHTTPMD5
+                                                break;
+                                            case "IncomingMailServerHostName": // required
+                                                account.host = value;
+                                                break;
+                                            case "IncomingMailServerIMAPPathPrefix":
+                                                break;
+                                            case "IncomingMailServerPortNumber":
+                                                account.port = Integer.parseInt(value);
+                                                break;
+                                            case "IncomingMailServerUsername":
+                                                account.user = value;
+                                                break;
+                                            case "IncomingMailServerUseSSL":
+                                                account.encryption = EmailService.ENCRYPTION_SSL;
+                                                break;
+                                            case "IncomingPassword":
+                                                account.password = value;
+                                                break;
+
+                                            case "OutgoingMailServerAuthentication": // required
+                                                // EmailAuthNone, EmailAuthPassword, EmailAuthCRAMMD5, EmailAuthNTLM, EmailAuthHTTPMD5
+                                                break;
+                                            case "OutgoingMailServerHostName": // required
+                                                identity.host = value;
+                                                break;
+                                            case "OutgoingMailServerPortNumber":
+                                                identity.port = Integer.parseInt(value);
+                                                break;
+                                            case "OutgoingMailServerUsername":
+                                                identity.user = value;
+                                                break;
+                                            case "OutgoingMailServerUseSSL":
+                                                identity.encryption = EmailService.ENCRYPTION_SSL;
+                                                break;
+                                            case "OutgoingPassword":
+                                                identity.password = value;
+                                                break;
+                                            case "OutgoingPasswordSameAsIncomingPassword":
+                                                identity.password = account.password;
+                                                break;
+                                        }
+                                    }
+                                } else
+                                    key = null;
+                            } else if (key != null && "true".equals(name)) {
+                                Log.i("mobileconfig " + key + "=" + name);
+                            } else
+                                key = null;
+                        }
+                        eventType = xml.next();
+                    }
+
+                    if (account.port == null)
+                        account.port = 993;
+                    if (account.password == null)
+                        account.password = "";
+                    if (identity.port == null)
+                        identity.port = 587;
+                    if (identity.password == null)
+                        identity.password = "";
+                }
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    account.id = db.account().insertAccount(account);
+                    identity.account = account.id;
+                    identity.id = db.identity().insertIdentity(identity);
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return account;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, EntityAccount account) {
+                if (account == null)
+                    return;
+
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(
+                        new Intent(ActivitySetup.ACTION_EDIT_ACCOUNT)
+                                .putExtra("id", account.id)
+                                .putExtra("protocol", account.protocol));
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "setup:apple");
+    }
+
     private void askPassword(final boolean export) {
         final Context context = getContext();
         Intent intent = (export ? getIntentExport(context) : getIntentImport(context));
         PackageManager pm = context.getPackageManager();
         if (intent.resolveActivity(pm) == null) { //  // system/GET_CONTENT whitelisted
-            ToastEx.makeText(context, R.string.title_no_saf, Toast.LENGTH_LONG).show();
+            Log.unexpectedError(getParentFragmentManager(),
+                    new IllegalArgumentException(context.getString(R.string.title_no_saf)), 25);
             return;
         }
 
@@ -1617,11 +1842,13 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                                 .remove("cloud_last_sync")
                                 .apply();
 
-                        File dir = Helper.ensureExists(new File(context.getFilesDir(), "syncdata"));
+                        File dir = Helper.ensureExists(context, "syncdata");
                         File[] files = dir.listFiles();
                         if (files != null)
-                            for (File file : files)
-                                Log.i("Cloud delete " + file + "=" + file.delete());
+                            for (File file : files) {
+                                Log.i("Cloud delete " + file);
+                                Helper.secureDelete(file);
+                            }
                     }
                 }
 
@@ -1642,7 +1869,7 @@ public class FragmentOptionsBackup extends FragmentBase implements SharedPrefere
                             .setIcon(R.drawable.twotone_warning_24)
                             .setTitle(getString(R.string.title_advanced_cloud_invalid))
                             .setNegativeButton(android.R.string.cancel, null);
-                    String message = ex.getMessage();
+                    String message = new ThrowableWrapper(ex).getSafeMessage();
                     if (!TextUtils.isEmpty(message))
                         builder.setMessage(message);
                     builder.show();

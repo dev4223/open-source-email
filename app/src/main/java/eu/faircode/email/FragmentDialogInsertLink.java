@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -56,9 +56,10 @@ import org.jsoup.nodes.Element;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class FragmentDialogInsertLink extends FragmentDialogBase {
     private EditText etLink;
@@ -132,7 +133,7 @@ public class FragmentDialogInsertLink extends FragmentDialogBase {
                 tvInsecure.setVisibility(
                         !UriHelper.isHyperLink(uri) || UriHelper.isSecure(uri)
                                 ? View.GONE : View.VISIBLE);
-                btnMetadata.setEnabled(UriHelper.isHyperLink(uri));
+                btnMetadata.setEnabled(UriHelper.isSecure(uri));
             }
         });
 
@@ -162,7 +163,7 @@ public class FragmentDialogInsertLink extends FragmentDialogBase {
 
                         OpenGraph og = new OpenGraph();
 
-                        HttpURLConnection connection = (HttpURLConnection) base.openConnection();
+                        HttpsURLConnection connection = (HttpsURLConnection) base.openConnection();
                         connection.setRequestMethod("GET");
                         connection.setReadTimeout(METADATA_READ_TIMEOUT);
                         connection.setConnectTimeout(METADATA_CONNECT_TIMEOUT);
@@ -172,7 +173,7 @@ public class FragmentDialogInsertLink extends FragmentDialogBase {
 
                         try {
                             int status = connection.getResponseCode();
-                            if (status != HttpURLConnection.HTTP_OK) {
+                            if (status != HttpsURLConnection.HTTP_OK) {
                                 String error = "Error " + status + ": " + connection.getResponseMessage();
                                 try {
                                     InputStream is = connection.getErrorStream();

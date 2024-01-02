@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -27,6 +27,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -125,6 +126,7 @@ public class EntityMessage implements Serializable {
     static final Long SWIPE_ACTION_DELETE = -7L;
     static final Long SWIPE_ACTION_JUNK = -8L;
     static final Long SWIPE_ACTION_REPLY = -9L;
+    static final Long SWIPE_ACTION_IMPORTANCE = -10L;
 
     private static final int MAX_SNOOZED = 300;
 
@@ -161,6 +163,7 @@ public class EntityMessage implements Serializable {
     public Boolean dkim;
     public Boolean spf;
     public Boolean dmarc;
+    public Boolean auth; // SMTP
     public Boolean mx;
     public Boolean blocklist;
     public Boolean from_domain; // spf/smtp.mailfrom <> from
@@ -190,6 +193,7 @@ public class EntityMessage implements Serializable {
     public Boolean content = false;
     public String language = null; // classified
     public Integer plain_only = null; // 1=true; 0x80=alt
+    public Boolean write_below;
     public Boolean resend = null;
     public Integer encrypt = null;
     public Integer ui_encrypt = null;
@@ -288,8 +292,8 @@ public class EntityMessage implements Serializable {
         List<Address> senders = new ArrayList<>();
         if (from != null)
             senders.addAll(Arrays.asList(from));
-        if (reply != null)
-            senders.addAll(Arrays.asList(reply));
+        //if (reply != null)
+        //    senders.addAll(Arrays.asList(reply));
 
         if (identities != null)
             for (TupleIdentityEx identity : identities)
@@ -406,6 +410,19 @@ public class EntityMessage implements Serializable {
                 }
             }
         return notJunk;
+    }
+
+    boolean isForwarder() {
+        if (from == null || from.length != 1)
+            return false;
+        if (submitter == null || submitter.length != 1)
+            return false;
+        String email = ((InternetAddress) from[0]).getAddress();
+        String domain = UriHelper.getEmailDomain(email);
+        return "duck.com".equals(domain) ||
+                "simplelogin.co".equals(domain) ||
+                "mozmail.com".equals(domain) ||
+                "anonaddy.me".equals(domain);
     }
 
     String[] checkFromDomain(Context context) {
@@ -556,6 +573,13 @@ public class EntityMessage implements Serializable {
 
         Element div = document.createElement("div")
                 .attr("fairemail", "reply");
+        try {
+            String text = p.text();
+            boolean rtl = TextDirectionHeuristics.FIRSTSTRONG_LTR.isRtl(text, 0, text.length());
+            div.attr("dir", rtl ? "rtl" : "ltr");
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
         if (!TextUtils.isEmpty(compose_font))
             div.attr("style", "font-family: " + StyleHelper.getFamily(compose_font));
         if (separate)
@@ -596,23 +620,14 @@ public class EntityMessage implements Serializable {
     }
 
     static File getFile(Context context, Long id) {
-        File root = Helper.ensureExists(new File(getRoot(context), "messages"));
-        File dir = Helper.ensureExists(new File(root, "D" + (id / 1000)));
+        File root = Helper.ensureExists(context, "messages");
+        File dir = new File(root, "D" + (id / 1000));
+        dir.mkdir(); // TODO CASA composed directory name
         return new File(dir, id.toString());
     }
 
-    static File getRoot(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean external_storage = prefs.getBoolean("external_storage_message", false);
-
-        File root = (external_storage
-                ? Helper.getExternalFilesDir(context)
-                : context.getFilesDir());
-        return root;
-    }
-
     static void convert(Context context) {
-        File root = new File(context.getFilesDir(), "messages");
+        File root = Helper.ensureExists(context, "messages");
         List<File> files = Helper.listFiles(root);
         for (File file : files)
             if (file.isFile())
@@ -620,7 +635,7 @@ public class EntityMessage implements Serializable {
                     long id = Long.parseLong(file.getName());
                     File target = getFile(context, id);
                     if (!file.renameTo(target))
-                        throw new IllegalArgumentException("Failed moving " + file);
+                        Log.e("Move failed: " + file);
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
@@ -631,12 +646,12 @@ public class EntityMessage implements Serializable {
     }
 
     File getFile(Context context, int revision) {
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "revision"));
+        File dir = Helper.ensureExists(context, "revision");
         return new File(dir, id + "." + revision);
     }
 
     File getRefFile(Context context) {
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "references"));
+        File dir = Helper.ensureExists(context, "references");
         return new File(dir, id.toString());
     }
 
@@ -645,7 +660,7 @@ public class EntityMessage implements Serializable {
     }
 
     static File getRawFile(Context context, Long id) {
-        File dir = Helper.ensureExists(new File(context.getFilesDir(), "raw"));
+        File dir = Helper.ensureExists(context, "raw");
         return new File(dir, id + ".eml");
     }
 
@@ -706,6 +721,8 @@ public class EntityMessage implements Serializable {
             return "move";
         if (SWIPE_ACTION_FLAG.equals(type))
             return "flag";
+        if (SWIPE_ACTION_IMPORTANCE.equals(type))
+            return "importance";
         if (SWIPE_ACTION_DELETE.equals(type))
             return "delete";
         if (SWIPE_ACTION_JUNK.equals(type))
@@ -741,6 +758,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.dkim, other.dkim) &&
                     Objects.equals(this.spf, other.spf) &&
                     Objects.equals(this.dmarc, other.dmarc) &&
+                    Objects.equals(this.auth, other.auth) &&
                     Objects.equals(this.mx, other.mx) &&
                     Objects.equals(this.blocklist, other.blocklist) &&
                     Objects.equals(this.from_domain, other.from_domain) &&

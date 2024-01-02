@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ContentResolver;
@@ -78,6 +78,8 @@ public class ActivityAMP extends ActivityBase {
         pbWait = findViewById(R.id.pbWait);
         grpReady = findViewById(R.id.grpReady);
 
+        wvAmp.clearCache(true);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean overview_mode = prefs.getBoolean("overview_mode", false);
         boolean safe_browsing = prefs.getBoolean("safe_browsing", false);
@@ -92,18 +94,20 @@ public class ActivityAMP extends ActivityBase {
 
         settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
 
-        settings.setAllowFileAccess(false);
         settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         if (WebViewEx.isFeatureSupported(this, WebViewFeature.SAFE_BROWSING_ENABLE))
             WebSettingsCompat.setSafeBrowsingEnabled(settings, safe_browsing);
+        if (WebViewEx.isFeatureSupported(this, WebViewFeature.ATTRIBUTION_REGISTRATION_BEHAVIOR))
+            WebSettingsCompat.setAttributionRegistrationBehavior(settings, WebSettingsCompat.ATTRIBUTION_BEHAVIOR_DISABLED);
 
         setDarkMode();
 
         settings.setLoadsImagesAutomatically(true);
         settings.setBlockNetworkLoads(false);
         settings.setBlockNetworkImage(false);
+        settings.setAllowFileAccess(false);
         settings.setJavaScriptEnabled(true);
 
         wvAmp.setWebViewClient(new WebViewClient() {
@@ -124,6 +128,10 @@ public class ActivityAMP extends ActivityBase {
                 }
 
                 return false;
+            }
+
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.w("AMP error " + errorCode + ":" + description);
             }
         });
 
@@ -159,7 +167,10 @@ public class ActivityAMP extends ActivityBase {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_force_light) {
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.menu_force_light) {
             onMenuForceLight();
             return true;
         }

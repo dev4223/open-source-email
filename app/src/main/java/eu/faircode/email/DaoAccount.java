@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import androidx.lifecycle.LiveData;
@@ -62,6 +62,7 @@ public interface DaoAccount {
             "    AND folder.type <> '" + EntityFolder.JUNK + "'" +
             "    AND folder.type <> '" + EntityFolder.DRAFTS + "'" +
             "    AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
+            "    AND folder.count_unread" +
             "    AND NOT ui_seen" +
             "    AND NOT ui_hide) AS unseen" +
             ", (SELECT COUNT(identity.id)" +
@@ -160,6 +161,12 @@ public interface DaoAccount {
             " AND tbd IS NULL")
     List<EntityAccount> getAccounts(String user, int protocol);
 
+    @Query("SELECT DISTINCT category" +
+            " FROM account" +
+            " WHERE NOT (category IS NULL OR category = '')" +
+            " ORDER BY category COLLATE NOCASE")
+    List<String> getAccountCategories();
+
     @Query("SELECT * FROM account WHERE `primary`")
     EntityAccount getPrimaryAccount();
 
@@ -191,6 +198,9 @@ public interface DaoAccount {
 
     @Update
     void updateAccount(EntityAccount account);
+
+    @Query("UPDATE account SET uuid = :uuid WHERE id = :id AND NOT (uuid IS :uuid)")
+    int setAccountUuid(long id, String uuid);
 
     @Query("UPDATE account SET synchronize = :synchronize WHERE id = :id AND NOT (synchronize IS :synchronize)")
     int setAccountSynchronize(long id, boolean synchronize);
@@ -226,10 +236,10 @@ public interface DaoAccount {
     int setAccountPassword(long id, String password, int auth_type, String provider);
 
     @Query("UPDATE account" +
-            " SET fingerprint = :fingerprint" +
+            " SET fingerprint = :fingerprint, insecure = :insecure" +
             " WHERE id = :id" +
             " AND NOT (fingerprint IS :fingerprint)")
-    int setAccountFingerprint(long id, String fingerprint);
+    int setAccountFingerprint(long id, String fingerprint, boolean insecure);
 
     @Query("UPDATE account SET last_connected = :last_connected WHERE id = :id AND NOT (last_connected IS :last_connected)")
     int setAccountConnected(long id, Long last_connected);

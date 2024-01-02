@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Dialog;
@@ -41,7 +41,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.FileProvider;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
@@ -293,7 +292,7 @@ public class FragmentDialogForwardRaw extends FragmentDialogBase {
             for (long id : ids) {
                 EntityLog.log(context, "Sending raw id=" + id);
                 File file = EntityMessage.getRawFile(context, id);
-                Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+                Uri uri = FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file);
                 uris.add(uri);
             }
 

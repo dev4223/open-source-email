@@ -92,6 +92,8 @@
         Bloquear o domínio do remetente usa regras de filtro, que trata-se de uma opção Pro.
     </string>
     <string name="title_blocked_senders">Remetentes bloqueados</string>
+    <string name="title_unblock_all">Desbloquear todos</string>
+    <string name="title_unblock_all_remark">Isso redefinirá todas as listas e opções que poderiam resultar no bloqueio de remetentes</string>
     <plurals name="title_ask_block_sender">
         <item quantity="one">Bloquear remetente da %1$s mensagem?</item>
         <item quantity="other">Bloquear remetentes das %1$s mensagens?</item>
@@ -163,6 +165,7 @@
     <string name="title_setup_quick_smtp">Servidor SMTP para enviar mensagens</string>
     <string name="title_setup_quick_certificates">Certificados do servidor</string>
     <string name="title_setup_wizard">Assistente</string>
+    <string name="title_setup_wizard_intro">Geralmente, o botão do assistente pode ser usado para adicionar uma conta, caso contrário, os endereços do servidor podem ser inseridos ou alterados manualmente usando a opção de configuração manual</string>
     <string name="title_setup_wizard_tutorials">Tutoriais</string>
     <string name="title_setup_wizard_multiple">O assistente pode ser usado várias vezes para configurar várias contas</string>
     <string name="title_setup_wizard_new">Preciso de um novo endereço de e-mail</string>
@@ -191,6 +194,7 @@
     <string name="title_setup_oauth_rationale">Autorizar acesso à sua conta %1$s</string>
     <string name="title_setup_oauth_update">Autorizar uma conta existente novamente (caso contrário, crie uma nova conta)</string>
     <string name="title_setup_oauth_updated">Autorização da conta foi atualizada</string>
+    <string name="title_setup_oauth_brave">Ao usar o navegador Brave, você deve ativar a opção nas configurações do Brave para permitir que links de aplicativos sejam abertos em aplicativos fora do Brave</string>
     <string name="title_setup_oauth_authorize">Autorizar</string>
     <string name="title_setup_select_account">Selecionar conta</string>
     <string name="title_setup_instructions">Instruções de configuração</string>
@@ -373,6 +377,7 @@
     <string name="title_advanced_suggest_sent">Sugerir endereços encontrados em mensagens enviadas</string>
     <string name="title_advanced_suggest_received">Sugerir endereços encontrados em mensagens recebidas</string>
     <string name="title_advanced_suggest_frequently">Ordenar endereços sugeridos de acordo com a frequência de uso</string>
+    <string name="title_advanced_suggest_account">Limitar sugestões à conta atual</string>
     <string name="title_advanced_alt_re_fwd">Prefixo alternativo</string>
     <string name="title_advanced_send_chips">Mostrar endereço em bolhas</string>
     <string name="title_advanced_send_nav_color">Use a cor de identidade para a barra de ação inferior</string>
@@ -385,6 +390,7 @@
     <string name="title_advanced_answer_hint">As ações do botão de resposta também podem ser configuradas na página da aba de configurações de envio</string>
     <string name="title_advanced_answer_warning">Nem todas as ações são possíveis sem um menu de seleção!</string>
     <string name="title_advanced_send_pending">Mostrar ícones de filtro rápido não obtrusivos</string>
+    <string name="title_advanced_save_revisions">Salvar rascunhos das revisões para desfazer e refazer</string>
     <string name="title_advanced_auto_save_paragraph">Salvar automaticamente um rascunho após cada parágrafo</string>
     <string name="title_advanced_auto_save_dot">Salvar automaticamente um rascunho após cada frase</string>
     <string name="title_advanced_compose_color">Cor de texto padrão</string>
@@ -420,6 +426,7 @@
     <string name="title_advanced_lookup_mx">Verifique os endereços de e-mail do destinatário antes de enviar</string>
     <string name="title_advanced_metered">Usar conexões limitadas</string>
     <string name="title_advanced_download">Fazer download automático de mensagens e anexos em uma conexão limitada até</string>
+    <string name="title_advanced_download_limited">Aplicar também a conexões ilimitadas</string>
     <string name="title_advanced_roaming">Fazer o download de mensagens e anexos de roaming</string>
     <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_download_headers">Baixar todos os cabeçalhos das mensagens</string>
@@ -430,10 +437,14 @@
     <string name="title_advanced_vpn_only">Conectar somente via VPN</string>
     <string name="title_advanced_timeout">Conexão expira em (segundos)</string>
     <string name="title_advanced_prefer_ip4">Preferir IPv4 ao invés de IPv6</string>
+    <string name="title_advanced_ssl_update">Usar provedor SSL atualizado</string>
     <string name="title_advanced_ssl_harden">Reforçar conexões SSL</string>
     <string name="title_advanced_ssl_harden_strict">Requer TLS 1.3</string>
     <string name="title_advanced_cert_strict">Verificação rigorosa de certificado</string>
+    <string name="title_advanced_check_names">Verifique os nomes dos hosts em relação aos certificados do servidor</string>
     <string name="title_advanced_open_safe">Abrir apenas conexões seguras</string>
+    <string name="title_advanced_http_redirect">Permitir redirecionamento de conexão</string>
+    <string name="title_advanced_bouncy_castle">Use o provedor de soquete seguro (JSSE) do Bouncy Castle</string>
     <string name="title_advanced_manage_connectivity">Gerenciar conectividade</string>
     <string name="title_advanced_caption_general">Geral</string>
     <string name="title_advanced_caption_navigation">Navegação</string>
@@ -490,6 +501,7 @@
     <string name="title_advanced_libravatars">Mostrar Libravatars</string>
     <string name="title_advanced_favicons">Mostrar ícone de favoritos</string>
     <string name="title_advanced_favicons_partial">Escanear apenas o primeiro %1$s da página web</string>
+    <string name="title_advanced_favicons_manifest">Escanear manifestos do aplicativo web</string>
     <string name="title_advanced_generated_icons">Mostrar ícones gerados</string>
     <string name="title_advanced_identicons">Mostrar identicons</string>
     <string name="title_advanced_circular">Mostrar ícones redondos</string>
@@ -501,6 +513,7 @@
     <string name="title_advanced_only_name">Exibir apenas o nome do contato</string>
     <string name="title_advanced_distinguish_contacts">Sublinhar o remetente quando o remetente é conhecido como contato local \'para\'</string>
     <string name="title_advanced_show_recipients">Mostrar destinatários no cabeçalho da mensagem</string>
+    <string name="title_advanced_reverse_addresses">Mostrar destinatário das mensagens enviadas</string>
     <string name="title_advanced_font_size_sender">Tamanho do texto do remetente</string>
     <string name="title_advanced_sender_ellipsize">Se necessário, encurte o remetente</string>
     <string name="title_advanced_subject_top">Mostrar assunto acima do remetente</string>
@@ -523,7 +536,9 @@
     <string name="title_advanced_unzip">Mostrar conteúdo de anexos compactados</string>
     <string name="title_advanced_attachments_alt">Mostrar anexos após o texto da mensagem</string>
     <string name="title_advanced_thumbnails">Mostrar miniaturas das imagens após o texto da mensagem</string>
+    <string name="title_advanced_pdf_preview">Mostrar miniaturas de PDF</string>
     <string name="title_advanced_message_text_zoom2">Zoom padrão da mensagem: %1$s %%</string>
+    <string name="title_advanced_editor_text_zoom">Amplie o texto da mensagem também no editor de mensagens</string>
     <string name="title_advanced_overview_mode">Ampliar as mensagens originais para adequar à tela</string>
     <string name="title_advanced_hyphenation">Usar hifenização automática</string>
     <string name="title_advanced_contrast">Usar alto contraste para o texto da mensagem</string>
@@ -548,6 +563,7 @@
     <string name="title_advanced_navbar_colorize">Colorir a barra de navegação do Android</string>
     <string name="title_advanced_list_count">Mostrar o número de mensagens ou conversas na barra de ação superior</string>
     <string name="title_advanced_bundled_fonts">Usar fontes embutidas</string>
+    <string name="title_advanced_narrow_fonts">Usar fontes estreitas</string>
     <string name="title_advanced_parse_classes">Analisar folhas de estilo</string>
     <string name="title_advanced_authentication">Mostrar avisos de autenticação</string>
     <string name="title_advanced_authentication_hint">As verificações subjacentes podem ser configuradas nas configurações de recebimento</string>
@@ -568,6 +584,7 @@
     <string name="title_advanced_double_tap">Toque duplo para marcar mensagem lida/não lida</string>
     <string name="title_advanced_swipenav">Deslize para a esquerda/direita para ir para próxima/anterior conversa</string>
     <string name="title_advanced_volumenav">Volume para cima/baixo para ir para próxima/anterior conversa</string>
+    <string name="title_advanced_up_down">Use as setas para cima/para baixo para a conversa seguinte/anterior</string>
     <string name="title_advanced_reversed">Reverter a direção de navegação</string>
     <string name="title_advanced_swipe_close">Deslize para baixo para fechar uma conversa</string>
     <string name="title_advanced_swipe_move">Deslize para cima para mover a conversa</string>
@@ -616,6 +633,8 @@
     <string name="title_advanced_notify_preview">Mostrar pré-visualização de mensagem nas notificações</string>
     <string name="title_advanced_notify_preview_all">Pré-visualizar todo o texto</string>
     <string name="title_advanced_notify_preview_only">Mostrar notificações apenas com pré-visualização de texto</string>
+    <string name="title_advanced_notify_transliterate">Transliterar para o alfabeto latino</string>
+    <string name="title_advanced_notify_ascii">Somente texto ASCII</string>
     <string name="title_advanced_notify_actions">Ações de notificação</string>
     <string name="title_advanced_notify_action_trash">Lixeira</string>
     <string name="title_advanced_notify_action_delete">Deletar</string>
@@ -634,6 +653,7 @@
     <string name="title_advanced_wearable_preview">Enviar notificações apenas com uma visualização de mensagem para os wearables</string>
     <string name="title_advanced_notify_messaging">Usar o \"estilo mensagem\" do Android como formato de notificação</string>
     <string name="title_advanced_biometrics_notify">Mostrar conteúdo de notificação ao usar autenticação biométrica</string>
+    <string name="title_advanced_notify_open_folder">Abrir pasta ao abrir uma nova mensagem</string>
     <string name="title_advanced_light">Usar luz de notificação</string>
     <string name="title_advanced_sound">Selecionar som de notificação</string>
     <string name="title_advanced_notify_screen_on">Ligar a tela brevemente para notificações de novas mensagens</string>
@@ -643,6 +663,8 @@
     <string name="title_advanced_confirm_files">Confirmar exibição dos arquivos</string>
     <string name="title_advanced_sanitize_links">Remover parâmetros de rastreamento por padrão</string>
     <string name="title_advanced_sanitize_links_hint">Somente quando confirmando links</string>
+    <string name="title_advanced_adguard" comment="title_advanced_adguard&#10;Title for option to enable using Adguard filter list to remove tracking parameters from links">Usar lista de filtros Adguard</string>
+    <string name="title_advanced_adguard_weekly" comment="title_advanced_adguard_weekly&#10;Title for option to automatically update the Adguard filter list weekly">Baixar automaticamente semanalmente</string>
     <string name="title_advanced_check_links_dbl">Verificar listas de bloqueio de domínios para links suspeitos</string>
     <string name="title_advanced_confirm_images">Não mostrar imagens por padrão</string>
     <string name="title_advanced_ask_images">Confirmar a exibição de imagens</string>
@@ -668,6 +690,9 @@
     <string name="title_advanced_mnemonic_hint">Qualquer email recebido com as palavras abaixo no campo assunto, irá automaticamente e imediatamente excluída dos dados do aplicativo</string>
     <string name="title_advanced_clear_all">Excluir dados do aplicativo</string>
     <string name="title_advanced_clear_all_remark">Os dados do aplicativo serão irremediavelmente excluídos!</string>
+    <string name="title_advanced_default_encryption">        O método de criptografia padrão (PGP ou S/MIME) será armazenado por identidade após o envio de uma mensagem assinada ou criptografada.
+        O método de criptografia pode ser selecionado antes do envio na caixa de diálogo de opções de envio (pressione longamente o botão enviar).
+    </string>
     <string name="title_advanced_sign_default">Assinar por padrão</string>
     <string name="title_advanced_encrypt_default">Criptografar por padrão</string>
     <string name="title_advanced_encrypt_auto">Criptografar automaticamente quando as chaves de todos os destinatários estiverem disponíveis</string>
@@ -693,19 +718,24 @@
     </string>
     <string name="title_advanced_power_menu">Adicionar ações ao menu de energia do Android</string>
     <string name="title_advanced_send_self">Adicionar \'enviar para si mesmo\' ao menu de compartilhamento do Android</string>
-    <string name="title_advanced_external_search">Permitir que outros aplicativos pesquisem nas mensagens</string>
+    <string name="title_advanced_external_search">Adicione \'FairEmail search\' ao menu de seleção de texto do Android</string>
     <string name="title_advanced_sort_answers">Ordenar modelos de resposta por frequência de uso</string>
     <string name="title_advanced_shortcuts">Mostrar contatos usados com frequência no menu de compartilhamento do Android</string>
+    <string name="title_advanced_ical_tentative">Armazenar convites recebidos como tentativas</string>
     <string name="title_advanced_fts">Construir índice de busca</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mensagens indexadas (%3$s)</string>
     <string name="title_advanced_classification">Classificar mensagens</string>
     <string name="title_advanced_class_min_chance">Probabilidade mínima da classe: %1$s %%</string>
     <string name="title_advanced_class_min_difference">Diferença mínima da classe: %1$s %%</string>
     <string name="title_advanced_show_filtered">Mostrar um ícone de filtro quando as regras forem aplicadas</string>
+    <string name="title_advanced_haptic_feedback">Feedback tátil sobre ações importantes</string>
     <string name="title_advanced_language">Idioma</string>
     <string name="title_advanced_language_system">Sistema</string>
     <string name="title_advanced_lt">Integração com LanguageTool</string>
+    <string name="title_advanced_lt_sentence">Verifique cada frase</string>
     <string name="title_advanced_lt_auto">Verificar parágrafo depois de uma nova linha</string>
+    <string name="title_advanced_lt_highlight">Destaque o texto que está sendo verificado</string>
+    <string name="title_advanced_lt_description">Mostrar pop-up com descrição do problema</string>
     <string name="title_advanced_lt_user">Nome de usuário (opcional)</string>
     <string name="title_advanced_lt_key">Chave da API (opcional)</string>
     <string name="title_advanced_deepl">Integração DeepL</string>
@@ -759,6 +789,7 @@
     <string name="title_advanced_pull_all_hint">Ao abrir a lista de pastas ou contas</string>
     <string name="title_advanced_suggest_names_hint">Se desativado, somente endereços de email serão utilizados ao selecionar contatos</string>
     <string name="title_advanced_suggest_local_hint">Além dos contatos fornecidos pelo Android. Os dados de contato serão armazenados para novas mensagens enviadas ou recebidas somente quando ativados.</string>
+    <string name="title_advanced_suggest_account_hint">Isso só se aplica a contatos locais porque os contatos no livro de endereços do Android não estão vinculados a contas específicas</string>
     <string name="title_advanced_auto_identity_hint">Isso selecionará a última identidade usada ao selecionar um destinatário para novas mensagens</string>
     <string name="title_advanced_send_reminders_hint">Mostrar um aviso quando o texto da mensagem ou o assunto estiver vazio ou quando um anexo puder estar ausente</string>
     <string name="title_advanced_reply_move_hint">O servidor de e-mail ainda pode adicionar as mensagens à pasta de mensagens enviadas</string>
@@ -831,6 +862,7 @@
     <string name="title_advanced_wearable_hint">Notificações só são enviadas para um wearable após o download do texto da mensagem</string>
     <string name="title_advanced_messaging_hint">Isto é necessário para o suporte ao Android Auto</string>
     <string name="title_advanced_move_hint">A pasta de destino pode ser configurada nas configurações da conta</string>
+    <string name="title_advanced_notify_sensitive_hint">Requer a desativação de notificações confidenciais nas configurações do Android</string>
     <string name="title_advanced_notify_no_grouping">Esta versão do Android não suporta agrupamento de notificações</string>
     <string name="title_advanced_notify_no_channels">Esta versão Android não suporta canais de notificação</string>
     <string name="title_advanced_fts_hint">Ativando isto melhora o desempenho da pesquisa, mas também aumenta o uso de bateria e espaço de armazenamento</string>
@@ -862,6 +894,7 @@
     <string name="title_identity_reply_to">Resposta para o endereço</string>
     <string name="title_identity_internal">Nomes de domínio internos (separados por vírgula)</string>
     <string name="title_identity_uri">Link de contato</string>
+    <string name="title_identity_sensitivity">Sensibilidade padrão</string>
     <string name="title_identity_unicode">Permitir UTF-8 nos cabeçalhos da mensagem</string>
     <string name="title_identity_unicode_remark">A maioria dos servidores não suporta isso</string>
     <string name="title_identity_octetmime">Permitir 8BITMIME</string>
@@ -984,6 +1017,9 @@
     <string name="title_service_port">Por favor, verifique novamente o número da porta</string>
     <string name="title_service_protocol">Por favor, cheque novamente o protocolo (SSL/TLS ou STARTTLS)</string>
     <string name="title_service_error10">Esta conta precisa ser autenticada novamente, o que pode ser feito por meio do assistente de configuração rápida</string>
+    <string name="title_certificate_error">        Devido às políticas da Play Store do Google, não é mais possível oferecer suporte a conexões inseguras a servidores de e-mail com problemas de certificado para a versão do FairEmail distribuída na Play Store.
+        Portanto, esse problema só pode ser resolvido pelo seu provedor de e-mail. As informações de erro acima podem ajudá-lo a resolver o problema.
+    </string>
     <string name="title_advanced_browse">Procurar mensagens no servidor</string>
     <string name="title_advanced_expand_read">Marcar mensagens lidas ao expandir</string>
     <string name="title_synchronize_now">Sincronizar agora</string>
@@ -999,6 +1035,8 @@
     <string name="title_synchronize_batch_disable">Desativar sincronização</string>
     <string name="title_notify_batch_enable">Permitir novas notificações de mensagens</string>
     <string name="title_notify_batch_disable">Desativar novas notificações de mensagens</string>
+    <string name="title_download_batch_enable">Baixar textos e anexos</string>
+    <string name="title_download_batch_disable">Baixar apenas cabeçalhos</string>
     <string name="title_delete_local">Excluir mensagens locais</string>
     <string name="title_delete_browsed">Excluir mensagens navegadas/pesquisadas</string>
     <string name="title_expunge">Expurgar</string>
@@ -1014,6 +1052,7 @@
     <string name="title_delete_channel">Excluir canal de notificação</string>
     <string name="title_insert_contact">Adicionar contato</string>
     <string name="title_edit_contact">Editar contato</string>
+    <string name="title_delete_contact">Excluir contato?</string>
     <string name="title_contact_email">E-mail</string>
     <string name="title_contact_name">Nome</string>
     <string name="title_contact_group">Grupo</string>
@@ -1117,6 +1156,8 @@
     <string name="title_importance_low">Baixa</string>
     <string name="title_importance_normal">Normal</string>
     <string name="title_importance_high">Alta</string>
+    <string name="title_important">Importante</string>
+    <string name="title_unimportant">Não importante</string>
     <string name="title_search_in_text">Pesquisar no texto &#8230;</string>
     <string name="title_forward">Encaminhar</string>
     <string name="title_resend">Reenviar</string>
@@ -1135,8 +1176,10 @@
     <string name="title_print_header">Imprimir cabeçalho</string>
     <string name="title_print_images">Imprimir imagens</string>
     <string name="title_print_images_remark">Baixar imagens pode demorar certo tempo</string>
+    <string name="title_print_block_quotes">Imprimir linhas de aspas por bloco</string>
+    <string name="title_print_margins">Adicionar uma margem</string>
     <string name="title_show_headers">Mostrar cabeçalhos</string>
-    <string name="title_share_as_html">Compartilhar como arquivo HTML</string>
+    <string name="title_show_html">Mostrar fonte</string>
     <string name="title_raw_save">Salvar imagem raw</string>
     <string name="title_raw_send">Enviar como anexo</string>
     <string name="title_raw_send_message">Mensagem</string>
@@ -1166,6 +1209,7 @@
     <string name="title_quick_actions_snooze">Soneca</string>
     <string name="title_quick_actions_clear">Limpar seleção após ação</string>
     <string name="title_trash">Lixeira</string>
+    <string name="title_trash_selection">Seleção para o lixo</string>
     <string name="title_copy">Copiar &#8230;</string>
     <string name="title_copy_to">Copiar para &#8230;</string>
     <string name="title_subscribe">Inscreva-se</string>
@@ -1180,7 +1224,7 @@
     <string name="title_unsubscribe">Desinscrever</string>
     <string name="title_message_rule">Criar regra</string>
     <string name="title_no_junk">Não é spam</string>
-    <string name="title_edit_subject" comment="title_edit_subject&#10;Title for menu item to edit the subject of a message">Editar assunto &#8230;</string>
+    <string name="title_edit_subject">Editar assunto &#8230;</string>
     <string name="title_move_to">Mover para &#8230;</string>
     <string name="title_move_to_folder">Mover para &#8230;</string>
     <string name="title_move_to_account">Mover para %1$s &#8230;</string>
@@ -1349,6 +1393,8 @@
     <string name="title_add_image_privacy">Remover dados confidenciais</string>
     <string name="title_add_image_privacy_remark">Localização geográfica, números de série, nomes de arquivos, etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_add_image_resize_remark">Redimensionamento é suportado para: %1$s</string>
+    <string name="title_add_image_select_remark">O seletor de fotos do Android não passa mais nomes de arquivos</string>
     <string name="title_add_image_select">Selecionar arquivo</string>
     <string name="title_add_attachment">Adicionar anexo</string>
     <string name="title_attachment_file">Anexar arquivo</string>
@@ -1360,6 +1406,7 @@
     <string name="title_image_dialog">Mostrar opções de imagem</string>
     <string name="title_style_toolbar">Barra de estilo</string>
     <string name="title_media_toolbar">Barra de mídia</string>
+    <string name="title_manage_android_contacts">Gerenciar os contatos do Android</string>
     <string name="title_manage_local_contacts">Gerenciar contatos locais</string>
     <string name="title_insert_contact_group">Inserir grupo de contato</string>
     <string name="title_insert_template">Inserir modelo</string>
@@ -1372,6 +1419,7 @@
     <string name="title_translate_formal">Usar formulário formal</string>
     <string name="title_translate_small">Usar uma fonte pequena para o texto original</string>
     <string name="title_translate_replace">Substituir texto de origem por texto traduzido</string>
+    <string name="title_translate_highlight">Destaque o texto que está sendo traduzido</string>
     <string name="title_translate_html">Preservar formatação</string>
     <string name="title_translate_html_hint">Isto consumirá mais caracteres</string>
     <string name="title_translate_usage">Utilização: %1$s / %2$s (%3$d %%)</string>
@@ -1462,6 +1510,7 @@
     <string name="title_search_hint">        Inicialmente, a pesquisa é efetuada no dispositivo.
         Para pesquisar também no servidor, toque no botão \"pesquisar novamente\".
     </string>
+    <string name="title_search_hint_fts">Usando o índice de pesquisa: apenas palavras inteiras</string>
     <string name="title_search_index_hint">Pesquisar através do índice de pesquisa é rápido, mas só encontra palavras inteiras.</string>
     <string name="title_search_text_hint">Pesquisar por textos em mensagens, quando há um grande número delas, pode não funcionar em alguns servidores</string>
     <string name="title_search_text_unsupported">\'%s\' significa que o servidor de email não suporta pesquisa em textos de mensagens</string>
@@ -1474,6 +1523,7 @@
     <string name="title_search_in_keywords">Por palavras-chave (se suportado)</string>
     <string name="title_search_in_message">Por texto da mensagem</string>
     <string name="title_search_in_notes">Em notas locais</string>
+    <string name="title_search_in_filenames">Em nomes de arquivo (apenas no dispositivo)</string>
     <string name="title_search_with">Limitar busca a</string>
     <string name="title_search_with_unseen">Não lida(s)</string>
     <string name="title_search_with_flagged">Favorita(s)</string>
@@ -1567,6 +1617,7 @@
     <string name="title_answer_placeholder_firstname">Primeiro nome do remetente</string>
     <string name="title_answer_placeholder_lastname">Último nome do remetente</string>
     <string name="title_answer_placeholder_date">Data atual</string>
+    <string name="title_answer_placeholder_weekday">Dia da semana</string>
     <string name="title_rule_noop">Nenhuma ação</string>
     <string name="title_rule_seen">Marcar como lida</string>
     <string name="title_rule_unseen">Marcar como não lida</string>
@@ -1578,6 +1629,7 @@
     <string name="title_rule_keyword">Palavra-chave</string>
     <string name="title_rule_keyword_add">Adicionar</string>
     <string name="title_rule_keyword_delete">Deletar</string>
+    <string name="title_rule_notes">Notas locais</string>
     <string name="title_rule_move">Mover</string>
     <string name="title_rule_copy">Copiar (etiqueta)</string>
     <string name="title_rule_answer">Responder/encaminhar</string>
@@ -1636,7 +1688,10 @@
     <string name="title_rule_answer_missing">Modelo faltando</string>
     <string name="title_rule_keyword_missing">Palavra-chave faltando</string>
     <string name="title_rule_automation_hint">Isto enviará a intenção \'%1$s\' com os extras \'%2$s\'</string>
+    <string name="title_rule_notes_missing">Notas locais ausentes</string>
+    <string name="title_rule_url_missing">URL ausente ou inválida</string>
     <string name="title_rule_delete_hint">A exclusão permanente é irreversível, por isso certifique-se de que as condições de regra estão corretas!</string>
+    <string name="title_rule_url_hint">Você pode usar os seguintes marcadores: %1$s</string>
     <string name="title_rule_edit_group">Editar grupo &#8230;</string>
     <string name="title_rule_execute">Execute agora</string>
     <string name="title_rule_applied">Mensagens afetadas: %1$d</string>
@@ -1656,6 +1711,11 @@
     <string name="title_rule_use_as_alarm">Usar como alarme</string>
     <string name="title_rule_alarm_hint">Isso ignorará as regras de \"não perturbe\"</string>
     <string name="title_rule_alarm_duration">Duração máxima do alarme (segundos)</string>
+    <string name="title_rule_alarm_title">Alarme</string>
+    <string name="title_rule_alarm_stop">Parar</string>
+    <string name="title_code_line_numbers">Mostrar número de linhas</string>
+    <string name="title_code_enable_links">Habilitar links</string>
+    <string name="title_code_pretty">Estampa bonita</string>
     <string name="title_legend_section_synchronize">Sincronizar</string>
     <string name="title_legend_section_folders">Pastas</string>
     <string name="title_legend_section_messages">Mensagens</string>
@@ -1781,6 +1841,7 @@
     <string name="title_hint_folder_sync">Para limitar o uso de bateria e de rede nem todas as pastas e mensagens serão sincronizadas por padrão</string>
     <string name="title_hint_airplane">Modo avião está ativado</string>
     <string name="title_hint_notifications">Sem permissões de notificação</string>
+    <string name="title_hint_notifications_remark">As permissões de notificação também são necessárias para alerta (de conta). As notificações de novas mensagens podem ser desativadas nas configurações.</string>
     <string name="title_hint_battery_optimizations">Otimizações de bateria continuam ativadas</string>
     <string name="title_hint_support">Se você tiver uma pergunta ou um problema, por favor, use o menu de suporte para obter ajuda</string>
     <string name="title_hint_message_actions">Deslize para a esquerda para a lixeira; Deslize para a direita para o arquivo (se disponível); As ações de deslize podem ser configuradas nas configurações da conta</string>
@@ -1849,6 +1910,7 @@
     <string name="title_no_ask_again">Não perguntar novamente</string>
     <string name="title_no_ask_for_again">Não perguntar novamente por %1$s</string>
     <string name="title_no_body">Texto da mensagem não encontrado</string>
+    <string name="title_large_body">Esta mensagem é muito grande e pode causar problemas!</string>
     <string name="title_no_charset">Codificação não suportada: %1$s</string>
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 hora</string>
@@ -1868,6 +1930,8 @@
     <string name="title_loading">Carregando &#8230;</string>
     <string name="title_fetching_again">Buscando a mensagem novamente do servidor</string>
     <string name="title_go_back">Voltar</string>
+    <string name="title_global_default">Usar padrão global</string>
+    <string name="title_not_existing">Esta mensagem não existe mais no servidor de email</string>
     <string name="title_conversation_actions">Ações</string>
     <string name="title_conversation_action_reply">Resposta com: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Copiar: \'%1$s\'</string>
@@ -1912,6 +1976,9 @@
     <string name="title_debug_info_issue">Descrição do problema (obrigatório)</string>
     <string name="title_debug_info_issue_remark">Detalhes, como o tempo estimado do problema, a mensagem de erro exata, etc., são importantes</string>
     <string name="title_debug_info_contact">Recentemente tivemos contato sobre este problema</string>
+    <string name="title_debug_info_send">Enviar imediatamente</string>
+    <string name="title_debug_info_send_remark">Normalmente, as informações de depuração serão armazenadas primeiro como rascunho da mensagem, para que você possa verificar o que será enviado</string>
+    <string name="title_debug_info_question">Por favor, use o botão de informações se você tiver apenas uma pergunta</string>
     <string name="title_unexpected_info_remark">Por favor, descreva o que você estava fazendo quando recebeu o erro:</string>
     <string name="title_widget_title_count">Nova contagem de mensagens</string>
     <string name="title_widget_title_list">Lista de mensagem</string>
@@ -1924,6 +1991,7 @@
     <string name="title_widget_account_all">Todos</string>
     <string name="title_widget_folder">Pasta</string>
     <string name="title_widget_folder_unified">Pastas da caixa de entrada unificadas</string>
+    <string name="title_widget_folder_notifying">Pastas com notificações de novas mensagens</string>
     <string name="title_widget_unseen">Apenas mensagens não lidas</string>
     <string name="title_widget_flagged">Apenas mensagens com estrela</string>
     <string name="title_widget_font_size">Tamanho do texto</string>
@@ -1938,6 +2006,7 @@
     <string name="title_widget_refresh">Mostrar botão para atualizar mensagens</string>
     <string name="title_widget_compose">Mostrar botão compor nova mensagem</string>
     <string name="title_widget_background">Cor de fundo</string>
+    <string name="title_widget_icon">Cor do ícone</string>
     <string name="title_widget_day_night">Seguir o tema escuro do sistema</string>
     <string name="title_compat_dark">A Google removeu o modo escuro para versões do Android anteriores a versão 10</string>
     <!-- Thunderbird -->

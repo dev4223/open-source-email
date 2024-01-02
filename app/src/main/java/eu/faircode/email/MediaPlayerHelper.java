@@ -1,13 +1,35 @@
 package eu.faircode.email;
 
+/*
+    This file is part of FairEmail.
+
+    FairEmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FairEmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+*/
+
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -20,6 +42,17 @@ import java.util.concurrent.TimeUnit;
 public class MediaPlayerHelper {
     static final int DEFAULT_SOUND_DURATION = 30; // seconds
     static final int DEFAULT_ALARM_DURATION = 30; // seconds
+
+    private static Semaphore sem;
+    private static final Object lock = new Object();
+
+    static void stop(Context context) {
+        EntityLog.log(context, "Alarm stop");
+        synchronized (lock) {
+            if (sem != null)
+                sem.release();
+        }
+    }
 
     static void queue(Context context, String uri) {
         try {
@@ -47,7 +80,9 @@ public class MediaPlayerHelper {
     }
 
     private static void play(Context context, Uri uri, boolean alarm, int duration) throws IOException {
-        Semaphore sem = new Semaphore(0);
+        synchronized (lock) {
+            sem = new Semaphore(0);
+        }
 
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -67,20 +102,56 @@ public class MediaPlayerHelper {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mp.stop();
-                mp.release();
                 sem.release();
             }
         });
         mediaPlayer.prepareAsync();
 
+        NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
+        if (alarm) {
+            Intent intent = new Intent(context, ServiceUI.class)
+                    .setAction("alarm");
+            PendingIntent piStop = PendingIntentCompat.getService(
+                    context, ServiceUI.PI_ALARM, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            NotificationCompat.Action.Builder actionStop = new NotificationCompat.Action.Builder(
+                    R.drawable.twotone_stop_24,
+                    context.getString(R.string.title_rule_alarm_stop),
+                    piStop)
+                    .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MUTE)
+                    .setShowsUserInterface(false)
+                    .setAllowGeneratedReplies(false);
+
+            NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(context, "alerts")
+                            .setSmallIcon(R.drawable.baseline_warning_white_24)
+                            .setContentTitle(context.getString(R.string.title_rule_alarm_title))
+                            .setSilent(true)
+                            .setAutoCancel(false)
+                            .addAction(actionStop.build())
+                            .setShowWhen(true)
+                            .setPriority(NotificationCompat.PRIORITY_MAX)
+                            .setOnlyAlertOnce(true)
+                            .setCategory(NotificationCompat.CATEGORY_ALARM)
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+            nm.notify("alarm", 1, builder.build());
+        }
+
         try {
-            if (!sem.tryAcquire(duration, TimeUnit.SECONDS)) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-            }
+            boolean acquired = sem.tryAcquire(duration, TimeUnit.SECONDS);
+            EntityLog.log(context, "Alarm acquired=" + acquired);
+            mediaPlayer.stop();
+            mediaPlayer.release();
         } catch (Throwable ex) {
             Log.w(ex);
+        } finally {
+            if (alarm)
+                nm.cancel("alarm", 1);
+        }
+
+        synchronized (lock) {
+            sem = null;
         }
     }
 

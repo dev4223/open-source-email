@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ClipData;
@@ -35,6 +35,7 @@ import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
 import android.util.AttributeSet;
@@ -77,6 +78,10 @@ public class EditTextCompose extends FixedEditText {
     private int colorBlockquote;
     private int quoteGap;
     private int quoteStripe;
+    private boolean lt_description;
+
+    private int lastStart = -1;
+    private int lastEnd = -1;
 
     public EditTextCompose(Context context) {
         super(context);
@@ -96,13 +101,65 @@ public class EditTextCompose extends FixedEditText {
     void init(Context context) {
         Helper.setKeyboardIncognitoMode(this, context);
 
-        colorPrimary = Helper.resolveColor(context, androidx.appcompat.R.attr.colorPrimary);
-        colorBlockquote = Helper.resolveColor(context, R.attr.colorBlockquote, colorPrimary);
-        quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
-        quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
+        this.colorPrimary = Helper.resolveColor(context, androidx.appcompat.R.attr.colorPrimary);
+        this.colorBlockquote = Helper.resolveColor(context, R.attr.colorBlockquote, colorPrimary);
+        this.quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
+        this.quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        this.lt_description = prefs.getBoolean("lt_description", false);
         boolean undo_manager = prefs.getBoolean("undo_manager", false);
+
+        addTextChangedListener(new TextWatcher() {
+            private Integer replace;
+            private Integer length;
+            private String what;
+            private boolean replacing = false;
+
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                try {
+                    int index = start + before;
+                    if (count - before == 1 && index > 1) {
+                        char c = text.charAt(index);
+                        if (c == '>' &&
+                                text.charAt(index - 1) == '-' &&
+                                text.charAt(index - 2) == '-') {
+                            replace = index - 2;
+                            length = 3;
+                            what = "→";
+                        } else if (c == '-' &&
+                                text.charAt(index - 1) == '-' &&
+                                text.charAt(index - 2) == '<') {
+                            replace = index - 2;
+                            length = 3;
+                            what = "←";
+                        }
+                    }
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable text) {
+                if (!replacing && replace != null)
+                    try {
+                        replacing = true;
+                        text.replace(replace, replace + length, what);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    } finally {
+                        replace = null;
+                        replacing = false;
+                    }
+            }
+        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             setCustomSelectionActionModeCallback(new ActionMode.Callback() {
@@ -151,8 +208,6 @@ public class EditTextCompose extends FixedEditText {
                             return surround("(", ")");
                         else if (id == R.string.title_insert_quotes)
                             return surround("\"", "\"");
-                        else if (id == R.string.title_lt_add)
-                            return modifyDictionary(true);
                         else if (id == R.string.title_lt_delete)
                             return modifyDictionary(false);
                     }
@@ -222,7 +277,7 @@ public class EditTextCompose extends FixedEditText {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            ToastEx.makeText(getContext(), ex.toString(), Toast.LENGTH_LONG).show();
+                            // Ignored
                         }
                     }.execute(activity, args, "dictionary:modify");
 
@@ -450,6 +505,25 @@ public class EditTextCompose extends FixedEditText {
         super.onSelectionChanged(selStart, selEnd);
         if (selectionListener != null)
             selectionListener.onSelected(hasSelection());
+
+        int start = -1;
+        int end = -1;
+        Editable edit = getText();
+        if (lt_description && selStart >= 0 && edit != null) {
+            SuggestionSpanEx[] suggestions = edit.getSpans(selStart, selEnd, SuggestionSpanEx.class);
+            if (suggestions != null && suggestions.length > 0) {
+                start = edit.getSpanStart(suggestions[0]);
+                end = edit.getSpanEnd(suggestions[0]);
+                if (start != lastStart && end != lastEnd) {
+                    String description = suggestions[0].getDescription();
+                    if (!TextUtils.isEmpty(description))
+                        ToastEx.makeText(getContext(), description, Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+
+        lastStart = start;
+        lastEnd = end;
     }
 
     @Override

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2023 by Marcel Bokhorst (M66B)
+    Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.SuppressLint;
@@ -45,7 +45,7 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
     @SuppressLint("StaticFieldLeak")
     private static Fts4DbHelper instance = null;
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "fts4a.db";
 
     private Fts4DbHelper(Context context) {
@@ -76,6 +76,7 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
                 ", `keyword`" +
                 ", `text`" +
                 ", `notes`" +
+                ", `filenames`" +
                 ", notindexed=`account`" +
                 ", notindexed=`folder`" +
                 ", notindexed=`time`)");
@@ -98,7 +99,7 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
         DB.getInstance(context).message().resetFts();
     }
 
-    static void insert(SQLiteDatabase db, EntityMessage message, String text) {
+    static void insert(SQLiteDatabase db, EntityMessage message, List<EntityAttachment> attachments, String text) {
         Log.i("FTS insert id=" + message.id);
         List<Address> address = new ArrayList<>();
         if (message.from != null)
@@ -110,6 +111,12 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
         if (message.bcc != null)
             address.addAll(Arrays.asList(message.bcc));
 
+        List<String> filenames = new ArrayList<>();
+        if (attachments != null)
+            for (EntityAttachment attachment : attachments)
+                if (!TextUtils.isEmpty(attachment.name))
+                    filenames.add(attachment.name);
+
         delete(db, message.id);
 
         ContentValues cv = new ContentValues();
@@ -118,10 +125,11 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
         cv.put("folder", message.folder);
         cv.put("time", message.received);
         cv.put("address", MessageHelper.formatAddresses(address.toArray(new Address[0]), true, false));
-        cv.put("subject", breakText(message.subject));
+        cv.put("subject", processBreakText(message.subject));
         cv.put("keyword", TextUtils.join(" ", message.keywords));
-        cv.put("text", breakText(text));
-        cv.put("notes", breakText(message.notes));
+        cv.put("text", processBreakText(text));
+        cv.put("notes", processBreakText(message.notes));
+        cv.put("filenames", processBreakText(TextUtils.join(" ", filenames)));
         db.insertWithOnConflict("message", null, cv, SQLiteDatabase.CONFLICT_FAIL);
     }
 
@@ -138,12 +146,14 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
                 .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
     }
 
-    static String breakText(String text) {
+    static String processBreakText(String text) {
         if (TextUtils.isEmpty(text))
             return "";
 
-        text = preprocessText(text);
+        return breakText(preprocessText(text));
+    }
 
+    static String breakText(String text) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
             return text;
 
@@ -187,33 +197,54 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
             SQLiteDatabase db,
             Long account, Long folder, long[] exclude,
             BoundaryCallbackMessages.SearchCriteria criteria, String query) {
-        String search = escape(breakText(query));
+        String search = escape(processBreakText(query));
 
-        String select = "";
-        if (account != null)
-            select += "account = " + account + " AND ";
-        if (folder != null)
-            select += "folder = " + folder + " AND ";
+        StringBuilder select = new StringBuilder();
+        List<String> args = new ArrayList<>();
+
+        if (account != null) {
+            select.append("account = CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(account));
+        }
+
+        if (folder != null) {
+            select.append("folder = CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(folder));
+        }
+
         if (exclude.length > 0) {
-            select += "NOT folder IN (";
+            select.append("NOT folder IN (");
             for (int i = 0; i < exclude.length; i++) {
                 if (i > 0)
-                    select += ", ";
-                select += exclude[i];
+                    select.append(", ");
+                select.append("CAST(? AS INTEGER)");
+                args.add(Long.toString(exclude[i]));
             }
-            select += ") AND ";
+            select.append(") AND ");
         }
-        if (criteria.after != null)
-            select += "time > " + criteria.after + " AND ";
-        if (criteria.before != null)
-            select += "time < " + criteria.before + " AND ";
 
-        Log.i("FTS select=" + select + " search=" + search + " query=" + query);
+        if (criteria.after != null) {
+            select.append("time > CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(criteria.after));
+        }
+
+        if (criteria.before != null) {
+            select.append("time < CAST(? AS INTEGER) AND ");
+            args.add(Long.toString(criteria.before));
+        }
+
+        select.append("message MATCH ?");
+        args.add(search);
+
+        Log.i("FTS select=" + select +
+                " args=" + TextUtils.join(", ", args) +
+                " query=" + query);
         List<Long> result = new ArrayList<>();
+        // TODO CASA composed SQL with placeholders
         try (Cursor cursor = db.query(
                 "message", new String[]{"rowid"},
-                select + "message MATCH ?",
-                new String[]{search},
+                select.toString(),
+                args.toArray(new String[0]),
                 null, null, "time DESC", null)) {
             while (cursor != null && cursor.moveToNext())
                 result.add(cursor.getLong(0));
@@ -250,7 +281,7 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
         for (File file : db.getParentFile().listFiles())
             if (file.getName().startsWith(DATABASE_NAME)) {
                 Log.i("FTS delete=" + file);
-                file.delete();
+                Helper.secureDelete(file);
             }
     }
 }
