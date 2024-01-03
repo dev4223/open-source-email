@@ -44,6 +44,8 @@ crowdin.properties
 app/.cxx/
 build
 captures
+android/
+koitlin-profiles/
 caches/
 wrapper/
 daemon/
