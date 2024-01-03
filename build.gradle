@@ -7,8 +7,6 @@ buildscript {
 
     dependencies {
         // https://developer.android.com/studio/releases/gradle-plugin
-        //classpath 'com.android.tools.build:gradle:8.0.1'
-        //classpath 'com.android.tools.build:gradle:8.0.2'
         classpath 'com.android.tools.build:gradle:8.2.0'
 
         // https://github.com/bugsnag/bugsnag-android-gradle-plugin
