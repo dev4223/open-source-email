@@ -9,6 +9,7 @@
 /.idea/modules.xml
 /.idea/tasks.xml
 /.idea/workspace.xml
+/.idea/migrations.xml
 /.idea/misc.xml
 /.idea/vcs.xml
 /.idea/encodings.xml
@@ -43,3 +44,8 @@ crowdin.properties
 app/.cxx/
 build
 captures
+caches/
+wrapper/
+daemon/
+native/
+jdks/
