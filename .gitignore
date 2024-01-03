@@ -45,7 +45,7 @@ app/.cxx/
 build
 captures
 android/
-koitlin-profiles/
+kotlin-profile/
 caches/
 wrapper/
 daemon/
