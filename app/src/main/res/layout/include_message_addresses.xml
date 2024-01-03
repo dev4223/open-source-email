@@ -440,49 +440,9 @@
             tvSignedByTitle,
             tvSubmitterTitle,tvDeliveredToTitle,
             tvFromExTitle,tvToTitle,tvReplyToTitle,
-            tvCcTitle,tvBccTitle,
-            tvIdentityTitle,
+            tvCcTitle,tvBccTitle,tvIdentityTitle,
             tvSentTitle,tvReceivedTitle,tvStoredTitle,
-            tvSizeExTitle,tvLanguageTitle,tvThreadTitle" />
-
-    <TextView
-        android:id="@+id/tvSubjectEx"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:text="Subject"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textIsSelectable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvLanguage" />
-
-    <TextView
-        android:id="@+id/tvFlags"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:text="Flags"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textIsSelectable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSubjectEx" />
-
-    <TextView
-        android:id="@+id/tvKeywordsEx"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:text="Keywords"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textIsSelectable="false"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvFlags" />
+            tvLanguageTitle" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"

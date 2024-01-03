@@ -2817,7 +2817,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubjectEx.setText(message.subject);
             
             // dev4223:240102: old style
-            /*if (subject_italic)
+            /*
+            if (subject_italic)
                 tvSubjectEx.setTypeface(Typeface.DEFAULT, Typeface.ITALIC);
             else
                 tvSubjectEx.setTypeface(Typeface.DEFAULT);
@@ -2828,11 +2829,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubjectEx.setTypeface(Typeface.DEFAULT,
                     (subject_italic ? Typeface.ITALIC : Typeface.NORMAL) |
                             (homoSubject ? Typeface.NORMAL : Typeface.BOLD));
-
+            // dev4223:240102: old style
+            /*
             boolean show_thread = (show_addresses && (BuildConfig.DEBUG || debug));
             tvThreadTitle.setVisibility(show_thread ? View.VISIBLE : View.GONE);
             tvThread.setVisibility(show_thread ? View.VISIBLE : View.GONE);
             tvThread.setText(message.thread);
+            */
 
             // dev4223: show Flags and Keywords dependand on show addresses
             paddingAddressBottom.setMinimumHeight(show_addresses ? (compact ? 18 : 36) : 0);
