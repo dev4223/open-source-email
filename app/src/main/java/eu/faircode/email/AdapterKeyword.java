@@ -98,7 +98,7 @@ public class AdapterKeyword extends RecyclerView.Adapter<AdapterKeyword.ViewHold
         private void bindTo(TupleKeyword keyword) {
             cbKeyword.setText(getTitle(keyword.name));
             cbKeyword.setChecked(keyword.selected);
-            btnColor.setColor(keyword.color);
+            btnColor.setColor(keyword.color, true);
             grpNotEdit.setVisibility(View.VISIBLE);
             grpEdit.setVisibility(View.GONE);
         }
@@ -220,7 +220,7 @@ public class AdapterKeyword extends RecyclerView.Adapter<AdapterKeyword.ViewHold
         }
 
         private void updateColor(TupleKeyword keyword, Integer color) {
-            btnColor.setColor(color);
+            btnColor.setColor(color, true);
             keyword.color = color;
 
             String key = "kwcolor." + keyword.name;
@@ -228,6 +228,8 @@ public class AdapterKeyword extends RecyclerView.Adapter<AdapterKeyword.ViewHold
                 prefs.edit().remove(key).apply();
             else
                 prefs.edit().putInt(key, keyword.color).apply();
+
+            prefs.edit().remove("keyword." + keyword.name);
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(new Intent(FragmentMessages.ACTION_KEYWORDS));

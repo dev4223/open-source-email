@@ -76,6 +76,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
+import java.io.IOException;
 import java.net.IDN;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -168,6 +169,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         // Get views
         final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_open_link, null);
         scroll = dview.findViewById(R.id.scroll);
+        final TextView tvCaption = dview.findViewById(R.id.tvCaption);
         final ImageButton ibInfo = dview.findViewById(R.id.ibInfo);
         final TextView tvTitle = dview.findViewById(R.id.tvTitle);
         final ImageButton ibDifferent = dview.findViewById(R.id.ibDifferent);
@@ -182,6 +184,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         final CheckBox cbSecure = dview.findViewById(R.id.cbSecure);
         final CheckBox cbSanitize = dview.findViewById(R.id.cbSanitize);
         final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+        final CheckBox cbNeverAgain = dview.findViewById(R.id.cbNeverAgain);
         final Spinner spOpenWith = dview.findViewById(R.id.spOpenWith);
 
         ibMore = dview.findViewById(R.id.ibMore);
@@ -295,11 +298,16 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         ibCopy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final Context context = v.getContext();
                 ClipboardManager clipboard = Helper.getSystemService(context, ClipboardManager.class);
                 if (clipboard == null)
                     return;
 
-                ClipData clip = ClipData.newPlainText(title, etLink.getText().toString());
+                String link = etLink.getText().toString();
+                if (link.startsWith("mailto:"))
+                    link = link.substring("mailto:".length());
+
+                ClipData clip = ClipData.newPlainText(title, link);
                 clipboard.setPrimaryClip(clip);
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
@@ -341,6 +349,13 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 prefs.edit().putBoolean(getConfirmHost(uri) + ".confirm_link", !isChecked).apply();
+            }
+        });
+
+        cbNeverAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cbNotAgain.setEnabled(!isChecked);
             }
         });
 
@@ -463,7 +478,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                         Uri uri = args.getParcelable("uri");
                         String host = UriHelper.getRootDomain(context, UriHelper.getHost(uri));
                         if (TextUtils.isEmpty(host))
-                            throw new UnknownHostException("Host unknown " + uri);
+                            throw new UnknownHostException("No root domain " + uri);
                         args.putString("host", host);
                         return Whois.get(host);
                     }
@@ -496,7 +511,7 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Log.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
                     }
                 }.execute(FragmentDialogOpenLink.this, args, "link:whois");
             }
@@ -528,6 +543,17 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         });
 
         // Initialize
+
+        int icon = 0;
+        if (UriHelper.isHyperLink(uri))
+            icon = R.drawable.twotone_insert_link_45_24;
+        else if (UriHelper.isMail(uri))
+            icon = R.drawable.twotone_mail_24;
+        else if (UriHelper.isPhoneNumber(uri))
+            icon = R.drawable.twotone_call_24;
+        else if (UriHelper.isGeo(uri))
+            icon = R.drawable.twotone_language_24;
+        tvCaption.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
 
         tvTitle.setText(title);
         tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
@@ -590,6 +616,8 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
         String chost = getConfirmHost(uri);
         cbNotAgain.setText(context.getString(R.string.title_no_ask_for_again, chost));
         cbNotAgain.setVisibility(!always_confirm && !sanitize_links && chost != null ? View.VISIBLE : View.GONE);
+
+        cbNeverAgain.setVisibility(!always_confirm && !sanitize_links ? View.VISIBLE : View.GONE);
 
         setMore(false);
 
@@ -765,13 +793,16 @@ public class FragmentDialogOpenLink extends FragmentDialogBase {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (chost != null &&
-                                cbNotAgain.getVisibility() == View.VISIBLE && cbNotAgain.isChecked())
+                        if (cbNeverAgain.getVisibility() == View.VISIBLE && cbNeverAgain.isChecked())
+                            prefs.edit().putBoolean("confirm_links", false).apply();
+                        else if (chost != null &&
+                                cbNotAgain.getVisibility() == View.VISIBLE && cbNotAgain.isChecked()) {
                             prefs.edit()
                                     .putBoolean(chost + ".link_view", false)
                                     .putBoolean(chost + ".link_sanitize",
                                             cbSanitize.getVisibility() == View.VISIBLE && cbSanitize.isChecked())
                                     .apply();
+                        }
 
                         Uri theUri = Uri.parse(etLink.getText().toString());
                         Package pkg = (Package) spOpenWith.getSelectedItem();

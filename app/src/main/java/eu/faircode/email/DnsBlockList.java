@@ -71,6 +71,21 @@ public class DnsBlockList {
                     "127.0.1.106", // abused legit botnet C&C
             }),
 
+            new BlockList(false, "UCEPROTECT/Level 1", "dnsbl-1.uceprotect.net", true, new String[]{
+                    // https://www.uceprotect.net/en/index.php?m=6&s=11
+                    "127.0.0.2",
+            }),
+
+            new BlockList(false, "UCEPROTECT/Level 2", "dnsbl-2.uceprotect.net", true, new String[]{
+                    // https://www.uceprotect.net/en/index.php?m=6&s=11
+                    "127.0.0.2",
+            }),
+
+            new BlockList(false, "UCEPROTECT/Level 3", "dnsbl-3.uceprotect.net", true, new String[]{
+                    // https://www.uceprotect.net/en/index.php?m=6&s=11
+                    "127.0.0.2",
+            }),
+
             new BlockList(false, "Spamcop", "bl.spamcop.net", true, new String[]{
                     // https://www.spamcop.net/fom-serve/cache/291.html
                     "127.0.0.2",
@@ -205,7 +220,7 @@ public class DnsBlockList {
         for (BlockList blocklist : blocklists)
             if (isEnabled(context, blocklist) &&
                     blocklist.numeric == numeric &&
-                    isJunk(host, blocklist)) {
+                    isJunk(context, host, blocklist)) {
                 blocked = true;
                 break;
             }
@@ -217,11 +232,11 @@ public class DnsBlockList {
         return blocked;
     }
 
-    private static boolean isJunk(String host, BlockList blocklist) {
+    private static boolean isJunk(Context context, String host, BlockList blocklist) {
         try {
             if (blocklist.numeric) {
                 long start = new Date().getTime();
-                InetAddress[] addresses = InetAddress.getAllByName(host);
+                InetAddress[] addresses = DnsHelper.getAllByName(context, host);
                 long elapsed = new Date().getTime() - start;
                 Log.i("isJunk resolved=" + host + " elapse=" + elapsed + " ms");
                 for (InetAddress addr : addresses) {
@@ -249,7 +264,7 @@ public class DnsBlockList {
 
                         lookup.append(blocklist.address);
 
-                        if (isJunk(lookup.toString(), blocklist.responses))
+                        if (isJunk(context, lookup.toString(), blocklist.responses))
                             return true;
                     } catch (Throwable ex) {
                         Log.w(ex);
@@ -258,7 +273,7 @@ public class DnsBlockList {
             } else {
                 long start = new Date().getTime();
                 String lookup = host + "." + blocklist.address;
-                boolean junk = isJunk(lookup, blocklist.responses);
+                boolean junk = isJunk(context, lookup, blocklist.responses);
                 long elapsed = new Date().getTime() - start;
                 Log.i("isJunk" + " " + lookup + "=" + junk + " elapsed=" + elapsed);
                 return junk;
@@ -270,12 +285,12 @@ public class DnsBlockList {
         return false;
     }
 
-    private static boolean isJunk(String lookup, InetAddress[] responses) {
+    private static boolean isJunk(Context context, String lookup, InetAddress[] responses) {
         long start = new Date().getTime();
         InetAddress result;
         try {
             // Possibly blocked
-            result = InetAddress.getByName(lookup);
+            result = DnsHelper.getByName(context, lookup);
         } catch (UnknownHostException ignored) {
             // Not blocked
             result = null;

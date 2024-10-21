@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scroll"
@@ -575,6 +575,28 @@
                     app:switchPadding="12dp" />
 
                 <TextView
+                    android:id="@+id/tvSeenDelay"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_seen_delay"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swCollapseMultiple" />
+
+                <eu.faircode.email.SpinnerEx
+                    android:id="@+id/spSeenDelay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:entries="@array/undoNames"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSeenDelay" />
+
+                <TextView
                     android:id="@+id/tvAutoSeenHint"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -587,7 +609,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swCollapseMultiple" />
+                    app:layout_constraintTop_toBottomOf="@id/spSeenDelay" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAutoClose"
@@ -627,7 +649,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvAutoCloseHint" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spOnClose"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -685,7 +707,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swCollapseMarked" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spUndoTimeout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -789,6 +811,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swFlagUnsnoozed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_star_unsnoozed"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swFlagSnoozed"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAutoImportant"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -796,7 +830,7 @@
                     android:text="@string/title_advanced_auto_important"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swFlagSnoozed"
+                    app:layout_constraintTop_toBottomOf="@id/swFlagUnsnoozed"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -868,6 +902,28 @@
                     app:layout_constraintTop_toBottomOf="@id/swMoveThreadAll"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSwipeTrashAll"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_swipe_trash_all"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swMoveThreadSent"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swGmailDeleteAll"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_gmail_delete_all"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swSwipeTrashAll"
+                    app:switchPadding="12dp" />
+
                 <Button
                     android:id="@+id/btnDefaultFolder"
                     style="?android:attr/buttonStyleSmall"
@@ -879,7 +935,7 @@
                     android:tag="disable"
                     android:text="@string/title_advanced_default_folder"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swMoveThreadSent" />
+                    app:layout_constraintTop_toBottomOf="@id/swGmailDeleteAll" />
 
                 <TextView
                     android:id="@+id/tvDefaultFolderHint"
@@ -905,4 +961,4 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

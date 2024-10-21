@@ -114,7 +114,6 @@ public class ConnectionHelper {
             "NO", // Norway
             "PL", // Poland
             "PT", // Portugal
-            "RE", // La Réunion
             "RO", // Romania
             "SK", // Slovakia
             "SI", // Slovenia
@@ -442,33 +441,43 @@ public class ConnectionHelper {
     }
 
     static Boolean isPrivateDnsActive(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+                return null;
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+            if (cm == null)
+                return null;
+            Network active = cm.getActiveNetwork();
+            if (active == null)
+                return null;
+            LinkProperties props = cm.getLinkProperties(active);
+            if (props == null)
+                return null;
+            return props.isPrivateDnsActive();
+        } catch (Throwable ex) {
+            Log.e(ex);
             return null;
-        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
-        if (cm == null)
-            return null;
-        Network active = cm.getActiveNetwork();
-        if (active == null)
-            return null;
-        LinkProperties props = cm.getLinkProperties(active);
-        if (props == null)
-            return null;
-        return props.isPrivateDnsActive();
+        }
     }
 
     static String getPrivateDnsServerName(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+                return null;
+            ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
+            if (cm == null)
+                return null;
+            Network active = cm.getActiveNetwork();
+            if (active == null)
+                return null;
+            LinkProperties props = cm.getLinkProperties(active);
+            if (props == null)
+                return null;
+            return props.getPrivateDnsServerName();
+        } catch (Throwable ex) {
+            Log.e(ex);
             return null;
-        ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
-        if (cm == null)
-            return null;
-        Network active = cm.getActiveNetwork();
-        if (active == null)
-            return null;
-        LinkProperties props = cm.getLinkProperties(active);
-        if (props == null)
-            return null;
-        return props.getPrivateDnsServerName();
+        }
     }
 
     static boolean isIoError(Throwable ex) {
@@ -488,6 +497,19 @@ public class ConnectionHelper {
                     "EOF on socket".equals(ex.getMessage()) ||
                     "Read timed out".equals(ex.getMessage()) || // POP3
                     "failed to connect".equals(ex.getMessage()))
+                return true;
+            ex = ex.getCause();
+        }
+
+        return false;
+    }
+
+    static boolean isAborted(Throwable ex) {
+        while (ex != null) {
+            String msg = ex.getMessage();
+            if (msg != null &&
+                    (msg.contains("Connection reset by peer") ||
+                            msg.contains("Connection closed by peer")))
                 return true;
             ex = ex.getCause();
         }
@@ -645,34 +667,68 @@ public class ConnectionHelper {
         boolean has4 = false;
         boolean has6 = false;
 
-        String ifacename = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        // props={
+        //   InterfaceName: rmnet16
+        //   LinkAddresses: [ 2a01:599:a1b:a486:9aa1:495d:81d9:5386/64 ]
+        //   DnsAddresses: [ /2a01:598:7ff:0:10:74:210:221,/2a01:598:7ff:0:10:74:210:222 ]
+        //   Domains: null
+        //   MTU: 1500
+        //   TcpBufferSizes: 2097152,6291456,16777216,512000,2097152,8388608
+        //   Routes: [ ::/0 -> :: rmnet16 mtu 1500,2a01:599:a1b:a486::/64 -> :: rmnet16 mtu 0 ]
+        //   Nat64Prefix: 64:ff9b::/96
+        //   Stacked: [[ {
+        //       InterfaceName: v4-rmnet16
+        //       LinkAddresses: [ 192.0.0.4/32 ]
+        //       DnsAddresses: [ ]
+        //       Domains: null
+        //       MTU: 0
+        //       Routes: [ 0.0.0.0/0 -> 192.0.0.4 v4-rmnet16 mtu 0 ]
+        //   } ]]
+        // }
+
+/*
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 ConnectivityManager cm = Helper.getSystemService(context, ConnectivityManager.class);
                 Network active = (cm == null ? null : cm.getActiveNetwork());
                 LinkProperties props = (active == null ? null : cm.getLinkProperties(active));
-                ifacename = (props == null ? null : props.getInterfaceName());
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            while (interfaces != null && interfaces.hasMoreElements()) {
-                NetworkInterface ni = interfaces.nextElement();
-                if (ifacename != null && !ifacename.equals(ni.getName()))
-                    continue;
-                for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
-                    InetAddress addr = iaddr.getAddress();
-                    boolean local = (addr.isLoopbackAddress() || addr.isLinkLocalAddress());
-                    EntityLog.log(context, EntityLog.Type.Network,
-                            "Interface=" + ni + " addr=" + addr + " local=" + local);
-                    if (!local)
+                String ifacename = (props == null ? null : props.getInterfaceName());
+                List<LinkAddress> las = (props == null ? null : props.getLinkAddresses());
+                if (las != null)
+                    for (LinkAddress la : las) {
+                        InetAddress addr = la.getAddress();
+                        boolean local = (addr.isLoopbackAddress() || addr.isLinkLocalAddress());
+                        EntityLog.log(context, EntityLog.Type.Network,
+                                "Link addr=" + addr + " local=" + local + " interface=" + ifacename);
+                        if (local)
+                            continue;
                         if (addr instanceof Inet4Address)
                             has4 = true;
                         else if (addr instanceof Inet6Address)
                             has6 = true;
-                }
+                    }
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+            return new boolean[]{has4, has6};
+        }
+*/
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces != null && interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+                if (ni != null && ni.isUp())
+                    for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
+                        InetAddress addr = iaddr.getAddress();
+                        boolean local = (addr.isLoopbackAddress() || addr.isLinkLocalAddress());
+                        EntityLog.log(context, EntityLog.Type.Network,
+                                "Interface=" + ni + " addr=" + addr + " local=" + local);
+                        if (!local)
+                            if (addr instanceof Inet4Address)
+                                has4 = true;
+                            else if (addr instanceof Inet6Address)
+                                has6 = true;
+                    }
             }
         } catch (Throwable ex) {
             Log.e(ex);

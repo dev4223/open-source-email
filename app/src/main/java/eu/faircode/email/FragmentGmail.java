@@ -33,14 +33,12 @@ import android.accounts.AuthenticatorException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Paint;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -204,6 +202,7 @@ public class FragmentGmail extends FragmentBase {
                         Log.e("newChooseAccountIntent unavailable");
                     startActivityForResult(intent, ActivitySetup.REQUEST_CHOOSE_ACCOUNT);
                 } catch (Throwable ex) {
+                    Log.e(ex);
                     if (ex instanceof IllegalArgumentException)
                         tvError.setText(new ThrowableWrapper(ex).getSafeMessage());
                     else
@@ -287,20 +286,6 @@ public class FragmentGmail extends FragmentBase {
         btnGrant.setEnabled(!granted);
         tvGranted.setVisibility(granted ? View.VISIBLE : View.GONE);
 
-        boolean hasName = (etName.getText() != null && etName.getText().length() > 0);
-        if (granted && !hasName) {
-            try (Cursor cursor = getContext().getContentResolver().query(
-                    ContactsContract.Profile.CONTENT_URI,
-                    new String[]{ContactsContract.Profile.DISPLAY_NAME}, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int colDisplay = cursor.getColumnIndex(ContactsContract.Profile.DISPLAY_NAME);
-                    etName.setText(cursor.getString(colDisplay));
-                }
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-        }
-
         etName.setEnabled(granted);
         cbPop.setEnabled(granted);
         cbRecent.setEnabled(granted);
@@ -369,7 +354,8 @@ public class FragmentGmail extends FragmentBase {
                                 } catch (Throwable ex) {
                                     // android.accounts.OperationCanceledException = ServiceDisabled?
                                     if (ex instanceof AuthenticatorException &&
-                                            "ServiceDisabled".equals(ex.getMessage()))
+                                            ("ERROR".equals(ex.getMessage())||
+                                                    "ServiceDisabled".equals(ex.getMessage())))
                                         ex = new IllegalArgumentException(disabled, ex);
 
                                     Log.e(ex);
@@ -479,11 +465,11 @@ public class FragmentGmail extends FragmentBase {
                 EmailProvider.Server inbound = (pop ? provider.pop : provider.imap);
                 String aprotocol = (pop ? (inbound.starttls ? "pop3" : "pop3s") : (inbound.starttls ? "imap" : "imaps"));
                 int aencryption = (inbound.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
-                try (EmailService aservice = new EmailService(
-                        context, aprotocol, null, aencryption, false, false,
+                try (EmailService aservice = new EmailService(context,
+                        aprotocol, null, aencryption, false, false, false,
                         EmailService.PURPOSE_CHECK, true)) {
                     aservice.connect(
-                            inbound.host, inbound.port,
+                            false, inbound.host, inbound.port,
                             AUTH_TYPE_GMAIL, null,
                             user, password,
                             null, null);
@@ -497,11 +483,11 @@ public class FragmentGmail extends FragmentBase {
                 Long max_size;
                 String iprotocol = (provider.smtp.starttls ? "smtp" : "smtps");
                 int iencryption = (provider.smtp.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
-                try (EmailService iservice = new EmailService(
-                        context, iprotocol, null, iencryption, false, false,
+                try (EmailService iservice = new EmailService(context,
+                        iprotocol, null, iencryption, false, false, false,
                         EmailService.PURPOSE_CHECK, true)) {
                     iservice.connect(
-                            provider.smtp.host, provider.smtp.port,
+                            false, provider.smtp.host, provider.smtp.port,
                             AUTH_TYPE_GMAIL, null,
                             user, password,
                             null, null);
@@ -608,6 +594,8 @@ public class FragmentGmail extends FragmentBase {
 
                 ServiceSynchronize.eval(context, "Gmail");
                 args.putBoolean("updated", update != null);
+
+                FairEmailBackupAgent.dataChanged(context);
 
                 return null;
             }

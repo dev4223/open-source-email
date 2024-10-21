@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -110,6 +110,19 @@
             app:layout_constraintTop_toBottomOf="@id/cbCopy" />
 
         <CheckBox
+            android:id="@+id/cbLabels"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawableEnd="@drawable/twotone_label_24"
+            android:drawablePadding="6dp"
+            android:text="@string/title_labels_btn"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbKeywords" />
+
+        <CheckBox
             android:id="@+id/cbNotes"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -120,7 +133,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbKeywords" />
+            app:layout_constraintTop_toBottomOf="@id/cbLabels" />
 
         <CheckBox
             android:id="@+id/cbSeen"
@@ -175,6 +188,19 @@
             app:layout_constraintTop_toBottomOf="@id/cbImportance" />
 
         <CheckBox
+            android:id="@+id/cbSummarize"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawableEnd="@drawable/twotone_smart_toy_24"
+            android:drawablePadding="6dp"
+            android:text="@string/title_summarize"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbTranslate" />
+
+        <CheckBox
             android:id="@+id/cbFullScreen"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -185,7 +211,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbTranslate" />
+            app:layout_constraintTop_toBottomOf="@id/cbSummarize" />
 
         <CheckBox
             android:id="@+id/cbForceLight"
@@ -342,5 +368,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cbUnsubscribe" />
+
+        <CheckBox
+            android:id="@+id/cbAnswer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawableEnd="@drawable/twotone_reply_24_options"
+            android:drawablePadding="6dp"
+            android:text="@string/title_reply"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbRule" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

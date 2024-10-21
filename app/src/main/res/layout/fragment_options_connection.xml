@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scroll"
@@ -125,7 +125,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvMeteredWarning" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spDownload"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -302,6 +302,20 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swDownloadPlain" />
 
+                <TextView
+                    android:id="@+id/tvPlainRemark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_plain_remark"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?attr/colorWarning"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvPlainHint" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swValidated"
                     android:layout_width="0dp"
@@ -310,7 +324,7 @@
                     android:text="@string/title_advanced_validated"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvPlainHint"
+                    app:layout_constraintTop_toBottomOf="@id/tvPlainRemark"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -400,6 +414,19 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swPreferIp6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_prefer_ip6"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swPreferIp4"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swBindSocket"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -408,7 +435,7 @@
                     android:text="@string/title_advanced_bind_socket"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swPreferIp4"
+                    app:layout_constraintTop_toBottomOf="@id/swPreferIp6"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -424,6 +451,55 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swDnsCustom"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_dns_custom"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swStandaloneVpn"
+                    app:switchPadding="12dp" />
+
+                <TextView
+                    android:id="@+id/tvDnsExtra"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_dns"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swDnsCustom" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etDnsExtra"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvDnsExtra" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swDnsClear"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_dns_clear"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/etDnsExtra"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swTcpKeepAlive"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -432,7 +508,7 @@
                     android:text="@string/title_advanced_tcp_keep_alive"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swStandaloneVpn"
+                    app:layout_constraintTop_toBottomOf="@id/swDnsClear"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -683,6 +759,20 @@
                     app:constraint_referenced_ids="swValidated,tvValidatedHint,swVpnOnly" />
 
                 <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpCustomDns"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="
+                    swDnsCustom,tvDnsExtra,etDnsExtra" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpBC"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="
+                    swBouncyCastle,swFipsMode,ibBouncyCastle" />
+
+                <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpCustomSsl"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
@@ -854,4 +944,4 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

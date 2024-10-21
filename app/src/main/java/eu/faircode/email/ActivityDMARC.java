@@ -48,7 +48,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -65,18 +64,17 @@ public class ActivityDMARC extends ActivityBase {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setSubtitle(R.string.title_advanced_dmarc_viewer);
-
         View view = LayoutInflater.from(this).inflate(R.layout.activity_dmarc, null);
         setContentView(view);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setSubtitle(R.string.title_advanced_dmarc_viewer);
 
         tvDmarc = findViewById(R.id.tvDmarc);
         pbWait = findViewById(R.id.pbWait);
         grpReady = findViewById(R.id.grpReady);
 
         // Initialize
-        FragmentDialogTheme.setBackground(this, view, false);
         grpReady.setVisibility(View.GONE);
 
         load();
@@ -155,7 +153,7 @@ public class ActivityDMARC extends ActivityBase {
                 if (ex instanceof NoStreamException)
                     ((NoStreamException) ex).report(ActivityDMARC.this);
                 else
-                    Log.unexpectedError(getSupportFragmentManager(), ex);
+                    Log.unexpectedError(getSupportFragmentManager(), ex, !(ex instanceof XmlPullParserException));
                 grpReady.setVisibility(View.VISIBLE);
             }
         }.execute(this, args, "dmarc:decode");
@@ -464,16 +462,10 @@ public class ActivityDMARC extends ActivityBase {
             }
 
             List<DnsHelper.DnsRecord> records = new ArrayList<>();
-            try {
-                records.addAll(Arrays.asList(
-                        DnsHelper.lookup(context, "_dmarc." + lastDomain, "txt")));
-            } catch (UnknownHostException ignored) {
-            }
-            try {
-                records.addAll(Arrays.asList(
-                        DnsHelper.lookup(context, "default._bimi." + lastDomain, "txt")));
-            } catch (UnknownHostException ignored) {
-            }
+            records.addAll(Arrays.asList(
+                    DnsHelper.lookup(context, "_dmarc." + lastDomain, "txt")));
+            records.addAll(Arrays.asList(
+                    DnsHelper.lookup(context, "default._bimi." + lastDomain, "txt")));
 
             for (DnsHelper.DnsRecord r : records)
                 ssb.append(r.response).append("\n");
@@ -511,14 +503,8 @@ public class ActivityDMARC extends ActivityBase {
                                 String[] net = domain.split("/");
                                 Integer prefix = (net.length > 1 ? Helper.parseInt(net[1]) : null);
                                 List<DnsHelper.DnsRecord> as = new ArrayList<>();
-                                try {
-                                    as.addAll(Arrays.asList(DnsHelper.lookup(context, net[0], "a")));
-                                } catch (UnknownHostException ignored) {
-                                }
-                                try {
-                                    as.addAll(Arrays.asList(DnsHelper.lookup(context, net[0], "aaaa")));
-                                } catch (UnknownHostException ignored) {
-                                }
+                                as.addAll(Arrays.asList(DnsHelper.lookup(context, net[0], "a")));
+                                as.addAll(Arrays.asList(DnsHelper.lookup(context, net[0], "aaaa")));
                                 for (DnsHelper.DnsRecord a : as)
                                     if (prefix == null
                                             ? text.equals(a.response)
@@ -529,35 +515,26 @@ public class ActivityDMARC extends ActivityBase {
                                         break;
                                     }
                             } else if ("mx".equals(ip) || ip.startsWith("mx:")) {
-                                try {
-                                    String domain = (ip.startsWith("mx:") ? ip.substring(3) : p.first);
-                                    String[] net = domain.split("/");
-                                    Integer prefix = (net.length > 1 ? Helper.parseInt(net[1]) : null);
-                                    DnsHelper.DnsRecord[] mxs = DnsHelper.lookup(context, net[0], "mx");
-                                    for (DnsHelper.DnsRecord mx : mxs) {
-                                        List<DnsHelper.DnsRecord> as = new ArrayList<>();
-                                        try {
-                                            as.addAll(Arrays.asList(DnsHelper.lookup(context, mx.response, "a")));
-                                        } catch (UnknownHostException ignored) {
-                                        }
-                                        try {
-                                            as.addAll(Arrays.asList(DnsHelper.lookup(context, mx.response, "aaaa")));
-                                        } catch (UnknownHostException ignored) {
-                                        }
-                                        for (DnsHelper.DnsRecord a : as) {
-                                            if (prefix == null
-                                                    ? text.equals(a.response)
-                                                    : ConnectionHelper.inSubnet(text, a.response, prefix)) {
-                                                valid = allow;
-                                                because = (allow ? '+' : '-') + ip +
-                                                        " in " + domain + (prefix == null ? "" : "/" + prefix);
-                                                break;
-                                            }
-                                        }
-                                        if (valid != null)
+                                String domain = (ip.startsWith("mx:") ? ip.substring(3) : p.first);
+                                String[] net = domain.split("/");
+                                Integer prefix = (net.length > 1 ? Helper.parseInt(net[1]) : null);
+                                DnsHelper.DnsRecord[] mxs = DnsHelper.lookup(context, net[0], "mx");
+                                for (DnsHelper.DnsRecord mx : mxs) {
+                                    List<DnsHelper.DnsRecord> as = new ArrayList<>();
+                                    as.addAll(Arrays.asList(DnsHelper.lookup(context, mx.response, "a")));
+                                    as.addAll(Arrays.asList(DnsHelper.lookup(context, mx.response, "aaaa")));
+                                    for (DnsHelper.DnsRecord a : as) {
+                                        if (prefix == null
+                                                ? text.equals(a.response)
+                                                : ConnectionHelper.inSubnet(text, a.response, prefix)) {
+                                            valid = allow;
+                                            because = (allow ? '+' : '-') + ip +
+                                                    " in " + domain + (prefix == null ? "" : "/" + prefix);
                                             break;
+                                        }
                                     }
-                                } catch (UnknownHostException ignored) {
+                                    if (valid != null)
+                                        break;
                                 }
                             } else if ("ptr".equals(ip) || ip.startsWith("ptr:")) {
                                 valid = false;
@@ -587,7 +564,7 @@ public class ActivityDMARC extends ActivityBase {
             }
 
             try {
-                InetAddress addr = InetAddress.getByName(text);
+                InetAddress addr = DnsHelper.getByName(context, text);
                 IPInfo info = IPInfo.getOrganization(addr, context);
                 ssb.append('(').append(info.org).append(") ");
             } catch (Throwable ex) {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -22,7 +22,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Spinner
+        <eu.faircode.email.SpinnerEx
             android:id="@+id/spAccount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/spAccount" />
 
-        <Spinner
+        <eu.faircode.email.SpinnerEx
             android:id="@+id/spFolder"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -58,13 +58,34 @@
             app:layout_constraintTop_toBottomOf="@+id/spFolder" />
 
         <CheckBox
+            android:id="@+id/cbShowUnseen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:checked="true"
+            android:text="@string/title_widget_show_unseen"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbUnseen" />
+
+        <CheckBox
             android:id="@+id/cbFlagged"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/title_widget_flagged"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbUnseen" />
+            app:layout_constraintTop_toBottomOf="@id/cbShowUnseen" />
+
+        <CheckBox
+            android:id="@+id/cbShowFlagged"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="@string/title_widget_show_flagged"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbFlagged" />
 
         <CheckBox
             android:id="@+id/cbDayNight"
@@ -74,7 +95,7 @@
             android:checked="true"
             android:text="@string/title_widget_day_night"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbFlagged" />
+            app:layout_constraintTop_toBottomOf="@id/cbShowFlagged" />
 
         <CheckBox
             android:id="@+id/cbHighlight"
@@ -144,7 +165,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cbSeparatorLines" />
 
-        <Spinner
+        <eu.faircode.email.SpinnerEx
             android:id="@+id/spFontSize"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -162,7 +183,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/spFontSize" />
 
-        <Spinner
+        <eu.faircode.email.SpinnerEx
             android:id="@+id/spPadding"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -182,7 +203,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/spPadding" />
 
-        <Spinner
+        <eu.faircode.email.SpinnerEx
             android:id="@+id/spSubjectLines"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -234,6 +255,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cbAccountName" />
 
+        <eu.faircode.email.EditTextPlain
+            android:id="@+id/etName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="12dp"
+            android:hint="@string/title_optional"
+            android:inputType="textCapSentences|textAutoCorrect"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbCaption" />
+
         <CheckBox
             android:id="@+id/cbRefresh"
             android:layout_width="wrap_content"
@@ -242,7 +277,7 @@
             android:checked="true"
             android:text="@string/title_widget_refresh"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbCaption" />
+            app:layout_constraintTop_toBottomOf="@id/etName" />
 
         <CheckBox
             android:id="@+id/cbCompose"
@@ -254,6 +289,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cbRefresh" />
 
+        <CheckBox
+            android:id="@+id/cbStandalone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/title_widget_standalone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbCompose" />
+
         <Button
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
@@ -263,7 +307,7 @@
             android:drawablePadding="6dp"
             android:text="@string/title_save"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbCompose" />
+            app:layout_constraintTop_toBottomOf="@id/cbStandalone" />
 
         <eu.faircode.email.ContentLoadingProgressBar
             android:id="@+id/pbWait"
@@ -286,4 +330,4 @@
         cbSemiTransparent,btnColor,
         tvFontSize,spFontSize,tvPadding,spPadding,btnSave" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

@@ -1,8 +1,8 @@
 # Einrichtungshilfe
 
-Es ist ziemlich einfach, FairEmail einzurichten. Sie müssen mindestens ein Konto hinzufügen, um E-Mails zu empfangen, und mindestens eine Identität, um E-Mails zu senden. Die Schnelleinrichtung wird ein Konto und eine Identität in einem Schritt für die meisten großen Anbieter hinzufügen.
+Das Einrichten von FairEmail ist ziemlich einfach. Sie müssen mindestens ein Konto hinzufügen, um E-Mails zu empfangen, und mindestens eine Identität, um E-Mails zu senden. Die Schnelleinrichtung wird ein Konto und eine Identität in einem Schritt für die meisten großen Anbieter hinzufügen.
 
-## Anforderungen
+## Voraussetzungen
 
 Für die Einrichtung von Konten und Identitäten ist eine Internetverbindung erforderlich.
 
@@ -10,7 +10,7 @@ Für die Einrichtung von Konten und Identitäten ist eine Internetverbindung erf
 
 Wählen Sie einfach den passenden Anbieter oder *»Anderer Anbieter«* aus, geben Ihren Namen, Ihre E-Mail-Adresse und Ihr Passwort ein und tippen auf *»Überprüfen«*.
 
-Dies funktioniert für die meisten E-Mail-Anbieter.
+Das funktioniert für die meisten großen E-Mail-Anbieter.
 
 Wenn die Schnelleinrichtung nicht funktioniert, müssen Sie Konto und Identität manuell einrichten, siehe Anweisungen unten.
 
@@ -30,7 +30,7 @@ Zur Verwendung von Alias-Adressen bitte [diese F&A](https://github.com/M66B/Fair
 
 ## Berechtigungen erteilen, um auf Kontaktinformationen zugreifen zu können
 
-Wenn Sie E-Mail-Adressen nachsehen, Kontaktfotos anzeigen lassen möchten usw., müssen Sie FairEmail die Berechtigung zum Lesen von Kontaktinformationen erteilen. Einfach auf *Berechtigungen erteilen* tippen und *Zulassen* auswählen.
+Wenn Sie E-Mail-Adressen nachschlagen, Kontaktfotos anzeigen lassen möchten usw., müssen Sie FairEmail die Berechtigung zum Lesen von Kontaktinformationen erteilen. Einfach auf *Berechtigungen erteilen* tippen und *Zulassen* auswählen.
 
 ## Akkuoptimierungen einrichten, um E-Mails fortlaufend zu erhalten
 

@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -72,10 +73,12 @@ public class FragmentPop extends FragmentBase {
     private ViewGroup view;
     private ScrollView scroll;
 
+    private CheckBox cbDnsSec;
     private EditText etHost;
     private RadioGroup rgEncryption;
     private CheckBox cbInsecure;
     private TextView tvInsecureRemark;
+    private CheckBox cbDane;
     private EditText etPort;
     private EditText etUser;
     private TextInputLayout tilPassword;
@@ -86,6 +89,9 @@ public class FragmentPop extends FragmentBase {
     private AutoCompleteTextView etCategory;
     private ViewButtonColor btnColor;
     private TextView tvColorPro;
+
+    private Button btnAvatar;
+    private TextView tvAvatarPro;
 
     private Button btnCalendar;
     private TextView tvCalendarPro;
@@ -123,14 +129,17 @@ public class FragmentPop extends FragmentBase {
     private ContentLoadingProgressBar pbWait;
 
     private long id = -1;
+    private long copy = -1;
     private int auth = AUTH_TYPE_PASSWORD;
+    private String avatar = null;
     private String calendar = null;
     private boolean saving = false;
 
     private static final int REQUEST_COLOR = 1;
-    private static final int REQUEST_CALENDAR = 2;
-    private static final int REQUEST_SAVE = 3;
-    private static final int REQUEST_DELETE = 4;
+    private static final int REQUEST_AVATAR = 2;
+    private static final int REQUEST_CALENDAR = 3;
+    private static final int REQUEST_SAVE = 4;
+    private static final int REQUEST_DELETE = 5;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -138,7 +147,10 @@ public class FragmentPop extends FragmentBase {
 
         // Get arguments
         Bundle args = getArguments();
-        id = args.getLong("id", -1);
+        if (args.getBoolean("copy"))
+            copy = args.getLong("id", -1);
+        else
+            id = args.getLong("id", -1);
     }
 
     @Override
@@ -151,11 +163,13 @@ public class FragmentPop extends FragmentBase {
         scroll = view.findViewById(R.id.scroll);
 
         // Get controls
+        cbDnsSec = view.findViewById(R.id.cbDnsSec);
         etHost = view.findViewById(R.id.etHost);
         etPort = view.findViewById(R.id.etPort);
         rgEncryption = view.findViewById(R.id.rgEncryption);
         cbInsecure = view.findViewById(R.id.cbInsecure);
         tvInsecureRemark = view.findViewById(R.id.tvInsecureRemark);
+        cbDane = view.findViewById(R.id.cbDane);
         etUser = view.findViewById(R.id.etUser);
         tilPassword = view.findViewById(R.id.tilPassword);
         tvPasswordStorage = view.findViewById(R.id.tvPasswordStorage);
@@ -164,6 +178,9 @@ public class FragmentPop extends FragmentBase {
         etCategory = view.findViewById(R.id.etCategory);
         btnColor = view.findViewById(R.id.btnColor);
         tvColorPro = view.findViewById(R.id.tvColorPro);
+
+        btnAvatar = view.findViewById(R.id.btnAvatar);
+        tvAvatarPro = view.findViewById(R.id.tvAvatarPro);
 
         btnCalendar = view.findViewById(R.id.btnCalendar);
         tvCalendarPro = view.findViewById(R.id.tvCalendarPro);
@@ -204,6 +221,13 @@ public class FragmentPop extends FragmentBase {
             @Override
             public void onCheckedChanged(RadioGroup group, int id) {
                 etPort.setHint(id == R.id.radio_ssl ? "995" : "110");
+            }
+        });
+
+        cbInsecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                cbDane.setEnabled(!checked);
             }
         });
 
@@ -270,6 +294,21 @@ public class FragmentPop extends FragmentBase {
 
         Helper.linkPro(tvColorPro);
 
+        btnAvatar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.setType("image/*");
+                Helper.openAdvanced(v.getContext(), intent);
+                startActivityForResult(intent, REQUEST_AVATAR);
+            }
+        });
+
+        Helper.linkPro(tvAvatarPro);
+
         grpCalendar.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
         btnCalendar.setEnabled(Helper.hasPermission(getContext(), Manifest.permission.WRITE_CALENDAR));
         btnCalendar.setOnClickListener(new View.OnClickListener() {
@@ -327,7 +366,7 @@ public class FragmentPop extends FragmentBase {
 
         etInterval.setHint(Integer.toString(EntityAccount.DEFAULT_POLL_INTERVAL));
 
-        adapterSwipe = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, getSwipeActions());
+        adapterSwipe = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, getSwipeActions(getContext()));
         adapterSwipe.setDropDownViewResource(R.layout.spinner_item1_dropdown);
 
         spLeft.setAdapter(adapterSwipe);
@@ -353,9 +392,18 @@ public class FragmentPop extends FragmentBase {
         // Initialize
         Helper.setViewsEnabled(view, false);
 
+        if (!DnsHelper.hasDnsSec()) {
+            Helper.hide(cbDnsSec);
+            Helper.hide(view.findViewById(R.id.tvDnsRemark));
+            Helper.hide(cbDane);
+            Helper.hide(view.findViewById(R.id.tvDaneRemark));
+        }
+
         if (!SSLHelper.customTrustManager()) {
             Helper.hide(cbInsecure);
             Helper.hide(tvInsecureRemark);
+            Helper.hide(cbDane);
+            Helper.hide(view.findViewById(R.id.tvDaneRemark));
         }
 
         if (id < 0)
@@ -367,6 +415,15 @@ public class FragmentPop extends FragmentBase {
         grpError.setVisibility(View.GONE);
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Workaround odd focus issue
+        if (scroll != null)
+            scroll.requestChildFocus(null, null);
     }
 
     private void onSave(boolean should) {
@@ -381,9 +438,11 @@ public class FragmentPop extends FragmentBase {
         else
             encryption = EmailService.ENCRYPTION_SSL;
 
+        args.putBoolean("dnssec", cbDnsSec.isChecked());
         args.putString("host", etHost.getText().toString().trim().replace(" ", ""));
         args.putInt("encryption", encryption);
         args.putBoolean("insecure", cbInsecure.isChecked());
+        args.putBoolean("dane", cbDane.isChecked());
         args.putString("port", etPort.getText().toString());
         args.putInt("auth", auth);
         args.putString("user", etUser.getText().toString());
@@ -392,6 +451,7 @@ public class FragmentPop extends FragmentBase {
         args.putString("name", etName.getText().toString());
         args.putString("category", etCategory.getText().toString());
         args.putInt("color", btnColor.getColor());
+        args.putString("avatar", avatar);
         args.putString("calendar", calendar);
 
         args.putBoolean("synchronize", cbSynchronize.isChecked());
@@ -438,9 +498,11 @@ public class FragmentPop extends FragmentBase {
             protected Boolean onExecute(Context context, Bundle args) throws Throwable {
                 long id = args.getLong("id");
 
+                boolean dnssec = args.getBoolean("dnssec");
                 String host = args.getString("host");
                 int encryption = args.getInt("encryption");
                 boolean insecure = args.getBoolean("insecure");
+                boolean dane = args.getBoolean("dane");
                 String port = args.getString("port");
                 int auth = args.getInt("auth");
                 String user = args.getString("user").trim();
@@ -449,6 +511,7 @@ public class FragmentPop extends FragmentBase {
                 String name = args.getString("name");
                 String category = args.getString("category");
                 Integer color = args.getInt("color");
+                String avatar = args.getString("avatar");
                 String calendar = args.getString("calendar");
 
                 boolean synchronize = args.getBoolean("synchronize");
@@ -520,11 +583,15 @@ public class FragmentPop extends FragmentBase {
                     if (account == null)
                         return !TextUtils.isEmpty(host) && !TextUtils.isEmpty(user);
 
+                    if (!Objects.equals(account.dnssec, dnssec))
+                        return true;
                     if (!Objects.equals(account.host, host))
                         return true;
                     if (!Objects.equals(account.encryption, encryption))
                         return true;
                     if (!Objects.equals(account.insecure, insecure))
+                        return true;
+                    if (!Objects.equals(account.dane, dane))
                         return true;
                     if (!Objects.equals(account.port, Integer.parseInt(port)))
                         return true;
@@ -537,6 +604,8 @@ public class FragmentPop extends FragmentBase {
                     if (!Objects.equals(account.category, category))
                         return true;
                     if (!Objects.equals(account.color, color))
+                        return true;
+                    if (!Objects.equals(account.avatar, avatar))
                         return true;
                     if (!Objects.equals(account.calendar, calendar))
                         return true;
@@ -582,14 +651,22 @@ public class FragmentPop extends FragmentBase {
                 boolean check = (synchronize && (account == null ||
                         !account.synchronize ||
                         account.error != null ||
+                        !account.dnssec.equals(dnssec) ||
                         !account.host.equals(host) ||
                         !account.encryption.equals(encryption) ||
                         !account.insecure.equals(insecure) ||
+                        !account.dane.equals(dane) ||
                         !account.port.equals(Integer.parseInt(port)) ||
                         !account.user.equals(user) ||
                         !account.password.equals(password) ||
                         BuildConfig.DEBUG));
                 Log.i("Account check=" + check);
+
+                boolean reload = (synchronize && !ondemand && account != null &&
+                        (account.leave_on_server != leave_server ||
+                                account.client_delete != client_delete ||
+                                account.leave_deleted != leave_deleted ||
+                                account.leave_on_device != leave_device));
 
                 Long last_connected = null;
                 if (account != null && synchronize == account.synchronize)
@@ -598,11 +675,11 @@ public class FragmentPop extends FragmentBase {
                 // Check POP3 server
                 if (check) {
                     String protocol = "pop3" + (encryption == EmailService.ENCRYPTION_SSL ? "s" : "");
-                    try (EmailService iservice = new EmailService(
-                            context, protocol, null, encryption, insecure, false,
+                    try (EmailService iservice = new EmailService(context,
+                            protocol, null, encryption, insecure, dane, false,
                             EmailService.PURPOSE_CHECK, true)) {
                         iservice.connect(
-                                host, Integer.parseInt(port),
+                                dnssec, host, Integer.parseInt(port),
                                 auth, null,
                                 user, password,
                                 null, null);
@@ -626,9 +703,11 @@ public class FragmentPop extends FragmentBase {
                         account = new EntityAccount();
 
                     account.protocol = EntityAccount.TYPE_POP;
+                    account.dnssec = dnssec;
                     account.host = host;
                     account.encryption = encryption;
                     account.insecure = insecure;
+                    account.dane = dane;
                     account.port = Integer.parseInt(port);
                     account.auth_type = auth;
                     account.user = user;
@@ -637,6 +716,7 @@ public class FragmentPop extends FragmentBase {
                     account.name = name;
                     account.category = category;
                     account.color = color;
+                    account.avatar = avatar;
                     account.calendar = calendar;
 
                     account.synchronize = synchronize;
@@ -707,6 +787,8 @@ public class FragmentPop extends FragmentBase {
 
                 if (reschedule)
                     ServiceSynchronize.reschedule(context);
+                else if (reload)
+                    ServiceSynchronize.reload(context, account.id, false, "POP3 leave");
                 else
                     ServiceSynchronize.eval(context, "POP3");
 
@@ -717,6 +799,8 @@ public class FragmentPop extends FragmentBase {
                 }
 
                 args.putBoolean("saved", true);
+
+                FairEmailBackupAgent.dataChanged(context);
 
                 return false;
             }
@@ -758,8 +842,9 @@ public class FragmentPop extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Helper.setSnackbarOptions(
+                                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG))
+                            .show();
                 else {
                     tvError.setText(Log.formatThrowable(ex, false));
                     grpError.setVisibility(View.VISIBLE);
@@ -781,6 +866,7 @@ public class FragmentPop extends FragmentBase {
     public void onSaveInstanceState(Bundle outState) {
         outState.putString("fair:password", tilPassword == null ? null : tilPassword.getEditText().getText().toString());
         outState.putInt("fair:auth", auth);
+        outState.putString("fair:avatar", avatar);
         outState.putString("fair:calendar", calendar);
         super.onSaveInstanceState(outState);
     }
@@ -790,7 +876,7 @@ public class FragmentPop extends FragmentBase {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = new Bundle();
-        args.putLong("id", id);
+        args.putLong("id", copy < 0 ? id : copy);
 
         new SimpleTask<EntityAccount>() {
             @Override
@@ -821,6 +907,7 @@ public class FragmentPop extends FragmentBase {
                         Log.e(ex);
                     }
 
+                    cbDnsSec.setChecked(account == null ? false : account.dnssec);
                     etHost.setText(account == null ? null : account.host);
                     etPort.setText(account == null ? null : Long.toString(account.port));
 
@@ -832,6 +919,8 @@ public class FragmentPop extends FragmentBase {
                         rgEncryption.check(R.id.radio_ssl);
 
                     cbInsecure.setChecked(account == null ? false : account.insecure);
+                    cbDane.setChecked(account == null ? false : account.dane);
+                    cbDane.setEnabled(!cbInsecure.isChecked());
 
                     etUser.setText(account == null ? null : account.user);
                     tilPassword.getEditText().setText(account == null ? null : account.password);
@@ -854,7 +943,7 @@ public class FragmentPop extends FragmentBase {
                     cbClientDelete.setChecked(account == null ? false : account.client_delete);
                     cbClientDelete.setEnabled(!cbLeaveServer.isChecked());
                     cbLeaveDeleted.setChecked(account == null ? true : account.leave_deleted);
-                    cbLeaveDevice.setChecked(account == null ? false : account.leave_on_device);
+                    cbLeaveDevice.setChecked(account == null ? true : account.leave_on_device);
 
                     if (account != null && account.max_messages != null)
                         etMax.setText(Integer.toString(account.max_messages));
@@ -864,9 +953,10 @@ public class FragmentPop extends FragmentBase {
                     etInterval.setText(account == null ? "" : Long.toString(account.poll_interval));
                     cbUnmetered.setChecked(jcondition.optBoolean("unmetered"));
                     cbVpnOnly.setChecked(jcondition.optBoolean("vpn_only"));
+
                     cbIdentity.setChecked(account == null);
 
-                    List<EntityFolder> folders = getSwipeActions();
+                    List<EntityFolder> folders = getSwipeActions(getContext());
                     for (int pos = 0; pos < folders.size(); pos++) {
                         EntityFolder folder = folders.get(pos);
 
@@ -882,6 +972,7 @@ public class FragmentPop extends FragmentBase {
                     }
 
                     auth = (account == null ? AUTH_TYPE_PASSWORD : account.auth_type);
+                    avatar = (account == null ? null : account.avatar);
                     calendar = (account == null ? null : account.calendar);
 
                     new SimpleTask<EntityAccount>() {
@@ -904,6 +995,7 @@ public class FragmentPop extends FragmentBase {
                 } else {
                     tilPassword.getEditText().setText(savedInstanceState.getString("fair:password"));
                     auth = savedInstanceState.getInt("fair:auth");
+                    avatar = savedInstanceState.getString("fair:avatar");
                     calendar = savedInstanceState.getString("fair:calendar");
                 }
 
@@ -978,6 +1070,12 @@ public class FragmentPop extends FragmentBase {
                             startActivity(new Intent(getContext(), ActivityBilling.class));
                     }
                     break;
+                case REQUEST_AVATAR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onImageSelected(data.getData());
+                    else
+                        avatar = null;
+                    break;
                 case REQUEST_CALENDAR:
                     if (resultCode == RESULT_OK && data != null) {
                         if (ActivityBilling.isPro(getContext())) {
@@ -1016,6 +1114,29 @@ public class FragmentPop extends FragmentBase {
         }
     }
 
+    private void onImageSelected(Uri uri) {
+        final Context context = getContext();
+
+        if (!ActivityBilling.isPro(context)) {
+            startActivity(new Intent(context, ActivityBilling.class));
+            return;
+        }
+
+        try {
+            NoStreamException.check(uri, context);
+
+            context.getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            if (!Helper.isPersisted(context, uri, true, false))
+                throw new IllegalStateException("No permission granted to access selected image " + uri);
+
+            avatar = uri.toString();
+        } catch (NoStreamException ex) {
+            ex.report(getActivity());
+        } catch (Throwable ex) {
+            Log.unexpectedError(getParentFragmentManager(), ex);
+        }
+    }
+
     private void onDelete() {
         Bundle args = new Bundle();
         args.putLong("id", id);
@@ -1051,7 +1172,7 @@ public class FragmentPop extends FragmentBase {
         }.execute(this, args, "account:delete");
     }
 
-    private List<EntityFolder> getSwipeActions() {
+    private List<EntityFolder> getSwipeActions(Context context) {
         List<EntityFolder> folders = new ArrayList<>();
 
         EntityFolder ask = new EntityFolder();
@@ -1061,8 +1182,18 @@ public class FragmentPop extends FragmentBase {
 
         EntityFolder seen = new EntityFolder();
         seen.id = EntityMessage.SWIPE_ACTION_SEEN;
-        seen.name = getString(R.string.title_seen);
+        seen.name = getString(R.string.title_seen_unseen);
         folders.add(seen);
+
+        EntityFolder snooze = new EntityFolder();
+        snooze.id = EntityMessage.SWIPE_ACTION_SNOOZE;
+        snooze.name = getString(R.string.title_snooze_now);
+        folders.add(snooze);
+
+        EntityFolder hide = new EntityFolder();
+        hide.id = EntityMessage.SWIPE_ACTION_HIDE;
+        hide.name = getString(R.string.title_hide);
+        folders.add(hide);
 
         EntityFolder flag = new EntityFolder();
         flag.id = EntityMessage.SWIPE_ACTION_FLAG;
@@ -1074,15 +1205,17 @@ public class FragmentPop extends FragmentBase {
         importance.name = getString(R.string.title_set_importance);
         folders.add(importance);
 
-        EntityFolder snooze = new EntityFolder();
-        snooze.id = EntityMessage.SWIPE_ACTION_SNOOZE;
-        snooze.name = getString(R.string.title_snooze_now);
-        folders.add(snooze);
+        EntityFolder tts = new EntityFolder();
+        tts.id = EntityMessage.SWIPE_ACTION_TTS;
+        tts.name = context.getString(R.string.title_rule_tts);
+        folders.add(tts);
 
-        EntityFolder hide = new EntityFolder();
-        hide.id = EntityMessage.SWIPE_ACTION_HIDE;
-        hide.name = getString(R.string.title_hide);
-        folders.add(hide);
+        if (AI.isAvailable(context)) {
+            EntityFolder summarize = new EntityFolder();
+            summarize.id = EntityMessage.SWIPE_ACTION_SUMMARIZE;
+            summarize.name = context.getString(R.string.title_summarize);
+            folders.add(summarize);
+        }
 
         EntityFolder junk = new EntityFolder();
         junk.id = EntityMessage.SWIPE_ACTION_JUNK;

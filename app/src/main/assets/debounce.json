@@ -1,6 +1,12 @@
 [
   {
     "include": [
+      "*://howl.me/link/?*",
+      "*://www.pntrac.com/t/*",
+      "*://track.flexlinks.com/a.ashx?*",
+      "*://www.wordseed.com/go/*",
+      "*://visit.ws/visit/*",
+      "*://llo.to/e/*",
       "*://g-o-media.digidip.net/visit?*",
       "*://www.dpbolvw.net/click-*",
       "*://www.tkqlhce.com/click-",
@@ -46,6 +52,16 @@
     ],
     "action": "redirect",
     "param": "Url"
+  },
+  {
+    "include": [
+      "*://trk.pmsrv.co/v2/trk?*",
+      "*://trk.pm-srv.co/v2/trk?*"
+    ],
+    "exclude": [
+    ],
+    "action": "redirect",
+    "param": "rurl"
   },
   {
     "include": [
@@ -184,6 +200,10 @@
   },
   {
     "include": [
+      "*://*.c9ftyd.net/c/*",
+      "*://*.iyhh.net/c/*",
+      "*://*.glg9ob.net/c/*",
+      "*://*.evyy.net/c/*",
       "*://*.uikc.net/c/*",
       "*://*.ztk5.net/*",
       "*://*.rg35.net/*",
@@ -395,6 +415,7 @@
   },
   {
     "include": [
+      "*://streak-link.com/*",
       "*://streaklinks.com/*"
     ],
     "exclude": [
@@ -415,6 +436,15 @@
   },
   {
     "include": [
+      "*://shopping.yahoo.com/rdlw?*"
+    ],
+    "exclude": [
+    ],
+    "action": "redirect",
+    "param": "gcReferrer"
+  },
+  {
+    "include": [
       "*://www.google.com/amp/s/*"
     ],
     "pref": "brave.de_amp.enabled",
@@ -423,6 +453,15 @@
     "prepend_scheme": "https",
     "action": "regex-path",
     "param": "^/amp/s/(.*)$"
+  },
+  {
+     "include": [
+       "https://buy.geni.us/Proxy.ashx?*"
+     ],
+     "exclude": [
+     ],
+     "action": "redirect",
+     "param": "GR_URL"
   },
   {
     "include": [

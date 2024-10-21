@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
@@ -107,6 +108,44 @@ public class TupleKeyword {
         return result;
     }
 
+    static String getKeyword(Context context, String title) {
+        if (TextUtils.isEmpty(title))
+            return title;
+
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_label1)))
+            return "$label1";
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_label2)))
+            return "$label2";
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_label3)))
+            return "$label3";
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_label4)))
+            return "$label4";
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_label5)))
+            return "$label5";
+
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_displayed)))
+            return MessageHelper.FLAG_DISPLAYED;
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_delivered)))
+            return MessageHelper.FLAG_DELIVERED;
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_not_displayed)))
+            return MessageHelper.FLAG_NOT_DISPLAYED;
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_not_delivered)))
+            return MessageHelper.FLAG_NOT_DELIVERED;
+        if (title.equalsIgnoreCase(context.getString(R.string.title_keyword_complaint)))
+            return MessageHelper.FLAG_COMPLAINT;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        for (String key : prefs.getAll().keySet())
+            if (key != null && key.startsWith("kwtitle.") &&
+                    title.equalsIgnoreCase(prefs.getString(key, null))) {
+                int dot = key.indexOf('.');
+                if (dot >= 0)
+                    return key.substring(dot + 1);
+            }
+
+        return title;
+    }
+
     static String getDefaultKeywordAlias(Context context, String keyword) {
         switch (keyword) {
             case "$label1": // Important
@@ -119,6 +158,18 @@ public class TupleKeyword {
                 return context.getString(R.string.title_keyword_label4);
             case "$label5": // Later
                 return context.getString(R.string.title_keyword_label5);
+            case MessageHelper.FLAG_DISPLAYED:
+                return context.getString(R.string.title_keyword_displayed);
+            case MessageHelper.FLAG_DELIVERED:
+                return context.getString(R.string.title_keyword_delivered);
+            case MessageHelper.FLAG_NOT_DISPLAYED:
+                return context.getString(R.string.title_keyword_not_displayed);
+            case MessageHelper.FLAG_NOT_DELIVERED:
+                return context.getString(R.string.title_keyword_not_delivered);
+            case MessageHelper.FLAG_COMPLAINT:
+                return context.getString(R.string.title_keyword_complaint);
+            case MessageHelper.FLAG_PHISHING:
+                return context.getString(R.string.title_keyword_phishing);
             default:
                 return keyword;
         }
@@ -136,6 +187,16 @@ public class TupleKeyword {
                 return Color.parseColor("#3333FF");
             case "$label5": // Later
                 return Color.parseColor("#993399");
+
+            case MessageHelper.FLAG_DISPLAYED:
+            case MessageHelper.FLAG_DELIVERED:
+                return Helper.resolveColor(context, R.attr.colorVerified);
+            case MessageHelper.FLAG_NOT_DISPLAYED:
+            case MessageHelper.FLAG_NOT_DELIVERED:
+            case MessageHelper.FLAG_COMPLAINT:
+            case MessageHelper.FLAG_PHISHING:
+                return Helper.resolveColor(context, androidx.appcompat.R.attr.colorError);
+
             default:
                 return null;
         }

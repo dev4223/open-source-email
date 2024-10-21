@@ -116,6 +116,16 @@ public class EntityAttachment {
         return ImageHelper.isImage(getMimeType());
     }
 
+    boolean isVideo() {
+        String type = getMimeType();
+        return (type != null && type.startsWith("video/"));
+    }
+
+    boolean isAudio() {
+        String type = getMimeType();
+        return (type != null && type.startsWith("audio/"));
+    }
+
     boolean isPDF() {
         return "application/pdf".equals(getMimeType());
     }

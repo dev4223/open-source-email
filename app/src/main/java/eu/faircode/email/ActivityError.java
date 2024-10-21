@@ -21,7 +21,9 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -42,14 +44,17 @@ public class ActivityError extends ActivityBase {
     private Button btnPassword;
     private ImageButton ibSetting;
     private ImageButton ibInfo;
+    private Button btnReload;
+    private Button btnSupport;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_error);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setSubtitle(getString(R.string.title_setup_error));
-        setContentView(R.layout.activity_error);
 
         tvTitle = findViewById(R.id.tvTitle);
         tvMessage = findViewById(R.id.tvMessage);
@@ -57,6 +62,8 @@ public class ActivityError extends ActivityBase {
         btnPassword = findViewById(R.id.btnPassword);
         ibSetting = findViewById(R.id.ibSetting);
         ibInfo = findViewById(R.id.ibInfo);
+        btnReload = findViewById(R.id.btnReload);
+        btnSupport = findViewById(R.id.btnSupport);
 
         load();
     }
@@ -88,6 +95,7 @@ public class ActivityError extends ActivityBase {
         long identity = intent.getLongExtra("identity", -1L);
         int protocol = intent.getIntExtra("protocol", -1);
         int auth_type = intent.getIntExtra("auth_type", -1);
+        String host = intent.getStringExtra("host");
         int faq = intent.getIntExtra("faq", -1);
 
         boolean isCertificateException = (message != null && message.contains("CertificateException"));
@@ -96,11 +104,17 @@ public class ActivityError extends ActivityBase {
         tvMessage.setMovementMethod(LinkMovementMethodCompat.getInstance());
         tvMessage.setText(message);
 
-        tvCertificate.setVisibility(isCertificateException ? View.VISIBLE : View.GONE);
+        tvCertificate.setVisibility(
+                isCertificateException && !SSLHelper.customTrustManager()
+                        ? View.VISIBLE : View.GONE);
 
         boolean password = (auth_type == ServiceAuthenticator.AUTH_TYPE_PASSWORD);
+        boolean outlook = ("outlook.office365.com".equalsIgnoreCase(host) ||
+                "smtp.office365.com".equalsIgnoreCase(host) ||
+                "imap-mail.outlook.com".equalsIgnoreCase(host) ||
+                "smtp-mail.outlook.com".equalsIgnoreCase(host));
 
-        btnPassword.setText(password ? R.string.title_password : R.string.title_setup_oauth_authorize);
+        btnPassword.setText(password && !outlook ? R.string.title_password : R.string.title_setup_oauth_authorize);
         btnPassword.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 0, 0,
                 password ? R.drawable.twotone_edit_24 : R.drawable.twotone_check_24, 0);
@@ -133,11 +147,12 @@ public class ActivityError extends ActivityBase {
                         startActivity(new Intent(ActivityError.this, ActivitySetup.class)
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
                     }
-                } else if (auth_type == ServiceAuthenticator.AUTH_TYPE_GRAPH)
+                } else if (auth_type == ServiceAuthenticator.AUTH_TYPE_GRAPH ||
+                        (auth_type == ServiceAuthenticator.AUTH_TYPE_PASSWORD && outlook))
                     startActivity(new Intent(ActivityError.this, ActivitySetup.class)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                             .putExtra("target", "oauth")
-                            .putExtra("id", provider)
+                            .putExtra("id", "outlookgraph")
                             .putExtra("name", "Outlook")
                             .putExtra("askAccount", true)
                             .putExtra("askTenant", true)
@@ -170,6 +185,50 @@ public class ActivityError extends ActivityBase {
             @Override
             public void onClick(View view) {
                 Helper.viewFAQ(view.getContext(), isCertificateException ? 4 : faq);
+            }
+        });
+
+        btnReload.setVisibility(account > 0 ? View.VISIBLE : View.GONE);
+        btnReload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ServiceSynchronize.reload(v.getContext(), account, true, "retry");
+                finish();
+            }
+        });
+
+        btnSupport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("auth_type=")
+                        .append(ServiceAuthenticator.getAuthTypeName(auth_type))
+                        .append("\n");
+
+                if (!TextUtils.isEmpty(host))
+                    sb.append("host=")
+                            .append(host)
+                            .append("\n");
+
+                if (account > 0)
+                    sb.append("protocol=")
+                            .append(protocol == EntityAccount.TYPE_IMAP ? "imap" : "pop3")
+                            .append("\n");
+
+                if (!TextUtils.isEmpty(provider))
+                    sb.append("provider=")
+                            .append(provider)
+                            .append("\n");
+
+                if (!TextUtils.isEmpty(message))
+                    sb.append(Helper.limit(message, 384));
+
+                Uri uri = Helper.getSupportUri(v.getContext(), "Sync:error")
+                        .buildUpon()
+                        .appendQueryParameter("message", sb.toString())
+                        .build();
+                Helper.view(v.getContext(), uri, true);
             }
         });
 

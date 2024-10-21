@@ -81,19 +81,22 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private boolean hasAccount;
 
     static final int REQUEST_SOUND_INBOUND = 1;
-    static final int REQUEST_SOUND_OUTBOUND = 2;
-    static final int REQUEST_CHOOSE_ACCOUNT = 3;
-    static final int REQUEST_DONE = 4;
-    static final int REQUEST_IMPORT_CERTIFICATE = 5;
-    static final int REQUEST_OAUTH = 6;
-    static final int REQUEST_STILL = 7;
-    static final int REQUEST_SELECT_IDENTITY = 8;
-    static final int REQUEST_EDIT_SIGNATURE = 9;
-    static final int REQUEST_CHANGE_PASSWORD = 10;
-    static final int REQUEST_DELETE_ACCOUNT = 11;
-    static final int REQUEST_IMPORT_PROVIDERS = 12;
-    static final int REQUEST_GRAPH_CONTACTS = 13;
-    static final int REQUEST_GRAPH_CONTACTS_OAUTH = 14;
+    static final int REQUEST_RINGTONE_OUTBOUND = 2;
+    static final int REQUEST_AUDIO_OUTBOUND = 3;
+    static final int REQUEST_CHOOSE_ACCOUNT = 4;
+    static final int REQUEST_DONE = 5;
+    static final int REQUEST_IMPORT_CERTIFICATE = 6;
+    static final int REQUEST_OAUTH = 7;
+    static final int REQUEST_STILL = 8;
+    static final int REQUEST_SELECT_IDENTITY = 9;
+    static final int REQUEST_EDIT_SIGNATURE = 10;
+    static final int REQUEST_CHANGE_PASSWORD = 11;
+    static final int REQUEST_EDIT_ACCOUNT_COLOR = 12;
+    static final int REQUEST_DELETE_ACCOUNT = 13;
+    static final int REQUEST_EDIT_IDENITY_COLOR = 14;
+    static final int REQUEST_IMPORT_PROVIDERS = 15;
+    static final int REQUEST_GRAPH_CONTACTS = 16;
+    static final int REQUEST_GRAPH_CONTACTS_OAUTH = 17;
     static final int REQUEST_DEBUG_INFO = 7000;
 
     static final int PI_CONNECTION = 1;
@@ -120,10 +123,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         view = LayoutInflater.from(this).inflate(R.layout.activity_setup, null);
         setContentView(view);
 
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setCustomView(R.layout.action_bar);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.setScrimColor(Helper.resolveColor(this, R.attr.colorDrawerScrim));
@@ -164,6 +164,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         menus.add(new NavMenuItem(R.drawable.twotone_close_24, R.string.title_setup_close, new Runnable() {
             @Override
             public void run() {
+                if (BuildConfig.DEBUG) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivitySetup.this);
+                    prefs.edit().remove("eula").apply();
+                }
+
                 onMenuClose();
             }
         }).setColor(colorWarning).setSeparated());
@@ -512,6 +517,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 if (id == null)
                     return;
                 startActivity(new Intent(ActivitySetup.this, ActivityCompose.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         .putExtra("action", "edit")
                         .putExtra("id", id));
             }
@@ -798,7 +804,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 else if (ACTION_IMPORT_CERTIFICATE.equals(action))
                     onImportCertificate(intent);
                 else if (ACTION_SETUP_REORDER.equals(action))
-                    onMenuOrder(R.string.title_setup_reorder_accounts, intent.getStringExtra("className"));
+                    onMenuOrder(
+                            intent.getIntExtra("title", -1),
+                            intent.getStringExtra("className"));
                 else if (ACTION_SETUP_MORE.equals(action))
                     onSetupMore(intent);
             }

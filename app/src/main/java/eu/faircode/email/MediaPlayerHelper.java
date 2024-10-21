@@ -28,6 +28,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
+import android.util.Pair;
 
 import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.Lifecycle;
@@ -36,6 +38,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +48,10 @@ public class MediaPlayerHelper {
 
     private static Semaphore sem;
     private static final Object lock = new Object();
+
+    private static MediaPlayer player = null;
+    private static Uri uri = null;
+    private static Runnable onCompleted = null;
 
     static void stop(Context context) {
         EntityLog.log(context, "Alarm stop");
@@ -84,74 +91,149 @@ public class MediaPlayerHelper {
             sem = new Semaphore(0);
         }
 
+        Log.i("Playing sound=" + uri);
+
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(alarm ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_NOTIFICATION)
                 .build();
 
         MediaPlayer mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioAttributes(attrs);
-        mediaPlayer.setDataSource(context.getApplicationContext(), uri);
-        mediaPlayer.setLooping(false);
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.start();
-            }
-        });
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                sem.release();
-            }
-        });
-        mediaPlayer.prepareAsync();
-
-        NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
-        if (alarm) {
-            Intent intent = new Intent(context, ServiceUI.class)
-                    .setAction("alarm");
-            PendingIntent piStop = PendingIntentCompat.getService(
-                    context, ServiceUI.PI_ALARM, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            NotificationCompat.Action.Builder actionStop = new NotificationCompat.Action.Builder(
-                    R.drawable.twotone_stop_24,
-                    context.getString(R.string.title_rule_alarm_stop),
-                    piStop)
-                    .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MUTE)
-                    .setShowsUserInterface(false)
-                    .setAllowGeneratedReplies(false);
-
-            NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(context, "alerts")
-                            .setSmallIcon(R.drawable.baseline_warning_white_24)
-                            .setContentTitle(context.getString(R.string.title_rule_alarm_title))
-                            .setSilent(true)
-                            .setAutoCancel(false)
-                            .addAction(actionStop.build())
-                            .setShowWhen(true)
-                            .setPriority(NotificationCompat.PRIORITY_MAX)
-                            .setOnlyAlertOnce(true)
-                            .setCategory(NotificationCompat.CATEGORY_ALARM)
-                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-            nm.notify("alarm", 1, builder.build());
-        }
-
         try {
-            boolean acquired = sem.tryAcquire(duration, TimeUnit.SECONDS);
-            EntityLog.log(context, "Alarm acquired=" + acquired);
-            mediaPlayer.stop();
-            mediaPlayer.release();
-        } catch (Throwable ex) {
-            Log.w(ex);
+            mediaPlayer.setAudioAttributes(attrs);
+            mediaPlayer.setDataSource(context.getApplicationContext(), uri);
+            mediaPlayer.setLooping(false);
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mp.start();
+                }
+            });
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    sem.release();
+                }
+            });
+            mediaPlayer.prepareAsync();
+
+            NotificationManager nm = Helper.getSystemService(context, NotificationManager.class);
+            try {
+                if (alarm) {
+                    Intent intent = new Intent(context, ServiceUI.class)
+                            .setAction("alarm");
+                    PendingIntent piStop = PendingIntentCompat.getService(
+                            context, ServiceUI.PI_ALARM, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    NotificationCompat.Action.Builder actionStop = new NotificationCompat.Action.Builder(
+                            R.drawable.twotone_stop_24,
+                            context.getString(R.string.title_rule_alarm_stop),
+                            piStop)
+                            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MUTE)
+                            .setShowsUserInterface(false)
+                            .setAllowGeneratedReplies(false);
+
+                    NotificationCompat.Builder builder =
+                            new NotificationCompat.Builder(context, "alerts")
+                                    .setSmallIcon(R.drawable.baseline_warning_white_24)
+                                    .setContentTitle(context.getString(R.string.title_rule_alarm_title))
+                                    .setSilent(true)
+                                    .setAutoCancel(false)
+                                    .addAction(actionStop.build())
+                                    .setShowWhen(true)
+                                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                                    .setOnlyAlertOnce(true)
+                                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+                    nm.notify("alarm", 1, builder.build());
+                }
+
+                boolean acquired = sem.tryAcquire(duration, TimeUnit.SECONDS);
+                EntityLog.log(context, "Alarm acquired=" + acquired);
+                mediaPlayer.stop();
+            } catch (Throwable ex) {
+                Log.w(ex);
+            } finally {
+                if (alarm)
+                    nm.cancel("alarm", 1);
+            }
         } finally {
-            if (alarm)
-                nm.cancel("alarm", 1);
+            mediaPlayer.release();
         }
+
+        Log.i("Played sound=" + uri);
 
         synchronized (lock) {
             sem = null;
+        }
+    }
+
+    static void startMusic(Context context, Uri uri, Runnable onCompleted) throws IOException {
+        synchronized (lock) {
+            stopMusic(context);
+
+            MediaPlayerHelper.uri = uri;
+            MediaPlayerHelper.onCompleted = onCompleted;
+
+            MediaPlayerHelper.player = new MediaPlayer();
+            MediaPlayerHelper.player.setAudioAttributes(
+                    new AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .build()
+            );
+            MediaPlayerHelper.player.setDataSource(context, uri);
+            MediaPlayerHelper.player.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
+            MediaPlayerHelper.player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    // https://issuetracker.google.com/issues/36921987
+                    mp.start();
+                }
+            });
+            MediaPlayerHelper.player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    stopMusic(context);
+                }
+            });
+            MediaPlayerHelper.player.prepareAsync();
+        }
+    }
+
+    static void stopMusic(Context context) {
+        synchronized (lock) {
+            if (MediaPlayerHelper.player != null)
+                try {
+                    MediaPlayerHelper.player.stop();
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                } finally {
+                    MediaPlayerHelper.player = null;
+                }
+            MediaPlayerHelper.uri = null;
+            if (MediaPlayerHelper.onCompleted != null) {
+                MediaPlayerHelper.onCompleted.run();
+                MediaPlayerHelper.onCompleted = null;
+            }
+        }
+    }
+
+    static boolean isPlaying(Uri uri) {
+        synchronized (lock) {
+            return (Objects.equals(MediaPlayerHelper.uri, uri));
+        }
+    }
+
+    static Pair<Integer, Integer> getPosition(Uri uri) {
+        synchronized (lock) {
+            if (!isPlaying(uri))
+                return null;
+            return new Pair<>(
+                    MediaPlayerHelper.player.getCurrentPosition(),
+                    MediaPlayerHelper.player.getDuration()
+            );
         }
     }
 

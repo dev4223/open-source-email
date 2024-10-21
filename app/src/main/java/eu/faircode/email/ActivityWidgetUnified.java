@@ -27,6 +27,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -34,6 +35,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -59,7 +61,9 @@ public class ActivityWidgetUnified extends ActivityBase {
     private Spinner spAccount;
     private Spinner spFolder;
     private CheckBox cbUnseen;
+    private CheckBox cbShowUnseen;
     private CheckBox cbFlagged;
+    private CheckBox cbShowFlagged;
     private CheckBox cbDayNight;
     private CheckBox cbHighlight;
     private ViewButtonColor btnHighlight;
@@ -73,8 +77,10 @@ public class ActivityWidgetUnified extends ActivityBase {
     private CheckBox cbAvatars;
     private CheckBox cbAccountName;
     private CheckBox cbCaption;
+    private EditText etName;
     private CheckBox cbRefresh;
     private CheckBox cbCompose;
+    private CheckBox cbStandalone;
     private Button btnSave;
     private ContentLoadingProgressBar pbWait;
     private Group grpReady;
@@ -103,7 +109,9 @@ public class ActivityWidgetUnified extends ActivityBase {
         long account = prefs.getLong("widget." + appWidgetId + ".account", -1L);
         long folder = prefs.getLong("widget." + appWidgetId + ".folder", -1L);
         boolean unseen = prefs.getBoolean("widget." + appWidgetId + ".unseen", false);
+        boolean show_unseen = prefs.getBoolean("widget." + appWidgetId + ".show_unseen", true);
         boolean flagged = prefs.getBoolean("widget." + appWidgetId + ".flagged", false);
+        boolean show_flagged = prefs.getBoolean("widget." + appWidgetId + ".show_flagged", false);
         boolean daynight = prefs.getBoolean("widget." + appWidgetId + ".daynight", false);
         boolean highlight = prefs.getBoolean("widget." + appWidgetId + ".highlight", false);
         int highlight_color = prefs.getInt("widget." + appWidgetId + ".highlight_color", Color.TRANSPARENT);
@@ -116,19 +124,24 @@ public class ActivityWidgetUnified extends ActivityBase {
         boolean avatars = prefs.getBoolean("widget." + appWidgetId + ".avatars", false);
         boolean account_name = prefs.getBoolean("widget." + appWidgetId + ".account_name", true);
         boolean caption = prefs.getBoolean("widget." + appWidgetId + ".caption", true);
+        String name = prefs.getString("widget." + appWidgetId + ".name", null);
         boolean refresh = prefs.getBoolean("widget." + appWidgetId + ".refresh", false);
         boolean compose = prefs.getBoolean("widget." + appWidgetId + ".compose", false);
+        boolean standalone = prefs.getBoolean("widget." + appWidgetId + ".standalone", false);
 
         daynight = daynight && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
 
+        setContentView(R.layout.activity_widget_unified);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setSubtitle(R.string.title_widget_title_list);
-        setContentView(R.layout.activity_widget_unified);
 
         spAccount = findViewById(R.id.spAccount);
         spFolder = findViewById(R.id.spFolder);
         cbUnseen = findViewById(R.id.cbUnseen);
+        cbShowUnseen = findViewById(R.id.cbShowUnseen);
         cbFlagged = findViewById(R.id.cbFlagged);
+        cbShowFlagged = findViewById(R.id.cbShowFlagged);
         cbDayNight = findViewById(R.id.cbDayNight);
         cbHighlight = findViewById(R.id.cbHighlight);
         btnHighlight = findViewById(R.id.btnHighlight);
@@ -142,14 +155,32 @@ public class ActivityWidgetUnified extends ActivityBase {
         cbAvatars = findViewById(R.id.cbAvatars);
         cbAccountName = findViewById(R.id.cbAccountName);
         cbCaption = findViewById(R.id.cbCaption);
+        etName = findViewById(R.id.etName);
         cbRefresh = findViewById(R.id.cbRefresh);
         cbCompose = findViewById(R.id.cbCompose);
+        cbStandalone = findViewById(R.id.cbStandalone);
         btnSave = findViewById(R.id.btnSave);
         pbWait = findViewById(R.id.pbWait);
         grpReady = findViewById(R.id.grpReady);
 
         final Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+
+        cbUnseen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cbShowUnseen.setEnabled(isChecked);
+            }
+        });
+
+        cbFlagged.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cbShowFlagged.setEnabled(!isChecked);
+            }
+        });
+
+        cbShowFlagged.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.S ? View.GONE : View.VISIBLE);
 
         cbDayNight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -249,6 +280,13 @@ public class ActivityWidgetUnified extends ActivityBase {
             }
         });
 
+        cbCaption.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                etName.setEnabled(isChecked);
+            }
+        });
+
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -258,13 +296,17 @@ public class ActivityWidgetUnified extends ActivityBase {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityWidgetUnified.this);
                 SharedPreferences.Editor editor = prefs.edit();
 
-                if (account != null && account.id > 0)
-                    if (folder != null && folder.id > 0)
-                        editor.putString("widget." + appWidgetId + ".name", folder.getDisplayName(ActivityWidgetUnified.this));
+                String name = etName.getText().toString();
+                if (TextUtils.isEmpty(name))
+                    if (account != null && account.id > 0)
+                        if (folder != null && folder.id > 0)
+                            editor.putString("widget." + appWidgetId + ".name", folder.getDisplayName(ActivityWidgetUnified.this));
+                        else
+                            editor.putString("widget." + appWidgetId + ".name", account.name);
                     else
-                        editor.putString("widget." + appWidgetId + ".name", account.name);
+                        editor.remove("widget." + appWidgetId + ".name");
                 else
-                    editor.remove("widget." + appWidgetId + ".name");
+                    editor.putString("widget." + appWidgetId + ".name", name);
 
                 int font = spFontSize.getSelectedItemPosition();
                 int padding = spPadding.getSelectedItemPosition();
@@ -273,8 +315,10 @@ public class ActivityWidgetUnified extends ActivityBase {
                 editor.putLong("widget." + appWidgetId + ".folder", folder == null ? -1L : folder.id);
                 editor.putString("widget." + appWidgetId + ".type", folder == null ? null : folder.type);
                 editor.putBoolean("widget." + appWidgetId + ".unseen", cbUnseen.isChecked());
+                editor.putBoolean("widget." + appWidgetId + ".show_unseen", cbShowUnseen.isChecked());
                 editor.putBoolean("widget." + appWidgetId + ".daynight", cbDayNight.isChecked());
                 editor.putBoolean("widget." + appWidgetId + ".flagged", cbFlagged.isChecked());
+                editor.putBoolean("widget." + appWidgetId + ".show_flagged", cbShowFlagged.isChecked());
                 editor.putBoolean("widget." + appWidgetId + ".highlight", cbHighlight.isChecked());
                 editor.putInt("widget." + appWidgetId + ".highlight_color", btnHighlight.getColor());
                 editor.putBoolean("widget." + appWidgetId + ".semi", cbSemiTransparent.isChecked());
@@ -288,6 +332,7 @@ public class ActivityWidgetUnified extends ActivityBase {
                 editor.putBoolean("widget." + appWidgetId + ".caption", cbCaption.isChecked());
                 editor.putBoolean("widget." + appWidgetId + ".refresh", cbRefresh.isChecked());
                 editor.putBoolean("widget." + appWidgetId + ".compose", cbCompose.isChecked());
+                editor.putBoolean("widget." + appWidgetId + ".standalone", cbStandalone.isChecked());
                 editor.putInt("widget." + appWidgetId + ".version", BuildConfig.VERSION_CODE);
 
                 editor.apply();
@@ -401,7 +446,11 @@ public class ActivityWidgetUnified extends ActivityBase {
 
         // Initialize
         cbUnseen.setChecked(unseen);
+        cbShowUnseen.setChecked(show_unseen);
+        cbShowUnseen.setEnabled(cbUnseen.isChecked());
         cbFlagged.setChecked(flagged);
+        cbShowFlagged.setChecked(show_flagged);
+        cbShowFlagged.setEnabled(!flagged);
         cbDayNight.setChecked(daynight);
         cbDayNight.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.S ? View.GONE : View.VISIBLE);
         cbHighlight.setChecked(highlight);
@@ -421,8 +470,11 @@ public class ActivityWidgetUnified extends ActivityBase {
         spSubjectLines.setSelection(subject_lines - 1);
         tvSubjectLinesHint.setText(getString(R.string.title_advanced_preview_lines_hint, NF.format(HtmlHelper.PREVIEW_SIZE)));
         cbCaption.setChecked(caption);
+        etName.setText(name);
+        etName.setEnabled(caption);
         cbRefresh.setChecked(refresh);
         cbCompose.setChecked(compose);
+        cbStandalone.setChecked(standalone);
 
         grpReady.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);

@@ -43,6 +43,7 @@ import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -79,9 +80,9 @@ public class EditTextCompose extends FixedEditText {
     private int quoteGap;
     private int quoteStripe;
     private boolean lt_description;
-
-    private int lastStart = -1;
-    private int lastEnd = -1;
+    private boolean undo_manager;
+    private boolean paste_plain;
+    private boolean paste_quote;
 
     public EditTextCompose(Context context) {
         super(context);
@@ -108,7 +109,9 @@ public class EditTextCompose extends FixedEditText {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.lt_description = prefs.getBoolean("lt_description", false);
-        boolean undo_manager = prefs.getBoolean("undo_manager", false);
+        this.undo_manager = prefs.getBoolean("undo_manager", false);
+        this.paste_plain = prefs.getBoolean("paste_plain", false);
+        this.paste_quote = prefs.getBoolean("paste_quote", false);
 
         addTextChangedListener(new TextWatcher() {
             private Integer replace;
@@ -168,9 +171,9 @@ public class EditTextCompose extends FixedEditText {
                     try {
                         int order = 1000;
                         menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_brackets,
-                                order++, context.getString(R.string.title_insert_brackets));
+                                order++, "(" + context.getString(R.string.title_insert_brackets) + ")");
                         menu.add(Menu.CATEGORY_SECONDARY, R.string.title_insert_quotes,
-                                order++, context.getString(R.string.title_insert_quotes));
+                                order++, "\"" + context.getString(R.string.title_insert_quotes) + "\"");
                         menu.add(Menu.CATEGORY_SECONDARY, R.string.title_lt_add,
                                 order++, context.getString(R.string.title_lt_add));
                         menu.add(Menu.CATEGORY_SECONDARY, R.string.title_lt_delete,
@@ -208,6 +211,8 @@ public class EditTextCompose extends FixedEditText {
                             return surround("(", ")");
                         else if (id == R.string.title_insert_quotes)
                             return surround("\"", "\"");
+                        else if (id == R.string.title_lt_add)
+                            return modifyDictionary(true);
                         else if (id == R.string.title_lt_delete)
                             return modifyDictionary(false);
                     }
@@ -290,8 +295,10 @@ public class EditTextCompose extends FixedEditText {
                 public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                     try {
                         int order = 1000;
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || paste_plain)
                             menu.add(Menu.CATEGORY_SECONDARY, android.R.id.pasteAsPlainText, order++, getTitle(R.string.title_paste_plain));
+                        if (paste_quote)
+                            menu.add(Menu.CATEGORY_SECONDARY, R.string.title_paste_as_quote, order++, getTitle(R.string.title_paste_as_quote));
                         if (undo_manager && can(android.R.id.undo))
                             menu.add(Menu.CATEGORY_SECONDARY, R.string.title_undo, order++, getTitle(R.string.title_undo));
                         if (undo_manager && can(android.R.id.redo))
@@ -326,9 +333,11 @@ public class EditTextCompose extends FixedEditText {
                         int id = item.getItemId();
                         if (id == android.R.id.pasteAsPlainText)
                             return insertPlain();
-                        else if (id == R.string.title_undo)
+                        else if (id == R.string.title_paste_as_quote && paste_quote)
+                            return pasteAsQuote();
+                        else if (id == R.string.title_undo && undo_manager)
                             return EditTextCompose.super.onTextContextMenuItem(android.R.id.undo);
-                        else if (id == R.string.title_redo)
+                        else if (id == R.string.title_redo && undo_manager)
                             return EditTextCompose.super.onTextContextMenuItem(android.R.id.redo);
                         else if (id == R.string.title_insert_line)
                             return insertLine();
@@ -367,7 +376,55 @@ public class EditTextCompose extends FixedEditText {
                     int start = getSelectionStart();
                     if (start < 0)
                         start = 0;
-                    getText().insert(start, text.toString());
+                    String plain = text.toString();
+                    getText().insert(start, plain);
+
+                    StyleHelper.markAsInserted(getText(), start, start + plain.length());
+
+                    return true;
+                }
+
+                private boolean pasteAsQuote() {
+                    ClipboardManager cbm = Helper.getSystemService(context, ClipboardManager.class);
+                    if (!cbm.hasPrimaryClip())
+                        return true;
+
+                    ClipData clip = cbm.getPrimaryClip();
+                    if (clip == null || clip.getItemCount() < 1)
+                        return true;
+
+                    ClipData.Item item = clip.getItemAt(0);
+                    if (item == null)
+                        return true;
+
+                    String h = item.getHtmlText();
+                    if (TextUtils.isEmpty(h)) {
+                        CharSequence t = item.getText();
+                        if (TextUtils.isEmpty(t))
+                            return true;
+                        h = "<div>" + HtmlHelper.formatPlainText(t.toString(), false) + "</div>";
+                    }
+                    String style = HtmlHelper.getQuoteStyle("", 0, 0);
+                    String html = "<blockquote style=\"" + style + "\">" + h + "</blockquote>";
+
+                    Helper.getUIExecutor().submit(new RunnableEx("pasteq") {
+                        @Override
+                        public void delegate() {
+                            SpannableStringBuilder ssb = getSpanned(context, html);
+
+                            EditTextCompose.this.post(new RunnableEx("pasteq") {
+                                @Override
+                                public void delegate() {
+                                    int start = getSelectionStart();
+                                    if (start < 0)
+                                        start = 0;
+                                    getText().insert(start, ssb);
+
+                                    StyleHelper.markAsInserted(getText(), start, start + ssb.length());
+                                }
+                            });
+                        }
+                    });
 
                     return true;
                 }
@@ -391,7 +448,7 @@ public class EditTextCompose extends FixedEditText {
 
                     for (EntityAnswer snippet : snippets)
                         if (snippet.id.equals(id)) {
-                            String html = snippet.getHtml(context, to);
+                            String html = snippet.getData(context, to).getHtml();
 
                             Helper.getUIExecutor().submit(new Runnable() {
                                 @Override
@@ -409,6 +466,7 @@ public class EditTextCompose extends FixedEditText {
                                                     int start = getSelectionStart();
                                                     if (start < 0)
                                                         start = 0;
+                                                    int at = start;
 
                                                     Editable edit = getText();
 
@@ -421,6 +479,8 @@ public class EditTextCompose extends FixedEditText {
                                                     edit.insert(start, ssb);
 
                                                     setSelection(start + ssb.length());
+
+                                                    StyleHelper.markAsInserted(getText(), at, at + (start - at) + ssb.length());
                                                 } catch (Throwable ex) {
                                                     Log.e(ex);
                                                 }
@@ -505,16 +565,16 @@ public class EditTextCompose extends FixedEditText {
         super.onSelectionChanged(selStart, selEnd);
         if (selectionListener != null)
             selectionListener.onSelected(hasSelection());
+    }
 
-        int start = -1;
-        int end = -1;
-        Editable edit = getText();
-        if (lt_description && selStart >= 0 && edit != null) {
-            SuggestionSpanEx[] suggestions = edit.getSpans(selStart, selEnd, SuggestionSpanEx.class);
-            if (suggestions != null && suggestions.length > 0) {
-                start = edit.getSpanStart(suggestions[0]);
-                end = edit.getSpanEnd(suggestions[0]);
-                if (start != lastStart && end != lastEnd) {
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (lt_description && event.getAction() == MotionEvent.ACTION_DOWN) {
+            Editable edit = getText();
+            if (edit != null) {
+                int off = Helper.getOffset(this, edit, event);
+                SuggestionSpanEx[] suggestions = edit.getSpans(off, off, SuggestionSpanEx.class);
+                if (suggestions != null && suggestions.length > 0) {
                     String description = suggestions[0].getDescription();
                     if (!TextUtils.isEmpty(description))
                         ToastEx.makeText(getContext(), description, Toast.LENGTH_LONG).show();
@@ -522,8 +582,7 @@ public class EditTextCompose extends FixedEditText {
             }
         }
 
-        lastStart = start;
-        lastEnd = end;
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -610,6 +669,8 @@ public class EditTextCompose extends FixedEditText {
                                             getText().insert(start, ssb);
                                         else
                                             getText().replace(start, end, ssb);
+
+                                        StyleHelper.markAsInserted(getText(), start, start + ssb.length());
                                     } catch (Throwable ex) {
                                         Log.e(ex);
                                         /*
@@ -632,10 +693,18 @@ public class EditTextCompose extends FixedEditText {
                 });
 
                 return true;
-            } else if (id == android.R.id.undo) {
+            } else if (id == android.R.id.pasteAsPlainText) {
+                int start = getSelectionStart();
+                int length = length();
+                boolean pasted = super.onTextContextMenuItem(id);
+                int end = start + length() - length;
+                if (pasted && start >= 0 && end > start)
+                    StyleHelper.markAsInserted(getText(), start, end);
+                return pasted;
+            } else if (id == android.R.id.undo && undo_manager) {
                 canUndo = true;
                 return true;
-            } else if (id == android.R.id.redo) {
+            } else if (id == android.R.id.redo && undo_manager) {
                 canRedo = true;
                 return true;
             }

@@ -27,7 +27,7 @@
     <color name="colorHighlightLight">#7fffe000</color>
     <color name="colorHighlightDark">#7fffe000</color>
 
-    <color name="colorVerifiedLight">#ff00e000</color>
+    <color name="colorVerifiedLight">#ff00c000</color>
     <color name="colorVerifiedDark">#ff00ff00</color>
 
     <color name="colorEncryptLight">#ff00ff00</color>
@@ -64,6 +64,8 @@
     <color name="lightActionForeground">#fff</color>
     <color name="lightActionForegroundDisabled">#ddd</color>
     <color name="lightActionBackground">#bbb</color>
+
+    <color name="whiteActionForegroundDisabled">#aaa</color>
 
     <color name="darkColorItemSelected">#444</color>
     <color name="darkColorSeparator">#444</color>
@@ -123,10 +125,10 @@
     <color name="darkAmberPrimaryDark">#c43e00</color>
     <color name="darkBlueAccent">#4fc3f7</color>
 
-    <!-- Yellow 900 / Purple 300 -->
+    <!-- Yellow 900 / Indigo 300 -->
     <color name="darkYellowPrimary">#f57f17</color>
     <color name="darkYellowPrimaryDark">#bc5100</color>
-    <color name="darkPurpleAccent">#ba68c8</color>
+    <color name="darkPurpleAccent">#7986cb</color>
 
     <!-- Purple 900 / Yellow 600 -->
     <color name="darkPurplePrimary">#4a148c</color>
@@ -181,6 +183,7 @@
 
     <color name="white">#ffffffff</color>
     <color name="black">#ff000000</color>
+    <color name="smoke">#fff5f5f5</color>
     <color name="grey">#ff7f7f7f</color>
     <!-- red ORIG 1: #F6402C -->
     <!-- red ORIG 2: #ffff0000 -->

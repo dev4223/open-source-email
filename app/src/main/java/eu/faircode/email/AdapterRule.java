@@ -143,39 +143,67 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                 JSONObject jcondition = new JSONObject(rule.condition);
                 if (jcondition.has("sender"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_sender),
+                            jcondition.getJSONObject("sender").optBoolean("not"),
                             jcondition.getJSONObject("sender").optString("value"),
                             jcondition.getJSONObject("sender").optBoolean("regex")));
                 if (jcondition.has("recipient"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_recipient),
+                            jcondition.getJSONObject("recipient").optBoolean("not"),
                             jcondition.getJSONObject("recipient").optString("value"),
                             jcondition.getJSONObject("recipient").optBoolean("regex")));
                 if (jcondition.has("subject"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_subject),
+                            jcondition.getJSONObject("subject").optBoolean("not"),
                             jcondition.getJSONObject("subject").optString("value"),
                             jcondition.getJSONObject("subject").optBoolean("regex")));
                 if (jcondition.optBoolean("attachments"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_attachments),
-                            null, null));
+                            false, null, null));
                 if (jcondition.has("header"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_header),
+                            jcondition.getJSONObject("header").optBoolean("not"),
                             jcondition.getJSONObject("header").optString("value"),
                             jcondition.getJSONObject("header").optBoolean("regex")));
                 if (jcondition.has("body"))
                     conditions.add(new Condition(context.getString(R.string.title_rule_body),
+                            jcondition.getJSONObject("body").optBoolean("not"),
                             jcondition.getJSONObject("body").optString("value"),
                             jcondition.getJSONObject("body").optBoolean("regex")));
-                if (jcondition.has("date"))
+                if (jcondition.has("date")) {
+                    String range = null;
+                    JSONObject jdate = jcondition.optJSONObject("date");
+                    if (jdate != null && jdate.has("after") && jdate.has("before")) {
+                        long after = jdate.getLong("after");
+                        long before = jdate.getLong("before");
+                        range = DF.format(after) + " - " + DF.format(before);
+                    }
                     conditions.add(new Condition(context.getString(R.string.title_rule_time_abs),
-                            null, null));
-                if (jcondition.has("schedule"))
+                            false, range, null));
+                }
+                if (jcondition.has("schedule")) {
+                    String range = null;
+                    JSONObject jschedule = jcondition.optJSONObject("schedule");
+                    if (jschedule != null && jschedule.has("start") && jschedule.has("end")) {
+                        int start = jschedule.getInt("start");
+                        int end = jschedule.getInt("end");
+                        range = Helper.formatHour(context, start % (24 * 60)) + " - " +
+                                Helper.formatHour(context, end % (24 * 60));
+                    }
                     conditions.add(new Condition(context.getString(R.string.title_rule_time_rel),
-                            null, null));
+                            false, range, null));
+                }
+
+                if (jcondition.has("expression"))
+                    conditions.add(new Condition(context.getString(R.string.title_rule_expression),
+                            false, jcondition.getString("expression"), null));
 
                 SpannableStringBuilder ssb = new SpannableStringBuilderEx();
                 for (Condition condition : conditions) {
                     if (ssb.length() > 0)
                         ssb.append("\n");
                     ssb.append(condition.name);
+                    if (condition.not)
+                        ssb.append(' ').append(context.getString(R.string.title_rule_not));
                     if (!TextUtils.isEmpty(condition.condition)) {
                         ssb.append(" \"");
                         int start = ssb.length();
@@ -461,7 +489,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex, false);
+                            boolean report = !(ex instanceof IllegalArgumentException);
+                            Log.unexpectedError(parentFragment.getParentFragmentManager(), ex, report, 71);
                         }
                     }.execute(context, owner, args, "rule:execute");
                 }
@@ -585,6 +614,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     return R.string.title_rule_notes;
                 case EntityRule.TYPE_URL:
                     return R.string.title_rule_url;
+                case EntityRule.TYPE_SILENT:
+                    return R.string.title_rule_silent;
+                case EntityRule.TYPE_SUMMARIZE:
+                    return R.string.title_rule_summarize;
                 default:
                     throw new IllegalArgumentException("Unknown action type=" + type);
             }
@@ -592,11 +625,13 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
         private class Condition {
             private final String name;
+            private boolean not;
             private final String condition;
             private final Boolean regex;
 
-            Condition(String name, String condition, Boolean regex) {
+            Condition(String name, boolean not, String condition, Boolean regex) {
                 this.name = name;
+                this.not = not;
                 this.condition = condition;
                 this.regex = regex;
             }

@@ -66,6 +66,8 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.net.SocketFactory;
@@ -92,8 +94,13 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
     private SwitchCompat swVpnOnly;
     private EditText etTimeout;
     private SwitchCompat swPreferIp4;
+    private SwitchCompat swPreferIp6;
     private SwitchCompat swBindSocket;
     private SwitchCompat swStandaloneVpn;
+    private SwitchCompat swDnsCustom;
+    private TextView tvDnsExtra;
+    private EditText etDnsExtra;
+    private SwitchCompat swDnsClear;
     private SwitchCompat swTcpKeepAlive;
     private SwitchCompat swSslUpdate;
     private SwitchCompat swSslHarden;
@@ -119,17 +126,21 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
     private TextView tvNetworkInfo;
 
     private Group grpValidated;
+    private Group grpCustomDns;
+    private Group grpBC;
     private Group grpCustomSsl;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "metered", "download", "download_limited", "roaming", "rlah",
             "download_headers", "download_eml", "download_plain",
             "require_validated", "require_validated_captive", "vpn_only",
-            "timeout", "prefer_ip4", "bind_socket", "standalone_vpn", "tcp_keep_alive",
+            "timeout", "prefer_ip4", "prefer_ip6", "bind_socket", "standalone_vpn",
+            "dns_extra", "dns_custom", "dns_clear",
+            "tcp_keep_alive",
             "ssl_update", "ssl_harden", "ssl_harden_strict", "cert_strict", "cert_transparency", "check_names",
             "open_safe", "http_redirect",
             "bouncy_castle", "bc_fips"
-    };
+    ));
 
     @Override
     @Nullable
@@ -155,8 +166,13 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         swVpnOnly = view.findViewById(R.id.swVpnOnly);
         etTimeout = view.findViewById(R.id.etTimeout);
         swPreferIp4 = view.findViewById(R.id.swPreferIp4);
+        swPreferIp6 = view.findViewById(R.id.swPreferIp6);
         swBindSocket = view.findViewById(R.id.swBindSocket);
         swStandaloneVpn = view.findViewById(R.id.swStandaloneVpn);
+        swDnsCustom = view.findViewById(R.id.swDnsCustom);
+        tvDnsExtra = view.findViewById(R.id.tvDnsExtra);
+        etDnsExtra = view.findViewById(R.id.etDnsExtra);
+        swDnsClear = view.findViewById(R.id.swDnsClear);
         swTcpKeepAlive = view.findViewById(R.id.swTcpKeepAlive);
         swSslUpdate = view.findViewById(R.id.swSslUpdate);
         swSslHarden = view.findViewById(R.id.swSslHarden);
@@ -184,6 +200,8 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         tvNetworkInfo = view.findViewById(R.id.tvNetworkInfo);
 
         grpValidated = view.findViewById(R.id.grpValidated);
+        grpCustomDns = view.findViewById(R.id.grpCustomDns);
+        grpBC = view.findViewById(R.id.grpBC);
         grpCustomSsl = view.findViewById(R.id.grpCustomSsl);
 
         setOptions();
@@ -314,6 +332,14 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("prefer_ip4", checked).apply();
+                swPreferIp6.setEnabled(!checked);
+            }
+        });
+
+        swPreferIp6.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("prefer_ip6", checked).apply();
             }
         });
 
@@ -332,6 +358,41 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("standalone_vpn", checked).apply();
+            }
+        });
+
+        swDnsCustom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                DnsHelper.clear(buttonView.getContext());
+                prefs.edit().putBoolean("dns_custom", checked).apply();
+                tvDnsExtra.setEnabled(checked || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
+                etDnsExtra.setEnabled(checked || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
+            }
+        });
+
+        etDnsExtra.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                prefs.edit().putString("dns_extra", s.toString()).apply();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Do nothing
+            }
+        });
+
+        swDnsClear.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                DnsHelper.clear(buttonView.getContext());
+                prefs.edit().putBoolean("dns_clear", checked).apply();
             }
         });
 
@@ -602,9 +663,10 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
         tvNetworkMetered.setVisibility(View.GONE);
         tvNetworkRoaming.setVisibility(View.GONE);
+        grpCustomDns.setVisibility(debug || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+        grpBC.setVisibility(debug || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         grpCustomSsl.setVisibility(SSLHelper.customTrustManager() ? View.VISIBLE : View.GONE);
         cardDebug.setVisibility(View.GONE);
 
@@ -621,7 +683,12 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+
         if ("timeout".equals(key))
+            return;
+        if ("dns_extra".equals(key))
             return;
 
         getMainHandler().removeCallbacks(update);
@@ -712,8 +779,15 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             etTimeout.setHint(Integer.toString(EmailService.DEFAULT_CONNECT_TIMEOUT));
 
             swPreferIp4.setChecked(prefs.getBoolean("prefer_ip4", true));
+            swPreferIp6.setChecked(prefs.getBoolean("prefer_ip6", false));
+            swPreferIp6.setEnabled(!swPreferIp4.isChecked());
             swBindSocket.setChecked(prefs.getBoolean("bind_socket", false));
             swStandaloneVpn.setChecked(prefs.getBoolean("standalone_vpn", false));
+            swDnsCustom.setChecked(prefs.getBoolean("dns_custom", false));
+            etDnsExtra.setText(prefs.getString("dns_extra", null));
+            tvDnsExtra.setEnabled(swDnsCustom.isChecked() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
+            etDnsExtra.setEnabled(swDnsCustom.isChecked() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
+            swDnsClear.setChecked(prefs.getBoolean("dns_clear", false));
             swTcpKeepAlive.setChecked(prefs.getBoolean("tcp_keep_alive", false));
             swSslUpdate.setChecked(prefs.getBoolean("ssl_update", true));
             swSslHarden.setChecked(prefs.getBoolean("ssl_harden", false));

@@ -34,6 +34,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ViewModel;
+import androidx.paging.DataSource;
 import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import androidx.preference.PreferenceManager;
@@ -81,14 +82,18 @@ public class ViewModelMessages extends ViewModel {
     Model getModel(
             final Context context, final LifecycleOwner owner,
             final AdapterMessage.ViewType viewType,
-            String type, long account, long folder,
+            String type, String category, long account, long folder,
             String thread, long id,
             boolean threading,
             boolean filter_archive,
             BoundaryCallbackMessages.SearchCriteria criteria, boolean server) {
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean legacy = prefs.getBoolean("legacy_queries", false);
+        boolean cache_lists = prefs.getBoolean("cache_lists", true);
+
         Args args = new Args(context,
-                viewType, type, account, folder,
+                viewType, type, category, account, folder,
                 thread, id, threading,
                 filter_archive, criteria, server);
         Log.i("Get model=" + viewType + " " + args);
@@ -112,6 +117,7 @@ public class ViewModelMessages extends ViewModel {
                         viewType, args.account, args.folder, args.server, args.criteria,
                         args.server ? REMOTE_PAGE_SIZE : SEARCH_PAGE_SIZE);
 
+            DataSource.Factory<Integer, TupleMessageEx> pager;
             LivePagedListBuilder<Integer, TupleMessageEx> builder = null;
             switch (viewType) {
                 case UNIFIED:
@@ -119,21 +125,37 @@ public class ViewModelMessages extends ViewModel {
                             .setPageSize(LOCAL_PAGE_SIZE)
                             .setMaxSize(MAX_CACHED_ITEMS)
                             .build();
-                    builder = new LivePagedListBuilder<>(
-                            db.message().pagedUnified(
-                                    args.type,
-                                    args.threading,
-                                    args.group_category,
-                                    args.sort, args.ascending,
-                                    args.filter_seen,
-                                    args.filter_unflagged,
-                                    args.filter_unknown,
-                                    args.filter_snoozed,
-                                    args.filter_deleted,
-                                    args.filter_language,
-                                    false,
-                                    args.debug),
-                            configUnified);
+                    if (legacy)
+                        pager = db.message().pagedUnifiedLegacy(
+                                args.type,
+                                args.category,
+                                args.threading,
+                                args.group_category,
+                                args.sort1, args.sort2, args.ascending,
+                                args.filter_seen,
+                                args.filter_unflagged,
+                                args.filter_unknown,
+                                args.filter_snoozed,
+                                args.filter_deleted,
+                                args.filter_language,
+                                false,
+                                args.debug);
+                    else
+                        pager = db.message().pagedUnified(
+                                args.type,
+                                args.category,
+                                args.threading,
+                                args.group_category,
+                                args.sort1, args.sort2, args.ascending,
+                                args.filter_seen,
+                                args.filter_unflagged,
+                                args.filter_unknown,
+                                args.filter_snoozed,
+                                args.filter_deleted,
+                                args.filter_language,
+                                false,
+                                args.debug);
+                    builder = new LivePagedListBuilder<>(pager, configUnified);
                     break;
 
                 case FOLDER:
@@ -143,19 +165,31 @@ public class ViewModelMessages extends ViewModel {
                             .setPrefetchDistance(REMOTE_PAGE_SIZE)
                             .setMaxSize(MAX_CACHED_ITEMS)
                             .build();
-                    builder = new LivePagedListBuilder<>(
-                            db.message().pagedFolder(
-                                    args.folder, args.threading,
-                                    args.sort, args.ascending,
-                                    args.filter_seen,
-                                    args.filter_unflagged,
-                                    args.filter_unknown,
-                                    args.filter_snoozed,
-                                    args.filter_deleted,
-                                    args.filter_language,
-                                    false,
-                                    args.debug),
-                            configFolder);
+                    if (legacy)
+                        pager = db.message().pagedFolderLegacy(
+                                args.folder, args.threading,
+                                args.sort1, args.sort2, args.ascending,
+                                args.filter_seen,
+                                args.filter_unflagged,
+                                args.filter_unknown,
+                                args.filter_snoozed,
+                                args.filter_deleted,
+                                args.filter_language,
+                                false,
+                                args.debug);
+                    else
+                        pager = db.message().pagedFolder(
+                                args.folder, args.threading,
+                                args.sort1, args.sort2, args.ascending,
+                                args.filter_seen,
+                                args.filter_unflagged,
+                                args.filter_unknown,
+                                args.filter_snoozed,
+                                args.filter_deleted,
+                                args.filter_language,
+                                false,
+                                args.debug);
+                    builder = new LivePagedListBuilder<>(pager, configFolder);
                     builder.setBoundaryCallback(boundary);
                     break;
 
@@ -179,27 +213,45 @@ public class ViewModelMessages extends ViewModel {
                             .setPrefetchDistance(REMOTE_PAGE_SIZE)
                             .setMaxSize(MAX_CACHED_ITEMS)
                             .build();
-                    if (args.folder < 0)
-                        builder = new LivePagedListBuilder<>(
-                                db.message().pagedUnified(
-                                        null,
-                                        args.threading, false,
-                                        "time", false,
-                                        false, false, false, false, false,
-                                        null,
-                                        true,
-                                        args.debug),
-                                configSearch);
-                    else
-                        builder = new LivePagedListBuilder<>(
-                                db.message().pagedFolder(
-                                        args.folder, args.threading,
-                                        "time", false,
-                                        false, false, false, false, false,
-                                        null,
-                                        true,
-                                        args.debug),
-                                configSearch);
+                    if (args.folder < 0) {
+                        if (legacy)
+                            pager = db.message().pagedUnifiedLegacy(
+                                    null, null,
+                                    args.threading, false,
+                                    criteria == null || criteria.touched == null ? "time" : "touched", "", false,
+                                    false, false, false, false, false,
+                                    null,
+                                    true,
+                                    args.debug);
+                        else
+                            pager = db.message().pagedUnified(
+                                    null, null,
+                                    args.threading, false,
+                                    criteria == null || criteria.touched == null ? "time" : "touched", "", false,
+                                    false, false, false, false, false,
+                                    null,
+                                    true,
+                                    args.debug);
+                        builder = new LivePagedListBuilder<>(pager, configSearch);
+                    } else {
+                        if (legacy)
+                            pager = db.message().pagedFolderLegacy(
+                                    args.folder, args.threading,
+                                    criteria == null || criteria.touched == null ? "time" : "touched", "", false,
+                                    false, false, false, false, false,
+                                    null,
+                                    true,
+                                    args.debug);
+                        else
+                            pager = db.message().pagedFolder(
+                                    args.folder, args.threading,
+                                    criteria == null || criteria.touched == null ? "time" : "touched", "", false,
+                                    false, false, false, false, false,
+                                    null,
+                                    true,
+                                    args.debug);
+                        builder = new LivePagedListBuilder<>(pager, configSearch);
+                    }
                     builder.setBoundaryCallback(boundary);
                     break;
             }
@@ -242,17 +294,25 @@ public class ViewModelMessages extends ViewModel {
             }
         });
 
-        if (viewType == AdapterMessage.ViewType.UNIFIED)
-            models.remove(AdapterMessage.ViewType.FOLDER);
+        if (cache_lists) {
+            if (viewType == AdapterMessage.ViewType.UNIFIED)
+                models.remove(AdapterMessage.ViewType.FOLDER);
 
-        if (viewType != AdapterMessage.ViewType.SEARCH &&
-                viewType != AdapterMessage.ViewType.THREAD)
-            models.remove(AdapterMessage.ViewType.SEARCH);
+            if (viewType != AdapterMessage.ViewType.SEARCH &&
+                    viewType != AdapterMessage.ViewType.THREAD)
+                models.remove(AdapterMessage.ViewType.SEARCH);
+        } else {
+            for (AdapterMessage.ViewType v : AdapterMessage.ViewType.values())
+                if (v != viewType)
+                    models.remove(v);
+        }
 
         if (viewType != AdapterMessage.ViewType.THREAD) {
             last = viewType;
             Log.i("Last model=" + last);
         }
+
+        Helper.gc("model:get");
 
         Log.i("Returning model=" + viewType);
         dump();
@@ -497,9 +557,14 @@ public class ViewModelMessages extends ViewModel {
         }
     }
 
+    void clear() {
+        models.clear();
+    }
+
     private class Args {
         private long account;
         private String type;
+        private String category;
         private long folder;
         private String thread;
         private long id;
@@ -508,7 +573,8 @@ public class ViewModelMessages extends ViewModel {
 
         private boolean threading;
         private boolean group_category;
-        private String sort;
+        private String sort1;
+        private String sort2;
         private boolean ascending;
         private boolean filter_seen;
         private boolean filter_unflagged;
@@ -521,12 +587,13 @@ public class ViewModelMessages extends ViewModel {
 
         Args(Context context,
              AdapterMessage.ViewType viewType,
-             String type, long account, long folder,
+             String type, String category, long account, long folder,
              String thread, long id, boolean threading,
              boolean filter_archive,
              BoundaryCallbackMessages.SearchCriteria criteria, boolean server) {
 
             this.type = type;
+            this.category = category;
             this.account = account;
             this.folder = folder;
             this.thread = thread;
@@ -540,7 +607,10 @@ public class ViewModelMessages extends ViewModel {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             this.group_category = prefs.getBoolean("group_category", false);
-            this.sort = prefs.getString(FragmentMessages.getSort(context, viewType, type), "time");
+            String sort = prefs.getString(FragmentMessages.getSort(context, viewType, type), "time");
+            String[] sorts = sort.split("\\+");
+            this.sort1 = sorts[0];
+            this.sort2 = (sorts.length > 1 ? sorts[1] : "");
             this.ascending = prefs.getBoolean(FragmentMessages.getSortOrder(context, viewType, type), outbox);
             this.filter_seen = prefs.getBoolean(FragmentMessages.getFilter(context, "seen", viewType, type), false);
             this.filter_unflagged = prefs.getBoolean(FragmentMessages.getFilter(context, "unflagged", viewType, type), false);
@@ -560,6 +630,7 @@ public class ViewModelMessages extends ViewModel {
             if (obj instanceof Args) {
                 Args other = (Args) obj;
                 return (Objects.equals(this.type, other.type) &&
+                        Objects.equals(this.category, other.category) &&
                         this.account == other.account &&
                         this.folder == other.folder &&
                         Objects.equals(this.thread, other.thread) &&
@@ -569,7 +640,8 @@ public class ViewModelMessages extends ViewModel {
 
                         this.threading == other.threading &&
                         this.group_category == other.group_category &&
-                        Objects.equals(this.sort, other.sort) &&
+                        Objects.equals(this.sort1, other.sort1) &&
+                        Objects.equals(this.sort2, other.sort2) &&
                         this.ascending == other.ascending &&
                         this.filter_seen == other.filter_seen &&
                         this.filter_unflagged == other.filter_unflagged &&
@@ -586,12 +658,12 @@ public class ViewModelMessages extends ViewModel {
         @NonNull
         @Override
         public String toString() {
-            return "folder=" + type + ":" + account + ":" + folder +
+            return "folder=" + type + "/" + category + ":" + account + ":" + folder +
                     " thread=" + thread + ":" + id +
                     " criteria=" + criteria + ":" + server + "" +
                     " threading=" + threading +
                     " category=" + group_category +
-                    " sort=" + sort + ":" + ascending +
+                    " sort=" + sort1 + "/" + sort2 + ":" + ascending +
                     " filter seen=" + filter_seen +
                     " unflagged=" + filter_unflagged +
                     " unknown=" + filter_unknown +

@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -32,11 +33,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FragmentDialogSync extends FragmentDialogBase {
+    private static final int DEFAULT_KEEP = 3; // months
+
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -45,20 +49,27 @@ public class FragmentDialogSync extends FragmentDialogBase {
         String name = args.getString("name");
         String type = args.getString("type");
 
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_sync, null);
+        final Context context = getContext();
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_sync, null);
         final TextView tvFolder = view.findViewById(R.id.tvFolder);
         final EditText etMonths = view.findViewById(R.id.etMonths);
         final TextView tvRemark = view.findViewById(R.id.tvRemark);
 
+        String key;
         if (fid < 0) {
+            key = "default_keep" + (TextUtils.isEmpty(type) ? "" : "." + type);
             if (TextUtils.isEmpty(type))
                 tvFolder.setText(R.string.title_folder_unified);
             else
-                tvFolder.setText(EntityFolder.localizeType(getContext(), type));
-        } else
+                tvFolder.setText(EntityFolder.localizeType(context, type));
+        } else {
+            key = "default_keep." + fid;
             tvFolder.setText(name);
+        }
 
-        etMonths.setText("12");
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int def = prefs.getInt(key, DEFAULT_KEEP);
+        etMonths.setText(def < 0 ? null : Integer.toString(def));
 
         tvRemark.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,7 +78,7 @@ public class FragmentDialogSync extends FragmentDialogBase {
             }
         });
 
-        return new AlertDialog.Builder(getContext())
+        return new AlertDialog.Builder(context)
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -75,11 +86,14 @@ public class FragmentDialogSync extends FragmentDialogBase {
                         String months = etMonths.getText().toString();
 
                         Bundle args = getArguments();
-                        if (TextUtils.isEmpty(months))
+                        if (TextUtils.isEmpty(months)) {
+                            prefs.edit().putInt(key, -1).apply();
                             args.putInt("months", 0);
-                        else
+                        } else
                             try {
-                                args.putInt("months", Integer.parseInt(months));
+                                int m = Integer.parseInt(months);
+                                prefs.edit().putInt(key, m).apply();
+                                args.putInt("months", m);
                             } catch (NumberFormatException ex) {
                                 Log.e(ex);
                                 return;
@@ -109,9 +123,8 @@ public class FragmentDialogSync extends FragmentDialogBase {
                                         folders.add(folder);
 
                                         if (children) {
-                                            List<EntityFolder> sub = db.folder().getChildFolders(folder.id);
-                                            if (sub != null)
-                                                folders.addAll(sub);
+                                            List<EntityFolder> sub = EntityFolder.getChildFolders(context, folder.id);
+                                            folders.addAll(sub);
                                         }
                                     }
 
@@ -122,7 +135,7 @@ public class FragmentDialogSync extends FragmentDialogBase {
                                                 db.folder().setFolderKeep(folder.id, Integer.MAX_VALUE);
                                             } else if (months > 0) {
                                                 db.folder().setFolderInitialize(folder.id, months * 30);
-                                                db.folder().setFolderKeep(folder.id, Math.max(folder.keep_days, months * 30));
+                                                db.folder().setFolderKeep(folder.id, months * 30);
                                             }
 
                                             EntityOperation.sync(context, folder.id, true);

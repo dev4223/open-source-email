@@ -74,6 +74,8 @@ public class EntityAccount extends EntityOrder implements Serializable {
     @ColumnInfo(name = "pop")
     public Integer protocol = TYPE_IMAP;
     @NonNull
+    public Boolean dnssec = false;
+    @NonNull
     public String host; // POP3/IMAP
     @NonNull
     @ColumnInfo(name = "starttls")
@@ -101,6 +103,8 @@ public class EntityAccount extends EntityOrder implements Serializable {
     public String category;
     public String signature; // obsolete
     public Integer color;
+    @ColumnInfo(name = "prefix")
+    public String avatar;
     public String calendar;
 
     @NonNull
@@ -122,9 +126,9 @@ public class EntityAccount extends EntityOrder implements Serializable {
     @NonNull
     public Boolean client_delete = false;
     @NonNull
-    public Boolean leave_deleted = false;
+    public Boolean leave_deleted = true;
     @NonNull
-    public Boolean leave_on_device = false;
+    public Boolean leave_on_device = true;
     public Integer max_messages = null; // POP3
     @NonNull
     public Boolean auto_seen = true;
@@ -153,7 +157,6 @@ public class EntityAccount extends EntityOrder implements Serializable {
     public Boolean use_date = false; // Date header
     @NonNull
     public Boolean use_received = false; // Received header
-    public String prefix; // namespace, obsolete
     @NonNull
     public Boolean unicode = false;
 
@@ -215,6 +218,10 @@ public class EntityAccount extends EntityOrder implements Serializable {
         return "imap.wp.pl".equalsIgnoreCase(host);
     }
 
+    boolean isWebDe() {
+        return "imap.web.de".equalsIgnoreCase(host);
+    }
+
     boolean isICloud() {
         return "imap.mail.me.com".equalsIgnoreCase(host);
     }
@@ -227,6 +234,18 @@ public class EntityAccount extends EntityOrder implements Serializable {
     }
 
     boolean isExempted(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean poll_metered = prefs.getBoolean("poll_metered", false);
+        boolean poll_unmetered = prefs.getBoolean("poll_unmetered", false);
+
+        if (poll_metered || poll_unmetered) {
+            ConnectionHelper.NetworkState state = ConnectionHelper.getNetworkState(context);
+            if (poll_metered && state.isConnected() && !state.isUnmetered())
+                return false;
+            if (poll_unmetered && state.isConnected() && state.isUnmetered())
+                return false;
+        }
+
         return this.poll_exempted;
     }
 
@@ -468,6 +487,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
                 Objects.equals(a1.category, other.category) &&
                 // signature
                 Objects.equals(a1.color, other.color) &&
+                Objects.equals(a1.avatar, other.avatar) &&
                 Objects.equals(a1.calendar, other.calendar) &&
                 a1.synchronize.equals(other.synchronize) &&
                 Objects.equals(a1.ondemand, other.ondemand) &&
@@ -495,7 +515,6 @@ public class EntityAccount extends EntityOrder implements Serializable {
                 a1.ignore_size == other.ignore_size &&
                 a1.use_date == other.use_date &&
                 a1.use_received == other.use_received &&
-                // prefix
                 a1.unicode == other.unicode &&
                 Objects.equals(a1.conditions, other.conditions) &&
                 (!state || Objects.equals(a1.quota_usage, other.quota_usage)) &&

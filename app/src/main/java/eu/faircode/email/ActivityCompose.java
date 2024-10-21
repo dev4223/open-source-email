@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.app.NotificationManager;
 import android.content.ClipData;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -56,8 +57,6 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
         setContentView(R.layout.activity_compose);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setCustomView(R.layout.action_bar);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
 
         getSupportFragmentManager().addOnBackStackChangedListener(this);
 
@@ -84,6 +83,8 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
             String[] tos = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
             boolean cloud = (tos != null && tos.length == 1 && BuildConfig.CLOUD_EMAIL.equals(tos[0]));
 
+            Log.i("Compose exit shared=" + shared + " widget=" + widget + " cloud=" + cloud);
+
             if (cloud) {
                 Intent setup = new Intent(this, ActivitySetup.class)
                         .setAction("misc")
@@ -92,8 +93,16 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
                 startActivity(setup);
             } else if (!shared && !widget) {
                 Intent parent = getParentActivityIntent();
-                if (parent != null)
-                    if (shouldUpRecreateTask(parent))
+                if (parent != null) {
+                    boolean recreate;
+                    ComponentName cn = parent.getComponent();
+                    if (cn != null && BuildConfig.APPLICATION_ID.equals(cn.getPackageName()))
+                        recreate = false;
+                    else
+                        recreate = shouldUpRecreateTask(parent);
+
+                    Log.i("Compose exit parent=" + parent + " recreate=" + recreate);
+                    if (recreate)
                         TaskStackBuilder.create(this)
                                 .addNextIntentWithParentStack(parent)
                                 .startActivities();
@@ -101,6 +110,7 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
                         parent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(parent);
                     }
+                }
             }
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -122,7 +132,11 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
     private void handle(Intent intent, boolean create) {
         Bundle args;
         String action = intent.getAction();
-        Log.i("Handle action=" + action + " create=" + create + " " + this);
+        Log.i("Handle action=" + action +
+                " shared=" + isShared(action) +
+                " create=" + create +
+                " uri=" + intent.getData() +
+                " " + this);
 
         if (isShared(action)) {
             args = new Bundle();
@@ -271,11 +285,14 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
         } else
             args = intent.getExtras();
 
+        Log.logBundle(args);
+
         FragmentManager fm = getSupportFragmentManager();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean attach_new = prefs.getBoolean("attach_new", true);
 
         if (!attach_new && !create &&
+                args != null &&
                 args.size() == 1 &&
                 (args.containsKey("to") ||
                         args.containsKey("attachments"))) {
@@ -347,6 +364,7 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
 
                 context.startActivity(
                         new Intent(context, ActivityCompose.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 .putExtra("action", "edit")
                                 .putExtra("id", id));
             }

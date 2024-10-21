@@ -55,7 +55,8 @@ import androidx.webkit.WebViewFeature;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -79,10 +80,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private SwitchCompat swDisableTracking;
     private Button btnPin;
     private Button btnBiometrics;
-    private Spinner spBiometricsTimeout;
     private SwitchCompat swAutoLock;
     private SwitchCompat swAutoLockNav;
-    private TextView tvAutoLockNavHint;
+    private Spinner spBiometricsTimeout;
     private SwitchCompat swClientId;
     private TextView tvClientId;
     private ImageButton ibClientId;
@@ -113,7 +113,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
     private final static int BIP39_WORDS = 6;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "confirm_links", "sanitize_links", "adguard", "adguard_auto_update",
             "check_links_dbl", "confirm_files",
             "confirm_images", "ask_images", "html_always_images", "confirm_html", "ask_html",
@@ -124,7 +124,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             "generic_ua", "safe_browsing", "load_emoji",
             "disconnect_auto_update", "disconnect_links", "disconnect_images",
             "wipe_mnemonic"
-    };
+    ));
 
     @Override
     @Nullable
@@ -154,10 +154,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swDisableTracking = view.findViewById(R.id.swDisableTracking);
         btnPin = view.findViewById(R.id.btnPin);
         btnBiometrics = view.findViewById(R.id.btnBiometrics);
-        spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         swAutoLock = view.findViewById(R.id.swAutoLock);
         swAutoLockNav = view.findViewById(R.id.swAutoLockNav);
-        tvAutoLockNavHint = view.findViewById(R.id.tvAutoLockNavHint);
+        spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         swClientId = view.findViewById(R.id.swClientId);
         tvClientId = view.findViewById(R.id.tvClientId);
         ibClientId = view.findViewById(R.id.ibClientId);
@@ -253,11 +252,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                     protected Void onExecute(Context context, Bundle args) throws Throwable {
                         Adguard.download(context);
                         return null;
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, Void data) {
-                        prefs.edit().putLong("adguard_last", new Date().getTime()).apply();
                     }
 
                     @Override
@@ -392,19 +386,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
-        spBiometricsTimeout.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                int[] values = getResources().getIntArray(R.array.biometricsTimeoutValues);
-                prefs.edit().putInt("biometrics_timeout", values[position]).apply();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                prefs.edit().remove("biometrics_timeout").apply();
-            }
-        });
-
         swAutoLock.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -419,7 +400,18 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
-        tvAutoLockNavHint.setText(getString(R.string.title_advanced_display_autolock_nav_hint, Helper.AUTH_AUTOLOCK_GRACE));
+        spBiometricsTimeout.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                int[] values = getResources().getIntArray(R.array.biometricsTimeoutValues);
+                prefs.edit().putInt("biometrics_timeout", values[position]).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("biometrics_timeout").apply();
+            }
+        });
 
         swClientId.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -530,11 +522,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                     }
 
                     @Override
-                    protected void onExecuted(Bundle args, Void data) {
-                        prefs.edit().putLong("disconnect_last", new Date().getTime()).apply();
-                    }
-
-                    @Override
                     protected void onException(Bundle args, Throwable ex) {
                         Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
                     }
@@ -612,8 +599,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
-
         StringBuilder sb = new StringBuilder();
         for (String value : EmailService.getId(getContext()).values()) {
             if (sb.length() > 0)
@@ -636,6 +621,11 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key) &&
+                !"adguard_last".equals(key) &&
+                !"disconnect_last".equals(key))
+            return;
+
         getMainHandler().removeCallbacks(update);
         getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
@@ -704,6 +694,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                     : R.string.title_setup_biometrics_enable);
             btnBiometrics.setEnabled(Helper.canAuthenticate(getContext()));
 
+            swAutoLock.setChecked(prefs.getBoolean("autolock", true));
+            swAutoLockNav.setChecked(prefs.getBoolean("autolock_nav", false));
+
             int biometrics_timeout = prefs.getInt("biometrics_timeout", 2);
             int[] biometricTimeoutValues = getResources().getIntArray(R.array.biometricsTimeoutValues);
             for (int pos = 0; pos < biometricTimeoutValues.length; pos++)
@@ -711,9 +704,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                     spBiometricsTimeout.setSelection(pos);
                     break;
                 }
-
-            swAutoLock.setChecked(prefs.getBoolean("autolock", true));
-            swAutoLockNav.setChecked(prefs.getBoolean("autolock_nav", false));
 
             swClientId.setChecked(prefs.getBoolean("client_id", true));
             swHideTimeZone.setChecked(prefs.getBoolean("hide_timezone", false));

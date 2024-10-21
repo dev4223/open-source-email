@@ -3,6 +3,7 @@ package eu.faircode.email;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.app.ActivityManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -29,7 +30,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.Field;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,7 +70,7 @@ import javax.mail.internet.InternetAddress;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 288,
+        version = 301,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -122,6 +125,7 @@ public abstract class DB extends RoomDatabase {
     static final String DB_NAME = "fairemail";
     static final int DEFAULT_QUERY_THREADS = 4; // AndroidX default thread count: 4
     static final int DEFAULT_CACHE_SIZE = 20; // percentage of memory class
+    private static final long DB_LOCK_TIMEOUT = 60 * 1000L;
     private static final int DB_JOURNAL_SIZE_LIMIT = 1048576; // requery/sqlite-android default
     private static final int DB_CHECKPOINT = 1000; // requery/sqlite-android default
 
@@ -147,7 +151,7 @@ public abstract class DB extends RoomDatabase {
         File dbfile = configuration.context.getDatabasePath(DB_NAME);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(configuration.context);
-        boolean sqlite_integrity_check = prefs.getBoolean("sqlite_integrity_check", true);
+        boolean sqlite_integrity_check = prefs.getBoolean("sqlite_integrity_check", false);
 
         // https://www.sqlite.org/pragma.html#pragma_integrity_check
         if (sqlite_integrity_check && dbfile.exists()) {
@@ -415,7 +419,8 @@ public abstract class DB extends RoomDatabase {
 
                 Log.i("Disabled view invalidation");
             } catch (ReflectiveOperationException ex) {
-                Log.e(ex);
+                // Should never happen
+                Log.forceCrashReport(context, ex);
             }
 
             sInstance.getInvalidationTracker().addObserver(new InvalidationTracker.Observer(DB_TABLES) {
@@ -424,6 +429,41 @@ public abstract class DB extends RoomDatabase {
                     Log.d("ROOM invalidated=" + TextUtils.join(",", tables));
                 }
             });
+
+            // Ref: https://android-review.googlesource.com/c/platform/frameworks/support/+/1797472
+            Log.i("DB critical section start");
+            File dbDir = context.getDatabasePath(DB_NAME).getParentFile();
+            dbDir.mkdirs();
+            File lockFile = new File(dbDir, DB_NAME + ".lock");
+            try (FileOutputStream fos = new FileOutputStream(lockFile)) {
+                ObjectHolder<FileLock> lock = new ObjectHolder<>(null);
+                try {
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                lock.value = fos.getChannel().lock();
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+                    });
+                    thread.start();
+                    thread.join(DB_LOCK_TIMEOUT);
+                    if (thread.isAlive())
+                        throw new IllegalArgumentException("DB critical section failed");
+
+                    // Force migration
+                    sInstance.getOpenHelper().getWritableDatabase();
+                } finally {
+                    if (lock.value != null)
+                        lock.value.release();
+                }
+            } catch (Throwable ex) {
+                // Should never happen
+                Log.forceCrashReport(context, ex);
+            }
+            Log.i("DB critical section end");
         }
 
         return sInstance;
@@ -521,6 +561,17 @@ public abstract class DB extends RoomDatabase {
                                 dropTriggers(db);
 
                             createTriggers(db);
+
+                            ContentValues cv = new ContentValues();
+                            cv.put("host", "imap.mnet-online.de");
+                            int rows = db.update(
+                                    "account",
+                                    SQLiteDatabase.CONFLICT_ABORT,
+                                    cv,
+                                    "host = ? AND (port = ? OR port = ?)",
+                                    new Object[]{"mail.m-online.net", 143, 993});
+                            if (rows > 0)
+                                EntityLog.log(context, "M-net updated");
                         } catch (Throwable ex) {
                             /*
                                 at eu.faircode.email.DB$6.onOpen(DB.java:522)
@@ -535,7 +586,8 @@ public abstract class DB extends RoomDatabase {
                                 at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper.getWritableDatabase(FrameworkSQLiteOpenHelper.kt:104)
                                 at androidx.room.RoomDatabase.inTransaction(RoomDatabase.java:706)
                              */
-                            Log.e(ex);
+                            // Should never happen
+                            Log.forceCrashReport(context, ex);
                             // FrameworkSQLiteOpenHelper.innerGetDatabase will delete the database
                             throw ex;
                         }
@@ -2850,8 +2902,8 @@ public abstract class DB extends RoomDatabase {
                     public void migrate(@NonNull SupportSQLiteDatabase db) {
                         logMigration(startVersion, endVersion);
                         db.execSQL("ALTER TABLE `account` ADD COLUMN `summary` INTEGER NOT NULL DEFAULT 0");
-                        db.execSQL("DROP VIEW IF EXISTS `account_view`");
-                        db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
+                        //db.execSQL("DROP VIEW IF EXISTS `account_view`");
+                        //db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
                     }
                 }).addMigrations(new Migration(279, 280) {
                     @Override
@@ -2914,6 +2966,94 @@ public abstract class DB extends RoomDatabase {
                         logMigration(startVersion, endVersion);
                         db.execSQL("ALTER TABLE `account` ADD COLUMN `dane` INTEGER NOT NULL DEFAULT 0");
                         db.execSQL("ALTER TABLE `identity` ADD COLUMN `dane` INTEGER NOT NULL DEFAULT 0");
+                    }
+                }).addMigrations(new Migration(288, 289) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `dnssec` INTEGER NOT NULL DEFAULT 0");
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `dnssec` INTEGER NOT NULL DEFAULT 0");
+                    }
+                }).addMigrations(new Migration(289, 290) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE `folder` SET `count_unread` = 0 WHERE `type` = '" + EntityFolder.ARCHIVE + "'");
+                        db.execSQL("UPDATE `folder` SET `count_unread` = 0 WHERE `type` = '" + EntityFolder.TRASH + "'");
+                        db.execSQL("UPDATE `folder` SET `count_unread` = 0 WHERE `type` = '" + EntityFolder.JUNK + "'");
+                        db.execSQL("UPDATE `folder` SET `count_unread` = 0 WHERE `type` = '" + EntityFolder.DRAFTS + "'");
+                    }
+                }).addMigrations(new Migration(290, 291) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `folder` ADD COLUMN `last_view` INTEGER");
+                    }
+                }).addMigrations(new Migration(291, 292) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `envelopeFrom` TEXT");
+                    }
+                }).addMigrations(new Migration(292, 293) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `last_touched` INTEGER");
+                    }
+                }).addMigrations(new Migration(293, 294) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `login` INTEGER NOT NULL DEFAULT 0");
+                    }
+                }).addMigrations(new Migration(294, 295) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("ALTER TABLE `answer` ADD COLUMN `ai` INTEGER NOT NULL DEFAULT 0");
+                    }
+                }).addMigrations(new Migration(295, 296) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE `identity` SET `use_ip` = 0 WHERE host = 'sslout.df.eu'");
+                    }
+                }).addMigrations(new Migration(296, 297) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE `account` SET `prefix` = NULL");
+                    }
+                }).addMigrations(new Migration(297, 298) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("DROP VIEW IF EXISTS `account_view`");
+                        db.execSQL("CREATE VIEW IF NOT EXISTS `account_view` AS " + TupleAccountView.query);
+                    }
+                }).addMigrations(new Migration(298, 299) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE account SET keep_alive_noop = 1" +
+                                " WHERE host = 'imap.mail.me.com' AND pop = " + EntityAccount.TYPE_IMAP);
+                    }
+                }).addMigrations(new Migration(299, 300) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE account SET keep_alive_noop = 1" +
+                                " WHERE host = 'imap.gmail.com' AND pop = " + EntityAccount.TYPE_IMAP);
+                    }
+                }).addMigrations(new Migration(300, 301) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        logMigration(startVersion, endVersion);
+                        db.execSQL("UPDATE account SET keep_alive_noop = 0" +
+                                " WHERE host = 'imap.gmail.com' AND pop = " + EntityAccount.TYPE_IMAP);
+                        db.execSQL("UPDATE account SET keep_alive_noop = 0" +
+                                " WHERE host = 'outlook.office365.com' AND pop = " + EntityAccount.TYPE_IMAP);
                     }
                 }).addMigrations(new Migration(998, 999) {
                     @Override

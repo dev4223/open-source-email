@@ -60,6 +60,8 @@ import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class FragmentOptionsDisplay extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -80,23 +82,24 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swShadowBorder;
     private SwitchCompat swShadowHighlight;
     private SwitchCompat swTabularDividers;
+    private SwitchCompat swTabularUnreadBg;
     private SwitchCompat swPortrait2;
     private SwitchCompat swPortrait2c;
     private Spinner spPortraitMinSize;
     private SwitchCompat swLandscape;
     private Spinner spLandscapeMinSize;
     private SwitchCompat swClosePane;
-    private SwitchCompat swOpenPane;
     private TextView tvColumnWidth;
     private SeekBar sbColumnWidth;
     private SwitchCompat swHideToolbar;
+    private SwitchCompat swEdgeToEdge;
     private SwitchCompat swNavOptions;
     private SwitchCompat swNavCategories;
     private SwitchCompat swNavLastSync;
     private SwitchCompat swNavMessageCount;
     private SwitchCompat swNavUnseenDrafts;
     private SwitchCompat swNavPinnedCount;
-    private SwitchCompat swNavBarColorize;
+    private SwitchCompat swShowUnexposed;
 
     private SwitchCompat swThreading;
     private SwitchCompat swThreadingUnread;
@@ -108,21 +111,26 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     private SwitchCompat swHighlightUnread;
     private ViewButtonColor btnHighlightColor;
-    private SwitchCompat swColorStripe;
+    private Spinner spAccountColor;
     private SwitchCompat swColorStripeWide;
     private SwitchCompat swAvatars;
     private ImageButton ibBimi;
     private TextView tvBimiHint;
     private TextView tvBimiUnverified;
     private SwitchCompat swBimi;
+    private SwitchCompat swBimiVmc;
     private SwitchCompat swGravatars;
     private TextView tvGravatarPrivacy;
     private SwitchCompat swLibravatars;
     private TextView tvLibravatarPrivacy;
     private SwitchCompat swFavicons;
+    private TextView tvFaviconsHint;
     private SwitchCompat swFaviconsPartial;
     private SwitchCompat swFaviconsManifest;
-    private TextView tvFaviconsHint;
+    private ImageButton ibFavicons;
+    private SwitchCompat swDdg;
+    private TextView tvDdgPrivacy;
+    private SwitchCompat swFaviconsDmarc;
     private SwitchCompat swGeneratedIcons;
     private SwitchCompat swIdenticons;
     private SwitchCompat swCircular;
@@ -183,6 +191,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swAttachmentsAlt;
     private SwitchCompat swThumbnails;
     private SwitchCompat swPdfPreview;
+    private SwitchCompat swVideoPreview;
+    private SwitchCompat swAudioPreview;
+    private SwitchCompat swBarcodePreview;
 
     private SwitchCompat swListCount;
     private SwitchCompat swBundledFonts;
@@ -202,15 +213,15 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     private NumberFormat NF = NumberFormat.getNumberInstance();
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "theme", "startup",
             "date", "date_week", "date_fixed", "date_bold", "date_time", "group_category",
-            "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers",
-            "portrait2", "portrait2c", "landscape", "close_pane", "open_pane", "column_width",
-            "hide_toolbar", "nav_options", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
+            "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers", "tabular_unread_bg",
+            "portrait2", "portrait2c", "landscape", "close_pane", "column_width",
+            "hide_toolbar", "edge_to_edge", "nav_options", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "show_unexposed",
             "threading", "threading_unread", "indentation", "seekbar", "actionbar", "actionbar_swap", "actionbar_color",
-            "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
-            "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
+            "highlight_unread", "highlight_color", "account_color", "color_stripe_wide",
+            "avatars", "bimi", "bimi_vmc", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "ddg_icons", "favicons_dmarc", "generated_icons", "identicons",
             "circular", "saturation", "brightness", "threshold",
             "email_format", "prefer_contact", "only_contact", "distinguish_contacts", "show_recipients", "reverse_addresses",
             "font_size_sender", "sender_ellipsize",
@@ -222,11 +233,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "hyphenation", "display_font", "contrast", "monospaced_pre",
             "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images", "button_extra",
-            "unzip", "attachments_alt", "thumbnails", "pdf_preview",
+            "unzip", "attachments_alt", "thumbnails", "pdf_preview", "video_preview", "audio_preview", "barcode_preview",
             "list_count", "bundled_fonts", "narrow_fonts", "parse_classes",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles",
             "authentication", "authentication_indicator"
-    };
+    ));
 
     @Override
     @Nullable
@@ -254,23 +265,24 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swShadowBorder = view.findViewById(R.id.swShadowBorder);
         swShadowHighlight = view.findViewById(R.id.swShadowHighlight);
         swTabularDividers = view.findViewById(R.id.swTabularDividers);
+        swTabularUnreadBg = view.findViewById(R.id.swTabularUnreadBg);
         swPortrait2 = view.findViewById(R.id.swPortrait2);
         swPortrait2c = view.findViewById(R.id.swPortrait2c);
         spPortraitMinSize = view.findViewById(R.id.spPortraitMinSize);
         swLandscape = view.findViewById(R.id.swLandscape);
         spLandscapeMinSize = view.findViewById(R.id.spLandscapeMinSize);
         swClosePane = view.findViewById(R.id.swClosePane);
-        swOpenPane = view.findViewById(R.id.swOpenPane);
         tvColumnWidth = view.findViewById(R.id.tvColumnWidth);
         sbColumnWidth = view.findViewById(R.id.sbColumnWidth);
         swHideToolbar = view.findViewById(R.id.swHideToolbar);
+        swEdgeToEdge = view.findViewById(R.id.swEdgeToEdge);
         swNavOptions = view.findViewById(R.id.swNavOptions);
         swNavCategories = view.findViewById(R.id.swNavCategories);
         swNavLastSync = view.findViewById(R.id.swNavLastSync);
         swNavMessageCount = view.findViewById(R.id.swNavMessageCount);
         swNavUnseenDrafts = view.findViewById(R.id.swNavUnseenDrafts);
         swNavPinnedCount = view.findViewById(R.id.swNavPinnedCount);
-        swNavBarColorize = view.findViewById(R.id.swNavBarColorize);
+        swShowUnexposed = view.findViewById(R.id.swShowUnexposed);
 
         swThreading = view.findViewById(R.id.swThreading);
         swThreadingUnread = view.findViewById(R.id.swThreadingUnread);
@@ -282,10 +294,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
         swHighlightUnread = view.findViewById(R.id.swHighlightUnread);
         btnHighlightColor = view.findViewById(R.id.btnHighlightColor);
-        swColorStripe = view.findViewById(R.id.swColorStripe);
+        spAccountColor = view.findViewById(R.id.spAccountColor);
         swColorStripeWide = view.findViewById(R.id.swColorStripeWide);
         swAvatars = view.findViewById(R.id.swAvatars);
         swBimi = view.findViewById(R.id.swBimi);
+        swBimiVmc = view.findViewById(R.id.swBimiVmc);
         tvBimiHint = view.findViewById(R.id.tvBimiHint);
         tvBimiUnverified = view.findViewById(R.id.tvBimiUnverified);
         ibBimi = view.findViewById(R.id.ibBimi);
@@ -294,9 +307,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swLibravatars = view.findViewById(R.id.swLibravatars);
         tvLibravatarPrivacy = view.findViewById(R.id.tvLibravatarPrivacy);
         swFavicons = view.findViewById(R.id.swFavicons);
+        tvFaviconsHint = view.findViewById(R.id.tvFaviconsHint);
         swFaviconsPartial = view.findViewById(R.id.swFaviconsPartial);
         swFaviconsManifest = view.findViewById(R.id.swFaviconsManifest);
-        tvFaviconsHint = view.findViewById(R.id.tvFaviconsHint);
+        ibFavicons = view.findViewById(R.id.ibFavicons);
+        swDdg = view.findViewById(R.id.swDdg);
+        tvDdgPrivacy = view.findViewById(R.id.tvDdgPrivacy);
+        swFaviconsDmarc = view.findViewById(R.id.swFaviconsDmarc);
         swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
         swIdenticons = view.findViewById(R.id.swIdenticons);
         swCircular = view.findViewById(R.id.swCircular);
@@ -355,6 +372,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
         swThumbnails = view.findViewById(R.id.swThumbnails);
         swPdfPreview = view.findViewById(R.id.swPdfPreview);
+        swVideoPreview = view.findViewById(R.id.swVideoPreview);
+        swAudioPreview = view.findViewById(R.id.swAudioPreview);
+        swBarcodePreview = view.findViewById(R.id.swBarcodePreview);
 
         swListCount = view.findViewById(R.id.swListCount);
         swBundledFonts = view.findViewById(R.id.swBundledFonts);
@@ -393,6 +413,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         // Wire controls
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean debug = prefs.getBoolean("debug", false);
 
         ibHelp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -484,6 +505,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 swShadowBorder.setEnabled(swShadow.isEnabled() && checked);
                 swShadowHighlight.setEnabled(swShadow.isEnabled() && checked);
                 swTabularDividers.setEnabled(!checked);
+                swTabularUnreadBg.setEnabled(!checked);
                 swIndentation.setEnabled(checked);
             }
         });
@@ -530,6 +552,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("dividers", checked).apply();
+            }
+        });
+
+        swTabularUnreadBg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("tabular_unread_bg", checked).apply();
             }
         });
 
@@ -586,14 +615,6 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("close_pane", checked).apply();
-                swOpenPane.setEnabled(!checked);
-            }
-        });
-
-        swOpenPane.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("open_pane", checked).apply();
             }
         });
 
@@ -623,6 +644,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("hide_toolbar", checked).apply();
+            }
+        });
+
+        swEdgeToEdge.setVisibility(debug || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+        swEdgeToEdge.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("edge_to_edge", checked).apply();
             }
         });
 
@@ -668,12 +697,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
-        swNavBarColorize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swShowUnexposed.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("navbar_colorize", checked).apply();
-                setNavigationBarColor(
-                        checked ? Helper.resolveColor(getContext(), androidx.appcompat.R.attr.colorPrimaryDark) : Color.BLACK);
+                prefs.edit().putBoolean("show_unexposed", checked).apply();
             }
         });
 
@@ -774,11 +801,17 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
-        swColorStripe.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        spAccountColor.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("color_stripe", checked).apply();
-                //swColorStripeWide.setEnabled(checked);
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putInt("account_color", position).apply();
+                swColorStripeWide.setEnabled(position == 1);
+                WidgetUnified.updateData(getContext());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("account_color").apply();
                 WidgetUnified.updateData(getContext());
             }
         });
@@ -803,6 +836,15 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("bimi", checked).apply();
+                swBimiVmc.setEnabled(checked);
+                ContactInfo.clearCache(compoundButton.getContext());
+            }
+        });
+
+        swBimiVmc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("bimi_vmc", checked).apply();
                 ContactInfo.clearCache(compoundButton.getContext());
             }
         });
@@ -864,6 +906,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        tvFaviconsHint.getPaint().setUnderlineText(true);
+        tvFaviconsHint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.view(v.getContext(), Uri.parse(Helper.FAVICON_PRIVACY_URI), true);
+            }
+        });
+
         swFaviconsPartial.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -880,11 +930,34 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
-        tvFaviconsHint.getPaint().setUnderlineText(true);
-        tvFaviconsHint.setOnClickListener(new View.OnClickListener() {
+        ibFavicons.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Helper.viewFAQ(view.getContext(), 154);
+            }
+        });
+
+        swDdg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("ddg_icons", checked).apply();
+                ContactInfo.clearCache(compoundButton.getContext());
+            }
+        });
+
+        tvDdgPrivacy.getPaint().setUnderlineText(true);
+        tvDdgPrivacy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.view(v.getContext(), Uri.parse(Helper.FAVICON_PRIVACY_URI), true);
+                Helper.view(v.getContext(), Uri.parse(Avatar.DDG_PRIVACY_URI), true);
+            }
+        });
+
+        swFaviconsDmarc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("favicons_dmarc", checked).apply();
+                ContactInfo.clearCache(compoundButton.getContext());
             }
         });
 
@@ -1316,6 +1389,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("thumbnails", checked).apply();
                 swPdfPreview.setEnabled(checked);
+                swVideoPreview.setEnabled(checked);
+                swAudioPreview.setEnabled(checked);
+                swBarcodePreview.setEnabled(checked);
             }
         });
 
@@ -1323,6 +1399,28 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("pdf_preview", checked).apply();
+            }
+        });
+
+        swVideoPreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("video_preview", checked).apply();
+            }
+        });
+
+        swAudioPreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("audio_preview", checked).apply();
+            }
+        });
+
+        swBarcodePreview.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? View.VISIBLE : View.GONE);
+        swBarcodePreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("barcode_preview", checked).apply();
             }
         });
 
@@ -1415,7 +1513,6 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
         swFaviconsPartial.setText(getString(R.string.title_advanced_favicons_partial,
                 Helper.humanReadableByteCount(ContactInfo.FAVICON_READ_BYTES, false)));
         grpAvatar.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
@@ -1435,6 +1532,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+
         if ("message_zoom".equals(key))
             return;
 
@@ -1506,27 +1606,28 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swShadowHighlight.setEnabled(swShadow.isEnabled() && swShadow.isChecked());
             swTabularDividers.setChecked(prefs.getBoolean("dividers", true));
             swTabularDividers.setEnabled(!swCards.isChecked());
+            swTabularUnreadBg.setChecked(prefs.getBoolean("tabular_unread_bg", true));
+            swTabularUnreadBg.setEnabled(!swCards.isChecked());
             swPortrait2.setChecked(prefs.getBoolean("portrait2", false));
             swPortrait2c.setChecked(prefs.getBoolean("portrait2c", false) && !swPortrait2.isChecked());
             spPortraitMinSize.setSelection(prefs.getInt("portrait_min_size", 0));
             swLandscape.setChecked(prefs.getBoolean("landscape", true));
             spLandscapeMinSize.setSelection(prefs.getInt("landscape_min_size", 0));
             swClosePane.setChecked(prefs.getBoolean("close_pane", !Helper.isSurfaceDuo()));
-            swOpenPane.setChecked(prefs.getBoolean("open_pane", false));
-            swOpenPane.setEnabled(!swClosePane.isChecked());
 
             int column_width = prefs.getInt("column_width", 67);
             tvColumnWidth.setText(getString(R.string.title_advanced_column_width, NF.format(column_width)));
             sbColumnWidth.setProgress(column_width);
 
             swHideToolbar.setChecked(prefs.getBoolean("hide_toolbar", !BuildConfig.PLAY_STORE_RELEASE));
+            swEdgeToEdge.setChecked(prefs.getBoolean("edge_to_edge", false));
             swNavOptions.setChecked(prefs.getBoolean("nav_options", true));
             swNavCategories.setChecked(prefs.getBoolean("nav_categories", false));
             swNavLastSync.setChecked(prefs.getBoolean("nav_last_sync", true));
             swNavMessageCount.setChecked(prefs.getBoolean("nav_count", false));
             swNavUnseenDrafts.setChecked(prefs.getBoolean("nav_unseen_drafts", false));
             swNavPinnedCount.setChecked(prefs.getBoolean("nav_count_pinned", false));
-            swNavBarColorize.setChecked(prefs.getBoolean("navbar_colorize", false));
+            swShowUnexposed.setChecked(prefs.getBoolean("show_unexposed", false));
 
             swThreading.setChecked(prefs.getBoolean("threading", true));
             swThreadingUnread.setChecked(prefs.getBoolean("threading_unread", false));
@@ -1545,11 +1646,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             btnHighlightColor.setColor(prefs.getInt("highlight_color",
                     Helper.resolveColor(getContext(), R.attr.colorUnreadHighlight)));
 
-            swColorStripe.setChecked(prefs.getBoolean("color_stripe", true));
+            spAccountColor.setSelection(prefs.getInt("account_color", 1));
             swColorStripeWide.setChecked(prefs.getBoolean("color_stripe_wide", false));
-            //swColorStripeWide.setEnabled(swColorStripe.isChecked());
+            swColorStripeWide.setEnabled(spAccountColor.getSelectedItemPosition() == 1);
             swAvatars.setChecked(prefs.getBoolean("avatars", true));
             swBimi.setChecked(prefs.getBoolean("bimi", false));
+            swBimiVmc.setChecked(prefs.getBoolean("bimi_vmc", false));
+            swBimiVmc.setEnabled(swBimi.isChecked());
             swGravatars.setChecked(prefs.getBoolean("gravatars", false));
             swLibravatars.setChecked(prefs.getBoolean("libravatars", false));
             swFavicons.setChecked(prefs.getBoolean("favicons", false));
@@ -1557,6 +1660,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swFaviconsPartial.setEnabled(swFavicons.isChecked());
             swFaviconsManifest.setChecked(prefs.getBoolean("favicons_manifest", false));
             swFaviconsManifest.setEnabled(swFavicons.isChecked());
+            swDdg.setChecked(prefs.getBoolean("ddg_icons", false));
+            swFaviconsDmarc.setChecked(prefs.getBoolean("favicons_dmarc", false));
             swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
             swIdenticons.setChecked(prefs.getBoolean("identicons", false));
             swIdenticons.setEnabled(swGeneratedIcons.isChecked());
@@ -1666,6 +1771,12 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swThumbnails.setChecked(prefs.getBoolean("thumbnails", true));
             swPdfPreview.setChecked(prefs.getBoolean("pdf_preview", true));
             swPdfPreview.setEnabled(swThumbnails.isChecked());
+            swVideoPreview.setChecked(prefs.getBoolean("video_preview", true));
+            swVideoPreview.setEnabled(swThumbnails.isChecked());
+            swAudioPreview.setChecked(prefs.getBoolean("audio_preview", true));
+            swAudioPreview.setEnabled(swThumbnails.isChecked());
+            swBarcodePreview.setChecked(prefs.getBoolean("barcode_preview", true));
+            swBarcodePreview.setEnabled(swThumbnails.isChecked());
 
             swListCount.setChecked(prefs.getBoolean("list_count", false));
             swBundledFonts.setChecked(prefs.getBoolean("bundled_fonts", true));

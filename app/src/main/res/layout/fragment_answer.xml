@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="eu.faircode.email.BehaviorBottomPadding">
 
-        <eu.faircode.email.ScrollViewEx
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
@@ -88,6 +88,16 @@
                     app:layout_constraintTop_toBottomOf="@+id/cbStandard" />
 
                 <CheckBox
+                    android:id="@+id/cbAI"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/title_answer_ai"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/cbReceipt" />
+
+                <CheckBox
                     android:id="@+id/cbFavorite"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -95,7 +105,7 @@
                     android:layout_marginTop="6dp"
                     android:text="@string/title_answer_favorite"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/cbReceipt" />
+                    app:layout_constraintTop_toBottomOf="@+id/cbAI" />
 
                 <CheckBox
                     android:id="@+id/cbSnippet"
@@ -172,7 +182,7 @@
                     android:layout_height="0dp"
                     app:constraint_referenced_ids="etName,etGroup,cbStandard,cbReceipt,cbFavorite,cbHide,btnColor,vSeparator,etText" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </eu.faircode.email.ScrollViewEx>
+        </ScrollView>
 
         <include
             android:id="@+id/style_bar"
@@ -188,6 +198,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
+            android:tag="inset"
             app:itemIconTint="@color/action_foreground"
             app:itemTextColor="@color/action_foreground"
             app:labelVisibilityMode="labeled"

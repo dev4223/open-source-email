@@ -342,6 +342,10 @@ public class UriHelper {
             Uri result = getBraveDebounce(context, uri);
 
             if (result == null &&
+                    uri.getQueryParameter("redirect") != null)
+                result = Uri.parse(uri.getQueryParameter("redirect"));
+
+            if (result == null &&
                     uri.getQueryParameter("redirectUrl") != null)
                 // https://.../link-tracker?redirectUrl=<base64>&sig=...&iat=...&a=...&account=...&email=...&s=...&i=...
                 try {
@@ -418,32 +422,45 @@ public class UriHelper {
         if (path != null)
             path = path.toLowerCase(Locale.ROOT);
 
-        boolean first = "www.facebook.com".equals(host);
-        for (String key : url.getQueryParameterNames()) {
-            // https://en.wikipedia.org/wiki/UTM_parameters
-            // https://docs.oracle.com/en/cloud/saas/marketing/eloqua-user/Help/EloquaAsynchronousTrackingScripts/EloquaTrackingParameters.htm
-            String lkey = key.toLowerCase(Locale.ROOT);
-            if (PARANOID_QUERY.contains(lkey) ||
-                    lkey.startsWith("utm_") ||
-                    lkey.startsWith("elq") ||
-                    ((host != null && host.endsWith("facebook.com")) &&
-                            !first &&
-                            FACEBOOK_WHITELIST_PATH.contains(path) &&
-                            !FACEBOOK_WHITELIST_QUERY.contains(lkey)) ||
-                    ("store.steampowered.com".equals(host) &&
-                            "snr".equals(lkey)))
-                changed = true;
-            else if (!TextUtils.isEmpty(key))
-                for (String value : url.getQueryParameters(key)) {
-                    Log.i("Query " + key + "=" + value);
-                    Uri suri = Uri.parse(value);
+        String q = url.getEncodedQuery();
+        if (!TextUtils.isEmpty(q)) {
+            boolean first = "www.facebook.com".equals(host);
+            StringBuilder sb = new StringBuilder();
+            for (String kv : q.split("&")) {
+                int eq = kv.indexOf('=');
+                String key = (eq < 0 ? kv : kv.substring(0, eq));
+                String value = (eq < 0 ? null : kv.substring(eq + 1));
+
+                // https://en.wikipedia.org/wiki/UTM_parameters
+                // https://docs.oracle.com/en/cloud/saas/marketing/eloqua-user/Help/EloquaAsynchronousTrackingScripts/EloquaTrackingParameters.htm
+                String lkey = key.toLowerCase(Locale.ROOT);
+                if (PARANOID_QUERY.contains(lkey) ||
+                        lkey.startsWith("utm_") ||
+                        lkey.startsWith("elq") ||
+                        ((host != null && host.endsWith("facebook.com")) &&
+                                !first &&
+                                FACEBOOK_WHITELIST_PATH.contains(path) &&
+                                !FACEBOOK_WHITELIST_QUERY.contains(lkey)) ||
+                        ("store.steampowered.com".equals(host) &&
+                                "snr".equals(lkey)))
+                    changed = true;
+                else if (!TextUtils.isEmpty(key)) {
+                    Uri suri = Uri.parse(key);
                     if (suri != null && isHyperLink(suri)) {
                         Uri s = sanitize(context, suri);
                         return (s == null ? suri : s);
                     }
-                    builder.appendQueryParameter(key, value);
+                    if (sb.length() > 0)
+                        sb.append('&');
+                    sb.append(key);
+                    if (value != null) {
+                        sb.append('=').append(value);
+                    }
                 }
-            first = false;
+                first = false;
+            }
+            if (sb.length() > 0)
+                builder.encodedQuery(sb.toString());
         }
 
         return (changed ? builder.build() : null);
@@ -542,6 +559,18 @@ public class UriHelper {
         return (!uri.isOpaque() &&
                 ("http".equalsIgnoreCase(uri.getScheme()) ||
                         "https".equalsIgnoreCase(uri.getScheme())));
+    }
+
+    static boolean isMail(Uri uri) {
+        return (uri.isOpaque() && "mailto".equalsIgnoreCase(uri.getScheme()));
+    }
+
+    static boolean isPhoneNumber(Uri uri) {
+        return (uri.isOpaque() && "tel".equalsIgnoreCase(uri.getScheme()));
+    }
+
+    static boolean isGeo(Uri uri) {
+        return (uri.isOpaque() && "geo".equalsIgnoreCase(uri.getScheme()));
     }
 
     static Uri fix(Uri uri) {

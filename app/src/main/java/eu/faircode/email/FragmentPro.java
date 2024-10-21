@@ -226,9 +226,9 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
         addBillingListener(new ActivityBilling.IBillingListener() {
             @Override
             public void onConnected() {
-                post(new Runnable() {
+                post(new RunnableEx("pro:connected") {
                     @Override
-                    public void run() {
+                    public void delegate() {
                         ivConnected.setImageResource(R.drawable.twotone_cloud_done_24);
                         ivConnected.setVisibility(View.VISIBLE);
                     }
@@ -237,11 +237,13 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
 
             @Override
             public void onDisconnected() {
-                post(new Runnable() {
+                post(new RunnableEx("pro:disconnected") {
                     @Override
-                    public void run() {
-                        ivConnected.setImageResource(R.drawable.twotone_cloud_off_24);
-                        ivConnected.setVisibility(View.VISIBLE);
+                    public void delegate() {
+                        if (ivConnected != null) {
+                            ivConnected.setImageResource(R.drawable.twotone_cloud_off_24);
+                            ivConnected.setVisibility(View.VISIBLE);
+                        }
                     }
                 });
             }
@@ -251,9 +253,9 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
                 if (!ActivityBilling.getSkuPro(getContext()).equals(sku))
                     return;
 
-                post(new Runnable() {
+                post(new RunnableEx("pro:sku") {
                     @Override
-                    public void run() {
+                    public void delegate() {
                         tvPrice.setText(getString(R.string.title_pro_one_time, price));
                         tvPrice.setVisibility(View.VISIBLE);
                         btnPurchase.setEnabled(true);
@@ -266,9 +268,9 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
                 if (!ActivityBilling.getSkuPro(getContext()).equals(sku))
                     return;
 
-                post(new Runnable() {
+                post(new RunnableEx("pro:pending") {
                     @Override
-                    public void run() {
+                    public void delegate() {
                         btnPurchase.setEnabled(false);
                         tvPending.setVisibility(View.VISIBLE);
                     }
@@ -280,9 +282,9 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
                 if (!ActivityBilling.getSkuPro(getContext()).equals(sku))
                     return;
 
-                post(new Runnable() {
+                post(new RunnableEx("pro:purchased") {
                     @Override
-                    public void run() {
+                    public void delegate() {
                         int color = Helper.resolveColor(btnPurchase.getContext(), R.attr.colorInfoForeground);
                         if (purchased)
                             color = ColorUtils.setAlphaComponent(color, (int) Math.round(0.6 * 255));
@@ -301,8 +303,8 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
                 if (view == null)
                     return;
 
-                Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE)
-                        .setGestureInsetBottomIgnored(true);
+                Snackbar snackbar = Helper.setSnackbarOptions(
+                        Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE));
                 snackbar.setAction(R.string.title_setup_help, new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -320,9 +322,9 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
                 if (view == null)
                     return;
 
-                view.post(new Runnable() {
+                view.post(new RunnableEx("pro:post") {
                     @Override
-                    public void run() {
+                    public void delegate() {
                         try {
                             runnable.run();
                         } catch (Throwable ex) {

@@ -88,12 +88,12 @@ public class ActivitySignature extends ActivityBase {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean monospaced = prefs.getBoolean("monospaced", false);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setSubtitle(getString(R.string.title_edit_signature));
-
         LayoutInflater inflater = LayoutInflater.from(this);
         view = (ViewGroup) inflater.inflate(R.layout.activity_signature, null, false);
         setContentView(view);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setSubtitle(getString(R.string.title_edit_signature));
 
         tvHtmlRemark = findViewById(R.id.tvHtmlRemark);
         etText = findViewById(R.id.etText);
@@ -208,7 +208,6 @@ public class ActivitySignature extends ActivityBase {
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(this, view, true);
         tvHtmlRemark.setVisibility(View.GONE);
         style_bar.setVisibility(View.GONE);
 
@@ -393,12 +392,27 @@ public class ActivitySignature extends ActivityBase {
     }
 
     private void delete() {
-        Intent result = getIntent();
-        if (result == null)
-            result = new Intent();
-        result.putExtra("html", (String) null);
-        setResult(RESULT_OK, result);
-        finish();
+        new AlertDialog.Builder(this)
+                .setIcon(R.drawable.twotone_gesture_24)
+                .setTitle(R.string.title_edit_signature_delete)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent result = getIntent();
+                        if (result == null)
+                            result = new Intent();
+                        result.putExtra("html", (String) null);
+                        setResult(RESULT_OK, result);
+                        finish();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                })
+                .show();
     }
 
     private void save() {

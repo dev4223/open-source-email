@@ -19,8 +19,10 @@ package eu.faircode.email;
     Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Notification;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -61,6 +63,7 @@ import com.google.android.material.tabs.TabLayout;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class FragmentOptions extends FragmentBase {
     private ViewPager pager;
@@ -139,14 +142,14 @@ public class FragmentOptions extends FragmentBase {
             "subscriptions",
             "check_authentication", "check_tls", "check_reply_domain", "check_mx", "check_blocklist",
             "send_pending",
-            "startup",
-            "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers",
+            "startup", "answer_single",
+            "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers", "tabular_unread_bg",
             "portrait2", "portrait2c", "portrait_min_size", "landscape", "landscape_min_size",
             "column_width",
-            "hide_toolbar", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "navbar_colorize",
+            "hide_toolbar", "edge_to_edge", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "show_unexposed",
             "indentation", "date", "date_week", "date_fixed", "date_bold", "date_time", "threading", "threading_unread",
             "show_filtered",
-            "highlight_unread", "highlight_color", "color_stripe", "color_stripe_wide",
+            "highlight_unread", "highlight_color", "account_color", "color_stripe_wide",
             "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
             "circular", "saturation", "brightness", "threshold",
             "authentication", "authentication_indicator",
@@ -154,7 +157,8 @@ public class FragmentOptions extends FragmentBase {
             "font_size_sender", "sender_ellipsize",
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines", "align_header",
-            "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt", "thumbnails",
+            "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt",
+            "thumbnails", "pdf_preview", "video_preview", "audio_preview", "barcode_preview",
             "contrast", "hyphenation", "display_font", "monospaced_pre",
             "list_count", "bundled_fonts", "narrow_fonts", "parse_classes",
             "background_color", "text_color", "text_size", "text_font", "text_align", "text_titles", "text_separators",
@@ -255,10 +259,12 @@ public class FragmentOptions extends FragmentBase {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        final Context context = getContext();
+
         TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+        tabLayout.setBackgroundColor(Helper.resolveColor(context, R.attr.colorCardBackground));
         tabLayout.setupWithViewPager(pager);
 
-        final Context context = getContext();
         int colorAccent = Helper.resolveColor(context, androidx.appcompat.R.attr.colorAccent);
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             Drawable d = ContextCompat.getDrawable(context, PAGE_ICONS[i]);
@@ -271,12 +277,21 @@ public class FragmentOptions extends FragmentBase {
                     .setText(title);
         }
 
-        String tab = getActivity().getIntent().getStringExtra("tab");
-        if (!TextUtils.isEmpty(tab)) {
-            int index = TAB_LABELS.indexOf(tab);
-            if (index >= 0)
-                pager.setCurrentItem(index);
-            getActivity().getIntent().removeExtra("tab");
+        Intent intent = getActivity().getIntent();
+        if (intent != null) {
+            String tab;
+
+            Set<String> categories = intent.getCategories();
+            if (categories != null && categories.contains(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES))
+                tab = "notifications";
+            else
+                tab = getActivity().getIntent().getStringExtra("tab");
+            if (!TextUtils.isEmpty(tab)) {
+                int index = TAB_LABELS.indexOf(tab);
+                if (index >= 0)
+                    pager.setCurrentItem(index);
+                getActivity().getIntent().removeExtra("tab");
+            }
         }
     }
 
@@ -423,7 +438,7 @@ public class FragmentOptions extends FragmentBase {
                     }
 
                     searchView.setSuggestionsAdapter(new SimpleCursorAdapter(
-                            searchView.getContext(),
+                            pager.getContext(),
                             R.layout.spinner_item1_dropdown,
                             cursor,
                             new String[]{"title"},
@@ -442,8 +457,19 @@ public class FragmentOptions extends FragmentBase {
                         for (int i = 0; i <= group.getChildCount(); i++)
                             id = getSuggestions(query, id, tab, title, group.getChildAt(i), cursor);
                     } else if (view instanceof TextView) {
+                        boolean extra = false;
+                        if (tab == 0 && view.getId() == R.id.tvManual) {
+                            for (int e : new int[]{R.string.title_host, R.string.title_port}) {
+                                String text = view.getContext().getString(e);
+                                if (text.toLowerCase().contains(query)) {
+                                    extra = true;
+                                    break;
+                                }
+                            }
+                        }
+
                         String description = ((TextView) view).getText().toString();
-                        if (description.toLowerCase().contains(query)) {
+                        if (description.toLowerCase().contains(query) || extra) {
                             description = description
                                     .replace("%%", "%")
                                     .replaceAll("%([0-9]\\$)?[sd]", "#");
@@ -477,7 +503,7 @@ public class FragmentOptions extends FragmentBase {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    static void reset(Context context, String[] options, Runnable confirmed) {
+    static void reset(Context context, List<String> options, Runnable confirmed) {
         new AlertDialog.Builder(context)
                 .setIcon(R.drawable.twotone_help_24)
                 .setTitle(R.string.title_setup_defaults)

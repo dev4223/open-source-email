@@ -12,6 +12,7 @@
     <attr name="colorThumb" format="reference" />
     <attr name="colorWarning" format="reference" />
     <attr name="colorBadge" format="reference" />
+    <attr name="colorBookmark" format="reference" />
     <attr name="colorAccept" format="reference" />
     <attr name="colorDecline" format="reference" />
     <attr name="colorDrawerScrim" format="reference" />
@@ -29,7 +30,7 @@
     <attr name="colorInfoBackground" format="reference" />
     <attr name="activatableItemBackground" format="reference" />
 
-    <style name="AppThemeBaseLight" parent="Base.Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppThemeBaseLight" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="themeName">light</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
         <item name="android:windowSplashScreenBackground" tools:targetApi="s">
@@ -77,6 +78,7 @@
         <item name="colorThumb">@color/lightColorThumb</item>
         <item name="colorWarning">@color/lightColorWarning</item>
         <item name="colorBadge">@color/red</item>
+        <item name="colorBookmark">?attr/colorAccent</item>
 
         <item name="colorAccept">@color/colorEncryptDark</item>
         <item name="colorDecline">@color/red</item>
@@ -111,7 +113,7 @@
         <item name="viewInflaterClass">eu.faircode.email.AppCompatViewInflaterEx</item>
     </style>
 
-    <style name="AppThemeBaseDark" parent="Base.Theme.AppCompat">
+    <style name="AppThemeBaseDark" parent="Theme.AppCompat.NoActionBar">
         <item name="themeName">dark</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
         <item name="android:windowSplashScreenBackground" tools:targetApi="s">
@@ -123,13 +125,10 @@
 
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowAnimationStyle">@style/activityAnimationStyle</item>
-
         <item name="android:navigationBarColor">@color/black</item>
-
         <item name="colorPrimary">@color/darkPrimary</item>
         <item name="colorPrimaryDark">@color/darkPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-
         <item name="colorSubject">@color/blackColorSubject</item>
 
         <item name="android:textColorPrimary">@color/abc_primary_text_material_dark</item>
@@ -159,6 +158,7 @@
         <item name="colorThumb">@color/darkColorThumb</item>
         <item name="colorWarning">@color/darkColorWarning</item>
         <item name="colorBadge">@color/red</item>
+        <item name="colorBookmark">?attr/colorAccent</item>
 
         <item name="colorAccept">@color/colorEncryptLight</item>
         <item name="colorDecline">@color/red</item>
@@ -241,7 +241,11 @@
 
         <item name="colorFabBackground">@color/lightPurpleAccent</item>
 
-        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorActionForeground">?android:attr/textColorSecondary</item>
+        <item name="colorActionForegroundDisabled">@color/whiteActionForegroundDisabled</item>
+        <item name="colorActionBackground">@color/smoke</item>
+
+        <item name="colorInfoForeground">?android:textColorPrimary</item>
         <item name="colorInfoBackground">@color/lightYellowPrimary</item>
 
         <item name="android:textColorLink">@color/lightPurpleAccent</item>
@@ -459,24 +463,44 @@
         <item name="colorInfoForeground">@color/white</item>
         <item name="colorInfoBackground">@color/blackPrimary</item>
 
-        <item name="actionBarTheme">@style/WhiteActionBar</item>
         <item name="snackbarStyle">@style/WhiteSnackBar</item>
-    </style>
-
-    <style name="WhiteActionBar" parent="Base.Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/blackPrimary</item>
-        <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
-        <item name="colorAccent">@color/blackAccent</item>
-
-        <item name="android:background">@color/white</item>
-        <item name="android:titleTextStyle">@style/ActionBarTitle</item>
-        <!-- snackbar text color -->
-        <item name="android:textColor">@color/blackPrimaryDark</item>
     </style>
 
     <style name="WhiteSnackBar" parent="Widget.Design.Snackbar">
         <item name="android:paddingLeft">0dp</item>
         <item name="android:paddingRight">0dp</item>
+    </style>
+
+    <style name="AppThemeBlank" parent="AppThemeBlueOrangeLight">
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryDark">@color/white</item>
+        <item name="colorAccent">@color/blackAccent</item>
+
+        <item name="colorActionForeground">?android:attr/textColorSecondary</item>
+        <item name="colorActionForegroundDisabled">@color/whiteActionForegroundDisabled</item>
+        <item name="colorActionBackground">@color/smoke</item>
+
+        <item name="colorInfoForeground">@color/blackPrimary</item>
+        <item name="colorInfoBackground">@color/smoke</item>
+
+        <item name="snackbarStyle">@style/BlankSnackBar</item>
+        <item name="snackbarTextViewStyle">@style/BlankSnackBarText</item>
+        <item name="snackbarButtonStyle">@style/BlankSnackBarButton</item>
+    </style>
+
+    <style name="BlankSnackBar" parent="Widget.Design.Snackbar">
+        <item name="android:background">@color/smoke</item>
+    </style>
+
+    <style name="BlankSnackBarText" parent="@style/Widget.MaterialComponents.Snackbar.TextView">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+    </style>
+
+    <style name="BlankSnackBarButton" parent="@style/Widget.MaterialComponents.Button.TextButton.Snackbar">
+        <item name="android:textColor">?colorAccent</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:textAllCaps">true</item>
     </style>
 
     <style name="AppThemeBlackAndWhite" parent="AppThemeBaseDark">
@@ -505,11 +529,13 @@
         <item name="colorUnread">@color/white</item>
         <item name="colorUnreadHighlight">@color/white</item>
 
+        <item name="colorBookmark">@color/lightBluePrimary</item>
+
         <item name="colorFabForeground">@color/white</item>
         <item name="colorFabBackground">@color/blackAndWhitePrimaryLight</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/blackPrimary</item>
+        <item name="colorInfoBackground">@color/blackAndWhitePrimary</item>
 
         <item name="android:windowBackground">@drawable/background_black</item>
         <item name="colorDrawerBackground">@color/black</item>
@@ -566,7 +592,7 @@
         <item name="colorFabBackground">@color/darkSolarizedAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/darkSolarizedAccent</item>
+        <item name="colorInfoBackground">@color/darkSolarizedPrimary</item>
 
         <item name="android:textColorLink">@color/darkSolarizedAccent</item>
         <item name="android:textColorLinkInverse">@color/darkSolarizedAccent</item>
@@ -590,7 +616,7 @@
         <item name="colorFabBackground">@color/darkSolarizedAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/darkSolarizedAccent</item>
+        <item name="colorInfoBackground">@color/darkSolarizedPrimary</item>
 
         <item name="android:textColorLink">@color/darkSolarizedAccent</item>
         <item name="android:textColorLinkInverse">@color/darkSolarizedAccent</item>
@@ -614,6 +640,7 @@
 
     <style name="Theme.AppCompat.TranslucentSplash" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/splashBackground</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 
     <style name="activityAnimationStyle" parent="@android:style/Animation.Activity">
@@ -679,4 +706,8 @@
     <style name="ChipDark" parent="Base.Theme.Material3.Dark">
         <item name="chipCornerRadius">6dp</item>
     </style>
+
+    <style name="actionBarStyleLight" parent="ThemeOverlay.AppCompat.ActionBar" />
+
+    <style name="actionBarStyleDark" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 </resources>

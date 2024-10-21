@@ -341,7 +341,7 @@ public class ServiceUI extends IntentService {
         Object obj = results.get("text");
         String body = (obj == null ? null : "<p>" + obj.toString().replaceAll("\\r?\\n", "<br>") + "</p>");
 
-        String text = HtmlHelper.getFullText(body);
+        String text = HtmlHelper.getFullText(this, body);
         String language = HtmlHelper.getLanguage(this, ref.subject, text);
         String preview = HtmlHelper.getPreview(text);
 
@@ -392,8 +392,8 @@ public class ServiceUI extends IntentService {
             if (message == null)
                 return;
 
+            db.message().setMessageUiIgnored(message.id, true);
             EntityOperation.queue(this, message, EntityOperation.FLAG, true);
-            EntityOperation.queue(this, message, EntityOperation.SEEN, true);
 
             db.setTransactionSuccessful();
         } finally {
@@ -440,9 +440,12 @@ public class ServiceUI extends IntentService {
     private void onSnooze(long id) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        int notify_snooze_duration = prefs.getInt("default_snooze", 1);
+        boolean flag_snoozed = prefs.getBoolean("flag_snoozed", false);
+        int default_snooze = prefs.getInt("default_snooze", 1);
+        if (default_snooze == 0)
+            default_snooze = 1;
 
-        long wakeup = new Date().getTime() + notify_snooze_duration * 3600 * 1000L;
+        long wakeup = new Date().getTime() + default_snooze * 3600 * 1000L;
 
         DB db = DB.getInstance(this);
         try {
@@ -455,6 +458,9 @@ public class ServiceUI extends IntentService {
             db.message().setMessageSnoozed(id, wakeup);
             db.message().setMessageUiIgnored(message.id, true);
             EntityMessage.snooze(this, id, wakeup);
+
+            if (flag_snoozed)
+                EntityOperation.queue(this, message, EntityOperation.FLAG, true);
 
             db.setTransactionSuccessful();
 

@@ -22,7 +22,6 @@ package eu.faircode.email;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -43,11 +42,9 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
@@ -59,12 +56,11 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.text.DateFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -80,6 +76,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     private Spinner spPollInterval;
     private TextView tvPollBattery;
     private RecyclerView rvExempted;
+    private SwitchCompat swPollMetered;
+    private SwitchCompat swPollUnmetered;
     private SwitchCompat swSchedule;
     private TextView tvSchedulePro;
     private TextView tvScheduleStart;
@@ -128,8 +126,9 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
     private int textColorTertiary;
     private int colorAccent;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "enabled", "poll_interval", "auto_optimize",
+            "poll_metered", "poll_unmetered",
             "schedule", "schedule_start", "schedule_end", "schedule_start_weekend", "schedule_end_weekend", "weekend",
             "sync_quick_imap", "sync_quick_pop",
             "sync_nodate", "sync_unseen", "sync_flagged", "delete_unseen", "sync_kept",
@@ -138,7 +137,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             "check_authentication", "check_tls", "check_reply_domain", "check_mx",
             "check_blocklist", "use_blocklist", "use_blocklist_pop",
             "tune_keep_alive"
-    };
+    ));
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -169,8 +168,11 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         spPollInterval = view.findViewById(R.id.spPollInterval);
         tvPollBattery = view.findViewById(R.id.tvPollBattery);
 
-        swSchedule = view.findViewById(R.id.swSchedule);
         rvExempted = view.findViewById(R.id.rvExempted);
+        swPollMetered = view.findViewById(R.id.swPollMetered);
+        swPollUnmetered = view.findViewById(R.id.swPollUnmetered);
+
+        swSchedule = view.findViewById(R.id.swSchedule);
         tvSchedulePro = view.findViewById(R.id.tvSchedulePro);
         tvScheduleStart = view.findViewById(R.id.tvScheduleStart);
         tvScheduleEnd = view.findViewById(R.id.tvScheduleEnd);
@@ -253,69 +255,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         btnUnblockAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final View dview = LayoutInflater.from(v.getContext()).inflate(R.layout.dialog_unblock, null);
-
-                new AlertDialog.Builder(v.getContext())
-                        .setView(dview)
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                new SimpleTask<Void>() {
-                                    @Override
-                                    protected Void onExecute(Context context, Bundle args) throws JSONException {
-                                        DB db = DB.getInstance(context);
-                                        int cleared = db.contact().clearContacts(null, new int[]{EntityContact.TYPE_JUNK});
-                                        EntityLog.log(context, "Unblocked senders=" + cleared);
-
-                                        List<EntityAccount> accounts = db.account().getSynchronizingAccounts(EntityAccount.TYPE_IMAP);
-                                        for (EntityAccount account : accounts) {
-                                            EntityFolder inbox = db.folder().getFolderByType(account.id, EntityFolder.INBOX);
-                                            EntityFolder junk = db.folder().getFolderByType(account.id, EntityFolder.JUNK);
-
-                                            if (junk != null && junk.auto_classify_target) {
-                                                db.folder().setFolderAutoClassify(junk.id, junk.auto_classify_source, false);
-                                                EntityLog.log(context, "Disabled classification folder=" + account.name + ":" + junk.type);
-                                            }
-
-                                            if (inbox != null && junk != null) {
-                                                List<EntityRule> rules = db.rule().getRules(inbox.id);
-                                                for (EntityRule rule : rules) {
-                                                    JSONObject jaction = new JSONObject(rule.action);
-                                                    if (jaction.optInt("type") == EntityRule.TYPE_MOVE &&
-                                                            jaction.optLong("target") == junk.id) {
-                                                        db.rule().setRuleEnabled(rule.id, false);
-                                                        EntityLog.log(context, "Disabled rule=" + rule.name);
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                                        SharedPreferences.Editor editor = prefs.edit();
-                                        for (String pref : new String[]{"check_blocklist", "auto_block_sender"})
-                                            if (prefs.getBoolean(pref, false)) {
-                                                editor.putBoolean(pref, false);
-                                                EntityLog.log(context, "Disabled option=" + pref);
-                                            }
-                                        editor.apply();
-
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onExecuted(Bundle args, Void data) {
-                                        ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
-                                    }
-
-                                    @Override
-                                    protected void onException(Bundle args, Throwable ex) {
-                                        Log.unexpectedError(getParentFragment(), ex);
-                                    }
-                                }.execute(FragmentOptionsSynchronize.this, new Bundle(), "unblock");
-                            }
-                        })
-                        .show();
+                FragmentDialogUnblockAll fragment = new FragmentDialogUnblockAll();
+                fragment.show(getParentFragmentManager(), "unblock:all");
             }
         });
 
@@ -365,6 +306,20 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
         adapter = new AdapterAccountExempted(getViewLifecycleOwner(), getContext());
         rvExempted.setAdapter(adapter);
+
+        swPollMetered.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("poll_metered", checked).apply();
+            }
+        });
+
+        swPollUnmetered.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("poll_unmetered", checked).apply();
+            }
+        });
 
         swSchedule.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -618,8 +573,6 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         rvBlocklist.setAdapter(badapter);
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
-
         swOutlookThread.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         tvSubjectThreading.setText(getString(R.string.title_advanced_subject_threading_hint, MessageHelper.MAX_SUBJECT_AGE));
 
@@ -646,6 +599,9 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+
         getMainHandler().removeCallbacks(update);
         getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
@@ -700,6 +656,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
                 }
 
             tvPollBattery.setVisibility(pollInterval > 0 && pollInterval < 15 ? View.VISIBLE : View.GONE);
+            swPollMetered.setChecked(prefs.getBoolean("poll_metered", false));
+            swPollUnmetered.setChecked(prefs.getBoolean("poll_unmetered", false));
             grpExempted.setVisibility(pollInterval == 0 ? View.GONE : View.VISIBLE);
 
             swSchedule.setChecked(prefs.getBoolean("schedule", false) && pro);
@@ -726,7 +684,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             swNodate.setChecked(prefs.getBoolean("sync_nodate", false));
             swUnseen.setChecked(prefs.getBoolean("sync_unseen", false));
             swFlagged.setChecked(prefs.getBoolean("sync_flagged", false));
-            swDeleteUnseen.setChecked(prefs.getBoolean("delete_unseen", false));
+            swDeleteUnseen.setChecked(prefs.getBoolean("delete_unseen", true));
             swSyncKept.setChecked(prefs.getBoolean("sync_kept", true));
             swGmailThread.setChecked(prefs.getBoolean("gmail_thread_id", false));
             swOutlookThread.setChecked(prefs.getBoolean("outlook_thread_id", false));

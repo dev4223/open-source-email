@@ -53,9 +53,11 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         final CheckBox cbNotes = dview.findViewById(R.id.cbNotes);
         final CheckBox cbRule = dview.findViewById(R.id.cbRule);
         final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
+        final CheckBox cbLabels = dview.findViewById(R.id.cbLabels);
         final CheckBox cbSearch = dview.findViewById(R.id.cbSearch);
         final CheckBox cbSearchText = dview.findViewById(R.id.cbSearchText);
         final CheckBox cbTranslate = dview.findViewById(R.id.cbTranslate);
+        final CheckBox cbSummarize = dview.findViewById(R.id.cbSummarize);
         final CheckBox cbFullScreen = dview.findViewById(R.id.cbFullScreen);
         final CheckBox cbForceLight = dview.findViewById(R.id.cbForceLight);
         final CheckBox cbEvent = dview.findViewById(R.id.cbEvent);
@@ -66,8 +68,10 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         final CheckBox cbHtml = dview.findViewById(R.id.cbHtml);
         final CheckBox cbRaw = dview.findViewById(R.id.cbRaw);
         final CheckBox cbUnsubscribe = dview.findViewById(R.id.cbUnsubscribe);
+        final CheckBox cbAnswer = dview.findViewById(R.id.cbAnswer);
 
         cbTranslate.setVisibility(DeepL.isAvailable(context) ? View.VISIBLE : View.GONE);
+        cbSummarize.setVisibility(AI.isAvailable(context) ? View.VISIBLE : View.GONE);
         cbPin.setVisibility(Shortcuts.can(context) ? View.VISIBLE : View.GONE);
 
         cbSeen.setChecked(prefs.getBoolean("button_seen", false));
@@ -81,9 +85,11 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         cbNotes.setChecked(prefs.getBoolean("button_notes", false));
         cbRule.setChecked(prefs.getBoolean("button_rule", false));
         cbKeywords.setChecked(prefs.getBoolean("button_keywords", false));
+        cbLabels.setChecked(prefs.getBoolean("button_labels", true));
         cbSearch.setChecked(prefs.getBoolean("button_search", false));
         cbSearchText.setChecked(prefs.getBoolean("button_search_text", false));
         cbTranslate.setChecked(prefs.getBoolean("button_translate", true));
+        cbSummarize.setChecked(prefs.getBoolean("button_summarize", false));
         cbFullScreen.setChecked(prefs.getBoolean("button_full_screen", false));
         cbForceLight.setChecked(prefs.getBoolean("button_force_light", true));
         cbEvent.setChecked(prefs.getBoolean("button_event", false));
@@ -94,6 +100,13 @@ public class FragmentDialogButtons extends FragmentDialogBase {
         cbHtml.setChecked(prefs.getBoolean("button_html", false));
         cbRaw.setChecked(prefs.getBoolean("button_raw", false));
         cbUnsubscribe.setChecked(prefs.getBoolean("button_unsubscribe", true));
+        cbAnswer.setChecked(prefs.getBoolean("button_answer", false));
+
+        boolean expand_all = prefs.getBoolean("expand_all", false);
+        boolean expand_one = prefs.getBoolean("expand_one", true);
+        boolean threading = prefs.getBoolean("threading", true);
+        boolean swipe_reply = prefs.getBoolean("swipe_reply", false);
+        cbAnswer.setVisibility((!expand_all && expand_one) || !threading || swipe_reply ? View.VISIBLE : View.GONE);
 
         return new AlertDialog.Builder(getContext())
                 .setView(dview)
@@ -112,9 +125,11 @@ public class FragmentDialogButtons extends FragmentDialogBase {
                         editor.putBoolean("button_notes", cbNotes.isChecked());
                         editor.putBoolean("button_rule", cbRule.isChecked());
                         editor.putBoolean("button_keywords", cbKeywords.isChecked());
+                        editor.putBoolean("button_labels", cbLabels.isChecked());
                         editor.putBoolean("button_search", cbSearch.isChecked());
                         editor.putBoolean("button_search_text", cbSearchText.isChecked());
                         editor.putBoolean("button_translate", cbTranslate.isChecked());
+                        editor.putBoolean("button_summarize", cbSummarize.isChecked());
                         editor.putBoolean("button_full_screen", cbFullScreen.isChecked());
                         editor.putBoolean("button_force_light", cbForceLight.isChecked());
                         editor.putBoolean("button_event", cbEvent.isChecked());
@@ -125,6 +140,7 @@ public class FragmentDialogButtons extends FragmentDialogBase {
                         editor.putBoolean("button_html", cbHtml.isChecked());
                         editor.putBoolean("button_raw", cbRaw.isChecked());
                         editor.putBoolean("button_unsubscribe", cbUnsubscribe.isChecked());
+                        editor.putBoolean("button_answer", cbAnswer.isChecked());
                         editor.apply();
                         sendResult(Activity.RESULT_OK);
                     }

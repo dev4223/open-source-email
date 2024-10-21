@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_openai"
+        android:id="@+id/menu_ai"
         android:icon="@drawable/twotone_smart_toy_24"
         android:title="@string/title_openai"
         app:showAsAction="always" />
@@ -20,10 +20,18 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/menu_zoom"
-        android:icon="@drawable/twotone_format_size_24"
-        android:title="@string/title_zoom"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/menu_send"
+        android:icon="@drawable/twotone_send_24"
+        android:title="@string/title_send"
+        app:showAsAction="always" />
+
+    <group android:id="@+id/group_appearance">
+        <item
+            android:id="@+id/menu_zoom"
+            android:icon="@drawable/twotone_format_size_24"
+            android:title="@string/title_zoom"
+            app:showAsAction="ifRoom" />
+    </group>
 
     <group android:id="@+id/group_options">
         <item
@@ -78,6 +86,13 @@
             android:checkable="true"
             android:icon="@drawable/outline_unfold_less_24"
             android:title="@string/title_compact"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/menu_markdown"
+            android:checkable="true"
+            android:icon="@drawable/twotone_data_array_24"
+            android:title="@string/title_markdown"
             app:showAsAction="never" />
     </group>
 

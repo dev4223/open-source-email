@@ -20,7 +20,6 @@ package eu.faircode.email;
 */
 
 import android.app.Notification;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -47,7 +46,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-public class ServiceExternal extends Service {
+public class ServiceExternal extends ServiceBase {
     private static final String ACTION_POLL = BuildConfig.APPLICATION_ID + ".POLL";
     private static final String ACTION_ENABLE = BuildConfig.APPLICATION_ID + ".ENABLE";
     private static final String ACTION_DISABLE = BuildConfig.APPLICATION_ID + ".DISABLE";
@@ -55,6 +54,7 @@ public class ServiceExternal extends Service {
     private static final String ACTION_RULE = BuildConfig.APPLICATION_ID + ".RULE";
     private static final String ACTION_TEMPLATE = BuildConfig.APPLICATION_ID + ".TEMPLATE";
     private static final String ACTION_DISCONNECT_ME = BuildConfig.APPLICATION_ID + ".DISCONNECT.ME";
+    private static final String ACTION_ADGUARD = BuildConfig.APPLICATION_ID + ".ADGUARD";
 
     // adb shell am start-foreground-service -a eu.faircode.email.POLL --es account Gmail
     // adb shell am start-foreground-service -a eu.faircode.email.ENABLE --es account Gmail
@@ -63,12 +63,32 @@ public class ServiceExternal extends Service {
     // adb shell am start-foreground-service -a eu.faircode.email.RULE --es account Gmail -es rule Test
     // adb shell am start-foreground-service -a eu.faircode.email.TEMPLATE --es template ... --es identity ... --es to ... --es cc ... --es subject ...
     // adb shell am start-foreground-service -a eu.faircode.email.DISCONNECT
+    // adb shell am start-foreground-service -a eu.faircode.email.ADGUARD
 
     @Override
     public void onCreate() {
         Log.i("Service external create");
         super.onCreate();
-        startForeground(NotificationHelper.NOTIFICATION_EXTERNAL, getNotification());
+        try {
+            startForeground(NotificationHelper.NOTIFICATION_EXTERNAL, getNotification());
+            EntityLog.log(this, EntityLog.Type.Debug2,
+                    "onCreate class=" + this.getClass().getName());
+        } catch (Throwable ex) {
+            if (Helper.isPlayStoreInstall())
+                Log.i(ex);
+            else
+                Log.e(ex);
+        }
+    }
+
+    @Override
+    public void onTimeout(int startId) {
+        String msg = "onTimeout" +
+                " class=" + this.getClass().getName() +
+                " ignoring=" + Helper.isIgnoringOptimizations(this);
+        Log.e(new Throwable(msg));
+        EntityLog.log(this, EntityLog.Type.Debug3, msg);
+        stopSelf();
     }
 
     @Override
@@ -86,7 +106,16 @@ public class ServiceExternal extends Service {
             Log.logExtras(intent);
 
             super.onStartCommand(intent, flags, startId);
-            startForeground(NotificationHelper.NOTIFICATION_EXTERNAL, getNotification());
+            try {
+                startForeground(NotificationHelper.NOTIFICATION_EXTERNAL, getNotification());
+                EntityLog.log(this, EntityLog.Type.Debug2,
+                        "onStartCommand class=" + this.getClass().getName());
+            } catch (Throwable ex) {
+                if (Helper.isPlayStoreInstall())
+                    Log.i(ex);
+                else
+                    Log.e(ex);
+            }
 
             if (intent == null)
                 return START_NOT_STICKY;
@@ -118,6 +147,9 @@ public class ServiceExternal extends Service {
                                 break;
                             case ACTION_DISCONNECT_ME:
                                 disconnect(context, intent);
+                                break;
+                            case ACTION_ADGUARD:
+                                adguard(context, intent);
                                 break;
                             default:
                                 throw new IllegalArgumentException(action);
@@ -294,7 +326,8 @@ public class ServiceExternal extends Service {
                 new InternetAddress(identity.get(0).email, identity.get(0).name, StandardCharsets.UTF_8.name())};
         if (subject == null) // Allow empty string
             subject = answers.get(0).name;
-        String body = answers.get(0).getHtml(context, to);
+        EntityAnswer.Data answerData = answers.get(0).getData(context, to);
+        String body = answerData.getHtml();
 
         EntityMessage msg = new EntityMessage();
         msg.account = identity.get(0).account;
@@ -314,7 +347,7 @@ public class ServiceExternal extends Service {
 
         File file = msg.getFile(context);
         Helper.writeText(file, body);
-        String text = HtmlHelper.getFullText(body);
+        String text = HtmlHelper.getFullText(context, body);
         msg.preview = HtmlHelper.getPreview(text);
         msg.language = HtmlHelper.getLanguage(context, msg.subject, text);
         db.message().setMessageContent(msg.id,
@@ -324,11 +357,17 @@ public class ServiceExternal extends Service {
                 msg.preview,
                 null);
 
+        answerData.insertAttachments(context, msg.id);
+
         EntityOperation.queue(context, msg, EntityOperation.SEND);
         ServiceSend.start(context);
     }
 
     private static void disconnect(Context context, Intent intent) throws IOException, JSONException {
         DisconnectBlacklist.download(context);
+    }
+
+    private static void adguard(Context context, Intent intent) throws IOException, JSONException {
+        Adguard.download(context);
     }
 }

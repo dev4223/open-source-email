@@ -15,6 +15,8 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <uses-permission android:name="com.android.vending.BILLING" />
 
@@ -22,9 +24,6 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission
         android:name="android.permission.USE_CREDENTIALS"
-        android:maxSdkVersion="22" />
-    <uses-permission
-        android:name="android.permission.READ_PROFILE"
         android:maxSdkVersion="22" />
 
     <!-- https://github.com/leolin310148/ShortcutBadger/pull/368 -->
@@ -112,8 +111,9 @@
 
     <application
         android:name=".ApplicationSecure"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:appCategory="productivity"
+        android:backupAgent=".FairEmailBackupAgent"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:description="@string/app_name"
         android:enableOnBackInvokedCallback="true"
@@ -126,10 +126,20 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="true"
         android:resizeableActivity="true"
+        android:restoreAnyVersion="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.TranslucentSplash">
         <!-- https://developer.samsung.com/samsung-dex/modify-optimizing.html -->
+
+        <!-- https://firebase.google.com/docs/analytics/configure-data-collection?platform=android -->
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="true" />
+        <!-- https://firebase.google.com/docs/perf-mon/disable-sdk?platform=android -->
+        <meta-data
+            android:name="firebase_performance_collection_deactivated"
+            android:value="true" />
 
         <!-- https://developer.android.com/guide/webapps/managing-webview#metrics -->
         <meta-data
@@ -149,6 +159,9 @@
         <meta-data
             android:name="com.bugsnag.android.API_KEY"
             android:value="9d2d57476a0614974449a3ec33f2604a" />
+        <meta-data
+            android:name="com.google.android.backup.api_key"
+            android:value="unused" />
 
         <activity
             android:name=".ActivityMain"
@@ -215,7 +228,12 @@
             android:launchMode="singleTask"
             android:parentActivityName=".ActivityMain"
             android:resizeableActivity="true"
-            android:taskAffinity="${applicationId}.SETUP" />
+            android:taskAffinity="${applicationId}.SETUP">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ActivitySignature"
@@ -598,16 +616,29 @@
         <service
             android:name=".ServiceSynchronize"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="FairEmail is an email app. Users expect to receive instant new email notifications, and the app to be auto-started. A foreground service is required to keep a continuous connection to email servers to listen for push messages via IMAP IDLE, for which there is no Firebase Cloud Messaging integration. Other foreground service types do not fit this use case, or can't be used on Android 15 because there are time limits or auto-starting on boot is not allowed. Using the Android work manager isn't an option either." />
+        </service>
 
         <service
             android:name=".ServiceSend"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="FairEmail is an email app. Users expect to receive instant new email notifications, and the app to be auto-started. A foreground service is required to keep a continuous connection to email servers to listen for push messages via IMAP IDLE, for which there is no Firebase Cloud Messaging integration. Other foreground service types do not fit this use case, or can't be used on Android 15 because there are time limits or auto-starting on boot is not allowed. Using the Android work manager isn't an option either." />
+        </service>
 
         <service
             android:name=".ServiceUI"
             android:exported="false" />
+
+        <service
+            android:name=".ServiceTTS"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <service
             android:name=".ServiceExternal"
@@ -622,6 +653,7 @@
                 <action android:name="${applicationId}.RULE" />
                 <action android:name="${applicationId}.TEMPLATE" />
                 <action android:name="${applicationId}.DISCONNECT.ME" />
+                <action android:name="${applicationId}.ADGUARD" />
             </intent-filter>
         </service>
 

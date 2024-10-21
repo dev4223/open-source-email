@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Folder;
@@ -74,6 +75,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private EditText etEmail;
     private TextInputLayout tilPassword;
     private TextView tvCharacters;
+    private TextView tvOutlookModern;
     private Button btnCheck;
     private ContentLoadingProgressBar pbCheck;
     private TextView tvPatience;
@@ -146,6 +148,7 @@ public class FragmentQuickSetup extends FragmentBase {
         etEmail = view.findViewById(R.id.etEmail);
         tilPassword = view.findViewById(R.id.tilPassword);
         tvCharacters = view.findViewById(R.id.tvCharacters);
+        tvOutlookModern = view.findViewById(R.id.tvOutlookModern);
         btnCheck = view.findViewById(R.id.btnCheck);
         pbCheck = view.findViewById(R.id.pbCheck);
         tvPatience = view.findViewById(R.id.tvPatience);
@@ -195,6 +198,26 @@ public class FragmentQuickSetup extends FragmentBase {
             }
         });
 
+        etEmail.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String email = s.toString().toLowerCase(Locale.ROOT);
+                boolean outlook = (email.contains("@outlook.") ||
+                        email.contains("@hotmail.") ||
+                        email.contains("@live."));
+                tvOutlookModern.setVisibility(outlook ? View.VISIBLE : View.GONE);
+            }
+        });
         tilPassword.setHintEnabled(false);
 
         tilPassword.getEditText().setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -274,6 +297,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
         // Initialize
         tvCharacters.setVisibility(View.GONE);
+        tvOutlookModern.setVisibility(View.GONE);
         tvImapFingerprint.setText(null);
         tvSmtpFingerprint.setText(null);
         pbCheck.setVisibility(View.GONE);
@@ -430,8 +454,8 @@ public class FragmentQuickSetup extends FragmentBase {
                         String user = null;
                         String aprotocol = (provider.imap.starttls ? "imap" : "imaps");
                         int aencryption = (provider.imap.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
-                        try (EmailService iservice = new EmailService(
-                                context, aprotocol, null, aencryption, false, false,
+                        try (EmailService iservice = new EmailService(context,
+                                aprotocol, null, aencryption, false, false, false,
                                 EmailService.PURPOSE_CHECK, true)) {
                             List<Throwable> exceptions = new ArrayList<>();
                             for (int i = 0; i < users.size(); i++) {
@@ -439,7 +463,7 @@ public class FragmentQuickSetup extends FragmentBase {
                                 Log.i("Trying with user=" + user);
                                 try {
                                     iservice.connect(
-                                            provider.imap.host, provider.imap.port,
+                                            false, provider.imap.host, provider.imap.port,
                                             AUTH_TYPE_PASSWORD, null,
                                             user, password,
                                             null, null);
@@ -448,7 +472,7 @@ public class FragmentQuickSetup extends FragmentBase {
                                     imap_certificate = ex.getCertificate();
                                     imap_fingerprint = EntityCertificate.getKeyFingerprint(imap_certificate);
                                     iservice.connect(
-                                            provider.imap.host, provider.imap.port,
+                                            false, provider.imap.host, provider.imap.port,
                                             AUTH_TYPE_PASSWORD, null,
                                             user, password,
                                             null, imap_fingerprint);
@@ -478,6 +502,8 @@ public class FragmentQuickSetup extends FragmentBase {
                                 boolean other = false;
                                 for (EntityFolder folder : folders)
                                     switch (folder.type) {
+                                        case EntityFolder.INBOX:
+                                            break;
                                         case EntityFolder.DRAFTS:
                                             drafts = true;
                                             break;
@@ -539,13 +565,13 @@ public class FragmentQuickSetup extends FragmentBase {
                         Long max_size;
                         String iprotocol = (provider.smtp.starttls ? "smtp" : "smtps");
                         int iencryption = (provider.smtp.starttls ? EmailService.ENCRYPTION_STARTTLS : EmailService.ENCRYPTION_SSL);
-                        try (EmailService iservice = new EmailService(
-                                context, iprotocol, null, iencryption, false, false,
+                        try (EmailService iservice = new EmailService(context,
+                                iprotocol, null, iencryption, false, false, false,
                                 EmailService.PURPOSE_CHECK, true)) {
                             iservice.setUseIp(provider.useip, null);
                             try {
                                 iservice.connect(
-                                        provider.smtp.host, provider.smtp.port,
+                                        false, provider.smtp.host, provider.smtp.port,
                                         AUTH_TYPE_PASSWORD, null,
                                         user, password,
                                         null, null);
@@ -553,7 +579,7 @@ public class FragmentQuickSetup extends FragmentBase {
                                 smtp_certificate = ex.getCertificate();
                                 smtp_fingerprint = EntityCertificate.getKeyFingerprint(smtp_certificate);
                                 iservice.connect(
-                                        provider.smtp.host, provider.smtp.port,
+                                        false, provider.smtp.host, provider.smtp.port,
                                         AUTH_TYPE_PASSWORD, null,
                                         user, password,
                                         null, smtp_fingerprint);
@@ -588,7 +614,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                                 account.host = provider.imap.host;
                                 account.encryption = aencryption;
-                                account.insecure = BuildConfig.PLAY_STORE_RELEASE;
+                                account.insecure = (BuildConfig.PLAY_STORE_RELEASE && !provider.imap.isSecure());
                                 account.port = provider.imap.port;
                                 account.auth_type = AUTH_TYPE_PASSWORD;
                                 account.user = user;
@@ -638,6 +664,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                                 identity.host = provider.smtp.host;
                                 identity.encryption = iencryption;
+                                identity.insecure = (BuildConfig.PLAY_STORE_RELEASE && !provider.smtp.isSecure());
                                 identity.port = provider.smtp.port;
                                 identity.auth_type = AUTH_TYPE_PASSWORD;
                                 identity.user = user;
@@ -672,6 +699,8 @@ public class FragmentQuickSetup extends FragmentBase {
 
                         ServiceSynchronize.eval(context, "quick setup");
                         args.putBoolean("updated", update != null);
+
+                        FairEmailBackupAgent.dataChanged(context);
 
                         return provider;
                     } catch (Throwable ex) {

@@ -161,3 +161,7 @@
 -dontwarn java.lang.**
 -dontwarn javax.naming.**
 -dontwarn sun.reflect.Reflection
+
+#EvalEx
+-dontwarn lombok.Generated
+-keep class com.ezylang.evalex.** {*;}

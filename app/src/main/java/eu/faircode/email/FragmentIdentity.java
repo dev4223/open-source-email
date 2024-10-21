@@ -76,6 +76,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import javax.mail.Folder;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -98,14 +99,17 @@ public class FragmentIdentity extends FragmentBase {
     private EditText etDomain;
     private Button btnAutoConfig;
     private ContentLoadingProgressBar pbAutoConfig;
+    private CheckBox cbDnsSec;
     private EditText etHost;
     private RadioGroup rgEncryption;
     private CheckBox cbInsecure;
     private TextView tvInsecureRemark;
+    private CheckBox cbDane;
     private EditText etPort;
     private EditText etUser;
     private TextInputLayout tilPassword;
     private TextView tvPasswordStorage;
+    private CheckBox cbLogin;
     private Button btnCertificate;
     private TextView tvCertificate;
     private EditText etRealm;
@@ -125,6 +129,7 @@ public class FragmentIdentity extends FragmentBase {
     private EditText etReplyTo;
     private EditText etCc;
     private EditText etBcc;
+    private EditText etEnvelopeFrom;
     private EditText etInternal;
     private Button btnUri;
     private TextView tvUriInfo;
@@ -205,14 +210,17 @@ public class FragmentIdentity extends FragmentBase {
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
         pbAutoConfig = view.findViewById(R.id.pbAutoConfig);
 
+        cbDnsSec = view.findViewById(R.id.cbDnsSec);
         etHost = view.findViewById(R.id.etHost);
         rgEncryption = view.findViewById(R.id.rgEncryption);
         cbInsecure = view.findViewById(R.id.cbInsecure);
         tvInsecureRemark = view.findViewById(R.id.tvInsecureRemark);
+        cbDane = view.findViewById(R.id.cbDane);
         etPort = view.findViewById(R.id.etPort);
         etUser = view.findViewById(R.id.etUser);
         tilPassword = view.findViewById(R.id.tilPassword);
         tvPasswordStorage = view.findViewById(R.id.tvPasswordStorage);
+        cbLogin = view.findViewById(R.id.cbLoginBeforeSend);
         btnCertificate = view.findViewById(R.id.btnCertificate);
         tvCertificate = view.findViewById(R.id.tvCertificate);
         etRealm = view.findViewById(R.id.etRealm);
@@ -232,6 +240,7 @@ public class FragmentIdentity extends FragmentBase {
         etReplyTo = view.findViewById(R.id.etReplyTo);
         etCc = view.findViewById(R.id.etCc);
         etBcc = view.findViewById(R.id.etBcc);
+        etEnvelopeFrom = view.findViewById(R.id.etEnvelopeFrom);
         etInternal = view.findViewById(R.id.etInternal);
         btnUri = view.findViewById(R.id.btnUri);
         tvUriInfo = view.findViewById(R.id.tvUriInfo);
@@ -466,6 +475,13 @@ public class FragmentIdentity extends FragmentBase {
             }
         });
 
+        cbInsecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                cbDane.setEnabled(!checked);
+            }
+        });
+
         tvInsecureRemark.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -564,12 +580,22 @@ public class FragmentIdentity extends FragmentBase {
 
         // Initialize
         Helper.setViewsEnabled(view, false);
+
         btnAutoConfig.setEnabled(false);
         pbAutoConfig.setVisibility(View.GONE);
+
+        if (!DnsHelper.hasDnsSec()) {
+            Helper.hide(cbDnsSec);
+            Helper.hide(view.findViewById(R.id.tvDnsRemark));
+            Helper.hide(cbDane);
+            Helper.hide(view.findViewById(R.id.tvDaneRemark));
+        }
 
         if (!SSLHelper.customTrustManager()) {
             Helper.hide(cbInsecure);
             Helper.hide(tvInsecureRemark);
+            Helper.hide(cbDane);
+            Helper.hide(view.findViewById(R.id.tvDaneRemark));
         }
 
         btnAdvanced.setVisibility(View.GONE);
@@ -708,8 +734,9 @@ public class FragmentIdentity extends FragmentBase {
                         (ex instanceof UnknownHostException ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof IllegalArgumentException))
-                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Helper.setSnackbarOptions(
+                                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG))
+                            .show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -755,6 +782,7 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("replyto", etReplyTo.getText().toString().trim());
         args.putString("cc", etCc.getText().toString().trim());
         args.putString("bcc", etBcc.getText().toString().trim());
+        args.putString("envelope_from", etEnvelopeFrom.getText().toString().trim());
         args.putString("internal", etInternal.getText().toString().replaceAll(" ", ""));
         args.putString("uri", (String) btnUri.getTag());
         args.putBoolean("sign_default", cbSignDefault.isChecked());
@@ -765,14 +793,17 @@ public class FragmentIdentity extends FragmentBase {
         args.putBoolean("octetmime", cbOctetMime.isChecked());
         args.putString("max_size", etMaxSize.getText().toString());
         args.putLong("account", account == null ? -1 : account.id);
+        args.putBoolean("dnssec", cbDnsSec.isChecked());
         args.putString("host", etHost.getText().toString().trim().replace(" ", ""));
         args.putInt("encryption", encryption);
         args.putBoolean("insecure", cbInsecure.isChecked());
+        args.putBoolean("dane", cbDane.isChecked());
         args.putString("port", etPort.getText().toString());
         args.putInt("auth", auth);
         args.putString("provider", provider);
         args.putString("user", etUser.getText().toString().trim());
         args.putString("password", tilPassword.getEditText().getText().toString());
+        args.putBoolean("login", cbLogin.isChecked());
         args.putString("certificate", certificate);
         args.putString("realm", etRealm.getText().toString());
         args.putString("fingerprint", cbTrust.isChecked() ? (String) cbTrust.getTag() : null);
@@ -818,14 +849,17 @@ public class FragmentIdentity extends FragmentBase {
                 Integer color = args.getInt("color");
                 String signature = args.getString("signature");
 
+                boolean dnssec = args.getBoolean("dnssec");
                 String host = args.getString("host");
                 int encryption = args.getInt("encryption");
                 boolean insecure = args.getBoolean("insecure");
+                boolean dane = args.getBoolean("dane");
                 String port = args.getString("port");
                 int auth = args.getInt("auth");
                 String provider = args.getString("provider");
                 String user = args.getString("user").trim();
                 String password = args.getString("password");
+                boolean login = args.getBoolean("login");
                 String certificate = args.getString("certificate");
                 String realm = args.getString("realm");
                 String fingerprint = args.getString("fingerprint");
@@ -842,6 +876,7 @@ public class FragmentIdentity extends FragmentBase {
                 String replyto = args.getString("replyto");
                 String cc = args.getString("cc");
                 String bcc = args.getString("bcc");
+                String envelope_from = args.getString("envelope_from");
                 String internal = args.getString("internal");
                 String uri = args.getString("uri");
                 boolean sign_default = args.getBoolean("sign_default");
@@ -905,6 +940,14 @@ public class FragmentIdentity extends FragmentBase {
                         throw new IllegalArgumentException(context.getString(R.string.title_email_invalid, bcc));
                     }
 
+                if (!TextUtils.isEmpty(envelope_from) && !should)
+                    try {
+                        for (InternetAddress address : InternetAddress.parse(envelope_from))
+                            address.validate();
+                    } catch (AddressException ex) {
+                        throw new IllegalArgumentException(context.getString(R.string.title_email_invalid, envelope_from));
+                    }
+
                 if (TextUtils.isEmpty(internal))
                     internal = null;
 
@@ -931,6 +974,9 @@ public class FragmentIdentity extends FragmentBase {
 
                 if (TextUtils.isEmpty(bcc))
                     bcc = null;
+
+                if (TextUtils.isEmpty(envelope_from))
+                    envelope_from = null;
 
                 if (color == Color.TRANSPARENT || !ActivityBilling.isPro(context))
                     color = null;
@@ -961,11 +1007,15 @@ public class FragmentIdentity extends FragmentBase {
                         return true;
                     if (!Objects.equals(identity.signature, signature))
                         return true;
+                    if (!Objects.equals(identity.dnssec, dnssec))
+                        return true;
                     if (!Objects.equals(identity.host, host))
                         return true;
                     if (!Objects.equals(identity.encryption, encryption))
                         return true;
                     if (!Objects.equals(identity.insecure, insecure))
+                        return true;
+                    if (!Objects.equals(identity.dane, dane))
                         return true;
                     if (!Objects.equals(identity.port, Integer.parseInt(port)))
                         return true;
@@ -974,6 +1024,8 @@ public class FragmentIdentity extends FragmentBase {
                     if (!Objects.equals(identity.user, user))
                         return true;
                     if (!Objects.equals(identity.password, password))
+                        return true;
+                    if (!Objects.equals(identity.login, login))
                         return true;
                     if (!Objects.equals(identity.certificate_alias, certificate))
                         return true;
@@ -1005,6 +1057,8 @@ public class FragmentIdentity extends FragmentBase {
                         return true;
                     if (!Objects.equals(identity.bcc, bcc))
                         return true;
+                    if (!Objects.equals(identity.envelopeFrom, envelope_from))
+                        return true;
                     if (!Objects.equals(identity.internal, internal))
                         return true;
                     if (!Objects.equals(identity.uri, uri))
@@ -1033,12 +1087,15 @@ public class FragmentIdentity extends FragmentBase {
 
                 boolean check = (synchronize && (identity == null ||
                         !identity.synchronize || identity.error != null ||
+                        dnssec != identity.dnssec ||
                         !host.equals(identity.host) ||
                         encryption != identity.encryption ||
                         insecure != identity.insecure ||
+                        dane != identity.dane ||
                         Integer.parseInt(port) != identity.port ||
                         !user.equals(identity.user) ||
                         !password.equals(identity.password) ||
+                        !Objects.equals(login, identity.login) ||
                         !Objects.equals(certificate, identity.certificate_alias) ||
                         !Objects.equals(realm, identityRealm) ||
                         !Objects.equals(fingerprint, identity.fingerprint) ||
@@ -1055,14 +1112,29 @@ public class FragmentIdentity extends FragmentBase {
                 // Check SMTP server
                 Long server_max_size = null;
                 if (check) {
+                    if (login) {
+                        EntityAccount a = db.account().getAccount(account);
+                        if (a != null)
+                            try (EmailService iaccount = new EmailService(context, a, EmailService.PURPOSE_CHECK, true)) {
+                                iaccount.connect(a);
+                                Folder ifolder = iaccount.getStore().getFolder("INBOX");
+                                ifolder.open(Folder.READ_ONLY);
+                                try {
+                                    ifolder.getMessages();
+                                } finally {
+                                    ifolder.close();
+                                }
+                            }
+                    }
+
                     // Create transport
                     String protocol = (encryption == EmailService.ENCRYPTION_SSL ? "smtps" : "smtp");
-                    try (EmailService iservice = new EmailService(
-                            context, protocol, realm, encryption, insecure, unicode,
+                    try (EmailService iservice = new EmailService(context,
+                            protocol, realm, encryption, insecure, dane, unicode,
                             EmailService.PURPOSE_CHECK, true)) {
                         iservice.setUseIp(use_ip, ehlo);
                         iservice.connect(
-                                host, Integer.parseInt(port),
+                                dnssec, host, Integer.parseInt(port),
                                 auth, provider,
                                 user, password,
                                 certificate, fingerprint);
@@ -1091,13 +1163,16 @@ public class FragmentIdentity extends FragmentBase {
                     identity.color = color;
                     identity.signature = signature;
 
+                    identity.dnssec = dnssec;
                     identity.host = host;
                     identity.encryption = encryption;
                     identity.insecure = insecure;
+                    identity.dane = dane;
                     identity.port = Integer.parseInt(port);
                     identity.auth_type = auth;
                     identity.user = user;
                     identity.password = password;
+                    identity.login = login;
                     identity.certificate_alias = certificate;
                     identity.provider = provider;
                     identity.realm = realm;
@@ -1115,6 +1190,7 @@ public class FragmentIdentity extends FragmentBase {
                     identity.replyto = replyto;
                     identity.cc = cc;
                     identity.bcc = bcc;
+                    identity.envelopeFrom = envelope_from;
                     identity.internal = internal;
                     identity.uri = uri;
                     identity.sign_default = sign_default;
@@ -1147,6 +1223,8 @@ public class FragmentIdentity extends FragmentBase {
 
                 Core.clearIdentities();
 
+                FairEmailBackupAgent.dataChanged(context);
+
                 return false;
             }
 
@@ -1167,8 +1245,9 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Helper.setSnackbarOptions(
+                                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG))
+                            .show();
                 else
                     showError(ex);
             }
@@ -1264,6 +1343,7 @@ public class FragmentIdentity extends FragmentBase {
                     if (signature == null)
                         signature = (identity == null ? null : identity.signature);
 
+                    cbDnsSec.setChecked(identity == null ? false : identity.dnssec);
                     etHost.setText(identity == null ? null : identity.host);
 
                     if (identity != null && identity.encryption == EmailService.ENCRYPTION_STARTTLS)
@@ -1274,9 +1354,12 @@ public class FragmentIdentity extends FragmentBase {
                         rgEncryption.check(R.id.radio_ssl);
 
                     cbInsecure.setChecked(identity == null ? false : identity.insecure);
+                    cbDane.setChecked(identity == null ? false : identity.dane);
+                    cbDane.setEnabled(!cbInsecure.isChecked());
                     etPort.setText(identity == null ? null : Long.toString(identity.port));
                     etUser.setText(identity == null ? null : identity.user);
                     tilPassword.getEditText().setText(identity == null ? null : identity.password);
+                    cbLogin.setChecked((identity != null && identity.login));
                     certificate = (identity == null ? null : identity.certificate_alias);
                     tvCertificate.setText(certificate == null ? getString(R.string.title_optional) : certificate);
                     etRealm.setText(identity == null ? null : identity.realm);
@@ -1305,6 +1388,7 @@ public class FragmentIdentity extends FragmentBase {
                     etReplyTo.setText(identity == null ? null : identity.replyto);
                     etCc.setText(identity == null ? null : identity.cc);
                     etBcc.setText(identity == null ? null : identity.bcc);
+                    etEnvelopeFrom.setText(identity == null ? null : identity.envelopeFrom);
                     etInternal.setText(identity == null ? null : identity.internal);
                     btnUri.setTag(identity == null ? null : identity.uri);
                     tvUriInfo.setText(identity == null ? null : getUriInfo(identity.uri));
@@ -1611,7 +1695,7 @@ public class FragmentIdentity extends FragmentBase {
                             ContactsContract.Contacts.DISPLAY_NAME_PRIMARY
                     },
                     null, null, null)) {
-                if (cursor.moveToNext())
+                if (cursor != null && cursor.moveToNext())
                     return cursor.getString(0);
             }
         } catch (Throwable ex) {

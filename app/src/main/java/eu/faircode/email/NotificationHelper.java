@@ -22,6 +22,7 @@ package eu.faircode.email;
 import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
 import static androidx.core.app.NotificationCompat.DEFAULT_SOUND;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -31,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -75,6 +77,7 @@ class NotificationHelper {
     static final int NOTIFICATION_EXTERNAL = 300;
     static final int NOTIFICATION_UPDATE = 400;
     static final int NOTIFICATION_TAGGED = 500;
+    static final int NOTIFICATION_TTS = 600;
 
     private static final int MAX_NOTIFICATION_DISPLAY = 10; // per group
     private static final int MAX_NOTIFICATION_COUNT = 100; // per group
@@ -138,7 +141,7 @@ class NotificationHelper {
         notification.enableLights(true);
         notification.setLightColor(Color.YELLOW);
         notification.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        notification.setBypassDnd(true);
+        //notification.setBypassDnd(true);
         createNotificationChannel(nm, notification);
 
         NotificationChannel progress = new NotificationChannel(
@@ -284,9 +287,16 @@ class NotificationHelper {
         jchannel.put("badge", channel.canShowBadge());
 
         Uri sound = channel.getSound();
-        if (sound != null)
+        if (sound != null) {
             jchannel.put("sound", sound.toString());
-        // audio attributes
+            AudioAttributes attr = channel.getAudioAttributes();
+            try {
+                jchannel.put("sound_content_type", attr.getContentType());
+                jchannel.put("sound_usage", attr.getUsage());
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+        }
 
         jchannel.put("light", channel.shouldShowLights());
         // color
@@ -326,12 +336,31 @@ class NotificationHelper {
 
         channel.setShowBadge(jchannel.getBoolean("badge"));
 
-        if (jchannel.has("sound") && !jchannel.isNull("sound")) {
-            Uri uri = Uri.parse(jchannel.getString("sound"));
-            Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
-            if (ringtone != null)
-                channel.setSound(uri, Notification.AUDIO_ATTRIBUTES_DEFAULT);
-        }
+        if (jchannel.has("sound") && !jchannel.isNull("sound"))
+            try {
+                Uri uri = Uri.parse(jchannel.getString("sound"));
+                AudioAttributes attr;
+                try {
+                    AudioAttributes.Builder builder = new AudioAttributes.Builder();
+                    if (jchannel.has("sound_content_type"))
+                        builder.setContentType(jchannel.getInt("sound_content_type"));
+                    else
+                        builder.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION);
+                    if (jchannel.has("sound_usage"))
+                        builder.setUsage(jchannel.getInt("sound_usage"));
+                    else
+                        builder.setUsage(AudioAttributes.USAGE_NOTIFICATION);
+                    attr = builder.build();
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                    attr = Notification.AUDIO_ATTRIBUTES_DEFAULT;
+                }
+                Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
+                if (ringtone != null)
+                    channel.setSound(uri, attr);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
 
         channel.enableLights(jchannel.getBoolean("light"));
         channel.enableVibration(jchannel.getBoolean("vibrate"));
@@ -368,7 +397,7 @@ class NotificationHelper {
         if (notify_screen_on &&
                 !(BuildConfig.DEBUG ||
                         Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU ||
-                        Helper.hasPermission(context, "android.permission.TURN_SCREEN_ON")))
+                        Helper.hasPermission(context, Manifest.permission.TURN_SCREEN_ON)))
             notify_screen_on = false;
 
         Log.i("Notify messages=" + messages.size() +
@@ -619,7 +648,7 @@ class NotificationHelper {
         }
 
         if (notify_screen_on && flash) {
-            Log.i("Notify screen on");
+            EntityLog.log(context, EntityLog.Type.Notification, "Notify screen on");
             PowerManager pm = Helper.getSystemService(context, PowerManager.class);
             PowerManager.WakeLock wakeLock = pm.newWakeLock(
                     PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -676,16 +705,21 @@ class NotificationHelper {
         String sound = prefs.getString("sound", null);
         boolean alert_once = prefs.getBoolean("alert_once", true);
         boolean perform_expunge = prefs.getBoolean("perform_expunge", true);
-        boolean delete_confirmation = prefs.getBoolean("delete_confirmation", true);
-
+        boolean delete_notification = prefs.getBoolean("delete_notification", false);
 
         // Get contact info
+        Long latest = null;
         Map<Long, Address[]> messageFrom = new HashMap<>();
         Map<Long, ContactInfo[]> messageInfo = new HashMap<>();
         for (int m = 0; m < messages.size() && m < MAX_NOTIFICATION_DISPLAY; m++) {
             TupleMessageEx message = messages.get(m);
+
+            if (latest == null || latest < message.received)
+                latest = message.received;
+
             ContactInfo[] info = ContactInfo.get(context,
-                    message.account, message.folderType, message.bimi_selector,
+                    message.account, message.folderType,
+                    message.bimi_selector, Boolean.TRUE.equals(message.dmarc),
                     message.isForwarder() ? message.submitter : message.from);
 
             Address[] modified = (message.from == null
@@ -753,6 +787,9 @@ class NotificationHelper {
                                     ? NotificationCompat.CATEGORY_EMAIL : NotificationCompat.CATEGORY_STATUS)
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                             .setAllowSystemGeneratedContextualActions(false);
+
+            if (latest != null)
+                builder.setWhen(latest).setShowWhen(true);
 
             if (group != 0 && messages.size() > 0)
                 builder.setSubText(messages.get(0).accountName);
@@ -898,7 +935,9 @@ class NotificationHelper {
                             .setShowWhen(true)
                             .setSortKey(sortKey)
                             .setDeleteIntent(piIgnore)
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setPriority(EntityMessage.PRIORITIY_HIGH.equals(message.importance)
+                                    ? NotificationCompat.PRIORITY_HIGH
+                                    : NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_EMAIL)
                             .setVisibility(notify_private
                                     ? NotificationCompat.VISIBILITY_PRIVATE
@@ -974,7 +1013,7 @@ class NotificationHelper {
                 if (notify_preview_all)
                     try {
                         File file = message.getFile(context);
-                        preview = HtmlHelper.getFullText(file);
+                        preview = HtmlHelper.getFullText(context, file);
                         if (preview != null && preview.length() > MAX_PREVIEW)
                             preview = preview.substring(0, MAX_PREVIEW);
                     } catch (Throwable ex) {
@@ -1044,8 +1083,8 @@ class NotificationHelper {
             List<NotificationCompat.Action> wactions = new ArrayList<>();
 
             if (notify_trash &&
-                    perform_expunge &&
-                    message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                    !delete_notification &&
+                    message.accountProtocol == EntityAccount.TYPE_IMAP && perform_expunge) {
                 EntityFolder folder = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
                 if (folder != null && !folder.id.equals(message.folder)) {
                     Intent trash = new Intent(context, ServiceUI.class)
@@ -1065,7 +1104,7 @@ class NotificationHelper {
                     wactions.add(actionTrash.build());
                 }
             } else if (notify_trash &&
-                    (!delete_confirmation ||
+                    (delete_notification ||
                             (message.accountProtocol == EntityAccount.TYPE_POP && message.accountLeaveDeleted) ||
                             (message.accountProtocol == EntityAccount.TYPE_IMAP && !perform_expunge))) {
                 Intent delete = new Intent(context, ServiceUI.class)
@@ -1075,7 +1114,7 @@ class NotificationHelper {
                         context, ServiceUI.PI_DELETE, delete, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionDelete = new NotificationCompat.Action.Builder(
                         R.drawable.twotone_delete_forever_24,
-                        context.getString(R.string.title_advanced_notify_action_delete),
+                        context.getString(R.string.title_delete_permanently),
                         piDelete)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
                         .setShowsUserInterface(false)
@@ -1160,7 +1199,7 @@ class NotificationHelper {
                             .putExtra("action", "reply")
                             .putExtra("reference", message.id)
                             .putExtra("group", group);
-                    reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     PendingIntent piReply = PendingIntentCompat.getActivity(
                             context, ActivityCompose.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
                     NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(

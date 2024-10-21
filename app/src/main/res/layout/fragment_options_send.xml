@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scroll"
@@ -232,6 +232,67 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swAutoIdentity" />
 
+                <TextView
+                    android:id="@+id/tvAutoDeleteLocal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_auto_delete_local"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvAutoIdentity" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etAutoDeleteAge"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:gravity="right"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvAutoDeleteLocal" />
+
+                <TextView
+                    android:id="@+id/tvAutoDeleteAge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/title_months"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintBottom_toBottomOf="@id/etAutoDeleteAge"
+                    app:layout_constraintStart_toEndOf="@id/etAutoDeleteAge"
+                    app:layout_constraintTop_toTopOf="@id/etAutoDeleteAge" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etAutoDeleteFreq"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:gravity="right"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/etAutoDeleteAge" />
+
+                <TextView
+                    android:id="@+id/tvAutoDeleteFreq"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="×"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintBottom_toBottomOf="@id/etAutoDeleteFreq"
+                    app:layout_constraintStart_toEndOf="@id/etAutoDeleteFreq"
+                    app:layout_constraintTop_toTopOf="@id/etAutoDeleteFreq" />
+
                 <Button
                     android:id="@+id/btnLocalContacts"
                     style="?android:attr/buttonStyleSmall"
@@ -243,7 +304,7 @@
                     android:drawablePadding="6dp"
                     android:text="@string/title_setup_manage"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvAutoIdentity" />
+                    app:layout_constraintTop_toBottomOf="@id/etAutoDeleteFreq" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swSendChips"
@@ -363,7 +424,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swDiscardDelete" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spSendDelayed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -371,6 +432,18 @@
                     android:entries="@array/sendDelayedNames"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvSendDelayed" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSendUndo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_send_undo"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/spSendDelayed"
+                    app:switchPadding="12dp" />
 
                 <TextView
                     android:id="@+id/tvAnswerActionSingle"
@@ -383,9 +456,9 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/spSendDelayed" />
+                    app:layout_constraintTop_toBottomOf="@id/swSendUndo" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spAnswerActionSingle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -407,7 +480,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/spAnswerActionSingle" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spAnswerActionLong"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -497,7 +570,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvComposeColorHint" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spComposeFont"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -633,6 +706,46 @@
                     app:layout_constraintTop_toBottomOf="@id/swSeparateReply"
                     app:switchPadding="12dp" />
 
+                <TextView
+                    android:id="@+id/tvTemplateReply"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_template_reply"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swExtendedReply" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etTemplateReply"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:hint="$time$ $from$:"
+                    android:imeOptions="actionDone"
+                    android:inputType="text|textNoSuggestions"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvTemplateReply" />
+
+                <TextView
+                    android:id="@+id/tvTemplateReplyHint"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_template_reply_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/etTemplateReply" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swWriteBelow"
                     android:layout_width="0dp"
@@ -642,7 +755,7 @@
                     android:text="@string/title_advanced_write_below"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swExtendedReply"
+                    app:layout_constraintTop_toBottomOf="@id/tvTemplateReplyHint"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -718,7 +831,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swResizePaste" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spSignatureLocation"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -825,6 +938,18 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSendAtTop"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_send_top"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvCaptionAdvanced"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAttachNew"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -833,7 +958,7 @@
                     android:text="@string/title_advanced_attach_new"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvCaptionAdvanced"
+                    app:layout_constraintTop_toBottomOf="@id/swSendAtTop"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -963,7 +1088,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swReceipt" />
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spReceiptType"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -1051,7 +1176,75 @@
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swReplyMoveInbox" />
+
+                <TextView
+                    android:id="@+id/tvSendRetryMax"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_send_retry_max"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvReplyMoveHint" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etSendRetryMax"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLength="2"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSendRetryMax" />
+
+                <TextView
+                    android:id="@+id/tvSendRetryCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="×"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintBottom_toBottomOf="@id/etSendRetryMax"
+                    app:layout_constraintStart_toEndOf="@id/etSendRetryMax"
+                    app:layout_constraintTop_toTopOf="@id/etSendRetryMax" />
+
+                <TextView
+                    android:id="@+id/tvSendRetryHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_send_retry_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/etSendRetryMax" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSendPartial"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_send_partial"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSendRetryHint"
+                    app:switchPadding="12dp" />
+
+                <TextView
+                    android:id="@+id/tvSendPartialHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_send_partial_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swSendPartial" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

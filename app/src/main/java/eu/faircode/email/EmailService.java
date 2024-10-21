@@ -62,11 +62,13 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -99,6 +101,7 @@ public class EmailService implements AutoCloseable {
     private Context context;
     private String protocol;
     private boolean insecure;
+    private boolean dane;
     private int purpose;
     private boolean ssl_harden;
     private boolean ssl_harden_strict;
@@ -168,14 +171,11 @@ public class EmailService implements AutoCloseable {
         // Prevent instantiation
     }
 
-    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean unicode, boolean debug) throws NoSuchProviderException {
-        this(context, protocol, realm, encryption, insecure, unicode, PURPOSE_USE, debug);
-    }
-
-    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean unicode, int purpose, boolean debug) throws NoSuchProviderException {
+    EmailService(Context context, String protocol, String realm, int encryption, boolean insecure, boolean dane, boolean unicode, int purpose, boolean debug) throws NoSuchProviderException {
         this.context = context.getApplicationContext();
         this.protocol = protocol;
         this.insecure = insecure;
+        this.dane = dane;
         this.purpose = purpose;
         this.debug = debug;
 
@@ -186,7 +186,7 @@ public class EmailService implements AutoCloseable {
         long protocol_since = prefs.getLong("protocol_since", 0);
         if (protocol_since == 0)
             prefs.edit().putLong("protocol_since", now).apply();
-        else if (protocol_since + PROTOCOL_LOG_DURATION < now && !BuildConfig.TEST_RELEASE)
+        else if (protocol_since + PROTOCOL_LOG_DURATION < now && !Log.isTestRelease())
             prefs.edit().putBoolean("protocol", false).apply();
         this.log = prefs.getBoolean("protocol", false);
         this.ssl_harden = prefs.getBoolean("ssl_harden", false);
@@ -312,6 +312,14 @@ public class EmailService implements AutoCloseable {
             throw new NoSuchProviderException(protocol);
     }
 
+    EmailService(Context context, EntityIdentity ident, int purpose, boolean debug) throws NoSuchProviderException {
+        this(context, ident.getProtocol(), ident.realm, ident.encryption, ident.insecure, ident.dane, ident.unicode, purpose, debug);
+    }
+
+    EmailService(Context context, EntityAccount account, int purpose, boolean debug) throws NoSuchProviderException {
+        this(context, account.getProtocol(), account.realm, account.encryption, account.insecure, account.dane, account.unicode, purpose, debug);
+    }
+
     void setPartialFetch(boolean enabled) {
         properties.put("mail." + protocol + ".partialfetch", Boolean.toString(enabled));
     }
@@ -322,6 +330,14 @@ public class EmailService implements AutoCloseable {
 
     void setIgnoreBodyStructureSize(boolean enabled) {
         properties.put("mail." + protocol + ".ignorebodystructuresize", Boolean.toString(enabled));
+    }
+
+    void setMailFrom(String address) {
+        properties.put("mail." + protocol + ".from", address);
+    }
+
+    void setSendPartial(boolean enabled) {
+        properties.put("mail." + protocol + ".sendpartial", Boolean.toString(enabled));
     }
 
     void setUseIp(boolean enabled, String host) {
@@ -357,7 +373,7 @@ public class EmailService implements AutoCloseable {
 
     public void connect(EntityAccount account) throws MessagingException {
         connect(
-                account.host, account.port,
+                account.dnssec, account.host, account.port,
                 account.auth_type, account.provider,
                 account.user, account.password,
                 new ServiceAuthenticator.IAuthenticated() {
@@ -376,7 +392,7 @@ public class EmailService implements AutoCloseable {
 
     public void connect(EntityIdentity identity) throws MessagingException {
         connect(
-                identity.host, identity.port,
+                identity.dnssec, identity.host, identity.port,
                 identity.auth_type, identity.provider,
                 identity.user, identity.password,
                 new ServiceAuthenticator.IAuthenticated() {
@@ -394,15 +410,15 @@ public class EmailService implements AutoCloseable {
     }
 
     public void connect(
-            String host, int port,
+            boolean dnssec, String host, int port,
             int auth, String provider,
             String user, String password,
             String certificate, String fingerprint) throws MessagingException {
-        connect(host, port, auth, provider, user, password, null, certificate, fingerprint);
+        connect(dnssec, host, port, auth, provider, user, password, null, certificate, fingerprint);
     }
 
     private void connect(
-            String host, int port,
+            boolean dnssec, String host, int port,
             int auth, String provider,
             String user, String password,
             ServiceAuthenticator.IAuthenticated intf,
@@ -454,7 +470,7 @@ public class EmailService implements AutoCloseable {
             boolean bc = prefs.getBoolean("bouncy_castle", false);
             boolean fips = prefs.getBoolean("bc_fips", false);
             factory = new SSLSocketFactoryService(
-                    context, host, insecure,
+                    context, host, port, insecure, dane,
                     ssl_harden, strict, cert_strict, cert_transparency, check_names,
                     bc, fips, key, chain, fingerprint);
             properties.put("mail." + protocol + ".ssl.socketFactory", factory);
@@ -487,7 +503,7 @@ public class EmailService implements AutoCloseable {
                 properties.put("mail." + protocol + ".auth.xoauth2.two.line.authentication.format", "true");
 
             Log.i("Connecting to " + host + ":" + port + " auth=" + auth);
-            connect(host, port, auth, user, factory);
+            connect(dnssec, host, port, auth, user, factory);
         } catch (AuthenticationFailedException ex) {
             //if ("outlook.office365.com".equals(host) &&
             //        "AUTHENTICATE failed.".equals(ex.getMessage()))
@@ -502,10 +518,10 @@ public class EmailService implements AutoCloseable {
 
             if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OAUTH) {
                 try {
-                    EntityLog.log(context, EntityLog.Type.Debug,
+                    EntityLog.log(context, EntityLog.Type.Debug1,
                             ex + "\n" + android.util.Log.getStackTraceString(ex));
                     authenticator.refreshToken(true);
-                    connect(host, port, auth, user, factory);
+                    connect(dnssec, host, port, auth, user, factory);
                 } catch (Exception ex1) {
                     Throwable cause = ex1.getCause();
                     if (cause == null)
@@ -517,6 +533,12 @@ public class EmailService implements AutoCloseable {
                     if (auth == AUTH_TYPE_GMAIL &&
                             msg != null && msg.endsWith("Invalid credentials (Failure)"))
                         msg += "\n" + context.getString(R.string.title_service_token);
+
+                    if (auth == AUTH_TYPE_OAUTH) {
+                        Long expiration = authenticator.getAccessTokenExpirationTime();
+                        if (expiration != null && expiration < new Date().getTime())
+                            msg = msg + "\n" + "Access token expired at " + new Date(expiration);
+                    }
 
                     Throwable c = ex1;
                     while (c != null) {
@@ -596,12 +618,14 @@ public class EmailService implements AutoCloseable {
     }
 
     private void connect(
-            String host, int port, int auth, String user,
+            boolean dnssec, String host, int port, int auth, String user,
             SSLSocketFactoryService factory) throws MessagingException {
         Map<String, String> crumb = new HashMap<>();
         crumb.put("host", host);
         crumb.put("port", Integer.toString(port));
         crumb.put("auth", Integer.toString(auth));
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         InetAddress main = null;
         boolean require_id = (purpose == PURPOSE_CHECK &&
@@ -613,11 +637,9 @@ public class EmailService implements AutoCloseable {
             //    throw new MailConnectException(
             //            new SocketConnectException("Debug", new IOException("Test"), host, port, 0));
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
             String key = "dns." + host;
             try {
-                main = InetAddress.getByName(host);
+                main = DnsHelper.getByName(context, host, dnssec);
                 EntityLog.log(context, EntityLog.Type.Network, "Main address=" + main);
                 prefs.edit().putString(key, main.getHostAddress()).apply();
             } catch (UnknownHostException ex) {
@@ -626,17 +648,18 @@ public class EmailService implements AutoCloseable {
                     throw ex;
                 else {
                     EntityLog.log(context, EntityLog.Type.Network, "Using " + key + "=" + last);
-                    main = InetAddress.getByName(last);
+                    main = DnsHelper.getByName(context, last, dnssec);
                 }
             }
 
             boolean prefer_ip4 = prefs.getBoolean("prefer_ip4", true);
-            if (prefer_ip4 && main instanceof Inet6Address) {
+            boolean prefer_ip6 = !prefer_ip4 && prefs.getBoolean("prefer_ip6", false);
+            if ((prefer_ip4 && main instanceof Inet6Address) || (prefer_ip6 && main instanceof Inet4Address)) {
                 boolean[] has46 = ConnectionHelper.has46(context);
-                if (has46[0])
+                if (prefer_ip4 ? has46[0] : has46[1])
                     try {
-                        for (InetAddress iaddr : InetAddress.getAllByName(host))
-                            if (iaddr instanceof Inet4Address) {
+                        for (InetAddress iaddr : DnsHelper.getAllByName(context, host, dnssec))
+                            if ((prefer_ip4 && iaddr instanceof Inet4Address) || (prefer_ip6 && iaddr instanceof Inet6Address)) {
                                 main = iaddr;
                                 EntityLog.log(context, EntityLog.Type.Network, "Preferring=" + main);
                                 break;
@@ -710,7 +733,9 @@ public class EmailService implements AutoCloseable {
             boolean ioError = false;
             Throwable ce = ex;
             while (ce != null) {
-                if (factory != null && ce instanceof CertificateException)
+                if (factory != null &&
+                        (ce instanceof CertificateException ||
+                                ce instanceof CertPathValidatorException))
                     throw new UntrustedException(ex, factory.certificate);
                 if (ce instanceof IOException)
                     ioError = true;
@@ -723,16 +748,30 @@ public class EmailService implements AutoCloseable {
                         ex + "\n" + android.util.Log.getStackTraceString(ex));
                 try {
                     // Some devices resolve IPv6 addresses while not having IPv6 connectivity
-                    InetAddress[] iaddrs = InetAddress.getAllByName(host);
+                    InetAddress[] iaddrs = DnsHelper.getAllByName(context, host, dnssec);
                     int ip4 = (main instanceof Inet4Address ? 1 : 0);
                     int ip6 = (main instanceof Inet6Address ? 1 : 0);
 
                     boolean[] has46 = ConnectionHelper.has46(context);
 
+                    boolean prefer_ip4 = prefs.getBoolean("prefer_ip4", true);
+                    boolean prefer_ip6 = !prefer_ip4 && prefs.getBoolean("prefer_ip6", false);
+
                     EntityLog.log(context, EntityLog.Type.Network, "Address main=" + main +
                             " count=" + iaddrs.length +
-                            " ip4=" + ip4 + " max4=" + MAX_IPV4 + " has4=" + has46[0] +
-                            " ip6=" + ip6 + " max6=" + MAX_IPV6 + " has6=" + has46[1]);
+                            " ip4=" + ip4 + " max4=" + MAX_IPV4 + " has4=" + has46[0] + " pref4=" + prefer_ip4 +
+                            " ip6=" + ip6 + " max6=" + MAX_IPV6 + " has6=" + has46[1] + " pref6=" + prefer_ip6);
+
+                    if (prefer_ip4 || prefer_ip6)
+                        Arrays.sort(iaddrs, new Comparator<InetAddress>() {
+                            @Override
+                            public int compare(InetAddress a1, InetAddress a2) {
+                                int s = Boolean.compare(a1 instanceof Inet4Address, a2 instanceof Inet4Address);
+                                if (prefer_ip4)
+                                    s = -s;
+                                return s;
+                            }
+                        });
 
                     for (InetAddress iaddr : iaddrs) {
                         EntityLog.log(context, EntityLog.Type.Network, "Address resolved=" + iaddr);
@@ -899,17 +938,26 @@ public class EmailService implements AutoCloseable {
     List<EntityFolder> getFolders() throws MessagingException {
         List<EntityFolder> folders = new ArrayList<>();
 
-        for (Folder ifolder : getStore().getDefaultFolder().list("*")) {
-            String fullName = ifolder.getFullName();
-            String[] attrs = ((IMAPFolder) ifolder).getAttributes();
-            String type = EntityFolder.getType(attrs, fullName, true);
-            Log.i(fullName + " attrs=" + TextUtils.join(" ", attrs) + " type=" + type);
+        try {
+            for (Folder ifolder : getStore().getDefaultFolder().list("*")) {
+                String fullName = ifolder.getFullName();
+                String[] attrs = ((IMAPFolder) ifolder).getAttributes();
+                String type = EntityFolder.getType(attrs, fullName, true);
+                Log.i(fullName + " attrs=" + TextUtils.join(" ", attrs) + " type=" + type);
 
-            if (type != null)
-                folders.add(new EntityFolder(fullName, type));
+                if (type != null)
+                    folders.add(new EntityFolder(fullName, type));
+            }
+
+            EntityFolder.guessTypes(folders);
+        } catch (MessagingException ex) {
+            if (ex.getMessage() != null &&
+                    ex.getMessage().contains("LIST processing failed")) {
+                Log.w(ex);
+                folders.add(new EntityFolder("Inbox", EntityFolder.INBOX));
+            } else
+                throw ex;
         }
-
-        EntityFolder.guessTypes(folders);
 
         return folders;
     }
@@ -1042,8 +1090,10 @@ public class EmailService implements AutoCloseable {
         private SSLSocketFactory factory;
         private X509Certificate certificate;
 
-        SSLSocketFactoryService(Context context, String host, boolean insecure,
-                                boolean ssl_harden, boolean ssl_harden_strict, boolean cert_strict, boolean cert_transparency, boolean check_names,
+        SSLSocketFactoryService(Context context, String host, int port,
+                                boolean insecure, boolean dane,
+                                boolean ssl_harden, boolean ssl_harden_strict, boolean cert_strict, boolean cert_transparency,
+                                boolean check_names,
                                 boolean bc, boolean fips,
                                 PrivateKey key, X509Certificate[] chain, String fingerprint) throws GeneralSecurityException {
             this.server = host;
@@ -1053,7 +1103,7 @@ public class EmailService implements AutoCloseable {
             this.trustedFingerprint = fingerprint;
 
             TrustManager[] tms = SSLHelper.getTrustManagers(
-                    context, server, secure, cert_strict, cert_transparency, check_names, trustedFingerprint,
+                    context, server, port, secure, dane, cert_strict, cert_transparency, check_names, trustedFingerprint,
                     new SSLHelper.ITrust() {
                         @Override
                         public void checkServerTrusted(X509Certificate[] chain) {

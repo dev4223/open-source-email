@@ -66,6 +66,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Flags;
@@ -88,11 +89,14 @@ public class ActivityEML extends ActivityBase {
     private TextView tvBody;
     private TextView tvStructure;
     private ImageButton ibEml;
+    private CardView cardStructure;
     private CardView cardHeaders;
     private TextView tvHeaders;
+    private TextView tvAuthentication;
     private ContentLoadingProgressBar pbWait;
     private Group grpReady;
 
+    private boolean draft;
     private boolean junk;
     private Uri uri;
     private MessageHelper.AttachmentPart apart;
@@ -103,14 +107,16 @@ public class ActivityEML extends ActivityBase {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null)
+        if (savedInstanceState != null) {
+            draft = savedInstanceState.getBoolean("fair:draft");
             junk = savedInstanceState.getBoolean("fair:junk");
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setSubtitle("EML");
+        }
 
         View view = LayoutInflater.from(this).inflate(R.layout.activity_eml, null);
         setContentView(view);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setSubtitle("EML");
 
         tvFrom = findViewById(R.id.tvFrom);
         tvTo = findViewById(R.id.tvTo);
@@ -125,8 +131,10 @@ public class ActivityEML extends ActivityBase {
         tvBody = findViewById(R.id.tvBody);
         tvStructure = findViewById(R.id.tvStructure);
         ibEml = findViewById(R.id.ibEml);
+        cardStructure = findViewById(R.id.cardStructure);
         cardHeaders = findViewById(R.id.cardHeaders);
         tvHeaders = findViewById(R.id.tvHeaders);
+        tvAuthentication = findViewById(R.id.tvAuthentication);
         pbWait = findViewById(R.id.pbWait);
         grpReady = findViewById(R.id.grpReady);
 
@@ -204,9 +212,9 @@ public class ActivityEML extends ActivityBase {
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(this, view, false);
         vSeparatorAttachments.setVisibility(View.GONE);
         grpReady.setVisibility(View.GONE);
+        cardStructure.setVisibility(View.GONE);
         cardHeaders.setVisibility(View.GONE);
 
         load();
@@ -221,6 +229,7 @@ public class ActivityEML extends ActivityBase {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("fair:draft", draft);
         outState.putBoolean("fair:junk", junk);
         super.onSaveInstanceState(outState);
     }
@@ -229,8 +238,12 @@ public class ActivityEML extends ActivityBase {
         uri = getIntent().getData();
         Log.i("EML uri=" + uri);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean debug = prefs.getBoolean("debug", false);
+
         Bundle args = new Bundle();
         args.putParcelable("uri", uri);
+        args.putBoolean("debug", debug || BuildConfig.DEBUG);
 
         new SimpleTask<Result>() {
             @Override
@@ -246,6 +259,7 @@ public class ActivityEML extends ActivityBase {
             @Override
             protected Result onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
+                boolean debug = args.getBoolean("debug");
 
                 NoStreamException.check(uri, context);
 
@@ -318,13 +332,50 @@ public class ActivityEML extends ActivityBase {
                         }, null);
                     }
 
-                    int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
-                    SpannableStringBuilder ssb = new SpannableStringBuilderEx();
-                    MessageHelper.getStructure(imessage, ssb, 0, textColorLink);
-                    result.structure = ssb;
+                    if (debug) {
+                        int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
+                        SpannableStringBuilder ssb = new SpannableStringBuilderEx();
+                        MessageHelper.getStructure(imessage, ssb, 0, textColorLink);
+                        result.structure = ssb;
 
-                    result.headers = HtmlHelper.highlightHeaders(context,
-                            helper.getFrom(), helper.getTo(), helper.getReceivedHeader(), helper.getHeaders(), false);
+                        result.headers = HtmlHelper.highlightHeaders(context,
+                                helper.getFrom(),
+                                helper.getTo(),
+                                helper.getReceivedHeader(),
+                                helper.getHeaders(),
+                                false, false);
+
+                        ssb = new SpannableStringBuilderEx();
+
+                        String[] authentication = helper.getAuthentication();
+
+                        Boolean tls = helper.getTLS();
+                        Boolean dkim = MessageHelper.getAuthentication("dkim", authentication);
+                        Boolean spf = MessageHelper.getAuthentication("spf", authentication);
+                        if (spf == null)
+                            spf = helper.getSPF();
+                        Boolean dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+                        Boolean auth = MessageHelper.getAuthentication("auth", authentication);
+
+                        List<String> signers = helper.verifyDKIM(context);
+                        boolean aligned = helper.isAligned(context, signers,
+                                helper.getReturnPath(), helper.getMailFrom(authentication), helper.getFrom(), helper.getSPF());
+
+                        ssb.append("TLS:   ").append(tls == null ? "-" : (tls ? "✓" : "✗")).append('\n');
+                        ssb.append("DKIM:  ").append(dkim == null ? "-" : (dkim ? "✓" : "✗")).append('\n');
+                        ssb.append("SPF:   ").append(spf == null ? "-" : (spf ? "✓" : "✗")).append('\n');
+                        ssb.append("DMARC: ").append(dmarc == null ? "-" : (dmarc ? "✓" : "✗")).append('\n');
+                        ssb.append("AUTH:  ").append(auth == null ? "-" : (auth ? "✓" : "✗")).append('\n');
+
+                        ssb.append('\n');
+                        ssb.append("Signers: ").append('\n');
+                        for (String signer : signers)
+                            ssb.append("- ").append(signer).append('\n');
+                        ssb.append('\n');
+                        ssb.append("Aligned: ").append(Boolean.toString(aligned)).append('\n');
+
+                        result.authentication = ssb;
+                    }
 
                     return result;
                 }
@@ -404,10 +455,15 @@ public class ActivityEML extends ActivityBase {
                 rvAttachment.setAdapter(adapter);
 
                 tvBody.setText(result.body);
+                grpReady.setVisibility(View.VISIBLE);
+
                 tvStructure.setText(result.structure);
                 tvHeaders.setText(result.headers);
-                grpReady.setVisibility(View.VISIBLE);
-                cardHeaders.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+                tvAuthentication.setText(result.authentication);
+
+                boolean debug = args.getBoolean("debug");
+                cardStructure.setVisibility(debug ? View.VISIBLE : View.GONE);
+                cardHeaders.setVisibility(debug ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -504,12 +560,23 @@ public class ActivityEML extends ActivityBase {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.menu_draft)
+                .setVisible(BuildConfig.DEBUG)
+                .setChecked(draft);
         menu.findItem(R.id.menu_junk)
                 .setVisible(BuildConfig.DEBUG)
                 .setChecked(junk);
-        menu.findItem(R.id.menu_save).setIcon(junk
-                ? R.drawable.twotone_report_24
-                : R.drawable.twotone_move_to_inbox_24);
+
+        if (draft && BuildConfig.DEBUG)
+            menu.findItem(R.id.menu_save)
+                    .setIcon(R.drawable.twotone_drafts_24);
+        else if (junk && BuildConfig.DEBUG)
+            menu.findItem(R.id.menu_save)
+                    .setIcon(R.drawable.twotone_report_24);
+        else
+            menu.findItem(R.id.menu_save)
+                    .setIcon(R.drawable.twotone_move_to_inbox_24);
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -522,8 +589,16 @@ public class ActivityEML extends ActivityBase {
         } else if (itemId == R.id.menu_save) {
             onMenuSave();
             return true;
+        } else if (itemId == R.id.menu_draft) {
+            draft = !draft;
+            if (draft)
+                junk = false;
+            item.setChecked(draft);
+            invalidateOptionsMenu();
         } else if (itemId == R.id.menu_junk) {
             junk = !junk;
+            if (junk)
+                draft = false;
             item.setChecked(junk);
             invalidateOptionsMenu();
         }
@@ -542,7 +617,12 @@ public class ActivityEML extends ActivityBase {
 
     private void onSave(Bundle args) {
         args.putParcelable("uri", uri);
-        args.putBoolean("junk", junk);
+        if (draft && BuildConfig.DEBUG)
+            args.putString("type", EntityFolder.DRAFTS);
+        else if (junk && BuildConfig.DEBUG)
+            args.putString("type", EntityFolder.JUNK);
+        else
+            args.putString("type", EntityFolder.INBOX);
 
         new SimpleTask<String>() {
             private Toast toast = null;
@@ -562,15 +642,14 @@ public class ActivityEML extends ActivityBase {
             @Override
             protected String onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
-                boolean junk = args.getBoolean("junk");
+                String type = args.getString("type");
                 long aid = args.getLong("account");
 
                 DB db = DB.getInstance(context);
                 EntityAccount account = db.account().getAccount(aid);
                 if (account == null)
                     return null;
-                EntityFolder folder = db.folder().getFolderByType(account.id,
-                        junk ? EntityFolder.JUNK : EntityFolder.INBOX);
+                EntityFolder folder = db.folder().getFolderByType(account.id, type);
                 if (folder == null)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_folder));
 
@@ -583,8 +662,7 @@ public class ActivityEML extends ActivityBase {
                     Session isession = Session.getInstance(props, null);
                     MimeMessage imessage = new MimeMessage(isession, is);
 
-                    try (EmailService iservice = new EmailService(
-                            context, account.getProtocol(), account.realm, account.encryption, account.insecure, account.unicode, true)) {
+                    try (EmailService iservice = new EmailService(context, account, EmailService.PURPOSE_USE, true)) {
                         iservice.setPartialFetch(account.partial_fetch);
                         iservice.setRawFetch(account.raw_fetch);
                         iservice.setIgnoreBodyStructureSize(account.ignore_size);
@@ -622,8 +700,9 @@ public class ActivityEML extends ActivityBase {
             @Override
             protected void onException(Bundle args, @NonNull Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(findViewById(android.R.id.content), new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Helper.setSnackbarOptions(
+                                    Snackbar.make(findViewById(android.R.id.content), new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG))
+                            .show();
                 else
                     Log.unexpectedError(getSupportFragmentManager(), ex);
             }
@@ -643,5 +722,6 @@ public class ActivityEML extends ActivityBase {
         Spanned body;
         Spanned structure;
         Spanned headers;
+        Spanned authentication;
     }
 }

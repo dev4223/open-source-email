@@ -22,7 +22,6 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.text.TextUtils;
 
 import androidx.preference.PreferenceManager;
 import androidx.room.Ignore;
@@ -40,6 +39,7 @@ public class TupleMessageEx extends EntityMessage {
     public Integer accountColor;
     public boolean accountNotify;
     public boolean accountSummary;
+    public boolean accountLeaveOnServer;
     public boolean accountLeaveDeleted;
     public boolean accountAutoSeen;
     public String folderName;
@@ -126,17 +126,6 @@ public class TupleMessageEx extends EntityMessage {
         this.keyword_titles = titles.toArray(new String[0]);
     }
 
-    String getRemark() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(MessageHelper.formatAddresses(from));
-        if (!TextUtils.isEmpty(subject)) {
-            if (sb.length() > 0)
-                sb.append('\n');
-            sb.append(subject);
-        }
-        return sb.toString();
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof TupleMessageEx) {
@@ -148,6 +137,7 @@ public class TupleMessageEx extends EntityMessage {
                     Objects.equals(this.accountColor, other.accountColor) &&
                     this.accountNotify == other.accountNotify &&
                     this.accountSummary == other.accountSummary &&
+                    this.accountLeaveOnServer == other.accountLeaveOnServer &&
                     this.accountLeaveDeleted == other.accountLeaveDeleted &&
                     this.accountAutoSeen == other.accountAutoSeen &&
                     this.folderName.equals(other.folderName) &&

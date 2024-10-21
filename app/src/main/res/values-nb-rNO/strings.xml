@@ -106,7 +106,6 @@
     <string name="title_notification_sending">Sender melding</string>
     <string name="title_notification_waiting">Venter på passende tilkobling</string>
     <string name="title_notification_idle">Inaktiv</string>
-    <string name="title_notification_failed">\'%1$s\' mislyktes</string>
     <string name="title_notification_alert">Serveralarm: %1$s</string>
     <string name="title_notification_sending_left">Forsøk igjen: %1$d</string>
     <string name="title_notification_sending_retry">Prøver igjen å sende når internettilkoblingen endres eller ved å trekke ned i utboksen</string>
@@ -340,7 +339,6 @@
     <string name="title_advanced_threading_unread">Vis antall uleste meldinger i samtaler</string>
     <string name="title_advanced_indentation">Venstre/høyre innrykk mottatt/sendt meldinger i samtaler</string>
     <string name="title_advanced_highlight_unread">Merk uleste meldinger</string>
-    <string name="title_advanced_color_stripe">Vis fargestripe</string>
     <string name="title_advanced_avatars">Vis kontakt bilde</string>
     <string name="title_advanced_gravatars">Vis Gravatars</string>
     <string name="title_advanced_favicons">Vis favicons</string>
@@ -382,7 +380,6 @@
     <string name="title_advanced_seekbar">Vis relativ samtaleposisjon med en prikk</string>
     <string name="title_advanced_actionbar">Vis samtale handlingslinje</string>
     <string name="title_advanced_actionbar_color">Bruke kontofarge som bakgrunnsfarge for samtalelinjen</string>
-    <string name="title_advanced_navbar_colorize">Fargelegg Android-navigasjonslinjen</string>
     <string name="title_advanced_parse_classes">Analyser stilark</string>
     <string name="title_advanced_sync_on_launch">Synkroniser ved start</string>
     <string name="title_advanced_double_back">Dobbel \'tilbake\' for å avslutte</string>
@@ -675,6 +672,7 @@
     <string name="title_delete_operation_flag">Flagg operasjoner</string>
     <string name="title_delete_operation_delete">Slett operasjoner</string>
     <string name="title_delete_operation_deleted">%1$d operasjoner er slettet</string>
+    <string name="title_delete_contacts">Slette alle lokale kontakter?</string>
     <string name="title_no_operations">Ingen ventende operasjoner</string>
     <string name="title_hint_operations">Slette operasjoner kan føre til at meldinger og synkroniseringsproblemer forsvinner</string>
     <string name="title_folder_name">Mappenavn</string>
@@ -1318,6 +1316,7 @@
     <string name="title_widget_folder_unified">Felles Innboks mapper</string>
     <string name="title_widget_unseen">Bare uleste meldinger</string>
     <string name="title_widget_flagged">Bare stjerne merkede meldinger</string>
+    <string name="title_widget_show_flagged">Vis stjerner</string>
     <string name="title_widget_font_size">Tekststørrelse</string>
     <string name="title_widget_padding">Polstring</string>
     <string name="title_widget_semi_transparent">Halvt gjennomsiktig bakgrunn</string>
@@ -1373,6 +1372,8 @@
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Nei</item>
+        <item>5 seconds</item>
+        <item>10 seconds</item>
         <item>15 sekunder</item>
         <item>30 sekunder</item>
         <item>1 minutt</item>
@@ -1385,6 +1386,7 @@
         <item>Felles mapper</item>
         <item>Mapper til primærkontoer</item>
         <item>Kontoer</item>
+        <item>Primary inbox</item>
     </string-array>
     <string-array name="downloadNames">
         <item>16 KB</item>
@@ -1510,6 +1512,11 @@
         <item>Medium</item>
         <item>Stor</item>
         <item>Ekstra stor</item>
+    </string-array>
+    <string-array name="accountColorNames">
+        <item>Ingen</item>
+        <item>Stripe</item>
+        <item>Dot</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Mottaker</item>

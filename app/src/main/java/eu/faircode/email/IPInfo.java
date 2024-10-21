@@ -61,7 +61,7 @@ public class IPInfo {
             Log.i(ex);
         }
 
-        InetAddress address = InetAddress.getByName(host);
+        InetAddress address = DnsHelper.getByName(context, host);
         return new Pair<>(address, getOrganization(address, context));
     }
 
@@ -72,6 +72,7 @@ public class IPInfo {
         }
 
         // https://ipinfo.io/developers
+        // Possible alternative: https://www.ip2location.io/ip2location-documentation
 
         //{
         //  "ip": "8.8.8.8",

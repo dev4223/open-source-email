@@ -18,7 +18,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <eu.faircode.email.ScrollViewEx
+        <ScrollView
             android:id="@+id/scroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <Spinner
+                <eu.faircode.email.SpinnerEx
                     android:id="@+id/spIdentity"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -262,7 +262,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/vSeparatorAttachments"
                     app:srcCompat="@drawable/twotone_delete_24" />
 
-                <androidx.recyclerview.widget.RecyclerView
+                <eu.faircode.email.FixedRecyclerView
                     android:id="@+id/rvAttachment"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -348,6 +348,18 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvPlainTextOnly" />
 
+                <ImageView
+                    android:id="@+id/ivMarkdown"
+                    android:layout_width="36dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:contentDescription="@string/title_markdown"
+                    android:tooltipText="@string/title_markdown"
+                    app:layout_constraintEnd_toEndOf="@id/etBody"
+                    app:layout_constraintTop_toTopOf="@id/etBody"
+                    app:srcCompat="@drawable/twotone_data_array_24"
+                    app:tint="?attr/colorSeparator" />
+
                 <TextView
                     android:id="@+id/tvNoInternet"
                     android:layout_width="wrap_content"
@@ -401,12 +413,12 @@
                     android:layout_marginTop="12dp"
                     android:layout_marginEnd="6dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/title_clipboard_copy"
+                    android:contentDescription="@string/title_edit_signature"
                     android:padding="3dp"
-                    android:tooltipText="@string/title_clipboard_copy"
+                    android:tooltipText="@string/title_edit_signature"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/cbSignature"
-                    app:srcCompat="@drawable/twotone_file_copy_24" />
+                    app:srcCompat="@drawable/twotone_edit_24" />
 
                 <View
                     android:id="@+id/vSeparatorSignature"
@@ -556,7 +568,7 @@
                     android:layout_height="0dp"
                     app:constraint_referenced_ids="ibCloseRefHint,tvReferenceHint" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </eu.faircode.email.ScrollViewEx>
+        </ScrollView>
 
         <View
             android:id="@+id/vwAnchor"
@@ -608,6 +620,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
+            android:tag="inset"
             app:itemIconTint="@color/action_foreground"
             app:itemTextColor="@color/action_foreground"
             app:labelVisibilityMode="labeled"

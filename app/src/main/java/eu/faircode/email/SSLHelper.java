@@ -46,7 +46,10 @@ import javax.net.ssl.X509TrustManager;
 
 public class SSLHelper {
     static TrustManager[] getTrustManagers(
-            Context context, String server, boolean secure, boolean cert_strict, boolean transparency, boolean check_names, String trustedFingerprint, ITrust intf) {
+            Context context, String server, int port,
+            boolean secure, boolean dane, boolean cert_strict, boolean transparency, boolean check_names,
+            String trustedFingerprint,
+            ITrust intf) {
         TrustManagerFactory tmf;
         try {
             tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -84,6 +87,8 @@ public class SSLHelper {
 
         return new TrustManager[]{new X509TrustManager() {
             // openssl s_client -connect <host>
+            // openssl s_client -starttls imap -crlf -connect <host>
+            // openssl s_client -starttls smtp -crlf -connect <host>
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
@@ -122,6 +127,9 @@ public class SSLHelper {
                             throw new CertificateException(principal.getName(), ex);
                     }
 
+                    if (dane)
+                        DnsHelper.verifyDane(chain, server, port);
+
                     // Check host name
                     if (check_names) {
                         List<String> names = EntityCertificate.getDnsNames(chain[0]);
@@ -131,7 +139,7 @@ public class SSLHelper {
                         // Fallback: check server/certificate IP address
                         if (!cert_strict)
                             try {
-                                InetAddress ip = InetAddress.getByName(server);
+                                InetAddress ip = DnsHelper.getByName(context, server);
                                 Log.i("Checking server ip=" + ip);
                                 for (String name : names) {
                                     if (name.startsWith("*."))
@@ -139,7 +147,7 @@ public class SSLHelper {
                                     Log.i("Checking cert name=" + name);
 
                                     try {
-                                        for (InetAddress addr : InetAddress.getAllByName(name))
+                                        for (InetAddress addr : DnsHelper.getAllByName(context, name))
                                             if (Arrays.equals(ip.getAddress(), addr.getAddress())) {
                                                 Log.i("Accepted " + name + " for " + server);
                                                 return;

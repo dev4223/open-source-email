@@ -26,11 +26,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.Patterns;
 
@@ -38,8 +37,14 @@ import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import com.ezylang.evalex.EvaluationException;
+import com.ezylang.evalex.Expression;
+import com.ezylang.evalex.data.EvaluationValue;
+import com.ezylang.evalex.parser.ParseException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -114,6 +119,9 @@ public class EntityRule {
     public Integer applied = 0;
     public Long last_applied;
 
+    @Ignore
+    public boolean async;
+
     static final int TYPE_SEEN = 1;
     static final int TYPE_UNSEEN = 2;
     static final int TYPE_MOVE = 3;
@@ -133,13 +141,16 @@ public class EntityRule {
     static final int TYPE_LOCAL_ONLY = 17;
     static final int TYPE_NOTES = 18;
     static final int TYPE_URL = 19;
+    static final int TYPE_SILENT = 20;
+    static final int TYPE_SUMMARIZE = 21;
 
     static final String ACTION_AUTOMATION = BuildConfig.APPLICATION_ID + ".AUTOMATION";
     static final String EXTRA_RULE = "rule";
+    static final String EXTRA_RECEIVED = "received";
     static final String EXTRA_SENDER = "sender";
     static final String EXTRA_NAME = "name";
     static final String EXTRA_SUBJECT = "subject";
-    static final String EXTRA_RECEIVED = "received";
+    static final String EXTRA_PREVIEW = "preview";
 
     static final String[] EXTRA_ALL = new String[]{
             EXTRA_RULE, EXTRA_SENDER, EXTRA_NAME, EXTRA_SUBJECT, EXTRA_RECEIVED
@@ -171,7 +182,13 @@ public class EntityRule {
     private static boolean needs(List<EntityRule> rules, String what) {
         for (EntityRule rule : rules)
             try {
+                JSONObject jaction = new JSONObject(rule.action);
+                int type = jaction.getInt("type");
+                if (type == TYPE_SUMMARIZE)
+                    return true;
+
                 JSONObject jcondition = new JSONObject(rule.condition);
+
                 if (jcondition.has(what)) {
                     if ("header".equals(what)) {
                         JSONObject jheader = jcondition.getJSONObject("header");
@@ -181,6 +198,16 @@ public class EntityRule {
                             continue;
                     }
                     return true;
+                }
+
+                if (jcondition.has("expression")) {
+                    Expression expression = ExpressionHelper.getExpression(rule, null, null, null, null);
+                    if (expression != null) {
+                        if ("header".equals(what) && ExpressionHelper.needsHeaders(expression))
+                            return true;
+                        if ("body".equals(what) && ExpressionHelper.needsBody(expression))
+                            return true;
+                    }
                 }
             } catch (Throwable ex) {
                 Log.e(ex);
@@ -236,6 +263,7 @@ public class EntityRule {
             // Sender
             JSONObject jsender = jcondition.optJSONObject("sender");
             if (jsender != null) {
+                boolean not = jsender.optBoolean("not");
                 String value = jsender.getString("value");
                 boolean regex = jsender.getBoolean("regex");
                 boolean known = jsender.optBoolean("known");
@@ -278,13 +306,14 @@ public class EntityRule {
                         }
                     }
                 }
-                if (!matches)
+                if (matches == not)
                     return false;
             }
 
             // Recipient
             JSONObject jrecipient = jcondition.optJSONObject("recipient");
             if (jrecipient != null) {
+                boolean not = jrecipient.optBoolean("not");
                 String value = jrecipient.getString("value");
                 boolean regex = jrecipient.getBoolean("regex");
 
@@ -305,17 +334,18 @@ public class EntityRule {
                         break;
                     }
                 }
-                if (!matches)
+                if (matches == not)
                     return false;
             }
 
             // Subject
             JSONObject jsubject = jcondition.optJSONObject("subject");
             if (jsubject != null) {
+                boolean not = jsubject.optBoolean("not");
                 String value = jsubject.getString("value");
                 boolean regex = jsubject.getBoolean("regex");
 
-                if (!matches(context, message, value, message.subject, regex))
+                if (matches(context, message, value, message.subject, regex) == not)
                     return false;
             }
 
@@ -345,99 +375,15 @@ public class EntityRule {
             // Header
             JSONObject jheader = jcondition.optJSONObject("header");
             if (jheader != null) {
+                boolean not = jheader.optBoolean("not");
                 String value = jheader.getString("value");
                 boolean regex = jheader.getBoolean("regex");
 
                 if (!regex &&
                         value.startsWith("$") &&
                         value.endsWith("$")) {
-                    String keyword = value.substring(1, value.length() - 1);
-
-                    if ("$tls".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.tls))
-                            return false;
-                    } else if ("$aligned".equals(keyword)) {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        boolean native_dkim = prefs.getBoolean("native_dkim", false);
-                        if (!native_dkim)
-                            return false;
-                        if (message.signedby == null)
-                            return false;
-                        if (message.from == null || message.from.length != 1)
-                            return false;
-                        String domain = UriHelper.getEmailDomain(((InternetAddress) message.from[0]).getAddress());
-                        if (domain == null)
-                            return false;
-                        boolean valid = false;
-                        for (String signer : message.signedby.split(","))
-                            if (Objects.equals(
-                                    UriHelper.getRootDomain(context, signer),
-                                    UriHelper.getRootDomain(context, domain))) {
-                                valid = true;
-                                break;
-                            }
-                        if (!valid)
-                            return false;
-                    } else if ("$dkim".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.dkim))
-                            return false;
-                    } else if ("$spf".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.spf))
-                            return false;
-                    } else if ("$dmarc".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.dmarc))
-                            return false;
-                    } else if ("$auth".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.auth))
-                            return false;
-                    } else if ("$mx".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.mx))
-                            return false;
-                    } else if ("$blocklist".equals(keyword)) {
-                        if (!Boolean.FALSE.equals(message.blocklist))
-                            return false;
-                    } else if ("$replydomain".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.reply_domain))
-                            return false;
-                    } else if ("$nofrom".equals(keyword)) {
-                        if (message.from != null && message.from.length > 0)
-                            return false;
-                    } else if ("$multifrom".equals(keyword)) {
-                        if (message.from == null || message.from.length < 2)
-                            return false;
-                    } else if ("$automatic".equals(keyword)) {
-                        if (!Boolean.TRUE.equals(message.auto_submitted))
-                            return false;
-                    } else if ("$lowpriority".equals(keyword)) {
-                        if (!EntityMessage.PRIORITIY_LOW.equals(message.priority))
-                            return false;
-                    } else if ("$highpriority".equals(keyword)) {
-                        if (!EntityMessage.PRIORITIY_HIGH.equals(message.priority))
-                            return false;
-                    } else if ("$signed".equals(keyword)) {
-                        if (!message.isSigned())
-                            return false;
-                    } else if ("$encrypted".equals(keyword)) {
-                        if (!message.isEncrypted())
-                            return false;
-                    } else {
-                        List<String> keywords = new ArrayList<>();
-                        keywords.addAll(Arrays.asList(message.keywords));
-
-                        if (message.ui_seen)
-                            keywords.add("$seen");
-                        if (message.ui_answered)
-                            keywords.add("$answered");
-                        if (message.ui_flagged)
-                            keywords.add("$flagged");
-                        if (message.ui_deleted)
-                            keywords.add("$deleted");
-                        if (message.infrastructure != null)
-                            keywords.add('$' + message.infrastructure);
-
-                        if (!keywords.contains(keyword))
-                            return false;
-                    }
+                    if (matchKeywords(context, message, value) != not)
+                        return false;
                 } else {
                     if (headers == null) {
                         if (message.headers == null)
@@ -455,7 +401,7 @@ public class EntityRule {
                             break;
                         }
                     }
-                    if (!matches)
+                    if (matches == not)
                         return false;
                 }
             }
@@ -463,6 +409,7 @@ public class EntityRule {
             // Body
             JSONObject jbody = jcondition.optJSONObject("body");
             if (jbody != null) {
+                boolean not = jbody.optBoolean("not");
                 String value = jbody.getString("value");
                 boolean regex = jbody.getBoolean("regex");
                 boolean skip_quotes = jbody.optBoolean("skip_quotes");
@@ -489,14 +436,14 @@ public class EntityRule {
 
                 Document d = JsoupEx.parse(html);
                 if (skip_quotes)
-                    d.select("blockquote").remove();
+                    HtmlHelper.removeQuotes(d, true);
                 if (jsoup) {
                     String selector = value.substring(JSOUP_PREFIX.length());
-                    if (d.select(selector).size() == 0)
+                    if (d.select(selector).isEmpty() != not)
                         return false;
                 } else {
                     String text = d.body().text();
-                    if (!matches(context, message, value, text, regex))
+                    if (matches(context, message, value, text, regex) == not)
                         return false;
                 }
             }
@@ -522,7 +469,10 @@ public class EntityRule {
 
                 if (cal_start.getTimeInMillis() > cal_end.getTimeInMillis())
                     if (all)
-                        cal_end.add(Calendar.DATE, 1);
+                        if (cal_end.getTimeInMillis() < message.received)
+                            cal_end.add(Calendar.DATE, 1);
+                        else
+                            cal_start.add(Calendar.DATE, -1);
                     else
                         cal_start.add(Calendar.HOUR_OF_DAY, -7 * 24);
 
@@ -531,11 +481,26 @@ public class EntityRule {
                     return false;
             }
 
+            // Younger
             if (jcondition.has("younger")) {
                 int younger = jcondition.getInt("younger");
                 Calendar y = Calendar.getInstance();
                 y.add(Calendar.HOUR_OF_DAY, -younger);
                 if (message.received < y.getTimeInMillis())
+                    return false;
+            }
+
+            // Expression
+            Expression expression = ExpressionHelper.getExpression(this, message, headers, html, context);
+            if (expression != null) {
+                if (ExpressionHelper.needsHeaders(expression) && headers == null && message.headers == null)
+                    throw new IllegalArgumentException(context.getString(R.string.title_rule_no_headers));
+
+                Log.i("EXPR evaluating='" + jcondition.getString("expression") + "'");
+                EvaluationValue val = expression.evaluate();
+                Boolean result = val.getBooleanValue();
+                Log.i("EXPR evaluated=" + result + " value=" + val);
+                if (!Boolean.TRUE.equals(result))
                     return false;
             }
 
@@ -548,14 +513,107 @@ public class EntityRule {
                     jbody == null &&
                     jdate == null &&
                     jschedule == null &&
-                    !jcondition.has("younger"))
+                    !jcondition.has("younger") &&
+                    !jcondition.has("expression"))
                 return false;
-        } catch (JSONException ex) {
+        } catch (JSONException | ParseException | EvaluationException ex) {
             Log.e(ex);
             return false;
         }
 
         return true;
+    }
+
+    private static boolean matchKeywords(Context context, EntityMessage message, String value) {
+        String keyword = value.substring(1, value.length() - 1);
+
+        if ("$tls".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.tls))
+                return true;
+        } else if ("$aligned".equals(keyword)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean native_dkim = prefs.getBoolean("native_dkim", false);
+            if (!native_dkim)
+                return true;
+            if (message.signedby == null)
+                return true;
+            if (message.from == null || message.from.length != 1)
+                return true;
+            String domain = UriHelper.getEmailDomain(((InternetAddress) message.from[0]).getAddress());
+            if (domain == null)
+                return true;
+            boolean valid = false;
+            for (String signer : message.signedby.split(","))
+                if (Objects.equals(
+                        UriHelper.getRootDomain(context, signer),
+                        UriHelper.getRootDomain(context, domain))) {
+                    valid = true;
+                    break;
+                }
+            if (!valid)
+                return true;
+        } else if ("$dkim".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.dkim))
+                return true;
+        } else if ("$spf".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.spf))
+                return true;
+        } else if ("$dmarc".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.dmarc))
+                return true;
+        } else if ("$auth".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.auth))
+                return true;
+        } else if ("$mx".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.mx))
+                return true;
+        } else if ("$blocklist".equals(keyword)) {
+            if (!Boolean.FALSE.equals(message.blocklist))
+                return true;
+        } else if ("$replydomain".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.reply_domain))
+                return true;
+        } else if ("$nofrom".equals(keyword)) {
+            if (message.from != null && message.from.length > 0)
+                return true;
+        } else if ("$multifrom".equals(keyword)) {
+            if (message.from == null || message.from.length < 2)
+                return true;
+        } else if ("$automatic".equals(keyword)) {
+            if (!Boolean.TRUE.equals(message.auto_submitted))
+                return true;
+        } else if ("$lowpriority".equals(keyword)) {
+            if (!EntityMessage.PRIORITIY_LOW.equals(message.priority))
+                return true;
+        } else if ("$highpriority".equals(keyword)) {
+            if (!EntityMessage.PRIORITIY_HIGH.equals(message.priority))
+                return true;
+        } else if ("$signed".equals(keyword)) {
+            if (!message.isSigned())
+                return true;
+        } else if ("$encrypted".equals(keyword)) {
+            if (!message.isEncrypted())
+                return true;
+        } else {
+            List<String> keywords = new ArrayList<>();
+            keywords.addAll(Arrays.asList(message.keywords));
+
+            if (message.ui_seen)
+                keywords.add("$seen");
+            if (message.ui_answered)
+                keywords.add("$answered");
+            if (message.ui_flagged)
+                keywords.add("$flagged");
+            if (message.ui_deleted)
+                keywords.add("$deleted");
+            if (message.infrastructure != null)
+                keywords.add('$' + message.infrastructure);
+
+            if (!keywords.contains(keyword))
+                return true;
+        }
+
+        return false;
     }
 
     private boolean matches(Context context, EntityMessage message, String needle, String haystack, boolean regex) {
@@ -631,12 +689,28 @@ public class EntityRule {
                 return onActionNotes(context, message, jaction, html);
             case TYPE_URL:
                 return onActionUrl(context, message, jaction, html);
+            case TYPE_SILENT:
+                return onActionSilent(context, message, jaction);
+            case TYPE_SUMMARIZE:
+                return onActionSummarize(context, message, jaction);
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type + " name=" + name);
         }
     }
 
     void validate(Context context) throws JSONException, IllegalArgumentException {
+        try {
+            Expression expression = ExpressionHelper.getExpression(this, null, null, null, context);
+            if (expression != null)
+                ExpressionHelper.check(expression);
+        } catch (ParseException | MessagingException ex) {
+            Log.w("EXPR", ex);
+            String message = ex.getMessage();
+            if (TextUtils.isEmpty(message))
+                message = "Invalid expression";
+            throw new IllegalArgumentException(message, ex);
+        }
+
         JSONObject jargs = new JSONObject(action);
         int type = jargs.getInt("type");
 
@@ -718,6 +792,10 @@ public class EntityRule {
                 String url = jargs.optString("url");
                 if (TextUtils.isEmpty(url) || !Patterns.WEB_URL.matcher(url).matches())
                     throw new IllegalArgumentException(context.getString(R.string.title_rule_url_missing));
+                return;
+            case TYPE_SILENT:
+                return;
+            case TYPE_SUMMARIZE:
                 return;
             default:
                 throw new IllegalArgumentException("Unknown rule type=" + type);
@@ -1087,10 +1165,12 @@ public class EntityRule {
         reply.id = db.message().insertMessage(reply);
 
         String body;
+        EntityAnswer.Data answerData = null;
         if (resend)
             body = Helper.readText(message.getFile(context));
         else {
-            body = answer.getHtml(context, message.from);
+            answerData = answer.getData(context, message.from);
+            body = answerData.getHtml();
 
             if (original_text) {
                 Document msg = JsoupEx.parse(body);
@@ -1118,7 +1198,7 @@ public class EntityRule {
 
         File file = reply.getFile(context);
         Helper.writeText(file, body);
-        String text = HtmlHelper.getFullText(body);
+        String text = HtmlHelper.getFullText(context, body);
         reply.preview = HtmlHelper.getPreview(text);
         reply.language = HtmlHelper.getLanguage(context, reply.subject, text);
         db.message().setMessageContent(reply.id,
@@ -1147,6 +1227,9 @@ public class EntityRule {
             db.attachment().setDownloaded(attachment.id, target.length());
         }
 
+        if (answerData != null)
+            answerData.insertAttachments(context, reply.id);
+
         EntityOperation.queue(context, reply, EntityOperation.SEND);
 
         // Batch send operations, wait until after commit
@@ -1164,10 +1247,11 @@ public class EntityRule {
 
         Intent automation = new Intent(ACTION_AUTOMATION);
         automation.putExtra(EXTRA_RULE, name);
+        automation.putExtra(EXTRA_RECEIVED, DTF.format(message.received));
         automation.putExtra(EXTRA_SENDER, iaddr == null ? null : iaddr.getAddress());
         automation.putExtra(EXTRA_NAME, iaddr == null ? null : iaddr.getPersonal());
         automation.putExtra(EXTRA_SUBJECT, message.subject);
-        automation.putExtra(EXTRA_RECEIVED, DTF.format(message.received));
+        automation.putExtra(EXTRA_PREVIEW, message.preview);
 
         List<String> extras = Log.getExtras(automation.getExtras());
         EntityLog.log(context, EntityLog.Type.Rules, message,
@@ -1212,32 +1296,31 @@ public class EntityRule {
         if (message.ui_seen)
             return;
 
-        Locale locale = (message.language == null ? Locale.getDefault() : new Locale(message.language));
-
-        Configuration configuration = new Configuration(context.getResources().getConfiguration());
-        configuration.setLocale(locale);
-        Resources res = context.createConfigurationContext(configuration).getResources();
-
         StringBuilder sb = new StringBuilder();
-        sb.append(res.getString(R.string.title_rule_tts_prefix)).append(". ");
+        sb.append(context.getString(R.string.title_rule_tts_prefix)).append(". ");
 
         if (message.from != null && message.from.length > 0)
-            sb.append(res.getString(R.string.title_rule_tts_from))
+            sb.append(context.getString(R.string.title_rule_tts_from))
                     .append(' ').append(MessageHelper.formatAddressesShort(message.from)).append(". ");
 
         if (!TextUtils.isEmpty(message.subject))
-            sb.append(res.getString(R.string.title_rule_tts_subject))
+            sb.append(context.getString(R.string.title_rule_tts_subject))
                     .append(' ').append(message.subject).append(". ");
 
         String body = Helper.readText(message.getFile(context));
-        String text = HtmlHelper.getFullText(body);
+        String text = HtmlHelper.getFullText(context, body);
         String preview = HtmlHelper.getPreview(text);
 
         if (!TextUtils.isEmpty(preview))
-            sb.append(res.getString(R.string.title_rule_tts_content))
+            sb.append(context.getString(R.string.title_rule_tts_content))
                     .append(' ').append(preview);
 
-        TTSHelper.speak(context, "rule:" + message.id, sb.toString(), locale);
+        Intent intent = new Intent(context, ServiceTTS.class);
+        intent.putExtra(ServiceTTS.EXTRA_FLUSH, false);
+        intent.putExtra(ServiceTTS.EXTRA_TEXT, sb.toString());
+        intent.putExtra(ServiceTTS.EXTRA_LANGUAGE, message.language);
+        intent.putExtra(ServiceTTS.EXTRA_UTTERANCE_ID, "rule:" + message.id);
+        context.startService(intent);
     }
 
     private boolean onActionSnooze(Context context, EntityMessage message, JSONObject jargs) throws JSONException {
@@ -1332,9 +1415,6 @@ public class EntityRule {
     }
 
     private boolean onActionSound(Context context, EntityMessage message, JSONObject jargs) throws JSONException {
-        if (message.ui_seen)
-            return false;
-
         Uri uri = (jargs.has("uri") ? Uri.parse(jargs.getString("uri")) : null);
         boolean alarm = jargs.getBoolean("alarm");
         int duration = jargs.optInt("duration", MediaPlayerHelper.DEFAULT_ALARM_DURATION);
@@ -1480,6 +1560,41 @@ public class EntityRule {
             if (connection != null)
                 connection.disconnect();
         }
+
+        return true;
+    }
+
+    private boolean onActionSilent(Context context, EntityMessage message, JSONObject jargs) {
+        DB db = DB.getInstance(context);
+        db.message().setMessageUiSilent(message.id, true);
+
+        message.ui_silent = true;
+        return true;
+    }
+
+    private boolean onActionSummarize(Context context, EntityMessage message, JSONObject jargs) throws JSONException, IOException {
+        DB db = DB.getInstance(context);
+
+        if (message.ui_hide)
+            return false;
+
+        if (!this.async && this.id != null) {
+            EntityOperation.queue(context, message, EntityOperation.RULE, this.id);
+            return true;
+        }
+
+        try {
+            Spanned summary = AI.getSummaryText(context, message, -1L);
+            if (summary != null)
+                message.preview = summary.toString().trim();
+        } catch (Throwable ex) {
+            message.error = Log.formatThrowable(ex);
+            db.message().setMessageError(message.id, message.error);
+            return false;
+        }
+
+        db.message().setMessageContent(message.id, message.content, message.language, message.plain_only, message.preview, message.warning);
+        db.message().setMessageNotifying(message.id, 0);
 
         return true;
     }

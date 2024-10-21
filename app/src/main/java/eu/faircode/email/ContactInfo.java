@@ -103,6 +103,7 @@ public class ContactInfo {
     private static Map<String, Lookup> emailLookup = new ConcurrentHashMap<>();
     private static final Map<String, ContactInfo> emailContactInfo = new HashMap<>();
 
+    private static final int CONTACT_ICON_SIZE = 64; // dp
     private static final int GENERATED_ICON_SIZE = 48; // dp
     private static final int FAVICON_ICON_SIZE = 64; // dp
     private static final int FAVICON_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
@@ -110,6 +111,8 @@ public class ContactInfo {
     private static final long CACHE_CONTACT_DURATION = 2 * 60 * 1000L; // milliseconds
     private static final long CACHE_FAVICON_DURATION = 2 * 7 * 24 * 60 * 60 * 1000L; // milliseconds
     private static final float MIN_FAVICON_LUMINANCE = 0.2f;
+
+    static final int AVATAR_SIZE = FAVICON_ICON_SIZE;
 
     // https://realfavicongenerator.net/faq
     private static final String[] FIXED_FAVICONS = new String[]{
@@ -177,7 +180,7 @@ public class ContactInfo {
 
         // Favicons
         Log.i("Cleanup avatars");
-        for (String type : new String[]{"favicons", "generated"}) {
+        for (String type : new String[]{"notcontact", "favicons", "generated"}) {
             File[] favicons = Helper.ensureExists(context, type).listFiles();
             if (favicons != null)
                 for (File file : favicons)
@@ -200,7 +203,7 @@ public class ContactInfo {
         if (!files)
             return;
 
-        for (String type : new String[]{"favicons", "generated"}) {
+        for (String type : new String[]{"notcontact", "favicons", "generated"}) {
             final File dir = Helper.ensureExists(context, type);
             Helper.getParallelExecutor().submit(new Runnable() {
                 @Override
@@ -219,15 +222,15 @@ public class ContactInfo {
     }
 
     @NonNull
-    static ContactInfo[] get(Context context, long account, String folderType, String selector, Address[] addresses) {
-        return get(context, account, folderType, selector, addresses, false);
+    static ContactInfo[] get(Context context, long account, String folderType, String selector, boolean dmarc, Address[] addresses) {
+        return get(context, account, folderType, selector, dmarc, addresses, false);
     }
 
-    static ContactInfo[] getCached(Context context, long account, String folderType, String selector, Address[] addresses) {
-        return get(context, account, folderType, selector, addresses, true);
+    static ContactInfo[] getCached(Context context, long account, String folderType, String selector, boolean dmarc, Address[] addresses) {
+        return get(context, account, folderType, selector, dmarc, addresses, true);
     }
 
-    private static ContactInfo[] get(Context context, long account, String folderType, String selector, Address[] addresses, boolean cacheOnly) {
+    private static ContactInfo[] get(Context context, long account, String folderType, String selector, boolean dmarc, Address[] addresses, boolean cacheOnly) {
         if (addresses == null || addresses.length == 0) {
             ContactInfo anonymous = getAnonymous(context);
             return new ContactInfo[]{anonymous == null ? new ContactInfo() : anonymous};
@@ -235,7 +238,7 @@ public class ContactInfo {
 
         ContactInfo[] result = new ContactInfo[addresses.length];
         for (int i = 0; i < addresses.length; i++) {
-            result[i] = _get(context, account, folderType, selector, (InternetAddress) addresses[i], cacheOnly);
+            result[i] = _get(context, account, folderType, selector, dmarc, (InternetAddress) addresses[i], cacheOnly);
             if (result[i] == null) {
                 if (cacheOnly)
                     return null;
@@ -257,7 +260,7 @@ public class ContactInfo {
     private static ContactInfo _get(
             Context context,
             long account, String folderType,
-            String selector, InternetAddress address, boolean cacheOnly) {
+            String selector, boolean dmarc, InternetAddress address, boolean cacheOnly) {
         String key = MessageHelper.formatAddresses(new Address[]{address});
         synchronized (emailContactInfo) {
             ContactInfo info = emailContactInfo.get(key);
@@ -268,27 +271,23 @@ public class ContactInfo {
         if (cacheOnly)
             return null;
 
+        boolean cached = false;
         ContactInfo info = new ContactInfo();
         info.email = address.getAddress();
 
-        // Maximum file name length: 255
-        // Maximum email address length: 320 (<local part = 64> @ <domain part = 255>)
-        final String ekey;
-        if (TextUtils.isEmpty(info.email))
-            ekey = null;
-        else
-            ekey = (info.email.length() > 255
-                    ? info.email.substring(0, 255)
-                    : info.email).toLowerCase(Locale.ROOT);
+        final String ekey = (TextUtils.isEmpty(info.email) ? null : getKey(info.email));
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean favicons_dmarc = prefs.getBoolean("favicons_dmarc", false);
         boolean avatars = prefs.getBoolean("avatars", true);
         boolean prefer_contact = prefs.getBoolean("prefer_contact", false);
         boolean distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
-        boolean bimi = (prefs.getBoolean("bimi", false) && !BuildConfig.PLAY_STORE_RELEASE);
-        boolean gravatars = (prefs.getBoolean("gravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
-        boolean libravatars = (prefs.getBoolean("libravatars", false) && !BuildConfig.PLAY_STORE_RELEASE);
-        boolean favicons = prefs.getBoolean("favicons", false);
+        boolean bimi = (prefs.getBoolean("bimi", false) && (!favicons_dmarc || dmarc) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean gravatars = (prefs.getBoolean("gravatars", false) && (!favicons_dmarc || dmarc) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean libravatars = (prefs.getBoolean("libravatars", false) && (!favicons_dmarc || dmarc) && !BuildConfig.PLAY_STORE_RELEASE);
+        boolean favicons = (prefs.getBoolean("favicons", false) && (!favicons_dmarc || dmarc));
+        boolean ddg_icons = (prefs.getBoolean("ddg_icons", false) && (!favicons_dmarc || dmarc) && !BuildConfig.PLAY_STORE_RELEASE);
+        String favicon_uri = prefs.getString("favicon_uri", null);
         boolean generated = prefs.getBoolean("generated_icons", true);
         boolean identicons = prefs.getBoolean("identicons", false);
         boolean circular = prefs.getBoolean("circular", true);
@@ -297,42 +296,53 @@ public class ContactInfo {
         if (!TextUtils.isEmpty(info.email) &&
                 (avatars || prefer_contact || distinguish_contacts) &&
                 Helper.hasPermission(context, Manifest.permission.READ_CONTACTS)) {
-            ContentResolver resolver = context.getContentResolver();
-            Uri uri = Uri.withAppendedPath(
-                    ContactsContract.CommonDataKinds.Email.CONTENT_LOOKUP_URI,
-                    Uri.encode(info.email.toLowerCase(Locale.ROOT)));
-            try (Cursor cursor = resolver.query(uri,
-                    new String[]{
-                            ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
-                            ContactsContract.Contacts.LOOKUP_KEY,
-                            ContactsContract.Contacts.DISPLAY_NAME
-                    },
-                    null, null, null)) {
+            File dir = Helper.ensureExists(context, "notcontact");
+            File file = new File(dir, ekey);
+            if (file.exists()) {
+                file.setLastModified(new Date().getTime());
+                Log.i("Contact negative cache key=" + ekey);
+            } else {
+                ContentResolver resolver = context.getContentResolver();
+                Uri uri = Uri.withAppendedPath(
+                        ContactsContract.CommonDataKinds.Email.CONTENT_LOOKUP_URI,
+                        Uri.encode(info.email.toLowerCase(Locale.ROOT)));
+                try (Cursor cursor = resolver.query(uri,
+                        new String[]{
+                                ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
+                                ContactsContract.Contacts.LOOKUP_KEY,
+                                ContactsContract.Contacts.DISPLAY_NAME
+                        },
+                        null, null, ContactsContract.Contacts.DISPLAY_NAME)) {
 
-                if (cursor != null && cursor.moveToNext()) {
-                    int colContactId = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.CONTACT_ID);
-                    int colLookupKey = cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
-                    int colDisplayName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+                    if (cursor != null && cursor.moveToNext()) {
+                        int colContactId = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.CONTACT_ID);
+                        int colLookupKey = cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
+                        int colDisplayName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
 
-                    long contactId = cursor.getLong(colContactId);
-                    String lookupKey = cursor.getString(colLookupKey);
-                    Uri lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
+                        long contactId = cursor.getLong(colContactId);
+                        String lookupKey = cursor.getString(colLookupKey);
+                        Uri lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
+                        int px = Helper.dp2pixels(context, CONTACT_ICON_SIZE);
 
-                    if (avatars)
-                        try (InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
-                                resolver, lookupUri, false)) {
-                            info.bitmap = BitmapFactory.decodeStream(is);
-                            info.type = "contact";
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                        }
+                        if (avatars)
+                            try (InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
+                                    resolver, lookupUri, false)) {
+                                info.bitmap = ImageHelper.getScaledBitmap(is, lookupUri.toString(), null, px);
+                                info.type = "contact";
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
 
-                    info.displayName = cursor.getString(colDisplayName);
-                    info.lookupUri = lookupUri;
-                    info.known = true;
+                        info.displayName = cursor.getString(colDisplayName);
+                        info.lookupUri = lookupUri;
+                        info.known = true;
+                    } else {
+                        file.createNewFile();
+                        Log.i("Contact negative cached key=" + ekey);
+                    }
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            } catch (Throwable ex) {
-                Log.e(ex);
             }
         }
 
@@ -392,6 +402,7 @@ public class ContactInfo {
                                 info.type = (data.length > 0 ? data[0] : "unknown");
                                 info.verified = (data.length > 1 && "verified".equals(data[1]));
                             }
+                            cached = true;
                         }
                     } else {
                         final int scaleToPixels = Helper.dp2pixels(context, FAVICON_ICON_SIZE);
@@ -468,6 +479,31 @@ public class ContactInfo {
                             }
                         }
 
+                        if (ddg_icons && !TextUtils.isEmpty(Avatar.DDG_URI))
+                            futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Favicon>() {
+                                @Override
+                                public Favicon call() throws Exception {
+                                    String parent = UriHelper.getRootDomain(context, domain);
+                                    String uri = Avatar.DDG_URI + Uri.encode(parent) + ".ico";
+                                    Favicon ddg = getFavicon(new URL(uri), null, scaleToPixels, context);
+                                    ddg.type = "ddg";
+                                    return ddg;
+                                }
+                            }));
+
+                        if (!TextUtils.isEmpty(favicon_uri) && (!favicons_dmarc || dmarc))
+                            futures.add(Helper.getDownloadTaskExecutor().submit(new Callable<Favicon>() {
+                                @Override
+                                public Favicon call() throws Exception {
+                                    String parent = UriHelper.getRootDomain(context, domain);
+                                    String uri = favicon_uri.replace("{domain}", Uri.encode(parent));
+                                    Log.i("Favicon uri=" + uri);
+                                    Favicon alt = getFavicon(new URL(uri), null, scaleToPixels, context);
+                                    alt.type = "uri";
+                                    return alt;
+                                }
+                            }));
+
                         Throwable ex = null;
                         for (Future<Favicon> future : futures)
                             try {
@@ -525,6 +561,7 @@ public class ContactInfo {
                                 ex instanceof CertPathValidatorException ||
                                 ex.getCause() instanceof CertPathValidatorException ||
                                 ex.getCause() instanceof CertificateException ||
+                                ex instanceof SSLHandshakeException ||
                                 (ex instanceof SSLException &&
                                         "Unable to parse TLS packet header".equals(ex.getMessage())) ||
                                 (ex instanceof IOException &&
@@ -560,6 +597,7 @@ public class ContactInfo {
                 files[0].setLastModified(new Date().getTime());
                 info.bitmap = BitmapFactory.decodeFile(files[0].getAbsolutePath());
                 info.type = Helper.getExtension(files[0].getName());
+                cached = true;
             } else {
                 int dp = Helper.dp2pixels(context, GENERATED_ICON_SIZE);
                 if (identicons) {
@@ -598,6 +636,21 @@ public class ContactInfo {
             } catch (Throwable ex) {
                 Log.e(ex);
             }
+
+        if (info.bitmap != null) {
+            int abc = info.bitmap.getAllocationByteCount();
+            if (!cached && (abc > 1024 * 1024 || BuildConfig.DEBUG)) {
+                String msg = "Avatar type=" + info.type +
+                        " domain=" + UriHelper.getEmailDomain(info.email) +
+                        " size=" + Helper.humanReadableByteCount(abc) +
+                        "/" + Helper.humanReadableByteCount(info.bitmap.getByteCount()) +
+                        " " + info.bitmap.getWidth() + "x" + info.bitmap.getHeight() + " " + info.bitmap.getConfig() +
+                        " play=" + BuildConfig.PLAY_STORE_RELEASE;
+                if (!BuildConfig.DEBUG)
+                    Log.e(msg);
+                EntityLog.log(context, EntityLog.Type.Debug4, msg);
+            }
+        }
 
         synchronized (emailContactInfo) {
             emailContactInfo.put(key, info);
@@ -828,7 +881,8 @@ public class ContactInfo {
                 Log.i("Using favicon=" + url);
                 return f;
             } catch (Throwable ex) {
-                if (ex.getCause() instanceof FileNotFoundException ||
+                if (ex instanceof FileNotFoundException ||
+                        ex.getCause() instanceof FileNotFoundException ||
                         ex.getCause() instanceof CertPathValidatorException)
                     Log.i(ex);
                 else
@@ -889,6 +943,10 @@ public class ContactInfo {
     }
 
     private static int getSize(String sizes) {
+        int q = sizes.indexOf('?');
+        if (q >= 0)
+            sizes = sizes.substring(0, q);
+
         int max = 0;
         for (String size : sizes.split(" ")) {
             int min = Integer.MAX_VALUE;
@@ -975,7 +1033,7 @@ public class ContactInfo {
             ContentObserver observer = new ContentObserver(ApplicationEx.getMainHandler()) {
                 @Override
                 public void onChange(boolean selfChange, Uri uri) {
-                    Log.i("Contact changed uri=" + uri);
+                    EntityLog.log(context, EntityLog.Type.Notification, "Contact changed uri=" + uri);
                     Helper.getSerialExecutor().submit(new Runnable() {
                         @Override
                         public void run() {
@@ -1002,7 +1060,7 @@ public class ContactInfo {
 
             try {
                 Uri uri = ContactsContract.CommonDataKinds.Email.CONTENT_URI;
-                Log.i("Observing uri=" + uri);
+                EntityLog.log(context, EntityLog.Type.Notification, "Observing uri=" + uri);
                 context.getContentResolver().registerContentObserver(uri, true, observer);
             } catch (SecurityException ex) {
                 Log.w(ex);
@@ -1016,6 +1074,14 @@ public class ContactInfo {
                  */
             }
         }
+    }
+
+    static String getKey(String email) {
+        // Maximum file name length: 255
+        // Maximum email address length: 320 (<local part = 64> @ <domain part = 255>)
+        return (email.length() > 255
+                ? email.substring(0, 255)
+                : email).toLowerCase(Locale.ROOT);
     }
 
     static Uri getLookupUri(List<Address> addresses) {
@@ -1078,8 +1144,9 @@ public class ContactInfo {
 
         if (Helper.hasPermission(context, Manifest.permission.READ_CONTACTS)) {
             Log.i("Reading email/uri");
-            ContentResolver resolver = context.getContentResolver();
+            File dir = Helper.ensureExists(context, "notcontact");
 
+            ContentResolver resolver = context.getContentResolver();
             try (Cursor cursor = resolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                     new String[]{
                             ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
@@ -1088,7 +1155,7 @@ public class ContactInfo {
                             ContactsContract.Contacts.DISPLAY_NAME
                     },
                     ContactsContract.CommonDataKinds.Email.ADDRESS + " <> ''",
-                    null, null)) {
+                    null, ContactsContract.Contacts.DISPLAY_NAME)) {
                 while (cursor != null && cursor.moveToNext()) {
                     long contactId = cursor.getLong(0);
                     String lookupKey = cursor.getString(1);
@@ -1099,6 +1166,15 @@ public class ContactInfo {
                     lookup.uri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
                     lookup.displayName = displayName;
                     all.put(email.toLowerCase(Locale.ROOT), lookup);
+
+                    if (!TextUtils.isEmpty(email)) {
+                        String ekey = getKey(email);
+                        File file = new File(dir, ekey);
+                        if (file.exists()) {
+                            Log.i("Contact delete cached key=" + ekey);
+                            Helper.secureDelete(file);
+                        }
+                    }
                 }
             } catch (Throwable ex) {
                 Log.e(ex);

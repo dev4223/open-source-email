@@ -70,6 +70,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -284,14 +285,26 @@ class ImageHelper {
             SVG.setInternalEntitiesEnabled(false);
 
             SVG svg = SVG.getFromInputStream(is);
-            float w = svg.getDocumentWidth();
-            float h = svg.getDocumentHeight();
-            if (w < 0 || h < 0) {
-                w = scaleToPixels;
-                h = scaleToPixels;
+            float dw = svg.getDocumentWidth();
+            float dh = svg.getDocumentHeight();
+            if (dw <= 0 || dh <= 0) {
+                dw = scaleToPixels;
+                dh = scaleToPixels;
             }
 
-            Bitmap bm = Bitmap.createBitmap((int) w, (int) h, Bitmap.Config.ARGB_8888);
+            int w, h;
+            if (dw > scaleToPixels || dh > scaleToPixels) {
+                w = scaleToPixels;
+                h = Math.round(scaleToPixels * dh / dw);
+            } else {
+                w = Math.round(dw);
+                h = Math.round(dh);
+            }
+
+            svg.setDocumentWidth("100%");
+            svg.setDocumentHeight("100%");
+
+            Bitmap bm = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             bm.eraseColor(fillColor);
             Canvas canvas = new Canvas(bm);
             svg.renderToCanvas(canvas);
@@ -615,22 +628,67 @@ class ImageHelper {
         return source.substring(colon + 1, semi);
     }
 
+    static String getDataUri(File file, String type) throws IOException {
+        try (InputStream is = new FileInputStream(file)) {
+            return getDataUri(is, type);
+        }
+    }
+
+    static String getDataUri(InputStream is, String type) throws IOException {
+        byte[] bytes = Helper.readBytes(is);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("data:");
+        sb.append(type);
+        sb.append(";base64,");
+        sb.append(Base64.encodeToString(bytes, Base64.NO_WRAP));
+
+        return sb.toString();
+    }
+
     static ByteArrayInputStream getDataUriStream(String source) {
         // "<img src=\"data:image/png;base64,iVBORw0KGgoAAA" +
         // "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
         // "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
         // "5ErkJggg==\" alt=\"Red dot\" />";
 
+        // <img src="data:image/svg;utf8,&lt;svg ...
+
         // https://en.wikipedia.org/wiki/Data_URI_scheme
+        // https://datatracker.ietf.org/doc/html/rfc2397
         try {
+            // data:[<mediatype>][;base64],<data>
             int comma = source.indexOf(',');
+            int colon = source.indexOf(':');
+            int semi = source.indexOf(';');
+
             if (comma < 0)
                 throw new IllegalArgumentException("Comma missing");
+
+            String type = null;
+            if (colon > 0 && semi > colon)
+                type = source.substring(colon + 1, semi).trim();
+            else if (colon > 0 && comma > colon)
+                type = source.substring(colon + 1, comma).trim();
+
+            String enc = (semi > 0 && comma > semi ? source.substring(semi + 1, comma).trim() : null);
+
+            if ("image/svg".equalsIgnoreCase(type) &&
+                    (TextUtils.isEmpty(enc) /* ASCII */ || "utf8".equalsIgnoreCase(enc))) {
+                InputStream is = new ByteArrayInputStream(source.substring(comma + 1).getBytes(StandardCharsets.UTF_8));
+                Bitmap bm = ImageHelper.renderSvg(is, Color.WHITE, 768);
+                Helper.ByteArrayInOutStream s = new Helper.ByteArrayInOutStream();
+                bm.compress(Bitmap.CompressFormat.PNG, 100, s);
+                return s.getInputStream();
+            }
+
+            if (!"base64".equalsIgnoreCase(enc))
+                throw new IllegalArgumentException("Unknown encoding");
 
             String base64 = source.substring(comma + 1);
             byte[] bytes = Base64.decode(base64.getBytes(), 0);
             return new ByteArrayInputStream(bytes);
-        } catch (IllegalArgumentException ex) {
+        } catch (Throwable ex) {
             String excerpt = source.substring(0, Math.min(100, source.length()));
             throw new IllegalArgumentException(excerpt, ex);
         }
@@ -779,7 +837,7 @@ class ImageHelper {
         while (options.outWidth / factor > scaleToPixels)
             factor *= 2;
 
-        Log.i("Download " + source + " factor=" + factor);
+        Log.i("Decode " + source + " factor=" + factor);
         bis.reset();
         if (factor > 1) {
             options.inJustDecodeBounds = false;

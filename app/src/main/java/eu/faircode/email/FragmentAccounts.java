@@ -19,17 +19,22 @@ package eu.faircode.email;
     Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
+import static android.app.Activity.RESULT_OK;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,8 +47,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuCompat;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
@@ -69,6 +76,7 @@ public class FragmentAccounts extends FragmentBase {
     private boolean cards;
     private boolean dividers;
     private boolean compact;
+    private boolean show_folders;
 
     private ViewGroup view;
     private SwipeRefreshLayout swipeRefresh;
@@ -94,6 +102,7 @@ public class FragmentAccounts extends FragmentBase {
         cards = prefs.getBoolean("cards", true);
         dividers = prefs.getBoolean("dividers", true);
         compact = prefs.getBoolean("compact_accounts", false) && !settings;
+        show_folders = prefs.getBoolean("folders_accounts", false) && !settings;
     }
 
     @Override
@@ -116,12 +125,14 @@ public class FragmentAccounts extends FragmentBase {
 
         // Wire controls
 
+        int c = Helper.resolveColor(getContext(), R.attr.colorInfoForeground);
+        swipeRefresh.setColorSchemeColors(c, c, c);
         int colorPrimary = Helper.resolveColor(getContext(), androidx.appcompat.R.attr.colorPrimary);
-        swipeRefresh.setColorSchemeColors(Color.WHITE, Color.WHITE, Color.WHITE);
         swipeRefresh.setProgressBackgroundColorSchemeColor(colorPrimary);
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                Helper.performHapticFeedback(swipeRefresh, HapticFeedbackConstants.CONFIRM);
                 onSwipeRefresh();
             }
         });
@@ -183,8 +194,8 @@ public class FragmentAccounts extends FragmentBase {
                 if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     return null;
 
-                TupleAccountEx prev = adapter.getItemAtPosition(pos - 1);
-                TupleAccountEx account = adapter.getItemAtPosition(pos);
+                TupleAccountFolder prev = adapter.getItemAtPosition(pos - 1);
+                TupleAccountFolder account = adapter.getItemAtPosition(pos);
                 if (pos > 0 && prev == null)
                     return null;
                 if (account == null)
@@ -219,7 +230,7 @@ public class FragmentAccounts extends FragmentBase {
         };
         rvAccount.addItemDecoration(categoryDecorator);
 
-        adapter = new AdapterAccount(this, settings, compact);
+        adapter = new AdapterAccount(this, settings, compact, show_folders);
         rvAccount.setAdapter(adapter);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -264,7 +275,7 @@ public class FragmentAccounts extends FragmentBase {
                         getContext(),
                         getViewLifecycleOwner(),
                         getParentFragmentManager(),
-                        fabCompose, -1L);
+                        fabCompose, -1L, -1L);
             }
         });
 
@@ -283,8 +294,6 @@ public class FragmentAccounts extends FragmentBase {
         animator = Helper.getFabAnimator(fab, getViewLifecycleOwner());
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
-
         if (settings) {
             fab.show();
             fabCompose.hide();
@@ -309,15 +318,15 @@ public class FragmentAccounts extends FragmentBase {
         final DB db = DB.getInstance(context);
 
         // Observe accounts
-        db.account().liveAccountsEx(settings)
-                .observe(getViewLifecycleOwner(), new Observer<List<TupleAccountEx>>() {
+        db.account().liveAccountFolder(settings)
+                .observe(getViewLifecycleOwner(), new Observer<List<TupleAccountFolder>>() {
                     @Override
-                    public void onChanged(@Nullable List<TupleAccountEx> accounts) {
+                    public void onChanged(@Nullable List<TupleAccountFolder> accounts) {
                         if (accounts == null)
                             accounts = new ArrayList<>();
 
                         boolean authorized = true;
-                        for (TupleAccountEx account : accounts)
+                        for (TupleAccountFolder account : accounts)
                             if (account.auth_type != AUTH_TYPE_PASSWORD &&
                                     !Helper.hasPermissions(getContext(), Helper.getOAuthPermissions())) {
                                 authorized = false;
@@ -330,7 +339,7 @@ public class FragmentAccounts extends FragmentBase {
                         grpReady.setVisibility(View.VISIBLE);
 
                         if (accounts.size() == 0) {
-                            fab.setCustomSize(Helper.dp2pixels(context, 2 * 56));
+                            fab.setCustomSize(Helper.dp2pixels(context, 3 * 56 / 2));
                             if (animator != null && !animator.isStarted())
                                 animator.start();
                         } else {
@@ -351,13 +360,17 @@ public class FragmentAccounts extends FragmentBase {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.menu_delete).setVisible(settings);
         menu.findItem(R.id.menu_search).setVisible(!settings);
         menu.findItem(R.id.menu_unified).setVisible(!settings);
         menu.findItem(R.id.menu_outbox).setVisible(!settings);
         menu.findItem(R.id.menu_compact).setChecked(compact);
         menu.findItem(R.id.menu_compact).setVisible(!settings);
+        menu.findItem(R.id.menu_show_folders).setChecked(show_folders);
+        menu.findItem(R.id.menu_show_folders).setVisible(!settings);
         menu.findItem(R.id.menu_theme).setVisible(!settings);
         menu.findItem(R.id.menu_force_sync).setVisible(!settings);
+        menu.findItem(R.id.menu_pwned).setVisible(settings && !TextUtils.isEmpty(BuildConfig.PWNED_ENDPOINT));
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -365,7 +378,10 @@ public class FragmentAccounts extends FragmentBase {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.menu_search) {
+        if (itemId == R.id.menu_delete) {
+            onMenuDelete();
+            return true;
+        } else if (itemId == R.id.menu_search) {
             onMenuSearch();
             return true;
         } else if (itemId == R.id.menu_unified) {
@@ -377,14 +393,30 @@ public class FragmentAccounts extends FragmentBase {
         } else if (itemId == R.id.menu_compact) {
             onMenuCompact();
             return true;
+        } else if (itemId == R.id.menu_show_folders) {
+            onMenuShowFolders();
+            return true;
         } else if (itemId == R.id.menu_theme) {
             onMenuTheme();
             return true;
         } else if (itemId == R.id.menu_force_sync) {
             onMenuForceSync();
             return true;
+        } else if (itemId == R.id.menu_pwned) {
+            onMenuPwned();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onMenuDelete() {
+        Bundle args = new Bundle();
+        args.putBoolean("all", true);
+
+        FragmentDialogSelectAccount fragment = new FragmentDialogSelectAccount();
+        fragment.setArguments(args);
+        fragment.setTargetFragment(this, ActivitySetup.REQUEST_DELETE_ACCOUNT);
+        fragment.show(getParentFragmentManager(), "accounts:delete");
     }
 
     private void onMenuSearch() {
@@ -430,6 +462,16 @@ public class FragmentAccounts extends FragmentBase {
         });
     }
 
+    private void onMenuShowFolders() {
+        show_folders = !show_folders;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("folders_accounts", show_folders).apply();
+
+        invalidateOptionsMenu();
+        adapter.setShowFolders(show_folders);
+    }
+
     private void onMenuTheme() {
         new FragmentDialogTheme().show(getParentFragmentManager(), "messages:theme");
     }
@@ -439,12 +481,110 @@ public class FragmentAccounts extends FragmentBase {
         ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
     }
 
+    private void onMenuPwned() {
+        new FragmentDialogPwned().show(getParentFragmentManager(), "pawned");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        try {
+            switch (requestCode) {
+                case ActivitySetup.REQUEST_EDIT_ACCOUNT_COLOR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onEditAccountColor(data.getBundleExtra("args"));
+                    break;
+                case ActivitySetup.REQUEST_DELETE_ACCOUNT:
+                    if (resultCode == RESULT_OK && data != null)
+                        onDeleteAccount(data.getBundleExtra("args"));
+                    break;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (Helper.hasPermissions(getContext(), permissions)) {
             btnGrant.setVisibility(View.GONE);
             ServiceSynchronize.reload(getContext(), null, false, "Permissions regranted");
         }
+    }
+
+    private void onEditAccountColor(Bundle args) {
+        if (!ActivityBilling.isPro(getContext())) {
+            startActivity(new Intent(getContext(), ActivityBilling.class));
+            return;
+        }
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                Integer color = args.getInt("color");
+
+                if (color == Color.TRANSPARENT)
+                    color = null;
+
+                DB db = DB.getInstance(context);
+                db.account().setAccountColor(id, color);
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "edit:color");
+    }
+
+    private void onDeleteAccount(Bundle args) {
+        long account = args.getLong("account");
+        String name = args.getString("name");
+
+        final Context context = getContext();
+
+        Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_warning_24);
+        d.mutate();
+        d.setTint(Helper.resolveColor(context, R.attr.colorWarning));
+
+        new AlertDialog.Builder(context)
+                .setIcon(d)
+                .setTitle(name)
+                .setMessage(R.string.title_account_delete)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Bundle args = new Bundle();
+                        args.putLong("id", account);
+
+                        new SimpleTask<Void>() {
+                            @Override
+                            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                                long id = args.getLong("id");
+
+                                DB db = DB.getInstance(context);
+                                db.account().deleteAccount(id);
+
+                                return null;
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Log.unexpectedError(getParentFragmentManager(), ex);
+                            }
+                        }.execute(FragmentAccounts.this, args, "setup:delete");
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                })
+                .show();
     }
 
     private void onSwipeRefresh() {
@@ -516,7 +656,7 @@ public class FragmentAccounts extends FragmentBase {
                 }
 
                 if (force || reload)
-                    ServiceSynchronize.reload(context, null, true, "refresh");
+                    ServiceSynchronize.reload(context, null, force, "refresh");
                 else
                     ServiceSynchronize.eval(context, "refresh");
 
@@ -532,8 +672,8 @@ public class FragmentAccounts extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalStateException) {
-                    Snackbar snackbar = Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true);
+                    Snackbar snackbar = Helper.setSnackbarOptions(
+                            Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG));
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -544,8 +684,9 @@ public class FragmentAccounts extends FragmentBase {
                     });
                     snackbar.show();
                 } else if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG)
-                            .setGestureInsetBottomIgnored(true).show();
+                    Helper.setSnackbarOptions(
+                                    Snackbar.make(view, new ThrowableWrapper(ex).getSafeMessage(), Snackbar.LENGTH_LONG))
+                            .show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }

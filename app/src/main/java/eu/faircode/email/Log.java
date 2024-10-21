@@ -114,7 +114,7 @@ import javax.net.ssl.TrustManagerFactory;
 public class Log {
     private static Context ctx;
 
-    private static final int MAX_CRASH_REPORTS = (BuildConfig.TEST_RELEASE ? 50 : 5);
+    private static final int MAX_CRASH_REPORTS = (Log.isTestRelease() ? 50 : 5);
     private static final String TAG = "fairemail";
 
     static final String TOKEN_REFRESH_REQUIRED =
@@ -136,6 +136,7 @@ public class Log {
             "java.net.SocketException",
             "java.net.SocketTimeoutException",
             "java.net.UnknownHostException",
+            "java.lang.InterruptedException",
 
             "javax.mail.AuthenticationFailedException",
             "javax.mail.internet.AddressException",
@@ -311,9 +312,24 @@ public class Log {
     static void setCrashReporting(boolean enabled) {
         try {
             if (enabled)
-                Bugsnag.startSession();
+                Bugsnag.resumeSession();
+            else
+                Bugsnag.pauseSession();
         } catch (Throwable ex) {
             Log.i(ex);
+        }
+    }
+
+    static void forceCrashReport(Context context, Throwable fatal) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean crash_reports = prefs.getBoolean("crash_reports", false);
+        try {
+            prefs.edit().putBoolean("crash_reports", true).apply();
+            setCrashReporting(true);
+            Log.e(fatal);
+        } finally {
+            prefs.edit().putBoolean("crash_reports", crash_reports).apply();
+            setCrashReporting(crash_reports);
         }
     }
 
@@ -382,7 +398,7 @@ public class Log {
     }
 
     static int getDefaultLogLevel() {
-        return (BuildConfig.DEBUG || BuildConfig.TEST_RELEASE ? android.util.Log.INFO : android.util.Log.WARN);
+        return (BuildConfig.DEBUG || Log.isTestRelease() ? android.util.Log.INFO : android.util.Log.WARN);
     }
 
     private static void setupBugsnag(final Context context) {
@@ -402,7 +418,8 @@ public class Log {
             config.setAutoTrackSessions(false);
 
             ErrorTypes etypes = new ErrorTypes();
-            etypes.setAnrs(BuildConfig.DEBUG);
+            etypes.setUnhandledExceptions(true);
+            etypes.setAnrs(false);
             etypes.setNdkCrashes(false);
             config.setEnabledErrorTypes(etypes);
             config.setMaxBreadcrumbs(BuildConfig.PLAY_STORE_RELEASE ? 250 : 500);
@@ -431,7 +448,7 @@ public class Log {
                 @Override
                 public boolean onSession(@NonNull Session session) {
                     // opt-in
-                    return prefs.getBoolean("crash_reports", false) || BuildConfig.TEST_RELEASE;
+                    return prefs.getBoolean("crash_reports", false) || Log.isTestRelease();
                 }
             });
 
@@ -440,7 +457,7 @@ public class Log {
                 public boolean onError(@NonNull Event event) {
                     // opt-in
                     boolean crash_reports = prefs.getBoolean("crash_reports", false);
-                    if (!crash_reports && !BuildConfig.TEST_RELEASE)
+                    if (!crash_reports && !Log.isTestRelease())
                         return false;
 
                     Throwable ex = event.getOriginalError();
@@ -462,6 +479,10 @@ public class Log {
                         event.addMetadata("extra", "theme", theme);
                         event.addMetadata("extra", "package", BuildConfig.APPLICATION_ID);
                         event.addMetadata("extra", "locale", Locale.getDefault().toString());
+
+                        Boolean foreground = Helper.isOnForeground();
+                        if (foreground != null)
+                            event.addMetadata("extra", "foreground", Boolean.toString(foreground));
                     }
 
                     return should;
@@ -545,7 +566,7 @@ public class Log {
             Log.i("uuid=" + uuid);
             client.setUser(uuid, null, null);
 
-            if (prefs.getBoolean("crash_reports", false) || BuildConfig.TEST_RELEASE)
+            if (prefs.getBoolean("crash_reports", false) || Log.isTestRelease())
                 Bugsnag.startSession();
         } catch (Throwable ex) {
             Log.e(ex);
@@ -585,6 +606,10 @@ public class Log {
         }
     }
 
+    static boolean isTestRelease() {
+        return BuildConfig.TEST_RELEASE;
+    }
+
     static void logExtras(Intent intent) {
         if (intent != null)
             logBundle(intent.getExtras());
@@ -615,9 +640,9 @@ public class Log {
                         if (element instanceof Long)
                             elements[i] = element + " (0x" + Long.toHexString((Long) element) + ")";
                         else if (element instanceof Spanned)
-                            elements[i] = "(span:" + Helper.getPrintableString(element.toString()) + ")";
+                            elements[i] = "(span:" + Helper.getPrintableString(element.toString(), true) + ")";
                         else
-                            elements[i] = (element == null ? "<null>" : Helper.getPrintableString(element.toString()));
+                            elements[i] = (element == null ? "<null>" : Helper.getPrintableString(element.toString(), true));
                     }
                     value = TextUtils.join(",", elements);
                     if (length > 10)
@@ -626,7 +651,7 @@ public class Log {
                 } else if (v instanceof Long)
                     value = v + " (0x" + Long.toHexString((Long) v) + ")";
                 else if (v instanceof Spanned)
-                    value = "(span:" + Helper.getPrintableString(v.toString()) + ")";
+                    value = "(span:" + Helper.getPrintableString(v.toString(), true) + ")";
                 else if (v instanceof Bundle)
                     value = "{" + TextUtils.join(" ", getExtras((Bundle) v)) + "}";
 
@@ -751,6 +776,15 @@ public class Log {
              */
             return false;
 
+        if ("android.app.RemoteServiceException$BadForegroundServiceNotificationException".equals(ex.getClass().getName()))
+            /*
+                android.app.RemoteServiceException$BadForegroundServiceNotificationException: Bad notification(tag=null, id=100) posted from package eu.faircode.email, crashing app(uid=10122, pid=3370): Software rendering doesn't support hardware bitmaps
+                    at android.app.ActivityThread.throwRemoteServiceException(ActivityThread.java:1982)
+                    at android.app.ActivityThread.-$$Nest$mthrowRemoteServiceException(Unknown Source:0)
+                    at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2238)
+             */
+            return false;
+
         if ("android.view.WindowManager$BadTokenException".equals(ex.getClass().getName()))
             /*
                 android.view.WindowManager$BadTokenException: Unable to add window -- token android.os.BinderProxy@e9084db is not valid; is your activity running?
@@ -763,6 +797,17 @@ public class Log {
                   at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:70)
                   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1976)
              */
+            return false;
+
+        if ("java.lang.Daemons$FinalizerWatchdogDaemon".equals(ex.getClass().getName()))
+            /*
+                java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.String java.lang.Object.toString()' on a null object reference
+                    at java.lang.Daemons$FinalizerWatchdogDaemon.finalizingObjectAsString(Daemons.java:605)
+                    at java.lang.Daemons$FinalizerWatchdogDaemon.waitForProgress(Daemons.java:559)
+                    at java.lang.Daemons$FinalizerWatchdogDaemon.runInternal(Daemons.java:412)
+                    at java.lang.Daemons$Daemon.run(Daemons.java:145)
+                    at java.lang.Thread.run(Thread.java:1012)
+            */
             return false;
 
         if (ex instanceof NoSuchMethodError)
@@ -946,13 +991,13 @@ public class Log {
                   at android.app.ActivityThread.handleUnbindService(ActivityThread.java:4352)
 
                 java.lang.RuntimeException: Could not get application info.
-                  at CH0.a(PG:11)
-                  at org.chromium.content.browser.ChildProcessLauncherHelperImpl.a(PG:34)
-                  at Fn2.run(PG:5)
-                  at android.os.Handler.handleCallback(Handler.java:874)
-                  at android.os.Handler.dispatchMessage(Handler.java:100)
-                  at android.os.Looper.loop(Looper.java:198)
-                  at android.os.HandlerThread.run(HandlerThread.java:65)
+                  at CH0.a(PG:11)
+                  at org.chromium.content.browser.ChildProcessLauncherHelperImpl.a(PG:34)
+                  at Fn2.run(PG:5)
+                  at android.os.Handler.handleCallback(Handler.java:874)
+                  at android.os.Handler.dispatchMessage(Handler.java:100)
+                  at android.os.Looper.loop(Looper.java:198)
+                  at android.os.HandlerThread.run(HandlerThread.java:65)
 
                 java.lang.RuntimeException: Unable to create service eu.faircode.email.ServiceSynchronize: java.lang.NullPointerException: Attempt to invoke interface method 'java.util.List android.os.IUserManager.getProfiles(int, boolean)' on a null object reference
                   at android.app.ActivityThread.handleCreateService(ActivityThread.java:2739)
@@ -1203,6 +1248,51 @@ public class Log {
              */
             return false;
 
+        if (ex instanceof NullPointerException &&
+                stack.length > 0 &&
+                "android.app.OplusActivityManager".equals(stack[0].getClassName()) &&
+                "finishNotOrderReceiver".equals(stack[0].getMethodName()))
+                /*
+                    java.lang.NullPointerException: Attempt to invoke interface method 'boolean android.os.IBinder.transact(int, android.os.Parcel, android.os.Parcel, int)' on a null object reference
+                        at android.app.OplusActivityManager.finishNotOrderReceiver(OplusActivityManager.java:2360)
+                        at android.content.BroadcastReceiver$PendingResult.sendFinished(BroadcastReceiver.java:347)
+                        at android.content.BroadcastReceiver$PendingResult.finish(BroadcastReceiver.java:302)
+                        at android.app.ActivityThread.handleReceiver(ActivityThread.java:4352)
+                 */
+            return false;
+
+        if (ex instanceof NullPointerException &&
+                stack.length > 0 &&
+                "android.widget.Editor$ActionPinnedPopupWindow".equals(stack[0].getClassName()) &&
+                "computeLocalPosition".equals(stack[0].getMethodName()))
+                /*
+                    java.lang.NullPointerException: Attempt to invoke virtual method 'float android.text.Layout.getPrimaryHorizontal(int)' on a null object reference
+                        at android.widget.Editor$ActionPinnedPopupWindow.computeLocalPosition(Editor.java:4134)
+                        at android.widget.Editor$PinnedPopupWindow.show(Editor.java:3737)
+                        at android.widget.Editor$ActionPinnedPopupWindow.show(Editor.java:4282)
+                        at android.widget.Editor$ActionPopupWindow.show(Editor.java:5224)
+                        at android.widget.Editor$HandleView$2.run(Editor.java:6783)
+                        at android.os.Handler.handleCallback(Handler.java:938)
+                 */
+            return false;
+
+        if (ex instanceof NullPointerException)
+            for (StackTraceElement ste : stack)
+                if ("java.lang.Daemons$FinalizerWatchdogDaemon".equals(ste.getClassName()))
+                    return false;
+
+        if (ex instanceof NullPointerException &&
+                ex.getMessage() != null && ex.getMessage().contains("android.window.BackMotionEvent"))
+            /*
+                java.lang.NullPointerException: Attempt to invoke virtual method 'float android.window.BackMotionEvent.getTouchX()' on a null object reference
+                    at android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper.lambda$onBackStarted$1(WindowOnBackInvokedDispatcher.java:353)
+                    at android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper.$r8$lambda$jWVwe-YeLRxW3tAMLuWZynG6e1k(Unknown Source:0)
+                    at android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper$$ExternalSyntheticLambda4.run(Unknown Source:4)
+                    at android.os.Handler.handleCallback(Handler.java:958)
+                    at android.os.Handler.dispatchMessage(Handler.java:99)
+            */
+            return false;
+
         if (ex instanceof IndexOutOfBoundsException &&
                 stack.length > 0 &&
                 "android.text.SpannableStringInternal".equals(stack[0].getClassName()) &&
@@ -1228,6 +1318,29 @@ public class Log {
                   at android.widget.PopupWindow$PopupDecorView.dispatchTouchEvent(PopupWindow.java:2407)
                   at android.view.View.dispatchPointerEvent(View.java:12789)
              */
+            return false;
+
+        if (ex instanceof IndexOutOfBoundsException &&
+                stack.length > 0 &&
+                "android.text.PackedIntVector".equals(stack[0].getClassName()) &&
+                "getValue".equals(stack[0].getMethodName()))
+            /*
+                java.lang.IndexOutOfBoundsException: 2, 1
+                    at android.text.PackedIntVector.getValue(PackedIntVector.java:75)
+                    at android.text.DynamicLayout.getLineTop(DynamicLayout.java:1001)
+                    at android.text.Layout.getLineBottom(Layout.java:1652)
+                    at android.widget.Editor.getCurrentLineAdjustedForSlop(Editor.java:6851)
+                    at android.widget.Editor.access$8700(Editor.java:175)
+                    at android.widget.Editor$InsertionHandleView.updatePosition(Editor.java:6317)
+                    at android.widget.Editor$HandleView.onTouchEvent(Editor.java:5690)
+                    at android.widget.Editor$InsertionHandleView.onTouchEvent(Editor.java:6235)
+                    at android.view.View.dispatchTouchEvent(View.java:13484)
+                    at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3222)
+                    at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2904)
+                    at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3222)
+                    at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2904)
+                    at android.widget.PopupWindow$PopupDecorView.dispatchTouchEvent(PopupWindow.java:2700)
+            */
             return false;
 
         if (ex instanceof IndexOutOfBoundsException) {
@@ -1347,6 +1460,27 @@ public class Log {
                 at android.os.Handler.handleCallback(Handler.java:815)
              */
             return false;
+
+        if (ex instanceof IndexOutOfBoundsException)
+            /*
+                java.lang.IndexOutOfBoundsException: charAt: 128 >= length 128
+                    at android.text.SpannableStringBuilder.charAt(SpannableStringBuilder.java:125)
+                    at android.text.CharSequenceCharacterIterator.next(CharSequenceCharacterIterator.java:67)
+                    at android.icu.text.RuleBasedBreakIterator.handleNext(RuleBasedBreakIterator.java:886)
+                    at android.icu.text.RuleBasedBreakIterator.-$$Nest$mhandleNext(Unknown Source:0)
+                    at android.icu.text.RuleBasedBreakIterator$BreakCache.populateNear(RuleBasedBreakIterator.java:1486)
+                    at android.icu.text.RuleBasedBreakIterator.isBoundary(RuleBasedBreakIterator.java:552)
+                    at android.text.method.WordIterator.isBoundary(WordIterator.java:112)
+                    at android.widget.Editor$SelectionHandleView.positionAtCursorOffset(Editor.java:6319)
+                    at android.widget.Editor$HandleView.updatePosition(Editor.java:5290)
+                    at android.widget.Editor$PositionListener.onPreDraw(Editor.java:3730)
+                    at android.view.ViewTreeObserver.dispatchOnPreDraw(ViewTreeObserver.java:1176)
+                    at android.view.ViewRootImpl.performTraversals(ViewRootImpl.java:4029)
+             */
+            for (StackTraceElement elm : stack)
+                if ("android.text.method.WordIterator".equals(elm.getClassName()) &&
+                        "isBoundary".equals(elm.getMethodName()))
+                    return false;
 
         if (ex instanceof IllegalArgumentException && ex.getCause() != null) {
             for (StackTraceElement ste : ex.getCause().getStackTrace())
@@ -1726,6 +1860,9 @@ public class Log {
                 ex.getCause() instanceof UnknownHostException)
             ex = new Throwable("Email server address lookup failed", ex);
 
+        if (ConnectionHelper.isAborted(ex))
+            ex = new Throwable("The server or network actively disconnected the connection", ex);
+
         StringBuilder sb = new StringBuilder();
         if (BuildConfig.DEBUG)
             sb.append(new ThrowableWrapper(ex).toSafeString());
@@ -1811,8 +1948,11 @@ public class Log {
             final Context context = getContext();
             LayoutInflater inflater = LayoutInflater.from(context);
             View dview = inflater.inflate(R.layout.dialog_unexpected, null);
+            TextView tvCaption = dview.findViewById(R.id.tvCaption);
             TextView tvError = dview.findViewById(R.id.tvError);
             Button btnHelp = dview.findViewById(R.id.btnHelp);
+
+            tvCaption.setText(report ? R.string.title_unexpected_error : R.string.title_setup_error);
 
             String message = Log.formatThrowable(ex, false);
             tvError.setText(message);
@@ -1835,7 +1975,7 @@ public class Log {
                             if (!TextUtils.isEmpty(message))
                                 uri = uri
                                         .buildUpon()
-                                        .appendQueryParameter("message", "Unexpected: " + message)
+                                        .appendQueryParameter("message", Helper.limit(message, 384))
                                         .build();
                             Helper.view(context, uri, true);
                         }
@@ -1862,6 +2002,7 @@ public class Log {
                                     return;
 
                                 context.startActivity(new Intent(context, ActivityCompose.class)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                         .putExtra("action", "edit")
                                         .putExtra("id", id));
                             }

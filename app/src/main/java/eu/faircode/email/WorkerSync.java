@@ -73,7 +73,9 @@ public class WorkerSync extends Worker {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String user = prefs.getString("cloud_user", null);
         String password = prefs.getString("cloud_password", null);
-        boolean enabled = !(TextUtils.isEmpty(user) || TextUtils.isEmpty(password));
+        boolean enabled = !(TextUtils.isEmpty(BuildConfig.CLOUD_URI) ||
+                TextUtils.isEmpty(user) ||
+                TextUtils.isEmpty(password));
         Log.i("Cloud worker enabled=" + enabled);
         try {
             if (enabled) {
@@ -97,7 +99,7 @@ public class WorkerSync extends Worker {
                                 .setConstraints(new Constraints.Builder()
                                         .setRequiredNetworkType(NetworkType.CONNECTED).build());
                 WorkManager.getInstance(context)
-                        .enqueueUniquePeriodicWork(getName(), ExistingPeriodicWorkPolicy.UPDATE, builder.build());
+                        .enqueueUniquePeriodicWork(getName(), ExistingPeriodicWorkPolicy.KEEP, builder.build());
                 Log.i("Queued " + getName());
             } else {
                 EntityLog.log(context, EntityLog.Type.Cloud,

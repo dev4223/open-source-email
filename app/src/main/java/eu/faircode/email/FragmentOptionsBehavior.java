@@ -51,6 +51,10 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class FragmentOptionsBehavior extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private View view;
     private ImageButton ibHelp;
@@ -83,6 +87,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swExpandAll;
     private SwitchCompat swExpandOne;
     private SwitchCompat swAutoClose;
+    private Spinner spSeenDelay;
     private TextView tvAutoSeenHint;
     private TextView tvOnClose;
     private Spinner spOnClose;
@@ -96,6 +101,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swResetImportance;
     private SwitchCompat swPhotoPicker;
     private SwitchCompat swFlagSnoozed;
+    private SwitchCompat swFlagUnsnoozed;
     private SwitchCompat swAutoImportant;
     private SwitchCompat swResetSnooze;
     private SwitchCompat swAutoBlockSender;
@@ -103,29 +109,30 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
     private SwitchCompat swSwipeReply;
     private SwitchCompat swMoveThreadAll;
     private SwitchCompat swMoveThreadSent;
+    private SwitchCompat swSwipeTrashAll;
+    private SwitchCompat swGmailDeleteAll;
     private Button btnDefaultFolder;
     private TextView tvDefaultFolder;
-
-    private boolean accessibility;
 
     final static int MAX_SWIPE_SENSITIVITY = 10;
     final static int DEFAULT_SWIPE_SENSITIVITY = 6;
 
     final static int REQUEST_DEFAULT_FOLDER = 1;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "restore_on_launch", "sync_on_launch", "double_back", "conversation_actions", "conversation_actions_replies", "language_detection",
             "photo_picker", "default_snooze",
             "pull", "pull_all", "autoscroll", "quick_filter", "quick_scroll", "quick_actions", "swipe_sensitivity", "foldernav",
             "doubletap", "swipenav", "volumenav", "updown", "reversed", "swipe_close", "swipe_move",
             "autoexpand", "expand_first", "expand_all", "expand_one", "collapse_multiple",
+            "seen_delay",
             "autoclose", "onclose", "autoclose_unseen", "autoclose_send", "collapse_marked",
             "undo_timeout",
-            "autoread", "flag_snoozed", "autounflag", "auto_important", "reset_importance",
+            "autoread", "flag_snoozed", "flag_unsnoozed", "autounflag", "auto_important", "reset_importance",
             "reset_snooze", "auto_block_sender", "auto_hide_answer", "swipe_reply",
-            "move_thread_all", "move_thread_sent",
+            "move_thread_all", "move_thread_sent", "swipe_trash_all", "gmail_delete_all",
             "default_folder"
-    };
+    ));
 
     @Override
     @Nullable
@@ -167,6 +174,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swExpandAll = view.findViewById(R.id.swExpandAll);
         swExpandOne = view.findViewById(R.id.swExpandOne);
         swCollapseMultiple = view.findViewById(R.id.swCollapseMultiple);
+        spSeenDelay = view.findViewById(R.id.spSeenDelay);
         tvAutoSeenHint = view.findViewById(R.id.tvAutoSeenHint);
         swAutoClose = view.findViewById(R.id.swAutoClose);
         tvOnClose = view.findViewById(R.id.tvOnClose);
@@ -180,6 +188,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swResetImportance = view.findViewById(R.id.swResetImportance);
         swPhotoPicker = view.findViewById(R.id.swPhotoPicker);
         swFlagSnoozed = view.findViewById(R.id.swFlagSnoozed);
+        swFlagUnsnoozed = view.findViewById(R.id.swFlagUnsnoozed);
         swAutoImportant = view.findViewById(R.id.swAutoImportant);
         swResetSnooze = view.findViewById(R.id.swResetSnooze);
         swAutoBlockSender = view.findViewById(R.id.swAutoBlockSender);
@@ -187,16 +196,17 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         swSwipeReply = view.findViewById(R.id.swSwipeReply);
         swMoveThreadAll = view.findViewById(R.id.swMoveThreadAll);
         swMoveThreadSent = view.findViewById(R.id.swMoveThreadSent);
+        swSwipeTrashAll = view.findViewById(R.id.swSwipeTrashAll);
+        swGmailDeleteAll = view.findViewById(R.id.swGmailDeleteAll);
         btnDefaultFolder = view.findViewById(R.id.btnDefaultFolder);
         tvDefaultFolder = view.findViewById(R.id.tvDefaultFolder);
-
-        accessibility = Helper.isAccessibilityEnabled(getContext());
 
         setOptions();
 
         // Wire controls
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        int[] undoValues = getResources().getIntArray(R.array.undoValues);
 
         ibHelp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -227,7 +237,6 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
-        swConversationActions.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
         swConversationActions.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -236,7 +245,6 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
-        swConversationActionsReplies.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
         swConversationActionsReplies.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -438,6 +446,19 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
+        spSeenDelay.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                int value = undoValues[position];
+                prefs.edit().putInt("seen_delay", value).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("seen_delay").apply();
+            }
+        });
+
         tvAutoSeenHint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -496,8 +517,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         spUndoTimeout.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                int[] values = getResources().getIntArray(R.array.undoValues);
-                int value = values[position];
+                int value = undoValues[position];
                 prefs.edit().putInt("undo_timeout", value).apply();
             }
 
@@ -540,6 +560,14 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("flag_snoozed", checked).apply();
+                swFlagUnsnoozed.setEnabled(checked);
+            }
+        });
+
+        swFlagUnsnoozed.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("flag_unsnoozed", checked).apply();
             }
         });
 
@@ -593,6 +621,20 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
+        swSwipeTrashAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("swipe_trash_all", checked).apply();
+            }
+        });
+
+        swGmailDeleteAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("gmail_delete_all", checked).apply();
+            }
+        });
+
         Intent tree = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         Helper.openAdvanced(getContext(), tree);
         PackageManager pm = getContext().getPackageManager();
@@ -606,8 +648,6 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
-
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 
         return view;
@@ -639,6 +679,9 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+
         if ("default_snooze".equals(key))
             return;
 
@@ -673,14 +716,17 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             if (view == null || getContext() == null)
                 return;
 
+            int[] undoValues = getResources().getIntArray(R.array.undoValues);
+
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
             swRestoreOnLaunch.setChecked(prefs.getBoolean("restore_on_launch", false));
             swSyncOnlaunch.setChecked(prefs.getBoolean("sync_on_launch", false));
             swDoubleBack.setChecked(prefs.getBoolean("double_back", false));
             swConversationActions.setChecked(prefs.getBoolean("conversation_actions", Helper.isGoogle()));
+            swConversationActions.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
             swConversationActionsReplies.setChecked(prefs.getBoolean("conversation_actions_replies", true));
-            swConversationActionsReplies.setEnabled(swConversationActions.isChecked());
+            swConversationActionsReplies.setEnabled(swConversationActions.isChecked() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
             swLanguageDetection.setChecked(prefs.getBoolean("language_detection", false));
 
             int default_snooze = prefs.getInt("default_snooze", 1);
@@ -716,6 +762,13 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             swExpandOne.setEnabled(!swExpandAll.isChecked());
             swCollapseMultiple.setChecked(prefs.getBoolean("collapse_multiple", true));
 
+            int seen_delay = prefs.getInt("seen_delay", 0);
+            for (int pos = 0; pos < undoValues.length; pos++)
+                if (undoValues[pos] == seen_delay) {
+                    spSeenDelay.setSelection(pos);
+                    break;
+                }
+
             swAutoClose.setChecked(prefs.getBoolean("autoclose", true));
 
             String onClose = prefs.getString("onclose", "");
@@ -734,7 +787,6 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             swCollapseMarked.setChecked(prefs.getBoolean("collapse_marked", true));
 
             int undo_timeout = prefs.getInt("undo_timeout", 5000);
-            int[] undoValues = getResources().getIntArray(R.array.undoValues);
             for (int pos = 0; pos < undoValues.length; pos++)
                 if (undoValues[pos] == undo_timeout) {
                     spUndoTimeout.setSelection(pos);
@@ -747,6 +799,8 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
 
             swPhotoPicker.setChecked(prefs.getBoolean("photo_picker", true));
             swFlagSnoozed.setChecked(prefs.getBoolean("flag_snoozed", false));
+            swFlagUnsnoozed.setChecked(prefs.getBoolean("flag_unsnoozed", false));
+            swFlagUnsnoozed.setEnabled(swFlagSnoozed.isChecked());
             swAutoImportant.setChecked(prefs.getBoolean("auto_important", false));
             swResetSnooze.setChecked(prefs.getBoolean("reset_snooze", true));
             swAutoBlockSender.setChecked(prefs.getBoolean("auto_block_sender", true));
@@ -756,6 +810,8 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             swMoveThreadAll.setChecked(prefs.getBoolean("move_thread_all", false));
             swMoveThreadSent.setChecked(prefs.getBoolean("move_thread_sent", false));
             swMoveThreadSent.setEnabled(!swMoveThreadAll.isChecked());
+            swSwipeTrashAll.setChecked(prefs.getBoolean("swipe_trash_all", true));
+            swGmailDeleteAll.setChecked(prefs.getBoolean("gmail_delete_all", false));
 
             tvDefaultFolder.setText(prefs.getString("default_folder", null));
         } catch (Throwable ex) {

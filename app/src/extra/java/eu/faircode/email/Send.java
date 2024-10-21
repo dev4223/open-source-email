@@ -71,7 +71,7 @@ public class Send {
     */
 
     static final int DEFAULT_DLIMIT = 10;
-    static final int DEFAULT_TLIMIT = 24; // hours
+    static final int DEFAULT_TLIMIT = 3 * 24; // hours
     static final String DEFAULT_SERVER = "https://send.vis.ee/";
 
     private static final int TIMEOUT = 20 * 1000; // milliseconds
@@ -222,8 +222,8 @@ public class Send {
 
             JSONObject jconfirm = new JSONObject(queue.remove(0));
             Log.i("Send confirm=" + jconfirm);
-            if (!jconfirm.getBoolean("ok"))
-                throw new FileNotFoundException();
+            if (!jconfirm.optBoolean("ok"))
+                throw new FileNotFoundException(jconfirm.toString());
         } finally {
             ws.disconnect();
         }

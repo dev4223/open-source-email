@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.StatusBarManager;
@@ -62,6 +63,10 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class FragmentOptionsNotifications extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -132,7 +137,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private Group grpBackground;
     private Group grpTiles;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "notify_newest_first", "notify_summary",
             "notify_trash", "notify_junk", "notify_block_sender", "notify_archive", "notify_move",
             "notify_reply", "notify_reply_direct",
@@ -145,7 +150,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             "wearable_preview",
             "notify_messaging",
             "biometrics_notify", "notify_open_folder", "background_service", "alert_once"
-    };
+    ));
 
     @Override
     @Nullable
@@ -251,17 +256,22 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             }
         });
 
-        ibClear.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                (BuildConfig.DEBUG || debug) ? View.VISIBLE : View.GONE);
+        ibClear.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? View.VISIBLE : View.GONE);
         ibClear.setOnClickListener(new View.OnClickListener() {
             @Override
             @RequiresApi(api = Build.VERSION_CODES.O)
             public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putBoolean("debug", BuildConfig.DEBUG || debug);
+
                 new SimpleTask<Pair<String[], String[]>>() {
                     @Override
                     protected Pair<String[], String[]> onExecute(Context context, Bundle args) throws Throwable {
+                        boolean debug = args.getBoolean("debug");
+
                         String[] ids = NotificationHelper.getChannelIds(context);
-                        String[] titles = new String[ids.length];
+                        List<String> channels = new ArrayList<>();
+                        List<String> titles = new ArrayList<>();
 
                         DB db = DB.getInstance(context);
 
@@ -271,23 +281,32 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
                                     long fid = Long.parseLong(ids[i].split("\\.")[2]);
                                     EntityFolder folder = db.folder().getFolder(fid);
                                     EntityAccount account = db.account().getAccount(folder == null ? -1L : folder.account);
-                                    titles[i] = (folder == null ? ids[i] : account.name + "/" + folder.name);
+                                    channels.add(ids[i]);
+                                    titles.add(folder == null ? ids[i] : account.name + "/" + folder.name);
                                 } else if (ids[i].startsWith("notification.")) {
                                     String[] parts = ids[i].split("\\.");
                                     if (parts.length == 2 && TextUtils.isDigitsOnly(parts[1])) {
-                                        long aid = Long.parseLong(parts[1]);
-                                        EntityAccount account = db.account().getAccount(aid);
-                                        titles[i] = (account == null ? ids[i] : account.name);
-                                    } else
-                                        titles[i] = ids[i].substring("notification.".length());
-                                } else
-                                    titles[i] = ids[i];
+                                        if (debug) {
+                                            long aid = Long.parseLong(parts[1]);
+                                            EntityAccount account = db.account().getAccount(aid);
+                                            channels.add(ids[i]);
+                                            titles.add(account == null ? ids[i] : account.name);
+                                        }
+                                    } else {
+                                        channels.add(ids[i]);
+                                        titles.add(ids[i].substring("notification.".length()));
+                                    }
+                                } else {
+                                    channels.add(ids[i]);
+                                    titles.add(ids[i]);
+                                }
                             } catch (Throwable ex) {
                                 Log.e(ex);
-                                titles[i] = ids[i];
+                                channels.add(ids[i]);
+                                titles.add(ids[i]);
                             }
 
-                        return new Pair<>(ids, titles);
+                        return new Pair<>(channels.toArray(new String[0]), titles.toArray(new String[0]));
                     }
 
                     @Override
@@ -355,7 +374,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
                     protected void onException(Bundle args, Throwable ex) {
                         Log.unexpectedError(getParentFragmentManager(), ex);
                     }
-                }.execute(FragmentOptionsNotifications.this, new Bundle(), "channel:list");
+                }.execute(FragmentOptionsNotifications.this, args, "channel:list");
             }
         });
 
@@ -508,7 +527,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         grpScreenOn.setVisibility(
                 BuildConfig.DEBUG ||
                         Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU ||
-                        hasPermission("android.permission.TURN_SCREEN_ON")
+                        hasPermission(Manifest.permission.TURN_SCREEN_ON)
                         ? View.VISIBLE : View.GONE);
         swNotifyScreenOn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -554,6 +573,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             }
         });
 
+        swNotifyGrouping.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? View.VISIBLE : View.GONE);
         swNotifyGrouping.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -744,8 +764,6 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         });
 
         // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
-
         swNotifyTransliterate.setVisibility(TextHelper.canTransliterate() ? View.VISIBLE : View.GONE);
         swUnseenIgnored.setVisibility(Helper.isXiaomi() ? View.GONE : View.VISIBLE);
         swAlertOnce.setVisibility(Helper.isXiaomi() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
@@ -801,6 +819,9 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+
         getMainHandler().removeCallbacks(update);
         getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }

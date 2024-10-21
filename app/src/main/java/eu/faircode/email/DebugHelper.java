@@ -70,9 +70,12 @@ import android.text.TextUtils;
 import android.view.Display;
 import android.view.ViewConfiguration;
 import android.view.WindowManager;
+import android.view.textservice.SpellCheckerInfo;
+import android.view.textservice.TextServicesManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.biometric.BiometricManager;
 import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsServiceConnection;
 import androidx.emoji2.text.EmojiCompat;
@@ -271,16 +274,12 @@ public class DebugHelper {
                 Build.VERSION.RELEASE, Build.VERSION.SDK_INT, Helper.getTargetSdk(context)));
 
         String miui = Helper.getMIUIVersion();
-        Integer autostart = (miui == null ? null : Helper.getMIUIAutostart(context));
-        sb.append(String.format("MIUI: %s autostart: %s\r\n",
-                miui == null ? "-" : miui,
-                autostart == null ? "?" : Boolean.toString(autostart == 0)));
+        sb.append(String.format("MIUI: %s\r\n", miui == null ? "-" : miui));
 
         boolean reporting = prefs.getBoolean("crash_reports", false);
-        if (reporting || BuildConfig.TEST_RELEASE) {
-            String uuid = prefs.getString("uuid", null);
-            sb.append(String.format("Bugsnag UUID: %s\r\n", uuid == null ? "-" : uuid));
-        }
+        String uuid = (reporting || Log.isTestRelease()
+                ? prefs.getString("uuid", null) : null);
+        sb.append(String.format("Bugsnag UUID: %s\r\n", uuid == null ? "-" : uuid));
 
         try {
             ApplicationInfo app = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
@@ -290,9 +289,17 @@ public class DebugHelper {
             Log.e(ex);
         }
 
+        String gms = null;
+        try {
+            PackageInfo pi = pm.getPackageInfo("com.google.android.gms", 0);
+            if (pi != null)
+                gms = pi.versionName + " #" + pi.versionCode;
+        } catch (Throwable ignored) {
+        }
+
         String installer = Helper.getInstallerName(context);
         sb.append(String.format("Release: %s\r\n", Log.getReleaseType(context)));
-        sb.append(String.format("Play Store: %s\r\n", Helper.hasPlayStore(context)));
+        sb.append(String.format("Play Store: %s Services: %s\r\n", Helper.hasPlayStore(context), gms));
         sb.append(String.format("Installer: %s\r\n", installer == null ? "-" : installer));
         sb.append(String.format("Installed: %s\r\n", new Date(Helper.getInstallTime(context))));
         sb.append(String.format("Updated: %s\r\n", new Date(Helper.getUpdateTime(context))));
@@ -312,6 +319,17 @@ public class DebugHelper {
                 sb.append(String.format("System: %s\r\n", ll.get(i)));
         }
 
+        if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            try {
+                TextServicesManager tsm = (TextServicesManager) context.getSystemService(Context.TEXT_SERVICES_MANAGER_SERVICE);
+                SpellCheckerInfo sci = (tsm == null ? null : tsm.getCurrentSpellCheckerInfo());
+                if (sci != null)
+                    for (int i = 0; i < sci.getSubtypeCount(); i++)
+                        sb.append(String.format("Spell: %s\r\n", sci.getSubtypeAt(i).getLocale()));
+            } catch (Throwable ex) {
+                sb.append(ex).append("\r\n");
+            }
+
         sb.append("\r\n");
 
         String osVersion = null;
@@ -326,7 +344,7 @@ public class DebugHelper {
         sb.append(String.format("Manufacturer: %s\r\n", Build.MANUFACTURER));
         sb.append(String.format("Model: %s\r\n", Build.MODEL));
         sb.append(String.format("Product: %s\r\n", Build.PRODUCT));
-        sb.append(String.format("Device: %s\r\n", Build.DEVICE));
+        sb.append(String.format("Device: %s Arc: %b\r\n", Build.DEVICE, Helper.isArc()));
         sb.append(String.format("Host: %s\r\n", Build.HOST));
         sb.append(String.format("Time: %s\r\n", new Date(Build.TIME).toString()));
         sb.append(String.format("Display: %s\r\n", Build.DISPLAY));
@@ -432,11 +450,12 @@ public class DebugHelper {
         ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
-        sb.append(String.format("Memory class: %d/%d Large: %s MB Total: %s Low: %b\r\n",
+        sb.append(String.format("Memory class: %d/%d MB Large: %s Total: %s Low: %b Small: %b\r\n",
                 am.getMemoryClass(), am.getLargeMemoryClass(),
                 largeHeap == null ? "?" : Boolean.toString(largeHeap),
                 Helper.humanReadableByteCount(mi.totalMem),
-                am.isLowRamDevice()));
+                am.isLowRamDevice(),
+                Helper.hasSmallMemoryClass(context)));
 
         long storage_available = Helper.getAvailableStorageSpace();
         long storage_total = Helper.getTotalStorageSpace();
@@ -473,6 +492,8 @@ public class DebugHelper {
         float density = context.getResources().getDisplayMetrics().density;
         sb.append(String.format("Density 1dp=%f\r\n", density));
         sb.append(String.format("Resolution: %.2f x %.2f dp\r\n", dim.x / density, dim.y / density));
+        //sb.append(String.format("Max. texture: %d px\r\n", Helper.getMaxTextureSize()));
+        sb.append(String.format("Foldable: %b\r\n", Helper.canFold(context)));
 
         Configuration config = context.getResources().getConfiguration();
 
@@ -521,9 +542,10 @@ public class DebugHelper {
                 WebViewEx.isFeatureSupported(context, WebViewFeature.ALGORITHMIC_DARKENING)));
         try {
             PackageInfo pkg = WebViewCompat.getCurrentWebViewPackage(context);
-            sb.append(String.format("WebView %d/%s\r\n",
+            sb.append(String.format("WebView %d/%s has=%b\r\n",
                     pkg == null ? -1 : pkg.versionCode,
-                    pkg == null ? null : pkg.versionName));
+                    pkg == null ? null : pkg.versionName,
+                    Helper.hasWebView(context)));
         } catch (Throwable ex) {
             sb.append(ex).append("\r\n");
         }
@@ -669,11 +691,14 @@ public class DebugHelper {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean enabled = prefs.getBoolean("enabled", true);
                 int pollInterval = ServiceSynchronize.getPollInterval(context);
+                boolean poll_metered = prefs.getBoolean("poll_metered", false);
+                boolean poll_unmetered = prefs.getBoolean("poll_unmetered", false);
                 boolean metered = prefs.getBoolean("metered", true);
                 Boolean ignoring = Helper.isIgnoringOptimizations(context);
                 boolean canSchedule = AlarmManagerCompatEx.canScheduleExactAlarms(context);
                 boolean auto_optimize = prefs.getBoolean("auto_optimize", false);
                 boolean schedule = prefs.getBoolean("schedule", false);
+                String startup = prefs.getString("startup", "unified");
 
                 String ds = ConnectionHelper.getDataSaving(context);
                 boolean vpn = ConnectionHelper.vpnActive(context);
@@ -713,6 +738,8 @@ public class DebugHelper {
 
                 size += write(os, "enabled=" + enabled + (enabled ? "" : " !!!") +
                         " interval=" + pollInterval + "\r\n" +
+                        (pollInterval != 0 && poll_metered ? "poll metered=" + poll_metered + " !!!\r\n" : "") +
+                        (pollInterval != 0 && poll_unmetered ? "poll unmetered=" + poll_unmetered + " !!!\r\n" : "") +
                         "metered=" + metered + (metered ? "" : " !!!") +
                         " saving=" + ds + ("enabled".equals(ds) ? " !!!" : "") +
                         " vpn=" + vpn + (vpn ? " !!!" : "") +
@@ -732,6 +759,7 @@ public class DebugHelper {
                         " rules=" + db.rule().countTotal(null, null) +
                         " ops=" + db.operation().getOperationCount() +
                         " outbox=" + db.message().countOutbox() + "\r\n" +
+                        "startup=" + startup + "\r\n" +
                         "filter " + filters + " " + sorts +
                         "\r\n\r\n");
 
@@ -890,6 +918,7 @@ public class DebugHelper {
                                         identity.display + " " + identity.email +
                                         (identity.self ? "" : " !self") +
                                         " [" + (identity.provider == null ? "" : identity.provider) +
+                                        ":" + identity.user +
                                         ":" + ServiceAuthenticator.getAuthTypeName(identity.auth_type) + "]" +
                                         (TextUtils.isEmpty(identity.sender_extra_regex) ? "" : " regex=" + identity.sender_extra_regex) +
                                         (!identity.sender_extra ? "" : " edit" +
@@ -1065,7 +1094,7 @@ public class DebugHelper {
                     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
                     while (interfaces != null && interfaces.hasMoreElements()) {
                         NetworkInterface ni = interfaces.nextElement();
-                        size += write(os, "Interface=" + ni + "\r\n");
+                        size += write(os, "Interface=" + ni + " up=" + ni.isUp() + "\r\n");
                         for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
                             InetAddress addr = iaddr.getAddress();
                             size += write(os, " addr=" + addr +
@@ -1090,6 +1119,20 @@ public class DebugHelper {
 
                 boolean[] has46 = ConnectionHelper.has46(context);
 
+                boolean mx;
+                try {
+                    DnsHelper.checkMx(context, new Address[]{Log.myAddress()});
+                    mx = true;
+                } catch (Throwable ignored) {
+                    mx = false;
+                }
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean dns_custom = prefs.getBoolean("dns_custom", false);
+
+                size += write(os, "DNS custom=" + dns_custom +
+                        " servers=" + TextUtils.join(", ", DnsHelper.getDnsServers(context)) + "\r\n");
+                size += write(os, "MX=" + mx + "\r\n");
                 size += write(os, "Has IPv4=" + has46[0] + " IPv6=" + has46[1] + "\r\n");
                 size += write(os, "VPN active=" + ConnectionHelper.vpnActive(context) + "\r\n");
                 size += write(os, "Data saving=" + ConnectionHelper.isDataSaving(context) + "\r\n");
@@ -1102,7 +1145,6 @@ public class DebugHelper {
                             NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted() + "\r\n");
                 size += write(os, "\r\n");
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 int timeout = prefs.getInt("timeout", EmailService.DEFAULT_CONNECT_TIMEOUT);
                 boolean metered = prefs.getBoolean("metered", true);
                 int download = prefs.getInt("download", MessageHelper.DEFAULT_DOWNLOAD_SIZE);
@@ -1150,6 +1192,10 @@ public class DebugHelper {
                 size += write(os, "cert_strict=" + cert_strict + (cert_strict ? " !!!" : "") + "\r\n");
                 size += write(os, "cert_transparency=" + cert_transparency + (cert_transparency ? " !!!" : "") + "\r\n");
                 size += write(os, "open_safe=" + open_safe + "\r\n");
+
+                for (String key : prefs.getAll().keySet())
+                    if (key.startsWith("dns_"))
+                        size += write(os, key + "=" + prefs.getAll().get(key) + "\r\n");
 
                 size += write(os, "\r\n");
                 size += write(os, Log.getCiphers().toString());
@@ -1321,26 +1367,31 @@ public class DebugHelper {
 
             File logcat = new File(context.getFilesDir(), "logcat.txt");
 
-            // https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html#java
-            ProcessBuilder pb = new ProcessBuilder("logcat", // CASA "/system/bin/logcat",
-                    "-d",
-                    "-v", "threadtime",
-                    //"-t", "1000",
-                    "fairemail" + ":I");
-            Map<String, String> env = pb.environment();
-            env.clear();
-            pb.directory(context.getFilesDir());
+            try {
 
-            Process proc = null;
-            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(logcat))) {
-                proc = pb.start();
-                Helper.copy(proc.getInputStream(), os);
-            } finally {
-                if (proc != null)
-                    proc.destroy();
+                // https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html#java
+                ProcessBuilder pb = new ProcessBuilder("logcat", // CASA "/system/bin/logcat",
+                        "-d",
+                        "-v", "threadtime",
+                        //"-t", "1000",
+                        "fairemail" + ":I");
+                Map<String, String> env = pb.environment();
+                env.clear();
+                pb.directory(context.getFilesDir());
+
+                Process proc = null;
+                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(logcat))) {
+                    proc = pb.start();
+                    Helper.copy(proc.getInputStream(), os);
+                } finally {
+                    if (proc != null)
+                        proc.destroy();
+                }
+
+                files.add(logcat);
+            } catch (Throwable ex) {
+                Log.e(ex);
             }
-
-            files.add(logcat);
 
             attachment.zip(context, files.toArray(new File[0]));
 
@@ -1470,11 +1521,70 @@ public class DebugHelper {
             PackageManager pm = context.getPackageManager();
 
             long size = 0;
+
+            boolean safOpen = false;
+            try {
+                Intent open = new Intent(Intent.ACTION_GET_CONTENT);
+                open.addCategory(Intent.CATEGORY_OPENABLE);
+                open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                open.setType("*/*");
+                safOpen = (open.resolveActivity(pm) != null);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+            boolean safCreate = false;
+            try {
+                Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                create.addCategory(Intent.CATEGORY_OPENABLE);
+                create.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                create.setType("*/*");
+                create.putExtra(Intent.EXTRA_TITLE, "x.x");
+                Helper.openAdvanced(context, create);
+                safCreate = (create.resolveActivity(pm) != null);
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                size += write(os, String.format("SAF open=%b create=%b\r\n", safOpen, safCreate));
                 size += write(os, String.format("Photo picker=%b\r\n", Helper.hasPhotoPicker()));
                 size += write(os, String.format("Double tap timeout=%d\r\n", ViewConfiguration.getDoubleTapTimeout()));
                 size += write(os, String.format("Long press timeout=%d\r\n", ViewConfiguration.getLongPressTimeout()));
+
+                String s = Helper.getTimePattern(context, SimpleDateFormat.SHORT);
+                String m = Helper.getTimePattern(context, SimpleDateFormat.MEDIUM);
+
+                size += write(os, String.format("Time 24h=%b\r\n",
+                        android.text.format.DateFormat.is24HourFormat(context)));
+                size += write(os, String.format("Time short format=%s time=%s\r\n", s,
+                        new SimpleDateFormat(s).format(now)));
+                size += write(os, String.format("Time medium format=%s time=%s\r\n", m,
+                        new SimpleDateFormat(m).format(now)));
+                size += write(os, String.format("Time short=%s\r\n",
+                        Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(now)));
+                size += write(os, String.format("Time medium=%s\r\n",
+                        Helper.getTimeInstance(context, SimpleDateFormat.MEDIUM).format(now)));
+                size += write(os, String.format("Time long=%s\r\n",
+                        Helper.getTimeInstance(context, SimpleDateFormat.LONG).format(now)));
+                size += write(os, String.format("Date short=%s\r\n",
+                        Helper.getDateInstance(context, SimpleDateFormat.SHORT).format(now)));
+                size += write(os, String.format("Date medium=%s\r\n",
+                        Helper.getDateInstance(context, SimpleDateFormat.MEDIUM).format(now)));
+                size += write(os, String.format("Date long=%s\r\n",
+                        Helper.getDateInstance(context, SimpleDateFormat.LONG).format(now)));
+                size += write(os, String.format("Date/time short=%s\r\n",
+                        Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT).format(now)));
+                size += write(os, String.format("Date/time medium=%s\r\n",
+                        Helper.getDateTimeInstance(context, SimpleDateFormat.MEDIUM, SimpleDateFormat.MEDIUM).format(now)));
+                size += write(os, String.format("Date/time long=%s\r\n",
+                        Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG).format(now)));
+
+                BiometricManager bm = BiometricManager.from(context);
+                boolean secure = (bm.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                        == BiometricManager.BIOMETRIC_SUCCESS);
+                size += write(os, String.format("Device credentials allowed=%b\r\n", secure));
 
                 for (Class<?> cls : new Class[]{
                         ActivitySendSelf.class,
@@ -1512,6 +1622,28 @@ public class DebugHelper {
                     size += write(os, String.format("Default launcher=%s\r\n", (rid == null ? null : rid.activityInfo.packageName)));
                 } catch (Throwable ex) {
                     size += write(os, String.format("%s\r\n", ex));
+                }
+                size += write(os, "\r\n");
+
+                try {
+                    Intent open = new Intent(Intent.ACTION_GET_CONTENT);
+                    open.addCategory(Intent.CATEGORY_OPENABLE);
+                    open.setType("*/*");
+
+                    ResolveInfo main = pm.resolveActivity(open, 0);
+
+                    List<ResolveInfo> ris = pm.queryIntentActivities(open, flags);
+                    size += write(os, "File selectors=" + (ris == null ? null : ris.size()) + "\r\n");
+                    if (ris != null)
+                        for (ResolveInfo ri : ris) {
+                            boolean p = Objects.equals(main == null ? null : main.activityInfo.packageName, ri.activityInfo.packageName);
+                            CharSequence label = pm.getApplicationLabel(ri.activityInfo.applicationInfo);
+                            size += write(os, String.format("File selector %s%s (%s)\r\n",
+                                    ri.activityInfo.packageName, p ? "*" : "", label == null ? null : label.toString()));
+                        }
+
+                } catch (Throwable ex) {
+                    size += write(os, "\r\n");
                 }
                 size += write(os, "\r\n");
 
@@ -1554,7 +1686,7 @@ public class DebugHelper {
                                 sb.append(scheme);
                             }
 
-                            if (tabs && BuildConfig.DEBUG)
+                            if (tabs && BuildConfig.DEBUG && false)
                                 try {
                                     boolean bindable = context.bindService(serviceIntent, new CustomTabsServiceConnection() {
                                         @Override

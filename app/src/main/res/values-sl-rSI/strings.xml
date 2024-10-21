@@ -132,7 +132,6 @@
     <string name="title_notification_sending">Pošiljanje sporočil</string>
     <string name="title_notification_waiting">Čakanje na primerno povezavo</string>
     <string name="title_notification_idle">Nedejavno</string>
-    <string name="title_notification_failed">\'%1$s\' je spodletelo.</string>
     <string name="title_notification_alert">Opozorilo strežnika: \'%1$s\'</string>
     <string name="title_notification_sending_left">Preostalih poizkusov: %1$d</string>
     <string name="title_notification_sending_retry">Pošiljanje so bo poizkusilo ponovno izvesti ob spremembi internetne povezave ali če povlečete dol v oknu izhodne pošte.</string>
@@ -331,8 +330,6 @@
     <string name="title_setup_reset_full">Prikaži izvirna sporočila</string>
     <string name="title_check_gmail_oauth">Vaši računi Gmail bodo še naprej delovali po 30. maju 2022.</string>
     <string name="title_check_gmail_password">Nekateri od vaših računov Gmail bodo morda prenehali delovati po 30. maju 2022.</string>
-    <string name="title_check_outlook_oauth">Vaši računi Outlook bodo še naprej delovali po 1. okrobru 2022.</string>
-    <string name="title_check_outlook_password">Nekateri od vaših računov Outlook bodo morda prenehali delovati po 1. oktobru 2022.</string>
     <string name="title_advanced_hint_title">Več naprednih nastavitev</string>
     <string name="title_advanced_hint_message">        You are navigating to the more advanced options.        All options have commonly used standard values, which you do not need to change unless you have a different preference.
     </string>
@@ -483,7 +480,6 @@
     <string name="title_advanced_threading_unread">Prikaži število neprebranih sporočil v pogovorih</string>
     <string name="title_advanced_indentation">V pogovorih zamakni prejeta/poslana sporočila levo/desno</string>
     <string name="title_advanced_highlight_unread">Poudari neprebrana sporočila</string>
-    <string name="title_advanced_color_stripe">Prikaži barvno črto</string>
     <string name="title_advanced_color_stripe_wide">Uporabi široko barvno črto</string>
     <string name="title_advanced_avatars">Prikaži slike stikov</string>
     <string name="title_advanced_bimi_unverified">Nepreverjen pošiljatelj</string>
@@ -545,7 +541,6 @@
     <string name="title_advanced_actionbar_swap">Zamenjaj gumba za smeti in arhiviranje</string>
     <string name="title_advanced_actionbar_color">Za barvo ozadja vrstice z dejanji pogovorov uporabi barvo računa</string>
     <string name="title_advanced_category_header">Združi po kategorijah računa</string>
-    <string name="title_advanced_navbar_colorize">Obarvaj Androidovo vrstico za krmarjenje</string>
     <string name="title_advanced_list_count">Prikaži število sporočil ali pogovorov v vrhnji vrstici dejanj</string>
     <string name="title_advanced_bundled_fonts">Uporabi svežnje pisav</string>
     <string name="title_advanced_parse_classes">Razčleni slogovne predloge</string>
@@ -752,7 +747,6 @@
     <string name="title_advanced_metered_warning">Onemogočanje te možnosti bo onemogočilo prejemanje in pošiljanje sporočil pri mobilnih internetnih povezavah.</string>
     <string name="title_advanced_rlah_hint">Program predvideva, da v EU-ju ni gostovanja.</string>
     <string name="title_advanced_usage_hint">To bo povečalo porabo energije, podatkov in prostora za shranjevanje.</string>
-    <string name="title_advanced_plain_hint">Omogočanje tega bo omejilo porabo podatkov, vendar bodo sporočila prikazana brez slogov.</string>
     <string name="title_advanced_tcp_keep_alive_hint">Omogočanje tega lahko na nekaterih napravah povzroči težave s povezavo in lahko poveča porabo energije.</string>
     <string name="title_advanced_validate_hint">To lahko povzroči, da se sporočila ne sinhronizirajo, na primer ob uporabi VPN-a in tudi v drugih primerih.</string>
     <string name="title_advanced_timeout_hint">Časovna omejitev za branje/pisanje bo nastavljena na dvakratno vrednost časovne omejitve povezave.  Višje vrednosti bodo povzročile večjo porabo energije.</string>
@@ -795,7 +789,6 @@
     <string name="title_advanced_display_harmful_hint">Onemogočanje te možnosti lahko škoduje vaši zasebnosti.</string>
     <string name="title_advanced_display_hidden_hint">To lahko povzroči čuden videz besedila ali dvojno besedilo.</string>
     <string name="title_advanced_display_pin_hint">PIN ima prednost pred biometrično overitvijo.</string>
-    <string name="title_advanced_display_autolock_nav_hint">Zakasnitveni čas bo %1$d s.</string>
     <string name="title_advanced_user_agent_hint">Nekater strežniki ne sprejemajo splošnega niza za uporabnišega posrednika.</string>
     <string name="title_advanced_safe_browsing_hint">Googlov strežnik ve, kateri naslovi se iščejo.</string>
     <string name="title_advanced_badge_hint">Na voljo samo v podprtih zaganjalnikih.</string>
@@ -1004,7 +997,7 @@
     <string name="title_delete_operation_flag">Opravila označevanja</string>
     <string name="title_delete_operation_delete">Opravila brisanja</string>
     <string name="title_delete_operation_deleted">Izbrisanih je bilo %1$d opravil.</string>
-    <string name="title_delete_contacts">Izbriši vidne krajevne stike?</string>
+    <string name="title_delete_contacts">Izbriši vse krajevne stike?</string>
     <string name="title_no_operations">Ni opravil na čakanju.</string>
     <string name="title_check_operations">Preverjanje za opravila</string>
     <string name="title_hint_operations">Izbris opravil lahko povzroči izginjanje sporočil in težave s sinhronizacijo.</string>
@@ -1229,10 +1222,6 @@
     <string name="title_third_party">Uporabljate različico tretje osebe.</string>
     <string name="title_expand_warning">Razširitev tega sporočila bo prejela %1$s.</string>
     <string name="title_download_message">Prejemanje &#8230;</string>
-    <string name="title_reformatted">        To je pogled preoblikovanega sporočila.
-        Lahko se dotaknete ikone &#x26F6; za ogled izvirnega sporočila in da skrijete to sporočilo.
-        Preoblikovanje sporočila traja nekaj časa, odvisno od velikosti sporočila in hitrosti naprave.
-    </string>
     <string name="title_compose">Sestavi</string>
     <string name="title_submitter">Poslal:</string>
     <string name="title_delivered_to">Dostavljeno za:</string>
@@ -1864,6 +1853,7 @@
     <string name="title_widget_folder_unified">Poenotene mape \'Prejeto\'</string>
     <string name="title_widget_unseen">Samo neprebrana sporočila</string>
     <string name="title_widget_flagged">Samo sporočila z zvezdico</string>
+    <string name="title_widget_show_flagged">Prikaži zvezdice</string>
     <string name="title_widget_font_size">Velikost besedila</string>
     <string name="title_widget_padding">Velikost blazinjenja</string>
     <string name="title_widget_separator_lines">Prikaži ločilne črte</string>
@@ -1931,6 +1921,8 @@
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Ne</item>
+        <item>5 seconds</item>
+        <item>10 seconds</item>
         <item>15 sekund</item>
         <item>30 sekund</item>
         <item>1 minuta</item>
@@ -1943,6 +1935,7 @@
         <item>poenotene mape</item>
         <item>mape glavnega računa</item>
         <item>Računi</item>
+        <item>Primary inbox</item>
     </string-array>
     <string-array name="downloadNames">
         <item>16 kB</item>
@@ -2074,6 +2067,11 @@
         <item>Srednja</item>
         <item>Velika</item>
         <item>Zelo velika</item>
+    </string-array>
+    <string-array name="accountColorNames">
+        <item>Brez</item>
+        <item>Stripe</item>
+        <item>Dot</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Prejemnik</item>

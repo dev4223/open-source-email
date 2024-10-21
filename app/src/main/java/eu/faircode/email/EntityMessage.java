@@ -127,6 +127,8 @@ public class EntityMessage implements Serializable {
     static final Long SWIPE_ACTION_JUNK = -8L;
     static final Long SWIPE_ACTION_REPLY = -9L;
     static final Long SWIPE_ACTION_IMPORTANCE = -10L;
+    static final Long SWIPE_ACTION_SUMMARIZE = -11L;
+    static final Long SWIPE_ACTION_TTS = -12L;
 
     private static final int MAX_SNOOZED = 300;
 
@@ -262,6 +264,7 @@ public class EntityMessage implements Serializable {
     public String warning; // persistent
     public String error; // volatile
     public Long last_attempt; // send
+    public Long last_touched;
 
     static String generateMessageId() {
         return generateMessageId("localhost");
@@ -277,6 +280,7 @@ public class EntityMessage implements Serializable {
         // adb shell pm set-app-links --package eu.faircode.email 0 all
         // adb shell pm verify-app-links --re-verify eu.faircode.email
         // adb shell pm get-app-links eu.faircode.email
+        // https://link.fairemail.net/.well-known/assetlinks.json
         return "https://link.fairemail.net/#" + id;
     }
 
@@ -286,6 +290,15 @@ public class EntityMessage implements Serializable {
 
     boolean hasAlt() {
         return (this.plain_only != null && (this.plain_only & 0x80) != 0);
+    }
+
+    boolean fromSelf(EntityIdentity identity) {
+        if (from != null && identity != null)
+            for (Address sender : from)
+                if (identity.self &&
+                        (identity.sameAddress(sender) || identity.similarAddress(sender)))
+                    return true;
+        return false;
     }
 
     boolean fromSelf(List<TupleIdentityEx> identities) {
@@ -347,6 +360,28 @@ public class EntityMessage implements Serializable {
                         addresses.remove(address);
 
         return addresses.toArray(new Address[0]);
+    }
+
+    List<Address> getAllRecipients() {
+        List<Address> recipients = new ArrayList<>();
+        if (to != null)
+            recipients.addAll(Arrays.asList(to));
+        if (cc != null)
+            recipients.addAll(Arrays.asList(cc));
+        if (bcc != null)
+            recipients.addAll(Arrays.asList(bcc));
+        return recipients;
+    }
+
+    String getRemark() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(MessageHelper.formatAddresses(from));
+        if (!TextUtils.isEmpty(subject)) {
+            if (sb.length() > 0)
+                sb.append('\n');
+            sb.append(subject);
+        }
+        return sb.toString();
     }
 
     boolean hasKeyword(@NonNull String value) {
@@ -419,10 +454,12 @@ public class EntityMessage implements Serializable {
             return false;
         String email = ((InternetAddress) from[0]).getAddress();
         String domain = UriHelper.getEmailDomain(email);
+        if (TextUtils.isEmpty(domain))
+            return false;
         return "duck.com".equals(domain) ||
                 "simplelogin.co".equals(domain) ||
-                "mozmail.com".equals(domain) ||
-                "anonaddy.me".equals(domain);
+                "anonaddy.me".equals(domain) ||
+                domain.endsWith(".mozmail.com");
     }
 
     String[] checkFromDomain(Context context) {
@@ -521,6 +558,7 @@ public class EntityMessage implements Serializable {
     Element getReplyHeader(Context context, Document document, boolean separate, boolean extended) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean hide_timezone = prefs.getBoolean("hide_timezone", false);
+        String template_reply = prefs.getString("template_reply", null);
         boolean language_detection = prefs.getBoolean("language_detection", false);
         String compose_font = prefs.getString("compose_font", "");
         String l = (language_detection ? language : null);
@@ -568,8 +606,17 @@ public class EntityMessage implements Serializable {
                 p.appendText(subject);
                 p.appendElement("br");
             }
-        } else
+        } else if (TextUtils.isEmpty(template_reply))
             p.text(date + " " + MessageHelper.formatAddresses(from) + ":");
+        else {
+            template_reply = template_reply.replace("$from$", MessageHelper.formatAddresses(from));
+            template_reply = template_reply.replace("$to$", MessageHelper.formatAddresses(to));
+            template_reply = template_reply.replace("$cc$", MessageHelper.formatAddresses(cc));
+            template_reply = template_reply.replace("$time$", date);
+            template_reply = template_reply.replace("$subject$", subject);
+            p.html(template_reply);
+        }
+
 
         Element div = document.createElement("div")
                 .attr("fairemail", "reply");
@@ -729,6 +776,10 @@ public class EntityMessage implements Serializable {
             return "junk";
         if (SWIPE_ACTION_REPLY.equals(type))
             return "reply";
+        if (SWIPE_ACTION_SUMMARIZE.equals(type))
+            return "summarize";
+        if (SWIPE_ACTION_TTS.equals(type))
+            return "TTS";
         return "???";
     }
 

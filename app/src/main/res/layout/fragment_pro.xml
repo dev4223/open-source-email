@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eu.faircode.email.ScrollViewEx xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="12dp"
     android:scrollbarStyle="outsideOverlay"
+    android:tag="inset"
     tools:context="eu.faircode.email.ActivityView">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -230,4 +231,4 @@
             app:layout_constraintTop_toBottomOf="@id/tvRestoreHint"
             app:srcCompat="@drawable/twotone_cloud_off_24" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</eu.faircode.email.ScrollViewEx>
+</ScrollView>

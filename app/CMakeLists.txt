@@ -2,7 +2,7 @@
 # https://developer.android.com/studio/projects/configure-cmake
 
 project(fairemail)
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.22.1)
 
 add_library(fairemail SHARED
         src/main/jni/fairemail.cc
@@ -81,5 +81,8 @@ find_library(log-lib log)
 add_definitions(-DHAVE_MEMRCHR -DHAVE_PTHREAD)
 
 target_compile_options(fairemail PRIVATE -Wno-c++11-narrowing -Wno-undefined-var-template)
+
+#https://developer.android.com/guide/practices/page-sizes#cmake
+target_link_options(fairemail PRIVATE "-Wl,-z,max-page-size=16384")
 
 target_link_libraries(fairemail ${log-lib})

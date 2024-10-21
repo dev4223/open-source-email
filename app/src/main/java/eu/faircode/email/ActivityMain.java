@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
@@ -161,8 +160,10 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                 protected void onExecuted(Bundle args, EntityMessage message) {
                     finish();
 
-                    if (message == null)
+                    if (message == null) {
+                        startActivity(new Intent(ActivityMain.this, ActivityView.class));
                         return;
+                    }
 
                     String type = args.getString("type");
 
@@ -218,15 +219,12 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
             final SimpleTask<Boolean> boot = new SimpleTask<Boolean>() {
                 @Override
                 protected void onPreExecute(Bundle args) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
-                        getMainHandler().postDelayed(splash, SPLASH_DELAY);
+                    getMainHandler().postDelayed(splash, SPLASH_DELAY);
                 }
 
                 @Override
                 protected void onPostExecute(Bundle args) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
-                        getMainHandler().removeCallbacks(splash);
-                    getWindow().setBackgroundDrawable(null);
+                    getMainHandler().removeCallbacks(splash);
                 }
 
                 @Override
@@ -283,7 +281,7 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                             long composing = prefs.getLong("last_composing", -1L);
                             if (ActivityCompose.class.getName().equals(last_activity) && composing >= 0)
                                 view = new Intent(ActivityMain.this, ActivityCompose.class)
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                         .putExtra("action", "edit")
                                         .putExtra("id", composing);
                         }
@@ -341,7 +339,8 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                                 public void onClick(DialogInterface dialog, int which) {
                                     Uri uri = Helper.getSupportUri(ActivityMain.this, "Main:error")
                                             .buildUpon()
-                                            .appendQueryParameter("message", Log.formatThrowable(ex, false))
+                                            .appendQueryParameter("message",
+                                                    Helper.limit(Log.formatThrowable(ex, false), 384))
                                             .build();
                                     Helper.view(ActivityMain.this, uri, true);
                                 }
@@ -465,8 +464,12 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if ("eula".equals(key))
-            if (prefs.getBoolean(key, false))
+        if ("eula".equals(key)) {
+            boolean eula = prefs.getBoolean(key, false);
+            if (eula) {
+                // recreate is done without animation, unfortunately
                 recreate();
+            }
+        }
     }
 }

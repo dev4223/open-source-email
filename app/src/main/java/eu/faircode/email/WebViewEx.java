@@ -19,6 +19,8 @@ package eu.faircode.email;
     Copyright 2018-2024 by Marcel Bokhorst (M66B)
 */
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -27,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -37,6 +40,7 @@ import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -64,7 +68,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
         super(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        this.viewportHeight = prefs.getInt("viewport_height", DEFAULT_VIEWPORT_HEIGHT);
+        this.viewportHeight = prefs.getInt("viewport_height", getDefaultViewportHeight(context));
         boolean overview_mode = prefs.getBoolean("overview_mode", false);
         boolean safe_browsing = prefs.getBoolean("safe_browsing", false);
 
@@ -183,7 +187,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.i("Open url=" + url);
-                return intf.onOpenLink(url);
+                return intf.onOpenLink(url, false);
             }
 
             @Override
@@ -201,8 +205,14 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
             setOnScrollChangeListener(new View.OnScrollChangeListener() {
                 @Override
                 public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                    Log.i("Scroll (x,y)=" + scrollX + "," + scrollY);
-                    intf.onScrollChange(scrollX - oldScrollX, scrollY - oldScrollY, scrollX, scrollY);
+                    int yrange = computeVerticalScrollRange();
+                    int yextend = computeVerticalScrollExtent();
+                    int yoff = computeVerticalScrollOffset();
+                    boolean canScrollVertical = (yrange > yextend && yoff < yrange - yextend);
+                    Log.i("Scroll (x,y)=" + scrollX + "," + scrollY +
+                            " yrange=" + yrange + " yextend=" + yextend + " yoff=" + yoff +
+                            " can=" + canScrollVertical);
+                    intf.onScrollChange(scrollX - oldScrollX, canScrollVertical ? scrollY - oldScrollY : -1, scrollX, scrollY);
                 }
             });
     }
@@ -294,19 +304,56 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
     @Override
     public boolean onLongClick(View view) {
-        WebView.HitTestResult result = ((WebView) view).getHitTestResult();
-        if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-            Log.i("Long press url=" + result.getExtra());
+        try {
+            final Context context = view.getContext();
 
-            Uri uri = Uri.parse(result.getExtra());
-            if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+            WebView.HitTestResult result = ((WebView) view).getHitTestResult();
+            int type = result.getType();
+            String extra = result.getExtra();
+            Log.i("WebView long click type=" + type + " extra=" + extra);
+
+            if (TextUtils.isEmpty(extra))
                 return false;
 
-            Helper.view(view.getContext(), uri, true);
+            if (type == HitTestResult.PHONE_TYPE ||
+                    type == HitTestResult.GEO_TYPE ||
+                    type == HitTestResult.EMAIL_TYPE ||
+                    type == HitTestResult.SRC_ANCHOR_TYPE ||
+                    type == HitTestResult.EDIT_TEXT_TYPE) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean confirm_links = prefs.getBoolean("confirm_links", true);
+                if (confirm_links) {
+                    ClipboardManager clipboard = Helper.getSystemService(context, ClipboardManager.class);
+                    if (clipboard == null)
+                        return false;
 
-            return true;
+                    String title = context.getString(R.string.app_name);
+
+                    ClipData clip = ClipData.newPlainText(title, extra);
+                    clipboard.setPrimaryClip(clip);
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+                        ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+
+                    return true;
+                } else
+                    return intf.onOpenLink(extra, true);
+            }
+
+            if (type == WebView.HitTestResult.IMAGE_TYPE ||
+                    type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                Uri uri = Uri.parse(extra);
+                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                    return false;
+
+                Helper.view(context, uri, true);
+
+                return true;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
+
         return false;
     }
 
@@ -430,6 +477,10 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
         }
     }
 
+    static int getDefaultViewportHeight(Context context) {
+        return DEFAULT_VIEWPORT_HEIGHT;
+    }
+
     @NonNull
     static String getUserAgent(Context context) {
         return getUserAgent(context, null);
@@ -467,7 +518,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
         void onScrollChange(int dx, int dy, int scrollX, int scrollY);
 
-        boolean onOpenLink(String url);
+        boolean onOpenLink(String url, boolean always);
 
         void onUserInterAction();
     }

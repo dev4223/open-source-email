@@ -29,8 +29,11 @@ import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -41,13 +44,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
@@ -57,6 +63,8 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -71,6 +79,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSuggestFrequently;
     private SwitchCompat swSuggestAccount;
     private SwitchCompat swAutoIdentity;
+    private EditText etAutoDeleteAge;
+    private EditText etAutoDeleteFreq;
     private Button btnLocalContacts;
     private SwitchCompat swSendChips;
     private SwitchCompat swNavColor;
@@ -81,6 +91,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swAutoSaveDot;
     private SwitchCompat swDiscardDelete;
     private Spinner spSendDelayed;
+    private SwitchCompat swSendUndo;
     private Spinner spAnswerActionSingle;
     private Spinner spAnswerActionLong;
     private Button btnSound;
@@ -94,6 +105,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private RadioGroup rgFwd;
     private SwitchCompat swSeparateReply;
     private SwitchCompat swExtendedReply;
+    private EditText etTemplateReply;
+    private TextView tvTemplateReplyHint;
     private SwitchCompat swWriteBelow;
     private SwitchCompat swQuoteReply;
     private SwitchCompat swQuoteLimit;
@@ -106,6 +119,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSignatureForward;
     private Button btnEditSignature;
 
+    private SwitchCompat swSendAtTop;
     private SwitchCompat swAttachNew;
     private SwitchCompat swAutoLink;
     private SwitchCompat swPlainOnly;
@@ -120,26 +134,30 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swLookupMx;
     private SwitchCompat swReplyMove;
     private SwitchCompat swReplyMoveInbox;
+    private EditText etSendRetryMax;
+    private SwitchCompat swSendPartial;
 
-    private final static String[] RESET_OPTIONS = new String[]{
+    final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
             "keyboard", "keyboard_no_fullscreen",
             "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently", "suggest_account", "auto_identity",
+            "purge_contact_age", "purge_contact_freq",
             "send_reminders", "send_chips", "send_nav_color", "send_pending",
             "save_revisions", "auto_save_paragraph", "auto_save_dot", "discard_delete",
-            "send_delayed",
+            "send_delayed", "send_undo",
             "answer_single", "answer_action",
             "sound_sent",
             "compose_color", "compose_font", "compose_monospaced",
             "prefix_once", "prefix_count", "alt_re", "alt_fwd",
-            "separate_reply", "extended_reply", "write_below", "quote_reply", "quote_limit",
+            "separate_reply", "extended_reply", "template_reply", "write_below", "quote_reply", "quote_limit",
             "resize_reply", "resize_paste",
             "signature_location", "signature_new", "signature_reply", "signature_reply_once", "signature_forward",
-            "attach_new", "auto_link", "plain_only", "plain_only_reply",
+            "send_at_top", "attach_new", "auto_link", "plain_only", "plain_only_reply",
             "format_flowed", "usenet_signature", "remove_signatures",
             "receipt_default", "receipt_type", "receipt_legacy",
             "forward_new",
-            "lookup_mx", "reply_move", "reply_move_inbox"
-    };
+            "lookup_mx", "reply_move", "reply_move_inbox",
+            "send_retry_max", "send_partial"
+    ));
 
     @Override
     @Nullable
@@ -160,6 +178,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swSuggestFrequently = view.findViewById(R.id.swSuggestFrequently);
         swSuggestAccount = view.findViewById(R.id.swSuggestAccount);
         swAutoIdentity = view.findViewById(R.id.swAutoIdentity);
+        etAutoDeleteAge = view.findViewById(R.id.etAutoDeleteAge);
+        etAutoDeleteFreq = view.findViewById(R.id.etAutoDeleteFreq);
         btnLocalContacts = view.findViewById(R.id.btnLocalContacts);
         swSendChips = view.findViewById(R.id.swSendChips);
         swNavColor = view.findViewById(R.id.swNavColor);
@@ -170,6 +190,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swAutoSaveDot = view.findViewById(R.id.swAutoSaveDot);
         swDiscardDelete = view.findViewById(R.id.swDiscardDelete);
         spSendDelayed = view.findViewById(R.id.spSendDelayed);
+        swSendUndo = view.findViewById(R.id.swSendUndo);
         spAnswerActionSingle = view.findViewById(R.id.spAnswerActionSingle);
         spAnswerActionLong = view.findViewById(R.id.spAnswerActionLong);
         btnSound = view.findViewById(R.id.btnSound);
@@ -183,6 +204,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         rgFwd = view.findViewById(R.id.rgFwd);
         swSeparateReply = view.findViewById(R.id.swSeparateReply);
         swExtendedReply = view.findViewById(R.id.swExtendedReply);
+        etTemplateReply = view.findViewById(R.id.etTemplateReply);
+        tvTemplateReplyHint = view.findViewById(R.id.tvTemplateReplyHint);
         swWriteBelow = view.findViewById(R.id.swWriteBelow);
         swQuoteReply = view.findViewById(R.id.swQuoteReply);
         swQuoteLimit = view.findViewById(R.id.swQuoteLimit);
@@ -195,6 +218,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swSignatureForward = view.findViewById(R.id.swSignatureForward);
         btnEditSignature = view.findViewById(R.id.btnEditSignature);
 
+        swSendAtTop = view.findViewById(R.id.swSendAtTop);
         swAttachNew = view.findViewById(R.id.swAttachNew);
         swAutoLink = view.findViewById(R.id.swAutoLink);
         swPlainOnly = view.findViewById(R.id.swPlainOnly);
@@ -209,6 +233,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         swLookupMx = view.findViewById(R.id.swLookupMx);
         swReplyMove = view.findViewById(R.id.swReplyMove);
         swReplyMoveInbox = view.findViewById(R.id.swReplyMoveInbox);
+        etSendRetryMax = view.findViewById(R.id.etSendRetryMax);
+        swSendPartial = view.findViewById(R.id.swSendPartial);
 
         List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext(), false);
 
@@ -302,6 +328,48 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             }
         });
 
+        etAutoDeleteAge.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Integer months = Helper.parseInt(s.toString());
+                if (months == null)
+                    prefs.edit().remove("purge_contact_age").apply();
+                else
+                    prefs.edit().putInt("purge_contact_age", months).apply();
+            }
+        });
+
+        etAutoDeleteFreq.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Integer months = Helper.parseInt(s.toString());
+                if (months == null)
+                    prefs.edit().remove("purge_contact_freq").apply();
+                else
+                    prefs.edit().putInt("purge_contact_freq", months).apply();
+            }
+        });
+
         btnLocalContacts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -370,12 +438,21 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 int[] values = getResources().getIntArray(R.array.sendDelayedValues);
-                prefs.edit().putInt("send_delayed", values[position]).apply();
+                int send_delayed = values[position];
+                prefs.edit().putInt("send_delayed", send_delayed).apply();
+                swSendUndo.setEnabled(send_delayed > 0);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("send_delayed").apply();
+            }
+        });
+
+        swSendUndo.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("send_undo", checked).apply();
             }
         });
 
@@ -408,14 +485,40 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         btnSound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String sound = prefs.getString("sound_sent", null);
-                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.title_advanced_sound));
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
-                startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_SOUND_OUTBOUND);
+                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), v);
+
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_rule_select_sound_ringtone, 1, R.string.title_rule_select_sound_ringtone);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_rule_select_sound_audio, 2, R.string.title_rule_select_sound_audio);
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        int itemId = item.getItemId();
+                        if (itemId == R.string.title_rule_select_sound_ringtone) {
+                            String sound = prefs.getString("sound_sent", null);
+                            Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+                            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.title_advanced_sound));
+                            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
+                            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
+                            startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_RINGTONE_OUTBOUND);
+                            return true;
+                        } else if (itemId == R.string.title_rule_select_sound_audio) {
+                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.setType("audio/*");
+                            Helper.openAdvanced(getContext(), intent);
+                            startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_AUDIO_OUTBOUND);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+                popupMenu.show();
             }
         });
 
@@ -517,8 +620,32 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("extended_reply", checked).apply();
+                etTemplateReply.setEnabled(!checked);
             }
         });
+
+        etTemplateReply.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String template = s.toString();
+                if (TextUtils.isEmpty(template.trim()))
+                    prefs.edit().remove("template_reply").apply();
+                else
+                    prefs.edit().putString("template_reply", template).apply();
+            }
+        });
+
+        tvTemplateReplyHint.setText(getString(R.string.title_advanced_template_reply_hint, "$from$ $to$ $cc$ $time$ $subject$"));
 
         swWriteBelow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -601,6 +728,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             public void onClick(View v) {
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(v.getContext());
                 lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_VIEW_IDENTITIES));
+            }
+        });
+
+        swSendAtTop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("send_at_top", checked).apply();
             }
         });
 
@@ -710,9 +844,35 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             }
         });
 
-        // Initialize
-        FragmentDialogTheme.setBackground(getContext(), view, false);
+        etSendRetryMax.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Do nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Integer count = Helper.parseInt(s.toString());
+                if (count == null)
+                    prefs.edit().remove("send_retry_max").apply();
+                else
+                    prefs.edit().putInt("send_retry_max", count).apply();
+            }
+        });
+
+        swSendPartial.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("send_partial", checked).apply();
+            }
+        });
+
+        // Initialize
         String re1 = getString(R.string.title_subject_reply, "");
         String re2 = getString(R.string.title_subject_reply_alt, "");
         ((RadioButton) view.findViewById(R.id.rbRe1)).setText(re1);
@@ -742,6 +902,15 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (!RESET_OPTIONS.contains(key))
+            return;
+        if ("template_reply".equals(key))
+            return;
+        if ("purge_contact_age".equals(key) || "purge_contact_freq".equals(key))
+            return;
+        if ("send_retry_max".equals(key))
+            return;
+
         getMainHandler().removeCallbacks(update);
         getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
     }
@@ -775,6 +944,9 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
+            int purge_contact_age = prefs.getInt("purge_contact_age", 0);
+            int purge_contact_freq = prefs.getInt("purge_contact_freq", 0);
+
             swKeyboard.setChecked(prefs.getBoolean("keyboard", true));
             swKeyboardNoFullscreen.setChecked(prefs.getBoolean("keyboard_no_fullscreen", false));
             swSuggestNames.setChecked(prefs.getBoolean("suggest_names", true));
@@ -786,6 +958,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             swSuggestAccount.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
             swAutoIdentity.setChecked(prefs.getBoolean("auto_identity", false));
             swAutoIdentity.setEnabled(swSuggestSent.isChecked() || swSuggestReceived.isChecked());
+            etAutoDeleteAge.setText(purge_contact_age > 0 ? Integer.toString(purge_contact_age) : null);
+            etAutoDeleteFreq.setText(purge_contact_freq > 0 ? Integer.toString(purge_contact_freq) : null);
             swSendChips.setChecked(prefs.getBoolean("send_chips", true));
             swNavColor.setChecked(prefs.getBoolean("send_nav_color", false));
             swSendReminders.setChecked(prefs.getBoolean("send_reminders", true));
@@ -802,6 +976,9 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
                     spSendDelayed.setSelection(pos);
                     break;
                 }
+
+            swSendUndo.setChecked(prefs.getBoolean("send_undo", false));
+            swSendUndo.setEnabled(send_delayed > 0);
 
             String[] answerValues = getResources().getStringArray(R.array.answerValues);
 
@@ -842,6 +1019,8 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
             swSeparateReply.setChecked(prefs.getBoolean("separate_reply", false));
             swExtendedReply.setChecked(prefs.getBoolean("extended_reply", false));
+            etTemplateReply.setText(prefs.getString("template_reply", null));
+            etTemplateReply.setEnabled(!swExtendedReply.isChecked());
             swWriteBelow.setChecked(prefs.getBoolean("write_below", false));
             swQuoteReply.setChecked(prefs.getBoolean("quote_reply", true));
             swQuoteLimit.setChecked(prefs.getBoolean("quote_limit", true));
@@ -857,6 +1036,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             swSignatureReplyOnce.setEnabled(swSignatureReply.isChecked());
             swSignatureForward.setChecked(prefs.getBoolean("signature_forward", true));
 
+            swSendAtTop.setChecked(prefs.getBoolean("send_at_top", false));
             swAttachNew.setChecked(prefs.getBoolean("attach_new", true));
             swAutoLink.setChecked(prefs.getBoolean("auto_link", false));
             swPlainOnly.setChecked(prefs.getBoolean("plain_only", false));
@@ -871,11 +1051,17 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
             swReceiptLegacy.setChecked(prefs.getBoolean("receipt_legacy", false));
 
-            swForwardNew.setChecked(prefs.getBoolean("forward_new", true));
+            swForwardNew.setChecked(prefs.getBoolean("forward_new", false));
             swLookupMx.setChecked(prefs.getBoolean("lookup_mx", false));
             swReplyMove.setChecked(prefs.getBoolean("reply_move", false));
             swReplyMoveInbox.setChecked(prefs.getBoolean("reply_move_inbox", true));
             swReplyMoveInbox.setEnabled(swReplyMove.isChecked());
+
+            int send_retry_max = prefs.getInt("send_retry_max", 0);
+            etSendRetryMax.setText(send_retry_max > 0 ? Integer.toString(send_retry_max) : null);
+            etSendRetryMax.setHint(Integer.toString(ServiceSend.RETRY_MAX_DEFAULT));
+
+            swSendPartial.setChecked(prefs.getBoolean("send_partial", false));
         } catch (Throwable ex) {
             Log.e(ex);
         }
@@ -887,9 +1073,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
         try {
             switch (requestCode) {
-                case ActivitySetup.REQUEST_SOUND_OUTBOUND:
+                case ActivitySetup.REQUEST_RINGTONE_OUTBOUND:
                     if (resultCode == RESULT_OK && data != null)
                         onSelectSound(data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+                    break;
+                case ActivitySetup.REQUEST_AUDIO_OUTBOUND:
+                    if (resultCode == RESULT_OK && data != null)
+                        onSelectSound(data.getData());
                     break;
             }
         } catch (Throwable ex) {
