@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -104,6 +104,7 @@ public class EntityMessage implements Serializable {
     static final Integer SMIME_SIGNENCRYPT = 3;
     static final Integer SMIME_SIGNONLY = 4;
     static final Integer PGP_ENCRYPTONLY = 5;
+    static final Integer SMIME_ENCRYPTONLY = 6;
 
     static final Integer PRIORITIY_LOW = 0;
     static final Integer PRIORITIY_NORMAL = 1;

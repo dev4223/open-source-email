@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.system.OsConstants.ECONNREFUSED;
@@ -126,6 +126,7 @@ public class EmailProvider implements Parcelable {
     private static final List<String> PROPRIETARY = Collections.unmodifiableList(Arrays.asList(
             "protonmail.ch",
             "protonmail.com",
+            "proton.me",
             "tutanota.com",
             "tutanota.de",
             "tutamail.com", // tutanota
@@ -441,8 +442,17 @@ public class EmailProvider implements Parcelable {
                 for (EmailProvider provider : providers)
                     if (provider.mx != null)
                         for (String mx : provider.mx)
-                            if (record.response.matches(mx))
+                            if (record.response.matches(mx)) {
+                                try {
+                                    // There could be a name server for hosting only, so prefer rfc6186 discovery
+                                    EmailProvider dns = fromDNS(context, domain, Discover.ALL, intf);
+                                    EntityLog.log(context, "NS rfc6186 imap=" + dns.imap + " smtp=" + dns.smtp);
+                                    continue;
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
                                 return Arrays.asList(provider);
+                            }
         } catch (Throwable ex) {
             Log.w(ex);
         }
@@ -560,7 +570,7 @@ public class EmailProvider implements Parcelable {
         if (candidates.size() == 0)
             throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
 
-        for (EmailProvider candidate : candidates) {
+        for (EmailProvider candidate : new ArrayList<>(candidates)) {
             // Always prefer built-in profiles
             // - ISPDB is not always correct
             // - documentation links
@@ -569,13 +579,21 @@ public class EmailProvider implements Parcelable {
                         provider.imap.host.equals(candidate.imap.host) ||
                         provider.smtp.host.equals(candidate.smtp.host)) {
                     EntityLog.log(context, "Replacing auto config host by profile=" + provider.name);
-                    return Arrays.asList(provider);
+                    EmailProvider copy = provider.copy();
+                    copy.imap.score = candidate.imap.score;
+                    copy.smtp.score = candidate.smtp.score;
+                    candidates.add(copy);
+                    candidates.remove(candidate);
                 } else if (provider.enabled && provider.mx != null)
                     for (String mx : provider.mx)
                         if ((candidate.imap.host != null && candidate.imap.host.matches(mx)) ||
                                 (candidate.smtp.host != null && candidate.smtp.host.matches(mx))) {
-                            EntityLog.log(context, "Replacing auto config MC by profile=" + provider.name);
-                            return Arrays.asList(provider);
+                            EntityLog.log(context, "Replacing auto config MX by profile=" + provider.name);
+                            EmailProvider copy = provider.copy();
+                            copy.imap.score = candidate.imap.score;
+                            copy.smtp.score = candidate.smtp.score;
+                            candidates.add(copy);
+                            candidates.remove(candidate);
                         }
 
             // https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview
@@ -718,8 +736,8 @@ public class EmailProvider implements Parcelable {
 
             EntityLog.log(context, "Parsing " + url);
 
-            boolean imap = false;
-            boolean smtp = false;
+            boolean imap = false, hasImap = false;
+            boolean smtp = false, hasSmtp = false;
             String href = null;
             String title = null;
             int eventType = xml.getEventType();
@@ -745,7 +763,7 @@ public class EmailProvider implements Parcelable {
                         //   <authentication>OAuth2</authentication>
                         //   <authentication>password-cleartext</authentication>
                         // </incomingServer>
-                        imap = "imap".equals(xml.getAttributeValue(null, "type"));
+                        imap = !hasImap && "imap".equals(xml.getAttributeValue(null, "type"));
 
                     } else if ("outgoingServer".equals(name)) {
                         // <outgoingServer type="smtp">
@@ -756,7 +774,7 @@ public class EmailProvider implements Parcelable {
                         //   <authentication>OAuth2</authentication>
                         //   <authentication>password-cleartext</authentication>
                         // </outgoingServer>
-                        smtp = "smtp".equals(xml.getAttributeValue(null, "type"));
+                        smtp = !hasSmtp && "smtp".equals(xml.getAttributeValue(null, "type"));
 
                     } else if ("hostname".equals(name)) {
                         eventType = xml.next();
@@ -856,13 +874,13 @@ public class EmailProvider implements Parcelable {
 
                 } else if (eventType == XmlPullParser.END_TAG) {
                     String name = xml.getName();
-                    if ("incomingServer".equals(name))
+                    if ("incomingServer".equals(name)) {
+                        hasImap = true;
                         imap = false;
-
-                    else if ("outgoingServer".equals(name))
+                    } else if ("outgoingServer".equals(name)) {
+                        hasSmtp = true;
                         smtp = false;
-
-                    else if ("enable".equals(name) || "documentation".equals(name)) {
+                    } else if ("enable".equals(name) || "documentation".equals(name)) {
                         if (href != null) {
                             if (title == null)
                                 title = href;
@@ -1340,6 +1358,20 @@ public class EmailProvider implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(imap, smtp);
+    }
+
+    public EmailProvider copy() {
+        Parcel parcel = null;
+        try {
+            parcel = Parcel.obtain();
+            this.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+            return EmailProvider.CREATOR.createFromParcel(parcel);
+        } finally {
+            if (parcel != null) {
+                parcel.recycle();
+            }
+        }
     }
 
     @NonNull

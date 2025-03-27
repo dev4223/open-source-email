@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
@@ -194,6 +194,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private static final int ANNOUNCEMENT_TIMEOUT = 15 * 1000; // milliseconds
     private static final long ANNOUNCEMENT_INTERVAL = 4 * 3600 * 1000L; // milliseconds
+
+    static final int REQUEST_FLAG_COLOR = 1;
 
     private static final int REQUEST_RULES_ACCOUNT = 2001;
     private static final int REQUEST_RULES_FOLDER = 2002;
@@ -908,9 +910,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         final List<NavMenuItem> menus = new ArrayList<>();
 
-        final NavMenuItem navOperations = new NavMenuItem(R.drawable.twotone_dns_24, R.string.menu_operations, new Runnable() {
+        final NavMenuItem navOperations = new NavMenuItem(R.drawable.twotone_dns_24, R.string.menu_operations, new RunnableEx("view:operations") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuOperations();
@@ -919,36 +921,36 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         menus.add(navOperations);
 
-        menus.add(new NavMenuItem(R.drawable.twotone_list_alt_24, R.string.title_log, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_list_alt_24, R.string.title_log, new RunnableEx("view:log") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onShowLog();
             }
         }));
 
-        menus.add(new NavMenuItem(R.drawable.twotone_text_snippet_24, R.string.menu_answers, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_text_snippet_24, R.string.menu_answers, new RunnableEx("view:templates") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuAnswers();
             }
         }));
 
-        menus.add(new NavMenuItem(R.drawable.twotone_filter_alt_24, R.string.menu_rules, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_filter_alt_24, R.string.menu_rules, new RunnableEx("view:rules") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuRulesAccount();
             }
         }));
 
-        menus.add(new NavMenuItem(R.drawable.twotone_settings_24, R.string.menu_setup, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_settings_24, R.string.menu_setup, new RunnableEx("view:settings") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuSetup();
@@ -974,18 +976,18 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         List<NavMenuItem> extra = new ArrayList<>();
 
-        extra.add(new NavMenuItem(R.drawable.twotone_help_24, R.string.menu_legend, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_help_24, R.string.menu_legend, new RunnableEx("view:legend") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuLegend();
             }
         }));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_support_24, R.string.menu_faq, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_support_24, R.string.menu_faq, new RunnableEx("view:support") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuFAQ();
@@ -1003,9 +1005,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         }).setExternal(true));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_feedback_24, R.string.menu_issue, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_feedback_24, R.string.menu_issue, new RunnableEx("view:report") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuIssue();
@@ -1018,9 +1020,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         }).setExternal(true));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_language_24, R.string.menu_translate, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_language_24, R.string.menu_translate, new RunnableEx("view:translate") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuTranslate();
@@ -1028,27 +1030,27 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }).setExternal(true));
 
         if (Helper.isPlayStoreInstall() && false)
-            extra.add(new NavMenuItem(R.drawable.twotone_bug_report_24, R.string.menu_test, new Runnable() {
+            extra.add(new NavMenuItem(R.drawable.twotone_bug_report_24, R.string.menu_test, new RunnableEx("view:test") {
                 @Override
-                public void run() {
+                public void delegate() {
                     if (!drawerLayout.isLocked(drawerContainer))
                         drawerLayout.closeDrawer(drawerContainer);
                     onMenuTest();
                 }
             }).setExternal(true));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_account_circle_24, R.string.menu_privacy, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_account_circle_24, R.string.menu_privacy, new RunnableEx("view:privacy") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 onMenuPrivacy();
             }
         }).setExternal(true));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_info_24, R.string.menu_about, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_info_24, R.string.menu_about, new RunnableEx("view:about") {
             @Override
-            public void run() {
+            public void delegate() {
                 onMenuAbout();
             }
         }, new Callable<Boolean>() {
@@ -1065,9 +1067,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         }).setSeparated().setSubtitle(BuildConfig.VERSION_NAME));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_monetization_on_24, R.string.menu_pro, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_monetization_on_24, R.string.menu_pro, new RunnableEx("view:pro") {
             @Override
-            public void run() {
+            public void delegate() {
                 if (!drawerLayout.isLocked(drawerContainer))
                     drawerLayout.closeDrawer(drawerContainer);
                 startActivity(new Intent(ActivityView.this, ActivityBilling.class));
@@ -1075,9 +1077,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }).setExtraIcon(ActivityBilling.isPro(this) ? R.drawable.twotone_check_24 : 0));
 
         if ((Helper.isPlayStoreInstall() || BuildConfig.DEBUG))
-            extra.add(new NavMenuItem(R.drawable.twotone_star_24, R.string.menu_rate, new Runnable() {
+            extra.add(new NavMenuItem(R.drawable.twotone_star_24, R.string.menu_rate, new RunnableEx("view:rate") {
                 @Override
-                public void run() {
+                public void delegate() {
                     if (!drawerLayout.isLocked(drawerContainer))
                         drawerLayout.closeDrawer(drawerContainer);
                     onMenuRate();
@@ -1272,6 +1274,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         try {
             switch (requestCode) {
+                case REQUEST_FLAG_COLOR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onSearchFlagColor(data.getBundleExtra("args"));
+                    break;
                 case REQUEST_RULES_ACCOUNT:
                     if (resultCode == RESULT_OK && data != null)
                         onMenuRulesFolder(data.getBundleExtra("args"));
@@ -1452,9 +1458,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else {
                     exit = true;
                     ToastEx.makeText(ActivityView.this, R.string.app_exit, Toast.LENGTH_SHORT).show();
-                    getMainHandler().postDelayed(new Runnable() {
+                    getMainHandler().postDelayed(new RunnableEx("view:exit") {
                         @Override
-                        public void run() {
+                        public void delegate() {
                             exit = false;
                         }
                     }, EXIT_DELAY);
@@ -1544,9 +1550,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         lastSnackbar = snackbar;
 
-        final Runnable timeout = new Runnable() {
+        final Runnable timeout = new RunnableEx("view:undo") {
             @Override
-            public void run() {
+            public void delegate() {
                 Log.i("Undo timeout");
                 snackbar.dismiss();
                 if (move != null) {
@@ -1613,15 +1619,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 return;
 
             String last = prefs.getString("changelog", null);
-            if (last != null && !last.equals(version)) {
-                prefs.edit().putString("changelog", version).apply();
-
+            if (!version.equals(last)) {
                 Bundle args = new Bundle();
                 args.putString("name", "CHANGELOG.md");
                 args.putString("option", "show_changelog");
                 FragmentDialogMarkdown fragment = new FragmentDialogMarkdown();
                 fragment.setArguments(args);
                 fragment.show(getSupportFragmentManager(), "changelog");
+
+                prefs.edit().putString("changelog", version).apply();
             }
         }
     }
@@ -2336,6 +2342,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 Log.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, new Bundle(), "rules:account");
+    }
+
+    private void onSearchFlagColor(Bundle args) {
+        BoundaryCallbackMessages.SearchCriteria criteria = new BoundaryCallbackMessages.SearchCriteria();
+        criteria.with_flagged = true;
+        criteria.with_flag_color = args.getInt("color");
+
+        final long account = args.getLong("account", -1);
+        final long folder = args.getLong("folder", -1);
+
+        FragmentMessages.search(
+                this, this, getSupportFragmentManager(),
+                account, folder,
+                false,
+                criteria);
     }
 
     private void onMenuRulesFolder(Bundle args) {

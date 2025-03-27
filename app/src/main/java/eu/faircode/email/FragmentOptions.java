@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Notification;
@@ -165,17 +165,18 @@ public class FragmentOptions extends FragmentBase {
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_swap", "actionbar_color", "group_category",
             "autoscroll", "swipenav", "updown", "reversed", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
-            "auto_hide_answer", "swipe_reply",
+            "keyboard_margin", "auto_hide_answer", "swipe_reply",
             "move_thread_all", "move_thread_sent",
             "language_detection",
             "quick_filter", "quick_scroll", "quick_actions",
             "experiments", "debug", "log_level", "test1", "test2", "test3", "test4", "test5",
-            "webview_legacy", "browser_zoom", "fake_dark",
+            "webview_legacy", "browser_zoom",
             "show_recent",
             "biometrics",
             "default_light",
             "vt_enabled", "vt_apikey",
-            "pdf_preview", "webp"
+            "pdf_preview", "webp",
+            "email_junk"
     };
 
     @Override

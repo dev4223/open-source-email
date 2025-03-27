@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.system.OsConstants.ENOSPC;
@@ -32,6 +32,7 @@ import android.os.Build;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.system.ErrnoException;
+import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
@@ -252,6 +253,7 @@ public class MessageHelper {
     static final String FLAG_LOW_IMPORTANCE = "$LowImportance";
     static final String FLAG_HIGH_IMPORTANCE = "$HighImportance";
     static final String FLAG_PHISHING = "$Phishing"; // Gmail
+    static final String CATEGORY_PREFIX = "$category:";
 
     // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
     // Not black listed: Gmail $Phishing
@@ -907,7 +909,7 @@ public class MessageHelper {
         // https://en.wikipedia.org/wiki/International_email
         for (Address address : addresses) {
             String email = ((InternetAddress) address).getAddress();
-            email = punyCode(email);
+            email = toPunyCode(email, false);
             ((InternetAddress) address).setAddress(email);
         }
         return addresses;
@@ -1009,6 +1011,7 @@ public class MessageHelper {
         boolean format_flowed = prefs.getBoolean("format_flowed", false);
         int compose_color = prefs.getInt("compose_color", Color.TRANSPARENT);
         String compose_font = prefs.getString("compose_font", "");
+        String compose_text_size = prefs.getString("compose_text_size", "");
         boolean auto_link = prefs.getBoolean("auto_link", false);
 
         // Build html body
@@ -1032,6 +1035,11 @@ public class MessageHelper {
             if (message.language != null)
                 document.body().attr("lang", message.language);
 
+            String defaultStyles = document.body().attr("style");
+            //defaultStyles = HtmlHelper.mergeStyles(defaultStyles, "font-size: medium;");
+            if (!TextUtils.isEmpty(defaultStyles))
+                document.body().attr("style", defaultStyles);
+
             // When sending message
             if (identity != null && send) {
                 if (auto_link) {
@@ -1039,7 +1047,9 @@ public class MessageHelper {
                     HtmlHelper.autoLink(document, true);
                 }
 
-                if (!TextUtils.isEmpty(compose_font) || compose_color != Color.TRANSPARENT) {
+                if (compose_color != Color.TRANSPARENT ||
+                        !TextUtils.isEmpty(compose_font) ||
+                        !TextUtils.isEmpty(compose_text_size)) {
                     List<Node> childs = new ArrayList<>();
                     for (Node child : document.body().childNodes())
                         if (TextUtils.isEmpty(child.attr("fairemail"))) {
@@ -1049,10 +1059,12 @@ public class MessageHelper {
                             break;
 
                     StringBuilder style = new StringBuilder();
-                    if (!TextUtils.isEmpty(compose_font))
-                        style.append("font-family: ").append(StyleHelper.getFamily(compose_font)).append(';');
                     if (compose_color != Color.TRANSPARENT)
                         style.append("color: ").append(HtmlHelper.encodeWebColor(compose_color)).append(';');
+                    if (!TextUtils.isEmpty(compose_font))
+                        style.append("font-family: ").append(StyleHelper.getFamily(compose_font)).append(';');
+                    if (!TextUtils.isEmpty(compose_text_size))
+                        style.append("font-size: ").append(compose_text_size).append(';');
 
                     Element div = document.createElement("div").attr("style", style.toString());
 
@@ -1533,10 +1545,19 @@ public class MessageHelper {
     }
 
     @NonNull
-    String[] getKeywords() throws MessagingException {
+    String[] getKeywords(boolean outlook) throws MessagingException {
         List<String> keywords = new ArrayList<>(Arrays.asList(imessage.getFlags().getUserFlags()));
+
+        if (outlook) {
+            String categories = imessage.getHeader("Keywords", null);
+            if (!TextUtils.isEmpty(categories))
+                for (String category : categories.split(","))
+                    keywords.add(CATEGORY_PREFIX + category);
+        }
+
         while (keywords.size() > MAX_KEYWORDS)
             keywords.remove(keywords.size() - 1);
+
         Collections.sort(keywords);
         return keywords.toArray(new String[0]);
     }
@@ -1930,7 +1951,7 @@ public class MessageHelper {
         }
 
         // Common reference
-        boolean thread_byref = prefs.getBoolean("thread_byref", true);
+        boolean thread_byref = prefs.getBoolean("thread_byref", !Helper.isPlayStoreInstall());
         if (thread == null && refs.size() > 0 && thread_byref) {
             // For example
             //   Message-ID: <organization/project/pull/nnn/issue_event/xxx@github.com>
@@ -2206,6 +2227,10 @@ public class MessageHelper {
 
         String signer = null;
         for (String header : headers) {
+            String v = getKeyValues(header).get(type);
+            if (v == null)
+                continue;
+
             if (signer == null)
                 signer = getSigner(header);
             else {
@@ -2215,10 +2240,6 @@ public class MessageHelper {
                     break;
                 }
             }
-
-            String v = getKeyValues(header).get(type);
-            if (v == null)
-                continue;
 
             String[] val = v.split("[^A-za-z]+");
             if (val.length == 0)
@@ -2628,7 +2649,7 @@ public class MessageHelper {
 
             String length = kv.get("l");
             if (!TextUtils.isEmpty(length))
-                throw new IllegalArgumentException("Length l=" + length);
+                throw new IllegalArgumentException("Length l=" + length + " body=" + body.length());
 
             Log.i("DKIM body=" + body.replace("\r\n", "|"));
 
@@ -2817,7 +2838,8 @@ public class MessageHelper {
 
             if (email != null) {
                 email = decodeMime(email);
-                email = punyCode(email);
+                email = fromPunyCode(email);
+                email = toPunyCode(email, true);
 
                 iaddress.setAddress(email);
             }
@@ -3183,6 +3205,7 @@ public class MessageHelper {
         // (qmail nnn invoked by uid nnn); 1 Jan 2022 00:00:00 -0000
         // Postfix: by <host name> (<name>, from userid nnn)
         if (header.matches(".*\\(qmail \\d+ invoked by uid \\d+\\).*") ||
+                header.matches(".*\\(nullmailer pid \\d+ invoked by uid \\d+\\).*") ||
                 header.matches(".*\\(.*, from userid \\d+\\).*")) {
             Log.i("--- phrase");
             return true;
@@ -3569,11 +3592,46 @@ public class MessageHelper {
         return TextUtils.join(compose ? ", " : "; ", formatted);
     }
 
-    static String punyCode(String email) {
+    static String fromPunyCode(String email) {
+        try {
+            int at = email.indexOf('@');
+            if (at > 0) {
+                String user = email.substring(0, at);
+                String domain = email.substring(at + 1);
+
+                try {
+                    user = IDN.toUnicode(user, IDN.ALLOW_UNASSIGNED);
+                } catch (Throwable ex) {
+                    Log.i(ex);
+                }
+
+                String[] parts = domain.split("\\.");
+                for (int p = 0; p < parts.length; p++)
+                    try {
+                        parts[p] = IDN.toUnicode(parts[p], IDN.ALLOW_UNASSIGNED);
+                    } catch (Throwable ex) {
+                        Log.i(ex);
+                    }
+
+                email = user + '@' + TextUtils.join(".", parts);
+            }
+        } catch (Throwable ex) {
+            Log.i(ex);
+        }
+
+        return email;
+    }
+
+    static String toPunyCode(String email, boolean single) {
         int at = email.indexOf('@');
         if (at > 0) {
             String user = email.substring(0, at);
             String domain = email.substring(at + 1);
+
+            if (single &&
+                    TextHelper.isSingleScript(user) &&
+                    TextHelper.isSingleScript(domain))
+                return email;
 
             try {
                 user = IDN.toASCII(user, IDN.ALLOW_UNASSIGNED);
@@ -3591,6 +3649,7 @@ public class MessageHelper {
 
             email = user + '@' + TextUtils.join(".", parts);
         }
+
         return email;
     }
 
@@ -3745,10 +3804,17 @@ public class MessageHelper {
     class PartHolder {
         Part part;
         ContentType contentType;
+        String filename;
 
         PartHolder(Part part, ContentType contentType) {
             this.part = part;
             this.contentType = contentType;
+        }
+
+        PartHolder(Part part, ContentType contentType, String filename) {
+            this.part = part;
+            this.contentType = contentType;
+            this.filename = filename;
         }
 
         boolean isPlainText() {
@@ -3764,7 +3830,10 @@ public class MessageHelper {
         }
 
         boolean isPatch() {
-            return "text/x-diff".equalsIgnoreCase(contentType.getBaseType()) ||
+            String ext = Helper.getExtension(filename);
+            return "diff".equalsIgnoreCase(ext) ||
+                    "patch".equalsIgnoreCase(ext) ||
+                    "text/x-diff".equalsIgnoreCase(contentType.getBaseType()) ||
                     "text/x-patch".equalsIgnoreCase(contentType.getBaseType());
         }
 
@@ -4192,12 +4261,15 @@ public class MessageHelper {
                         result = HtmlHelper.formatPlainText(result);
                     }
                 } else if (h.isPatch()) {
+                    String filename = h.part.getFileName();
                     result = (first ? "" : "<br><hr>") +
+                            (TextUtils.isEmpty(filename) ? "" :
+                                    "<div style =\"text-align: center;\">" + Html.escapeHtml(filename) + "</div><br>") +
                             "<pre style=\"font-family: monospace; font-size:small;\">" +
                             HtmlHelper.formatPlainText(result) +
                             "</pre>";
                 } else if (h.isReport()) {
-                    Report report = new Report(h.contentType.getBaseType(), result);
+                    Report report = new Report(h.contentType.getBaseType(), result, context);
                     result = report.html;
 
                     StringBuilder w = new StringBuilder();
@@ -4239,7 +4311,7 @@ public class MessageHelper {
             return sb.toString();
         }
 
-        Report getReport() throws MessagingException, IOException {
+        Report getReport(Context context) throws MessagingException, IOException {
             for (PartHolder h : extra)
                 if (h.isReport()) {
                     String result;
@@ -4250,7 +4322,7 @@ public class MessageHelper {
                         result = Helper.readStream((InputStream) content);
                     else
                         result = content.toString();
-                    return new Report(h.contentType.getBaseType(), result);
+                    return new Report(h.contentType.getBaseType(), result, context);
                 }
             return null;
         }
@@ -4471,6 +4543,11 @@ public class MessageHelper {
                             subsequence = decodeTNEF(context, epart.attachment, subsequence);
 
                     } catch (Throwable ex) {
+                        Log.w(ex);
+
+                        if (epart.attachment.id == null)
+                            continue;
+
                         db.attachment().setError(epart.attachment.id, Log.formatThrowable(ex));
                         db.attachment().setAvailable(epart.attachment.id, true); // unrecoverable
                     }
@@ -5335,10 +5412,13 @@ public class MessageHelper {
                         filename += ".html";
                 }
 
+                String ext = Helper.getExtension(filename);
                 if ("text/markdown".equalsIgnoreCase(ct) ||
                         "text/x-diff".equalsIgnoreCase(ct) ||
-                        "text/x-patch".equalsIgnoreCase(ct))
-                    parts.extra.add(new PartHolder(part, contentType));
+                        "text/x-patch".equalsIgnoreCase(ct) ||
+                        "diff".equalsIgnoreCase(ext) ||
+                        "patch".equalsIgnoreCase(ext))
+                    parts.extra.add(new PartHolder(part, contentType, filename));
 
                 if (Report.isDeliveryStatus(ct) ||
                         Report.isDispositionNotification(ct) ||
@@ -5848,6 +5928,10 @@ public class MessageHelper {
         return false;
     }
 
+    static boolean isNoReply(Address[] addresses) {
+        return (addresses != null && isNoReply(Arrays.asList(addresses)));
+    }
+
     static boolean isNoReply(@NonNull List<Address> addresses) {
         for (Address address : addresses)
             if (isNoReply(address))
@@ -6011,7 +6095,7 @@ public class MessageHelper {
         String feedback;
         String html;
 
-        Report(String type, String content) {
+        Report(String type, String content, Context context) {
             this.type = type;
             StringBuilder report = new StringBuilder();
             report.append("<hr><div style=\"font-family: monospace; font-size: small;\">");
@@ -6087,7 +6171,14 @@ public class MessageHelper {
                 Log.e(ex);
                 report.append(TextUtils.htmlEncode(new ThrowableWrapper(ex).toSafeString()));
             }
+
             report.append("</div>");
+
+            if (isDeliveryStatus() && !isDelivered())
+                report.append("<br><div style=\"font-size: small; font-style: italic;\">")
+                        .append(TextUtils.htmlEncode(context.getString(R.string.title_report_remark)))
+                        .append("</div>");
+
             this.html = report.toString();
         }
 
@@ -6147,6 +6238,7 @@ public class MessageHelper {
 
         private String getType() {
             // manual-action/MDN-sent-manually; displayed
+            // automatic-action/MDN-sent-automatically; deleted
             if (disposition == null)
                 return null;
             int semi = disposition.lastIndexOf(';');

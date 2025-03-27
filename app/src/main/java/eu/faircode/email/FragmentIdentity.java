@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -528,6 +528,14 @@ public class FragmentIdentity extends FragmentBase {
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
                 pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(Helper.getChooser(getContext(), pick), REQUEST_URI);
+            }
+        });
+
+        btnUri.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onPickUri(null);
+                return true;
             }
         });
 

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.text.TextUtils;
@@ -28,7 +28,11 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.DLSequence;
+import org.bouncycastle.asn1.DLTaggedObject;
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -45,11 +49,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -115,9 +121,56 @@ public class EntityCertificate {
     }
 
     String getSigAlgName() {
+        StringBuilder sb = new StringBuilder();
         try {
-            return getCertificate().getSigAlgName();
+            X509Certificate cert = getCertificate();
+            sb.append(cert.getSigAlgName());
+            PublicKey pubkey = cert.getPublicKey();
+            if (pubkey instanceof RSAPublicKey)
+                sb.append(((RSAPublicKey) pubkey).getModulus().bitLength());
         } catch (Throwable ex) {
+            Log.w(ex);
+        }
+        return (sb.length() == 0 ? null : sb.toString());
+    }
+
+    List<String> getKeyUsage() {
+        List<String> result = new ArrayList<>();
+        try {
+            X509Certificate cert = getCertificate();
+            boolean[] usage = cert.getKeyUsage();
+            if (usage == null)
+                return result;
+            if (usage.length > 0 && usage[0])
+                result.add("digitalSignature");
+            if (usage.length > 1 && usage[1])
+                result.add("nonRepudiation");
+            if (usage.length > 2 && usage[2])
+                result.add("keyEncipherment");
+            if (usage.length > 3 && usage[3])
+                result.add("dataEncipherment");
+            if (usage.length > 4 && usage[4])
+                result.add("keyAgreement");
+            if (usage.length > 5 && usage[5])
+                result.add("keyCertSign");
+            if (usage.length > 6 && usage[6])
+                result.add("cRLSign");
+            if (usage.length > 7 && usage[7])
+                result.add("encipherOnly");
+            if (usage.length > 8 && usage[8])
+                result.add("decipherOnly");
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+        return result;
+    }
+
+    Boolean isSelfSigned() {
+        try {
+            X509Certificate cert = getCertificate();
+            return (cert.getIssuerX500Principal().equals(cert.getSubjectX500Principal()));
+        } catch (Throwable ex) {
+            Log.e(ex);
             return null;
         }
     }
@@ -188,9 +241,27 @@ public class EntityCertificate {
             Collection<List<?>> altNames = certificate.getSubjectAlternativeNames();
             if (altNames != null)
                 for (List altName : altNames)
-                    if (altName.get(0).equals(GeneralName.rfc822Name))
-                        result.add((String) altName.get(1));
-                    else
+                    if (altName.get(0).equals(GeneralName.rfc822Name)) {
+                        if (altName.get(1) instanceof String)
+                            result.add(MessageHelper.fromPunyCode((String) altName.get(1)));
+                    } else if (altName.get(0).equals(GeneralName.otherName)) {
+                        if (altName.get(1) instanceof byte[])
+                            try {
+                                ASN1InputStream decoder = new ASN1InputStream((byte[]) altName.get(1));
+                                DLTaggedObject encoded = (DLTaggedObject) decoder.readObject();
+                                String otherName = DERUTF8String.getInstance(
+                                        ((DLTaggedObject) ((DLSequence) encoded.getBaseObject())
+                                                .getObjectAt(1)).getBaseObject()).getString();
+                                int at = otherName.indexOf('@');
+                                int dot = otherName.lastIndexOf('.');
+                                if (at >= 0 && dot > at) // UTF-8 accepted, so basic test only
+                                    result.add(MessageHelper.fromPunyCode(otherName));
+                                else
+                                    Log.w("Ignoring otherName=" + otherName);
+                            } catch (Throwable ex) {
+                                Log.w(ex);
+                            }
+                    } else
                         Log.i("Alt type=" + altName.get(0) + " data=" + altName.get(1));
         } catch (CertificateParsingException ex) {
             Log.e(ex);
@@ -202,7 +273,9 @@ public class EntityCertificate {
                 List<RDN> rdns = new ArrayList<>();
                 rdns.addAll(Arrays.asList(name.getRDNs(BCStyle.CN)));
                 rdns.addAll(Arrays.asList(name.getRDNs(BCStyle.EmailAddress)));
-                for (RDN rdn : rdns)
+                for (RDN rdn : rdns) {
+                    if (rdn == null)
+                        continue;
                     for (AttributeTypeAndValue tv : rdn.getTypesAndValues()) {
                         ASN1Encodable enc = tv.getValue();
                         if (enc == null)
@@ -212,8 +285,9 @@ public class EntityCertificate {
                             continue;
                         if (!Helper.EMAIL_ADDRESS.matcher(email).matches())
                             continue;
-                        result.add(email);
+                        result.add(MessageHelper.fromPunyCode(email));
                     }
+                }
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -232,9 +306,10 @@ public class EntityCertificate {
 
         for (List altName : altNames)
             try {
-                if (altName.get(0).equals(GeneralName.dNSName))
-                    result.add((String) altName.get(1));
-                else if (altName.get(0).equals(GeneralName.iPAddress))
+                if (altName.get(0).equals(GeneralName.dNSName)) {
+                    if (altName.get(1) instanceof String)
+                        result.add((String) altName.get(1));
+                } else if (altName.get(0).equals(GeneralName.iPAddress))
                     if (altName.get(1) instanceof String)
                         result.add((String) altName.get(1));
                     else {

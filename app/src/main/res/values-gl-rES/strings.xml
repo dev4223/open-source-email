@@ -985,6 +985,7 @@
     <string name="title_important">Importante</string>
     <string name="title_search_in_text">Procurar no texto &#8230;</string>
     <string name="title_forward">Reenviar</string>
+    <string name="title_forward_to">Reenviar a</string>
     <string name="title_resend">Reenviar</string>
     <string name="title_fetching_headers">Baixando cabeceiras das mensaxes &#8230;</string>
     <string name="title_new_message">Nova mensaxe</string>
@@ -1000,7 +1001,6 @@
     <string name="title_print_images">Imprimir imaxes</string>
     <string name="title_print_images_remark">As descargas de imaxes levan algún tempo</string>
     <string name="title_show_headers">Mostrar cabeceiras</string>
-    <string name="title_raw_save">Gardar a mensaxe en cru (raw)</string>
     <string name="title_raw_send">Enviar como anexo</string>
     <string name="title_raw_send_message">Mensaxe</string>
     <string name="title_raw_send_thread">Conversa</string>
@@ -1195,7 +1195,6 @@
     <string name="title_translate">Traducir</string>
     <string name="title_translate_configure">Configurar &#8230;</string>
     <string name="title_translate_key">Inserir chave de contrasinal</string>
-    <string name="title_translating">Traducindo &#8230;</string>
     <string name="title_translate_formal">Usar un rexistro formal</string>
     <string name="title_translate_small">Usar unha fonte pequena para o texto orixinal</string>
     <string name="title_translate_html">Preservar formato</string>
@@ -1342,6 +1341,7 @@
     <string name="title_filter_hidden">Agochado</string>
     <string name="title_filter_deleted">Borrado</string>
     <string name="title_filter_duplicates">Duplicados</string>
+    <string name="title_filter_sent">Enviado</string>
     <string name="title_filter_trash">Eliminada</string>
     <string name="title_compact">Vista compacta</string>
     <string name="title_zoom">Tamaño do texto</string>
@@ -1598,7 +1598,6 @@
     <string name="title_hint_junk">O filtrado de correo lixo debería facelo o servidor de correo e non é fiable facelo nun aparello a baterías con capacidades limitadas.</string>
     <string name="title_hint_junk_learn">Cando mova mensaxes cara ou dende o cartafol de spam, o servidor de correo aprenderá que é o spam</string>
     <string name="title_hint_contact_actions">Manteña pulsado para ver as opcións</string>
-    <string name="title_hint_eml">Este é un resumo do contido dunha mensaxe en cru. Garde o mensaxe en cru ca icona na barra de accións para ver todo o contido.</string>
     <string name="title_open_link">Abrir ligazón</string>
     <string name="title_image_link">Ligazón da imaxe</string>
     <string name="title_different_link">O título e o enderezo da ligazón son diferentes</string>
@@ -1770,8 +1769,10 @@
     <string name="title_accessibility_to">Destinatario</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
-        <item>Cada 5 minutos</item>
-        <item>Cada 10 minutos</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Cada 15 minutos</item>
         <item>Cada 30 minutos</item>
         <item>Cada hora</item>
@@ -1886,6 +1887,7 @@
         <item>PGP encrypt-only</item>
         <item>Sinatura e cifrado PGP</item>
         <item>Só sinatura S/MIME</item>
+        <item>S/MIME encrypt-only</item>
         <item>Cifrado e asinado S/MIME</item>
     </string-array>
     <string-array name="sizeNames">
@@ -1906,6 +1908,8 @@
         <item>7.5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Cursiva</item>

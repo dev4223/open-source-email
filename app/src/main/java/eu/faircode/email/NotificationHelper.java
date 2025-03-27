@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
@@ -61,6 +61,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -389,6 +390,9 @@ class NotificationHelper {
         boolean biometrics = prefs.getBoolean("biometrics", false);
         String pin = prefs.getString("pin", null);
         boolean biometric_notify = prefs.getBoolean("biometrics_notify", true);
+        long notify_rate_limit = prefs.getInt("notify_rate_limit", 0);
+
+        long now = new Date().getTime();
         boolean pro = ActivityBilling.isPro(context);
 
         boolean redacted = ((biometrics || !TextUtils.isEmpty(pin)) && !biometric_notify);
@@ -517,11 +521,15 @@ class NotificationHelper {
             List<Long> add = new ArrayList<>();
             List<Long> update = new ArrayList<>();
             List<Long> remove = new ArrayList<>(data.groupNotifying.get(group));
+            Long lastSound = data.groupLast.get(group);
+            boolean noise = false;
+            boolean silent = (lastSound != null && now - lastSound < notify_rate_limit);
             for (int m = 0; m < groupMessages.get(group).size(); m++) {
                 TupleMessageEx message = groupMessages.get(group).get(m);
                 if (m >= MAX_NOTIFICATION_DISPLAY) {
                     // This is to prevent notification sounds when shifting messages up
                     if (!message.ui_silent) {
+                        message.ui_silent = true;
                         Log.i("Notify silence=" + message.id);
                         db.message().setMessageUiSilent(message.id, true);
                     }
@@ -544,10 +552,21 @@ class NotificationHelper {
                     } else {
                         flash = true;
                         add.add(id);
+                        if (notify_rate_limit > 0) {
+                            if (silent && !message.ui_silent) {
+                                message.ui_silent = true;
+                                db.message().setMessageUiSilent(message.id, true);
+                                Log.i("Notify limit=" + message.id);
+                            } else
+                                noise = true;
+                        }
                     }
-                    Log.i("Notify adding=" + id + " existing=" + existing);
+                    Log.i("Notify adding=" + id + " existing=" + existing + " silent=" + message.ui_silent);
                 }
             }
+
+            if (noise)
+                data.groupLast.put(group, now);
 
             Integer prev = prefs.getInt("new_messages." + group, 0);
             Integer current = newMessages.get(group);
@@ -627,6 +646,10 @@ class NotificationHelper {
                                     " sort=" + notification.getSortKey());
                     try {
                         if (NotificationHelper.areNotificationsEnabled(nm)) {
+                            // https://github.com/leolin310148/ShortcutBadger/wiki/Xiaomi-Device-Support
+                            if (id == 0 && badge && Helper.isXiaomi())
+                                ShortcutBadgerAlt.applyNotification(context, notification, current);
+
                             nm.notify(tag, NotificationHelper.NOTIFICATION_TAGGED, notification);
                             if (update.contains(id))
                                 try {
@@ -637,9 +660,6 @@ class NotificationHelper {
                                 }
                         }
 
-                        // https://github.com/leolin310148/ShortcutBadger/wiki/Xiaomi-Device-Support
-                        if (id == 0 && badge && Helper.isXiaomi())
-                            ShortcutBadgerAlt.applyNotification(context, notification, current);
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
@@ -687,6 +707,7 @@ class NotificationHelper {
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_messaging = prefs.getBoolean("notify_messaging", false);
         boolean notify_subtext = prefs.getBoolean("notify_subtext", true);
+        boolean notify_subject = prefs.getBoolean("notify_subject", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
         boolean notify_preview_all = prefs.getBoolean("notify_preview_all", false);
         boolean wearable_preview = prefs.getBoolean("wearable_preview", false);
@@ -700,6 +721,7 @@ class NotificationHelper {
         boolean notify_seen = (prefs.getBoolean("notify_seen", true) || !pro);
         boolean notify_hide = (prefs.getBoolean("notify_hide", false) && pro);
         boolean notify_snooze = (prefs.getBoolean("notify_snooze", false) && pro);
+        boolean notify_tts = (prefs.getBoolean("notify_tts", false) && pro);
         boolean notify_remove = prefs.getBoolean("notify_remove", true);
         boolean light = prefs.getBoolean("light", false);
         String sound = prefs.getString("sound", null);
@@ -852,7 +874,7 @@ class NotificationHelper {
                         Address[] afrom = messageFrom.get(message.id);
                         String from = MessageHelper.formatAddresses(afrom, email_format, false);
                         sb.append("<strong>").append(Html.escapeHtml(from)).append("</strong>");
-                        if (!TextUtils.isEmpty(message.subject))
+                        if (!TextUtils.isEmpty(message.subject) && notify_subject)
                             sb.append(": ").append(Html.escapeHtml(message.subject));
                         sb.append(" ").append(Html.escapeHtml(DTF.format(message.received)));
                         sb.append("<br>");
@@ -976,7 +998,7 @@ class NotificationHelper {
 
                 NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(me.build());
 
-                if (!TextUtils.isEmpty(message.subject))
+                if (!TextUtils.isEmpty(message.subject) && notify_subject)
                     messagingStyle.setConversationTitle(message.subject);
 
                 messagingStyle.addMessage(
@@ -1022,7 +1044,7 @@ class NotificationHelper {
 
                 // Wearables
                 StringBuilder sb = new StringBuilder();
-                if (!TextUtils.isEmpty(message.subject))
+                if (!TextUtils.isEmpty(message.subject) && notify_subject)
                     sb.append(TextHelper.normalizeNotification(context, message.subject));
                 if (wearable_preview && !TextUtils.isEmpty(preview)) {
                     if (sb.length() > 0)
@@ -1041,7 +1063,7 @@ class NotificationHelper {
                             if (keyword.startsWith("!"))
                                 sbm.append(Html.escapeHtml(keyword)).append(": ");
 
-                    if (!TextUtils.isEmpty(message.subject))
+                    if (!TextUtils.isEmpty(message.subject) && notify_subject)
                         sbm.append("<em>").append(Html.escapeHtml(message.subject)).append("</em>").append("<br>");
 
                     if (!TextUtils.isEmpty(preview))
@@ -1050,14 +1072,14 @@ class NotificationHelper {
                     if (sbm.length() > 0) {
                         NotificationCompat.BigTextStyle bigText = new NotificationCompat.BigTextStyle()
                                 .bigText(HtmlHelper.fromHtml(sbm.toString(), context));
-                        if (!TextUtils.isEmpty(message.subject))
+                        if (!TextUtils.isEmpty(message.subject) && notify_subject)
                             bigText.setSummaryText(message.subject);
 
                         mbuilder.setStyle(bigText);
                     }
                 }
             } else {
-                if (!TextUtils.isEmpty(message.subject))
+                if (!TextUtils.isEmpty(message.subject) && notify_subject)
                     mbuilder.setContentText(TextHelper.normalizeNotification(context, message.subject));
             }
 
@@ -1314,6 +1336,28 @@ class NotificationHelper {
                 wactions.add(actionSnooze.build());
             }
 
+            if (message.content && notify_tts) {
+                Intent tts = new Intent(context, ServiceTTS.class)
+                        .setAction("tts:" + message.id)
+                        .putExtra(ServiceTTS.EXTRA_FLUSH, true)
+                        .putExtra(ServiceTTS.EXTRA_TEXT, "")
+                        .putExtra(ServiceTTS.EXTRA_LANGUAGE, message.language)
+                        .putExtra(ServiceTTS.EXTRA_UTTERANCE_ID, "tts:" + message.id)
+                        .putExtra(ServiceTTS.EXTRA_GROUP, group)
+                        .putExtra(ServiceTTS.EXTRA_MESSAGE, message.id);
+                PendingIntent piTts = PendingIntentCompat.getService(
+                        context, ServiceTTS.PI_TTS, tts, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionTts = new NotificationCompat.Action.Builder(
+                        R.drawable.twotone_play_arrow_24,
+                        context.getString(R.string.title_rule_tts),
+                        piTts)
+                        .setShowsUserInterface(false)
+                        .setAllowGeneratedReplies(false);
+                mbuilder.addAction(actionTts.build());
+
+                wactions.add(actionTts.build());
+            }
+
             // https://developer.android.com/training/wearables/notifications
             // https://developer.android.com/reference/androidx/core/app/NotificationCompat.Action.WearableExtender
             mbuilder.extend(new NotificationCompat.WearableExtender()
@@ -1361,6 +1405,7 @@ class NotificationHelper {
     }
 
     static class NotificationData {
+        private Map<Long, Long> groupLast = new HashMap<>();
         private Map<Long, List<Long>> groupNotifying = new HashMap<>();
 
         NotificationData(Context context) {

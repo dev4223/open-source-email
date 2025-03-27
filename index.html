@@ -8,19 +8,10 @@
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    ul.task-list{list-style: none;}
   </style>
   <link rel="shortcut icon" href="https://raw.githubusercontent.com/M66B/FairEmail/master/app/src/main/ic_launcher-web.png">
   <meta name="theme-color" content="#006db3">
@@ -61,14 +52,14 @@
 <p>🇫🇷 Si vous avez une question, veuillez d’abord vérifier les questions fréquemment posées suivantes. <a href="#get-support">En bas</a>, vous pouvez découvrir comment poser d’autres questions, demander des fonctionnalités et signaler des bogues. Vous recevrez une réponse dans votre propre langue.</p>
 <p><br></p>
 <p><strong>Important</strong></p>
-<p>There is a lot of technical information in this FAQ, mostly for specific problems or specific use cases. For other more common questions, please see the tutorials below or contact me via <em>Get support</em> below.</p>
+<p>There is a lot of technical information in this FAQ, mostly for specific problems or specific use cases. For other, more common questions, please see the tutorials below or contact me via <em>Get support</em> below.</p>
 <p><br /></p>
 <h2 id="tutorials">Tutorials</h2>
 <p>Please <a href="https://github.com/M66B/FairEmail/tree/master/tutorials">see here</a> for tutorials 📖.</p>
 <p><br /></p>
 <h2 id="index">Index</h2>
 <ul>
-<li><a href="#authorizing-accounts">Authorizing accounts</a></li>
+<li><a href="#authorizing-accounts">Configuring accounts</a></li>
 <li><a href="#howto">How to …?</a></li>
 <li><a href="#known-problems">Known problems</a></li>
 <li><a href="#planned-features">Planned features</a></li>
@@ -77,7 +68,7 @@
 </ul>
 <p><br /></p>
 <h2>
-<a name="authorizing-accounts"></a>Authorizing accounts
+<a name="authorizing-accounts"></a>Configuring accounts
 </h2>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23authorizing-accounts">Google Translate</a></p>
 <p>In most cases, the quick setup wizard will be able to automatically identify the correct configuration.</p>
@@ -103,16 +94,16 @@
 <li>T-online.de: please make sure you use <a href="https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten">an email password</a> (German) and not your account password</li>
 <li>Ionos (1und1): please make sure you use <a href="https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/">an email password</a> (German) and not your account password</li>
 <li>Yandex: please check if <a href="https://yandex.com/support/mail/mail-clients/others.html">IMAP is enabled</a></li>
-<li>Comcast/Xfinity: please check if <a href="https://www.xfinity.com/support/articles/third-party-email-access">third part email access</a> is enabled</li>
+<li>Comcast/Xfinity: please check if <a href="https://www.xfinity.com/support/articles/third-party-email-access">third party email access</a> is enabled</li>
 </ul>
-<p>Please see <a href="#faq22">here</a> for common error messages and solutions.</p>
+<p>Please see <a href="#faq22">this FAQ</a> for common error messages and solutions, and please see <a href="#faq207">this FAQ</a> in case of ‘<em>Authentication failed</em>’ or similar.</p>
 <p>Related questions:</p>
 <ul>
 <li><a href="#faq111">Is OAuth supported?</a></li>
 <li><a href="#faq133">Why is ActiveSync ™ not supported?</a></li>
 </ul>
 <p><br /></p>
-<p><a name="howto"></p>
+<p><a name="howto"></a></p>
 <h2 id="how-to">How to …?</h2>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23howto">Google Translate</a></p>
 <ul>
@@ -123,12 +114,13 @@
 <li>Set a default CC or BCC address: (Main) Settings, tap Manual setup, tap Identities, tap identity, tap Advanced.</li>
 <li>Add CC and BCC addresses: tap the people’s icon at the end of the subject</li>
 <li>Go to the next/previous message on archive/delete: in the behavior settings disable <em>Automatically close conversations</em> and select <em>Go to next/previous conversation</em> for <em>On closing a conversation</em></li>
+<li>Create a folder: tap the account name in the navigation menu (left side menu) and tap the button at the bottom right</li>
 <li>Add a folder to the unified inbox: long press the folder in the folder list and tick <em>Show in unified inbox</em></li>
 <li>Add a folder to the navigation menu: long press the folder in the folder list and tick <em>Show in navigation menu</em></li>
 <li>Load more messages: long press a folder in the folder list, select <em>Fetch more messages</em></li>
 <li>Delete a message, skipping trash: long press the trash icon</li>
-<li>Delete an account/identity: (Main) Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, trash icon top right</li>
-<li>Delete a folder: long press the folder in the folder list, Edit properties, trash icon top right</li>
+<li>Delete an account/identity: (Main) Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, tap the trash icon in the top right corner</li>
+<li>Delete a folder: long press the folder in the folder list, Edit properties, tap the trash icon in the top right corner</li>
 <li>Undo send: Outbox, swipe the message in the list left or right</li>
 <li>Delete a contact: please <a href="#faq171">see this FAQ</a></li>
 <li>Store sent messages in the inbox: please <a href="#faq142">see this FAQ</a></li>
@@ -160,18 +152,19 @@
 <li>Language detection <a href="https://issuetracker.google.com/issues/173337263">is not working anymore</a> on Pixel devices with (upgraded to?) Android 11</li>
 <li>A <a href="https://github.com/open-keychain/open-keychain/issues/2688">bug in OpenKeychain</a> causes invalid PGP signatures when using a hardware token.</li>
 <li>Search suggestions causes the keyboard losing focus on Android 12L.</li>
-<li><a href="https://techcommunity.microsoft.com/t5/outlook/outlook-office-365-imap-idle-is-broken/m-p/3616242">A bug</a> in the Outlook IMAP server causes delayed new message notifications.</li>
+<li><del><a href="https://techcommunity.microsoft.com/t5/outlook/outlook-office-365-imap-idle-is-broken/m-p/3616242">A bug</a> in the Outlook IMAP server causes delayed new message notifications.</del></li>
+<li>Updating the Material You colors sometimes require restarting the app / the device, which is caused by <a href="https://issuetracker.google.com/issues/386671298">a bug</a> in the Android WebView.</li>
 </ul>
 <p><a name="redmi"></a> <a name="realme"></a> <a name="oneplus"></a> <a name="oppo"></a></p>
 <p><br /></p>
 <p><strong>Xiaomi Redmi / Realme / OnePlus / Oppo</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23redmi">Google Translate</a></p>
-<p>On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices running Android 12 and some Oppo devices running Android 12 the database occasionally gets corrupted, especially after an update, resulting in total data loss (on the device only, unless you are using a POP3 account with the option <em>Leave messages on server</em> disabled).</p>
+<p>On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices, some Oppo devices, and some Samsung devices running Android 12, the database occasionally gets corrupted, especially after installing an update, resulting in total data loss (on the device only, unless you are using a POP3 account with the option <em>Leave messages on server</em> disabled).</p>
 <p>The cause of this problem are disk I/O errors due to an Android bug (more likely) or maybe a hardware issue (less likely), please <a href="https://www.sqlite.org/rescode.html#ioerr_write">see here</a>.</p>
 <p>“<em>This error might result from a hardware malfunction or because a filesystem came unmounted while the file was open.</em>”</p>
-<p>This can’t be fixed by the app and should be fixed by manufacturer of the device.</p>
+<p>This can’t be fixed by the app and must be fixed by the device manufacturer with an Android update.</p>
 <p><strong>Please do not blame the app for this!</strong></p>
-<p>For the record the stack trace:</p>
+<p>For the record, the stack trace:</p>
 <pre><code>android.database.sqlite.SQLiteDiskIOException: disk I/O error (code 778)
     at io.requery.android.database.sqlite.SQLiteConnection.nativeExecute(SourceFile:-2)
     at io.requery.android.database.sqlite.SQLiteConnection.execute(SQLiteConnection:595)
@@ -180,7 +173,7 @@
     at io.requery.android.database.sqlite.SQLiteDatabase.endTransaction(SQLiteDatabase:551)
     at androidx.room.RoomDatabase.internalEndTransaction(RoomDatabase:594)
     at androidx.room.RoomDatabase.endTransaction(RoomDatabase:584)</code></pre>
-<p>The cause might be <a href="https://ericsink.com/entries/sqlite_android_n.html">changes in Android 7 Nougat</a>, which is why sqlite isn’t bundled anymore since version 1.1970.</p>
+<p>This will affect other apps which use a local database intensively too. Most apps store their data in the cloud instead of on the device, which is why this isn’t occurring frequently.</p>
 <p><br /></p>
 <h2>
 <a name="planned-features"></a>Planned features
@@ -198,15 +191,15 @@
 <li>✔ <del>Search for messages with/without attachments</del> (on-device only because IMAP doesn’t support searching for attachments)</li>
 <li>✔ <del>Search for a folder</del></li>
 <li>✔ <del>Search suggestions</del></li>
-<li>❌ <del><a href="https://autocrypt.org/autocrypt-spec-1.0.0.pdf">Autocrypt Setup Message</a> (section 4.4)</del> (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)</li>
+<li>❌ <del><a href="https://autocrypt.org/autocrypt-spec-1.0.0.pdf">Autocrypt Setup Message</a> (section 4.4)</del> (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys, too)</li>
 <li>✔ <del>Generic unified folders</del></li>
-<li>✔ <del>New per account message notification schedules</del> (implemented by adding a time condition to rules so messages can be snoozed during selected periods)</li>
+<li>✔ <del>New per-account message notification schedules</del> (implemented by adding a time condition to rules, so that messages can be snoozed during selected periods)</li>
 <li>✔ <del>Copy accounts and identities</del></li>
-<li>✔ <del>Pinch zoom</del></li>
+<li>✔ <del>Pinch to zoom</del></li>
 <li>✔ <del>More compact folder view</del></li>
 <li>✔ <del>Compose lists</del></li>
 <li>❌ <del>Compose tables</del> (the Android editor doesn’t support tables)</li>
-<li>✔ <del>Pinch zoom text size</del></li>
+<li>✔ <del>Pinch to zoom text size</del></li>
 <li>✔ <del>Display GIFs</del></li>
 <li>✔ <del>Themes</del></li>
 <li>❌ <del>Any day time condition</del> (any day doesn’t really fit into the from/to date/time condition)</li>
@@ -234,7 +227,7 @@
 <li><a href="#faq4">(4) How can I use an invalid security certificate / empty password / plain text connection?</a></li>
 <li><a href="#faq5">(5) How can I customize the message view?</a></li>
 <li><a href="#faq6">(6) How can I login to Gmail / G suite?</a></li>
-<li><a href="#faq7">(7) Why are sent messages not appearing (directly) in the sent folder?</a></li>
+<li><a href="#faq7">(7) Why are sent messages not appearing (immediately) in the sent folder?</a></li>
 <li><a href="#faq8">(8) Can I use a Microsoft Exchange account?</a></li>
 <li><a href="#faq9">(9) What are identities / how do I add an alias / configure a default CC or BCC address?</a></li>
 <li><a href="#faq11"><del>(11) Why is POP not supported?</del></a></li>
@@ -431,6 +424,8 @@
 <li><a href="#faq203">(203) Where is my sent message?</a></li>
 <li><a href="#faq204">(204) How do I use Gemini?</a></li>
 <li><a href="#faq205">(205) How do I check the integrity of an APK file?</a></li>
+<li><a href="#faq206">(206) How can I move or copy messages from one account to another?</a></li>
+<li><a href="#faq207">(207) What does ‘Authentication failed’ mean?</a></li>
 </ul>
 <p><a href="#get-support">I have another question.</a></p>
 <p><a name="faq1"></a> <strong>(1) Which permissions are needed and why?</strong></p>
@@ -444,22 +439,22 @@
 <li><em>run foreground service</em> (FOREGROUND_SERVICE_MEDIA_PLAYBACK): for text-to-speech</li>
 <li><em>schedule exact alarm</em> (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later), for example to snooze messages</li>
 <li><em>prevent device from sleeping</em> (WAKE_LOCK): to keep the device awake while performing actions, like synchronization of messages</li>
-<li><em>use fingerprint hardware</em> (USE_FINGERPRINT) and <em>use biometric hardware</em> (USE_BIOMETRIC): to use biometric authentication (fingerprint, face unlock, etc)</li>
-<li><em>ask to ingore battery optimizations</em> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): to disable battery optimizations, please see <a href="#faq175">this FAQ</a> for more information</li>
+<li><em>use fingerprint hardware</em> (USE_FINGERPRINT) and <em>use biometric hardware</em> (USE_BIOMETRIC): to use biometric authentication (fingerprint, face unlock, etc.)</li>
+<li><em>ask to ignore battery optimizations</em> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): to disable battery optimizations, please see <a href="#faq175">this FAQ</a> for more information</li>
 <li><em>allow the app to show notifications</em> (POST_NOTIFICATIONS): to show new message notifications and (account) warnings and errors (Android 13 and later only)</li>
 <li><em>Google Play (in-app) billing service</em> (BILLING): for in-app purchases</li>
 </ul>
 <p><br /></p>
 <p>The following Android permissions are <strong>optional</strong>:</p>
 <ul>
-<li><em>read your contacts</em> (READ_CONTACTS): to auto complete addresses, to show contact photos and <a href="https://developer.android.com/guide/components/intents-common#PickContactDat">to pick contacts</a></li>
+<li><em>read your contacts</em> (READ_CONTACTS): to auto-complete addresses, to show contact photos and <a href="https://developer.android.com/guide/components/intents-common#PickContactDat">to select contacts</a></li>
 <li><em>find accounts on the device</em> (GET_ACCOUNTS): to select an account when using the Gmail quick setup</li>
 <li><em>read the contents of your shared storage (SD card)</em> (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also <a href="#faq49">this FAQ</a></li>
 <li>Android 5.1 Lollipop and before: <em>use accounts on the device</em> (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)</li>
 <li>Android 5.1 Lollipop and before: <em>Read profile</em> (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)</li>
 <li>GitHub version only: <em>read and write calendar data</em> (READ_CALENDAR/WRITE_CALENDAR): to <a href="#faq186">auto-store invitations</a></li>
 </ul>
-<p><a href="https://developer.android.com/training/permissions/requesting">Optional permissions</a> are supported on Android 6 Marshmallow and later only. On earlier Android versions you will be asked to grant the permissions on installing FairEmail.</p>
+<p><a href="https://developer.android.com/training/permissions/requesting">Optional permissions</a> are supported on Android 6 Marshmallow and later only. On earlier Android versions, you will be asked to grant the permissions on installing FairEmail.</p>
 <p><br /></p>
 <p>The following permissions are needed to show the count of unread messages as a badge (see also <a href="#faq106">this FAQ</a>):</p>
 <ul>
@@ -474,6 +469,9 @@
 <li><em>com.huawei.android.launcher.permission.CHANGE_BADGE</em></li>
 <li><em>com.huawei.android.launcher.permission.READ_SETTINGS</em></li>
 <li><em>com.huawei.android.launcher.permission.WRITE_SETTINGS</em></li>
+<li><em>com.hihonor.android.launcher.permission.CHANGE_BADGE</em></li>
+<li><em>com.hihonor.android.launcher.permission.READ_SETTINGS</em></li>
+<li><em>com.hihonor.android.launcher.permission.WRITE_SETTINGS</em></li>
 <li><em>android.permission.READ_APP_BADGE</em></li>
 <li><em>com.oppo.launcher.permission.READ_SETTINGS</em></li>
 <li><em>com.oppo.launcher.permission.WRITE_SETTINGS</em></li>
@@ -482,22 +480,22 @@
 <li><em>com.vivo.notification.permission.BADGE_ICON</em></li>
 </ul>
 <p><br /></p>
-<p>FairEmail will keep a list of addresses you receive messages from and send messages to and will use this list for contact suggestions when no contacts permissions is granted to FairEmail. This means you can use FairEmail without the Android contacts provider (address book). Note that you can still pick contacts without granting contacts permissions to FairEmail, only suggesting contacts won’t work without contacts permissions.</p>
+<p>FairEmail will keep a list of addresses you receive messages from and send messages to and will use this list for contact suggestions when no contacts permission is granted to FairEmail. This means you can use FairEmail without the Android contacts provider (address book). Note that you can still select contacts without granting the contacts permission to FairEmail, only suggesting contacts won’t work without contacts permission.</p>
 <p><br /></p>
 <p><a name="faq2"></a> <strong>(2) Why is there a permanent notification shown?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq2">Google Translate</a></p>
 <p><em>If you came here by clicking on the “monitoring” notification, you should know that the next click will open the unified inbox.</em></p>
-<p>To reliably receive messages in the background the app needs to start a service, which will let Android display a status bar notification notifying you about potential battery usage.</p>
+<p>To reliably receive messages in the background, the app needs to start a service, which will let Android display a status bar notification notifying you about potential battery usage.</p>
 <p>The service can’t be started without a notification and the app can’t disable the notification either. However, you can disable the notification yourself, without side effects, via the notification settings of FairEmail:</p>
 <ul>
 <li>Android 8 Oreo and later: tap the <em>Monitoring channel</em> button and disable the channel via the Android settings (this won’t disable new message notifications)</li>
 <li>Android 7 Nougat and before: enabled <em>Use background service to synchronize messages</em>, but be sure to read the remark below the setting first</li>
 </ul>
-<p>You can also switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power. See <a href="#faq39">here</a> for more details about battery usage.</p>
+<p>You can also switch to periodical synchronization of messages in the receive settings, in order to remove the notification, but be aware that this might use more battery power. See <a href="#faq39">here</a> for more details about battery usage.</p>
 <p>Android 8 Oreo might also show a status bar notification with the text <em>Apps are running in the background</em>. Please see <a href="https://www.reddit.com/r/Android/comments/7vw7l4/psa_turn_off_background_apps_notification/">here</a> about how you can disable this notification.</p>
 <p><em>Background</em></p>
 <p>The service is a <a href="https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)">foreground service</a> and is needed to prevent Android from stopping the service when the device is sleeping (<a href="https://developer.android.com/training/monitoring-device-state/doze-standby">doze mode</a>).</p>
-<p>Most, if not all, other email apps don’t show a notification with a “side effect” that new messages are often not or late being reported and that messages are not or late being sent.</p>
+<p>Most, if not all, other email apps don’t show a notification, which leads to new messages often not being shown or reported later and messages not being sent at all or sent later.</p>
 <p>Some other email apps download all your messages to their servers first and push messages via <a href="https://firebase.google.com/docs/cloud-messaging/">Firebase Cloud Messaging</a> to your device. For your privacy this is not a nice solution …</p>
 <p><br /></p>
 <p><a name="faq3"></a> <strong>(3) What are operations and why are they pending?</strong></p>
@@ -534,14 +532,19 @@
 <p><br /></p>
 <p><a name="faq4"></a> <strong>(4) How can I use an invalid security certificate / empty password / plain text connection?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq4">Google Translate</a></p>
-<p><strong>Since version 1.2137: Due to <a href="https://support.google.com/faqs/answer/6346016">Google’s Play Store policies</a>, it is no longer possible to support insecure connections to email servers with certificate issues for the version of FairEmail distributed in the Play Store. Therefore, this issue can only be resolved by your email provider, or by installing the GitHub version of the app (as an update) and enabling insecure connections in the account/identity settings.</strong></p>
+<!-- **Since version 1.2137:
+Due to [Google's Play Store policies](https://support.google.com/faqs/answer/6346016),
+it is no longer possible to support insecure connections to email servers with certificate issues
+for the version of FairEmail distributed in the Play Store.
+Therefore, this issue can only be resolved by your email provider,
+or by installing the GitHub version of the app (as an update) and enabling insecure connections in the account/identity settings.** -->
 <p><em>… Untrusted … not in certificate …</em><br /> <em>… Invalid security certificate (Can’t verify identity of server) …</em><br /> <em>… Chain validation failed … timestamp check failed … Certificate expired at …</em><br /></p>
-<p>This can be caused by using an incorrect host name, so first double check the host name in the advanced identity/account settings (tap <em>Manual setup and account options</em>). Please see the documentation of the email provider about the right host name. Sometimes the right host name is in the error message.</p>
+<p>This can be caused by using an incorrect host name, so first double-check the host name in the advanced identity/account settings (tap <em>Manual setup and account options</em>). Please see the documentation of the email provider about the right host name. Sometimes the right host name is in the error message.</p>
 <p>You should try to fix this by contacting your provider or by getting a valid security certificate because invalid security certificates are insecure and allow <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">man-in-the-middle attacks</a>. If money is an obstacle, you can get free security certificates from <a href="https://letsencrypt.org">Let’s Encrypt</a>.</p>
 <p>The quick, but unsafe solution (not advised), is to enable <em>Insecure connections</em> in the advanced identity settings (navigation menu, tap <em>Settings</em>, tap <em>Manual setup</em>, tap <em>Identities</em>, tap the identity, tap <em>Advanced</em>).</p>
 <p>Alternatively, you can accept the fingerprint of invalid server certificates like this:</p>
 <ol type="1">
-<li>Make sure you are using a trusted internet connection (no public Wi-Fi networks, etc)</li>
+<li>Make sure you are using a trusted internet connection (no public Wi-Fi networks, etc.)</li>
 <li>Go to the setup screen via the navigation menu (swipe from the left side inwards)</li>
 <li>Tap Manual setup, tap Accounts/Identities and tap the faulty account and identity</li>
 <li>Check/save the account and identity</li>
@@ -555,13 +558,13 @@
 <p>This could be due to the root certificate not being installed on your device or because intermediate certificates are missing, for example because the email server didn’t send them.</p>
 <p>You can fix the first problem by downloading and installing the root certificate from the website of the provider of the certificate.</p>
 <p>The second problem should be fixed by changing the server configuration or by importing the intermediate certificates on your device.</p>
-<p>You can pin the certificate too, see above.</p>
+<p>You can pin the certificate, too, see above.</p>
 <p><br /></p>
 <p><em>Empty password</em></p>
 <p>Your username is likely easily guessed, so this is pretty insecure, unless the SMTP server is available via a restricted local network or a VPN only.</p>
 <p><em>Plain text connection</em></p>
 <p>Your username and password and all messages will be sent and received unencrypted, which is <strong>very insecure</strong> because a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">man-in-the-middle attack</a> is very simple on an unencrypted connection.</p>
-<p>If you still want to use an invalid security certificate, an empty password or a plain text connection you’ll need to enable insecure connections in the account and/or identity settings. STARTTLS should be selected for plain text connections. If you enable insecure connections, you should connect via private, trusted networks only and never via public networks, like offered in hotels, airports, etc.</p>
+<p>If you still want to use an invalid security certificate, an empty password or a plain text connection, you’ll need to enable insecure connections in the account and/or identity settings. STARTTLS should be selected for plain text connections. If you enable insecure connections, you should connect via private, trusted networks only and never via public networks, such as are offered in hotels, airports, etc.</p>
 <p><br /></p>
 <p><a name="faq5"></a> <strong>(5) How can I customize the message view?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq5">Google Translate</a></p>
@@ -590,8 +593,8 @@
 <p>Note that messages can be previewed only when the message text was downloaded. Larger message texts are not downloaded by default on metered (generally mobile) networks. You can change this in the connection settings.</p>
 <p>Some people ask:</p>
 <ul>
-<li>to show the subject bold, but bold is already being used to highlight unread messages</li>
-<li>to move the star to the left, but it is much easier to operate the star on the right side</li>
+<li>to show the subject text in bold font, but that is already being used as an indicator for unread messages</li>
+<li>to move the star to the left, but it is much easier to toggle the star on the right side</li>
 </ul>
 <p><br /></p>
 <p><a name="faq6"></a> <strong>(6) How can I login to Gmail / G suite?</strong></p>
@@ -620,16 +623,16 @@
 </ul>
 <p><strong>Note that other email apps, possibly on other devices, which still use your account password could cause your account to be blocked!</strong></p>
 </blockquote>
-<p>If you use the Play store or GitHub version of FairEmail, you can use the quick setup wizard to easily setup a Gmail account and identity. The Gmail quick setup wizard is not available for third party builds, like the F-Droid build because Google approved the use of OAuth for official builds only.</p>
+<p>If you use the Play store or GitHub version of FairEmail, you can use the quick setup wizard to easily setup a Gmail account and identity. The Gmail quick setup wizard is not available for third party builds, such as the F-Droid build, because Google approved the use of OAuth for official builds only.</p>
 <p>When using OAuth with multiple Google accounts, other Google accounts probably need to be logged out first.</p>
 <p>The “<em>Gmail (Android)</em>” quick setup wizard won’t work if the Android account manager doesn’t work or doesn’t support Google accounts, which is typically the case if the account selection is being <em>canceled</em> right away.</p>
-<p>If you don’t want to use or can’t use OAuth or an on-device Google account, for example on recent Huawei devices, you can <del>either enable access for “less secure apps” and use your account password (not advised)</del> or enable two factor authentication and use an app specific password. To use a password you can use the quick setup wizard and select <em>Other provider</em>.</p>
+<p>If you don’t want to use or can’t use OAuth or an on-device Google account, for example on recent Huawei devices, you can <del>either enable access for “less secure apps” and use your account password (not advised) or</del> enable two factor authentication and use an app specific password. To use a password, you can use the quick setup wizard and select <em>Other provider</em>.</p>
 <p><strong>Important</strong>: sometimes Google issues this alert:</p>
 <p><em>[ALERT] Please log in via your web browser: https://support.google.com/mail/accounts/answer/78754 (Failure)</em></p>
-<p>This Google security check is triggered more often with <em>less secure apps</em> enabled, less with an app password, and hardly when using an on-device account (OAuth). You might see the error <em>OAUTH2 asked for more</em>, which basically says the connection is temporarily blocked, until you confirm it is you.</p>
+<p>This Google security check is triggered more often with <em>less secure apps</em> enabled, even less with an app password, and hardly ever when using an on-device account (OAuth). You might see the error <em>OAUTH2 asked for more</em>, which basically says the connection is temporarily blocked, until you confirm it is you.</p>
 <p>Note that an app specific password is required when two factor authentication is enabled. After enabling two factor authentication there will be this error message:</p>
 <p><em>[ALERT] Application-specific password required: https://support.google.com/mail/accounts/answer/185833 (Failure)</em></p>
-<p>The error message “<em>Authentication failed - Invalid credentials</em>” or <em>Token refresh required</em> means that the Android account manager was not able to refresh the access token, or that getting an access token was not allowed, for example when the account is a <a href="https://support.google.com/families/answer/7101025">Family Link</a> account, in which case you can use the Gmail app only. A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager. Please make sure permissions were granted to the app via setup step 2. You can try to workaround this issue by using the quick setup wizard <em>Gmail (Oauth)</em> or by using an app password.</p>
+<p>The error message “<em>Authentication failed - Invalid credentials</em>” or <em>Token refresh required</em> means that the Android account manager was not able to refresh the access token, or that getting an access token was not allowed, for example when the account is a <a href="https://support.google.com/families/answer/7101025">Family Link</a> account, in which case you can use the Gmail app only. A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager. Please make sure permissions were granted to the app via setup step 2. You can try to work around this issue by using the quick setup wizard <em>Gmail (Oauth)</em> or by using an app password.</p>
 <p><em>[ALERT] IMAP access is not allowed for this account.</em></p>
 <p>This means that it is a <a href="https://families.google.com/familylink/">Google Family Link</a> account for a child under the age of 13. Please see <a href="https://www.reddit.com/r/ios/comments/x0dklz/i_give_up_adding_google_email_account_to_my/">here</a> for a solution.</p>
 <p><br /></p>
@@ -652,11 +655,11 @@
 <p>You might get the alert “<em>Please log in via your web browser</em>”. This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.</p>
 <p>See <a href="https://support.google.com/mail/answer/7126229">here</a> for Google’s instructions and <a href="https://support.google.com/mail/accounts/answer/78754">here</a> for troubleshooting.</p>
 <p><br /></p>
-<p><a name="faq7"></a> <strong>(7) Why are sent messages not appearing (directly) in the sent folder?</strong></p>
+<p><a name="faq7"></a> <strong>(7) Why are sent messages not appearing (immediately) in the sent folder?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq7">Google Translate</a></p>
 <p>Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder. This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.</p>
-<p>Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. In these cases FairEmail, will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message have been sent. Note that this will result in extra internet traffic.</p>
-<p><del>If this doesn’t happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.</del> <del>In these cases you can enable the advanced identity setting <em>Store sent messages</em> to let FairEmail add sent messages to the sent folder right after sending a message.</del> <del>Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.</del> <del>Also beware that enabling this setting will result in extra data usage, especially when when sending messages with large attachments.</del></p>
+<p>Some providers do not keep track of sent messages, or the used SMTP server might not be related to the provider. In these cases, FairEmail, will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message has been sent. Note that this will result in extra internet traffic.</p>
+<p><del>If this doesn’t happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.</del> <del>In these cases, you can enable the advanced identity setting <em>Store sent messages</em> to let FairEmail add sent messages to the sent folder right after sending a message.</del> <del>Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder, too.</del> <del>Also beware of enabling this setting since it will result in extra data usage, especially when sending messages with large attachments.</del></p>
 <p><del>If sent messages in the outbox are not found in the sent folder on a full synchronize, they will be moved from the outbox to the sent folder too.</del> <del>A full synchronize happens when reconnecting to the server or when synchronizing periodically or manually.</del> <del>You’ll likely want to enable the advanced setting <em>Store sent messages</em> instead to move messages to the sent folder sooner.</del></p>
 <p><br /></p>
 <p><a name="faq8"></a> <strong>(8) Can I use a Microsoft Exchange account?</strong></p>
@@ -676,6 +679,7 @@
 <p>Some providers allow you to have multiple aliases addresses.</p>
 <p>The easiest way to create an alias address is to use the mini <em>Create alias</em> wizard. For this, please go to the settings via the navigation menu (left side menu), tap on <em>Manual setup and account options</em>, tap on <em>Identities</em>, long press the main identity, and select <em>Create alias</em>.</p>
 <p>For more options, you can copy the main identity by long pressing on it, and change the email address and perhaps the (display) name. You should not change the username!</p>
+<p>Note that you can select the default sending address via the three-dots overflow menu at the top right of the message editor (not the start screen!).</p>
 <p><strong>Important</strong>: In the case of an Outlook account, you should first authenticate the account again with the “Office 365” wizard. You don’t need to remove the account for this.</p>
 <p><strong>In many cases, an alias address must first be verified via the website of the mail provider</strong></p>
 <p>Alternatively, you can enable <em>Allow editing sender address</em> in the advanced settings of an existing identity to edit the username when composing a new message, if your provider allows this. Considering the email address test@example.org you can use these special username formats:</p>
@@ -720,7 +724,7 @@
 </ul>
 <p>To sign/encrypt a message, just select the appropriate method in the send dialog. The simplest way to show the send dialog (again) is to long press the <em>Send</em> button in the bottom action bar. It might be necessary to disable signing/encryption with the padlock icon in the top action bar first, to prevent the select key dialog, etc. from being in the way. The encryption method will be remembered for the selected identity (at the top of the message editor).</p>
 <p>To verify a signature or to decrypt a received message, open the message and just tap the gesture or padlock icon just below the message action bar.</p>
-<p>The first time you send a signed/encrypted message, you might be asked for a sign key. FairEmail will automatically store the selected sign key in the used identity for the next time. If you need to reset the sign key, just save the identity or long press the identity in the list of identities and select <em>Reset sign key</em>. The selected sign key is visible in the list of identities. If need to select a key on a case by case basis, you can create multiple identities for the same account with the same email address.</p>
+<p>The first time you send a signed/encrypted message, you might be asked for a sign key. FairEmail will automatically store the selected sign key in the used identity for the next time. If you need to reset the sign key, just save the identity or long press the identity in the list of identities and select <em>Reset sign key</em>. The selected sign key is visible in the list of identities. If you need to select a key on a case by case basis, you can create multiple identities for the same account with the same email address.</p>
 <p>In the encryption settings, you can select the default encryption method (PGP or S/MIME), enable <em>Sign by default</em>, <em>Encrypt by default</em> and <em>Automatically decrypt messages</em>, but be aware that automatic decryption is not possible if user interaction is required, like selecting a key or reading a security token.</p>
 <p>The to be encrypted message text/attachments and the decrypted message text/attachments are stored locally only and will never be added to the remote server. If you want to undo decryption, you can tap on the “close” padlock icon.</p>
 <p><br /></p>
@@ -746,10 +750,11 @@
 <p>Signed-only messages are supported, and encrypted-only messages are supported since version 1.2053.</p>
 <p>Common errors:</p>
 <ul>
-<li><em>No key</em>: there is no PGP key available for one of the listed email addresses</li>
+<li><em>No key</em>: there is no PGP key available for one of the listed email addresses.</li>
 <li><em>No key found!</em>: the PGP key stored in the identity probably doesn’t exist anymore. Resetting the key (see above) will probably fix this problem.</li>
 <li><em>Missing key for encryption</em>: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.</li>
 <li><em>Key for signature verification is missing</em>: the public key for the sender is not available in the OpenKeychain app. This can also be caused by Autocrypt being disabled in the encryption settings or by the Autocrypt header not being sent.</li>
+<li><em>Message signature valid but not confirmed</em>: the signature is okay, but the public key still needs to be confirmed in the OpenKeychain app.</li>
 <li><em>OpenPgp error 0: null</em> / <em>OpenPgp error 0: General error</em>: please check the key in the OpenKeychain app and make sure there are no conflicting identities for the key and make sure the email address exactly matches the key, including lower/upper case. Also, make sure the key can be used to sign/encrypt and isn’t for encrypting/signing only.</li>
 <li><em>OpenPgp error 0: Encountered an error reading input data!</em>: your public key has the <a href="https://en.wikipedia.org/wiki/Authenticated_encryption">AEAD</a> flag set, but the message was encrypted in the older MDC (Modification Detection Code) mode by the sender. For example the Posteo email server does this erroneously. Workaround: <a href="https://github.com/keybase/keybase-issues/issues/4025#issuecomment-853933127">remove the AEAD flag</a> from the key.</li>
 </ul>
@@ -783,7 +788,8 @@ openssl pkcs12 -export -legacy -in certbag.pem &gt;legacy.p12</code></pre>
 <p>In case the certificate chain is incorrect, you can tap on the little info button to show the all certificates. After the certificate details the issuer or “selfSign” is shown. A certificate is self signed when the subject and the issuer are the same. Certificates from a certificate authority (CA) are marked with “<a href="https://tools.ietf.org/html/rfc5280#section-4.2.1.3">keyCertSign</a>”. You can find the description of other key usage bits, like <em>cRLSign</em>, via this same link. Certificates found in the Android key store are marked with “Android”.</p>
 <p>A valid chain looks like this:</p>
 <pre><code>Your certificate &gt; zero or more intermediate certificates &gt; CA (root) certificate marked with &quot;Android&quot;</code></pre>
-<p>Note that a certificate chain will always be invalid when no anchor certificate can be found in the Android key store, which is fundamental to S/MIME certificate validation.</p>
+<p>Note that a certificate chain will always be invalid when no anchor certificate can be found in the Android key store, which is fundamental to S/MIME certificate validation. This means that your private key should include all intermediate certificates (but not the root certificate). This command might be useful for that:</p>
+<pre><code>openssl pkcs12 -export -in certificatechain.crt -inkey private.key -out certificate.pfx</code></pre>
 <p>Please see <a href="https://support.google.com/pixelphone/answer/2844832?hl=en">here</a> how you can import certificates into the Android key store.</p>
 <p>The use of expired keys, inline encrypted/signed messages and hardware security tokens is not supported.</p>
 <p>If you are looking for a free (test) S/MIME certificate, see <a href="http://kb.mozillazine.org/Getting_an_SMIME_certificate">here</a> for the options. Please be sure to <a href="https://davidroessli.com/logs/2019/09/free-smime-certificates-in-2019/#update20191219">read this first</a> if you want to request an S/MIME Actalis certificate.</p>
@@ -847,15 +853,17 @@ keyword:&lt;keyword&gt;</code></pre>
 <p><a name="faq14"></a> <strong>(14) How can I set up an Outlook / Live / Hotmail account?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq14">Google Translate</a></p>
 <p><br /></p>
+<p>In the case of the error ‘<em>User is authenticated but not connected</em>’, please see <a href="#faq139">this FAQ</a>.</p>
+<p><br></p>
 <blockquote>
 <p><strong>IMPORTANT: If you came here via a warning in the app, you MUST take action!</strong></p>
 <p><strong>IMPORTANT: Microsoft seems to disable (app) passwords ahead of schedule for more and more accounts, resulting in “<em>Authentication failed</em>” error messages.</strong></p>
 </blockquote>
 <p><br /></p>
 <blockquote>
-<p>🇬🇧 In short: go to settings via the navigation menu (left side menu), tap the wizard button, select Outlook/Hotmail/Live and follow the steps.</p>
-<p>🇩🇪 Kurz gesagt: Gehen Sie über das Navigationsmenü (Menü auf der linken Seite) zu den Einstellungen, tippen Sie auf die Schaltfläche Assistent, wählen Sie Outlook/Hotmail/Live und folgen Sie den Schritten.</p>
-<p>🇫🇷 En bref : allez dans les paramètres via le menu de navigation (menu de gauche), appuyez sur le bouton de l’assistant, sélectionnez Outlook/Hotmail/Live et suivez les étapes.</p>
+<p>🇬🇧 In short: go to settings via the navigation menu (left side menu), tap the wizard button, select “<em>Outlook/Office 365 (OAuth)</em>” and follow the steps.</p>
+<p>🇩🇪 Kurz gesagt: Gehen Sie über das Navigationsmenü (Menü auf der linken Seite) zu den Einstellungen, tippen Sie auf die Schaltfläche Assistent, wählen Sie “<em>Outlook/Office 365 (OAuth)</em>” und folgen Sie den Schritten.</p>
+<p>🇫🇷 En bref : allez dans les paramètres via le menu de navigation (menu de gauche), appuyez sur le bouton de l’assistant, sélectionnez “<em>Outlook/Office 365 (OAuth)</em>” et suivez les étapes.</p>
 </blockquote>
 <p><br /></p>
 <blockquote>
@@ -864,7 +872,7 @@ keyword:&lt;keyword&gt;</code></pre>
 </blockquote>
 <p><br /></p>
 <blockquote>
-<p>tl;dr; go to settings via the navigation menu (left side menu), tap the wizard button, select Outlook/Hotmail/Live and follow the steps.</p>
+<p>tl;dr; go to settings via the navigation menu (left side menu), tap the wizard button, select “<em>Outlook/Office 365 (OAuth)</em>” and follow the steps.</p>
 <p><sub>If you don’t use the account anymore, you can delete it via a button in the “extra” section at the bottom of the main settings screen.</sub></p>
 </blockquote>
 <p><br /></p>
@@ -897,14 +905,14 @@ keyword:&lt;keyword&gt;</code></pre>
 <p>How to fix:</p>
 <ul>
 <li>Go to the <em>Settings</em> via the navigation menu (left side menu)</li>
-<li>Tap on the <em>Wizard</em> button and select <em>Outlook/Hotmail/Live (OAuth)</em> or <em>Office 365 (OAuth)</em>.</li>
+<li>Tap on the <em>Wizard</em> button and select “<em>Outlook/Office 365 (OAuth)</em>”.</li>
 <li>Tick the checkbox to authenticate an existing account (else you’ll create a new account!)</li>
 <li>Fill in the fields and follow the steps</li>
 <li>Repeat for each account</li>
 </ul>
 </blockquote>
 <p><br /></p>
-<p>An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting <em>Outlook/Hotmail/Live (OAuth)</em> or <em>Office 365 (OAuth)</em>.</p>
+<p>An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting “<em>Outlook/Office 365 (OAuth)</em>”.</p>
 <p><strong>Important</strong>: a personal and a business account can have the same email address, but have different mailboxes (folders). So, please make sure you select the right option.</p>
 <p>Microsoft said “<em>We have turned off SMTP AUTH for millions of tenants not using it</em>”, which can result in this error message:</p>
 <pre><code>535 5.7.139 Authentication unsuccessful, SmtpClientAuthentication is disabled for the Tenant.
@@ -920,7 +928,7 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <p><a name="faq15"></a> <strong>(15) Why does the message text keep loading?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq15">Google Translate</a></p>
 <p>The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and will be fetched on demand on expanding a message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.</p>
-<p>You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons) and the operation list accessible via the main navigation menu for pending operations (see <a href="#faq3">this FAQ</a> for the meaning of the operations).</p>
+<p>You can check the account and folder list for the account and folder state (see the legend in the navigation menu for the meaning of the icons) and the operation list accessible via the main navigation menu for pending operations (see <a href="#faq3">this FAQ</a> for the meaning of the operations).</p>
 <p>If FairEmail is holding off because of prior connectivity issues, please see <a href="#faq123">this FAQ</a>, you can force synchronization via the three dots menu.</p>
 <p>In the receive settings you can set the maximum size for automatically downloading of messages on metered connections.</p>
 <p>Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are too.</p>
@@ -1115,6 +1123,10 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <p>You can enable the storage access framework (again) with this adb command:</p>
 <pre><code>pm install -k --user 0 com.android.documentsui</code></pre>
 <p>Alternatively, you might be able to enable the <em>Files</em> app again using the Android app settings.</p>
+<p><br /></p>
+<p>In the case of the error <em>com.android.externalstorage has no access to content://…</em>, please enable this Android option for <em>com.android.externalstorage</em> and <em>com.android.sharedstorage</em>:</p>
+<p><em>Settings</em> &gt; <em>Privacy</em> &gt; <em>Permission management</em> &gt; <em>Files and media</em> &gt; <em>See more apps that can access all files</em></p>
+<p><br /></p>
 <p>OneDrive doesn’t support <em>view</em>, only <em>share</em>, which means that if you want to open an attachment in OneDrive you need to long press on an attachment.</p>
 <p><br /></p>
 <p><a name="faq26"></a> <strong>(26) Can I help to translate FairEmail in my own language?</strong></p>
@@ -1135,6 +1147,7 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <p><a name="faq28"></a> <strong>(28) How can I manage status bar notifications?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq28">Google Translate</a></p>
 <p>In the notification settings you’ll find a button <em>Manage notifications</em> to directly navigate to the Android notifications settings for FairEmail.</p>
+<p>Samsung / One UI: you need to enable: Notification &gt; Advanced settings &gt; Manage notification categories for each app</p>
 <p>On Android 8.0 Oreo and later you can manage the properties of the individual notification channels, for example to set a specific notification sound or to show notifications on the lock screen.</p>
 <p>FairEmail has the following notification channels:</p>
 <ul>
@@ -1190,7 +1203,7 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <p>Note that identities need to be enabled to be able to be matched and that identities of other accounts will not be considered.</p>
 <p>Matching will be done only once on receiving a message, so changing the configuration will not change existing messages. You could clear local messages by long pressing a folder in the folder list and synchronize the messages again, though.</p>
 <p>It is possible to configure a <a href="https://en.wikipedia.org/wiki/Regular_expression">regex</a> in the advanced identity settings (Navigation menu &gt; Settings &gt; Manual setup and account options &gt; Identities &gt; tap the identity &gt; Advanced) to match <strong>the username</strong> of an email address (the part before the @ sign).</p>
-<p>Note that the domain name (the parts after the @ sign) always needs to be equal to the domain name of the identity. Since version 1.1640 it is possible to match the full email address with a regex, which can be useful for matching alias domain names.</p>
+<p>Note that the domain name (the parts after the @ sign) always needs to be equal to the domain name of the identity. This also implies that the username will be copied from a received message only if it matches the domain name of the matched identity. Since version 1.1640, it is possible to match the full email address with a regex by including the @ character in the regex, which can be useful for matching alias domain names. The username will not be copied in this case because the domain name of the <em>from</em> address and the the domain name of the identity must be the same. If you want the username to be copied, you should define an identity for each domain, which will allow you to send new messages from a specific domain name too.</p>
 <p>If you want to match a catch-all email address, this regex is usually fine, provided all usernames for the domain are yours:</p>
 <pre><code>.*</code></pre>
 <p>The username of a message being replied to will be used as the default username when editing of usernames is enabled in the advanced identity settings.</p>
@@ -1214,9 +1227,9 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <p>This BBC article is worth reading as well: <a href="https://www.bbc.com/news/technology-56071437">Spy pixels in emails have become endemic</a>.</p>
 <p>Opening attachments or viewing an original message might load remote content and execute scripts, that might not only cause privacy sensitive information to leak, but can also be a security risk.</p>
 <p>Note that your contacts could unknowingly send malicious messages if they got infected with malware.</p>
-<p>FairEmail formats messages again causing messages to look different from the original, but also uncovering phishing links, etc.</p>
-<p>Note that reformatted messages are often better readable than original messages because the margins are removed, and font colors and sizes are standardized.</p>
-<p>The Gmail app shows images by default by downloading the images through a Google proxy server. Since the images are downloaded from the source server <a href="https://blog.filippo.io/how-the-new-gmail-image-proxy-works-and-what-this-means-for-you/">in real-time</a>, this is even less secure because Google is involved too without providing much benefit.</p>
+<p>FairEmail formats messages again, causing messages to look different from the original, but also uncovering phishing links, etc.</p>
+<p>Note that reformatted messages are often easier to read than original messages because the margins are removed, and font colors and sizes are standardized.</p>
+<p>The Gmail app shows images by default by downloading the images through a Google proxy server. Since the images are downloaded from the source server <a href="https://blog.filippo.io/how-the-new-gmail-image-proxy-works-and-what-this-means-for-you/">in real-time</a>, this is even less secure, because Google is involved, too, without providing much benefit.</p>
 <p>You can show images and original messages by default for trusted senders on a case-by-case basis by checking <em>Do not ask this again for …</em>. You might need to reset the questions via a button in the miscellaneous-settings tab page.</p>
 <p><br /></p>
 <p><a name="faq36"></a> <strong>(36) How are settings files encrypted?</strong></p>
@@ -1337,7 +1350,7 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <p><br /></p>
 <p><a name="faq46"></a> <strong>(46) Why does the message list keep refreshing?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq46">Google Translate</a></p>
-<p>If you see a ‘spinner’ at the top of the message list, the folder is still being synchronized with the remote server. You can see the progress of the synchronization in the folder list. See the legend about what the icons and numbers mean.</p>
+<p>If you see a ‘spinner’ at the top of the message list, the folder is still being synchronized with the remote server. You can see the progress of the synchronization in the folder list. See the legend in the navigation menu about what the icons and numbers mean.</p>
 <p>The speed of your device and internet connection and the number of days to synchronize messages determine how long synchronization will take. Note that you shouldn’t set the number of days to synchronize messages to more than one day in most cases, see also <a href="#faq39">this FAQ</a>.</p>
 <p><br /></p>
 <p><a name="faq47"></a> <strong>(47) How do I solve the error ‘No primary account or no drafts folder’?</strong></p>
@@ -1575,9 +1588,12 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <pre><code>.*alice@example\.org.*|.*bob@example\.org.*|.*carol@example\.org.*</code></pre>
 <p>Note that <a href="https://developer.android.com/reference/java/util/regex/Pattern#DOTALL">dot all mode</a> is enabled to be able to match <a href="https://tools.ietf.org/html/rfc2822#section-3.2.3">unfolded headers</a>.</p>
 <p><br /></p>
-<p><strong>Expressions</strong></p>
-<p>Since version 1.2174 it is possible to use expression conditions, which is <a href="#faq125">experimental</a> for now.</p>
-<p>Please <a href="https://ezylang.github.io/EvalEx/references/references.html">see here</a> about which constants, operators and functions are available.</p>
+<p><a name="expression_conditions"></a> <strong>Expressions</strong></p>
+<p>Since version 1.2174 it is possible to use expression conditions like:</p>
+<p><code>from contains "@example.com" &amp;&amp; subject contains "Example"</code></p>
+<p><code>subject contains "This" || subject contains "That"</code></p>
+<p>Note that there is a separate input field for expression conditions. You can use newlines for more clarity.</p>
+<p>Please <a href="https://ezylang.github.io/EvalEx/references/references.html">see here</a> about which constants, operators and functions are available. Commonly used are &amp;&amp; (=and) and || (=or).</p>
 <p>The following extra variables are available:</p>
 <ul>
 <li><em>received</em> (long, unix epoch in milliseconds; since version 1.2179)</li>
@@ -1602,11 +1618,13 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <li><em>Jsoup()</em> (returns an array of selected strings; since version 1.2179)</li>
 <li><em>Size(array)</em> (returns the number of items in an array; since version 1.2179)</li>
 <li><em>knownContact()</em> (returns a boolean indicating that the from/reply-to address is in the Android address book or in the local contacts database)</li>
+<li><em>AI(prompt)</em> (perform interference with the configured AI model using the specified prompt, returning the result as a string; since version 1.2243)</li>
 </ul>
 <p>Example conditions:</p>
 <p><code>header("X-Mailer") contains "Open-Xchange" &amp;&amp; from matches ".*service@.*"</code></p>
 <p><code>!onBlocklist() &amp;&amp; hasMx() &amp;&amp; attachments() &gt; 0</code></p>
 <p><code>(received + 7*24*60*60*1000) &lt; DT_DATE_TO_EPOCH(DT_NOW())</code></p>
+<p><code>AI("Is the message below a scam? Answer in English with just yes or no.") contains "yes"</code></p>
 <p><br></p>
 <p><strong>Actions</strong></p>
 <p>You can select one of these actions to apply to matching messages:</p>
@@ -1643,8 +1661,12 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 $week$
 $month$
 $year$
+$user$ (since version 1.2265)
+$extra$ (since version 1.2265)
 $domain$
 $group$ (since version 1.2030)</code></pre>
+<p><span class="math inline"><em>u</em><em>s</em><em>e</em><em>r</em></span> is the domain name of the ‘from’ email address, and <span class="math inline"><em>d</em><em>o</em><em>m</em><em>a</em><em>i</em><em>n</em></span> is the domain name of the ‘from’ email address: <em>user@domain</em>.</p>
+<p><span class="math inline"><em>e</em><em>x</em><em>t</em><em>r</em><em>a</em></span> is the part after the plus sign if the username: <em>user+extra$example.org</em>.</p>
 <p><span class="math inline"><em>g</em><em>r</em><em>o</em><em>u</em><em>p</em></span> will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only. Note that the Android contact provider isn’t very fast, so using this placeholder can slow down fetching messages.</p>
 <p><br /></p>
 <p>Since version 1.2132 it is possible to use the following placeholders in keywords:</p>
@@ -1657,6 +1679,8 @@ $year$</code></pre>
 <p>Some common header conditions (regex):</p>
 <ul>
 <li><em>.*To:.*undisclosed-recipients.*</em></li>
+<li><em>.*Cc:.*test@example.com.*</em></li>
+<li><em>.*Envelope-to:.*test@example.com.*</em></li>
 <li><em>.*Auto-Submitted:.*</em> <a href="https://tools.ietf.org/html/rfc3834">RFC3834</a></li>
 <li><em>.*List-Unsubscribe:.*</em> <a href="https://datatracker.ietf.org/doc/html/rfc2369">RFC3834</a></li>
 <li><em>.*Content-Type:.*multipart/report.*</em> <a href="https://tools.ietf.org/html/rfc3462">RFC3462</a></li>
@@ -1721,7 +1745,7 @@ $$aligned$ (since version 1.2049)</code></pre>
 <p>This website might be useful for testing webhooks:</p>
 <p><a href="https://webhook.site/">https://webhook.site/</a></p>
 <p><br /></p>
-<p><a name="autoanswer"> <strong>Auto reply/answer</strong></p>
+<p><a name="autoanswer"></a> <strong>Auto reply/answer</strong></p>
 <p>First, create a template with the text to reply/answer with via the navigation menu (left side menu).</p>
 <p>After creating a template text, go to the rules via the navigation menu (left side menu), and create a rule for the inbox like this:</p>
 <ul>
@@ -1909,6 +1933,7 @@ Y1 OK CAPABILITY completed</code></pre>
 <p><a name="faq92"></a> <strong>(92) Can you add spam filtering, verification of the DKIM signature and SPF authorization?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq92">Google Translate</a></p>
 <p>Spam filtering, verification of the <a href="https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail">DKIM</a> signature and <a href="https://en.wikipedia.org/wiki/Sender_Policy_Framework">SPF</a> authorization is a task of email servers, not of an email client, which is basically a viewer for messages on an email server. Servers generally have more memory and computing power, so they are much better suited to this task than battery-powered devices. Also, you’ll want spam filtered for all your email clients, possibly including web email, not just for one email client on one device. Moreover, email servers have access to information, like the IP address, etc. of the connecting server, which an email client has no access to. Furthermore, an email server can inspect all messages of all email accounts, while an email client can inspect messages in your email account only.</p>
+<p>Spammers today use large spam networks with many servers and e-mail addresses and AI to create messages that slip through spam filters. This means that only powerful servers running a neural network fed with many messages can filter spam properly. A smartphone simply cannot do that anymore.</p>
 <p>If you are receiving a significant amount of spam, the first thing you should do is consider switching to another email provider. Some email servers excell at filtering spam, and others are really bad at it. Switching to another e-mail provider is no fun, but neither is wading through piles of spam on a daily basis.</p>
 <p>Spam filtering based on message headers might have been feasible, but unfortunately this technique is <a href="https://patents.google.com/patent/US7543076">patented by Microsoft</a>.</p>
 <p>Recent versions of FairEmail can filter spam to a certain extent using a message classifier. Please see <a href="#faq163">this FAQ</a> for more information about this.</p>
@@ -1952,6 +1977,7 @@ Y1 OK CAPABILITY completed</code></pre>
 <p>If an app is listed depends on if the app implements a <a href="https://developer.android.com/guide/topics/providers/document-provider">document provider</a>. If the app is not listed, you might need to ask the developer of the app to add support for the Storage Access Framework.</p>
 <p>Android Q will make it harder and maybe even impossible to directly access files, see <a href="https://developer.android.com/preview/privacy/scoped-storage">here</a> and <a href="https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/">here</a> for more details.</p>
 <p>If you use MIUI, please make sure <a href="https://android.stackexchange.com/questions/191228/what-is-miui-optimization">MIUI optimization</a> is enabled in the developer settings. You can enable the developer options by tapping a few times on the MIUI version number in the settings, About phone.</p>
+<p>See also <a href="#faq25">this FAQ</a>.</p>
 <p><br /></p>
 <p><a name="faq96"></a> <strong>(96) Where can I find the IMAP and SMTP settings?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq96">Google Translate</a></p>
@@ -2111,7 +2137,7 @@ category:promotions</code></pre>
 <p><br /></p>
 <p><a name="faq38"></a> <a name="faq117"></a> <strong>(117) How can I restore a purchase (on another device) ?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq117">Google Translate</a></p>
-<p>Firstly, a purchase will be available on all devices logged into the same Google account, <em>if</em> (this is important) the app is installed via the same Google account too. You can select the account in the Play store app by tapping on the avatar at the top right, but only <em>before</em> installing the app. It is not possible to change the linked Google account after the app has been installed. Google doesn’t support moving a Play Store purchase from one to another account either.</p>
+<p>Firstly, a purchase will be available on all devices logged into the same Google account, <em>if</em> (this is important!) the app is installed via the same Google account too. You can select the account in the Play store app by tapping on the avatar at the top right, but only <em>before</em> installing the app. It is not possible to change the linked Google account after the app has been installed. Google doesn’t support moving a Play Store purchase from one to another account either. This means you have to reinstall the app if it was installed under a different Google account.</p>
 <p>Google manages all purchases, so as a developer I have little control over purchases. So, basically, the only thing I can do, is suggest some things:</p>
 <ul>
 <li>Make sure you have an active, working internet connection, and turn off any VPN based app because it might prevent the Play store from checking purchases</li>
@@ -2124,6 +2150,7 @@ category:promotions</code></pre>
 <p>You can also try to clear the cache of the Play store app via the Android apps settings. Restarting the device might be necessary to let the Play store recognize the purchase correctly.</p>
 <p>Note that:</p>
 <ul>
+<li>If you did not yet configure an email account in the app, you can long press <em>About</em> in the navigation menu (left side menu) of the settings screen to go to the pro features screen</li>
 <li>If you get <em>ITEM_ALREADY_OWNED</em>, the Play store app probably needs to be updated, please <a href="https://support.google.com/googleplay/answer/1050566?hl=en">see here</a></li>
 <li>If you get <em>BILLING_UNAVAILABLE Google Play In-app Billing API version is less than 3</em>, the Play store app might not be logged into the account used to install the app</li>
 <li>Purchases are stored in the Google cloud and cannot get lost</li>
@@ -2188,10 +2215,10 @@ category:promotions</code></pre>
 <p><br /></p>
 <p><em>Resend (version 1.1788+)</em></p>
 <p>Resend a message as defined in <a href="https://datatracker.ietf.org/doc/html/rfc2822#section-3.6.6">rfc2822 section 3.6.6</a> via the reply/answer menu.</p>
-<p>To resend a message, the original message headers are required. You can enable downloading of messages headers for all messages in the connection settings of the app. Alternative, you can show messages headers via the horizontal three-dots menu just above the message text to download the message headers for a single message. The resend menu item will be shown grayed (dimmed) if the message headers are not available (yet).</p>
+<p>To resend a message, the original message headers are required. You can enable downloading of message headers for all messages in the connection settings of the app. Alternatively, you can show messages headers via the horizontal three-dots menu just above the message text to download the message headers for a single message. The resend menu item will be shown grayed (dimmed) if the message headers are not available (yet).</p>
 <p>Remarks:</p>
 <ul>
-<li>Messages to, CC or BCC <em>undisclosed-recipients:</em> cannot be resend</li>
+<li>Messages to, CC or BCC <em>undisclosed-recipients:</em> cannot be resent</li>
 <li>The original subject is sent as-is, unless it is being changed</li>
 <li>The original message text will be sent as-is, unless text is being entered</li>
 <li>The original attachments are sent as they are, unless attachments are being added or removed</li>
@@ -2224,8 +2251,14 @@ $NotDisplayed</code></pre>
 <p><em>Markdown (1.2061+)</em></p>
 <p>Composing messages using <a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a> can be enabled via the three-dots overflow menu of the message editor.</p>
 <p><br /></p>
-<p><em>Rule expression condition (1.2174+)</em></p>
-<p>See <a href="#faq71">this FAQ</a></p>
+<p><em>Fast forward to (1.2226+)</em></p>
+<p>Show (fast) <em>Forward to</em> in the answer menu, with addresses recently used for forwarding messages (if any). You can show the answer menu by tapping on the answer button at the bottom right of an opened/expanded message.</p>
+<p><br /></p>
+<p><em>Force light for reformatted message view (1.2254+)</em></p>
+<p>Show force light menu item / button (when configured) to force a light theme for reformatted messages.</p>
+<p><br /></p>
+<p><em>Basic image editor (1.2257+)</em></p>
+<p>Display a basic image editor when tapping an inserted image.</p>
 <p><br /></p>
 <p><a name="faq126"></a> <strong>(126) Can message previews be sent to my smartwatch?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq126">Google Translate</a></p>
@@ -2239,13 +2272,13 @@ $NotDisplayed</code></pre>
 <p>If you think this is good enough, you can enable the notification option <em>Only send notifications with a message preview to smartwatches</em> and if this does not work, you can try to enable the notification option <em>Show notifications with a preview text only</em>. Note that this applies to smartwatches not showing a preview text too, even when the Android Wear app says the notification has been sent (bridged).</p>
 <p>If you want to have the full message text sent to your smartwatch, you can enable the notification option <em>Preview all text</em>. Note that some smartwatches are known to crash with this option enabled.</p>
 <p>If you use a Samsung smartwatch with the Galaxy smartwatch (Samsung Gear) app, you might need to enable notifications for FairEmail when the setting <em>Notifications</em>, <em>Apps installed in the future</em> is turned off in this app.</p>
-<p>Some companion apps ignore <a href="https://developer.android.com/training/wearables/notifications/bridger#non-bridged">local only</a> notifications, causing the summary notification (<em>nnn new messages</em>) to be bridged. Unfortunately, it is not possible to workaround this problem.</p>
+<p>Some companion apps ignore <a href="https://developer.android.com/training/wearables/notifications/bridger#non-bridged">local only</a> notifications, causing (only) the summary notification (<em>nnn new messages</em>) to be bridged. You can try to disable the option <em>Group notifications</em> in the notification settings tab page to workaround this.</p>
 <p>Some smartwatches do not display notifications with non-<a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a> characters, in which can you can enable the option <em>ASCII text only</em> in the display settings tab page.</p>
 <p>Ongoing notifications shouldn’t be bridged, but some companion apps bridge all notifications. This results in the “monitoring” status bar notification to be bridged. The workaround is to disable this notification, see <a href="#faq2">this FAQ</a>.</p>
 <p><br /></p>
 <p><a name="faq127"></a> <strong>(127) How can I fix ‘Syntactically invalid HELO argument(s)’?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq127">Google Translate</a></p>
-<p>The error <em>… Syntactically invalid HELO argument(s) …</em> means that the SMTP server rejected the local IP address or host name. You can likely fix this error by enabling or disabling the advanced indentity option <em>Use local IP address instead of host name</em>.</p>
+<p>The error <em>… Syntactically invalid HELO argument(s) …</em> means that the SMTP server rejected the local IP address or host name. You can likely fix this error by enabling or disabling the advanced identity option <em>Use local IP address instead of host name</em>.</p>
 <p><br /></p>
 <p><a name="faq128"></a> <strong>(128) How can I reset asked questions, for example to show images?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq128">Google Translate</a></p>
@@ -2253,7 +2286,7 @@ $NotDisplayed</code></pre>
 <p><br /></p>
 <p><a name="faq129"></a> <strong>(129) Are ProtonMail, Tutanota, etc supported?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq129">Google Translate</a></p>
-<p><strong>ProtonMail</strong> uses a proprietary email protocol and <a href="https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/">does not directly support IMAP</a>, so you cannot use FairEmail or any other Android email client to access ProtonMail.</p>
+<p><strong>ProtonMail</strong> uses a proprietary email protocol and <a href="https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/">does not directly support IMAP</a>, so you cannot use FairEmail or any other Android email client to access ProtonMail. Unfortunately, Proton has no plans to add <a href="https://github.com/ProtonMail/proton-bridge/issues/427">a mail bridge for Android</a>.</p>
 <p><strong>Tutanota</strong> uses a proprietary email protocol and <a href="https://tutanota.com/faq/#imap">does not support IMAP</a>, so you cannot use FairEmail or any other email client to access Tutanota.</p>
 <p><strong>Cyberfear</strong> does not support IMAP, so you’ll need to manually configure a POP3 account.</p>
 <p><strong>Skiff</strong> uses a proprietary email protocol and <a href="https://www.skiff.com/blog/tutanota-alternatives-comparison">does not support IMAP</a> so you cannot use FairEmail or any other email client to access Skiff.</p>
@@ -2295,7 +2328,7 @@ $NotDisplayed</code></pre>
 <p>Since the IMAP protocol is meant to synchronize two ways, from server to client and from client to server, trashing (=move to trash) and (permanently) deleting messages will be performed on the email server too, so that the message list is the same for all connected clients. Deleting a message from the device only won’t work because it would be synchronized again later.</p>
 <p>Some email apps pretend they can do this, but, in fact, messages are hidden on the device. FairEmail can do this too, but in a more explicit way, also allowing you to show the messages again.</p>
 <p>You can hide messages either via the three-dots menu in the action bar just above the message text (you can configure a button for this via the same menu) or by multiple selecting messages in the message list.</p>
-<p>Alternatively, you can disable AUTO EXPUNGE, which will result in marking messages being deleted on the server (by setting the <em>deleted</em> flag), but not expunging (deleting) them. You can find this option in the debug panel, which can be shown by (temporarily) enabling debug mode in the miscellaneous settings. Note that with AUTO EXPUNGE enabled, all messages in all folders of all accounts will remain on the email server (with the deleted flag set), also in the draft-messages folder and when emptying the trash-messages or spam-messages folder. You’ll need to manually perform the EXPUNGE command, which you can do by long pressing on a folder, or via the three-dots overflow menu of a messages list.</p>
+<p>Alternatively, you can disable AUTO EXPUNGE, which will result in marking messages being deleted on the server (by setting the <em>deleted</em> flag), but not expunging (deleting) them. You can find this option in the debug panel, which can be shown by (temporarily) enabling debug mode in the miscellaneous settings. Note that with AUTO EXPUNGE disabled, all messages in all folders of all accounts will remain on the email server (with the deleted flag set), also in the draft-messages folder and when emptying the trash-messages or spam-messages folder. You’ll need to manually perform the EXPUNGE command, which you can do by long pressing on a folder, or via the three-dots overflow menu of a messages list.</p>
 <p>Note that it is possible to set the swipe left or right action to hide a message. There is a button in the behavior settings to quickly configure the swipe left and right actions for all IMAP accounts.</p>
 <p><br /></p>
 <p><a name="faq135"></a> <strong>(135) Why are trashed messages and drafts shown in conversations?</strong></p>
@@ -2330,6 +2363,20 @@ $NotDisplayed</code></pre>
 <p><a name="faq83"></a> <a name="faq139"></a> <strong>(139) How do I fix ‘User is authenticated but not connected’?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq139">Google Translate</a></p>
 <p>The confusing Microsoft specific server error <em>User is authenticated but not connected</em> might occur if:</p>
+<p><strong>Consumer Outlook/Hotmail/Live account</strong></p>
+<ul>
+<li>IMAP is disabled, which is the default for new Outlook accounts now</li>
+</ul>
+<p>To fix this:</p>
+<ul>
+<li>Go to the <a href="https://outlook.live.com/">Outlook website</a></li>
+<li>Tap on the settings wheel at the top right</li>
+<li>Select ‘<em>Mail</em>’</li>
+<li>Select ‘<em>Forwarding and IMAP</em>’</li>
+<li>In the section ‘<em>POP and IMAP</em>’ enable ‘<em>Let devices and apps use IMAP</em>’</li>
+</ul>
+<p><br></p>
+<p><strong>Corporate, education, etc. account</strong></p>
 <ul>
 <li>External access is administratively disabled, please see <a href="https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules">this article</a> about how an administrator can enable it again</li>
 <li>Access by third-party apps is administratively disabled or allowed for specific apps only</li>
@@ -2430,7 +2477,7 @@ $NotDisplayed</code></pre>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq147">Google Translate</a></p>
 <p>You likely came here because you are using a third party build of FairEmail.</p>
 <p>There is <strong>only support</strong> on the latest Play store version, the latest GitHub release and the F-Droid build, but <strong>only if</strong> the version number of the F-Droid build is the same as the version number of the latest GitHub release.</p>
-<p>F-Droid builds irregularly, which can be problematic if there is an important update. Therefore you are advised to switch to the GitHub release.</p>
+<p>F-Droid builds irregularly, which can be problematic if there is an important update. Therefore you are advised to switch to the GitHub release. F-Droid isn’t as secure as you might think anyway, <a href="https://privsec.dev/posts/android/f-droid-security-issues/">see here</a>.</p>
 <p>Note that developers have no control over F-Droid builds and the F-Droid infrastructure (apps, forums, etc.).</p>
 <p>OAuth access is available only for Play Store and Github releases because email providers permitted the use of OAuth for these releases only. The responsible for a release, for the F-Droid build this is the F-Droid organization, needs to ask for OAuth permissions, which mostly involves signing a contract with binding terms and conditions, often with the clause that the use of OAuth is exclusive.</p>
 <p>Note that you’ll need to uninstall the F-Droid build first before you can install a GitHub release because Android refuses to install (“<em>App was not installed</em>”) the same app with a different signature for security reasons.</p>
@@ -2477,6 +2524,7 @@ $NotDisplayed</code></pre>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq152">Google Translate</a></p>
 <p>You can insert the email addresses of all contacts in a contact group via the three dots menu of the message composer. You can also long press the person-add icon at the end of the to/cc/bcc/field.</p>
 <p>You can define contact groups with the Android contacts app, please see <a href="https://support.google.com/contacts/answer/30970">here</a> for instructions.</p>
+<p>Please be aware that your email provider might block a message to many recipients. If you want to send newsletters to many people, you should use a transaction email service.</p>
 <p><br /></p>
 <p><a name="faq153"></a> <strong>(153) Why does permanently deleting Gmail message not work?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq153">Google Translate</a></p>
@@ -2554,7 +2602,7 @@ https://favicon.yandex.net/favicon/{domain}</code></pre>
 <p>Since version 1.1601 it is possible to disable confirmation of permanent deletion of individual messages after reading a big warning.</p>
 <p>Note that the POP3 protocol can download messages from the inbox only. So, deleted messages cannot be uploaded to the inbox again. This means that messages can only be permanently deleted in case of a POP3 account.</p>
 <p>Advanced: the IMAP delete flag in combination with the EXPUNGE command is not supportable because both email servers and not all people can handle this, risking unexpected loss of messages. A complicating factor is that not all email servers support <a href="https://tools.ietf.org/html/rfc4315">UID EXPUNGE</a>.</p>
-<p>Since version 1.1485 it is possible to temporarily enable debug mode in the miscellaneous settings to disable auto expunging messages. Note that messages with a *flag will not be shown if auto EXPUNGE is enabled.</p>
+<p>Since version 1.1485 it is possible to temporarily enable debug mode in the miscellaneous settings to disable auto expunging messages. Note that messages with a *flag will not be shown if AUTO EXPUNGE is enabled.</p>
 <p>In the debug panel, it is also possible to disable permanent delete confirmation and enable permanent delete from notifications (since version 1.2163).</p>
 <p><br /></p>
 <p><a name="faq161"></a> <strong>(161) Can you add a setting to change the primary and accent color?</strong>*</p>
@@ -2676,21 +2724,25 @@ DNS lookup 108.27.250.142.zen.spamhaus.org -&gt;
 <p><a name="faq170"></a> <strong>(170) Why can’t folders be created with POP3?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq170">Google Translate</a></p>
 <p>The POP3 protocol has commands to download and delete messages from the inbox only. There are no commands to access any other folder.</p>
-<p>Creating a local folder only and storing messages on your device only is a bad idea because losing or breaking your device would mean losing your messages. Therefore this isn’t supportable.</p>
+<p>Creating a local folder only and storing messages on your device only is a bad idea because losing or breaking your device would mean losing your messages. Imagine you’ve put a lot of time organizing your messages, and you need to reinstall the app on another device, only to discover all the work you did was a waste of time. Therefore, this isn’t supportable.</p>
+<p>An alternative is to use keywords, which is possible since version 1.2263, but please be aware that keywords can’t be stored on the email server with POP3, only on the device. You can search on keywords via “<em>More options</em>” in the search dialog box, and save the search via a button in the top action bar, which basically means you can have virtual folders in the navigation menu. Keywords can be added and messages can be hidden (in the inbox) automatically with rules, see <a href="#faq71">this FAQ</a>.</p>
 <p>Please note that FairEmail doesn’t store a copy of your messages in the cloud for privacy reasons.</p>
 <p>If you want to store messages in folders, please use IMAP, so that there is always a copy of the messages on the email server.</p>
 <p>You could register, for example, a Gmail account, and configure Gmail to import messages from a POP3 account, automatically label them (=put them in a folder), and configure the Gmail account in FairEmail. Please <a href="https://support.google.com/mail/answer/21289?hl=en&amp;co=GENIE.Platform%3DDesktop">see here</a> for instructions.</p>
+<p>If you are concerned about deleting messages, with IMAP messages are moved to the trash messages folder first, which means that deleted messages can be restored. You can also hide instead of delete messages, please <a href="#faq134">see this FAQ</a>.</p>
+<p>Some people believe POP3 is safer than IMAP, but security wise, there is no difference between POP3 and IMAP. The connection to the email server is always encrypted, and the account is protected by a password in both cases.</p>
+<p>If your email provider only offers POP3 access, tell them the POP3 protocol is 40+ years old (<a href="https://datatracker.ietf.org/doc/html/rfc918">defined in 1984</a>).</p>
 <p><br /></p>
 <p><a name="faq171"></a> <strong>(171) How can I delete a contact?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq171">Google Translate</a></p>
 <p>A contact can be stored in the Android address book or in the local contact database.</p>
 <p>When a contact is stored in the Android address book, you can use the Android contacts app to delete the contact.</p>
-<p>When a contact is store in the local contact database, you can delete it like this:</p>
+<p>When a contact is stored in the local contact database, you can delete it like this:</p>
 <ul>
 <li>Go to the settings via the navigation menu (left side menu)</li>
 <li>Go to the send settings tab page</li>
 <li>Tap on the <em>Manage</em> button under <em>Suggest locally stored contacts</em></li>
-<li>Locate the contact (you can use the magnifier glass in the top action bar)</li>
+<li>Locate the contact (you can use the magnifier glass in the top action bar to search for it)</li>
 <li>Long press the contact and select to delete it</li>
 </ul>
 <p><br /></p>
@@ -2736,7 +2788,7 @@ DNS lookup 108.27.250.142.zen.spamhaus.org -&gt;
 <p>Example DNS records (SRV=record type, 0=priority, 1=weight, 993/587=port number):</p>
 <pre><code>_imaps._tcp SRV 0 1 993 imap.example.com.
 _submission._tcp SRV 0 1 587 smtp.example.com.</code></pre>
-<p><a href="https://wiki.mozilla.org/Thunderbird:Autoconfiguration">Mozilla’s autoconfiguration</a> is supported too, but only if the configuration file is accessible via a secure (https) connection.</p>
+<p><a href="https://wiki.mozilla.org/Thunderbird:Autoconfiguration">Mozilla’s autoconfiguration</a> is supported too, but only if the configuration file is accessible via a secure (https) connection. The Play Store version of the app will query Mozilla’s database only to comply with Play Store policies. If you want to query your own server on your own domain name, you should install or update to the GitHub version of the app.</p>
 <p>FairEmail will also check the <a href="https://en.wikipedia.org/wiki/MX_record">MX record</a> and if common email ports (143/993, 465/587) are open.</p>
 <p>There is no auto discovery for POP3.</p>
 <p><br /></p>
@@ -2911,7 +2963,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p><br></p>
 <p><strong>Usage</strong></p>
 <p><em>Editor</em></p>
-<p>Tap on the robot button in the top action bar of the message editor. If the text in the message editor is empty, the message being replied to will be answered (using the configured answer prompt), else the entered text will be sent, which could be a question or command. If you select entered text, it will be replaced by the answer.</p>
+<p>Tap the robot button in the top action bar of the message editor. A dialog box will appear (since version 1.2259). You can select the prompt and select whether to input the message you typed and/or the message you are replying to.</p>
 <p>For example: create a new draft and enter the text “<em>How far is the sun?</em>”, and tap on the robot button in the top action bar.</p>
 <p>Since version 1.2191 it is possible to define AI templates, which you can select after tapping on the robot icon.</p>
 <p><br></p>
@@ -2926,6 +2978,13 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p><em>Error 429: Too Many Requests insufficient_quota: You exceeded your current quota, please check your plan and billing details</em></p>
 <p>Note that you are required to switch to a <a href="https://openai.com/api/pricing/">paid plan</a> after the testing period.</p>
 <p><br></p>
+<p>An alternative to OpenAI is using <a href="https://groq.com/">Groq</a>.</p>
+<ul>
+<li>Endpoint: <strong>https://api.groq.com/openai/v1/</strong></li>
+<li>Suggested <a href="https://console.groq.com/docs/models">model</a>: <strong>gemma2-9b-it</strong> or <strong>llama-3.3-70b-versatile</strong></li>
+</ul>
+<p>It’s faster and free to use for now.</p>
+<p><br></p>
 <p>You can select the <a href="https://platform.openai.com/docs/models/overview">model</a>, and configure the <a href="https://platform.openai.com/docs/api-reference/chat/create#chat/create-temperature">temperature</a>.</p>
 <p>Please read the <a href="https://openai.com/policies/privacy-policy">privacy policy</a> of OpenAI, and perhaps <a href="https://katedowninglaw.com/2023/03/10/openais-massive-data-grab/">this article</a> and <a href="https://www.ncsc.gov.uk/blog-post/chatgpt-and-large-language-models-whats-the-risk">this article</a> too.</p>
 <p>FairEmail does not use third-party libraries to avoid being tracked when OpenAI is not being used.</p>
@@ -2936,6 +2995,8 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <li>In the integration settings enter the URI https://api.deepinfra.com/v1/openai, an API key and the model name</li>
 </ul>
 <p><br></p>
+<p><br></p>
+<p>If you are looking for Google Gemini support, please see <a href="#faq204">this FAQ</a>.</p>
 <p>This feature is experimental and requires version 1.2053 or later for the GitHub version and version 1.2182 or later for the Play Store version.</p>
 <p><br></p>
 <p><a name="faq191"></a> <strong>(191) How do I download and keep older messages on my device?</strong></p>
@@ -2986,7 +3047,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq197">Google Translate</a></p>
 <p>You can print a message, both to a PDF or a printer, by tapping on the horizontal three-dots button just above the message text near the left side. You might need to tap on the ‘&gt;’ button to show the message actions again.</p>
 <p>Note that you can configure a button for printing via the same pop-up menu.</p>
-<p>Printing is managed by Android for all apps. You should be able to select the paper size, etc. You might need to update or install a driver app for your printer via the Play Store.</p>
+<p>Printing is managed by Android for all apps. You should be able to select the paper size, etc. You might need to update or install a driver app for your printer via the Play Store. For example, for <a href="https://play.google.com/store/apps/details?id=com.hp.android.printservice">HP printers</a>.</p>
 <p>A message is printed as-is, which means that the sender of the message determines the margins, etc.</p>
 <p><br></p>
 <p><a name="faq198"></a> <strong>(198) Can you add spell checking?</strong></p>
@@ -3038,6 +3099,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p>Note that DNSSEC and DANE are available in the GitHub version only.</p>
 <p><br></p>
 <p><a name="faq203"></a> <strong>(203) Where is my sent message?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq203">Google Translate</a></p>
 <p>When you write a message, it will be stored in the draft messages folder.</p>
 <p>When you send a message, it will be in the outbox first and later in the sent messages folder.</p>
 <p>The outbox is a queue of messages to be transferred to the email server of your email provider. After a message has been transferred to the email server, it will be stored in the sent messages folder.</p>
@@ -3047,6 +3109,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p>Basically, an outgoing message is either in the draft messages folder, the outbox, or the sent messages folder.</p>
 <p><br></p>
 <p><a name="faq204"></a> <strong>(204) How do I use Gemini?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq204">Google Translate</a></p>
 <p>Gemini can only be used if configured and enabled.</p>
 <p><strong>Note that using Gemini is not free (anymore) !</strong></p>
 <p><br></p>
@@ -3064,6 +3127,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p>This feature is experimental and requires version 1.2171 or later for the GitHub version and version 1.2182 or later for the Play Store version.</p>
 <p><br></p>
 <p><a name="faq205"></a> <strong>(205) How do I check the integrity of an APK file?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq205">Google Translate</a></p>
 <p>“<em>Artifact attestations enable you to create unfalsifiable provenance and integrity guarantees for the software you build.</em> <em>In turn, people who consume your software can verify where and how your software was built.</em>”</p>
 <p>Please <a href="https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds">see here</a> for details.</p>
 <p>You can verify in this way that an APK file was built and signed by a GitHub workflow:</p>
@@ -3074,6 +3138,25 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 </ol>
 <pre><code>gh attestation verify xyz.apk -R M66B/FairEmail</code></pre>
 <p>Attestation of APK files is available from version 1.2209.</p>
+<p><br></p>
+<p><a name="faq206"></a> <strong>(206) How can I move or copy messages from one account to another?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq206">Google Translate</a></p>
+<p>There are two options for this:</p>
+<ol type="1">
+<li>Long press a message in the message list to select it, tap the three-dot button that appears, scroll to the bottom of the pop-up menu and select the target account.</li>
+<li>Long press the move-to button just above the message text to select the target account first.</li>
+</ol>
+<p>To copy a message to another account, long press the target folder.</p>
+<p><br></p>
+<p><a name="faq207"></a> <strong>(207) What does ‘Authentication failed’ mean?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq207">Google Translate</a></p>
+<p>Basically, ‘<em>Authentication failed</em>’, or similar, means that the email server of your email provider doesn’t accept the login (anymore).</p>
+<p>The first thing you should check whether you can still login via the website of the email provider. If you can’t login via the website of the email provider, you’ll need to contact the email provider for support. In any case, in that situation, no email app can login either.</p>
+<p>The obvious reason is that the username (generally the email address, but not always) or the password is incorrect. There are other possible causes too, like connecting from a suspicious network (according to the email provider), connecting from abroad, or using a VPN. Some email providers are more critical than other email provider regarding accepting connections.</p>
+<p>If you are using a VPN, please turn it off, or make an exception for FairEmail. With a VPN you share a network address with many other people, possibly not all behaving nicely. If an email server detects ‘unwanted’ behavior, like somebody trying to send spam messages, an email server often automatically blocks network addresses as a protection measure.</p>
+<p>You can try to switch to Wi-Fi or mobile data because this will result in using another (local) network address. Turning flight mode on for a while and turning it back off will mostly result in another network address being assigned. So, this is worth trying as well.</p>
+<p>Email providers like Google, Microsoft, and Yahoo/AOL require <a href="https://en.wikipedia.org/wiki/OAuth">OAuth</a> for logging in, which means it is not possible to configure an account manually, and that you <em>must</em> use the quick setup wizard to configure an account.</p>
+<p>Some email providers use account-specific host (server) names. So, please take care you use the correct host name when manually configuring an account.</p>
 <p><br></p>
 <h2>
 <a name="get-support"></a>Get support

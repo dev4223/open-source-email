@@ -857,12 +857,25 @@
                     android:id="@+id/tvExpression"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
                     android:text="@string/title_rule_expression"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintBottom_toBottomOf="@+id/ibExpression"
+                    app:layout_constraintEnd_toStartOf="@id/ibExpression"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <ImageButton
+                    android:id="@+id/ibExpression"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/title_info"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/vSeparatorExpression" />
+                    app:layout_constraintStart_toEndOf="@id/tvExpression"
+                    app:layout_constraintTop_toBottomOf="@+id/vSeparatorExpression"
+                    app:srcCompat="@drawable/twotone_info_24" />
 
                 <eu.faircode.email.EditTextPlain
                     android:id="@+id/etExpression"
@@ -875,12 +888,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvExpression" />
-
-                <androidx.constraintlayout.widget.Group
-                    android:id="@+id/grpExpression"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    app:constraint_referenced_ids="tvAndExpression,vSeparatorExpression,tvExpression,etExpression" />
 
                 <TextView
                     android:id="@+id/tvAction"
@@ -957,13 +964,22 @@
                     app:layout_constraintTop_toBottomOf="@id/npDuration" />
 
                 <CheckBox
-                    android:id="@+id/cbSnoozeSeen"
+                    android:id="@+id/cbHideSeen"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/title_rule_seen"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cbScheduleEnd" />
+
+                <CheckBox
+                    android:id="@+id/cbSnoozeSeen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_rule_seen"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cbHideSeen" />
 
                 <TextView
                     android:id="@+id/tvColor"
@@ -1236,6 +1252,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cbAttached" />
 
+                <CheckBox
+                    android:id="@+id/cbChecks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_rule_checks"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cbCc" />
+
                 <TextView
                     android:id="@+id/tvAnswerRemark"
                     android:layout_width="0dp"
@@ -1245,7 +1271,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/cbCc" />
+                    app:layout_constraintTop_toBottomOf="@id/cbChecks" />
 
                 <Button
                     android:id="@+id/btnTtsSetup"
@@ -1284,13 +1310,22 @@
                     app:layout_constraintTop_toBottomOf="@id/btnTtsData" />
 
                 <CheckBox
+                    android:id="@+id/cbLoop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_rule_loop_sound"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/btnSound" />
+
+                <CheckBox
                     android:id="@+id/cbAlarm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/title_rule_use_as_alarm"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/btnSound" />
+                    app:layout_constraintTop_toBottomOf="@id/cbLoop" />
 
                 <TextView
                     android:id="@+id/tvAlarm"
@@ -1430,11 +1465,24 @@
                     android:id="@+id/etUrl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:hint="https://..."
                     android:inputType="textUri"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/spUrlMethod" />
+
+                <eu.faircode.email.EditTextPlain
+                    android:id="@+id/etContent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="{'example': true}"
+                    android:inputType="text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/etUrl" />
 
                 <TextView
                     android:id="@+id/tvUrlHint"
@@ -1445,7 +1493,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/etUrl" />
+                    app:layout_constraintTop_toBottomOf="@+id/etContent" />
 
                 <TextView
                     android:id="@+id/tvSummarizeRemark"
@@ -1487,6 +1535,12 @@
                     app:constraint_referenced_ids="tvAge,etAge" />
 
                 <androidx.constraintlayout.widget.Group
+                    android:id="@+id/grpHide"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:constraint_referenced_ids="cbHideSeen" />
+
+                <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpSnooze"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
@@ -1526,7 +1580,7 @@
                     android:id="@+id/grpAnswer"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:constraint_referenced_ids="tvAnswerIdentity,spIdent,tvAnswerTemplate,spAnswer,cbAnswerSubject,cbOriginalText,cbWithAttachments,tvTo,etTo,ibTo,cbResend,cbAttached,cbCc,tvAnswerRemark" />
+                    app:constraint_referenced_ids="tvAnswerIdentity,spIdent,tvAnswerTemplate,spAnswer,cbAnswerSubject,cbOriginalText,cbWithAttachments,tvTo,etTo,ibTo,cbResend,cbAttached,cbCc,cbChecks,tvAnswerRemark" />
 
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpTts"
@@ -1538,7 +1592,7 @@
                     android:id="@+id/grpSound"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:constraint_referenced_ids="btnSound,cbAlarm,tvAlarm,tvAlarmDuration,etAlarmDuration" />
+                    app:constraint_referenced_ids="btnSound,cbLoop,cbAlarm,tvAlarm,tvAlarmDuration,etAlarmDuration" />
 
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpAutomation"
@@ -1568,7 +1622,7 @@
                     android:id="@+id/grpUrl"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:constraint_referenced_ids="tvUrl,spUrlMethod,etUrl,tvUrlHint" />
+                    app:constraint_referenced_ids="tvUrl,spUrlMethod,etUrl,etContent,tvUrlHint" />
 
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpSummarize"
@@ -1583,7 +1637,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:tag="inset"
             app:itemIconTint="@color/action_foreground"
             app:itemTextColor="@color/action_foreground"
             app:labelVisibilityMode="labeled"

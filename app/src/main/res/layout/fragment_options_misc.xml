@@ -344,6 +344,18 @@
                     app:layout_constraintTop_toBottomOf="@id/swShowFiltered"
                     app:switchPadding="12dp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swHapticFeedbackSwipe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_haptic_feedback_swipe"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swHapticFeedback"
+                    app:switchPadding="12dp" />
+
                 <TextView
                     android:id="@+id/tvLanguage"
                     android:layout_width="0dp"
@@ -355,7 +367,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swHapticFeedback" />
+                    app:layout_constraintTop_toBottomOf="@id/swHapticFeedbackSwipe" />
 
                 <eu.faircode.email.SpinnerEx
                     android:id="@+id/spLanguage"
@@ -1179,17 +1191,6 @@
                     app:layout_constraintTop_toBottomOf="@id/ibSqliteCache" />
 
                 <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swLegacyQueries"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/title_advanced_legacy_queries"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvSqliteCacheHint"
-                    app:switchPadding="12dp" />
-
-                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swCacheLists"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1197,7 +1198,7 @@
                     android:text="@string/title_advanced_cache_lists"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swLegacyQueries"
+                    app:layout_constraintTop_toBottomOf="@id/tvSqliteCacheHint"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1235,6 +1236,29 @@
                     app:layout_constraintTop_toBottomOf="@id/tvStartDelay" />
 
                 <TextView
+                    android:id="@+id/tvRangeSize"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_range_size"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/sbStartDelay" />
+
+                <SeekBar
+                    android:id="@+id/sbRangeSize"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:max="5000"
+                    android:min="0"
+                    android:progress="1000"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRangeSize" />
+
+                <TextView
                     android:id="@+id/tvChunkSize"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1244,7 +1268,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/sbStartDelay" />
+                    app:layout_constraintTop_toBottomOf="@id/sbRangeSize" />
 
                 <SeekBar
                     android:id="@+id/sbChunkSize"
@@ -1280,6 +1304,29 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvThreadRange" />
 
+                <TextView
+                    android:id="@+id/tvRestartInterval"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_restart_interval"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/sbThreadRange" />
+
+                <SeekBar
+                    android:id="@+id/sbRestartInterval"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:max="90"
+                    android:min="0"
+                    android:progress="24"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRestartInterval" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAutoScroll"
                     android:layout_width="0dp"
@@ -1288,7 +1335,7 @@
                     android:text="@string/title_advanced_auto_scroll"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/sbThreadRange"
+                    app:layout_constraintTop_toBottomOf="@id/sbRestartInterval"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1314,18 +1361,6 @@
                     app:layout_constraintTop_toBottomOf="@id/swUndoManager"
                     app:switchPadding="12dp" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swFakeDark"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:checked="true"
-                    android:text="@string/title_advanced_fake_dark"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swBrowserZoom"
-                    app:switchPadding="12dp" />
-
                 <TextView
                     android:id="@+id/tvViewportHeight"
                     android:layout_width="0dp"
@@ -1337,7 +1372,7 @@
                     android:textColor="?android:attr/textColorPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swFakeDark" />
+                    app:layout_constraintTop_toBottomOf="@id/swBrowserZoom" />
 
                 <EditText
                     android:id="@+id/etViewportHeight"
@@ -1679,6 +1714,17 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swSvg"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_svg"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swStrictAlignment"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swWebp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1686,7 +1732,7 @@
                     android:text="@string/title_advanced_webp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swStrictAlignment"
+                    app:layout_constraintTop_toBottomOf="@id/swSvg"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -1793,6 +1839,17 @@
                     app:layout_constraintTop_toBottomOf="@id/etFaviconUri" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swEmailJunk"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_email_junk"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvFaviconUriHint"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swInfra"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1800,7 +1857,7 @@
                     android:text="@string/title_advanced_infra"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvFaviconUriHint"
+                    app:layout_constraintTop_toBottomOf="@id/swEmailJunk"
                     app:switchPadding="12dp" />
 
                 <androidx.constraintlayout.helper.widget.Flow

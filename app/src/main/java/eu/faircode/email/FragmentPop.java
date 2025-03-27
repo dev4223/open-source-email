@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -307,6 +307,14 @@ public class FragmentPop extends FragmentBase {
             }
         });
 
+        btnAvatar.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                avatar = null;
+                return true;
+            }
+        });
+
         Helper.linkPro(tvAvatarPro);
 
         grpCalendar.setVisibility(BuildConfig.PLAY_STORE_RELEASE ? View.GONE : View.VISIBLE);
@@ -423,7 +431,17 @@ public class FragmentPop extends FragmentBase {
 
         // Workaround odd focus issue
         if (scroll != null)
-            scroll.requestChildFocus(null, null);
+            try {
+                scroll.requestChildFocus(null, null);
+            } catch (Throwable ex) {
+                /*
+                    java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.view.View.getRevealOnFocusHint()' on a null object reference
+                        at android.widget.ScrollView.requestChildFocus(ScrollView.java:1471)
+                        at eu.faircode.email.FragmentPop.onViewCreated(SourceFile:9)
+                        at androidx.fragment.app.Fragment.performViewCreated(SourceFile:15)
+                 */
+                Log.w(ex);
+            }
     }
 
     private void onSave(boolean should) {
@@ -1224,7 +1242,7 @@ public class FragmentPop extends FragmentBase {
 
         EntityFolder delete = new EntityFolder();
         delete.id = EntityMessage.SWIPE_ACTION_DELETE;
-        delete.name = getString(R.string.title_delete_permanently);
+        delete.name = getString(R.string.title_trash);
         folders.add(delete);
 
         return folders;

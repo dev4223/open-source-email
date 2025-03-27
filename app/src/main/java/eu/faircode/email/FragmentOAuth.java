@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -95,6 +95,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.mail.AuthenticationFailedException;
+import javax.mail.MessagingException;
 import javax.net.ssl.HttpsURLConnection;
 
 public class FragmentOAuth extends FragmentBase {
@@ -277,6 +278,12 @@ public class FragmentOAuth extends FragmentBase {
                     brave = true;
                 else if (browser.activityInfo.packageName.startsWith("com.microsoft.emmx")) // .beta .canary .dev
                     edge = true;
+                else if (browser.activityInfo.packageName.startsWith("org.mozilla.firefox"))
+                    ;
+                else if (browser.activityInfo.packageName.equals("org.mozilla.focus"))
+                    ;
+                else if (browser.activityInfo.packageName.equals("com.duckduckgo.mobile.android"))
+                    ;
         } catch (Throwable ex) {
             Log.e(ex);
         }
@@ -360,6 +367,9 @@ public class FragmentOAuth extends FragmentBase {
 
     private void onAuthorize(boolean graph) {
         try {
+            if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+                return;
+
             if (askAccount) {
                 String name = etName.getText().toString().trim();
                 String email = etEmail.getText().toString().trim();
@@ -515,11 +525,14 @@ public class FragmentOAuth extends FragmentBase {
 
             @Override
             public boolean matches(@NonNull BrowserDescriptor descriptor) {
+
                 if (BuildConfig.DEBUG) {
-                    boolean edge = "com.microsoft.emmx".equals(descriptor.packageName);
-                    Log.i("MMM " + descriptor.packageName + "=" + edge);
-                    return edge;
+                    boolean test = (descriptor.useCustomTab &&
+                            "com.duckduckgo.mobile.android".equals(descriptor.packageName));
+                    Log.i("MMM " + descriptor.packageName + ":" + descriptor.useCustomTab + "=" + test);
+                    return test;
                 }
+
                 boolean accept = !(SBROWSER.matches(descriptor) || SBROWSER_TAB.matches(descriptor));
 
                 if (descriptor.useCustomTab && !tabs)
@@ -1130,6 +1143,21 @@ public class FragmentOAuth extends FragmentBase {
                 else
                     tvOfficeAuthHint.setText(R.string.title_setup_office_auth);
                 tvOfficeAuthHint.setVisibility(View.VISIBLE);
+            } else if (ex instanceof MessagingException) {
+                boolean notconnected = false;
+                Throwable e = ex;
+                while (e != null) {
+                    String msg = e.getMessage();
+                    if (msg != null && msg.contains("User is authenticated but not connected")) {
+                        notconnected = true;
+                        break;
+                    }
+                    e = e.getCause();
+                }
+                if (notconnected) {
+                    tvOfficeAuthHint.setText(R.string.title_setup_office_not_connected);
+                    tvOfficeAuthHint.setVisibility(View.VISIBLE);
+                }
             }
         }
 

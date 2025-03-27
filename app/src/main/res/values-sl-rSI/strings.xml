@@ -1083,6 +1083,7 @@
     <string name="title_important">Pomembno</string>
     <string name="title_search_in_text">Išči v besedilu &#8230;</string>
     <string name="title_forward">posredoval</string>
+    <string name="title_forward_to">Posreduj za</string>
     <string name="title_resend">znova poslal</string>
     <string name="title_fetching_headers">Prejemanje glav sporočil &#8230;</string>
     <string name="title_new_message">Novo sporočilo</string>
@@ -1100,7 +1101,6 @@
     <string name="title_print_images">Natisni slike</string>
     <string name="title_print_images_remark">Prejem slik lahko traja nekaj časa</string>
     <string name="title_show_headers">Prikaži glave</string>
-    <string name="title_raw_save">Shrani izvorno sporočilo</string>
     <string name="title_raw_send">Shrani kot prilogo</string>
     <string name="title_raw_send_message">Sporočilo</string>
     <string name="title_raw_send_thread">Pogovor</string>
@@ -1320,7 +1320,6 @@
     <string name="title_translate">Prevedi</string>
     <string name="title_translate_configure">Nastavi &#8230;</string>
     <string name="title_translate_key">Vnesite ključ</string>
-    <string name="title_translating">Prevajanje &#8230;</string>
     <string name="title_translate_formal">Uporabi uradno obliko</string>
     <string name="title_translate_small">Uporabi majhno pisavo za izvorno besedilo</string>
     <string name="title_translate_html">Ohrani oblikovanje</string>
@@ -1472,6 +1471,7 @@
     <string name="title_filter_hidden">Skrita</string>
     <string name="title_filter_deleted">Izbrisano</string>
     <string name="title_filter_duplicates">Dvojnike</string>
+    <string name="title_filter_sent">Poslano</string>
     <string name="title_filter_trash">Smeti</string>
     <string name="title_compact">Strnjen pogled</string>
     <string name="title_zoom">Velikost besedila</string>
@@ -1732,7 +1732,6 @@
     <string name="title_hint_junk">Vsiljeno pošto bi moral filtrirati strežnik in je ni mogoče zanesljivo filtrirati na napravi z omejeno zmogljivostjo, ki jo napaja baterija.</string>
     <string name="title_hint_junk_learn">S premikanjem sporočil v in iz mape z vsiljeno pošto se e-poštni strežnik nauči, kaj je vsiljena pošta.</string>
     <string name="title_hint_contact_actions">Dolg pritisk za možnosti</string>
-    <string name="title_hint_eml">To je povzetek vsebine datoteke izvornega sporočila.  Shranite izvorno sporočilo z ikono za shranjevanje v vrstici dejanj za ogled celotne vsebine.</string>
     <string name="title_open_link">Odpri povezavo</string>
     <string name="title_image_link">Povezava do slike</string>
     <string name="title_different_link">Naziv in naslov povezave se razlikujeta.</string>
@@ -1909,8 +1908,10 @@
     <string name="title_accessibility_to">Prejemnik</string>
     <string-array name="pollIntervalNames">
         <item>Vedno</item>
-        <item>Vsakih 5 minut</item>
-        <item>Vsakih 10 minut</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Vsakih 15 minut</item>
         <item>Vsakih 30 minut</item>
         <item>Vsako uro</item>
@@ -2025,6 +2026,7 @@
         <item>PGP encrypt-only</item>
         <item>Podpiši in šifriraj (PGP)</item>
         <item>Samo podpiši (S/MIME)</item>
+        <item>S/MIME encrypt-only</item>
         <item>Podpiši in šifriraj (S/MIME)</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2045,6 +2047,8 @@
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Cursive</item>

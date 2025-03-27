@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -181,6 +181,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "tcp_keep_alive", // force reconnect
             "ssl_harden", "ssl_harden_strict", "cert_strict", "cert_transparency", "check_names", "bouncy_castle", "bc_fips", // force reconnect
             "experiments", "debug", "protocol", // force reconnect
+            //"restart_interval", // force reconnect
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", // force reconnect
             "keep_alive_poll", "empty_pool", "idle_done", // force reconnect
             "exact_alarms" // force schedule
@@ -982,7 +983,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                 last = stats;
 
-                EntityLog.log(ServiceSynchronize.this, "Widget update");
                 Widget.update(ServiceSynchronize.this);
 
                 boolean badge = prefs.getBoolean("badge", true);
@@ -1381,6 +1381,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
                             boolean threading = prefs.getBoolean("threading", true);
                             boolean flag_unsnoozed = prefs.getBoolean("flag_unsnoozed", false);
+                            boolean important_unsnoozed = prefs.getBoolean("important_unsnoozed", false);
 
                             // Show thread
                             List<EntityMessage> messages = db.message().getMessagesByThread(
@@ -1391,6 +1392,12 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             db.message().setMessageUnsnoozed(message.id, true);
                             if (flag_unsnoozed)
                                 EntityOperation.queue(ServiceSynchronize.this, message, EntityOperation.FLAG, false);
+                            if (important_unsnoozed) {
+                                db.message().setMessageImportance(message.id, EntityMessage.PRIORITIY_HIGH);
+                                EntityOperation.queue(ServiceSynchronize.this, message, EntityOperation.KEYWORD,
+                                        MessageHelper.FLAG_HIGH_IMPORTANCE, true);
+
+                            }
                             EntityOperation.queue(ServiceSynchronize.this, message, EntityOperation.SEEN, false, false);
                         }
 
@@ -1671,7 +1678,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                 if (account.keep_alive_noop) {
                     int timeout = prefs.getInt("timeout", EmailService.DEFAULT_CONNECT_TIMEOUT);
-                    iservice.setRestartIdleInterval(timeout * 2 * 6); // 20 x 2 x 6 = 4 min
+                    int restart_interval = prefs.getInt("restart_interval", EmailService.DEFAULT_RESTART_INTERVAL);
+                    int factor = (timeout == 0 ? 0 : restart_interval / timeout);
+                    int idle_interval = timeout * factor;
+                    Log.i("Restart interval=" + restart_interval + " timeout=" + timeout + " factor=" + factor + " idle=" + idle_interval);
+                    iservice.setRestartIdleInterval(idle_interval);
                 }
 
                 final Date lastStillHere = new Date(0);
@@ -2127,7 +2138,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                             EntityOperation.sync(this, folder.id, false, force && !forced);
 
-                            if (capNotify && subscriptions && EntityFolder.INBOX.equals(folder.type))
+                            if (capNotify && subscriptions &&
+                                    EntityFolder.INBOX.equals(folder.type) &&
+                                    MessageHelper.hasCapability(ifolder, "NOTIFY"))
                                 ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                                     @Override
                                     public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
@@ -2144,8 +2157,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                                         if (responses.length == 0)
                                             throw new ProtocolException("No response");
-                                        if (!responses[responses.length - 1].isOK())
-                                            throw new ProtocolException(responses[responses.length - 1]);
+                                        if (!responses[responses.length - 1].isOK()) {
+                                            Log.w(new ProtocolException(responses[responses.length - 1]));
+                                            return null;
+                                        }
 
                                         for (int i = 0; i < responses.length - 1; i++) {
                                             EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Account, account,
@@ -2186,8 +2201,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             cowner.value.start();
 
                             db.operation().liveOperations(account.id).observe(cowner.value, new Observer<List<TupleOperationEx>>() {
-                                private DutyCycle dc = new DutyCycle(account.name + " operations");
-                                private List<Long> handling = new ArrayList<>();
+                                private final DutyCycle dc = new DutyCycle(account.name + " operations");
+                                private final List<Long> handling = new ArrayList<>();
                                 private final Map<TupleOperationEx.PartitionKey, List<TupleOperationEx>> partitions = new HashMap<>();
 
                                 private final PowerManager.WakeLock wlOperations = pm.newWakeLock(
@@ -2206,7 +2221,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                             added.get(op.folder).add(op);
                                         }
                                     }
-                                    handling = all;
+                                    handling.clear();
+                                    handling.addAll(all);
 
                                     if (empty_pool && istore instanceof IMAPStore) {
                                         getMainHandler().removeCallbacks(purge);

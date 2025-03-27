@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -34,6 +34,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.RelativeSizeSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -72,6 +73,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private View view;
     private ImageButton ibHelp;
     private SwitchCompat swKeyboard;
+    private SwitchCompat swKeyboardMargin;
     private SwitchCompat swKeyboardNoFullscreen;
     private SwitchCompat swSuggestNames;
     private SwitchCompat swSuggestSent;
@@ -98,6 +100,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
     private ViewButtonColor btnComposeColor;
     private Spinner spComposeFont;
+    private Spinner spComposeTextSize;
     private SwitchCompat swComposeMonospaced;
     private SwitchCompat swPrefixOnce;
     private SwitchCompat swPrefixCount;
@@ -138,7 +141,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
     private SwitchCompat swSendPartial;
 
     final static List<String> RESET_OPTIONS = Collections.unmodifiableList(Arrays.asList(
-            "keyboard", "keyboard_no_fullscreen",
+            "keyboard", "keyboard_margin", "keyboard_no_fullscreen",
             "suggest_names", "suggest_sent", "suggested_received", "suggest_frequently", "suggest_account", "auto_identity",
             "purge_contact_age", "purge_contact_freq",
             "send_reminders", "send_chips", "send_nav_color", "send_pending",
@@ -146,7 +149,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             "send_delayed", "send_undo",
             "answer_single", "answer_action",
             "sound_sent",
-            "compose_color", "compose_font", "compose_monospaced",
+            "compose_color", "compose_font", "compose_text_size", "compose_monospaced",
             "prefix_once", "prefix_count", "alt_re", "alt_fwd",
             "separate_reply", "extended_reply", "template_reply", "write_below", "quote_reply", "quote_limit",
             "resize_reply", "resize_paste",
@@ -171,6 +174,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
         ibHelp = view.findViewById(R.id.ibHelp);
         swKeyboard = view.findViewById(R.id.swKeyboard);
+        swKeyboardMargin = view.findViewById(R.id.swKeyboardMargin);
         swKeyboardNoFullscreen = view.findViewById(R.id.swKeyboardNoFullscreen);
         swSuggestNames = view.findViewById(R.id.swSuggestNames);
         swSuggestSent = view.findViewById(R.id.swSuggestSent);
@@ -197,6 +201,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
         btnComposeColor = view.findViewById(R.id.btnComposeColor);
         spComposeFont = view.findViewById(R.id.spComposeFont);
+        spComposeTextSize = view.findViewById(R.id.spComposeTextSize);
         swComposeMonospaced = view.findViewById(R.id.swComposeMonospaced);
         swPrefixOnce = view.findViewById(R.id.swPrefixOnce);
         swPrefixCount = view.findViewById(R.id.swPrefixCount);
@@ -239,7 +244,7 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
         List<StyleHelper.FontDescriptor> fonts = StyleHelper.getFonts(getContext(), false);
 
         List<CharSequence> fn = new ArrayList<>();
-        fn.add("-");
+        fn.add(getString(R.string.title_style_font_default));
         for (int i = 0; i < fonts.size(); i++) {
             StyleHelper.FontDescriptor font = fonts.get(i);
             SpannableStringBuilder ssb = new SpannableStringBuilderEx(font.toString());
@@ -248,9 +253,31 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             fn.add(ssb);
         }
 
-        ArrayAdapter<CharSequence> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, fn);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spComposeFont.setAdapter(adapter);
+        ArrayAdapter<CharSequence> fontAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, fn);
+        fontAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spComposeFont.setAdapter(fontAdapter);
+
+        int[] textSizeTitles = new int[]{
+                R.string.title_style_size_xsmall,
+                R.string.title_style_size_small,
+                R.string.title_style_size_medium,
+                R.string.title_style_size_large,
+                R.string.title_style_size_xlarge};
+
+        List<CharSequence> ts = new ArrayList<>();
+        ts.add(getString(R.string.title_style_font_default));
+        for (int i = 0; i < textSizeTitles.length; i++) {
+            SpannableStringBuilder ssb = new SpannableStringBuilderEx(getString(textSizeTitles[i]));
+            Float size = HtmlHelper.getFontSize(HtmlHelper.fontSizeNames[i], 1.0f);
+            if (size == null)
+                size = 1.0f;
+            ssb.setSpan(new RelativeSizeSpan(size), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ts.add(ssb);
+        }
+
+        ArrayAdapter<CharSequence> sizeAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, ts);
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spComposeTextSize.setAdapter(sizeAdapter);
 
         setOptions();
 
@@ -269,6 +296,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("keyboard", checked).apply();
+            }
+        });
+
+        swKeyboardMargin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("keyboard_margin", checked).apply();
             }
         });
 
@@ -569,6 +603,21 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("compose_font").apply();
+            }
+        });
+
+        spComposeTextSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                if (position == 0)
+                    prefs.edit().remove("compose_text_size").apply();
+                else
+                    prefs.edit().putString("compose_text_size", HtmlHelper.fontSizeNames[position - 1]).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("compose_text_size").apply();
             }
         });
 
@@ -944,10 +993,11 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-            int purge_contact_age = prefs.getInt("purge_contact_age", 0);
+            int purge_contact_age = prefs.getInt("purge_contact_age", 1);
             int purge_contact_freq = prefs.getInt("purge_contact_freq", 0);
 
             swKeyboard.setChecked(prefs.getBoolean("keyboard", true));
+            swKeyboardMargin.setChecked(prefs.getBoolean("keyboard_margin", false));
             swKeyboardNoFullscreen.setChecked(prefs.getBoolean("keyboard_no_fullscreen", false));
             swSuggestNames.setChecked(prefs.getBoolean("suggest_names", true));
             swSuggestSent.setChecked(prefs.getBoolean("suggest_sent", true));
@@ -1008,6 +1058,13 @@ public class FragmentOptionsSend extends FragmentBase implements SharedPreferenc
                     break;
                 }
             }
+
+            String compose_text_size = prefs.getString("compose_text_size", "");
+            for (int pos = 0; pos < HtmlHelper.fontSizeNames.length; pos++)
+                if (HtmlHelper.fontSizeNames[pos].equals(compose_text_size)) {
+                    spComposeTextSize.setSelection(pos + 1);
+                    break;
+                }
 
             swComposeMonospaced.setChecked(prefs.getBoolean("compose_monospaced", false));
 

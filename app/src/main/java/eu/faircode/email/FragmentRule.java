@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -25,7 +25,6 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -65,7 +64,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Lifecycle;
-import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -135,10 +133,13 @@ public class FragmentRule extends FragmentBase {
     private CheckBox cbEveryDay;
     private EditText etYounger;
 
+    private ImageButton ibExpression;
     private EditText etExpression;
 
     private Spinner spAction;
     private TextView tvActionRemark;
+
+    private CheckBox cbHideSeen;
 
     private NumberPicker npDuration;
     private CheckBox cbScheduleEnd;
@@ -167,11 +168,13 @@ public class FragmentRule extends FragmentBase {
     private CheckBox cbResend;
     private CheckBox cbAttached;
     private CheckBox cbCc;
+    private CheckBox cbChecks;
 
     private Button btnTtsSetup;
     private Button btnTtsData;
 
     private Button btnSound;
+    private CheckBox cbLoop;
     private CheckBox cbAlarm;
     private EditText etAlarmDuration;
 
@@ -182,14 +185,15 @@ public class FragmentRule extends FragmentBase {
 
     private Spinner spUrlMethod;
     private EditText etUrl;
+    private EditText etContent;
     private TextView tvUrlHint;
 
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
 
     private Group grpReady;
-    private Group grpExpression;
     private Group grpAge;
+    private Group grpHide;
     private Group grpSnooze;
     private Group grpFlag;
     private Group grpImportance;
@@ -246,6 +250,7 @@ public class FragmentRule extends FragmentBase {
             "$$dkim$",
             "$$spf$",
             "$$dmarc$",
+            "$$auth$",
             "$$mx$",
             "$$blocklist$",
             "$$replydomain$",
@@ -340,10 +345,13 @@ public class FragmentRule extends FragmentBase {
         cbEveryDay = view.findViewById(R.id.cbEveryDay);
         etYounger = view.findViewById(R.id.etYounger);
 
+        ibExpression = view.findViewById(R.id.ibExpression);
         etExpression = view.findViewById(R.id.etExpression);
 
         spAction = view.findViewById(R.id.spAction);
         tvActionRemark = view.findViewById(R.id.tvActionRemark);
+
+        cbHideSeen = view.findViewById(R.id.cbHideSeen);
 
         npDuration = view.findViewById(R.id.npDuration);
         cbScheduleEnd = view.findViewById(R.id.cbScheduleEnd);
@@ -372,11 +380,13 @@ public class FragmentRule extends FragmentBase {
         cbResend = view.findViewById(R.id.cbResend);
         cbAttached = view.findViewById(R.id.cbAttached);
         cbCc = view.findViewById(R.id.cbCc);
+        cbChecks = view.findViewById(R.id.cbChecks);
 
         btnTtsSetup = view.findViewById(R.id.btnTtsSetup);
         btnTtsData = view.findViewById(R.id.btnTtsData);
 
         btnSound = view.findViewById(R.id.btnSound);
+        cbLoop = view.findViewById(R.id.cbLoop);
         cbAlarm = view.findViewById(R.id.cbAlarm);
         etAlarmDuration = view.findViewById(R.id.etAlarmDuration);
 
@@ -387,6 +397,7 @@ public class FragmentRule extends FragmentBase {
 
         spUrlMethod = view.findViewById(R.id.spUrlMethod);
         etUrl = view.findViewById(R.id.etUrl);
+        etContent = view.findViewById(R.id.etContent);
         tvUrlHint = view.findViewById(R.id.tvUrlHint);
 
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
@@ -394,8 +405,8 @@ public class FragmentRule extends FragmentBase {
         pbWait = view.findViewById(R.id.pbWait);
 
         grpReady = view.findViewById(R.id.grpReady);
-        grpExpression = view.findViewById(R.id.grpExpression);
         grpAge = view.findViewById(R.id.grpAge);
+        grpHide = view.findViewById(R.id.grpHide);
         grpSnooze = view.findViewById(R.id.grpSnooze);
         grpFlag = view.findViewById(R.id.grpFlag);
         grpImportance = view.findViewById(R.id.grpImportance);
@@ -678,6 +689,13 @@ public class FragmentRule extends FragmentBase {
             }
         });
 
+        ibExpression.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), "expression_conditions");
+            }
+        });
+
         List<Action> actions = new ArrayList<>();
         actions.add(new Action(EntityRule.TYPE_NOOP, getString(R.string.title_rule_noop), R.drawable.twotone_remove_circle_outline_24));
         actions.add(new Action(EntityRule.TYPE_SEEN, getString(R.string.title_rule_seen), R.drawable.twotone_drafts_24));
@@ -690,8 +708,7 @@ public class FragmentRule extends FragmentBase {
         actions.add(new Action(EntityRule.TYPE_SNOOZE, getString(R.string.title_rule_snooze), R.drawable.twotone_timelapse_24));
         actions.add(new Action(EntityRule.TYPE_FLAG, getString(R.string.title_rule_flag), R.drawable.twotone_star_24));
         actions.add(new Action(EntityRule.TYPE_IMPORTANCE, getString(R.string.title_rule_importance), R.drawable.twotone_north_24));
-        if (protocol == EntityAccount.TYPE_IMAP)
-            actions.add(new Action(EntityRule.TYPE_KEYWORD, getString(R.string.title_rule_keyword), R.drawable.twotone_label_important_24));
+        actions.add(new Action(EntityRule.TYPE_KEYWORD, getString(R.string.title_rule_keyword), R.drawable.twotone_label_important_24));
         actions.add(new Action(EntityRule.TYPE_NOTES, getString(R.string.title_rule_notes), R.drawable.twotone_sticky_note_2_24));
         actions.add(new Action(EntityRule.TYPE_MOVE, getString(R.string.title_rule_move), R.drawable.twotone_drive_file_move_24));
         if (protocol == EntityAccount.TYPE_IMAP)
@@ -891,6 +908,27 @@ public class FragmentRule extends FragmentBase {
             }
         });
 
+        etContent.setEnabled(false);
+        spUrlMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String method = null;
+                try {
+                    String[] methods = getResources().getStringArray(R.array.httpMethodNames);
+                    if (position >= 0 && position < methods.length)
+                        method = methods[position];
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+                etContent.setEnabled("POST".equals(method) || "PUT".equals(method));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                etContent.setEnabled(false);
+            }
+        });
+
         List<String> extras = new ArrayList<>();
         for (String extra : EntityRule.EXTRA_ALL)
             extras.add("$" + extra + "$");
@@ -918,8 +956,8 @@ public class FragmentRule extends FragmentBase {
         tvFolder.setText(null);
         bottom_navigation.setVisibility(View.GONE);
         grpReady.setVisibility(View.GONE);
-        grpExpression.setVisibility(View.GONE);
         grpAge.setVisibility(View.GONE);
+        grpHide.setVisibility(View.GONE);
         grpSnooze.setVisibility(View.GONE);
         grpFlag.setVisibility(View.GONE);
         grpImportance.setVisibility(View.GONE);
@@ -1386,6 +1424,10 @@ public class FragmentRule extends FragmentBase {
                         } else {
                             int type = jaction.getInt("type");
                             switch (type) {
+                                case EntityRule.TYPE_HIDE:
+                                    cbHideSeen.setChecked(jaction.optBoolean("seen", false));
+                                    break;
+
                                 case EntityRule.TYPE_SNOOZE:
                                     npDuration.setValue(jaction.optInt("duration", 0));
                                     cbScheduleEnd.setChecked(jaction.optBoolean("schedule_end", false));
@@ -1446,13 +1488,16 @@ public class FragmentRule extends FragmentBase {
                                     cbResend.setChecked(jaction.optBoolean("resend"));
                                     cbAttached.setChecked(jaction.optBoolean("attached"));
                                     cbCc.setChecked(jaction.optBoolean("cc"));
+                                    cbChecks.setChecked(jaction.optBoolean("checks", true));
                                     break;
 
                                 case EntityRule.TYPE_SOUND:
                                     if (jaction.has("uri"))
                                         FragmentRule.this.sound = Uri.parse(jaction.getString("uri"));
+                                    boolean loop = jaction.optBoolean("loop");
                                     boolean alarm = jaction.optBoolean("alarm");
                                     int duration = jaction.optInt("duration", 0);
+                                    cbLoop.setChecked(loop);
                                     cbAlarm.setChecked(alarm);
                                     etAlarmDuration.setEnabled(alarm);
                                     etAlarmDuration.setText(duration == 0 ? null : Integer.toString(duration));
@@ -1467,6 +1512,7 @@ public class FragmentRule extends FragmentBase {
 
                                 case EntityRule.TYPE_URL:
                                     etUrl.setText(jaction.getString("url"));
+                                    etContent.setText(jaction.getString("body"));
                                     String method = jaction.optString("method");
                                     if (TextUtils.isEmpty(method))
                                         method = "GET";
@@ -1500,10 +1546,6 @@ public class FragmentRule extends FragmentBase {
                         if (action != null)
                             showActionParameters(action.type);
                     }
-
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                    boolean experiments = prefs.getBoolean("experiments", false);
-                    grpExpression.setVisibility(experiments ? View.VISIBLE : View.GONE);
                 } catch (Throwable ex) {
                     Log.e(ex);
                 } finally {
@@ -1523,6 +1565,7 @@ public class FragmentRule extends FragmentBase {
     }
 
     private void showActionParameters(int type) {
+        grpHide.setVisibility(type == EntityRule.TYPE_HIDE ? View.VISIBLE : View.GONE);
         grpSnooze.setVisibility(type == EntityRule.TYPE_SNOOZE ? View.VISIBLE : View.GONE);
         grpFlag.setVisibility(type == EntityRule.TYPE_FLAG ? View.VISIBLE : View.GONE);
         grpImportance.setVisibility(type == EntityRule.TYPE_IMPORTANCE ? View.VISIBLE : View.GONE);
@@ -1832,6 +1875,10 @@ public class FragmentRule extends FragmentBase {
         if (action != null) {
             jaction.put("type", action.type);
             switch (action.type) {
+                case EntityRule.TYPE_HIDE:
+                    jaction.put("seen", cbHideSeen.isChecked());
+                    break;
+
                 case EntityRule.TYPE_SNOOZE:
                     jaction.put("duration", npDuration.getValue());
                     jaction.put("schedule_end", cbScheduleEnd.isChecked());
@@ -1876,12 +1923,15 @@ public class FragmentRule extends FragmentBase {
                     jaction.put("resend", cbResend.isChecked());
                     jaction.put("attached", cbAttached.isChecked());
                     jaction.put("cc", cbCc.isChecked());
+                    jaction.put("checks", cbChecks.isChecked());
                     break;
 
                 case EntityRule.TYPE_SOUND:
+                    boolean loop = cbLoop.isChecked();
                     boolean alarm = cbAlarm.isChecked();
                     String duration = etAlarmDuration.getText().toString();
                     jaction.put("uri", sound);
+                    jaction.put("loop", loop);
                     jaction.put("alarm", alarm);
                     if (alarm && !TextUtils.isEmpty(duration))
                         try {
@@ -1900,6 +1950,7 @@ public class FragmentRule extends FragmentBase {
 
                 case EntityRule.TYPE_URL:
                     jaction.put("url", etUrl.getText().toString().trim());
+                    jaction.put("body", etContent.getText().toString());
                     int pos = spUrlMethod.getSelectedItemPosition();
                     String[] methods = getResources().getStringArray(R.array.httpMethodNames);
                     if (pos >= 0 && pos < methods.length)

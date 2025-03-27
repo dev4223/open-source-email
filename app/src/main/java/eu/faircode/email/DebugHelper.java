@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
@@ -45,8 +45,6 @@ import android.content.pm.verify.domain.DomainVerificationManager;
 import android.content.pm.verify.domain.DomainVerificationUserState;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
@@ -542,10 +540,9 @@ public class DebugHelper {
                 WebViewEx.isFeatureSupported(context, WebViewFeature.ALGORITHMIC_DARKENING)));
         try {
             PackageInfo pkg = WebViewCompat.getCurrentWebViewPackage(context);
-            sb.append(String.format("WebView %d/%s has=%b\r\n",
+            sb.append(String.format("WebView %d/%s\r\n",
                     pkg == null ? -1 : pkg.versionCode,
-                    pkg == null ? null : pkg.versionName,
-                    Helper.hasWebView(context)));
+                    pkg == null ? null : pkg.versionName));
         } catch (Throwable ex) {
             sb.append(ex).append("\r\n");
         }
@@ -623,6 +620,11 @@ public class DebugHelper {
             File file = attachment.getFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+                for (String key : new String[]{"confirm_images", "ask_images", "confirm_html", "ask_html"})
+                    size += write(os, String.format("%s=%b\r\n", key, prefs.getBoolean(key, true)));
+
+                size += write(os, "\r\n");
 
                 Map<String, ?> settings = prefs.getAll();
                 List<String> keys = new ArrayList<>(settings.keySet());
@@ -836,11 +838,13 @@ public class DebugHelper {
                         int blocked = db.contact().countBlocked(account.id);
 
                         boolean unmetered = false;
+                        boolean vpn_only = false;
                         boolean ignore_schedule = false;
                         try {
                             if (account.conditions != null) {
                                 JSONObject jconditions = new JSONObject(account.conditions);
                                 unmetered = jconditions.optBoolean("unmetered");
+                                vpn_only = jconditions.optBoolean("vpn_only");
                                 ignore_schedule = jconditions.optBoolean("ignore_schedule");
                             }
                         } catch (Throwable ignored) {
@@ -862,6 +866,7 @@ public class DebugHelper {
                                 " rules=" + db.rule().countTotal(account.id, null) +
                                 " ops=" + db.operation().getOperationCount(account.id) +
                                 " schedule=" + (!ignore_schedule) + (ignore_schedule ? " !!!" : "") +
+                                " vpn_only=" + vpn_only + (vpn_only ? " !!!" : "") +
                                 " unmetered=" + unmetered + (unmetered ? " !!!" : "") +
                                 " quota=" + (account.quota_usage == null ? "-" : Helper.humanReadableByteCount(account.quota_usage)) +
                                 "/" + (account.quota_limit == null ? "-" : Helper.humanReadableByteCount(account.quota_limit)) +
@@ -1457,6 +1462,8 @@ public class DebugHelper {
                             mark = true;
                         if ("notify_suppress_in_car".equals(key) && Boolean.TRUE.equals(value))
                             mark = true;
+                        if ("notify_rate_limit".equals(key) && (value == null || (Integer) value != 0))
+                            mark = true;
                         options.append(' ').append(key).append('=')
                                 .append(value)
                                 .append(mark ? " !!!" : "")
@@ -1467,6 +1474,13 @@ public class DebugHelper {
                     options.append("\r\n");
                     size += write(os, options.toString());
                 }
+
+                List<EntityAccount> accounts = db.account().getAccounts();
+                for (EntityAccount account : accounts) {
+                    size += write(os, String.format("%d %s notify=%b\r\n",
+                            account.id, account.name, account.notify));
+                }
+                size += write(os, "\r\n");
 
                 for (NotificationChannel channel : nm.getNotificationChannels())
                     try {
@@ -1796,11 +1810,8 @@ public class DebugHelper {
                 size += write(os, String.format("Database: %s\r\n",
                         context.getDatabasePath(DB.DB_NAME)));
 
-                try (Cursor cursor = SQLiteDatabase.create(null).rawQuery(
-                        "SELECT sqlite_version() AS sqlite_version", null)) {
-                    if (cursor.moveToNext())
-                        size += write(os, String.format("sqlite: %s\r\n", cursor.getString(0)));
-                }
+                size += write(os, String.format("sqlite: %s json: %b\r\n", DB.getSqliteVersion(), DB.hasJson()));
+
                 try {
                     TupleFtsStats stats = db.message().getFts();
                     size += write(os, String.format("fts: %d/%d %s\r\n", stats.fts, stats.total,

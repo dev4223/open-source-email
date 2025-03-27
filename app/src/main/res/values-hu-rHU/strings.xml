@@ -100,7 +100,7 @@
     <string name="title_unblock_all_hint">Vegye figyelembe, hogy az alkalmazás nem tudja megakadályozni, hogy a szerver az üzeneteket a levélszemét mappába tegye!</string>
     <plurals name="title_ask_block_sender">
         <item quantity="one">Letiltja az üzenet küldőjét?</item>
-        <item quantity="other">Letiltja az %1$s üzenet küldőjét?</item>
+        <item quantity="other">Letiltja %1$s üzenet küldőjét?</item>
     </plurals>
     <plurals name="title_hours">
         <item quantity="one">%1$s óra</item>
@@ -201,18 +201,22 @@
     <string name="title_setup_office_auth">Az \'AUTHENTICATE failed\' hibának oka lehet hogy a rendszeradminisztrátor kikapcsolta az IMAP/SMTP-t</string>
     <string name="title_setup_office_auth_5_7_3">Kérem próbálja meg az \"Egyéb szolgáltató\" gyorsbeállítás varázslót.</string>
     <string name="title_setup_office_auth_5_7_139">Kérem, próbálja meg az \"Outlook/Hotmail/Live\" gyorsbeállítás varázslót.</string>
+    <string name="title_setup_office_not_connected">        A  \'User is authenticated but not connected\' többnyire azt jelenti, hogy az IMAP ki van kapcsolva.
+        Magánszemélyként használt Outlook fiók esetén, nyissa meg az Outlook weboldalt, kattintson a Beállításokra a jobb felső sarokban, válassza a \"Levelezés\", majd a \"Továbbítás és IMAP\" menüpontot, és a \"POP és IMAP\" résznél kattintson az \"Engedélyezze az eszközök és alkalmazások számára az IMAP használatát\" pontra.
+       Vállalati, oktatási, stb. fiók esetén, kérem a levelezőszerver rendszergazdájával vegye fel a kapcsolatot.    </string>
     <string name="title_setup_oauth_rationale">Engedélyezze a hozzáférést a %1$s fiókjához</string>
     <string name="title_setup_oauth_update">Ismételt bejelentkezés egy már meglevő fiókba (vagy új fiók létrehozása)</string>
     <string name="title_setup_oauth_updated">A fiókhitelesítés frissült</string>
     <string name="title_setup_oauth_edge">Edge böngésző használatakor győződjön meg, hogy a \"Külső alkalmazások megnyitásának tiltása\" az \"Adatvédelem, biztonság és szolgáltatások\" beállításnál \"Ki\" van kapcsolva</string>
     <string name="title_setup_oauth_brave">Ha Brave böngészőt használ, engedélyeznie kell a Brave beállításaiban az alkalmazás-hivatkozások megnyitását külső alkalmazásban</string>
-    <string name="title_setup_oauth_browser">A hitelesítés működő böngészőt igényel</string>
+    <string name="title_setup_oauth_browser">A hitelesítés működő böngészőt igényel, melyben megnyithatók az alkalmazás hivatkozásai (mely gyakran egy biztonsági beállítás), azért, hogy végül a hitelesítő token eljusson az alkalmazáshoz</string>
     <string name="title_setup_oauth_authorize">Engedélyezés</string>
     <string name="title_setup_select_account">Válasszon fiókot</string>
     <string name="title_setup_instructions">Telepítési útmutató</string>
     <string name="title_setup_no_settings">Nem találhatók beállítások a következő domainhez: %1$s</string>
     <string name="title_setup_no_settings_hint">Próbálj meg beállítani egy fiókot kézileg az e-mail szolgáltatód által megadott adatokkal</string>
     <string name="title_setup_no_auth_hint">Ellenőrizze az email címét és jelszavát, illetve bizonyosodjon meg róla hogy a fiókja elérhető SMTP/IMAP protokollokon keresztül</string>
+    <string name="title_setup_no_auth_outlook">Ehhez a fiókhoz az Outlook / Office 365 gyorsbeállítás varázslót kell használnia (a Microsoft megköveteli)</string>
     <string name="title_setup_app_password_hint">Ez a szolgáltó alkalmazásjelszót igényel a fiók jelszava helyett, kérlek ellenőrizd a szolgáltatód instrukcióit</string>
     <string name="title_setup_no_inbox">Bejövő mappa nem található</string>
     <string name="title_setup_advanced_protection">Az \"Advanced Protection\" programban részt vevők fiókjaihoz való hozzáférést a Google letiltotta minden harmadik féltől származó app számára.</string>
@@ -340,6 +344,10 @@
     </string>
     <string name="title_advanced_hint_remark">        Az opciók fülekre vannak osztva, és azok tovább szekciókra, kinézet szerint rendezve, és mind kereshető.
     </string>
+    <string name="title_advanced_hint_options">        A legtöbb beállításra nem lesz szüksége, és mivel egyes beállítások elég specifikusak,
+        így teljesen érthető, ha az összes beállítás működése nen világos azonnal.
+        Kérem, ne adjon rossz értékelést csupán a beállítások mennyisége miatt, vagy mert nem világos egyből minden beállítás.
+        A számtalan beállítás hasznos jó pár embernek, ha talán önnek (még) nem is.    </string>
     <string name="title_advanced_hint_setup">Beállíthatja fiókját a fő konfigurációs képernyőn a varázsló gombra nyomva.</string>
     <string name="title_advanced_section_main">Alapbeállítások</string>
     <string name="title_advanced_section_synchronize">Fogadás</string>
@@ -372,6 +380,7 @@
     <string name="title_advanced_kept_removed">Régi üzenetek szerverről való törlésének ellenőrzése</string>
     <string name="title_advanced_gmail_thread">Gmail stílusú üzenetcsoportosítás a Gmail fiókokhoz</string>
     <string name="title_advanced_subject_threading">Csoport üzenetek küldő és tárgy szerint</string>
+    <string name="title_advanced_outlook_categories">Outlook kategóriák szinkronizálása</string>
     <string name="title_advanced_sync_folders">Mappák listájának szinkronizálása</string>
     <string name="title_advanced_sync_folders_poll">Mappa lista aktív szinkronizálása</string>
     <string name="title_advanced_sync_shared_folders">Szinkronizált mappák listája</string>
@@ -387,6 +396,7 @@
     <string name="title_advanced_tune_keep_alive">Az ébrentartás időtartamának automatikus hangolása</string>
     <string name="title_advanced_blocklist_warning">A blokkolási listák nem tökéletesek, és nem csak a spameket blokkolhatják!</string>
     <string name="title_advanced_keyboard">Billentyűzet alapértelmezett megjelenítése</string>
+    <string name="title_advanced_keyboard_margin">Legyen margó a billentyűzet fölött</string>
     <string name="title_advanced_keyboard_no_fullscreen">Teljes képernyős billentyűzet letiltása</string>
     <string name="title_advanced_suggest_names">Nevek és e-mail címek használata</string>
     <string name="title_advanced_suggest_local">Helyileg tárolt névjegyek felajánlása</string>
@@ -494,6 +504,7 @@
     <string name="title_advanced_close_pane">Sor vagy oszlop összecsukása beszélgetés bezárásánál</string>
     <string name="title_advanced_column_width">Üzenet oszlopszélesség / sormagasság: %1$s %%</string>
     <string name="title_advanced_hide_toolbar">Felső eszköztár elrejtése üzenetek görgetésekor</string>
+    <string name="title_advanced_edge_to_edge">Az alkalmazás háttérszínét alkalmazza az Android navigációs sávra is</string>
     <string name="title_advanced_nav_options">Navigációs menü opciók mutatása</string>
     <string name="title_advanced_nav_categories">Fiókkategória mutatása a navigációs menüben</string>
     <string name="title_advanced_nav_pin">Navigációs menü kitűzése</string>
@@ -501,6 +512,7 @@
     <string name="title_advanced_nav_hide_message">Újra be tudja kapcsolni a kijelző opciókban</string>
     <string name="title_advanced_nav_last_sync">Utolsó szinkronizálás idejének mutatása a navigációs menüben</string>
     <string name="title_advanced_nav_message_count">Mutassa a helyileg elmentett üzeneteket a navigációs menüben</string>
+    <string name="title_advanced_nav_unseen">Olvasatlan üzenetek számának mutatása a navigációs menüben</string>
     <string name="title_advanced_nav_unseen_drafts">Elküldetlen piszkozatok számának megjelenítése a navigációs menüben</string>
     <string name="title_advanced_nav_pinned_count">Olvasatlan üzenetek számának mutatása a kitűzött navigációs menüben</string>
     <string name="title_advanced_show_unexposed">Csillaggal jelölje az újonnan érkezett, olvasatlan üzeneketet tartalmazó fiókokat/mappákat</string>
@@ -646,6 +658,7 @@
     <string name="title_advanced_reset_importance">Fontosság törlése áthelyezéskor</string>
     <string name="title_advanced_star_snoozed">Automatikusan csillagozza meg az üzenetet halasztáskor</string>
     <string name="title_advanced_star_unsnoozed">Csillag automatikus eltávolítása az üzenet szundi kikapcsolásakor</string>
+    <string name="title_advanced_important_unsnoozed">Halasztás megszűnésekor az üzenetet automatikusan jelölje meg fontosnak</string>
     <string name="title_advanced_auto_important">Automatikusan csináljon csillagozott üzeneteket fontossá</string>
     <string name="title_advanced_cancel_snooze">Szundi kikapcsolása üzenetek áthelyezésekor</string>
     <string name="title_advanced_auto_block_sender">Küldő automatikus letiltása levélszemét jelentésekor</string>
@@ -671,6 +684,7 @@
     <string name="title_advanced_notify_suppress_in_call">Értesítések késleltetése hívás közben</string>
     <string name="title_advanced_notify_suppress_in_car">Értesítések halasztása amíg az Android Auto csatlakoztatva van</string>
     <string name="title_advanced_notify_summary">Csak összegző értesítések megjelnítése</string>
+    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Mutatása a tárgyat az értesítésben</string>
     <string name="title_advanced_notify_preview">Üzenet előnézetének megjelnítése az értesítésben</string>
     <string name="title_advanced_notify_preview_all">Összes szöveg előnézete</string>
     <string name="title_advanced_notify_preview_only">Az értesítések csak a szöveg előnézete jelenjen meg</string>
@@ -700,6 +714,7 @@
     <string name="title_advanced_notify_screen_on">Rövid időre kapcsolja be a képernyőt az új üzeneteknél</string>
     <string name="title_advanced_notifications_background">Háttérfolyamat használata üzenetek szinkronizálásához</string>
     <string name="title_advanced_notifications_background_hint">Egy háttérfolyamat leállítható az Android által bármikor, de nem szükséges státusz sor értesítés hozzá</string>
+    <string name="title_advanced_rate_limit">Új üzenet értesítés megjelenítése ennyi üzenetenként:</string>
     <string name="title_advanced_confirm_links">Hivatkozások megnyitásának jóváhagyása</string>
     <string name="title_advanced_confirm_files">Fájlmegtekintés jóváhagyása</string>
     <string name="title_advanced_sanitize_links">Alapértelmezetten a követő kódok eltávolítása</string>
@@ -752,6 +767,7 @@
         Az legtöbbet használt alap algoritmus az SHA256 és AES128.
     </string>
     <string name="title_advanced_check_certificate">Nyilvános kulcs ellenőrzése küldéskor</string>
+    <string name="title_advanced_check_key_usage">Küldéskor ellenőrizze a kulcshasználat indikátort</string>
     <string name="title_advanced_manage_certificates">Nyilvános kulcsok kezelése</string>
     <string name="title_advanced_import_key">Privát kulcs importálása</string>
     <string name="title_advanced_manage_keys">Privát kulcsok kezelése</string>
@@ -771,6 +787,7 @@
     <string name="title_advanced_class_min_difference">Legalacsonyabb mappa különbség: %1$s %%</string>
     <string name="title_advanced_show_filtered">Szűrőikon mutatása ha szabályt alkalmaztunk</string>
     <string name="title_advanced_haptic_feedback">Rezgés fontos műveleteknél</string>
+    <string name="title_advanced_haptic_feedback_swipe">Rezgés jobbra/balra húzáskor</string>
     <string name="title_advanced_language">Nyelv</string>
     <string name="title_advanced_language_system">Rendszer</string>
     <string name="title_advanced_integrations_hint">Az alábbi felhőszolgáltatások nem az alkalmazás részei. Az esetleges kifizetések közvetlenül a felhőszolgáltatónak történnek, nem az alkalmazás fejlesztőjének.</string>
@@ -795,6 +812,10 @@
     <string name="title_advanced_answer_prompt">Válasz prompt</string>
     <string name="title_advanced_system_instructions">Rendszer utasításai</string>
     <string name="title_advanced_default_prompt">Alap prompt</string>
+    <string name="title_advanced_ai">MI</string>
+    <string name="title_advanced_ai_input_system">Rendszer prompt használata</string>
+    <string name="title_advanced_ai_input_body">Az üzenet szövegének bevitele</string>
+    <string name="title_advanced_ai_input_reply">A kapott üzenet szövegének bevitele</string>
     <string name="title_advanced_entered_text">Bevitt szöveg</string>
     <string name="title_advanced_sdcard">SD kártyát akarok használni</string>
     <string name="title_advanced_watchdog">A FairEmail futásának időszakos ellenőrzése</string>
@@ -829,6 +850,7 @@
     <string name="title_advanced_sync_kept_hint">Ez megnövekedett adatforgalom- és akkumulátorhasználatot eredményez, különösen ha sok üzenet található a készüléken</string>
     <string name="title_advanced_gmail_thread_hint">Ez csak új üzenetekre lesz alkalmazva és elronthat meglévő csoportokat</string>
     <string name="title_advanced_subject_threading_hint">Csak az elmúlt %1$d órában érkezett üzenetek</string>
+    <string name="title_advanced_outlook_categories_hint">Az Outlook kategóriákat csak lekérni lehet, nem frissülnek automatikusan, az Outlook IMAP kiszolgáló korlátai miatt</string>
     <string name="title_advanced_sync_folders_hint">Kikapcsolása valamelyest csökkentheti az adatforgalom- és akkumulátorhasználatot, de egyúttal a mappák listájának frissítését is megakadályozza</string>
     <string name="title_advanced_poll_folders_hint">A fiókhoz csatlakozást követően időszakosan szinkronizálja a mappa listát</string>
     <string name="title_advanced_check_authentication_hint">Ellenőrzi az email szerver által végzett DKIM, SPF és DMARC hitelesítések eredményét</string>
@@ -845,6 +867,7 @@
     <string name="title_advanced_send_reminders_hint">Figyelmeztetés megjelenítése, ha az üzenet szövege vagy a tárgy üres, illetve ha a melléklet feltehetőleg hiányzik</string>
     <string name="title_advanced_reply_move_hint">Az e-mail szerver továbbra is felveheti az üzeneteket az elküldött üzenetek mappájába</string>
     <string name="title_advanced_compose_color_hint">Nagyon világos vagy sötét szín választása a címzett számára olvashatatlan üzenetet eredményezhet</string>
+    <string name="title_advanced_compose_font_hint">Az alapértelmezett követi a fogadó által beállított betűtípust</string>
     <string name="title_advanced_template_reply_hint">HTML használható. Elérhető helyőrzők: %1$s</string>
     <string name="title_advanced_write_below_hint">A címzett így lemaradhat az ön válaszáról, például ha hosszú üzenetváltást rövidebbre metszenek</string>
     <string name="title_advanced_attach_new_hint">Vagy, a megosztás során kapott címet vagy fájlokat adja hozzá a jelenlegi vázlathoz</string>
@@ -911,6 +934,7 @@
     <string name="title_advanced_notify_car_hint">A kapcsolódás ebben az esetben az app felé való kivetítést jelenti, mint például a navigációs térképnél</string>
     <string name="title_advanced_notify_remove_hint">Az új üzenet értesitések mindig törlődnek azok oldalra csúsztatásával, vagy az üzenet olvasottként való megjelölésével</string>
     <string name="title_advanced_notify_manage_hint">Koppintson a csatorna nevére a tulajdonságai beállításához</string>
+    <string name="title_advanced_notify_samsung_hint">Az értesítési csatornák kezeléséhez lehetséges, hogy engedélyeznie kell ezt az Android beállítást: Értesítések, Haladó beállítások, Alkalmazásonkénti értesítési kategóriák kezelése</string>
     <string name="title_advanced_notify_manage_default_hint">Alapértelmezett hang beállítása, stb</string>
     <string name="title_advanced_notify_manage_service_hint">A \'figyelés\' értesítés kikapcsolásához</string>
     <string name="title_advanced_notify_separate_hint">Hogyan állítom be a fiók, könyvtár és küldő specifikus értesítéseket?</string>
@@ -1195,7 +1219,7 @@
     <string name="title_folder_unified">Összesített bejövő mappa</string>
     <string name="title_folder_inbox">Bejövő mappa</string>
     <string name="title_folder_outbox">Kimenő mappa</string>
-    <string name="title_folder_all">Archívált</string>
+    <string name="title_folder_all">Archivált</string>
     <string name="title_folder_drafts">Piszkozatok</string>
     <string name="title_folder_trash">Kuka</string>
     <string name="title_folder_junk">Spam</string>
@@ -1211,6 +1235,7 @@
     <string name="title_filters_active">Egy vagy több szűrő aktív</string>
     <string name="title_duplicate_in">Duplikált üzenet a(z) %1$s mappában</string>
     <string name="title_trashed_from">%1$s-től törölve</string>
+    <string name="title_sent_to">Üzenetet elküldve a következőnek: %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_subject_reply_alt">Re: %1$s</string>
@@ -1233,6 +1258,7 @@
     <string name="title_unimportant">Nem fontos</string>
     <string name="title_search_in_text">Keresés a szövegben &#8230;</string>
     <string name="title_forward">Továbbítás</string>
+    <string name="title_forward_to">Továbbítás neki...</string>
     <string name="title_resend">Újraküldés</string>
     <string name="title_fetching_headers">Üzenetfejlécek letöltése &#8230;</string>
     <string name="title_new_message">Új üzenet</string>
@@ -1244,6 +1270,7 @@
     <string name="title_force_light">Világos téma erőltetése</string>
     <string name="title_rename">Átnevez</string>
     <string name="title_share">Megosztás</string>
+    <string name="title_analyze">Elemzés</string>
     <string name="title_event">Hozzáadás naptárhoz</string>
     <string name="title_pin">Parancsikon hozzáadása</string>
     <string name="title_pin_label">Hivatkozás címe</string>
@@ -1255,11 +1282,12 @@
     <string name="title_print_margins">Margó hozzáadása</string>
     <string name="title_show_headers">Fejlécek megjelenítése</string>
     <string name="title_show_html">Forrás mutatása</string>
-    <string name="title_raw_save">Nyers üzenet mentése</string>
+    <string name="title_raw_save">Nyers üzenetfájl mentése (.eml)</string>
     <string name="title_raw_send">Küldés mellékletként</string>
     <string name="title_raw_send_message">Üzenet</string>
     <string name="title_raw_send_thread">Beszélgetés</string>
     <string name="title_manage_keywords">Kulcsszavak kezelése</string>
+    <string name="title_manage_keywords_pop">POP3 esetén a kulcsszavak nem tárolhatók az email kiszolgálón!</string>
     <string name="title_manage_labels">Gmail címkék kezelése</string>
     <string name="title_add_keyword">Kulcsszó hozzáadása</string>
     <string name="title_show_inline">Beágyazott mellékletek megjelenítése</string>
@@ -1358,6 +1386,7 @@
     <string name="title_attachment_saved">A melléklet mentve</string>
     <string name="title_attachments_saved">A mellékletek mentve</string>
     <string name="title_attachments_incomplete">Néhány kép vagy melléklet letöltése nem sikerült, így hozzáadásuk meghiúsult</string>
+    <string name="title_report_remark">Ez a jelentés egy különlegesen formázott email, melyet az email kiszolgáló küldött, mivel a küldött üzenet nem volt kézbesíthető, például mert a postaláda betelt, vagy mert az email cím (már) nem létezik.</string>
     <string name="title_ask_save">Menti a módosításokat?</string>
     <string name="title_ask_delete">Véglegesen törli az üzenetet?</string>
     <string name="title_ask_delete_accept">Megértettem, hogy a végleges törlés nem visszafordítható</string>
@@ -1497,7 +1526,7 @@
     <string name="title_summarize">Összefoglalás</string>
     <string name="title_translate_configure">&#8230; konfigurálása</string>
     <string name="title_translate_key">Kulcs megadása</string>
-    <string name="title_translating">Fordítás &#8230;</string>
+    <string name="title_translating">Fordítás %1$s nyelvre &#8230;</string>
     <string name="title_translate_formal">Használjon hivatalos formát</string>
     <string name="title_translate_small">Kis betű használata a forrás szöveghez</string>
     <string name="title_translate_replace">A forrásszöveg felülírása a fordítással</string>
@@ -1586,6 +1615,7 @@
     <string name="title_signature_email">Aláírás címe</string>
     <string name="title_signature_mismatch">Az email címe az üzenetnek és az aláírásnak nem ugyanaz</string>
     <string name="title_signature_algorithm">Algoritmus</string>
+    <string name="title_signature_public_key">Nyilvános kulcs</string>
     <string name="title_signature_subject">Tárgy</string>
     <string name="title_signature_validity">Érvényesség</string>
     <string name="title_signature_outdated">Ez a nyilvános kulcs jelenleg nem érvényes</string>
@@ -1649,6 +1679,7 @@
     <string name="title_sort_on_starred_unread">Csillagozott, olvasatlan</string>
     <string name="title_sort_on_priority">Prioritás</string>
     <string name="title_sort_on_sender">Feladó</string>
+    <string name="title_sort_on_sender_name">Küldő neve</string>
     <string name="title_sort_on_subject">Tárgy</string>
     <string name="title_sort_on_size">Méret</string>
     <string name="title_sort_on_attachments">Mellékletek</string>
@@ -1665,6 +1696,7 @@
     <string name="title_filter_hidden">Rejtett</string>
     <string name="title_filter_deleted">Törölt</string>
     <string name="title_filter_duplicates">Másolatok</string>
+    <string name="title_filter_sent">Elküldött</string>
     <string name="title_filter_trash">Kukázott</string>
     <string name="title_compact">Kompakt nézet</string>
     <string name="title_zoom">Szövegméret</string>
@@ -1688,6 +1720,7 @@
     <string name="title_edit_signature_image_hint">        Üzenet küldésekor a képet beemeljük az üzenetbe a kijelölt helyről.
         Úgyhogy, ne törölje le a kép fájlt!
     </string>
+    <string name="title_edit_signature_delete">Aláírás törlése?</string>
     <string name="title_answer_define_name">Név</string>
     <string name="title_answer_define_value">Érték</string>
     <string name="title_answer_caption">Sablon szerkesztése</string>
@@ -1773,6 +1806,7 @@
     <string name="title_rule_resend">Újraküldés</string>
     <string name="title_rule_attached">Nyers üzenetfájl csatolása</string>
     <string name="title_rule_cc">Válasz a másolatok címzetteinek</string>
+    <string name="title_rule_checks">Automatikusan küldött üzenetek, ne válaszoljon (no-reply) címek, stb. ellenőrzése.</string>
     <string name="title_rule_with_attachments">Mellékletekkel</string>
     <string name="title_rule_answer_remark">A válaszhurkok elkerülése érdekében minden beszélgetéshez csak egy válasz lesz elküldve</string>
     <string name="title_rule_name_missing">Hiányzó szabálynév</string>
@@ -1804,6 +1838,7 @@
     <string name="title_rule_select_sound">Hang kiválasztása</string>
     <string name="title_rule_select_sound_ringtone">Csengőhang</string>
     <string name="title_rule_select_sound_audio">Hangfájl</string>
+    <string name="title_rule_loop_sound">Hang lejátszása</string>
     <string name="title_rule_use_as_alarm">Ébresztőként használni</string>
     <string name="title_rule_alarm_hint">Figyelmen kívűl hagyja a \"ne zavarjon\" szabályokat</string>
     <string name="title_rule_alarm_duration">Maximális ébresztő időtartam (másodperc)</string>
@@ -1961,7 +1996,9 @@
     <string name="title_hint_junk">A spam szűrés a levelező szervereken futó erőforrás igényes feladat. Képtelenség hatékonyan kivitelezni egy akkumlátorról üzemelő eszközön.</string>
     <string name="title_hint_junk_learn">Az üzenetek a levélszemét mappából való ki és be helyezésével az email szerver \"megtanulja\" mi számít szemétnek</string>
     <string name="title_hint_contact_actions">Nyomja hosszan a további opciókért</string>
-    <string name="title_hint_eml">Ez a nyers üzenetfájl tartalmának összefoglalása. Mentsd a nyers üzenetfájlt a műveletmenü mentés ikonjával a teljes tartalom megtekintéséhez.</string>
+    <string name="title_hint_eml">        Ez egy nyers üzenetfájl tartalmi összefoglalója.
+        A jobb alsó gombbal lementheti az üzenetet a beérkező üzenetek közé a teljes tartalom megtekintéséhez.
+    </string>
     <string name="title_open_link">Link megnyitása</string>
     <string name="title_image_link">Kép link</string>
     <string name="title_different_link">A link neve és a címe különbözik</string>
@@ -1984,7 +2021,7 @@
     <string name="title_no">Nem</string>
     <string name="title_later">Később</string>
     <string name="title_paste_plain">Beillesztés egyszerű szövegként</string>
-    <string name="title_paste_as_quote" comment="title_paste_as_quote&#10;Title for an additional menu option in the Android copy/paste popup menu">Beillesztés idézetként</string>
+    <string name="title_paste_as_quote">Beillesztés idézetként</string>
     <string name="title_undo">Visszavonás</string>
     <string name="title_redo">Mégis</string>
     <string name="title_insert_line">Sor beszúrása</string>
@@ -2166,9 +2203,11 @@
     <string name="title_accessibility_to">Címzett</string>
     <string-array name="pollIntervalNames">
         <item>Mindig</item>
-        <item>Minden 5 percenként</item>
-        <item>Minden 10 percenként</item>
-        <item>Minden 15 percenként</item>
+        <item>Percenként</item>
+        <item>2 percenként</item>
+        <item>5 percenként</item>
+        <item>10 percenként</item>
+        <item>15 percenként</item>
         <item>30 percenként</item>
         <item>Óránként</item>
         <item>2 óránként</item>
@@ -2282,6 +2321,7 @@
         <item>PGP csak titkosítás</item>
         <item>PGP aláírás+titkosítás</item>
         <item>S/MIME csak aláírás</item>
+        <item>S/MIME - csak titkosítás</item>
         <item>S/MIME aláírás+titkosítás</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2302,6 +2342,8 @@
         <item>7,5 mp</item>
         <item>10 mp</item>
         <item>15 mp</item>
+        <item>30 mp</item>
+        <item>60 mp</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Folyóírás</item>
@@ -2327,8 +2369,8 @@
     </string-array>
     <string-array name="accountColorNames">
         <item>Egyik sem</item>
-        <item>Stripe</item>
-        <item>Dot</item>
+        <item>Csík</item>
+        <item>Pötty</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Címzett</item>

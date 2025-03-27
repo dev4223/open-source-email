@@ -235,7 +235,6 @@
     <string name="title_setup_oauth_updated">Autorizácia účtu bola aktualizovaná</string>
     <string name="title_setup_oauth_edge">Pri používaní prehliadača Edge sa uistite, že „Blokovať otváranie externých aplikácií“ v nastaveniach „Ochrana súkromia, bezpečnosť a služby“ je „Vypnuté“</string>
     <string name="title_setup_oauth_brave">Ak používate prehliadač Brawe, mali by ste v jeho nastaveniach povoliť otváranie odkazov na aplikácie mimo prostredia Brawe</string>
-    <string name="title_setup_oauth_browser">Na autorizáciu je vyžadovaný funkčný webový prehliadač</string>
     <string name="title_setup_oauth_authorize">Autorizovať</string>
     <string name="title_setup_select_account">Vybrať účet</string>
     <string name="title_setup_instructions">Pokyny pre nastavenie</string>
@@ -1264,6 +1263,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_unimportant">Nedôležité</string>
     <string name="title_search_in_text">Hľadať v texte &#8230;</string>
     <string name="title_forward">Preposlať</string>
+    <string name="title_forward_to">Preposlať na</string>
     <string name="title_resend">Znovu odoslať</string>
     <string name="title_fetching_headers">Preberanie hlavičiek správ &#8230;</string>
     <string name="title_new_message">Nová správa</string>
@@ -1286,7 +1286,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_print_margins">Pridať okraje</string>
     <string name="title_show_headers">Zobraziť hlavičky</string>
     <string name="title_show_html">Zobraziť zdrojový kód správy</string>
-    <string name="title_raw_save">Uložiť surovú správu</string>
     <string name="title_raw_send">Preposlať ako prílohu</string>
     <string name="title_raw_send_message">Správa</string>
     <string name="title_raw_send_thread">Konverzácia</string>
@@ -1528,7 +1527,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_summarize">Zhrnúť</string>
     <string name="title_translate_configure">Nastaviť &#8230;</string>
     <string name="title_translate_key">Zadajte kľúč</string>
-    <string name="title_translating">Preklad &#8230;</string>
     <string name="title_translate_formal">Používať formálny jazyk</string>
     <string name="title_translate_small">Zdrojový text malým písmom</string>
     <string name="title_translate_replace">Nahradiť zdrojový text preloženým textom</string>
@@ -1696,6 +1694,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_filter_hidden">Skryté</string>
     <string name="title_filter_deleted">Odstránené</string>
     <string name="title_filter_duplicates">Duplicity</string>
+    <string name="title_filter_sent">Odoslané</string>
     <string name="title_filter_trash">Premiestnené do koša</string>
     <string name="title_compact">Kompaktné zobrazenie</string>
     <string name="title_zoom">Veľkosť textu</string>
@@ -1989,7 +1988,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_hint_junk">Filtrovanie nevyžiadanej pošty by malo byť zabezpečené na strane servera, pretože filtrovanie na zariadení napájanom z batérie s obmedzenými možnosťami nemusí fungovať dostatočne spoľahlivo.</string>
     <string name="title_hint_junk_learn">Presúvaním správ do a z priečinka spam učíte server, ktoré správy sú nevyžiadané</string>
     <string name="title_hint_contact_actions">Možnosti zobrazíte dlhým stlačením</string>
-    <string name="title_hint_eml">Toto je náhľad obsahu surového súboru so správou. Ak chcete zobraziť celý obsah, klepnite na tlačidlo \'Uložiť\' v lište akcií.</string>
     <string name="title_open_link">Otvoriť odkaz</string>
     <string name="title_image_link">URL Adresa obrázka</string>
     <string name="title_different_link">Názov a adresa odkazu sú rôzne</string>
@@ -2176,8 +2174,10 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_accessibility_to">Adresát</string>
     <string-array name="pollIntervalNames">
         <item>Vždy</item>
-        <item>Každých 5 minút</item>
-        <item>Každých 10 minút</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Každých 15 minút</item>
         <item>Každých 30 minút</item>
         <item>Každú hodinu</item>
@@ -2292,6 +2292,7 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
         <item>Len PGP šifrovanie</item>
         <item>PGP podpísať aj zašifrovať</item>
         <item>S/MIME len podpísať</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME podpísať aj zašifrovať</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2312,6 +2313,8 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Cursive</item>

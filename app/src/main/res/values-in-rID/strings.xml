@@ -125,7 +125,7 @@
     <string name="menu_attribution">Atribusi</string>
     <string name="menu_privacy">Privasi</string>
     <string name="menu_about">Tentang</string>
-    <string name="menu_pro">Fitur Pro</string>
+    <string name="menu_pro">Fitur Pro</string>
     <string name="menu_rate">Beri nilai aplikasi ini</string>
     <string name="title_welcome">Selamat Datang</string>
     <string name="title_eula">Perjanjian lisensi pengguna akhir</string>
@@ -193,7 +193,6 @@
     <string name="title_setup_oauth_updated">Ulang kembali otorisasi akun</string>
     <string name="title_setup_oauth_edge">Saat menggunakan peramban Edge, pastikan bahwa \'Blokir pembukaan aplikasi eksternal\' di pengaturan \'Privasi, keamanan, dan layanan\' \'Nonaktif\'</string>
     <string name="title_setup_oauth_brave">Ketika menggunakan Brave browser, anda harus mengaktifkan pilihan di pengaturan Brave untuk mengizinkan link app membuka aplikasi di luar Brave</string>
-    <string name="title_setup_oauth_browser">Otorisasi memerlukan browser yang berfungsi</string>
     <string name="title_setup_oauth_authorize">Perizinan</string>
     <string name="title_setup_select_account">Pilih Akun</string>
     <string name="title_setup_instructions">Instruksi Penyiapan</string>
@@ -1217,6 +1216,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_unimportant">Tidak penting</string>
     <string name="title_search_in_text">Telusuri dalam teks &#8230;</string>
     <string name="title_forward">Teruskan</string>
+    <string name="title_forward_to">Diteruskan kepada</string>
     <string name="title_resend">Kirim ulang</string>
     <string name="title_fetching_headers">Mengunduh kepala pesan &#8230;</string>
     <string name="title_new_message">Pesan baru</string>
@@ -1239,7 +1239,6 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_print_margins">Tambahkan margin</string>
     <string name="title_show_headers">Tampilkan Judul</string>
     <string name="title_show_html">Tampilkan sumber</string>
-    <string name="title_raw_save">Simpan pesan sebagai bahan</string>
     <string name="title_raw_send">Kirim sebagai lampiran</string>
     <string name="title_raw_send_message">Pesan</string>
     <string name="title_raw_send_thread">Percakapan</string>
@@ -1480,7 +1479,6 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_summarize">Rangkum</string>
     <string name="title_translate_configure">Konfigurasi &#8230;</string>
     <string name="title_translate_key">Masukkan kata kunci</string>
-    <string name="title_translating">Menerjemahkan &#8230;</string>
     <string name="title_translate_formal">Gunakan format formal</string>
     <string name="title_translate_small">Gunakan font kecil untuk tulisan sumber</string>
     <string name="title_translate_replace">Ganti teks sumber dengan teks terjemahan</string>
@@ -1647,6 +1645,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_filter_hidden">Tersembunyi</string>
     <string name="title_filter_deleted">Dihapus</string>
     <string name="title_filter_duplicates">Duplikat</string>
+    <string name="title_filter_sent">Terkirim</string>
     <string name="title_filter_trash">Sudah dibuang</string>
     <string name="title_compact">Tampilan ringkas</string>
     <string name="title_zoom">Ukuran teks</string>
@@ -1940,7 +1939,6 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_hint_junk">Penyaringan spam harus dilakukan oleh server surel dan tidak dapat dilakukan secara handal pada perangkat berdaya baterai dengan kemampuan yang terbatas.</string>
     <string name="title_hint_junk_learn">Dengan memindahkan pesan ke dan dari folder spam, server surel \"mempelajari\" bagaimana spam itu</string>
     <string name="title_hint_contact_actions">Ketuk dan tahan untuk pilihan</string>
-    <string name="title_hint_eml">Ini adalah rangkuman kandungan fail pesan mentah. Simpan pesan mentah dengan ikon simpan di baris aksi untuk melihat semua pesan.</string>
     <string name="title_open_link">Buka tautan</string>
     <string name="title_image_link">Tautan Gambar</string>
     <string name="title_different_link">Judul dan alamat tautan berbeda</string>
@@ -1963,7 +1961,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_no">Tidak</string>
     <string name="title_later">Nanti</string>
     <string name="title_paste_plain">Tempel sebagai teks biasa</string>
-    <string name="title_paste_as_quote" comment="title_paste_as_quote&#10;Title for an additional menu option in the Android copy/paste popup menu">Tempel sebagai kutipan</string>
+    <string name="title_paste_as_quote">Tempel sebagai kutipan</string>
     <string name="title_undo">Undo</string>
     <string name="title_redo">Ulangi</string>
     <string name="title_insert_line">Sisipkan baris</string>
@@ -2143,8 +2141,10 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
     <string name="title_accessibility_to">Penerima</string>
     <string-array name="pollIntervalNames">
         <item>Selalu</item>
-        <item>Setiap 5 menit</item>
-        <item>Setiap 10 menit</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Setiap 15 menit</item>
         <item>Setiap 30 menit</item>
         <item>Setiap jam</item>
@@ -2259,6 +2259,7 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
         <item>Hanya enkirpsi PGP</item>
         <item>PGP sign+encrypt</item>
         <item>S/MIME sign-only</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME sign+encrypt</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2279,6 +2280,8 @@ Kunci dan sertifikat umumnya dapat ditemukan di menu Lanjutan - Enkripsi dan kre
         <item>7.5 detik</item>
         <item>10 detik</item>
         <item>15 detik</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Cursive</item>

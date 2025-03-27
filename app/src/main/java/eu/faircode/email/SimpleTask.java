@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -54,6 +54,7 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     private boolean log = true;
     private boolean count = true;
     private boolean keepawake = false;
+    private boolean kill = false;
 
     private String id;
     private String name;
@@ -101,6 +102,12 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     @NonNull
     public SimpleTask<T> setKeepAwake(boolean value) {
         this.keepawake = value;
+        return this;
+    }
+
+    @NonNull
+    public SimpleTask<T> setKill(boolean kill) {
+        this.kill = kill;
         return this;
     }
 
@@ -447,6 +454,13 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     }
 
     protected void onDestroyed(Bundle args) {
+        if (this.kill && future != null)
+            try {
+                Log.i("Killing task=" + name);
+                future.cancel(true);
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
     }
 
     @Override

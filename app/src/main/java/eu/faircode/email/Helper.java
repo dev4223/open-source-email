@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED;
@@ -153,6 +153,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -260,25 +261,6 @@ public class Helper {
                     "[\\p{L}0-9][\\p{L}0-9\\-\\_]{0,25}" +
                     ")+"
     );
-
-    // https://support.google.com/mail/answer/6590#zippy=%2Cmessages-that-have-attachments
-    static final List<String> DANGEROUS_EXTENSIONS = Collections.unmodifiableList(Arrays.asList(
-            "ade", "adp", "apk", "appx", "appxbundle",
-            "bat",
-            "cab", "chm", "cmd", "com", "cpl",
-            "dll", "dmg",
-            "ex", "ex_", "exe",
-            "hta",
-            "ins", "isp", "iso",
-            "jar", "js", "jse",
-            "lib", "lnk",
-            "mde", "msc", "msi", "msix", "msixbundle", "msp", "mst",
-            "nsh",
-            "pif", "ps1",
-            "scr", "sct", "shb", "sys",
-            "vb", "vbe", "vbs", "vxd",
-            "wsc", "wsf", "wsh"
-    ));
 
     private static ExecutorService sSerialExecutor = null;
     private static ExecutorService sParallelExecutor = null;
@@ -557,16 +539,33 @@ public class Helper {
         PackageManager pm = context.getPackageManager();
         Intent view = new Intent(Intent.ACTION_VIEW, uri);
 
-        int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
-        List<ResolveInfo> ris = pm.queryIntentActivities(view, flags); // action whitelisted
-        for (ResolveInfo info : ris) {
-            Intent intent = new Intent();
-            intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
-            intent.setPackage(info.activityInfo.packageName);
-            if (pkg != null && !pkg.equals(info.activityInfo.packageName))
-                continue;
-            if (pm.resolveService(intent, 0) != null)
-                return true;
+        try {
+            int flags = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? 0 : PackageManager.MATCH_ALL);
+            List<ResolveInfo> ris = pm.queryIntentActivities(view, flags); // action whitelisted
+            for (ResolveInfo info : ris) {
+                Intent intent = new Intent();
+                intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
+                intent.setPackage(info.activityInfo.packageName);
+                if (pkg != null && !pkg.equals(info.activityInfo.packageName))
+                    continue;
+                if (pm.resolveService(intent, 0) != null)
+                    return true;
+            }
+        } catch (Throwable ex) {
+            /*
+                java.lang.SecurityException: You need INTERACT_ACROSS_USERS, MANAGE_USERS, or QUERY_USERS permission to: check isProfile
+                    at android.os.Parcel.createExceptionOrNull(Unknown Source:7)
+                    at android.os.Parcel.createException(Unknown Source:0)
+                    at android.os.Parcel.readException(Unknown Source:11)
+                    at android.os.Parcel.readException(Unknown Source:10)
+                    at android.content.pm.IPackageManager$Stub$Proxy.queryIntentActivities(Unknown Source:38)
+                    at android.app.ApplicationPackageManager.queryIntentActivitiesAsUser(Unknown Source:22)
+                    at android.app.ApplicationPackageManager.queryIntentActivities(Unknown Source:4)
+                    at android.app.ApplicationPackageManager.queryIntentActivities(Unknown Source:5)
+                    at eu.faircode.email.Helper.hasCustomTabs(SourceFile:23)
+            */
+            Log.e(ex);
+            return false;
         }
 
         return false;
@@ -1036,6 +1035,20 @@ public class Helper {
             return context.getResources().getDimensionPixelSize(resid);
     }
 
+    static Snackbar.SnackbarLayout findSnackbarLayout(View rootView) {
+        if (rootView instanceof Snackbar.SnackbarLayout)
+            return (Snackbar.SnackbarLayout) rootView;
+
+        if (rootView instanceof ViewGroup) {
+            for (int i = 0; i < ((ViewGroup) rootView).getChildCount(); i++)
+                if (findSnackbarLayout(((ViewGroup) rootView).getChildAt(i)) != null)
+                    return findSnackbarLayout(((ViewGroup) rootView).getChildAt(i));
+            return null;
+        }
+
+        return null;
+    }
+
     static @NonNull List<View> getViewsWithTag(@NonNull View view, @NonNull String tag) {
         List<View> result = new ArrayList<>();
         if (view != null && tag.equals(view.getTag()))
@@ -1091,11 +1104,14 @@ public class Helper {
         if (share ? !app_chooser_share : !app_chooser)
             return intent;
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            PackageManager pm = context.getPackageManager();
-            if (pm.queryIntentActivities(intent, 0).size() == 1)
-                return intent;
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R)
+            try {
+                PackageManager pm = context.getPackageManager();
+                if (pm.queryIntentActivities(intent, 0).size() == 1)
+                    return intent;
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
 
         return Intent.createChooser(intent, context.getString(R.string.title_select_app));
     }
@@ -1289,6 +1305,7 @@ public class Helper {
                             : CustomTabsIntent.COLOR_SCHEME_LIGHT)
                     .setShareState(CustomTabsIntent.SHARE_STATE_ON)
                     .setUrlBarHidingEnabled(true)
+                    .setSendToExternalDefaultHandlerEnabled(true)
                     .setStartAnimations(context, R.anim.activity_open_enter, R.anim.activity_open_exit)
                     .setExitAnimations(context, R.anim.activity_close_enter, R.anim.activity_close_exit);
 
@@ -1389,7 +1406,15 @@ public class Helper {
         viewFAQ(context, question, true /* Google translate */);
     }
 
+    static void viewFAQ(Context context, String fragment) {
+        viewFAQ(context, fragment, true);
+    }
+
     private static void viewFAQ(Context context, int question, boolean english) {
+        viewFAQ(context, question == 0 ? "top" : "faq" + question, english);
+    }
+
+    private static void viewFAQ(Context context, String fragment, boolean english) {
         // Redirection is done to prevent text editors from opening the link
         // https://email.faircode.eu/faq -> https://github.com/M66B/FairEmail/blob/master/FAQ.md
         // https://email.faircode.eu/docs -> https://github.com/M66B/FairEmail/tree/master/docs
@@ -1403,10 +1428,7 @@ public class Helper {
         else
             base = "https://email.faircode.eu/docs/FAQ-" + locale + ".md";
 
-        if (question == 0)
-            view(context, Uri.parse(base + "#top"), "text/html", false, false);
-        else
-            view(context, Uri.parse(base + "#faq" + question), "text/html", false, false);
+        view(context, Uri.parse(base + "#" + fragment), "text/html", false, false);
     }
 
     static Uri getPrivacyUri(Context context) {
@@ -1423,6 +1445,7 @@ public class Helper {
                 (Helper.hasValidFingerprint(context) ? "1" : "3") +
                 (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
                 (BuildConfig.DEBUG ? "d" : "") +
+                (ConnectionHelper.vpnActive(context) ? "v" : "") +
                 (ActivityBilling.isPro(context) ? "+" : "");
     }
 
@@ -2796,13 +2819,13 @@ public class Helper {
     }
 
     static boolean isEndChar(char c) {
-        return (isSentenceChar(c) ||
-                c == ',' || c == ':' || c == ';');
+        return (isSentenceChar(c) || c == ',');
     }
 
     static boolean isSentenceChar(char c) {
         return (c == '.' /* Latin */ ||
                 c == '。' /* Chinese */ ||
+                c == ':' || c == ';' ||
                 c == '?' || c == '!');
     }
 
@@ -3789,9 +3812,11 @@ public class Helper {
     }
 
     static <T> List<List<T>> chunkList(List<T> list, int size) {
+        if (list == null || list.isEmpty())
+            return new ArrayList<>();
         List<List<T>> result = new ArrayList<>(list.size() / size);
         for (int i = 0; i < list.size(); i += size)
-            result.add(list.subList(i, i + size < list.size() ? i + size : list.size()));
+            result.add(new ArrayList<>(list.subList(i, i + size < list.size() ? i + size : list.size())));
         return result;
     }
 
@@ -3849,5 +3874,50 @@ public class Helper {
     static void clearAll(Context context) {
         ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         am.clearApplicationUserData();
+    }
+
+    static class MaximumLengthStream extends FilterInputStream {
+        private int max;
+        private int count = 0;
+
+        protected MaximumLengthStream(InputStream in, int max) {
+            super(in);
+            this.max = max;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b >= 0) {
+                count++;
+                checkLength();
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            int read = super.read(b);
+            if (read > 0) {
+                count += read;
+                checkLength();
+            }
+            return read;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            int read = super.read(b, off, len);
+            if (read > 0) {
+                count += read;
+                checkLength();
+            }
+            return read;
+        }
+
+        private void checkLength() throws IOException {
+            if (count > max)
+                throw new IOException("Stream larger than " + max + " bytes");
+        }
     }
 }

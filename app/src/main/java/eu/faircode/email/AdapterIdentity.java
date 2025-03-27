@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
@@ -180,11 +180,6 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
                 if (sb.length() != 0)
                     sb.append(", ");
                 sb.append(identity.sign_key_alias);
-            }
-            if (identity.encrypt == 1) {
-                if (sb.length() != 0)
-                    sb.append(", ");
-                sb.append("S/MIME");
             }
 
             tvSignKeyId.setText(context.getString(R.string.title_sign_key, sb.toString()));

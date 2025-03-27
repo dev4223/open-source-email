@@ -16,8 +16,11 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
+
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -109,7 +112,7 @@ public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHold
                     ? View.GONE : View.VISIBLE);
 
             if (count == null)
-                tvItem.setText(menu.getTitle());
+                tvItem.setText(context.getString(menu.getTitle()));
             else
                 tvItem.setText(context.getString(R.string.title_name_count,
                         context.getString(menu.getTitle()), NF.format(count)));
@@ -117,6 +120,9 @@ public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHold
             tvItem.setTextColor(count == null ? (color == null ? textColorSecondary : color) : colorUnread);
             tvItem.setTypeface(count == null ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
             tvItem.setVisibility(expanded ? View.VISIBLE : View.GONE);
+
+            ivItem.setContentDescription(tvItem.getText());
+            ivItem.setImportantForAccessibility(expanded ? IMPORTANT_FOR_ACCESSIBILITY_NO : IMPORTANT_FOR_ACCESSIBILITY_YES);
 
             tvItemExtra.setText(menu.getSubtitle());
             tvItemExtra.setVisibility(menu.getSubtitle() != null && expanded ? View.VISIBLE : View.GONE);

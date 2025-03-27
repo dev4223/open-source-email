@@ -140,6 +140,7 @@
         android:layout_marginTop="6dp"
         android:hyphenationFrequency="none"
         android:minHeight="60dp"
+        android:paddingHorizontal="6dp"
         android:paddingBottom="6dp"
         android:text="Body"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"

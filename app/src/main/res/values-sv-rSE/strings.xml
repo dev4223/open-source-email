@@ -202,18 +202,23 @@
     <string name="title_setup_office_auth">Felet \"AUTHENTICATE failed\" kan orsakas av att IMAP/SMTP inaktiveras av systemadministratören</string>
     <string name="title_setup_office_auth_5_7_3">Försök med snabbinstallationsguiden \'Annan leverantör\'.</string>
     <string name="title_setup_office_auth_5_7_139">Försök med snabbinstallationsguiden \'Outlook/Hotmail/Live\'.</string>
+    <string name="title_setup_office_not_connected">        Felet \'Användare är autentiserad men inte ansluten\' betyder oftast att IMAP är inaktiverat.
+        När det gäller ett konsument Outlook-konto, gå till Outlook, tryck på inställningshjulet längst upp till höger, Välj \'Mail\', välj \'Vidarebefordran och IMAP\' och i avsnittet \'POP och IMAP\' aktivera \'Låt enheter och appar använda IMAP\'.
+        När det gäller ett företag, utbildning etc. kontakta systemadministratören på e-postservern.
+    </string>
     <string name="title_setup_oauth_rationale">Auktorisera åtkomst till ditt %1$s konto</string>
     <string name="title_setup_oauth_update">Auktorisera ett befintligt konto igen (annars skapa ett nytt konto)</string>
     <string name="title_setup_oauth_updated">Kontoauktorisering har uppdaterats</string>
     <string name="title_setup_oauth_edge">När du använder Edge webbläsare, se till att \"Blockera öppna externa appar\" i inställningarna \"Sekretess, säkerhet och tjänster\" är \"Av\"</string>
     <string name="title_setup_oauth_brave">När du använder webbläsaren Brave så måste du aktivera alternativet i Braves inställningar för att tillåta att applänkar öppnas i appar utanför Brave</string>
-    <string name="title_setup_oauth_browser">Auktorisering kräver en fungerande webbläsare</string>
+    <string name="title_setup_oauth_browser">Auktorisering kräver en fungerande webbläsare som gör det möjligt att öppna applänkar (ofta en säkerhetsinställning), så att auktoriseringstoken i slutet kan överföras till appen</string>
     <string name="title_setup_oauth_authorize">Auktorisera</string>
     <string name="title_setup_select_account">Välj konto</string>
     <string name="title_setup_instructions">Inställningsinstruktioner</string>
     <string name="title_setup_no_settings">Inga inställningar hittades för domänen \"%1$s\"</string>
     <string name="title_setup_no_settings_hint">Försök att konfigurera ett konto manuellt med de inställningar som tillhandahålls av din e-postleverantör</string>
     <string name="title_setup_no_auth_hint">Vänligen dubbelkolla din e-postadress och lösenord och se till att extern åtkomst (IMAP/SMTP) är aktiverad för ditt konto</string>
+    <string name="title_setup_no_auth_outlook">Du måste använda guiden Outlook / Office 365 för snabbinstallation för detta konto (krävs av Microsoft)</string>
     <string name="title_setup_app_password_hint">Denna leverantör kräver ett app-lösenord istället för kontots lösenord, vänligen kontrollera instruktionerna hos din leverantör</string>
     <string name="title_setup_no_inbox">Inkorgen hittades inte</string>
     <string name="title_setup_advanced_protection">När du är inskriven i det avancerade skyddsprogrammet är det inte möjligt att använda en tredje parts e-postapp. Detta är en begränsning som införts av Google.</string>
@@ -370,6 +375,7 @@
     <string name="title_advanced_kept_removed">Kontrollera om gamla meddelanden har tagits bort från servern</string>
     <string name="title_advanced_gmail_thread">Använd Gmails stil för gruppering av meddelande på Gmail-konton</string>
     <string name="title_advanced_subject_threading">Gruppera meddelanden efter avsändare och ämne</string>
+    <string name="title_advanced_outlook_categories">Synkronisera Outlookkategorier</string>
     <string name="title_advanced_sync_folders">Synkronisera mapplistan</string>
     <string name="title_advanced_sync_folders_poll">Synkronisera mapplistan aktivt</string>
     <string name="title_advanced_sync_shared_folders">Synkronisera delade mapplistor</string>
@@ -385,6 +391,7 @@
     <string name="title_advanced_tune_keep_alive">Justera automatiskt keep-alive intervallet</string>
     <string name="title_advanced_blocklist_warning">Blocklistor är inte perfekta och kan blockera mer än bara skräppost!</string>
     <string name="title_advanced_keyboard">Visa tangentbord som standard</string>
+    <string name="title_advanced_keyboard_margin">Lägg till marginal ovanför tangentbordet</string>
     <string name="title_advanced_keyboard_no_fullscreen">Förhindra helskärmstangentbord</string>
     <string name="title_advanced_suggest_names">Visa namn och e-postadresser</string>
     <string name="title_advanced_suggest_local">Föreslå lokalt lagrade kontakter</string>
@@ -492,6 +499,7 @@
     <string name="title_advanced_close_pane">Kollapsa rad eller kolumn när en konversation stängs</string>
     <string name="title_advanced_column_width">Meddelandekolumnens bredd / radhöjd: %1$s %%</string>
     <string name="title_advanced_hide_toolbar">Dölj övre verktygsfältet vid bläddring i meddelanden</string>
+    <string name="title_advanced_edge_to_edge">Använd appens bakgrundsfärg för Androids navigeringsfält</string>
     <string name="title_advanced_nav_options">Visa alternativ för navigeringsmeny</string>
     <string name="title_advanced_nav_categories">Visa kontokategorier i navigeringsmenyn</string>
     <string name="title_advanced_nav_pin">Fäst navigeringsmenyn</string>
@@ -499,6 +507,7 @@
     <string name="title_advanced_nav_hide_message">Du kan aktivera alternativen igen i visningsinställningarna</string>
     <string name="title_advanced_nav_last_sync">Visa den senaste synkroniseringstiden i navigeringsmenyn</string>
     <string name="title_advanced_nav_message_count">Visa antalet lokalt lagrade meddelanden i navigeringsmenyn</string>
+    <string name="title_advanced_nav_unseen">Visa antalet olästa meddelanden i navigeringsmenyn</string>
     <string name="title_advanced_nav_unseen_drafts">Visa antal olästa utkast i navigeringsmenyn</string>
     <string name="title_advanced_nav_pinned_count">Visa antalet olästa meddelanden i navigeringsmenyn</string>
     <string name="title_advanced_show_unexposed">Visa en stjärna för konton/mappar med nyligen mottagna olästa meddelanden</string>
@@ -644,6 +653,7 @@
     <string name="title_advanced_reset_importance">Återställ betydelsen när du flyttar meddelanden</string>
     <string name="title_advanced_star_snoozed">Stjärnmarkera automatiskt vid slumring av meddelanden</string>
     <string name="title_advanced_star_unsnoozed">Ta automatiskt bort stjärnmarkering när meddelanden inte längre är vilande</string>
+    <string name="title_advanced_important_unsnoozed">Gör automatiskt uppväckta meddelanden viktiga</string>
     <string name="title_advanced_auto_important">Gör automatiskt stjärnmärkta meddelanden viktiga</string>
     <string name="title_advanced_cancel_snooze">Avbryt snooze när meddelanden flyttas</string>
     <string name="title_advanced_auto_block_sender">Blockera avsändaren automatiskt vid rapportering av skräppost</string>
@@ -698,6 +708,7 @@
     <string name="title_advanced_notify_screen_on">Slå på skärmen en kort stund när det kommer nya meddelanden</string>
     <string name="title_advanced_notifications_background">Använd en bakgrundstjänst för att synkronisera meddelanden</string>
     <string name="title_advanced_notifications_background_hint">En bakgrundstjänst kan stoppas av Android när som helst, men kräver inte ett meddelande i statusfältet</string>
+    <string name="title_advanced_rate_limit">Begränsa aviseringsljud för nya meddelanden till en gång per:</string>
     <string name="title_advanced_confirm_links">Bekräfta att länkar öppnas</string>
     <string name="title_advanced_confirm_files">Bekräfta visning av filer</string>
     <string name="title_advanced_sanitize_links">Ta bort spårningsparametrar som standard</string>
@@ -747,6 +758,7 @@
         Standardalgoritmerna SHA256 och AES128 stöds ofta.
     </string>
     <string name="title_advanced_check_certificate">Kontrollera offentlig nyckel när du skickar</string>
+    <string name="title_advanced_check_key_usage">Kontrollera nyckelanvändnings-indikationer när du skickar</string>
     <string name="title_advanced_manage_certificates">Hantera publika nycklar</string>
     <string name="title_advanced_import_key">Importera privat nyckel</string>
     <string name="title_advanced_manage_keys">Hantera privata nycklar</string>
@@ -788,6 +800,10 @@
     <string name="title_advanced_multi_modal">Multimodal</string>
     <string name="title_advanced_summarize_prompt">Sammanfatta prompten</string>
     <string name="title_advanced_system_instructions">Systemets instruktioner</string>
+    <string name="title_advanced_ai">AI</string>
+    <string name="title_advanced_ai_input_system">Använd AI systemprompt</string>
+    <string name="title_advanced_ai_input_body">Använd din meddelandetext</string>
+    <string name="title_advanced_ai_input_reply">Använd den ursprungliga meddelandetexten</string>
     <string name="title_advanced_entered_text">Angiven text</string>
     <string name="title_advanced_sdcard">Jag vill använda ett SD-kort</string>
     <string name="title_advanced_watchdog">Kontrollera regelbundet om FairEmail fortfarande är aktiv</string>
@@ -823,6 +839,7 @@
     <string name="title_advanced_sync_kept_hint">Detta kommer att överföra extra data och förbruka extra batterikraft, speciellt om många meddelanden lagras på enheten</string>
     <string name="title_advanced_gmail_thread_hint">Detta gäller endast för nyligen mottagna meddelanden och kan bryta befintliga grupper</string>
     <string name="title_advanced_subject_threading_hint">Endast meddelanden mottagna under de senaste %1$d timmarna</string>
+    <string name="title_advanced_outlook_categories_hint">Outlookkategorier kan endast hämtas och kan inte uppdateras automatiskt på grund av begränsningar för Outlook IMAP server</string>
     <string name="title_advanced_sync_folders_hint">Inaktivering av detta kommer att minska data och batterianvändning något, men kommer att inaktivera uppdatering av listan över mappar också</string>
     <string name="title_advanced_poll_folders_hint">Synkronisera mapplistan periodiskt utöver när du har anslutit till ett konto</string>
     <string name="title_advanced_check_authentication_hint">Detta kommer att kontrollera resultaten av DKIM, SPF och DMARC-autentisering som utförs av e-postservern</string>
@@ -839,6 +856,7 @@
     <string name="title_advanced_send_reminders_hint">Visa en varning när meddelandetexten eller ämnet är tomt eller när en bilaga kanske saknas</string>
     <string name="title_advanced_reply_move_hint">E-postservern kan fortfarande lägga till meddelanden till skickade mail mappen</string>
     <string name="title_advanced_compose_color_hint">Mycket ljusa eller mycket mörka färger kommer att resultera i oläsliga meddelanden på mottagarsidan</string>
+    <string name="title_advanced_compose_font_hint">Standard innebär att respektera typsnittet som valts på mottagarsidan</string>
     <string name="title_advanced_template_reply_hint">HTML är tillåten. Tillgängliga platshållare: %1$s</string>
     <string name="title_advanced_write_below_hint">En mottagare kan missa ditt svar, till exempel när ett längre meddelande trunkeras</string>
     <string name="title_advanced_attach_new_hint">Annars, lägg till delade adresser eller filer till det aktuella utkastet</string>
@@ -905,6 +923,7 @@
     <string name="title_advanced_notify_car_hint">Ansluten innebär att något projekteras, till exempel en karta för navigering</string>
     <string name="title_advanced_notify_remove_hint">Nya meddelandeaviseringar kommer alltid att tas bort när de sveps bort och när meddelanden markeras som lästa</string>
     <string name="title_advanced_notify_manage_hint">Tryck på kanalens namn för att ange kanalens egenskaper</string>
+    <string name="title_advanced_notify_samsung_hint">För att hantera aviseringskanaler kan du behöva aktivera den här Android-inställningen: Avisering, Avancerade inställningar, Hantera aviseringskategorier för varje app</string>
     <string name="title_advanced_notify_manage_default_hint">För att ställa in standardljudet, etc</string>
     <string name="title_advanced_notify_manage_service_hint">För att inaktivera meddelandet \"övervakning\"</string>
     <string name="title_advanced_notify_separate_hint">Hur konfigurerar jag aviseringar för konton, mappar och avsändare?</string>
@@ -1203,6 +1222,7 @@
     <string name="title_filters_active">Ett eller flera filter är aktiva</string>
     <string name="title_duplicate_in">Duplicerade meddelande i %1$s</string>
     <string name="title_trashed_from">Kastat meddelande från %1$s</string>
+    <string name="title_sent_to">Skickade meddelandet till %1$s</string>
     <string name="title_subject_reply">Sv: %1$s</string>
     <string name="title_subject_forward">Vb: %1$s</string>
     <string name="title_subject_reply_alt">Sv: %1$s</string>
@@ -1225,6 +1245,7 @@
     <string name="title_unimportant">Oviktigt</string>
     <string name="title_search_in_text">Sök i text &#8230;</string>
     <string name="title_forward">Vidarebefordra</string>
+    <string name="title_forward_to">Vidarebefordra till</string>
     <string name="title_resend">Skicka igen</string>
     <string name="title_fetching_headers">Laddar ner meddelanderubriker &#8230;</string>
     <string name="title_new_message">Nytt meddelande</string>
@@ -1236,6 +1257,7 @@
     <string name="title_force_light">Tvinga ljust tema</string>
     <string name="title_rename">Ändra namn</string>
     <string name="title_share">Dela</string>
+    <string name="title_analyze">Analysera</string>
     <string name="title_event">Lägg till i kalender</string>
     <string name="title_pin">Lägg till genväg</string>
     <string name="title_pin_label">Rubrik för genväg</string>
@@ -1247,11 +1269,12 @@
     <string name="title_print_margins">Lägg till marginal</string>
     <string name="title_show_headers">Visa sidhuvuden</string>
     <string name="title_show_html">Visa källa</string>
-    <string name="title_raw_save">Spara rent meddelande</string>
+    <string name="title_raw_save">Spara oformaterat meddelande (.eml)</string>
     <string name="title_raw_send">Skicka som bilaga</string>
     <string name="title_raw_send_message">Meddelande</string>
     <string name="title_raw_send_thread">Konversation</string>
     <string name="title_manage_keywords">Hantera nyckelord</string>
+    <string name="title_manage_keywords_pop">Med POP3 kan sökord inte lagras på e-postservern!</string>
     <string name="title_manage_labels">Hantera Gmail-etiketter</string>
     <string name="title_add_keyword">Lägg till nyckelord</string>
     <string name="title_show_inline">Visa infogade bilagor</string>
@@ -1351,6 +1374,7 @@
     <string name="title_attachment_saved">Bilaga sparad</string>
     <string name="title_attachments_saved">Bilagor sparade</string>
     <string name="title_attachments_incomplete">Vissa bilagor eller bilder hämtades inte och kunde inte läggas till</string>
+    <string name="title_report_remark">Denna rapport, ett speciellt utformat meddelande, skickades av en e-postserver eftersom ett skickat meddelande inte kunde levereras till mottagaren, till exempel på grund av att brevlådan är full, eller på grund av att e-postadressen inte existerar (längre).</string>
     <string name="title_ask_save">Spara ändringar?</string>
     <string name="title_ask_delete">Ta bort meddelandet permanent?</string>
     <string name="title_ask_delete_accept">Jag förstår att permanent ta bort meddelanden är oåterkalleligt</string>
@@ -1485,7 +1509,7 @@
     <string name="title_summarize">Sammanfatta</string>
     <string name="title_translate_configure">Konfigurera &#8230;</string>
     <string name="title_translate_key">Ange nyckel</string>
-    <string name="title_translating">Översätter &#8230;</string>
+    <string name="title_translating">Översätter till %1$s &#8230;</string>
     <string name="title_translate_formal">Använd formell form</string>
     <string name="title_translate_small">Använd ett litet typsnitt för källtexten</string>
     <string name="title_translate_replace">Ersätt ursprunglig text med översatt text</string>
@@ -1574,6 +1598,7 @@
     <string name="title_signature_email">Signaturens adress</string>
     <string name="title_signature_mismatch">Avsändarens och signaturens e-postadress matchar inte</string>
     <string name="title_signature_algorithm">Algoritm</string>
+    <string name="title_signature_public_key">Offentlig nyckel</string>
     <string name="title_signature_subject">Ämne</string>
     <string name="title_signature_validity">Giltighet</string>
     <string name="title_signature_outdated">Denna publika nyckel är för närvarande inte giltig</string>
@@ -1637,6 +1662,7 @@
     <string name="title_sort_on_starred_unread">Stjärnmärkta, olästa</string>
     <string name="title_sort_on_priority">Prioritet</string>
     <string name="title_sort_on_sender">Avsändaren</string>
+    <string name="title_sort_on_sender_name">Avsändarens namn</string>
     <string name="title_sort_on_subject">Ämne</string>
     <string name="title_sort_on_size">Storlek</string>
     <string name="title_sort_on_attachments">Bilagor</string>
@@ -1653,6 +1679,7 @@
     <string name="title_filter_hidden">Dold</string>
     <string name="title_filter_deleted">Raderad</string>
     <string name="title_filter_duplicates">Dubbletter</string>
+    <string name="title_filter_sent">Skickat</string>
     <string name="title_filter_trash">Kastade</string>
     <string name="title_compact">Kompakt vy</string>
     <string name="title_zoom">Textstorlek</string>
@@ -1676,6 +1703,7 @@
     <string name="title_edit_signature_image_hint">        När du skickar ett meddelande kopieras bilden till meddelandet från den valda platsen.
         Ta alltså inte bort bildfilen!
     </string>
+    <string name="title_edit_signature_delete">Ta bort signatur?</string>
     <string name="title_answer_define_name">Namn</string>
     <string name="title_answer_define_value">Värde</string>
     <string name="title_answer_caption">Redigera mall</string>
@@ -1760,6 +1788,7 @@
     <string name="title_rule_resend">Skicka igen</string>
     <string name="title_rule_attached">Bifoga meddelandefil i källformat</string>
     <string name="title_rule_cc">Svar till CC-adresser</string>
+    <string name="title_rule_checks">Sök efter automatiskt skickade meddelanden, svara-ej-adresser, etc.</string>
     <string name="title_rule_with_attachments">Med bilagor</string>
     <string name="title_rule_answer_remark">Endast ett svar kommer att skickas för någon konversation, för att undvika svarsloopar</string>
     <string name="title_rule_name_missing">Regelnamn saknas</string>
@@ -1791,6 +1820,7 @@
     <string name="title_rule_select_sound">Välj ljud</string>
     <string name="title_rule_select_sound_ringtone">Ringsignal</string>
     <string name="title_rule_select_sound_audio">Ljudfil</string>
+    <string name="title_rule_loop_sound">Loopa ljud</string>
     <string name="title_rule_use_as_alarm">Använd som larm</string>
     <string name="title_rule_alarm_hint">Det här kommer att ignorera \"stör ej\"-reglerna</string>
     <string name="title_rule_alarm_duration">Maxtid för alarm (sekunder)</string>
@@ -1948,7 +1978,6 @@
     <string name="title_hint_junk">Spamfiltrering bör göras via e-postservern och kan inte göras tillförlitligt på en batteridriven enhet med begränsad kapacitet.</string>
     <string name="title_hint_junk_learn">Genom att flytta meddelanden till och från skräppostmappen \"lär\" sig e-postservern vad skräppost är</string>
     <string name="title_hint_contact_actions">Långt tryck för alternativ</string>
-    <string name="title_hint_eml">Detta är en sammanfattning av innehållet i en raw-meddelandefil. Spara raw-meddelandet med ikonen spara i åtgärdsfältet för att visa allt innehåll.</string>
     <string name="title_open_link">Öppna länken</string>
     <string name="title_image_link">Bildlänk</string>
     <string name="title_different_link">Titeln och länkadressen är olika</string>
@@ -1971,7 +2000,7 @@
     <string name="title_no">Nej</string>
     <string name="title_later">Senare</string>
     <string name="title_paste_plain">Klistra in som oformaterad text</string>
-    <string name="title_paste_as_quote" comment="title_paste_as_quote&#10;Title for an additional menu option in the Android copy/paste popup menu">Klistra in som citerad text</string>
+    <string name="title_paste_as_quote">Klistra in som citerad text</string>
     <string name="title_undo">Ångra</string>
     <string name="title_redo">Gör om</string>
     <string name="title_insert_line">Infoga rad</string>
@@ -2153,6 +2182,8 @@
     <string name="title_accessibility_to">Mottagare</string>
     <string-array name="pollIntervalNames">
         <item>Kontinuerligt</item>
+        <item>Varje minut</item>
+        <item>Varannan minut</item>
         <item>Var 5:e minut</item>
         <item>Var 10:e minut</item>
         <item>Var 15:e minut</item>
@@ -2269,7 +2300,8 @@
         <item>Endast PGP-kryptering</item>
         <item>PGP-signering + kryptering</item>
         <item>S/MIME signering</item>
-        <item>S/MIME signera+kryptera</item>
+        <item>Kryptera enbart (S/MIME)</item>
+        <item>Signera och kryptera (S/MIME)</item>
     </string-array>
     <string-array name="sizeNames">
         <item>0 B</item>
@@ -2289,6 +2321,8 @@
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Kursivt</item>

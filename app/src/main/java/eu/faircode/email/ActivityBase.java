@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -71,6 +71,7 @@ import androidx.lifecycle.OnLifecycleEvent;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -103,10 +104,13 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     }
 
     @Override
-    public void setContentView(View view) {
+    public void setContentView(@NonNull View view) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean hide_toolbar = prefs.getBoolean("hide_toolbar", !BuildConfig.PLAY_STORE_RELEASE);
         boolean edge_to_edge = prefs.getBoolean("edge_to_edge", false);
+        boolean keyboard_margin = prefs.getBoolean("keyboard_margin", false);
+
+        int bnv_height = Helper.dp2pixels(this, 24 + 2 * 8); // icon size + 2 x margin
 
         int colorPrimary = Helper.resolveColor(this, androidx.appcompat.R.attr.colorPrimary);
         double lum = ColorUtils.calculateLuminance(colorPrimary);
@@ -151,6 +155,25 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         holder.removeView(placeholder);
         holder.addView(view, placeholder.getLayoutParams());
 
+        if (edge_to_edge)
+            holder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                private boolean has = false;
+
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    try {
+                        Snackbar.SnackbarLayout sl = Helper.findSnackbarLayout(v.getRootView());
+                        boolean h = (sl != null);
+                        if (has != h) {
+                            has = h;
+                            v.requestApplyInsets();
+                        }
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                }
+            });
+
         int abh = Helper.getActionBarHeight(this);
         appbar.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             @Override
@@ -169,6 +192,10 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         });
 
         FragmentDialogTheme.setBackground(this, holder, this instanceof ActivityCompose);
+
+        View cf = view.findViewById(R.id.content_frame);
+        View content = (cf == null ? view : cf);
+        int cpad = content.getPaddingBottom();
 
         ViewCompat.setOnApplyWindowInsetsListener(holder, (v, windowInsets) -> {
             try {
@@ -197,9 +224,9 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                     v.setLayoutParams(mlp);
 
                 int b = v.getPaddingBottom();
-                if (hasWindowFocus) {
+                if (Helper.isKeyboardVisible(v)) {
                     int bottom = windowInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
-                    int pad = Math.max(0, bottom - insets.bottom);
+                    int pad = Math.max(0, bottom - insets.bottom + (keyboard_margin ? bnv_height : 0));
                     if (b != pad)
                         v.setPaddingRelative(0, 0, 0, pad);
                 } else {
@@ -207,13 +234,22 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                         v.setPaddingRelative(0, 0, 0, 0);
                 }
 
-                if (edge_to_edge)
-                    for (View child : Helper.getViewsWithTag(v, "inset")) {
-                        mlp = (ViewGroup.MarginLayoutParams) child.getLayoutParams();
-                        mlp.bottomMargin = insets.bottom;
-                        child.setLayoutParams(mlp);
+                if (edge_to_edge) {
+                    Insets nav = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
+                    int pad = Math.max(0, cpad + (nav.bottom - nav.top));
+                    Snackbar.SnackbarLayout sl = Helper.findSnackbarLayout(content.getRootView());
+                    if (sl != null) {
+                        pad = cpad;
+                        if (sl.getPaddingBottom() != nav.bottom - nav.top)
+                            sl.setPaddingRelative(
+                                    sl.getPaddingStart(), sl.getPaddingTop(),
+                                    sl.getPaddingEnd(), nav.bottom - nav.top);
                     }
-
+                    if (pad != content.getPaddingBottom())
+                        content.setPaddingRelative(
+                                content.getPaddingStart(), content.getPaddingTop(),
+                                content.getPaddingEnd(), pad);
+                }
             } catch (Throwable ex) {
                 Log.e(ex);
             }
@@ -474,7 +510,40 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     @Override
     protected void onPause() {
         Log.d("Pause " + this.getClass().getName());
-        super.onPause();
+        try {
+            super.onPause();
+        } catch (Throwable ex) {
+            Log.e(ex);
+            /*
+                Exception java.lang.RuntimeException:
+                  at android.app.ActivityThread.performPauseActivityIfNeeded (ActivityThread.java:5639)
+                  at android.app.ActivityThread.performPauseActivity (ActivityThread.java:5590)
+                  at android.app.ActivityThread.handlePauseActivity (ActivityThread.java:5542)
+                  at android.app.servertransaction.PauseActivityItem.execute (PauseActivityItem.java:47)
+                  at android.app.servertransaction.ActivityTransactionItem.execute (ActivityTransactionItem.java:45)
+                  at android.app.servertransaction.TransactionExecutor.executeLifecycleState (TransactionExecutor.java:176)
+                  at android.app.servertransaction.TransactionExecutor.execute (TransactionExecutor.java:97)
+                  at android.app.ActivityThread$H.handleMessage (ActivityThread.java:2443)
+                  at android.os.Handler.dispatchMessage (Handler.java:106)
+                  at android.os.Looper.loopOnce (Looper.java:226)
+                  at android.os.Looper.loop (Looper.java:313)
+                  at android.app.ActivityThread.main (ActivityThread.java:8751)
+                  at java.lang.reflect.Method.invoke
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:571)
+                  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1135)
+                Caused by java.lang.IllegalArgumentException:
+                  at androidx.fragment.app.BackStackRecord.executePopOps (BackStackRecord.java:480)
+                  at androidx.fragment.app.FragmentManager.executeOps (FragmentManager.java:2277)
+                  at androidx.fragment.app.FragmentManager.executeOpsTogether (FragmentManager.java:2165)
+                  at androidx.fragment.app.FragmentManager.removeRedundantOperationsAndExecute (FragmentManager.java:2109)
+                  at androidx.fragment.app.FragmentManager.execPendingActions (FragmentManager.java:2052)
+                  at androidx.fragment.app.FragmentManager.dispatchStateChange (FragmentManager.java:3327)
+                  at androidx.fragment.app.FragmentManager.dispatchPause (FragmentManager.java:3255)
+                  at androidx.fragment.app.FragmentController.dispatchPause (FragmentController.java:296)
+                  at androidx.fragment.app.FragmentActivity.onPause (FragmentActivity.java:284)
+                  at eu.faircode.email.ActivityBase.onPause (ActivityBase.java:510)
+            */
+        }
 
         visible = false;
 

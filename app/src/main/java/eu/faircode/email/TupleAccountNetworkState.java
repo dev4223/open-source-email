@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -38,6 +38,7 @@ public class TupleAccountNetworkState {
     public TupleAccountState accountState;
 
     private JSONObject jconditions;
+    private Boolean network_vpn_only;
 
     public TupleAccountNetworkState(
             boolean enabled,
@@ -65,8 +66,10 @@ public class TupleAccountNetworkState {
     public boolean canConnect(Context context) {
         boolean unmetered = jconditions.optBoolean("unmetered");
         boolean vpn_only = jconditions.optBoolean("vpn_only");
+        if (vpn_only && this.network_vpn_only == null)
+            this.network_vpn_only = ConnectionHelper.vpnActive(context);
         return (!unmetered || this.networkState.isUnmetered()) &&
-                (!vpn_only || ConnectionHelper.vpnActive(context));
+                (!vpn_only || this.network_vpn_only);
     }
 
     public boolean canRun(Context context) {

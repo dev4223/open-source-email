@@ -16,8 +16,11 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
+
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -92,6 +95,9 @@ public class AdapterNavSearch extends RecyclerView.Adapter<AdapterNavSearch.View
             ivBadge.setVisibility(View.GONE);
             tvCount.setVisibility(View.GONE);
             tvItem.setText(search.name);
+
+            ivItem.setContentDescription(tvItem.getText());
+            ivItem.setImportantForAccessibility(expanded ? IMPORTANT_FOR_ACCESSIBILITY_NO : IMPORTANT_FOR_ACCESSIBILITY_YES);
 
             tvItemExtra.setVisibility(View.GONE);
             ivExtra.setVisibility(View.GONE);

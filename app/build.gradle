@@ -3,9 +3,9 @@ apply plugin: 'com.bugsnag.android.gradle'
 apply plugin: 'kotlin-android'
 apply plugin: 'de.undercouch.download'
 
-def getVersionCode = { -> return 2240 }
+def getVersionCode = { -> return 2269 }
 def getRevision = { -> return "b" }
-def getReleaseName = { -> return "Barsboldia" }
+def getReleaseName = { -> return "Ceratonykus" }
 // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
 
 def keystoreProperties = new Properties()
@@ -24,9 +24,9 @@ android {
     // https://apilevels.com/
     defaultConfig {
         applicationId "eu.faircode.email"
-        compileSdk 35
+        compileSdk 36
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 36
         //targetSdkPreview "VanillaIceCream"
         versionCode getVersionCode()
         versionName "1." + getVersionCode()
@@ -54,7 +54,7 @@ android {
 
         // https://developer.android.com/ndk/downloads
         // https://developer.android.com/guide/practices/page-sizes
-        ndkVersion "26.3.11579264" // r26d
+        ndkVersion "27.2.12479018" // r27c
         ndk {
             // Bugsnag, sqlite
             // https://developer.android.com/ndk/guides/abis
@@ -437,11 +437,11 @@ tasks.register('updatePrivacy', Exec) {
     commandLine 'sh', '-c', 'pandoc --standalone --metadata title="FairEmail - privacy" --variable=title="FairEmail" --metadata-file privacy/privacy.yaml PRIVACY.md -o privacy/index.html'
 }
 
-tasks.register('updateCrowdin', Exec) {
+tasks.register('downloadCrowdin', Exec) {
     // https://crowdin.github.io/crowdin-cli/
     // https://developer.crowdin.com/configuration-file/
     workingDir "${rootDir}"
-    commandLine 'sh', '-c', 'crowdin download --branch=master'
+    commandLine 'sh', '-c', 'crowdin download --branch=master && grep -RPl "\\xa0" app/src/main/res/values* | xargs xargs sed -i -e "s/\\xc2\\xa0/ /g"'
 }
 
 tasks.register('downloadPSL', Download) {
@@ -457,7 +457,7 @@ tasks.register('downloadBraveClean', Download) {
     overwrite true
 }
 
-tasks.register('downloadBraveDebouce', Download) {
+tasks.register('downloadBraveDebounce', Download) {
     src "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/debounce.json"
     dest "src/main/assets"
     overwrite true
@@ -524,7 +524,7 @@ configurations.configureEach {
     exclude group: "com.atlassian.commonmark", module: "commonmark"
 
     // https://github.com/MiniDNS/minidns/issues/139
-    //exclude group: "org.minidns", module: "minidns-dnssec"
+    exclude group: "org.minidns", module: "minidns-dnssec"
 }
 
 configurations.configureEach {
@@ -553,53 +553,54 @@ dependencies {
     //implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     def desugar_version = "2.0.4"
-    def startup_version = "1.2.0-alpha02" // 1.2.0
+    def startup_version = "1.2.0"
     def annotation_version_experimental = "1.4.1" // 1.5.0-alpha01
-    def core_version = "1.13.1" // 1.15.0-rc01
+    def core_version = "1.15.0" // 1.16.0-rc01
     def appcompat_version = "1.7.0"
     def emoji_version = "1.5.0"
     def flatbuffers_version = "2.0.0"
-    def activity_version = " 1.9.3" // 1.10.0-alpha02
-    def fragment_version = "1.8.4"
-    def windows_version = "1.3.0" // 1.4.0-alpha05
-    def webkit_version = "1.10.0" // 1.11.0/1.12.0
-    def recyclerview_version = "1.3.2" // 1.4.0-rc01
-    def coordinatorlayout_version = "1.2.0" // 1.3.0-alpha02
-    def constraintlayout_version = "2.1.4" // 2.2.0-rc01
-    def material_version = "1.11.0" // 1.12.0 / 1.13.0-alpha03
-    def browser_version = "1.8.0"
+    def activity_version = "1.10.0" // 1.11.0-alpha02
+    def fragment_version = "1.8.6"
+    def windows_version = "1.3.0" // 1.4.0-rc01/1.5.0-alpha01
+    def webkit_version = "1.13.0"
+    def recyclerview_version = "1.4.0"
+    def coordinatorlayout_version = "1.2.0" // 1.3.0-rc01
+    def constraintlayout_version = "2.2.0"
+    def viewpager_version = "1.1.0-beta01" // 1.1.0
+    def material_version = "1.12.0" // 1.13.0-alpha03
+    def browser_version = "1.8.0" // 1.9.0-alpha01
     def lbm_version = "1.1.0"
-    def swiperefresh_version = "1.2.0-alpha01"
+    def swiperefresh_version = "1.2.0-beta01"
     def documentfile_version = "1.1.0-alpha01"
-    def lifecycle_version = "2.8.6" // 2.9.0-alpha05
+    def lifecycle_version = "2.8.6" // 2.8.7/2.9.0-alpha13
     def lifecycle_extensions_version = "2.2.0"
-    def room_version = "2.4.3" // 2.5.2/2.6.1/2.7.0-alpha10
-    def sqlite_version = "2.4.0" // 2.5.0-alpha10
+    def room_version = "2.4.3" // 2.5.2/2.6.1/2.7.0-rc03
+    def sqlite_version = "2.4.0" // 2.5.0-rc03
     def requery_version = "3.39.2"
-    def paging_version = "2.1.2" // 3.3.0-rc01
+    def paging_version = "2.1.2" // 3.3.6
     def preference_version = "1.2.1"
-    def work_version = "2.9.1" // 2.10.0-rc01
-    def exif_version = "1.3.7"
-    def biometric_version = "1.2.0-alpha05" // 1.4.0-alpha02
+    def work_version = "2.10.0"
+    def exif_version = "1.4.0-rc01"
+    def biometric_version = "1.2.0-alpha05" // 1.4.0-alpha03
     def billingclient_version = "6.0.1" // 6.2.0
-    def playservicesbasement_version = "18.4.0";
-    def transparency_version = "2.5.49"
+    def playservicesbasement_version = "18.5.0";
+    def transparency_version = "2.5.73"
     def javamail_version = "1.6.7"
-    def jsoup_version = "1.17.2" // 1.18.1
+    def jsoup_version = "1.18.3"
     def jsonpath_version = "2.9.0"
     def css_version = "0.9.30"
     def jax_version = "2.3.0-jaxb-1.0.6"
     def minidns_version = "1.0.5"
     def openpgp_version = "12.0"
     def badge_version = "1.1.22"
-    def bugsnag_version = "6.7.0"
+    def bugsnag_version = "6.10.0"
     def biweekly_version = "0.6.8"
     def vcard_version = "0.12.1"
     def relinker_version = "1.4.5"
     def markwon_version = "4.6.2"
     def commonmark_version = "0.22.0"
     def flexmark_version = "0.64.8"
-    def bouncycastle_version = "1.78.1"
+    def bouncycastle_version = "1.79"
     def colorpicker_version = "0.0.15"
     def overscroll_version = "1.1.1"
     def appauth_version = "0.11.1"
@@ -609,13 +610,14 @@ dependencies {
     def reactivestreams_version = "1.0.3"
     def rxjava2_version = "2.2.21"
     def svg_version = "1.4"
-    def compress_version = "1.26.2"
-    def ipaddress_version = "5.5.0"
+    def compress_version = "1.27.1"
+    def ipaddress_version = "5.5.1"
     def canary_version = "2.14"
     def ws_version = "2.14"
     def tinylog_version = "2.7.0"
     def zxing_version = "3.5.3"
-    def evalex_version = "3.3.0"
+    def evalex_version = "3.4.0"
+    def image_cropper_version = "4.6.0"
 
     // https://mvnrepository.com/artifact/com.android.tools/desugar_jdk_libs?repo=google
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugar_version"
@@ -648,9 +650,6 @@ dependencies {
     // https://mvnrepository.com/artifact/androidx.webkit/webkit
     implementation "androidx.webkit:webkit:$webkit_version"
 
-    // https://mvnrepository.com/artifact/androidx.viewpager2/viewpager2
-    //implementation "androidx.viewpager2:viewpager2:1.1.0-alpha01"
-
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview-selection
     implementation "androidx.recyclerview:recyclerview:$recyclerview_version"
@@ -661,6 +660,12 @@ dependencies {
 
     // https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
+
+    // https://developer.android.com/jetpack/androidx/releases/viewpager
+    //implementation "androidx.viewpager:viewpager:$viewpager_version"
+
+    // https://mvnrepository.com/artifact/androidx.viewpager2/viewpager2
+    //implementation "androidx.viewpager2:viewpager2:1.1.0-alpha01"
 
     // https://mvnrepository.com/artifact/com.google.android.material/material
     // https://github.com/material-components/material-components-android/releases
@@ -834,7 +839,7 @@ dependencies {
     // https://search.maven.org/artifact/io.github.everythingme/overscroll-decor-android
     implementation "io.github.everythingme:overscroll-decor-android:$overscroll_version"
 
-    // https://www.bouncycastle.org/latest_releases.html
+    // https://www.bouncycastle.org/news/
     // https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15to18
     // https://mvnrepository.com/artifact/org.bouncycastle/bctls-jdk15to18
     implementation "org.bouncycastle:bcpkix-jdk15to18:$bouncycastle_version"
@@ -896,4 +901,8 @@ dependencies {
 
     // https://github.com/ezylang/EvalEx
     implementation "com.ezylang:EvalEx:$evalex_version"
+
+    // https://github.com/CanHub/Android-Image-Cropper
+    // https://mvnrepository.com/artifact/com.vanniktech/android-image-cropper
+    implementation "com.vanniktech:android-image-cropper:$image_cropper_version"
 }

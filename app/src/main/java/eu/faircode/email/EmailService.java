@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GMAIL;
@@ -128,6 +128,7 @@ public class EmailService implements AutoCloseable {
     static final int ENCRYPTION_NONE = 2;
 
     final static int DEFAULT_CONNECT_TIMEOUT = 20; // seconds
+    static final int DEFAULT_RESTART_INTERVAL = 4 * 60; // seconds
     final static boolean SEPARATE_STORE_CONNECTION = false;
 
     private final static int SEARCH_TIMEOUT = 90 * 1000; // milliseconds
@@ -400,10 +401,9 @@ public class EmailService implements AutoCloseable {
                     public void onPasswordChanged(Context context, String newPassword) {
                         DB db = DB.getInstance(context);
                         identity.password = newPassword;
-                        int count = db.identity().setIdentityPassword(identity.id, identity.password);
+                        int identities = db.identity().setIdentityPassword(identity.account, identity.user, identity.password, identity.auth_type, identity.auth_type, identity.provider);
                         EntityLog.log(context, EntityLog.Type.Account, identity.account, null, null,
-                                identity.email + " token refreshed=" + count);
-
+                                identity.email + "/" + identity.user + " token refreshed=" + identities);
                     }
                 },
                 identity.certificate_alias, identity.fingerprint);
@@ -526,8 +526,14 @@ public class EmailService implements AutoCloseable {
                     Throwable cause = ex1.getCause();
                     if (cause == null)
                         Log.e(ex1);
-                    else
-                        Log.e(new Throwable(ex1.getMessage() + " error=" + cause.getMessage(), ex1));
+                    else {
+                        String msg = cause.getMessage();
+                        // AADSTS70000: The provided value for the input parameter 'refresh_token' or 'assertion' is not valid. Trace ID: <guid> Correlation ID: <guid> Timestamp: <date time>
+                        if (msg != null && msg.contains("AADSTS70000"))
+                            Log.i(new Throwable(ex1.getMessage() + " error=" + msg, ex1));
+                        else
+                            Log.e(new Throwable(ex1.getMessage() + " error=" + msg, ex1));
+                    }
 
                     String msg = ex.getMessage();
                     if (auth == AUTH_TYPE_GMAIL &&
@@ -728,7 +734,7 @@ public class EmailService implements AutoCloseable {
                     ex.getCause() instanceof ConnectException &&
                     ex.getCause().getCause() instanceof ErrnoException &&
                     ((ErrnoException) ex.getCause().getCause()).errno == OsConstants.EACCES)
-                throw new SecurityException("Please check 'Restrict data usage' in the Android app settings", ex);
+                throw new SecurityException("EACCES Please check 'Restrict data usage' in the Android app settings", ex);
 
             boolean ioError = false;
             Throwable ce = ex;
@@ -882,6 +888,9 @@ public class EmailService implements AutoCloseable {
                 }
 
             // Verizon
+            // https://senders.yahooinc.com/developer/documentation/#imap-modes-limited
+            // https://www.ietf.org/archive/id/draft-melnikov-imap-uidonly-00.html
+            // https://answers.microsoft.com/en-us/outlook_com/forum/all/why-is-an-imap-inbox-only-displaying-10000-items/6d15de5f-9047-4b41-9b58-1d8345bbd002
             if (false && istore.hasCapability("X-UIDONLY") && istore.hasCapability("ENABLE"))
                 try {
                     istore.enable("X-UIDONLY");

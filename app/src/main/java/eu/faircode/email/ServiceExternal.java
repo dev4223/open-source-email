@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Notification;
@@ -287,7 +287,7 @@ public class ServiceExternal extends ServiceBase {
                     continue;
 
                 EntityLog.log(context, "Executing rules message=" + message.id);
-                applied = EntityRule.run(context, rules, message, null, null);
+                applied = EntityRule.run(context, rules, message, false, null, null);
 
                 db.setTransactionSuccessful();
             } finally {

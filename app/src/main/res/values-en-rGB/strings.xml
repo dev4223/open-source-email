@@ -2,6 +2,7 @@
 <resources>
     <string name="channel_service_description">Synchronising and monitoring of accounts</string>
     <string name="tile_synchronize">Synchronise</string>
+    <string name="menu_test">Test programme</string>
     <string name="menu_faq">Support</string>
     <string name="menu_privacy">Privacy</string>
     <string name="title_list_accounts">Accounts</string>
@@ -15,9 +16,10 @@
     <string name="title_setup_oauth_rationale">Authorise access to your %1$s account</string>
     <string name="title_setup_oauth_update">Authorise an existing account again (otherwise create a new account)</string>
     <string name="title_setup_oauth_updated">Account authorisation was updated</string>
-    <string name="title_setup_oauth_browser">Authorisation requires a working browser</string>
+    <string name="title_setup_oauth_browser">Authorisation requires a working browser which allows opening app links (often a security setting), so that at the end the authorisation token can be transferred to the app</string>
     <string name="title_setup_oauth_authorize">Authorise</string>
-    <string name="title_setup_quick_configure">To edit the name, colour, swipe actions, etc</string>
+    <string name="title_setup_advanced_protection">When enrolled in the advanced protection programme it is not possible to use a third party email app. This is a restriction imposed by Google.</string>
+    <string name="title_setup_quick_configure">To edit the name, colour, swipe actions, etc.</string>
     <string name="title_setup_doze">Disable battery optimisations</string>
     <string name="title_setup_doze_explanation">Battery optimisations should be disabled for the app to ensure reliable sending and receiving of messages in the background</string>
     <string name="title_setup_doze_hint">Although this may sound contradictory, turning off battery optimisations for this app will result in less battery usage</string>
@@ -26,6 +28,7 @@
     <string name="title_setup_theme_reverse">Swap colours</string>
     <string name="title_setup_theme_you_hint">The Material You colours can be configured in the Android Wallpaper &amp; style settings</string>
     <string name="title_setup_theme_more_colors">I want more colours</string>
+    <string name="title_setup_reset_images">Reset show pictures</string>
     <string name="title_check_outlook_oauth">Your Outlook accounts will continue to work after 16 September 2024</string>
     <string name="title_check_outlook_password">Some of your Outlook/Hotmail/Live accounts will stop working after 16 September 2024</string>
     <string name="title_advanced_hint_remark">        The options are categorised by tab, divided into sections, organised by appearance or use, and searchable.
@@ -35,6 +38,7 @@
     <string name="title_advanced_section_notifications">Notifications</string>
     <string name="title_advanced_optimize">Automatically optimise</string>
     <string name="title_advanced_advanced">Advanced</string>
+    <string name="title_advanced_outlook_categories">Synchronise Outlook categories</string>
     <string name="title_advanced_sync_folders">Synchronise folder list</string>
     <string name="title_advanced_sync_folders_poll">Actively synchronise folder list</string>
     <string name="title_advanced_sync_shared_folders">Synchronise shared folder lists</string>
@@ -46,6 +50,7 @@
     <string name="title_advanced_remove_signatures">Remove recognised signatures</string>
     <string name="title_advanced_caption_conversation">Conversation</string>
     <string name="title_advanced_caption_message">Message</string>
+    <string name="title_advanced_edge_to_edge">Use app background colour for Android navigation bar</string>
     <string name="title_advanced_tabular_background">Use card colour as background colour when using tabular style</string>
     <string name="title_advanced_cards_shadow_highlight">Use highlight colour instead of accent colour</string>
     <string name="title_advanced_tabular_unread_bg">Use a grey background colour for unread messages when using table style</string>
@@ -62,6 +67,7 @@
     <string name="title_advanced_pull_all">Synchronise all folders</string>
     <string name="title_advanced_swipe_trash_all">When swiping a conversation to the bin, delete all messages</string>
     <string name="title_advanced_notify_action_trash">Delete</string>
+    <string name="title_advanced_notify_action_delete">Remove</string>
     <string name="title_advanced_notifications_background">Use background service to synchronise messages</string>
     <string name="title_advanced_tracking">Attempt to recognise and disable tracking images</string>
     <string name="title_advanced_disconnect_images">Use lists to recognise tracking images</string>
@@ -91,7 +97,7 @@
     <string name="title_synchronize_batch_disable">Disable synchronisation</string>
     <string name="title_empty_trash">Empty bin</string>
     <string name="title_edit_color">Edit colour</string>
-    <string name="title_contact_email">E-mail</string>
+    <string name="title_contact_email"></string>
     <string name="title_empty_trash_ask">Remove all deleted messages permanently?</string>
     <string name="title_empty_trash_all_ask">Remove all deleted messages of all accounts permanently?</string>
     <string name="title_hint_operations">Deleting operations can result in disappearing messages and synchronisation problems</string>
@@ -110,6 +116,7 @@
     <string name="title_trashed_from">Deleted message from %1$s</string>
     <string name="title_hide">Hide</string>
     <string name="title_flag_color">Coloured star &#8230;</string>
+    <string name="title_analyze">Analyse</string>
     <string name="title_raw_send_message">Message</string>
     <string name="title_raw_send_thread">Conversation</string>
     <string name="title_quick_actions_snooze">Snooze</string>

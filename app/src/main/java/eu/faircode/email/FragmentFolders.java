@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -137,6 +137,7 @@ public class FragmentFolders extends FragmentBase {
     static final int REQUEST_EDIT_FOLDER_COLOR = 7;
     static final int REQUEST_EDIT_ACCOUNT_NAME = 8;
     static final int REQUEST_EDIT_ACCOUNT_COLOR = 9;
+    static final int REQUEST_ALL_READ = 10;
 
     private static final long EXPORT_PROGRESS_INTERVAL = 5000L; // milliseconds
 
@@ -991,6 +992,10 @@ public class FragmentFolders extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         onEditAccountColor(data.getBundleExtra("args"));
                     break;
+                case REQUEST_ALL_READ:
+                    if (resultCode == RESULT_OK && data != null)
+                        onMarkAllRead(data.getBundleExtra("args"));
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -1214,7 +1219,7 @@ public class FragmentFolders extends FragmentBase {
                             continue;
 
                         EntityLog.log(context, "Executing rules message=" + message.id);
-                        applied = EntityRule.run(context, rules, message, null, null);
+                        applied = EntityRule.run(context, rules, message, false, null, null);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1807,5 +1812,10 @@ public class FragmentFolders extends FragmentBase {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "edit:color");
+    }
+
+    private void onMarkAllRead(Bundle args) {
+        FragmentMessages.markAllRead(this,
+                args.getString("type"), args.getLong("folder"), AdapterMessage.ViewType.FOLDER);
     }
 }

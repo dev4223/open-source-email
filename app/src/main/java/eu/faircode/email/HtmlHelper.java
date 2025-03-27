@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
@@ -138,6 +138,10 @@ public class HtmlHelper {
     static final float FONT_LARGE = 1.25f; // 20px=1.2
     static final float FONT_XLARGE = 1.50f; // 24px=1.5
 
+    static final String[] fontSizeNames = new String[]{
+            "x-small", "small", "medium", "large", "x-large"
+    };
+
     static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
     static final int MAX_SHARE_TEXT_SIZE = 50 * 1024; // characters
     static final int MAX_TRANSLATABLE_TEXT_SIZE = 50 * 1024; // characters
@@ -155,6 +159,7 @@ public class HtmlHelper {
     private static final int MAX_FORMAT_TEXT_SIZE = 100 * 1024; // characters
     private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
+    private static final int TRACKING_INDICATOR_SIZE = 18; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
     private static final String LINE = "----------------------------------------";
     private static final String W3NS = /* http/https */ "://www.w3.org/";
@@ -544,7 +549,7 @@ public class HtmlHelper {
             sheets = parseStyles(parsed.head().select("style"));
 
         Safelist safelist = Safelist.relaxed()
-                .addTags("hr", "abbr", "big", "font", "dfn", "ins", "del", "s", "tt", "mark", "address", "input")
+                .addTags("hr", "abbr", "big", "font", "dfn", "ins", "del", "s", "tt", "mark", "address", "input", "samp")
                 .addAttributes(":all", "class")
                 .addAttributes(":all", "style")
                 .addAttributes("span", "dir")
@@ -1173,6 +1178,7 @@ public class HtmlHelper {
             if (!TextUtils.isEmpty(cite) && !cite.trim().startsWith("#"))
                 q.attr("href", cite);
             q.removeAttr("cite");
+            q.wrap("<span>\"<em></em>\"</span>");
         }
 
         // Citation
@@ -1190,7 +1196,8 @@ public class HtmlHelper {
 
         // Pre formatted text
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
-        for (Element pre : document.select("pre")) {
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/samp
+        for (Element pre : document.select("pre,samp")) {
             NodeTraversor.traverse(new NodeVisitor() {
                 private int index = 0;
                 private boolean inElement = false;
@@ -1450,8 +1457,7 @@ public class HtmlHelper {
             }
 
             // Remove spacer, etc
-            if (!show_images && !(inline_images && isInline) &&
-                    TextUtils.isEmpty(img.attr("x-tracking"))) {
+            if (!show_images && !(inline_images && isInline) && TextUtils.isEmpty(tracking)) {
                 Integer width = Helper.parseInt(img.attr("width").trim());
                 Integer height = Helper.parseInt(img.attr("height").trim());
                 if (width != null && height != null) {
@@ -1738,61 +1744,67 @@ public class HtmlHelper {
 
         String ns = null;
         for (Element h : parsed.select("html"))
-            for (Attribute a : h.attributes()) {
-                String key = a.getKey();
-                String value = a.getValue().toLowerCase(Locale.ROOT);
-                if ("xmlns".equals(key) && value.contains(W3NS)) {
-                    ns = key;
-                    break;
-                } else if (key.startsWith("xmlns:") && value.contains(W3NS)) {
-                    ns = key.split(":")[1];
-                    break;
-                }
-            }
-
-        for (Element e : parsed.select("*")) {
-            String tag = e.tagName();
-            if (tag.contains(":")) {
-                boolean show = (ns == null || tag.startsWith(ns) ||
-                        tag.startsWith("html:") || tag.startsWith("body:") || tag.startsWith("w:"));
-                if (display_hidden || show) {
-                    String[] nstag = tag.split(":");
-                    String t = nstag[nstag.length > 1 ? 1 : 0];
-                    if (!TextUtils.isEmpty(t)) {
-                        e.tagName(t);
-                        Log.i("Updated tag=" + tag + " to=" + t);
+            for (Attribute a : h.attributes())
+                try {
+                    String key = a.getKey();
+                    String value = a.getValue().toLowerCase(Locale.ROOT);
+                    if ("xmlns".equals(key) && value.contains(W3NS)) {
+                        ns = key;
+                        break;
+                    } else if (key.startsWith("xmlns:") && value.contains(W3NS)) {
+                        ns = key.split(":")[1];
+                        break;
                     }
-
-                    if (!show) {
-                        String style = e.attr("style");
-                        e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
-                    }
-                } else if (TextUtils.isEmpty(e.text()) && !"\u00a0".equals(e.wholeText())) {
-                    // <meta name=Generator content="Microsoft Word 15 (filtered medium)">
-                    // <p class=MsoNormal>
-                    //    <span style='font-family:"Calibri",sans-serif'>
-                    //       <o:p>&nbsp;</o:p>
-                    //    </span>
-                    // </p>
-                    e.remove();
-                    Log.i("Removed tag=" + tag + " ns=" + ns +
-                            " content=" + Helper.getPrintableString(e.wholeText(), true));
-                } else {
-                    // Leave tag with unknown namespace to ensure all text is being displayed
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            } else if (!"html".equals(tag) && !"body".equals(tag) && !"w".equals(tag)) {
-                String xmlns = e.attr("xmlns").toLowerCase(Locale.ROOT);
-                if (!TextUtils.isEmpty(xmlns) && !xmlns.contains(W3NS)) {
-                    if (display_hidden) {
-                        String style = e.attr("style");
-                        e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
-                    } else {
+
+        for (Element e : parsed.select("*"))
+            try {
+                String tag = e.tagName();
+                if (tag.contains(":")) {
+                    boolean show = (ns == null || tag.startsWith(ns) ||
+                            tag.startsWith("html:") || tag.startsWith("body:") || tag.startsWith("w:"));
+                    if (display_hidden || show) {
+                        String[] nstag = tag.split(":");
+                        String t = nstag[nstag.length > 1 ? 1 : 0];
+                        if (!TextUtils.isEmpty(t)) {
+                            e.tagName(t);
+                            Log.i("Updated tag=" + tag + " to=" + t);
+                        }
+
+                        if (!show) {
+                            String style = e.attr("style");
+                            e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
+                        }
+                    } else if (TextUtils.isEmpty(e.text()) && !"\u00a0".equals(e.wholeText())) {
+                        // <meta name=Generator content="Microsoft Word 15 (filtered medium)">
+                        // <p class=MsoNormal>
+                        //    <span style='font-family:"Calibri",sans-serif'>
+                        //       <o:p>&nbsp;</o:p>
+                        //    </span>
+                        // </p>
                         e.remove();
-                        Log.i("Removed tag=" + tag + " ns=" + ns + " xmlns=" + xmlns + " content=" + e.text());
+                        Log.i("Removed tag=" + tag + " ns=" + ns +
+                                " content=" + Helper.getPrintableString(e.wholeText(), true));
+                    } else {
+                        // Leave tag with unknown namespace to ensure all text is being displayed
+                    }
+                } else if (!"html".equals(tag) && !"body".equals(tag) && !"w".equals(tag)) {
+                    String xmlns = e.attr("xmlns").toLowerCase(Locale.ROOT);
+                    if (!TextUtils.isEmpty(xmlns) && !xmlns.contains(W3NS)) {
+                        if (display_hidden) {
+                            String style = e.attr("style");
+                            e.attr("style", mergeStyles(style, "text-decoration:line-through;"));
+                        } else {
+                            e.remove();
+                            Log.i("Removed tag=" + tag + " ns=" + ns + " xmlns=" + xmlns + " content=" + e.text());
+                        }
                     }
                 }
+            } catch (Throwable ex) {
+                Log.e(ex);
             }
-        }
     }
 
     static List<CSSStyleSheet> parseStyles(Elements styles) {
@@ -1900,17 +1912,23 @@ public class HtmlHelper {
             for (int i = 0; i < _media.getLength(); i++) {
                 String type = _media.mediaQuery(i).getMedia();
 
+                boolean hasMinWidth = false;
                 boolean hasMaxWidth = false;
                 List<Property> props = _media.mediaQuery(i).getProperties();
                 if (props != null)
                     for (Property prop : props) {
+                        if ("min-width".equals(prop.getName()) ||
+                                "min-device-width".equals(prop.getName())) {
+                            hasMinWidth = true;
+                            break;
+                        }
                         if ("max-width".equals(prop.getName()) ||
                                 "max-device-width".equals(prop.getName())) {
                             hasMaxWidth = true;
                             break;
                         }
                     }
-                if (!hasMaxWidth)
+                if (!hasMinWidth && !hasMaxWidth)
                     if ("all".equals(type) || "screen".equals(type) || _media.mediaQuery(i).isNot()) {
                         Log.i("Using media=" + media.getMediaText());
                         return true;
@@ -2038,7 +2056,7 @@ public class HtmlHelper {
         return null;
     }
 
-    private static Float getFontSize(String value, float current) {
+    static Float getFontSize(String value, float current) {
         // https://developer.mozilla.org/en-US/docs/Web/CSS/font-size
         if (TextUtils.isEmpty(value))
             return null;
@@ -2423,11 +2441,14 @@ public class HtmlHelper {
 
             if (isTrackingPixel(img) || isTrackingHost(context, host, disconnect_images)) {
                 uris.add(uri);
+                String px = Integer.toString(TRACKING_INDICATOR_SIZE);
                 img.attr("src", sb.toString());
                 img.attr("alt", context.getString(R.string.title_legend_tracking_pixel));
-                img.attr("height", "24");
-                img.attr("width", "24");
-                img.attr("style", "display:block !important; width:24px !important; height:24px !important;");
+                img.attr("height", px);
+                img.attr("width", px);
+                img.attr("style", "display:block !important;" +
+                        " width:" + px + "px !important;" +
+                        " height:" + px + "px !important;");
                 img.attr("x-tracking", src);
             }
         }
@@ -2822,10 +2843,10 @@ public class HtmlHelper {
         d.body().select("div#Signature").select("[data-lt-sig-active]").remove();
 
         // Outlook/mobile <div id="ms-outlook-mobile-signature" dir="auto">
-        d.body().select("div#ms-outlook-mobile-signature").remove();
+        //d.body().select("div#ms-outlook-mobile-signature").remove();
 
         // Yahoo/Android: <div id="ymail_android_signature">
-        d.body().select("div#ymail_android_signature").remove();
+        //d.body().select("div#`ymail_android_signature").remove();
 
         // Spark: <div name="messageSignatureSection">
         d.body().select("div[name=messageSignatureSection]").remove();
@@ -3942,6 +3963,7 @@ public class HtmlHelper {
                                 break;
                             case "pre":
                             case "tt":
+                            case "samp":
                                 // Signature
                                 setSpan(ssb, StyleHelper.getTypefaceSpan("monospace", context), start, ssb.length());
                                 break;
@@ -4078,8 +4100,10 @@ public class HtmlHelper {
             start.put(span, ssb.getSpanStart(span));
             end.put(span, ssb.getSpanEnd(span));
             flags.put(span, ssb.getSpanFlags(span));
-            ssb.removeSpan(span);
         }
+
+        ssb.clearSpans();
+
         for (int i = spans.length - 1; i >= 0; i--) {
             int s = start.get(spans[i]);
             int e = end.get(spans[i]);
@@ -4167,7 +4191,27 @@ public class HtmlHelper {
     static void clearComposingText(TextView view) {
         if (view == null)
             return;
-        view.clearComposingText();
+
+        CharSequence edit = view.getText();
+        if (!(edit instanceof Spannable))
+            return;
+
+        // Copied from BaseInputConnection.removeComposingSpans
+        Spannable text = (Spannable) edit;
+        Object[] sps = text.getSpans(0, text.length(), Object.class);
+        if (sps != null) {
+            for (int i = sps.length - 1; i >= 0; i--) {
+                Object o = sps[i];
+                if (o instanceof ImageSpan) {
+                    String source = ((ImageSpan) o).getSource();
+                    if (source != null && source.startsWith("cid:"))
+                        continue;
+                }
+                if ((text.getSpanFlags(o) & Spanned.SPAN_COMPOSING) != 0) {
+                    text.removeSpan(o);
+                }
+            }
+        }
     }
 
     static void clearComposingText(Spannable text) {
@@ -4177,7 +4221,8 @@ public class HtmlHelper {
     }
 
     static Spanned fromHtml(@NonNull String html, Context context) {
-        Document document = JsoupEx.parse(html);
+        Document parsed = JsoupEx.parse(html);
+        Document document = sanitizeView(context, parsed, false);
         return fromDocument(context, document, null, null);
     }
 

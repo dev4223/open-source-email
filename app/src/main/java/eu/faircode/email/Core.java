@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -114,6 +114,7 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.search.AndTerm;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.FlagTerm;
 import javax.mail.search.HeaderTerm;
@@ -124,6 +125,7 @@ import javax.mail.search.SearchTerm;
 import javax.mail.search.SentDateTerm;
 
 class Core {
+    static final int DEFAULT_RANGE_SIZE = 1000;
     static final int DEFAULT_CHUNK_SIZE = 50;
 
     private static final int SYNC_BATCH_SIZE = 20;
@@ -298,7 +300,8 @@ class Core {
                                             account.protocol == EntityAccount.TYPE_IMAP) {
                                         JSONArray jnext = new JSONArray(next.args);
                                         // Same target
-                                        if (jargs.getLong(0) == jnext.getLong(0) &&
+                                        if (Objects.equals(op.account, next.account) &&
+                                                jargs.getLong(0) == jnext.getLong(0) &&
                                                 jargs.optBoolean(4) == jnext.optBoolean(4)) {
                                             EntityMessage m = db.message().getMessage(next.message);
                                             if (m != null && m.uid != null)
@@ -650,16 +653,19 @@ class Core {
                             // Fetch: BAD Error in IMAP command FETCH: Invalid messageset (n.nnn + n .nnn secs).
                             // Fetch: NO FETCH sequence parse error in: nnn
                             // Fetch: NO [NONEXISTENT] No matching messages
+                            // Fetch: NO Some of the requested messages no longer exist.
                             // Fetch UID: NO Some messages could not be FETCHed (Failure)
                             // Fetch UID: NO [LIMIT] UID FETCH Rate limit hit.
                             // Fetch UID: NO Server Unavailable. 15
                             // Fetch UID: NO [UNAVAILABLE] Failed to open mailbox
+                            // Fetch UID: NO [UNAVAILABLE] UID FETCH completed
                             // Fetch UID: NO [TEMPFAIL] SELECT completed
                             // Fetch UID: NO Internal error. Try again later... (MARKER:xxx)
                             // Fetch UID: BAD Serious error while processing UID FETCH (NioRecvFail (nn/nn))
                             // Fetch UID: NO SELECT: libmapper: Internal error: No servers available or value handling error!
                             // Fetch UID: BAD Serious error while processing UID FETCH (CassdbDatabaseError (nnn/n))
                             // Move: NO Over quota
+                            // Move: NO [OVERQUOTA] quota exceeded
                             // Move: NO No matching messages
                             // Move: NO [EXPUNGEISSUED] Some of the requested messages no longer exist (n.nnn + n.nnn + n.nnn secs)
                             // Move: BAD parse error: invalid message sequence number:
@@ -676,6 +682,7 @@ class Core {
                             // Move: NO [CANNOT] Operation is not supported on mailbox
                             // Move: NO [CANNOT] Can't save messages to this virtual mailbox (0.001 + 0.000 secs).
                             // Move: NO [ALREADYEXISTS] Mailbox already exists
+                            // Move: NO Permission denied
                             // Copy: NO Client tried to access nonexistent namespace. (Mailbox name should probably be prefixed with: INBOX.) (n.nnn + n.nnn secs).
                             // Copy: NO Message not found
                             // Add: BAD Data length exceeds limit
@@ -686,7 +693,11 @@ class Core {
                             // Add: NO [OVERQUOTA] Quota exceeded (mailbox for user is full) (n.nnn + n.nnn secs).
                             // Add: NO APPEND failed
                             // Add: BAD [TOOBIG] Message too large.
+                            // Add: BAD Cannot upload message, TOOBIG (took x ms)
                             // Add: NO Permission denied
+                            // Add: NO Message size exceeds fixed maximum message size. Size: xxx KB, Max size: yyy KB
+                            // Add: NO Message size exceeds maximum message size limit
+                            // Add: BAD maximum message size exceeded
                             // Delete: NO [CANNOT] STORE It's not possible to perform specified operation
                             // Delete: NO [UNAVAILABLE] EXPUNGE Backend error
                             // Delete: NO mailbox selected READ-ONLY
@@ -815,7 +826,7 @@ class Core {
 
         DB db = DB.getInstance(context);
 
-        Long uid = findUid(context, account, ifolder, message.msgid);
+        Long uid = findUid(context, account, ifolder, message.msgid, null);
         if (uid == null) {
             if (EntityOperation.MOVE.equals(op.name) &&
                     EntityFolder.DRAFTS.equals(folder.type))
@@ -837,13 +848,13 @@ class Core {
         message.uid = uid;
     }
 
-    private static Long findUid(Context context, EntityAccount account, IMAPFolder ifolder, String msgid) throws MessagingException, IOException {
+    private static Long findUid(Context context, EntityAccount account, IMAPFolder ifolder, String msgid, Long from) throws MessagingException, IOException {
         String name = ifolder.getFullName();
         Log.i(name + " searching for msgid=" + msgid);
 
         Long uid = null;
 
-        Message[] imessages = findMsgId(context, account, ifolder, msgid);
+        Message[] imessages = findMsgId(context, account, ifolder, msgid, from);
         if (imessages != null)
             for (Message iexisting : imessages)
                 try {
@@ -862,19 +873,44 @@ class Core {
         return uid;
     }
 
-    private static Message[] findMsgId(Context context, EntityAccount account, IMAPFolder ifolder, String msgid) throws MessagingException, IOException {
+    private static Message[] findMsgId(Context context, EntityAccount account, IMAPFolder ifolder, String msgid, Long from) throws MessagingException, IOException {
         // https://stackoverflow.com/questions/18891509/how-to-get-message-from-messageidterm-for-yahoo-imap-profile
-        if (account.isYahooJp()) {
-            Message[] itemps = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date()));
+        if (account.isYahooJp() || from != null) {
+            if (from == null)
+                from = new Date().getTime();
+            from -= 24 * 3600 * 1000L;
+            long to = from + 3 * 24 * 3600 * 1000L;
+
+            Message[] itemps = ifolder.search(
+                    new AndTerm(
+                            new ReceivedDateTerm(ComparisonTerm.GE, new Date(from)),
+                            new ReceivedDateTerm(ComparisonTerm.LE, new Date(to))));
             List<Message> tmp = new ArrayList<>();
             for (Message itemp : itemps) {
                 MessageHelper helper = new MessageHelper((MimeMessage) itemp, context);
                 if (msgid.equals(helper.getMessageID()))
                     tmp.add(itemp);
             }
+            Log.w("Fallback search by" +
+                    " msgid=" + msgid +
+                    " host=" + account.host +
+                    " from=" + new Date(from) + " to=" + new Date(to) +
+                    " found=" + tmp.size());
             return tmp.toArray(new Message[0]);
-        } else
-            return ifolder.search(new MessageIDTerm(msgid));
+        } else {
+            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
+            if (messages == null || messages.length <= 1)
+                return messages;
+            List<Message> tmp = new ArrayList<>();
+            for (Message m : messages) {
+                MessageHelper helper = new MessageHelper((MimeMessage) m, context);
+                if (msgid.equals(helper.getMessageID()))
+                    tmp.add(m);
+                else
+                    Log.w("findMsgId msgid=" + msgid + " <> " + helper.getMessageID() + " !!!");
+            }
+            return tmp.toArray(new Message[0]);
+        }
     }
 
     private static Map<EntityMessage, Message> findMessages(Context context, EntityFolder folder, List<EntityMessage> messages, POP3Store istore, POP3Folder ifolder) throws MessagingException, IOException {
@@ -1279,66 +1315,67 @@ class Core {
             db.message().setMessageUid(message.id, null);
 
             // Some providers do not list the new message yet
-            try {
-                List<Message> delete = new ArrayList<>();
+            if (EntityFolder.DRAFTS.equals(folder.type))
+                try {
+                    List<Message> delete = new ArrayList<>();
 
-                if (message.uid != null)
-                    try {
-                        Message iprev = ifolder.getMessageByUID(message.uid);
-                        if (iprev != null) {
-                            Log.i(folder.name + " found prev uid=" + message.uid + " msgid=" + message.msgid);
-                            iprev.setFlag(Flags.Flag.DELETED, true);
-                            delete.add(iprev);
-                        }
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-
-                Log.i(folder.name + " searching for added msgid=" + message.msgid);
-                Message[] imessages = findMsgId(context, account, ifolder, message.msgid);
-                if (imessages != null) {
-                    Long found = newuid;
-
-                    for (Message iexisting : imessages)
+                    if (message.uid != null)
                         try {
-                            long muid = ifolder.getUID(iexisting);
-                            if (muid < 0)
-                                continue;
-                            Log.i(folder.name + " found added uid=" + muid + " msgid=" + message.msgid);
-                            if (found == null || muid > found)
-                                found = muid;
-                        } catch (MessageRemovedException ex) {
+                            Message iprev = ifolder.getMessageByUID(message.uid);
+                            if (iprev != null) {
+                                Log.i(folder.name + " found prev uid=" + message.uid + " msgid=" + message.msgid);
+                                iprev.setFlag(Flags.Flag.DELETED, true);
+                                delete.add(iprev);
+                            }
+                        } catch (Throwable ex) {
                             Log.w(ex);
                         }
 
-                    if (found != null) {
-                        if (newuid == null || found > newuid)
-                            newuid = found;
+                    Log.i(folder.name + " searching for added msgid=" + message.msgid);
+                    Message[] imessages = findMsgId(context, account, ifolder, message.msgid, null);
+                    if (imessages != null) {
+                        Long found = newuid;
 
                         for (Message iexisting : imessages)
                             try {
                                 long muid = ifolder.getUID(iexisting);
                                 if (muid < 0)
                                     continue;
-                                if (muid < newuid &&
-                                        (message.uid == null || message.uid != muid))
-                                    try {
-                                        iexisting.setFlag(Flags.Flag.DELETED, true);
-                                        delete.add(iexisting);
-                                    } catch (MessagingException ex) {
-                                        Log.w(ex);
-                                    }
+                                Log.i(folder.name + " found added uid=" + muid + " msgid=" + message.msgid);
+                                if (found == null || muid > found)
+                                    found = muid;
                             } catch (MessageRemovedException ex) {
                                 Log.w(ex);
                             }
+
+                        if (found != null) {
+                            if (newuid == null || found > newuid)
+                                newuid = found;
+
+                            for (Message iexisting : imessages)
+                                try {
+                                    long muid = ifolder.getUID(iexisting);
+                                    if (muid < 0)
+                                        continue;
+                                    if (muid < newuid &&
+                                            (message.uid == null || message.uid != muid))
+                                        try {
+                                            iexisting.setFlag(Flags.Flag.DELETED, true);
+                                            delete.add(iexisting);
+                                        } catch (MessagingException ex) {
+                                            Log.w(ex);
+                                        }
+                                } catch (MessageRemovedException ex) {
+                                    Log.w(ex);
+                                }
+                        }
                     }
+
+                    expunge(context, ifolder, delete);
+
+                } catch (MessagingException ex) {
+                    Log.w(ex);
                 }
-
-                expunge(context, ifolder, delete);
-
-            } catch (MessagingException ex) {
-                Log.w(ex);
-            }
 
             if (newuid != null && (message.uid == null || newuid > message.uid))
                 try {
@@ -1354,7 +1391,7 @@ class Core {
             int count = 0;
             Long found = newuid;
             while (found == null && count++ < FIND_RETRY_COUNT) {
-                found = findUid(context, account, ifolder, message.msgid);
+                found = findUid(context, account, ifolder, message.msgid, count > 1 ? message.received : null);
                 if (found == null)
                     try {
                         Thread.sleep(FIND_RETRY_DELAY);
@@ -1368,8 +1405,9 @@ class Core {
 
                 if (found == null) {
                     db.message().setMessageError(message.id,
-                            "Message not found in target folder " + account.name + "/" + folder.name);
+                            "Message not found in target folder " + account.name + "/" + folder.name + " msgid=" + message.msgid);
                     db.message().setMessageUiHide(message.id, false);
+                    db.message().setMessageUiBusy(message.id, null);
                 } else {
                     // Mark source read
                     if (autoread)
@@ -1516,7 +1554,8 @@ class Core {
                     }
 
                     for (Flags.Flag flag : imessage.getFlags().getSystemFlags())
-                        icopy.setFlag(flag, true);
+                        if (flag != Flags.Flag.DRAFT || EntityFolder.DRAFTS.equals(target.type))
+                            icopy.setFlag(flag, true);
 
                     icopies.add(icopy);
                 }
@@ -1610,9 +1649,9 @@ class Core {
                         if (TextUtils.isEmpty(msgid))
                             throw new IllegalArgumentException("move: msgid missing");
 
-                        Long uid = findUid(context, account, itarget, msgid);
+                        Long uid = findUid(context, account, itarget, msgid, null);
                         if (uid == null)
-                            if (duplicate)
+                            if (duplicate || !EntityFolder.TRASH.equals(folder.type))
                                 throw new IllegalArgumentException("move: uid not found");
                             else {
                                 Log.w("move: uid not found");
@@ -1926,7 +1965,7 @@ class Core {
                 if (!TextUtils.isEmpty(message.msgid) &&
                         (!found || EntityFolder.DRAFTS.equals(folder.type)))
                     try {
-                        Message[] imessages = findMsgId(context, account, ifolder, message.msgid);
+                        Message[] imessages = findMsgId(context, account, ifolder, message.msgid, null);
                         if (imessages != null)
                             for (Message iexisting : imessages)
                                 try {
@@ -2078,7 +2117,7 @@ class Core {
         DB db = DB.getInstance(context);
 
         if (!EntityFolder.INBOX.equals(folder.type))
-            throw new IllegalArgumentException("Unexpected folder=" + folder.type);
+            throw new IllegalArgumentException("Not INBOX type=" + folder.type);
 
         if (message.raw == null || !message.raw) {
             Map<EntityMessage, Message> map = findMessages(context, folder, Arrays.asList(message), istore, ifolder);
@@ -2241,7 +2280,7 @@ class Core {
 
         ifolder.appendMessages(new Message[]{icopy});
 
-        Long uid = findUid(context, account, ifolder, msgid);
+        Long uid = findUid(context, account, ifolder, msgid, null);
         if (uid != null) {
             JSONArray fargs = new JSONArray();
             fargs.put(uid);
@@ -2314,7 +2353,7 @@ class Core {
         String charset = (jargs.isNull(1) ? null : jargs.optString(1, null));
 
         if (!EntityFolder.INBOX.equals(folder.type))
-            throw new IllegalArgumentException("Not INBOX");
+            throw new IllegalArgumentException("Not INBOX type=" + folder.type);
 
         if (message.content && message.isPlainOnly() == plain_text && charset == null)
             return;
@@ -2349,7 +2388,7 @@ class Core {
         long id = jargs.getLong(0);
 
         if (!EntityFolder.INBOX.equals(folder.type))
-            throw new IllegalArgumentException("Not INBOX");
+            throw new IllegalArgumentException("Not INBOX type=" + folder.type);
 
         DB db = DB.getInstance(context);
         EntityAttachment attachment = db.attachment().getAttachment(id);
@@ -2967,10 +3006,13 @@ class Core {
                         folder.setProperties();
                         folder.setSpecials(account);
 
-                        if (selectable)
+                        if (selectable) {
                             folder.inheritFrom(parent);
-                        if (user && sync_added_folders && EntityFolder.USER.equals(type))
-                            folder.synchronize = true;
+                            if (user && sync_added_folders && EntityFolder.USER.equals(type)) {
+                                folder.synchronize = true;
+                                folder.notify = true;
+                            }
+                        }
 
                         folder.id = db.folder().insertFolder(folder);
                         Log.i(folder.name + " added type=" + folder.type + " sync=" + folder.synchronize);
@@ -2978,6 +3020,8 @@ class Core {
                             EntityOperation.sync(context, folder.id, false);
                     } else {
                         Log.i(folder.name + " exists type=" + folder.type);
+                        if (!Objects.equals(type, folder.type))
+                            EntityLog.log(context, "Folder name=" + folder.name + " type old=" + folder.type + " new=" + type);
 
                         folder.namespace = ifolder.first.getFullName();
                         folder.separator = ifolder.first.getSeparator();
@@ -3210,10 +3254,11 @@ class Core {
             db.beginTransaction();
 
             long id = jargs.getLong(0);
+            boolean browsed = jargs.optBoolean(1);
             if (id < 0) {
                 EntityLog.log(context, "Executing deferred daily rules for message=" + message.id);
                 List<EntityRule> rules = db.rule().getEnabledRules(message.folder, true);
-                EntityRule.run(context, rules, message, null, null);
+                EntityRule.run(context, rules, message, browsed, null, null);
             } else {
                 EntityRule rule = db.rule().getRule(id);
                 if (rule == null)
@@ -3223,7 +3268,7 @@ class Core {
                     throw new IllegalArgumentException("Message without content id=" + rule.id + ":" + rule.name);
 
                 rule.async = true;
-                rule.execute(context, message, null);
+                rule.execute(context, message, browsed, null);
             }
 
             db.setTransactionSuccessful();
@@ -3264,7 +3309,7 @@ class Core {
 
         ifolder.appendMessages(new Message[]{icopy});
 
-        Long uid = findUid(context, account, ifolder, msgid);
+        Long uid = findUid(context, account, ifolder, msgid, null);
         if (uid != null) {
             JSONArray fargs = new JSONArray();
             fargs.put(uid);
@@ -3684,7 +3729,7 @@ class Core {
                                 attachment.id = db.attachment().insertAttachment(attachment);
                             }
 
-                            runRules(context, headers, body, account, folder, message, rules);
+                            runRules(context, headers, body, account, folder, message, false, rules);
                             reportNewMessage(context, account, folder, message);
 
                             db.setTransactionSuccessful();
@@ -3936,7 +3981,8 @@ class Core {
             cal_keep.set(Calendar.MILLISECOND, 0);
 
             Calendar cal_keep_unread = Calendar.getInstance();
-            cal_keep_unread.add(Calendar.DAY_OF_MONTH, -Math.max(keep_days * 6, EntityFolder.DEFAULT_KEEP * 6));
+            cal_keep_unread.add(Calendar.DAY_OF_MONTH,
+                    delete_unseen ? -keep_days : -Math.max(keep_days * 6, EntityFolder.DEFAULT_KEEP * 6));
             cal_keep_unread.set(Calendar.HOUR_OF_DAY, 0);
             cal_keep_unread.set(Calendar.MINUTE, 0);
             cal_keep_unread.set(Calendar.SECOND, 0);
@@ -4145,6 +4191,10 @@ class Core {
                             public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
                                 protocol.select(folder.name);
 
+                                // Yahoo range size: 2000
+                                // https://help.yahoo.com/kb/download-email-yahoo-mail-third-party-sln28681.html
+                                int range_size = prefs.getInt("range_size", DEFAULT_RANGE_SIZE);
+
                                 // Build ranges
                                 List<Pair<Long, Long>> ranges = new ArrayList<>();
                                 long first = -1;
@@ -4152,7 +4202,7 @@ class Core {
                                 for (long uid : uids)
                                     if (first < 0)
                                         first = uid;
-                                    else if ((last < 0 ? first : last) + 1 == uid)
+                                    else if ((last < 0 ? first : last) + 1 == uid && (uid - first + 1 <= range_size))
                                         last = uid;
                                     else {
                                         ranges.add(new Pair<>(first, last < 0 ? first : last));
@@ -4167,13 +4217,28 @@ class Core {
                                 if (chunk_size < 200 &&
                                         (account.isGmail() || account.isOutlook()))
                                     chunk_size = 200;
-                                List<List<Pair<Long, Long>>> chunks = Helper.chunkList(ranges, chunk_size);
+
+                                List<List<Pair<Long, Long>>> chunks = new ArrayList<>();
+
+                                int s = 0;
+                                List<Pair<Long, Long>> r = new ArrayList<>();
+                                for (Pair<Long, Long> range : ranges) {
+                                    long n = range.second - range.first + 1;
+                                    if (s + n > range_size) {
+                                        chunks.addAll(Helper.chunkList(r, chunk_size));
+                                        s = 0;
+                                        r.clear();
+                                    }
+                                    s += n;
+                                    r.add(range);
+                                }
+                                chunks.addAll(Helper.chunkList(r, chunk_size));
 
                                 Log.i(folder.name + " executing uid fetch count=" + uids.size() +
-                                        " ranges=" + ranges.size() + " chunks=" + chunks.size());
+                                        " ranges=" + ranges.size() + " chunks=" + chunks.size() +
+                                        " range_size=" + range_size + " chunk_size=" + chunk_size);
                                 for (int c = 0; c < chunks.size(); c++) {
                                     List<Pair<Long, Long>> chunk = chunks.get(c);
-                                    Log.i(folder.name + " chunk #" + c + " size=" + chunk.size());
 
                                     StringBuilder sb = new StringBuilder();
                                     for (Pair<Long, Long> range : chunk) {
@@ -4184,6 +4249,8 @@ class Core {
                                         else
                                             sb.append(range.first).append(':').append(range.second);
                                     }
+                                    Log.i(folder.name + " chunk #" + c + " " + sb);
+
                                     String command = "UID FETCH " + sb + " (UID FLAGS)";
                                     Response[] responses = protocol.command(command, null);
 
@@ -4231,6 +4298,12 @@ class Core {
                                                             message.flagged = flagged;
                                                             message.ui_flagged = flagged;
                                                             Log.i("UID fetch flagged=" + flagged);
+                                                            boolean auto_important = prefs.getBoolean("auto_important", false);
+                                                            if (auto_important) {
+                                                                message.importance = (flagged ? EntityMessage.PRIORITIY_HIGH : null);
+                                                                EntityOperation.queue(context, message, EntityOperation.KEYWORD, MessageHelper.FLAG_LOW_IMPORTANCE, false);
+                                                                EntityOperation.queue(context, message, EntityOperation.KEYWORD, MessageHelper.FLAG_HIGH_IMPORTANCE, flagged);
+                                                            }
                                                         }
                                                         if (message.deleted != deleted) {
                                                             update = true;
@@ -4320,6 +4393,14 @@ class Core {
                             stats.headers += full.size();
                             stats.headers_ms += (SystemClock.elapsedRealtime() - headers);
                             Log.i(folder.name + " fetched headers=" + full.size() + " " + stats.headers_ms + " ms");
+                        } else if (false) {
+                            fp = new FetchProfile();
+                            fp.add(IMAPFolder.FetchProfileItem.HEADERS);
+                            long headers = SystemClock.elapsedRealtime();
+                            ifolder.fetch(isub, fp);
+                            stats.headers += isub.length;
+                            stats.headers_ms += (SystemClock.elapsedRealtime() - headers);
+                            Log.i(folder.name + " fetched headers=" + isub.length + " " + stats.headers_ms + " ms");
                         }
 
                         int free = Log.getFreeMemMb();
@@ -4519,11 +4600,11 @@ class Core {
             List<EntityRule> rules, State state, SyncStats stats) throws MessagingException, IOException {
         DB db = DB.getInstance(context);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean outlook_categories = prefs.getBoolean("outlook_categories", false);
         boolean download_headers = prefs.getBoolean("download_headers", false);
         boolean download_plain = prefs.getBoolean("download_plain", false);
         boolean notify_known = prefs.getBoolean("notify_known", false);
         boolean native_dkim = prefs.getBoolean("native_dkim", false);
-        boolean strict_alignment = prefs.getBoolean("strict_alignment", false);
         boolean experiments = prefs.getBoolean("experiments", false);
         boolean mdn = prefs.getBoolean("mdn", experiments);
         boolean pro = ActivityBilling.isPro(context);
@@ -4552,7 +4633,7 @@ class Core {
         boolean flagged = helper.getFlagged();
         boolean deleted = helper.getDeleted();
         String flags = helper.getFlags();
-        String[] keywords = helper.getKeywords();
+        String[] keywords = helper.getKeywords(outlook_categories && account.isOutlook());
         String[] labels = helper.getLabels();
         boolean update = false;
         boolean process = false;
@@ -4870,7 +4951,7 @@ class Core {
 
             if (mdn && helper.isReport())
                 try {
-                    MessageHelper.Report r = parts.getReport();
+                    MessageHelper.Report r = parts.getReport(context);
                     boolean client_id = prefs.getBoolean("client_id", true);
                     String we = "dns;" + (client_id ? EmailService.getDefaultEhlo() : "example.com");
                     if (r != null && !we.equals(r.reporter)) {
@@ -4935,7 +5016,7 @@ class Core {
                     attachment.id = db.attachment().insertAttachment(attachment);
                 }
 
-                runRules(context, headers, body, account, folder, message, rules);
+                runRules(context, headers, body, account, folder, message, browsed, rules);
 
                 if (message.blocklist != null && message.blocklist) {
                     boolean use_blocklist = prefs.getBoolean("use_blocklist", false);
@@ -5076,6 +5157,12 @@ class Core {
                 if (!flagged)
                     message.color = null;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flagged=" + flagged);
+                boolean auto_important = prefs.getBoolean("auto_important", false);
+                if (auto_important) {
+                    message.importance = (flagged ? EntityMessage.PRIORITIY_HIGH : null);
+                    EntityOperation.queue(context, message, EntityOperation.KEYWORD, MessageHelper.FLAG_LOW_IMPORTANCE, false);
+                    EntityOperation.queue(context, message, EntityOperation.KEYWORD, MessageHelper.FLAG_HIGH_IMPORTANCE, flagged);
+                }
                 syncSimilar = true;
             }
 
@@ -5173,7 +5260,7 @@ class Core {
                     db.message().updateMessage(message);
 
                     if (process)
-                        runRules(context, headers, body, account, folder, message, rules);
+                        runRules(context, headers, body, account, folder, message, browsed, rules);
 
                     db.setTransactionSuccessful();
                 } finally {
@@ -5373,7 +5460,7 @@ class Core {
 
     private static void runRules(
             Context context, List<Header> headers, String html,
-            EntityAccount account, EntityFolder folder, EntityMessage message,
+            EntityAccount account, EntityFolder folder, EntityMessage message, boolean browsed,
             List<EntityRule> rules) {
 
         if (EntityFolder.INBOX.equals(folder.type)) {
@@ -5393,7 +5480,7 @@ class Core {
         try {
             boolean executed = false;
             if (pro) {
-                int applied = EntityRule.run(context, rules, message, headers, html);
+                int applied = EntityRule.run(context, rules, message, browsed, headers, html);
                 executed = (applied > 0);
             }
 

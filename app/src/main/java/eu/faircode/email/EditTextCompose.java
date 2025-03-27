@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ClipData;
@@ -619,7 +619,7 @@ public class EditTextCompose extends FixedEditText {
 
                 final String html;
                 String h = null;
-                if (raw) {
+                if (raw || (!BuildConfig.PLAY_STORE_RELEASE && length() == 0)) {
                     CharSequence text = item.getText();
                     if (text != null && DetectHtml.isHtml(text.toString())) {
                         Log.i("Paste: raw HTML");

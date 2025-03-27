@@ -4,11 +4,11 @@
     <string name="app_send_self">Отправить себе</string>
     <string name="app_changelog">Список изменений</string>
     <string name="app_welcome">FairEmail — это почтовое приложение с открытым исходным кодом, ориентированное на конфиденциальность и безопасность. По этой причине некоторые функции могут работать не так, как вы привыкли.</string>
-    <string name="app_limitations">Например, по умолчанию сообщения переформатируются, так чтобы удалять небезопасные элементы и улучшать читаемость, а открытие ссылок нужно в целях безопасности подтверждать. Обе функции можно отключить.</string>
+    <string name="app_limitations">Например, по умолчанию сообщения переформатируются для удаления небезопасных элементов и улучшения читаемости, а открытие ссылок, также в целях безопасности, нужно подтверждать. Обе функции отключаемы.</string>
     <string name="app_unsupported">Ошибки в версии Android этого конкретного устройства вызывают сбои</string>
-    <string name="app_data_loss">Все данные могут быть потеряны</string>
+    <string name="app_data_loss">Могут быть утеряны все данные</string>
     <string name="app_continue">Всё равно продолжить</string>
-    <string name="app_exit">Для выхода снова перейдите \"назад\"</string>
+    <string name="app_exit">Вернитесь \"назад\", чтобы выйти</string>
     <string name="app_cake">Недостаточно места</string>
     <string name="app_cake_remaining">Оставшееся место на устройстве: %1$s</string>
     <string name="app_cake_required">Минимально необходимое место: %1$s</string>
@@ -212,7 +212,7 @@
     <string name="title_setup_account_identity_hint">Вы можете настроить имя, цвет и жесты в настройках учётной записи, а также настроить подпись в настройках идентификатора</string>
     <string name="title_setup_accounts">Учётные записи</string>
     <string name="title_setup_identities">Идентификаторы</string>
-    <string name="title_setup_google_sign_in">Войти с помощью Google</string>
+    <string name="title_setup_google_sign_in">Войти с помощью Google</string>
     <string name="title_setup_other">Другой провайдер</string>
     <string name="title_setup_inbound">Только входящая почта (отправка письма невозможна!)</string>
     <string name="title_setup_imap">Учётная запись IMAP</string>
@@ -230,18 +230,23 @@
     <string name="title_setup_office_auth">Ошибка \"AUTHENTICATE failed\" может быть вызвана отключением IMAP/SMTP системным администратором</string>
     <string name="title_setup_office_auth_5_7_3">Попробуйте воспользоваться мастером быстрой настройки \"Другой провайдер\".</string>
     <string name="title_setup_office_auth_5_7_139">Попробуйте воспользоваться мастером быстрой настройки \"Outlook/Hotmail/Live\".</string>
+    <string name="title_setup_office_not_connected">        Ошибка \"User is authenticated but not connected\" обычно означает, что IMAP отключён.
+        Если у вас пользовательская учётная запись Outlook, перейдите на сайт Outlook, нажмите на значок настроек в правом верхнем углу, выберите \"Почта\", затем \"Переадресация и IMAP\" и в разделе \"POP и IMAP\" включите \"Разрешить устройствам и приложениям использовать IMAP\".
+        Если у вас корпоративная или учебная учётная запись и т.п., свяжитесь с системным администратором сервера электронной почты.
+    </string>
     <string name="title_setup_oauth_rationale">Авторизовать доступ к вашей учётной записи %1$s</string>
     <string name="title_setup_oauth_update">Авторизация существующей учётной записи (или создание новой)</string>
     <string name="title_setup_oauth_updated">Авторизация учётной записи обновлена</string>
     <string name="title_setup_oauth_edge">При использовании браузера Edge убедитесь, что настройка \"Блокировать открытие внешних приложений\" в разделе \"Конфиденциальность, безопасность и службы\" отключена</string>
     <string name="title_setup_oauth_brave">При использовании браузера Brave необходимо разрешить в его настройках открывать ссылки сторонними приложениями</string>
-    <string name="title_setup_oauth_browser">Для авторизации требуется работающий браузер</string>
+    <string name="title_setup_oauth_browser">Для авторизации требуется работающий браузер, который позволяет открывать ссылки из приложения (зачастую это параметры безопасности), чтобы в конце токен авторизации можно было передать обратно в приложение</string>
     <string name="title_setup_oauth_authorize">Авторизироваться</string>
     <string name="title_setup_select_account">Выбрать учётную запись</string>
     <string name="title_setup_instructions">Инструкция по установке</string>
     <string name="title_setup_no_settings">Не найдено настроек для домена %1$s</string>
     <string name="title_setup_no_settings_hint">Попробуйте настроить учётную запись вручную, используя настройки, предоставленные почтовым провайдером</string>
     <string name="title_setup_no_auth_hint">Пожалуйста, проверьте свой адрес электронной почты и пароль и убедитесь, что внешний доступ (IMAP/SMTP) включён для вашей учётной записи</string>
+    <string name="title_setup_no_auth_outlook">Необходимо использовать мастер быстрой настройки Outlook / Office 365 (требование Microsoft)</string>
     <string name="title_setup_app_password_hint">Данный провайдер требует пароль для приложения вместо пароля от учётной записи, пожалуйста, ознакомьтесь с его инструкциями</string>
     <string name="title_setup_no_inbox">Папка \"Входящие\" не найдена</string>
     <string name="title_setup_advanced_protection">При регистрации в программе расширенной защиты невозможно использовать стороннее приложение электронной почты. Это ограничение, налагаемое Google.</string>
@@ -369,6 +374,11 @@
         Все параметры обычно имеют стандартные значения, которые можно изменить, если у вас есть другие предпочтения.    </string>
     <string name="title_advanced_hint_remark">        Параметры сгруппированы по вкладкам, поделены на разделы, организованы по внешнему виду или использованию и доступны через поиск.
     </string>
+    <string name="title_advanced_hint_options">        Большинство функций вам не понадобятся, а некоторые из них довольно специфичны,
+        поэтому возможно, что функционирование всех вариантов будет понятно не сразу.
+        Пожалуйста, не оставляйте плохой отзыв только из-за обилия имеющихся функций или из-за того, что вы не сразу поняли все варианты их действия.
+        Все имеющиеся функции полезны многим людям, но, возможно, (пока) не вам.
+    </string>
     <string name="title_advanced_hint_setup">Можно настроить учётную запись, нажав кнопку мастера на главном экране настроек.</string>
     <string name="title_advanced_section_main">Основные</string>
     <string name="title_advanced_section_synchronize">Получение</string>
@@ -401,6 +411,7 @@
     <string name="title_advanced_kept_removed">Проверять, были ли удалены старые сообщения с сервера</string>
     <string name="title_advanced_gmail_thread">Стиль группировки сообщений Gmail для соответствующих учётных записей</string>
     <string name="title_advanced_subject_threading">Группировать сообщения по отправителю и теме</string>
+    <string name="title_advanced_outlook_categories">Синхронизировать категории Outlook</string>
     <string name="title_advanced_sync_folders">Синхронизировать список папок</string>
     <string name="title_advanced_sync_folders_poll">Активная синхронизация списка папок</string>
     <string name="title_advanced_sync_shared_folders">Синхронизировать списки общих папок</string>
@@ -416,6 +427,7 @@
     <string name="title_advanced_tune_keep_alive">Автоматически настраивать интервал keep-alive</string>
     <string name="title_advanced_blocklist_warning">Списки блокировки спама не идеальны и могут блокировать не только спам!</string>
     <string name="title_advanced_keyboard">Показывать клавиатуру по умолчанию</string>
+    <string name="title_advanced_keyboard_margin">Добавить отступ над клавиатурой</string>
     <string name="title_advanced_keyboard_no_fullscreen">Не показывать клавиатуру в полноэкранном режиме</string>
     <string name="title_advanced_suggest_names">Использовать имена и адреса электронной почты</string>
     <string name="title_advanced_suggest_local">Предлагать локальные контакты</string>
@@ -523,6 +535,7 @@
     <string name="title_advanced_close_pane">Свернуть строку или колонку при закрытии диалога</string>
     <string name="title_advanced_column_width">Ширина колонки / высота строки: %1$s %%</string>
     <string name="title_advanced_hide_toolbar">Скрывать верхнюю панель инструментов при прокрутке сообщений</string>
+    <string name="title_advanced_edge_to_edge">Использовать цвет фона приложения для панели навигации Android</string>
     <string name="title_advanced_nav_options">Показывать панель меню навигации</string>
     <string name="title_advanced_nav_categories">Показывать категории учётных записей в меню навигации</string>
     <string name="title_advanced_nav_pin">Закрепить меню навигации</string>
@@ -530,6 +543,7 @@
     <string name="title_advanced_nav_hide_message">Снова включить панель можно в разделе настроек \"Отображение\"</string>
     <string name="title_advanced_nav_last_sync">Показывать время последней синхронизации в меню навигации</string>
     <string name="title_advanced_nav_message_count">Показывать количество сохранённых локально сообщений в меню навигации</string>
+    <string name="title_advanced_nav_unseen">Показывать количество непрочитанных сообщений в меню навигации</string>
     <string name="title_advanced_nav_unseen_drafts">Показывать количество непрочитанных черновиков в меню навигации</string>
     <string name="title_advanced_nav_pinned_count">Показывать количество непрочитанных сообщений в закреплённом меню навигации</string>
     <string name="title_advanced_show_unexposed">Показывать метку избранного для учётных записей/папок с недавно полученными непрочитанными сообщениями</string>
@@ -675,6 +689,7 @@
     <string name="title_advanced_reset_importance">Сбрасывать важность при перемещении сообщений</string>
     <string name="title_advanced_star_snoozed">Автоматически добавлять в избранное при откладывании сообщений</string>
     <string name="title_advanced_star_unsnoozed">Автоматически удалять из избранного при отмене откладывания сообщений</string>
+    <string name="title_advanced_important_unsnoozed">Автоматически помечать сообщения важными при отмене откладывания</string>
     <string name="title_advanced_auto_important">Автоматически помечать избранные сообщения важными</string>
     <string name="title_advanced_cancel_snooze">Отменять откладывание при перемещении сообщений</string>
     <string name="title_advanced_auto_block_sender">Автоматически блокировать отправителя при сообщении о спаме</string>
@@ -700,6 +715,7 @@
     <string name="title_advanced_notify_suppress_in_call">Откладывать уведомления во время вызова</string>
     <string name="title_advanced_notify_suppress_in_car">Откладывать уведомления при подключении Android Auto</string>
     <string name="title_advanced_notify_summary">Показывать только сводное уведомление</string>
+    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Показывать тему в уведомлениях</string>
     <string name="title_advanced_notify_preview">Предпросмотр сообщений в уведомлениях</string>
     <string name="title_advanced_notify_preview_all">Предпросмотр всего текста</string>
     <string name="title_advanced_notify_preview_only">Показывать уведомления только с предпросмотром текста</string>
@@ -729,6 +745,7 @@
     <string name="title_advanced_notify_screen_on">Включать экран для новых уведомлений</string>
     <string name="title_advanced_notifications_background">Использовать фоновую службу для синхронизации сообщений</string>
     <string name="title_advanced_notifications_background_hint">Фоновая служба может быть остановлена Android в любое время, но не требует уведомления в статусной строке</string>
+    <string name="title_advanced_rate_limit">Ограничить звуки уведомления о новых сообщениях до одного раза в:</string>
     <string name="title_advanced_confirm_links">Подтверждать открытие ссылок</string>
     <string name="title_advanced_confirm_files">Подтверждать просмотр файлов</string>
     <string name="title_advanced_sanitize_links">Удалять отслеживающие элементы по умолчанию</string>
@@ -781,6 +798,7 @@
         Алгоритмы по умолчанию (SHA-256 и AES-128) обычно поддерживаются.
     </string>
     <string name="title_advanced_check_certificate">Проверять публичный ключ при отправке</string>
+    <string name="title_advanced_check_key_usage">Проверять использование ключей при отправке</string>
     <string name="title_advanced_manage_certificates">Управление публичными ключами</string>
     <string name="title_advanced_import_key">Импортировать приватный ключ</string>
     <string name="title_advanced_manage_keys">Управление приватными ключами</string>
@@ -801,6 +819,7 @@
     <string name="title_advanced_class_min_difference">Минимальная разница между классами: %1$s %%</string>
     <string name="title_advanced_show_filtered">Показывать значок фильтра при применении правил</string>
     <string name="title_advanced_haptic_feedback">Вибрация при выполнении важных действий</string>
+    <string name="title_advanced_haptic_feedback_swipe">Вибрация при жестах влево/вправо</string>
     <string name="title_advanced_language">Язык</string>
     <string name="title_advanced_language_system">Системный</string>
     <string name="title_advanced_integrations_hint">Представленные ниже облачные сервисы не являются частью приложения. Все платежи будут поступать непосредственно в облачный сервис, а не разработчику приложения.</string>
@@ -825,6 +844,10 @@
     <string name="title_advanced_answer_prompt">Запрос для ответа</string>
     <string name="title_advanced_system_instructions">Системные инструкции</string>
     <string name="title_advanced_default_prompt">Запрос по умолчанию</string>
+    <string name="title_advanced_ai">ИИ</string>
+    <string name="title_advanced_ai_input_system">Введите системный запрос</string>
+    <string name="title_advanced_ai_input_body">Введите текст сообщения</string>
+    <string name="title_advanced_ai_input_reply">Введите текст ответного сообщения</string>
     <string name="title_advanced_entered_text">Введённый текст</string>
     <string name="title_advanced_sdcard">Я хочу использовать SD-карту</string>
     <string name="title_advanced_watchdog">Регулярно проверять, активен ли FairEmail</string>
@@ -860,6 +883,7 @@
     <string name="title_advanced_sync_kept_hint">Приведёт к большему потреблению трафика и заряда батареи, особенно если на устройстве хранится много сообщений</string>
     <string name="title_advanced_gmail_thread_hint">Относится только к вновь полученным сообщениям и может нарушить существующие группы</string>
     <string name="title_advanced_subject_threading_hint">Только сообщения, полученные за последние %1$d часов</string>
+    <string name="title_advanced_outlook_categories_hint">Категории Outlook могут быть только загружены и не могут обновляться автоматически из-за ограничений сервера Outlook IMAP</string>
     <string name="title_advanced_sync_folders_hint">Отключение уменьшит потребление трафика и заряда батареи, но также отключит обновление списка папок</string>
     <string name="title_advanced_poll_folders_hint">Периодическая синхронизация списка папок в дополнение к синхронизации после подключения к учётной записи</string>
     <string name="title_advanced_check_authentication_hint">Проверка результатов аутентификации DKIM, SPF и DMARC в зависимости от почтового сервера</string>
@@ -876,6 +900,7 @@
     <string name="title_advanced_send_reminders_hint">Показывать предупреждение, если отсутствует текст сообщения, тема или, возможно, отсутствует вложение</string>
     <string name="title_advanced_reply_move_hint">Сервер электронной почты всё ещё может добавлять сообщения в папку отправленных</string>
     <string name="title_advanced_compose_color_hint">Очень светлые или очень тёмные цвета сделают сообщение неразборчивым для получателя</string>
+    <string name="title_advanced_compose_font_hint">Значение по умолчанию означает соответствие шрифту, выбранному получателем</string>
     <string name="title_advanced_template_reply_hint">Использование HTML разрешено. Доступные заполнители: %1$s</string>
     <string name="title_advanced_write_below_hint">Получатель может пропустить ваш ответ, например, при сокращении длинного сообщения</string>
     <string name="title_advanced_attach_new_hint">В противном случае общие адреса или файлы добавляются к текущему черновику</string>
@@ -942,6 +967,7 @@
     <string name="title_advanced_notify_car_hint">Подключение означает отображение чего-либо, например, навигационной карты</string>
     <string name="title_advanced_notify_remove_hint">Уведомления о новых о сообщениях всегда будут удаляться при смахивании сообщения и пометке о прочтении</string>
     <string name="title_advanced_notify_manage_hint">Нажмите на название канала, чтобы установить его свойства</string>
+    <string name="title_advanced_notify_samsung_hint">Для управления каналами уведомлений может потребоваться включить данную настройку Android: Уведомления → Дополнительные настройки → Управление категориями уведомлений для каждого приложения</string>
     <string name="title_advanced_notify_manage_default_hint">Для установки звука по умолчанию и т.д.</string>
     <string name="title_advanced_notify_manage_service_hint">Для отключения контролирующего уведомления</string>
     <string name="title_advanced_notify_separate_hint">Как настроить уведомления для учётных записей, папок и отправителей?</string>
@@ -1244,6 +1270,7 @@
     <string name="title_filters_active">Один или несколько фильтров активны</string>
     <string name="title_duplicate_in">Дубликат сообщения в %1$s</string>
     <string name="title_trashed_from">Мусорное сообщение от %1$s</string>
+    <string name="title_sent_to">Сообщение для %1$s отправлено</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_subject_reply_alt">Re: %1$s</string>
@@ -1266,6 +1293,7 @@
     <string name="title_unimportant">Неважное</string>
     <string name="title_search_in_text">Поиск в тексте&#8230;</string>
     <string name="title_forward">Переслать</string>
+    <string name="title_forward_to">Переслать</string>
     <string name="title_resend">Перенаправить</string>
     <string name="title_fetching_headers">Загрузка заголовков сообщений&#8230;</string>
     <string name="title_new_message">Новое сообщение</string>
@@ -1277,6 +1305,7 @@
     <string name="title_force_light">Принудительно использовать светлую тему</string>
     <string name="title_rename">Переименовать</string>
     <string name="title_share">Поделиться</string>
+    <string name="title_analyze">Анализ</string>
     <string name="title_event">Добавить в календарь</string>
     <string name="title_pin">Добавить ярлык</string>
     <string name="title_pin_label">Имя ярлыка</string>
@@ -1288,17 +1317,18 @@
     <string name="title_print_margins">Добавить отступ</string>
     <string name="title_show_headers">Показать заголовки</string>
     <string name="title_show_html">Показать исходный код</string>
-    <string name="title_raw_save">Сохранить оригинал сообщения</string>
+    <string name="title_raw_save">Сохранить исходное сообщение (.eml)</string>
     <string name="title_raw_send">Отправить как вложение</string>
     <string name="title_raw_send_message">Сообщение</string>
     <string name="title_raw_send_thread">Диалог</string>
     <string name="title_manage_keywords">Управление ключами (словами)</string>
+    <string name="title_manage_keywords_pop">При использовании POP3 ключевые слова невозможно сохранить на почтовом сервере!</string>
     <string name="title_manage_labels">Управление метками Gmail</string>
     <string name="title_add_keyword">Добавить ключ (слово)</string>
     <string name="title_show_inline">Показывать встроенные вложения</string>
     <string name="title_download_all">Загрузить все</string>
     <string name="title_save_all">Сохранить все</string>
-    <string name="title_save_eml">Сохранить оригинальный файл сообщения</string>
+    <string name="title_save_eml">Сохранить исходный файл сообщения</string>
     <string name="title_save_file">Сохранить файл</string>
     <string name="title_eml_remark">Для пересылки исходные (оригинальные) сообщения необходимо загрузить с сервера электронной почты. Это требует подключения к интернету, а сами сообщения должны храниться на сервере.</string>
     <string name="title_eml_option">Это можно предотвратить, включив загрузку исходных сообщений в настройках подключения</string>
@@ -1387,11 +1417,12 @@
     <string name="title_monospaced_pre">Моноширинный &lt;pre&gt;</string>
     <string name="title_unused_inline">Неиспользуемые встроенные изображения будут удалены при отправке</string>
     <string name="title_accross_remark">Сообщения, перемещаемые между учётными записями, будут загружены заново, порождая дополнительный трафик</string>
-    <string name="title_raw_saved">Оригинал сообщения сохранён</string>
+    <string name="title_raw_saved">Исходное сообщение сохранено</string>
     <string name="title_attachment_eml">Прикреплённое сообщение</string>
     <string name="title_attachment_saved">Вложение сохранено</string>
     <string name="title_attachments_saved">Вложения сохранены</string>
     <string name="title_attachments_incomplete">Некоторые вложения или изображения не были загружены и не могут быть добавлены</string>
+    <string name="title_report_remark">Этот отчёт, являющийся электронным письмом специального формата, был отправлен почтовым сервером, поскольку отправленное сообщение невозможно доставить получателю, например, из-за переполнения почтового ящика или из-за того, что адрес электронной почты (больше) не существует.</string>
     <string name="title_ask_save">Сохранить изменения?</string>
     <string name="title_ask_delete">Удалить сообщение навсегда?</string>
     <string name="title_ask_delete_accept">Я понимаю, что окончательное удаление сообщений необратимо</string>
@@ -1532,7 +1563,7 @@
     <string name="title_summarize">Сводка</string>
     <string name="title_translate_configure">Настроить&#8230;</string>
     <string name="title_translate_key">Введите ключ</string>
-    <string name="title_translating">Перевод&#8230;</string>
+    <string name="title_translating">Перевод на %1$s&#8230;</string>
     <string name="title_translate_formal">Использовать формальный стиль</string>
     <string name="title_translate_small">Использовать мелкий шрифт для исходного текста</string>
     <string name="title_translate_replace">Заменять исходный текст переводом</string>
@@ -1621,6 +1652,7 @@
     <string name="title_signature_email">Адрес подписи</string>
     <string name="title_signature_mismatch">Адреса электронной почты отправителя и подписи не совпадают</string>
     <string name="title_signature_algorithm">Алгоритм</string>
+    <string name="title_signature_public_key">Публичный ключ</string>
     <string name="title_signature_subject">Тема</string>
     <string name="title_signature_validity">Достоверность</string>
     <string name="title_signature_outdated">Этот публичный ключ недействителен в настоящее время</string>
@@ -1684,6 +1716,7 @@
     <string name="title_sort_on_starred_unread">Избранное, не прочитано</string>
     <string name="title_sort_on_priority">Приоритет</string>
     <string name="title_sort_on_sender">Отправитель</string>
+    <string name="title_sort_on_sender_name">Имя отправителя</string>
     <string name="title_sort_on_subject">Тема</string>
     <string name="title_sort_on_size">Размер</string>
     <string name="title_sort_on_attachments">Вложения</string>
@@ -1700,6 +1733,7 @@
     <string name="title_filter_hidden">Скрытые</string>
     <string name="title_filter_deleted">Удалено</string>
     <string name="title_filter_duplicates">Дубликаты</string>
+    <string name="title_filter_sent">Отправленные</string>
     <string name="title_filter_trash">Мусор</string>
     <string name="title_compact">Компактный вид</string>
     <string name="title_zoom">Размер текста</string>
@@ -1723,6 +1757,7 @@
     <string name="title_edit_signature_image_hint">        При отправке сообщения изображение копируется в него из указанного расположения.
         Поэтому не удаляйте файл изображения!
     </string>
+    <string name="title_edit_signature_delete">Удалить подпись?</string>
     <string name="title_answer_define_name">Имя</string>
     <string name="title_answer_define_value">Значение</string>
     <string name="title_answer_caption">Изменить шаблон</string>
@@ -1806,8 +1841,9 @@
     <string name="title_rule_original_text">Включить текст исходного сообщения</string>
     <string name="title_rule_forward_to">Переслать</string>
     <string name="title_rule_resend">Перенаправить</string>
-    <string name="title_rule_attached">Прикрепить оригинальный файл сообщения</string>
+    <string name="title_rule_attached">Прикрепить исходный файл сообщения</string>
     <string name="title_rule_cc">Ответить на адреса копий (CC)</string>
+    <string name="title_rule_checks">Проверить наличие автоматически отправленных сообщений, адресов не для ответа и т. д.</string>
     <string name="title_rule_with_attachments">С вложениями</string>
     <string name="title_rule_answer_remark">Только один ответ будет отправлен в каждый диалог, чтобы избежать петель ответов</string>
     <string name="title_rule_name_missing">Отсутствует название правила</string>
@@ -1839,6 +1875,7 @@
     <string name="title_rule_select_sound">Выбрать звук</string>
     <string name="title_rule_select_sound_ringtone">Мелодия</string>
     <string name="title_rule_select_sound_audio">Аудиофайл</string>
+    <string name="title_rule_loop_sound">Повтор звука</string>
     <string name="title_rule_use_as_alarm">Использовать как будильник</string>
     <string name="title_rule_alarm_hint">Это игнорирует правила \"не беспокоить\"</string>
     <string name="title_rule_alarm_duration">Максимальная длительность будильника (в секундах)</string>
@@ -1996,7 +2033,9 @@
     <string name="title_hint_junk">Фильтрация спама должна выполняться почтовым сервером и не может быть надёжно выполнена на устройстве с ограниченными возможностями и питанием от батареи.</string>
     <string name="title_hint_junk_learn">Перемещая сообщения в/из папки \"Спам\", сервер электронной почты \"изучает\", что такое спам</string>
     <string name="title_hint_contact_actions">Длительное нажатие откроет другие действия.</string>
-    <string name="title_hint_eml">Это обзор содержимого файла оригинального сообщения. Сохраните его с помощью значка \"Сохранить\" на панели действий, чтобы просмотреть содержимое полностью.</string>
+    <string name="title_hint_eml">        Это сводка содержимого файла исходного сообщения.
+        Можно использовать кнопку в правом нижнем углу, чтобы сохранить сообщение в папке \"Входящие\" для просмотра всего содержимого.
+    </string>
     <string name="title_open_link">Открыть ссылку</string>
     <string name="title_image_link">Ссылка на изображение</string>
     <string name="title_different_link">Заголовок и адрес ссылки отличаются</string>
@@ -2019,7 +2058,7 @@
     <string name="title_no">Нет</string>
     <string name="title_later">Позже</string>
     <string name="title_paste_plain">Вставить как обычный текст</string>
-    <string name="title_paste_as_quote" comment="title_paste_as_quote&#10;Title for an additional menu option in the Android copy/paste popup menu">Вставить как цитату</string>
+    <string name="title_paste_as_quote">Вставить как цитату</string>
     <string name="title_undo">Отменить</string>
     <string name="title_redo">Восстановить</string>
     <string name="title_insert_line">Вставить строку</string>
@@ -2204,6 +2243,8 @@
     <string name="title_accessibility_to">Получатель</string>
     <string-array name="pollIntervalNames">
         <item>Непрерывно</item>
+        <item>Каждую минуту</item>
+        <item>Каждые 2 минуты</item>
         <item>Каждые 5 минут</item>
         <item>Каждые 10 минут</item>
         <item>Каждые 15 минут</item>
@@ -2320,6 +2361,7 @@
         <item>Только шифрование PGP</item>
         <item>Подпись+шифрование PGP</item>
         <item>Только подпись S/MIME</item>
+        <item>Только шифрование S/MIME</item>
         <item>Подпись+шифрование S/MIME</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2340,6 +2382,8 @@
         <item>7,5 сек.</item>
         <item>10 сек.</item>
         <item>15 сек.</item>
+        <item>30 сек.</item>
+        <item>60 сек.</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Курсив</item>

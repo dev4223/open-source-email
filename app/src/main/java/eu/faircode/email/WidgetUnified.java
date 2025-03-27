@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.app.PendingIntent;
@@ -271,6 +271,7 @@ public class WidgetUnified extends AppWidgetProvider {
             try {
                 int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, WidgetUnified.class));
                 appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.lv);
+                EntityLog.log(context, "Updated widget data count=" + appWidgetIds.length);
             } catch (Throwable ex) {
                 Log.e(ex);
             /*

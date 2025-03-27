@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.SuppressLint;
@@ -124,7 +124,7 @@ public class Fts4DbHelper extends SQLiteOpenHelper {
         cv.put("account", message.account);
         cv.put("folder", message.folder);
         cv.put("time", message.received);
-        cv.put("address", MessageHelper.formatAddresses(address.toArray(new Address[0]), true, false));
+        cv.put("address", processBreakText(MessageHelper.formatAddresses(address.toArray(new Address[0]), true, false)));
         cv.put("subject", processBreakText(message.subject));
         cv.put("keyword", TextUtils.join(" ", message.keywords));
         cv.put("text", processBreakText(text));

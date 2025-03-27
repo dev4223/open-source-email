@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.app.IntentService;
@@ -101,7 +101,7 @@ public class ServiceUI extends IntentService {
         try {
             String[] parts = action.split(":");
             long id = (parts.length > 1 ? Long.parseLong(parts[1]) : -1);
-            long group = intent.getLongExtra("group", -1);
+            long group = intent.getLongExtra("group", 0);
 
             switch (parts[0]) {
                 case "clear":
@@ -216,7 +216,7 @@ public class ServiceUI extends IntentService {
 
     private void cancel(long group, long id) {
         // https://issuetracker.google.com/issues/159152393
-        String tag = "unseen." + group + ":" + id;
+        String tag = "unseen." + group + "." + id;
 
         NotificationManager nm = Helper.getSystemService(this, NotificationManager.class);
         nm.cancel(tag, NotificationHelper.NOTIFICATION_TAGGED);

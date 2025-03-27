@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.content.ClipData;
@@ -35,6 +35,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
@@ -57,7 +58,6 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     private IWebView intf;
     private Runnable onPageLoaded;
     private String hash;
-    private Boolean images;
 
     private static String userAgent = null;
 
@@ -99,6 +99,8 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
             WebSettingsCompat.setSafeBrowsingEnabled(settings, safe_browsing);
         if (WebViewEx.isFeatureSupported(context, WebViewFeature.ATTRIBUTION_REGISTRATION_BEHAVIOR))
             WebSettingsCompat.setAttributionRegistrationBehavior(settings, WebSettingsCompat.ATTRIBUTION_BEHAVIOR_DISABLED);
+
+        CookieManager.getInstance().setAcceptCookie(false);
     }
 
     void init(int height, int maxHeight, float size, Pair<Integer, Integer> position, boolean force_light, IWebView intf) {
@@ -193,7 +195,8 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
             @Override
             public void onScaleChanged(WebView view, float oldScale, float newScale) {
                 Log.i("Changed scale=" + newScale);
-                intf.onScaleChanged(newScale);
+                if (getVisibility() == View.VISIBLE)
+                    intf.onScaleChanged(newScale);
             }
 
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
@@ -243,6 +246,10 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
     void setImages(boolean show_images, boolean inline) {
         WebSettings settings = getSettings();
+
+        if (settings.getLoadsImagesAutomatically() != (show_images || inline))
+            this.hash = null;
+
         settings.setLoadsImagesAutomatically(show_images || inline);
         settings.setBlockNetworkLoads(!show_images);
         settings.setBlockNetworkImage(!show_images);
@@ -252,14 +259,10 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
         try {
             // Prevent flickering
-            boolean i = getSettings().getLoadsImagesAutomatically();
-            if (Objects.equals(this.images, i)) {
-                String h = (data == null ? null : Helper.md5(data.getBytes()));
-                if (Objects.equals(this.hash, h))
-                    return;
-                this.hash = h;
-            } else
-                this.images = i;
+            String h = (data == null ? null : Helper.md5(data.getBytes()));
+            if (Objects.equals(this.hash, h))
+                return;
+            this.hash = h;
         } catch (Throwable ex) {
             Log.w(ex);
         }
@@ -275,9 +278,17 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // Unable to create layer for WebViewEx, size 1088x16384 max size 16383 color type 4 has context 1)
-        int limitHeight = MeasureSpec.makeMeasureSpec(viewportHeight, MeasureSpec.AT_MOST);
-        super.onMeasure(widthMeasureSpec, limitHeight);
+        // java.lang.IllegalStateException: Unable to create layer for WebViewEx, size 768x4864 max size 8192 color type 4 has context 1
+        //        at android.os.MessageQueue.nativePollOnce(MessageQueue.java:-2)
+        //        at android.os.MessageQueue.next(MessageQueue.java:326)
+        //        at android.os.Looper.loop(Looper.java:183)
+        //        at android.app.ActivityThread.main(ActivityThread.java:7266)
+        if (viewportHeight == 0)
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        else
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(viewportHeight, MeasureSpec.AT_MOST);
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         int mh = getMeasuredHeight();
         Log.i("Measured height=" + mh + " last=" + height + "/" + maxHeight + " ch=" + getContentHeight());
@@ -287,7 +298,8 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         super.onSizeChanged(w, h, ow, oh);
         Log.i("Size changed height=" + h);
-        this.intf.onSizeChanged(w, h, ow, oh);
+        if (getVisibility() == View.VISIBLE)
+            this.intf.onSizeChanged(w, h, ow, oh);
     }
 
     @Override
@@ -441,12 +453,6 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
 
     public static boolean isFeatureSupported(Context context, String feature) {
         if (WebViewFeature.ALGORITHMIC_DARKENING.equals(feature)) {
-            if (BuildConfig.DEBUG) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean fake_dark = prefs.getBoolean("fake_dark", false);
-                if (fake_dark)
-                    return false;
-            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
                 return false;
 
@@ -478,7 +484,10 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     }
 
     static int getDefaultViewportHeight(Context context) {
-        return DEFAULT_VIEWPORT_HEIGHT;
+        if (Helper.isGoogle() && Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE /* Android 14 */)
+            return DEFAULT_VIEWPORT_HEIGHT * 2;
+        else
+            return DEFAULT_VIEWPORT_HEIGHT;
     }
 
     @NonNull
@@ -489,6 +498,7 @@ public class WebViewEx extends WebView implements DownloadListener, View.OnLongC
     @NonNull
     static String getUserAgent(Context context, WebView webView) {
         // https://developer.chrome.com/docs/multidevice/user-agent/#chrome-for-android
+        // https://android-developers.googleblog.com/2024/12/user-agent-reduction-on-android-webview.html
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean generic_ua = prefs.getBoolean("generic_ua", false);
         if (generic_ua)

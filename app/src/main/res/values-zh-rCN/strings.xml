@@ -188,18 +188,23 @@
     <string name="title_setup_office_auth">“认证失败”的错误可能是由于 IMAP/SMTP 被系统管理员禁用导致的</string>
     <string name="title_setup_office_auth_5_7_3">请尝试\'其他提供商\'快速设置向导。</string>
     <string name="title_setup_office_auth_5_7_139">请尝试“Outlook/Hotmail/Live”快速设置向导。</string>
+    <string name="title_setup_office_not_connected">        错误信息 \'User is authenticated but not connected\' 主要表示禁用了 IMAP。
+        如果是消费者 Outlook 账户，请前往 Outlook 网站， 点按右上角的设置齿轮，选择 \'邮件\' ，选择 ‘转发和IMAP\'，在 \'POP 和 IMAP\' 部分启用\'让设备和应用启用IMAP\'。
+        如果是企业、教育账户，请联系电子邮件服务器的系统管理员。
+    </string>
     <string name="title_setup_oauth_rationale">授权访问您的 %1$s 账户</string>
     <string name="title_setup_oauth_update">重新授权现有账户（否则请新建账户）</string>
     <string name="title_setup_oauth_updated">账户授权已更新</string>
     <string name="title_setup_oauth_edge">当使用 Edge 浏览器时，请确保“隐私、安全和服务”设置中的“阻止打开外部应用程序”为“关闭”</string>
     <string name="title_setup_oauth_brave">使用 Brave 浏览器时，您必须在 Brave 的设置中启用该选项，允许在 Brave 之外的应用中打开应用链接</string>
-    <string name="title_setup_oauth_browser">授权需要一个运转正常的浏览器</string>
+    <string name="title_setup_oauth_browser">授权需要一个允许打开应用链接的浏览器 (通常是安全设置)，以便在授权过程结束时，授权令牌可以转移到应用</string>
     <string name="title_setup_oauth_authorize">授权</string>
     <string name="title_setup_select_account">选择账户</string>
     <string name="title_setup_instructions">设置指南</string>
     <string name="title_setup_no_settings">找不到域名\"%1$s\"的设置</string>
     <string name="title_setup_no_settings_hint">尝试使用电子邮件供应商提供的设置手动设置一个帐户</string>
     <string name="title_setup_no_auth_hint">请仔细检查您的电子邮件地址和密码，并确保您的账户启用外部访问 (IMAP/SMTP)</string>
+    <string name="title_setup_no_auth_outlook">此账户您必须使用 Outlook / Office 365 快速设置向导 (微软要求)</string>
     <string name="title_setup_app_password_hint">此供应商需要应用密码而不是帐户密码，请查看供应商的说明</string>
     <string name="title_setup_no_inbox">未找到收件箱</string>
     <string name="title_setup_advanced_protection">当加入了高级保护程序后，将无法使用第三方电子邮件APP, 这是 Google 强加的限制</string>
@@ -327,6 +332,11 @@
     </string>
     <string name="title_advanced_hint_remark">        各个选项按照标签页分类，标签页内又分为多个部分，按外观或用途进行整理，并且可搜索。
     </string>
+    <string name="title_advanced_hint_options">        大多数选项你都用不到，并且因为一些选项相当有针对性，
+        所以如果不是所有选项功能的含义都立即清楚也是可以理解的。
+        请不要只因为选项太多或不能立刻理解所有选项的意思而给差评。
+        每个选项对于一些人都是有用的，只是你(还)用不到。
+    </string>
     <string name="title_advanced_hint_setup">您可以通过点击主配置屏幕上的向导按钮来配置一个帐户。</string>
     <string name="title_advanced_section_main">主要</string>
     <string name="title_advanced_section_synchronize">接收</string>
@@ -359,6 +369,7 @@
     <string name="title_advanced_kept_removed">检查是否已从服务器中移除旧邮件</string>
     <string name="title_advanced_gmail_thread">为 Gmail 账号采用 Gmail 邮件分组样式</string>
     <string name="title_advanced_subject_threading">按发件人和主题来分组邮件</string>
+    <string name="title_advanced_outlook_categories">同步 Outlook 类别</string>
     <string name="title_advanced_sync_folders">同步文件夹列表</string>
     <string name="title_advanced_sync_folders_poll">主动同步文件夹列表</string>
     <string name="title_advanced_sync_shared_folders">同步共享文件夹列表</string>
@@ -374,6 +385,7 @@
     <string name="title_advanced_tune_keep_alive">自动调谐保活的时间间隔</string>
     <string name="title_advanced_blocklist_warning">拦截列表并不完美，可能会阻止垃圾邮件以外的东西！</string>
     <string name="title_advanced_keyboard">默认显示键盘</string>
+    <string name="title_advanced_keyboard_margin">在键盘上方添加边距</string>
     <string name="title_advanced_keyboard_no_fullscreen">防止全屏键盘</string>
     <string name="title_advanced_suggest_names">使用名称和电子邮件地址</string>
     <string name="title_advanced_suggest_local">建议本地存储的联系人</string>
@@ -481,6 +493,7 @@
     <string name="title_advanced_close_pane">关闭会话时收起行或列</string>
     <string name="title_advanced_column_width">邮件列宽/行高：%1$s %%</string>
     <string name="title_advanced_hide_toolbar">滚动邮件时隐藏顶部工具栏</string>
+    <string name="title_advanced_edge_to_edge">Android 导航栏使用应用背景色</string>
     <string name="title_advanced_nav_options">显示导航菜单选项</string>
     <string name="title_advanced_nav_categories">在导航菜单中显示账户类别</string>
     <string name="title_advanced_nav_pin">固定导航菜单</string>
@@ -488,6 +501,7 @@
     <string name="title_advanced_nav_hide_message">您可以在显示设置中再次启用选项</string>
     <string name="title_advanced_nav_last_sync">在导航菜单中显示上次同步时间</string>
     <string name="title_advanced_nav_message_count">在导航菜单中显示本地存储的邮件数</string>
+    <string name="title_advanced_nav_unseen">在导航菜单中显示未读邮件数</string>
     <string name="title_advanced_nav_unseen_drafts">在导航菜单中显示未读草稿的数量</string>
     <string name="title_advanced_nav_pinned_count">在固定导航菜单中显示未读邮件的数量</string>
     <string name="title_advanced_show_unexposed">为新收到的未读邮件的账号/文件夹显示星标</string>
@@ -633,6 +647,7 @@
     <string name="title_advanced_reset_importance">移动邮件时重置其重要性</string>
     <string name="title_advanced_star_snoozed">自动给延后邮件添加星标</string>
     <string name="title_advanced_star_unsnoozed">取消邮件延后通知时自动删除星标</string>
+    <string name="title_advanced_important_unsnoozed">自动将取消延后的消息变得重要</string>
     <string name="title_advanced_auto_important">自动标注星标邮件为重要</string>
     <string name="title_advanced_cancel_snooze">移动邮件时取消延后</string>
     <string name="title_advanced_auto_block_sender">报告垃圾邮件时自动屏蔽发件人</string>
@@ -658,6 +673,7 @@
     <string name="title_advanced_notify_suppress_in_call">通话时延迟通知</string>
     <string name="title_advanced_notify_suppress_in_car">已连接 Android Auto 时延迟通知</string>
     <string name="title_advanced_notify_summary">仅显示摘要通知</string>
+    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">在通知中显示主题</string>
     <string name="title_advanced_notify_preview">在通知中显示邮件预览</string>
     <string name="title_advanced_notify_preview_all">预览所有文本</string>
     <string name="title_advanced_notify_preview_only">仅显示有预览文本的通知</string>
@@ -687,6 +703,7 @@
     <string name="title_advanced_notify_screen_on">短暂打开屏幕以获取新邮件通知</string>
     <string name="title_advanced_notifications_background">使用后台服务同步邮件</string>
     <string name="title_advanced_notifications_background_hint">后台服务不会显示状态栏通知，但随时可能会被 Android 终止</string>
+    <string name="title_advanced_rate_limit">每多少条新消息发出一次通知声音：</string>
     <string name="title_advanced_confirm_links">确认打开链接</string>
     <string name="title_advanced_confirm_files">确认查看文件</string>
     <string name="title_advanced_sanitize_links">默认删除跟踪参数</string>
@@ -739,6 +756,7 @@
         通常支持默认算法 SHA256 和 AES128。
     </string>
     <string name="title_advanced_check_certificate">发送时检查公钥</string>
+    <string name="title_advanced_check_key_usage">发送时检查密钥使用指示</string>
     <string name="title_advanced_manage_certificates">管理公钥</string>
     <string name="title_advanced_import_key">导入私钥</string>
     <string name="title_advanced_manage_keys">管理私钥</string>
@@ -758,6 +776,7 @@
     <string name="title_advanced_class_min_difference">不同分类的最小差异：%1$s %%</string>
     <string name="title_advanced_show_filtered">应用规则时显示过滤器图标</string>
     <string name="title_advanced_haptic_feedback">对重要操作提供触觉反馈</string>
+    <string name="title_advanced_haptic_feedback_swipe">向左/向右滑动时给予触觉反馈</string>
     <string name="title_advanced_language">界面语言</string>
     <string name="title_advanced_language_system">系统</string>
     <string name="title_advanced_integrations_hint">下面的云服务不是应用的一部分。任何付款都将直接提供给云服务，而不是应用开发者。</string>
@@ -782,6 +801,10 @@
     <string name="title_advanced_answer_prompt">回答提示</string>
     <string name="title_advanced_system_instructions">系统指南</string>
     <string name="title_advanced_default_prompt">默认提示</string>
+    <string name="title_advanced_ai">AI</string>
+    <string name="title_advanced_ai_input_system">输入系统提示</string>
+    <string name="title_advanced_ai_input_body">输入您信息的文本</string>
+    <string name="title_advanced_ai_input_reply">输入回复消息的文本</string>
     <string name="title_advanced_entered_text">输入的文本</string>
     <string name="title_advanced_sdcard">我想使用 SD 卡</string>
     <string name="title_advanced_watchdog">定期检查 FairEmail 是否仍在运行</string>
@@ -817,6 +840,7 @@
     <string name="title_advanced_sync_kept_hint">这将更耗数据与电量，特别是如果有大量邮件存储在设备上</string>
     <string name="title_advanced_gmail_thread_hint">这只适用于新收到的邮件，且可能会破坏现有的组</string>
     <string name="title_advanced_subject_threading_hint">仅在过去 %1$d 小时内收到的邮件</string>
+    <string name="title_advanced_outlook_categories_hint">由于 Outlook IMAP 服务器的限制，只能提取 Outlook 类别，无法自动刷新</string>
     <string name="title_advanced_sync_folders_hint">禁用此功能某种程度上会减少数据和电量使用，但也会禁用更新文件夹列表</string>
     <string name="title_advanced_poll_folders_hint">定期同步文件夹列表（除了在连接账户后）</string>
     <string name="title_advanced_check_authentication_hint">这将检查电子邮件服务器执行的DKIM、SPF和DMARC认证的结果</string>
@@ -833,6 +857,7 @@
     <string name="title_advanced_send_reminders_hint">当邮件文本或主题为空或缺少附件时显示警告</string>
     <string name="title_advanced_reply_move_hint">邮件服务器仍可能将邮件添加到“已发送”文件夹</string>
     <string name="title_advanced_compose_color_hint">颜色太浅或太深会导致收件人难以辨认邮件</string>
+    <string name="title_advanced_compose_font_hint">默认意味着尊重接收方选择的字体</string>
     <string name="title_advanced_template_reply_hint">允许 HTML。可用的占位符： %1$s</string>
     <string name="title_advanced_write_below_hint">收件人可能会错过您的回复，例如当邮件较长被截断时</string>
     <string name="title_advanced_attach_new_hint">否则，将共享地址或文件添加到当前草稿邮件中</string>
@@ -899,6 +924,7 @@
     <string name="title_advanced_notify_car_hint">已连接意味着正在投影某些东西，例如用于导航的地图</string>
     <string name="title_advanced_notify_remove_hint">滑走或标为已读时将总会移除新邮件通知</string>
     <string name="title_advanced_notify_manage_hint">点击频道名称来设置频道属性</string>
+    <string name="title_advanced_notify_samsung_hint">要管理通知渠道，您可能需要启用此 Android 设置：通知、高级设置、管理每个应用的通知类别</string>
     <string name="title_advanced_notify_manage_default_hint">设置默认声音等</string>
     <string name="title_advanced_notify_manage_service_hint">禁用“监视”通知</string>
     <string name="title_advanced_notify_separate_hint">如何配置账户、文件夹和发送者的通知？</string>
@@ -1198,6 +1224,7 @@
     <string name="title_filters_active">已激活至少一个过滤器</string>
     <string name="title_duplicate_in">%1$s 中的重复邮件</string>
     <string name="title_trashed_from">来自 %1$s 的已回收邮件</string>
+    <string name="title_sent_to">消息已发送至 %1$s</string>
     <string name="title_subject_reply">回复: %1$s</string>
     <string name="title_subject_forward">转发: %1$s</string>
     <string name="title_subject_reply_alt">Re: %1$s</string>
@@ -1220,6 +1247,7 @@
     <string name="title_unimportant">不重要</string>
     <string name="title_search_in_text">在文本中搜索 &#8230;</string>
     <string name="title_forward">转发</string>
+    <string name="title_forward_to">转发给</string>
     <string name="title_resend">重新发送</string>
     <string name="title_fetching_headers">正在下载邮件标头 &#8230;</string>
     <string name="title_new_message">新邮件</string>
@@ -1231,6 +1259,7 @@
     <string name="title_force_light">强制使用浅色主题</string>
     <string name="title_rename">重命名</string>
     <string name="title_share">分享</string>
+    <string name="title_analyze">分析</string>
     <string name="title_event">添加到日历</string>
     <string name="title_pin">添加快捷方式</string>
     <string name="title_pin_label">快捷方式标题</string>
@@ -1242,11 +1271,12 @@
     <string name="title_print_margins">添加边距</string>
     <string name="title_show_headers">显示邮件头</string>
     <string name="title_show_html">显示原始消息</string>
-    <string name="title_raw_save">保存原始邮件</string>
+    <string name="title_raw_save">保存原始邮件 (.eml)</string>
     <string name="title_raw_send">作为附件发送</string>
     <string name="title_raw_send_message">邮件</string>
     <string name="title_raw_send_thread">对话</string>
     <string name="title_manage_keywords">关键字管理</string>
+    <string name="title_manage_keywords_pop">使用 POP3，关键字不能存储在电子邮件服务器上！</string>
     <string name="title_manage_labels">管理 Gmail 标签</string>
     <string name="title_add_keyword">添加关键字</string>
     <string name="title_show_inline">显示内嵌附件</string>
@@ -1346,6 +1376,7 @@
     <string name="title_attachment_saved">附件已保存</string>
     <string name="title_attachments_saved">附件已保存</string>
     <string name="title_attachments_incomplete">一些附件或图像没有下载，且无法添加</string>
+    <string name="title_report_remark">这份报告是一封特别格式的电子邮件，由电子邮件服务器发送，因为发送的邮件无法发送给收件人， 例如，因为邮箱已满，或因为电子邮件地址不存在 (不再存在)。</string>
     <string name="title_ask_save">保存更改？</string>
     <string name="title_ask_delete">确定要永久删除邮件吗？</string>
     <string name="title_ask_delete_accept">我明白永久删除邮件是不可逆的</string>
@@ -1485,7 +1516,7 @@
     <string name="title_summarize">总结</string>
     <string name="title_translate_configure">配置 &#8230;</string>
     <string name="title_translate_key">输入密钥</string>
-    <string name="title_translating">正在翻译 &#8230;</string>
+    <string name="title_translating">正在翻译为 %1$s &#8230;</string>
     <string name="title_translate_formal">使用正式语言形式</string>
     <string name="title_translate_small">对源文本使用一个小字体</string>
     <string name="title_translate_replace">用翻译文本替换源文本</string>
@@ -1574,6 +1605,7 @@
     <string name="title_signature_email">签名地址</string>
     <string name="title_signature_mismatch">发件人和签名的电子邮件地址不匹配</string>
     <string name="title_signature_algorithm">算法</string>
+    <string name="title_signature_public_key">公钥</string>
     <string name="title_signature_subject">主题</string>
     <string name="title_signature_validity">有效性</string>
     <string name="title_signature_outdated">此公钥当前无效</string>
@@ -1637,6 +1669,7 @@
     <string name="title_sort_on_starred_unread">星标，未读</string>
     <string name="title_sort_on_priority">优先级</string>
     <string name="title_sort_on_sender">发件人</string>
+    <string name="title_sort_on_sender_name">发件人名称</string>
     <string name="title_sort_on_subject">主题</string>
     <string name="title_sort_on_size">大小</string>
     <string name="title_sort_on_attachments">附件</string>
@@ -1653,6 +1686,7 @@
     <string name="title_filter_hidden">隐藏</string>
     <string name="title_filter_deleted">已删除</string>
     <string name="title_filter_duplicates">重复项</string>
+    <string name="title_filter_sent">已发送</string>
     <string name="title_filter_trash">已回收</string>
     <string name="title_compact">紧凑视图</string>
     <string name="title_zoom">文本大小</string>
@@ -1676,6 +1710,7 @@
     <string name="title_edit_signature_image_hint">        发送邮件时，图像从所选位置被复制到邮件中。
         因此，不要删除图像文件！
     </string>
+    <string name="title_edit_signature_delete">删除签名？</string>
     <string name="title_answer_define_name">名称</string>
     <string name="title_answer_define_value">值</string>
     <string name="title_answer_caption">编辑模板</string>
@@ -1761,6 +1796,7 @@
     <string name="title_rule_resend">重新发送</string>
     <string name="title_rule_attached">附加原始邮件文件</string>
     <string name="title_rule_cc">回信给邮件抄送地址</string>
+    <string name="title_rule_checks">检查自动发送的邮件、无回复地址等。</string>
     <string name="title_rule_with_attachments">含附件</string>
     <string name="title_rule_answer_remark">(设置自动回复后)任何会话将仅发送一个回复，以避免回复循环</string>
     <string name="title_rule_name_missing">缺少规则名称</string>
@@ -1792,6 +1828,7 @@
     <string name="title_rule_select_sound">选择声音</string>
     <string name="title_rule_select_sound_ringtone">铃声</string>
     <string name="title_rule_select_sound_audio">音频文件</string>
+    <string name="title_rule_loop_sound">循环声音</string>
     <string name="title_rule_use_as_alarm">用作警报</string>
     <string name="title_rule_alarm_hint">这将忽略“勿扰”规则</string>
     <string name="title_rule_alarm_duration">警报最长持续时间 (秒)</string>
@@ -1949,7 +1986,9 @@
     <string name="title_hint_junk">过滤垃圾邮件属于邮件服务器的工作，单凭客户端设备根本无力胜任</string>
     <string name="title_hint_junk_learn">将邮件移入或移出垃圾邮件文件夹会让电子邮件服务器“得知”什么是垃圾邮件</string>
     <string name="title_hint_contact_actions">长按以显示更多选项</string>
-    <string name="title_hint_eml">这是原始邮件文件内容的摘要。使用操作栏中的保存图标保存原始邮件以查看所有内容。</string>
+    <string name="title_hint_eml">        这是一个原始消息文件内容的摘要。
+        您可以使用右下角按钮保存消息到收件箱查看所有内容。
+    </string>
     <string name="title_open_link">打开链接</string>
     <string name="title_image_link">图片链接</string>
     <string name="title_different_link">标题和链接地址不同</string>
@@ -1972,7 +2011,7 @@
     <string name="title_no">否</string>
     <string name="title_later">稍后再说</string>
     <string name="title_paste_plain">粘贴为纯文本</string>
-    <string name="title_paste_as_quote" comment="title_paste_as_quote&#10;Title for an additional menu option in the Android copy/paste popup menu">粘贴为引用</string>
+    <string name="title_paste_as_quote">粘贴为引用</string>
     <string name="title_undo">撤销</string>
     <string name="title_redo">重做</string>
     <string name="title_insert_line">插入行</string>
@@ -2152,6 +2191,8 @@
     <string name="title_accessibility_to">收件人</string>
     <string-array name="pollIntervalNames">
         <item>总是</item>
+        <item>每分钟</item>
+        <item>每 2 分钟</item>
         <item>每 5 分钟</item>
         <item>每 10 分钟</item>
         <item>每 15 分钟</item>
@@ -2268,6 +2309,7 @@
         <item>仅 PGP 加密</item>
         <item>PGP 签名+加密</item>
         <item>仅 S/MIME 签名</item>
+        <item>仅 S/MIME 加密</item>
         <item>S/MIME 签名+加密</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2288,6 +2330,8 @@
         <item>7.5 秒</item>
         <item>10 秒</item>
         <item>15 秒</item>
+        <item>30 秒</item>
+        <item>60 秒</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>草写体</item>

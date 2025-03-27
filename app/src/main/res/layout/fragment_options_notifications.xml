@@ -109,6 +109,19 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/btnManage" />
 
+                <TextView
+                    android:id="@+id/tvSamsungHint"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_notify_samsung_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvManageHint" />
+
                 <Button
                     android:id="@+id/btnManageDefault"
                     style="?android:attr/buttonStyleSmall"
@@ -119,7 +132,7 @@
                     android:drawablePadding="6dp"
                     android:text="@string/title_advanced_notifications_default"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvManageHint" />
+                    app:layout_constraintTop_toBottomOf="@id/tvSamsungHint" />
 
                 <ImageView
                     android:id="@+id/ivChannelDefault"
@@ -384,6 +397,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cbNotifyActionHide" />
 
+                <CheckBox
+                    android:id="@+id/cbNotifyActionTts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/title_rule_tts"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cbNotifyActionSnooze" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swLight"
                     android:layout_width="0dp"
@@ -392,7 +415,7 @@
                     android:text="@string/title_advanced_light"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/cbNotifyActionSnooze"
+                    app:layout_constraintTop_toBottomOf="@id/cbNotifyActionTts"
                     app:switchPadding="12dp" />
 
                 <Button
@@ -687,6 +710,18 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNotifySubject"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_notify_subject"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySubtext"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swNotifyPreview"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -695,7 +730,7 @@
                     android:text="@string/title_advanced_notify_preview"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNotifySubtext"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySubject"
                     app:switchPadding="12dp" />
 
                 <TextView
@@ -903,6 +938,28 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swBackground" />
 
+                <TextView
+                    android:id="@+id/tvRateLimit"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_rate_limit"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvBackgroundHint" />
+
+                <eu.faircode.email.SpinnerEx
+                    android:id="@+id/spRateLimit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:entries="@array/undoNames"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRateLimit" />
+
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swAlertOnce"
                     android:layout_width="0dp"
@@ -911,7 +968,7 @@
                     android:text="@string/title_advanced_alert_once"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvBackgroundHint"
+                    app:layout_constraintTop_toBottomOf="@id/spRateLimit"
                     app:switchPadding="12dp" />
 
                 <TextView

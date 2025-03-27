@@ -16,8 +16,11 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
+
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
 
 import android.content.Context;
 import android.content.Intent;
@@ -171,6 +174,9 @@ public class AdapterNavAccountFolder extends RecyclerView.Adapter<AdapterNavAcco
             tvItem.setTextColor(count == 0 ? textColorSecondary : colorUnread);
             tvItem.setTypeface(count == 0 ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
             tvItem.setVisibility(expanded ? View.VISIBLE : View.GONE);
+
+            ivItem.setContentDescription(tvItem.getText());
+            ivItem.setImportantForAccessibility(expanded ? IMPORTANT_FOR_ACCESSIBILITY_NO : IMPORTANT_FOR_ACCESSIBILITY_YES);
 
             if (account.folderName == null) {
                 if (account.last_connected != null && expanded && nav_last_sync) {

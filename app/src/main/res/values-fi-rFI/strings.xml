@@ -204,7 +204,6 @@
     <string name="title_setup_oauth_update">Valtuuta olemassa oleva tili uudelleen (muussa tapauksessa luo uusi tili)</string>
     <string name="title_setup_oauth_updated">Tilin valtuutus päivitettiin</string>
     <string name="title_setup_oauth_brave">Brave-selaimessa täytyy ottaa asetuksissa käyttöön valinta, jotta sovelluslinkit voidaan avata muissa sovelluksissa</string>
-    <string name="title_setup_oauth_browser">Valtuutus vaatii toimivan selaimen</string>
     <string name="title_setup_oauth_authorize">Valtuuta</string>
     <string name="title_setup_select_account">Valitse tili</string>
     <string name="title_setup_instructions">Asetusohjeet</string>
@@ -1224,6 +1223,7 @@
     <string name="title_unimportant">Ei tärkeä</string>
     <string name="title_search_in_text">Etsi tekstistä &#8230;</string>
     <string name="title_forward">Lähetä edelleen</string>
+    <string name="title_forward_to">Lähetä edelleen vastaanottajalle</string>
     <string name="title_resend">Uudelleenlähetä</string>
     <string name="title_fetching_headers">Ladataan viestien otsikkotietoja &#8230;</string>
     <string name="title_new_message">Uusi viesti</string>
@@ -1246,7 +1246,6 @@
     <string name="title_print_margins">Lisää marginaali</string>
     <string name="title_show_headers">Näytä tunnistetiedot</string>
     <string name="title_show_html">Näytä lähde</string>
-    <string name="title_raw_save">Tallenna raakaviesti</string>
     <string name="title_raw_send">Lähetä liitteenä</string>
     <string name="title_raw_send_message">Viesti</string>
     <string name="title_raw_send_thread">Keskustelu</string>
@@ -1486,7 +1485,6 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
     <string name="title_summarize">Tee yhteenveto</string>
     <string name="title_translate_configure">Määritä &#8230;</string>
     <string name="title_translate_key">Syötä avain</string>
-    <string name="title_translating">Käännetään &#8230;</string>
     <string name="title_translate_formal">Käytä muodollista kieltä</string>
     <string name="title_translate_small">Käytä pientä kirjasinta lähdetekstille</string>
     <string name="title_translate_replace">Korvaa lähdeteksti käännöksellä</string>
@@ -1654,6 +1652,7 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
     <string name="title_filter_hidden">Piilotettu</string>
     <string name="title_filter_deleted">Poistetut</string>
     <string name="title_filter_duplicates">Kaksoiskappaleet</string>
+    <string name="title_filter_sent">Lähetetty</string>
     <string name="title_filter_trash">Roskakoriin siirretyt</string>
     <string name="title_compact">Tiivistetty näkymä</string>
     <string name="title_zoom">Tekstin koko</string>
@@ -1948,7 +1947,6 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
     <string name="title_hint_junk">Roskapostin suodatus pitäisi tehdä sähköpostipalvelimella, eikä sitä voi tehdä luotettavasti akkukäyttöisellä laitteella, jolla on rajalliset ominaisuudet.</string>
     <string name="title_hint_junk_learn">Siirtämällä viestejä roskapostikansioon ja sieltä pois, sähköpostipalvelin \"oppii\" mitä roskaposti on</string>
     <string name="title_hint_contact_actions">Pitkä painallus avaa asetukset</string>
-    <string name="title_hint_eml">Tämä on tiivistelmä raakaviestistä. Näet koko sisällön tallentamalla raakaviestin toimintopalkin tallennuskuvakkeesta.</string>
     <string name="title_open_link">Avaa linkki</string>
     <string name="title_image_link">Kuvalinkki</string>
     <string name="title_different_link">Verkko-osoite linkin nimessä ei vastaa linkin kohdeosoitetta</string>
@@ -2151,8 +2149,10 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
     <string name="title_accessibility_to">Vastaanottaja</string>
     <string-array name="pollIntervalNames">
         <item>Jatkuvasti</item>
-        <item>5 minuutin välein</item>
-        <item>10 minuutin välein</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>15 minuutin välein</item>
         <item>30 minuutin välein</item>
         <item>Joka tunti</item>
@@ -2267,6 +2267,7 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
         <item>PGP salaa ainoastaan</item>
         <item>PGP allekirjoita+salaa</item>
         <item>S/MIME allekirjoita ainoastaan</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME allekirjoita+salaa</item>
     </string-array>
     <string-array name="sizeNames">
@@ -2287,6 +2288,8 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Kursivoitu</item>

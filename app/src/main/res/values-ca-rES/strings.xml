@@ -835,7 +835,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_pin">Afegeix una drecera</string>
     <string name="title_print">Imprimeix</string>
     <string name="title_show_headers">Mostra les capçaleres</string>
-    <string name="title_raw_save">Descarregueu el missatge en brut</string>
     <string name="title_raw_send">Envia com a fitxer adjunt</string>
     <string name="title_raw_send_message">Missatge</string>
     <string name="title_raw_send_thread">Conversació</string>
@@ -1074,6 +1073,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_filter_unknown">Remitents desconeguts</string>
     <string name="title_filter_hidden">Ocult</string>
     <string name="title_filter_duplicates">Duplicades</string>
+    <string name="title_filter_sent">Enviat</string>
     <string name="title_compact">Vista compacta</string>
     <string name="title_zoom">Mida del text</string>
     <string name="title_padding">Separació del text</string>
@@ -1261,7 +1261,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_hint_important">Important</string>
     <string name="title_hint_sync">La descàrrega dels missatges pot trigar un temps, depenent de la velocitat del proveïdor, de la connexió a Internet i del dispositiu i del nombre de missatges. Mentre descarregueu missatges, l\'aplicació pot respondre més lent.</string>
     <string name="title_hint_contact_actions">Pulsació llarga per opcions</string>
-    <string name="title_hint_eml">Aquest és un resum del contingut d\'un fitxer de missatges sense processar. Desa el missatge sense processar amb la icona de desar a la barra d\'accions per a veure tot el contingut.</string>
     <string name="title_open_link">Obrir l\'enllaç</string>
     <string name="title_image_link">Enllaç a la imatge</string>
     <string name="title_different_link">El títol i la direcció de l\'enllaç són diferents</string>
@@ -1389,8 +1388,10 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_accessibility_to">Destinatari</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
-        <item>Cada 5 minuts</item>
-        <item>Cada 10 minuts</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Cada 15 minuts</item>
         <item>Cada 30 minuts</item>
         <item>Cada hora</item>
@@ -1494,6 +1495,7 @@ Ambdues opcions es poden desactivar si es desitja.</string>
         <item>PGP encrypt-only</item>
         <item>Signar i xifrar PGP</item>
         <item>Només signar S/MIME</item>
+        <item>S/MIME encrypt-only</item>
         <item>Signar i xifrar S/MIME</item>
     </string-array>
     <string-array name="sizeNames">
@@ -1514,6 +1516,8 @@ Ambdues opcions es poden desactivar si es desitja.</string>
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Cursiva</item>

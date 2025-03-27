@@ -525,7 +525,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/title_accessibility_filter_out_seen"
                 android:padding="12dp"
-                android:tag="inset"
                 app:layout_constraintBottom_toTopOf="@+id/etSearch"
                 app:layout_constraintEnd_toStartOf="@id/ibUnflagged"
                 app:layout_constraintHorizontal_chainStyle="packed"
@@ -541,7 +540,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/title_accessibility_filter_out_unflagged"
                 android:padding="12dp"
-                android:tag="inset"
                 app:layout_constraintBottom_toTopOf="@+id/etSearch"
                 app:layout_constraintEnd_toStartOf="@+id/ibSnoozed"
                 app:layout_constraintStart_toEndOf="@id/ibSeen"
@@ -556,7 +554,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/title_accessibility_filter_out_snoozed"
                 android:padding="12dp"
-                android:tag="inset"
                 app:layout_constraintBottom_toTopOf="@+id/etSearch"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/ibUnflagged"
@@ -592,7 +589,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="?attr/colorPrimary"
-                android:tag="inset"
                 app:itemIconTint="@color/action_foreground"
                 app:itemTextColor="@color/action_foreground"
                 app:labelVisibilityMode="unlabeled"
@@ -977,6 +973,20 @@
                 app:tint="@color/action_foreground" />
 
             <ImageButton
+                android:id="@+id/ibKeywords"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/title_manage_keywords"
+                android:padding="6dp"
+                android:scaleType="fitCenter"
+                android:tooltipText="@string/title_manage_keywords"
+                app:layout_constraintEnd_toStartOf="@id/ibInbox"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/twotone_label_important_24"
+                app:tint="@color/action_foreground" />
+
+            <ImageButton
                 android:id="@+id/ibMoreSettings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -985,7 +995,7 @@
                 android:padding="3dp"
                 android:paddingVertical="6dp"
                 android:tooltipText="@string/title_setup"
-                app:layout_constraintEnd_toStartOf="@id/ibInbox"
+                app:layout_constraintEnd_toStartOf="@id/ibKeywords"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/twotone_settings_24"
                 app:tint="@color/action_foreground" />
@@ -1023,7 +1033,6 @@
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="45dp"
         android:contentDescription="@string/title_setup_error"
-        android:tag="inset"
         android:tooltipText="@string/title_setup_error"
         app:backgroundTint="?attr/colorWarning"
         app:srcCompat="@drawable/twotone_warning_24"

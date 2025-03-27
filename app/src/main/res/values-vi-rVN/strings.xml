@@ -987,6 +987,7 @@
     <string name="title_important">Quan trọng</string>
     <string name="title_search_in_text">Tìm kiếm trong văn bản &#8230;</string>
     <string name="title_forward">Chuyển tiếp</string>
+    <string name="title_forward_to">Chuyển tiếp đến</string>
     <string name="title_resend">Gửi lại</string>
     <string name="title_fetching_headers">Đang tải xuống tiêu đề thư &#8230;</string>
     <string name="title_new_message">Thư mới</string>
@@ -1002,7 +1003,6 @@
     <string name="title_print_images">In các hình ảnh</string>
     <string name="title_print_images_remark">Việc tải xuống các hình ảnh có thể mất một ít thời gian</string>
     <string name="title_show_headers">Hiện tiêu đề</string>
-    <string name="title_raw_save">Lưu thư thô</string>
     <string name="title_raw_send">Gửi làm tệp đính kèm</string>
     <string name="title_raw_send_message">Thư</string>
     <string name="title_raw_send_thread">Cuộc hội thoại</string>
@@ -1206,7 +1206,6 @@
     <string name="title_translate">Dịch</string>
     <string name="title_translate_configure">Thiết lập &#8230;</string>
     <string name="title_translate_key">Nhập mã khóa</string>
-    <string name="title_translating">Đang dịch &#8230;</string>
     <string name="title_translate_formal">Sử dụng dạng trang trọng</string>
     <string name="title_translate_small">Sử dụng phông chữ nhỏ cho văn bản nguồn</string>
     <string name="title_translate_html">Giữ lại định dạng</string>
@@ -1347,6 +1346,7 @@
     <string name="title_filter_hidden">Ẩn</string>
     <string name="title_filter_deleted">Đã xoá</string>
     <string name="title_filter_duplicates">Bản sao</string>
+    <string name="title_filter_sent">Đã gửi</string>
     <string name="title_filter_trash">Thùng rác</string>
     <string name="title_compact">Xem kiểu thu gọn</string>
     <string name="title_zoom">Cỡ chữ</string>
@@ -1600,7 +1600,6 @@
     <string name="title_hint_junk">Việc lọc thư rác nên được làm bởi máy chủ email và không thể làm một cách đáng tin cậy trên một thiết bị chạy bằng pin có khả năng giới hạn.</string>
     <string name="title_hint_junk_learn">Bằng cách di chuyển thư đến và từ thư mục thư rác, máy chủ email sẽ \"học\" được thư rác là gì</string>
     <string name="title_hint_contact_actions">Nhấn giữ để xem các tuỳ chọn</string>
-    <string name="title_hint_eml">Đây là tóm tắt của nội dung của một tập tin thư thô. Lưu thư thô bằng biểu tượng lưu trong thanh hành động để xem tất cả nội dung.</string>
     <string name="title_open_link">Mở liên kết</string>
     <string name="title_image_link">Liên kết hình ảnh</string>
     <string name="title_different_link">Tiêu đề và địa chỉ liên kết khác nhau</string>
@@ -1620,7 +1619,7 @@
     <string name="title_issue">Bạn có câu hỏi hoặc vấn đề không?</string>
     <string name="title_yes">Có</string>
     <string name="title_no">Không</string>
-    <string name="title_later">Để sau</string>
+    <string name="title_later">Để sau</string>
     <string name="title_paste_plain">Dán kiểu văn bản thuần</string>
     <string name="title_undo">Hoàn tác</string>
     <string name="title_redo">Làm lại</string>
@@ -1730,7 +1729,7 @@
     <string name="title_keyword_label2">Công việc</string>
     <string name="title_keyword_label3">Cá nhân</string>
     <string name="title_keyword_label4">Cần làm</string>
-    <string name="title_keyword_label5">Để sau</string>
+    <string name="title_keyword_label5">Để sau</string>
     <plurals name="title_accessibility_messages">
         <item quantity="other">%1$d thư</item>
     </plurals>
@@ -1763,8 +1762,10 @@
     <string name="title_accessibility_to">Người nhận</string>
     <string-array name="pollIntervalNames">
         <item>Luôn luôn</item>
-        <item>Mỗi 5 phút</item>
-        <item>Mỗi 10 phút</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Mỗi 15 phút</item>
         <item>Mỗi 30 phút</item>
         <item>Mỗi tiếng</item>
@@ -1872,6 +1873,7 @@
         <item>PGP encrypt-only</item>
         <item>PGP ký+mã hoá</item>
         <item>S/MIME chỉ ký</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME ký+mã hoá</item>
     </string-array>
     <string-array name="sizeNames">
@@ -1892,6 +1894,8 @@
         <item>7.5 giây</item>
         <item>10 giây</item>
         <item>15 giây</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Chữ viết tay</item>

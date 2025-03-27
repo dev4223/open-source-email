@@ -741,6 +741,7 @@
     <string name="title_important">Viktig</string>
     <string name="title_search_in_text">Søk i tekst &#8230;</string>
     <string name="title_forward">Videresend</string>
+    <string name="title_forward_to">Videresend til</string>
     <string name="title_new_message">Ny melding</string>
     <string name="title_editasnew">Rediger som ny</string>
     <string name="title_create_rule">Opprett regel &#8230;</string>
@@ -750,7 +751,6 @@
     <string name="title_print">Skriv ut</string>
     <string name="title_print_header">Inkluder header-informasjon ved utskrift</string>
     <string name="title_show_headers">Vis topptekster</string>
-    <string name="title_raw_save">Lagre rå melding</string>
     <string name="title_raw_send">Send som vedlegg</string>
     <string name="title_raw_send_message">Melding</string>
     <string name="title_raw_send_thread">Samtale</string>
@@ -1013,6 +1013,7 @@
     <string name="title_filter_unknown">Ukjente avsendere</string>
     <string name="title_filter_hidden">Skjult</string>
     <string name="title_filter_duplicates">Duplikater</string>
+    <string name="title_filter_sent">Sendt</string>
     <string name="title_compact">Kompakt visning</string>
     <string name="title_zoom">Tekststørrelse</string>
     <string name="title_padding">Polstring</string>
@@ -1221,7 +1222,6 @@
     <string name="title_hint_design">Utformingen er laget for å ikke distrahere, men fortsatt være svært nyttig. Det finnes mange tilpasningsmuligheter, men vennligst forstå at det er umulig å gjøre alle fornøyde til enhver tid.</string>
     <string name="title_hint_junk">Spam-filtrering må gjøres av e-posttjeneren og kan ikke gjøres på en batteridrevet enhet med begrenset kapasitet.</string>
     <string name="title_hint_contact_actions">Langt trykk for flere instillinger</string>
-    <string name="title_hint_eml">Dette er et sammendrag av innholdet i en rå meldingsfil. Lagre råmeldingen med lagringsikonet i handlingslinjen for å se alt innhold.</string>
     <string name="title_open_link">Åpne link</string>
     <string name="title_image_link">Bildelink</string>
     <string name="title_different_link">Tittelen og linkadressen er forskjellige</string>
@@ -1360,8 +1360,10 @@
     <string name="title_accessibility_to">Mottaker</string>
     <string-array name="pollIntervalNames">
         <item>Alltid</item>
-        <item>Hvert 5. minutt</item>
-        <item>Hvert 10. minutt</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Hvert 15. minutt</item>
         <item>Hvert 30. minutt</item>
         <item>Hver time</item>
@@ -1475,6 +1477,7 @@
         <item>PGP encrypt-only</item>
         <item>PGP signer+krypter</item>
         <item>Kun S/MIME signering</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME signer+krypter</item>
     </string-array>
     <string-array name="sizeNames">
@@ -1495,6 +1498,8 @@
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Kursiv</item>

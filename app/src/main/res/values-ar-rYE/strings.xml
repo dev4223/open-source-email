@@ -185,6 +185,7 @@
     <string name="title_setup_google_sign_in">تسجيل الدخول باستخدام جوجل</string>
     <string name="title_setup_other">مزود اخر</string>
     <string name="title_setup_inbound">البريد الإلكتروني الوارد فقط (لا يمكن إرسال البريد الإلكتروني!)</string>
+    <string name="title_setup_imap">حساب IMAP</string>
     <string name="title_setup_pop3">حساب POP3</string>
     <string name="title_setup_oauth_permission">مزود البريد الإلكتروني وافق على OAuth فقط لإصدارة متجر Play وإصدارة GitHub</string>
     <string name="title_setup_gmail_support">تفويض حسابات جوجل سيعمل فقط مع إصدارة متجر Play وإصدارة GitHub لأن أندرويد يفحص توقيع التطبيق الرقمي</string>
@@ -365,6 +366,7 @@
     <string name="title_advanced_signature_location">موضوع التوقيع</string>
     <string name="title_advanced_plain_only_reply">تلقائياً نص عادي فقط عند الرد على رسالة نص عادي فقط</string>
     <string name="title_advanced_metered">استخدام اتصالات أجهزة الاستنشاق</string>
+    <string name="title_advanced_ssl_harden_strict">يتطلب TLS 1.3</string>
     <string name="title_advanced_caption_general">الاعدادات العامة</string>
     <string name="title_advanced_caption_list">قائمة</string>
     <string name="title_advanced_caption_conversation">المحادثة</string>
@@ -563,7 +565,6 @@
     <string name="title_show_addresses">عرض CC/BCC</string>
     <string name="title_media_toolbar">شريط أدوات الوسائط</string>
     <string name="title_translate_configure">إعداد &#8230;</string>
-    <string name="title_translating">ترجمة &#8230;</string>
     <string name="title_translate_small">استخدام خط صغير لنص المصدر</string>
     <string name="title_from_missing">المُرسِل مفقود</string>
     <string name="title_to_missing">المستلِم أو المُرسَل إليه مفقود</string>
@@ -595,6 +596,7 @@
     <string name="title_sort_on_size">الحجم</string>
     <string name="title_sort_on_name">الإسم</string>
     <string name="title_sort_on_order">الترتيب</string>
+    <string name="title_filter_sent">البريد المرسَل</string>
     <string name="title_zoom">حجم النص</string>
     <string name="title_select_all">اختيار الكل</string>
     <string name="title_language_all">الكل</string>
@@ -742,8 +744,10 @@
     <string name="title_accessibility_from">المُرسِل</string>
     <string-array name="pollIntervalNames">
         <item>دائماً</item>
-        <item>كل 5 دقيقة</item>
-        <item>كل 10 دقيقة</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>كل 15 دقيقة</item>
         <item>كل 30 دقيقة</item>
         <item>كل ساعة</item>

@@ -408,6 +408,7 @@
     <string name="title_delete_channel">Избриши канал за обавештавање</string>
     <string name="title_insert_contact">Додај контакт</string>
     <string name="title_edit_contact">Измени контакт</string>
+    <string name="title_contact_email">Електронска пошта</string>
     <string name="title_contact_name">Име</string>
     <string name="title_create_sub_folder">Направи подфасциклу</string>
     <string name="title_empty_trash_ask">Заувек обрисати све поруке из отпада?</string>
@@ -482,7 +483,6 @@
     <string name="title_pin">Додај пречицу</string>
     <string name="title_print">Штампа</string>
     <string name="title_show_headers">Прикажи заглавља</string>
-    <string name="title_raw_save">Сачувај сирову поруку</string>
     <string name="title_raw_send">Пошаљи као прилог</string>
     <string name="title_raw_send_message">Порука</string>
     <string name="title_raw_send_thread">Разговор</string>
@@ -681,6 +681,7 @@
     <string name="title_filter_unknown">Непознати пошиљаоци</string>
     <string name="title_filter_hidden">Сакривеним</string>
     <string name="title_filter_duplicates">Дупликатима</string>
+    <string name="title_filter_sent">Послате</string>
     <string name="title_filter_trash">У отпаду</string>
     <string name="title_compact">Компактан изглед</string>
     <string name="title_zoom">Величина текста</string>
@@ -858,7 +859,6 @@
     <string name="title_hint_important">Важно</string>
     <string name="title_hint_sync">Преузимање порука може да потраје, у зависности од брзине провајдера, интернет конекцје, и уређаја и броја порука. За време преузимања порука, апликација може бити спорија.</string>
     <string name="title_hint_contact_actions">Држите дуго за опције</string>
-    <string name="title_hint_eml">Ово је сажетак садржаја фајла сирове поруке. Сачувајте сирову поруку преко иконице за чување у траци са радњама да бисте јој видели садржај.</string>
     <string name="title_open_link">Отвори везу</string>
     <string name="title_different_link">Текст везе и адреса везе су различити</string>
     <string name="title_link_http">Саобраћај неће бити шифрован</string>
@@ -971,8 +971,10 @@
     <string name="title_accessibility_to">Прималац</string>
     <string-array name="pollIntervalNames">
         <item>Увек</item>
-        <item>Сваких 5 минута</item>
-        <item>Сваких 10 минута</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>Сваких 15 минута</item>
         <item>Сваких 30 минута</item>
         <item>На сваких сат времена</item>
@@ -1082,6 +1084,7 @@
         <item>PGP encrypt-only</item>
         <item>PGP потпис+шифровање</item>
         <item>S/MIME само потпис</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME потпис+шифровање</item>
     </string-array>
     <string-array name="sizeNames">

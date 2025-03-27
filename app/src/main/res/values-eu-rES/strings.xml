@@ -823,6 +823,7 @@
     <string name="title_important">Garrantzitsua</string>
     <string name="title_search_in_text">Bilatu testuan &#8230;</string>
     <string name="title_forward">Birbidali</string>
+    <string name="title_forward_to">Birbidali hona:</string>
     <string name="title_resend">Birbidali</string>
     <string name="title_fetching_headers">Mezu-goiburuak deskargatzen &#8230;</string>
     <string name="title_new_message">Mezu berria</string>
@@ -836,7 +837,6 @@
     <string name="title_print_header">Inprimatu goiburua</string>
     <string name="title_print_images_remark">Irudiak deskargatzea denbora hartu lezake</string>
     <string name="title_show_headers">Erakutsi goiburuak</string>
-    <string name="title_raw_save">Gorde mezu gordina</string>
     <string name="title_raw_send">Bidali eranskin gisa</string>
     <string name="title_raw_send_message">Mezua</string>
     <string name="title_raw_send_thread">Elkarrizketa</string>
@@ -1140,6 +1140,7 @@
     <string name="title_filter_hidden">Ezkutuan</string>
     <string name="title_filter_deleted">Ezabatua</string>
     <string name="title_filter_duplicates">Bikoiztutakoak</string>
+    <string name="title_filter_sent">Bidalita</string>
     <string name="title_filter_trash">Zakarrontzian</string>
     <string name="title_compact">Ikuspegi trinkoa</string>
     <string name="title_zoom">Letra tamaina</string>
@@ -1373,7 +1374,6 @@
     <string name="title_hint_design">Diseinuak ez du arreta galarazten, baina oso funtzionala da. Itxura pertsonalizatzeko aukera asko daude, baina, mesedez, uler ezazu ezinezkoa dela denak aldi berean zoriontsu egitea.</string>
     <string name="title_hint_junk_learn">Mezuak spam karpetara eta bertatik mugitzean, posta-zerbitzariak spama zer den \"ikasten\" du</string>
     <string name="title_hint_contact_actions">Sakatu luze aukeretarako</string>
-    <string name="title_hint_eml">Hau mezu gordin fitxategi baten edukiaren laburpena da. Gorde mezu gordina ekintza-barrako \'gorde\' ikonoarekin eduki osoa ikusteko.</string>
     <string name="title_open_link">Ireki esteka</string>
     <string name="title_image_link">Irudiaren esteka</string>
     <string name="title_different_link">Izenburua eta estekaren helbidea desberdinak dira</string>
@@ -1522,8 +1522,10 @@
     <string name="title_accessibility_to">Hartzailea</string>
     <string-array name="pollIntervalNames">
         <item>Beti</item>
-        <item>5 minuturik behin</item>
-        <item>10 minuturik behin</item>
+        <item>Every minute</item>
+        <item>Every 2 minutes</item>
+        <item>Every 5 minutes</item>
+        <item>Every 10 minutes</item>
         <item>15 minuturik behin</item>
         <item>30 minuturik behin</item>
         <item>Orduero</item>
@@ -1638,6 +1640,7 @@
         <item>PGP encrypt-only</item>
         <item>PGP sinadura eta zifratzea</item>
         <item>S/MIME sinadura soilik</item>
+        <item>S/MIME encrypt-only</item>
         <item>S/MIME sinadura eta zifratzea</item>
     </string-array>
     <string-array name="sizeNames">
@@ -1658,6 +1661,8 @@
         <item>7,5 s</item>
         <item>10 s</item>
         <item>15 s</item>
+        <item>30 s</item>
+        <item>60 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Etzana</item>

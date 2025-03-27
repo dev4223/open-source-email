@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
@@ -755,7 +755,13 @@ public class FragmentQuickSetup extends FragmentBase {
                 Helper.hideKeyboard(view);
 
                 if (ex instanceof AuthenticationFailedException) {
-                    String message = getString(R.string.title_setup_no_auth_hint);
+                    String message;
+                    if (provider != null && provider.imap != null &&
+                            ("outlook.office365.com".equals(provider.imap.host) ||
+                                    "imap-mail.outlook.com".equals(provider.imap.host)))
+                        message = getString(R.string.title_setup_no_auth_outlook);
+                    else
+                        message = getString(R.string.title_setup_no_auth_hint);
                     if (provider != null && provider.appPassword)
                         message += "\n\n" + getString(R.string.title_setup_app_password_hint);
                     tvErrorHint.setText(message);

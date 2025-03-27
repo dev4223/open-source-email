@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2024 by Marcel Bokhorst (M66B)
+    Copyright 2018-2025 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -38,7 +38,6 @@ import android.os.strictmode.Violation;
 import android.text.TextUtils;
 import android.util.Printer;
 import android.view.ContextThemeWrapper;
-import android.webkit.CookieManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -89,18 +88,18 @@ public class ApplicationEx extends Application
         if (BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && false)
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList());
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        if (prefs.contains("english")) {
-            boolean english = prefs.getBoolean("english", false);
-            if (english)
-                prefs.edit()
-                        .remove("english")
-                        .putString("language", Locale.US.toLanguageTag())
-                        .commit(); // apply won't work here
-        }
-
         try {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+            if (prefs.contains("english")) {
+                boolean english = prefs.getBoolean("english", false);
+                if (english)
+                    prefs.edit()
+                            .remove("english")
+                            .putString("language", Locale.US.toLanguageTag())
+                            .commit(); // apply won't work here
+            }
+
             String language = prefs.getString("language", null);
             if (language != null) {
                 if ("de-AT".equals(language) || "de-LI".equals(language))
@@ -118,6 +117,31 @@ public class ApplicationEx extends Application
             }
         } catch (Throwable ex) {
             Log.e(ex);
+            /*
+                Redmi zircon / Android 15
+                Exception java.lang.RuntimeException:
+                  at android.app.LoadedApk.makeApplicationInner (LoadedApk.java:1548)
+                  at android.app.LoadedApk.makeApplicationInner (LoadedApk.java:1469)
+                  at android.app.ActivityThread.handleBindApplication (ActivityThread.java:8185)
+                  at android.app.ActivityThread.-$$Nest$mhandleBindApplication (Unknown Source)
+                  at android.app.ActivityThread$H.handleMessage (ActivityThread.java:2679)
+                  at android.os.Handler.dispatchMessage (Handler.java:107)
+                  at android.os.Looper.loopOnce (Looper.java:249)
+                  at android.os.Looper.loop (Looper.java:337)
+                  at android.app.ActivityThread.main (ActivityThread.java:9503)
+                  at java.lang.reflect.Method.invoke
+                  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run (RuntimeInit.java:636)
+                  at com.android.internal.os.ZygoteInit.main (ZygoteInit.java:1005)
+                Caused by java.lang.IllegalStateException: SharedPreferences in credential encrypted storage are not available until after user (id 0) is unlocked
+                  at android.app.ContextImpl.getSharedPreferences (ContextImpl.java:643)
+                  at android.app.ContextImpl.getSharedPreferences (ContextImpl.java:621)
+                  at androidx.preference.PreferenceManager.getDefaultSharedPreferences (PreferenceManager.java:119)
+                  at eu.faircode.email.ApplicationEx.getLocalizedContext (ApplicationEx.java:90)
+                  at eu.faircode.email.ApplicationEx.attachBaseContext (ApplicationEx.java:83)
+                  at android.app.Application.attach (Application.java:368)
+                  at android.app.Instrumentation.newApplication (Instrumentation.java:1356)
+                  at android.app.LoadedApk.makeApplicationInner (LoadedApk.java:1541)
+             */
         }
 
         return context;
@@ -154,7 +178,7 @@ public class ApplicationEx extends Application
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final boolean crash_reports = prefs.getBoolean("crash_reports", false);
         final boolean leak_canary = prefs.getBoolean("leak_canary", BuildConfig.TEST_RELEASE);
-        final boolean load_emoji = prefs.getBoolean("load_emoji", true);
+        final boolean load_emoji = prefs.getBoolean("load_emoji", false);
 
         prev = Thread.getDefaultUncaughtExceptionHandler();
 
@@ -273,9 +297,6 @@ public class ApplicationEx extends Application
         // https://developer.android.com/guide/navigation/custom-back/support-animations#fragments
         // https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture#opt-predictive
         FragmentManager.enablePredictiveBack(false);
-
-        if (Helper.hasWebView(this))
-            CookieManager.getInstance().setAcceptCookie(false);
 
         // https://issuetracker.google.com/issues/233525229
         Log.i("Load emoji=" + load_emoji);
@@ -1063,6 +1084,17 @@ public class ApplicationEx extends Application
                         .remove("color_stripe");
             }
         }
+
+        if (version < 2243 && "a".equals(BuildConfig.REVISION)) {
+            boolean beige = prefs.getBoolean("beige", true);
+            String theme = prefs.getString("theme", "blue_orange_system");
+            boolean you = theme.startsWith("you_");
+            if (you && beige)
+                editor.putBoolean("beige", false);
+        }
+
+        if (version < 2259)
+            editor.putBoolean("thread_byref", true);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");
