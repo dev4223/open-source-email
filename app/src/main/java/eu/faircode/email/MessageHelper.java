@@ -856,7 +856,7 @@ public class MessageHelper {
 
     static Pair<String, String> getExtra(String email, String extra) {
         String name = null;
-        int comma = extra.indexOf(',');
+        int comma = extra.lastIndexOf(',');
         if (comma >= 0) {
             name = extra.substring(0, comma).trim();
             extra = extra.substring(comma + 1).trim();
@@ -4760,7 +4760,7 @@ public class MessageHelper {
                     // https://www.rfc-editor.org/rfc/rfc5546#section-3.2
                     Method method = icalendar.getMethod();
                     if (method != null && method.isCancel())
-                        CalendarHelper.delete(context, event, message);
+                        CalendarHelper.delete(context, icalendar, event, account, message);
                     else if (method == null || method.isRequest()) {
                         if (ical_tentative)
                             CalendarHelper.insert(context, icalendar, event,
@@ -5267,6 +5267,9 @@ public class MessageHelper {
                 // https://en.wikipedia.org/wiki/MIME#Multipart_subtypes
                 if ("multipart".equals(ct.getPrimaryType()) &&
                         !("mixed".equalsIgnoreCase(ct.getSubType()) ||
+                                "none".equalsIgnoreCase(ct.getSubType()) ||
+                                "signed".equalsIgnoreCase(ct.getSubType()) ||
+                                "alternate".equalsIgnoreCase(ct.getSubType()) ||
                                 "alternative".equalsIgnoreCase(ct.getSubType()) ||
                                 "related".equalsIgnoreCase(ct.getSubType()) ||
                                 "relative".equalsIgnoreCase(ct.getSubType()) || // typo?
@@ -5636,7 +5639,10 @@ public class MessageHelper {
 
             return count;
         } catch (Throwable ex) {
-            Log.e(ex);
+            if (BuildConfig.PLAY_STORE_RELEASE)
+                Log.i(ex);
+            else
+                Log.e(ex);
             return -1;
         }
     }

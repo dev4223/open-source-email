@@ -162,7 +162,7 @@
     <string name="title_setup_intro">Kontoopsætning udgør kun tre trin, hvorefter e-mails kan afsendes og modtages</string>
     <string name="title_setup_simple">Ingen grund til at ændre valgmuligheder</string>
     <string name="title_setup_issue">FairEmail er udviklet for at hjælpe dig med at beskytte din fortrolighed og repræsenterer bogstaveligt talt tusindvis af arbejdstimer. Oplever du problemer, så kontakt mig først mhp. support, inden du giver en dårlig bedømmelse. Jeg vil med glæde hjælpe!</string>
-    <string name="title_setup_analytics">FairEmail viser ikke annoncer eller sporer/analyserer brugeradfærd. Bugsnag bruges til fejlrapportering og er som standard deaktiveret.</string>
+    <string name="title_setup_analytics">FairEmail viser ikke annoncer og sporer eller analyserer ikke brugerens adfærd.</string>
     <string name="title_setup_quick_accounts">Tilføj eller skift konti</string>
     <string name="title_setup_quick_support">Visse udbydere besværliggør kontotilføjelse. Bebrejd venligst ikke FairEmail for dette, men anmod i stedet om support.</string>
     <string name="title_setup_quick_hint">Den angivne e-mailadresse bruges til indhentning af opsætningsoplysninger fra e-mailserveren og autoconfig.thunderbird.net</string>
@@ -192,7 +192,7 @@
     <string name="title_setup_oauth_permission">E-mailudbyderen har kun godkendt OAuth til Play Store- og GitHub-versioner</string>
     <string name="title_setup_gmail_support">Godkendelse af Google-konti fungerer kun i Play Store-versioner, da Android tjekker den digitale app-signatur</string>
     <string name="title_setup_gmail_rationale">Giv tilladelser til at vælge en konto og læse dit navn</string>
-    <string name="title_setup_gmail_permissions">Google vil bede om tilladelse til at læse, komponere, sende samt permanent slette alle dine e-mails. FairEmail sletter aldrig dine beskeder uden dit samtykke.</string>
+    <string name="title_setup_gmail_permissions">Google vil anmode om tilladelser til at læse (for at kunne vise brugeren beskeder), skrive (for at gemme kladdebeskeder), sende samt permanent slette alle e-mails. FairEmail vil aldrig sletter beskeder uden et udtrykkeligt brugersamtykke. Kun brugeren og ingen andre har adgang til beskederne.</string>
     <string name="title_setup_gmail_login">Er Chrome logget ind på en konto, kan en ny konto kun tilføjes via Android. Dette kan undgås ved at logge ud af Chrome via dens synkindstillinger.</string>
     <string name="title_setup_gmail_max">I tilfælde af fejlmeddelelsen \"Du er logget ind på det maksimale antal konti\", skal der logges ud på alle Google-konti i browseren.</string>
     <string name="title_setup_outlook_hint">I tilfælde af en aliasadresse bør Office 365-guiden sandsynligvis anvendes.</string>
@@ -440,7 +440,6 @@
     <string name="title_advanced_quote_reply">Citat af svartekst</string>
     <string name="title_advanced_limit_reply">Begræns antallet af indlejrede citater</string>
     <string name="title_advanced_resize_reply">Skalér billedstørrelse i tekstsvaret</string>
-    <string name="title_advanced_resize_paste">Ændr størrelse på indsatte billeder</string>
     <string name="title_advanced_signature_location">Signaturposition</string>
     <string name="title_advanced_signature_new">Brug signatur til nye beskeder</string>
     <string name="title_advanced_signature_reply">Benyt signatur i svar</string>
@@ -540,7 +539,7 @@
     <string name="title_advanced_indentation">Venstre-/-højreindryk modtagne/sendte beskeder i samtaler</string>
     <string name="title_advanced_highlight_unread">Fremhæv ulæste beskeder</string>
     <string name="title_advanced_account_color">Vis en farvestribe eller farveprik</string>
-    <string name="title_advanced_color_stripe_wide">Benyt bred farvestribe</string>
+    <string name="title_advanced_account_color_size">Farvestribebredde</string>
     <string name="title_advanced_avatars">Vis kontaktfotos</string>
     <string name="title_advanced_bimi">Vis Brand Indicators for Message Identification (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Kræv gyldigt VMC-certifikat</string>
@@ -688,7 +687,7 @@
     <string name="title_advanced_notify_suppress_in_call">Udsæt notifikationer under opkald</string>
     <string name="title_advanced_notify_suppress_in_car">Udsæt notifikationer, mens Android Auto er tilsluttet</string>
     <string name="title_advanced_notify_summary">Vis kun resuménotifikationer</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Vis emne i notifikationer</string>
+    <string name="title_advanced_notify_subject">Vis emne i notifikationer</string>
     <string name="title_advanced_notify_preview">Beskedforhåndsvisning i notifikationer</string>
     <string name="title_advanced_notify_preview_all">Forhåndsvis al tekst</string>
     <string name="title_advanced_notify_preview_only">Vis kun notifikationer med en forhåndsvisningstekst</string>
@@ -785,6 +784,7 @@
     <string name="title_advanced_sort_answers">Sortér svarskabeloner efter anvendelsesfrekvens</string>
     <string name="title_advanced_shortcuts">Vis ofte anvendte kontakter i Android-delingsmenuen</string>
     <string name="title_advanced_ical_tentative">Gem modtagne invitationer som foreløbige</string>
+    <string name="title_advanced_ical_email">Gem e-mailadresse for deltagere</string>
     <string name="title_advanced_fts">Opbyg søgeindeks</string>
     <string name="title_advanced_fts_indexed">%1$d/%2$d beskeder indekseret (%3$s)</string>
     <string name="title_advanced_classification">Klassificér beskeder</string>
@@ -919,7 +919,7 @@
     <string name="title_advanced_default_folder_hint">        Android kan bede om adgangstilladelse til den valgte mappe, selvom appen ikke behøver den.
         Valgdialogen kan annulleres for at gendanne standardmappen (normalt mappen \'Download\').
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Gendan seneste app-tilstand ved genstart inden for %1$d minutter via app-ikonet</string>
+    <string name="title_advanced_restore_on_launch_hint">Gendan om muligt sidste app-tilstand, når genstartet via Launcher-ikonet</string>
     <string name="title_advanced_autoexpand_hint">Åbn automatisk besked, når der kun er én besked eller kun én ulæst besked i en samtale</string>
     <string name="title_advanced_expandall_hint">Svar-knappen vises ikke, når flere beskeder er udvidet, da det vil være uklart, hvilken besked knappen gælder for</string>
     <string name="title_advanced_autoseen_hint">Automarkering af beskeder som læst ved udvidelse kan deaktiveres i de individuelle kontoindstillinger</string>
@@ -941,7 +941,6 @@
     <string name="title_advanced_notify_remove_hint">Nye beskednotifikationer fjernes altid, når de stryges væk samt ved markering af beskeder som læste</string>
     <string name="title_advanced_notify_manage_hint">Tryk på kanalnavnet for at opsætte kanalegenskaberne</string>
     <string name="title_advanced_notify_samsung_hint">For at håndtere meddelelseskanaler kan man være nødt til at aktivere denne Android-indstilling: Notifikation, Avancerede indstillinger, Håndtér meddelelseskategorier for hver app</string>
-    <string name="title_advanced_notify_manage_default_hint">For at opsætte standardlyd etc.</string>
     <string name="title_advanced_notify_manage_service_hint">For at deaktivere \'overvågningsnotifikationen\'</string>
     <string name="title_advanced_notify_separate_hint">Hvordan opsættes notifikationer for konti, mapper og afsendere?</string>
     <string name="title_advanced_notify_preview_all_hint">For wearables, som kan vise den fulde tekst (op til 5.000 tegn)</string>
@@ -1179,6 +1178,7 @@
     <string name="title_hint_operations">Sletning af handlinger kan resultere i forsvundne beskeder og synkroniseringsproblemer</string>
     <string name="title_op_title_headers">Downloader overskrifter</string>
     <string name="title_op_title_raw">Downloader besked i råformat</string>
+    <string name="title_op_title_add">Uploader besked</string>
     <string name="title_folder_name">Mappenavn</string>
     <string name="title_display_name">Visningsnavn</string>
     <string name="title_show_folders">Vis skjulte mapper</string>
@@ -1510,6 +1510,7 @@
     <string name="title_add_image_inline">Indsæt</string>
     <string name="title_add_image_attach">Vedhæft</string>
     <string name="title_add_image_resize">Skalér</string>
+    <string name="title_add_image_resize_width_only">Begræns kun bredde</string>
     <string name="title_add_image_privacy">Fjern personsensitive data</string>
     <string name="title_add_image_privacy_remark">Geografisk placering, serienumre, filnavne mv.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
@@ -1701,6 +1702,8 @@
     <string name="title_sort_on_last_applied">Senest anvendt</string>
     <string name="title_filter">Filtrér fra</string>
     <string name="title_filter_seen">Læst</string>
+    <string name="title_filter_unseen">Ulæst</string>
+    <string name="title_filter_flagged">Stjernemarkeret</string>
     <string name="title_filter_unflagged">Fjernet stjernemarkering</string>
     <string name="title_filter_unknown">Ukendte afsendere</string>
     <string name="title_filter_hidden">Skjult</string>
@@ -2067,6 +2070,7 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 time</string>
     <string name="title_1day">1 dag</string>
+    <string name="title_snooze_doze">Deaktivér venligst batterioptimeringer via trin 3 på hovedindstillingsskærmen</string>
     <string name="title_more_overflow">Flere &#8230;</string>
     <string name="title_today_at">I dag kl. %1$s</string>
     <string name="title_tomorrow_at">I morgen kl. %1$s</string>
@@ -2382,6 +2386,11 @@
         <item>Ingen</item>
         <item>Stribe</item>
         <item>Prik</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Smal</item>
+        <item>Mellem</item>
+        <item>Bred</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Modtager</item>

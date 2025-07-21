@@ -144,7 +144,6 @@
     <string name="title_setup_intro">Configurar unha conta son so tres pasos, e logo poderá enviar e recibir correos</string>
     <string name="title_setup_simple">Non hai necesidade de cambiar outras opcións</string>
     <string name="title_setup_issue">FairEmail foi feito para axudarlle a protexer a súa privacidade e representa milleiros de horas de traballo. Se ten problemas, por favor, contacte comigo na procura de axuda antes de deixar una mala recensión. Quero axudar!</string>
-    <string name="title_setup_analytics">FairEmail non amosa anuncios e non segue nen analiza a súa actividade. Bugsnag se emprega para os informes de fallos, e está desactivado por defecto.</string>
     <string name="title_setup_quick_accounts">Engadir ou cambiar contas</string>
     <string name="title_setup_quick_support">Algúns provedores fan difícil engadir unha conta. Por favor, non culpe a FairEmail por isto, e no seu lugar solicite axuda.</string>
     <string name="title_setup_quick_hint">A conta de correo introducida úsase para preguntar ao servidor de correo e a autoconfig.thunderbird.net sobre a información de configuración</string>
@@ -171,7 +170,6 @@
     <string name="title_setup_oauth_permission">O provedor de correo só aprobou OAuth para as versións de Play Store e GitHub</string>
     <string name="title_setup_gmail_support">Autorizar contas de Google só funcionará nas versións de Play Store e GitHub desta aplicación porque Android verifica a súa sinatura dixital</string>
     <string name="title_setup_gmail_rationale">Por favor, conceda permisos para seleccionar unha conta e ler o seu nome</string>
-    <string name="title_setup_gmail_permissions">Google pedirá permisos para ler, redactar, enviar e borrar permanentemente todo o seu correo. FairEmail nunca eliminará as súas mensaxes sen o seu consentimento explícito.</string>
     <string name="title_setup_gmail_on_device">Por que é necesario seleccionar unha conta interna de dispositivo?</string>
     <string name="title_setup_gmail_password">Quero autorizar unha conta con un contrasinal no canto da conta interna de dispositivo</string>
     <string name="title_setup_office_auth">O erro \'AUTHENTICATE failed\' pode estar causado porque IMAP/SMTP estea desactivado polo administrador do sistema</string>
@@ -430,7 +428,6 @@
     <string name="title_advanced_threading_unread">Mostrar o número de mensaxes sen ler nas conversas</string>
     <string name="title_advanced_indentation">Sangrar á esquerda/dereita as mensaxes enviadas/recibidas nas conversas</string>
     <string name="title_advanced_highlight_unread">Resaltar as mensaxes non lidas</string>
-    <string name="title_advanced_color_stripe_wide">Usar barra de cor longa</string>
     <string name="title_advanced_avatars">Mostrar as fotos dos contactos</string>
     <string name="title_advanced_bimi_unverified">Remitente non verificado</string>
     <string name="title_advanced_bimi_verified">Remitente verificado</string>
@@ -722,7 +719,6 @@
     <string name="title_advanced_notify_action_hint">Mostraranse tres accións como máximo</string>
     <string name="title_advanced_notify_remove_hint">As novas notificacións de mensaxes borraranse sempre cando se arrastren e cando se marquen as mensaxes como lidas</string>
     <string name="title_advanced_notify_manage_hint">Premer no nome da canle para axustar as súas propiedades</string>
-    <string name="title_advanced_notify_manage_default_hint">Para configurar os sons predeterminados, etc</string>
     <string name="title_advanced_notify_manage_service_hint">Para desactivar a notificación de \'monitorización\'</string>
     <string name="title_advanced_notify_separate_hint">Como configuro as notificacións para contas, cartafoles e remitentes?</string>
     <string name="title_advanced_notify_preview_all_hint">Para que os aparellos vestibles poidan mostrar o texto completo (até 5.000 caracteres)</string>
@@ -1336,6 +1332,8 @@
     <string name="title_sort_on_order">Orde</string>
     <string name="title_filter">Sen coincidencia nos filtros</string>
     <string name="title_filter_seen">Lido</string>
+    <string name="title_filter_unseen">Sen ler</string>
+    <string name="title_filter_flagged">Destacadas</string>
     <string name="title_filter_unflagged">Sen destacar</string>
     <string name="title_filter_unknown">Remitente descoñecido</string>
     <string name="title_filter_hidden">Agochado</string>
@@ -1937,6 +1935,11 @@
         <item>Ningún</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Mediano</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Destinatario</item>

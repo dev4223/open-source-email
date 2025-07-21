@@ -1096,6 +1096,21 @@ public class ApplicationEx extends Application
         if (version < 2259)
             editor.putBoolean("thread_byref", true);
 
+        if (version < 2271) {
+            boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
+            if (color_stripe_wide)
+                editor.putInt("account_color_size", 12);
+            editor.remove("color_stripe_wide");
+        }
+
+        if (version < 2277) {
+            if (!prefs.contains("restore_on_launch"))
+                editor.putBoolean("restore_on_launch", false);
+        }
+
+        if (version < 2283)
+            editor.remove("cert_transparency");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");
 

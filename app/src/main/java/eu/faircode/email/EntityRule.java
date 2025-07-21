@@ -246,10 +246,11 @@ public class EntityRule {
             JSONObject jcondition = new JSONObject(condition);
 
             // general
+            int age = 0;
             if (this.daily) {
                 JSONObject jgeneral = jcondition.optJSONObject("general");
                 if (jgeneral != null) {
-                    int age = jgeneral.optInt("age");
+                    age = jgeneral.optInt("age");
                     if (age > 0) {
                         Calendar cal = Calendar.getInstance();
                         cal.setTimeInMillis(message.received);
@@ -505,7 +506,8 @@ public class EntityRule {
             }
 
             // Safeguard
-            if (jsender == null &&
+            if (age == 0 &&
+                    jsender == null &&
                     jrecipient == null &&
                     jsubject == null &&
                     !jcondition.optBoolean("attachments") &&
@@ -1316,6 +1318,9 @@ public class EntityRule {
     }
 
     private static void speak(Context context, EntityRule rule, EntityMessage message) throws IOException {
+        if (Helper.isPlayStoreInstall())
+            throw new IllegalArgumentException("TTS is available in the GitHub version only because Google doesn't allow it in the Play Store :-(");
+
         Log.i("Speaking name=" + rule.name);
 
         if (message.ui_seen)

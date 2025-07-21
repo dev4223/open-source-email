@@ -162,7 +162,6 @@
     <string name="title_setup_intro">Настройването на акаунта е просто три крачки и след това може да изпращате и получавате е-писма</string>
     <string name="title_setup_simple">Няма нужда да променяте никакви други възможности</string>
     <string name="title_setup_issue">FairEmail е развито, за да ви помогне да защитите поверителността си и представлява буквално хиляди часове работа. Ако имате проблеми, то се свържете първо с мен за поддръжка преди да оставите лош отзив. Радвам се да помогна!</string>
-    <string name="title_setup_analytics">FairEmail не показва реклами и не проследява или анализира поведението ви. Bugsnag се употребява за докладване на грешки и по подразбиране е изключено.</string>
     <string name="title_setup_quick_accounts">Добавяне или промяна на акаунтите</string>
     <string name="title_setup_quick_support">Някои доставчици затрудняват добавянето на акаунт. Не винете FairEmail за това, а вместо това искайте поддръжка.</string>
     <string name="title_setup_quick_hint">Въведеният имейл адрес се употребява към опашката на сървъра за имейл и autoconfig.thunderbird.net за конфигуриране на сведенията</string>
@@ -192,7 +191,6 @@
     <string name="title_setup_oauth_permission">Доставчикът на имейл одобрил OAuth само за версии на Play Store и GitHub</string>
     <string name="title_setup_gmail_support">Упълномощаването на акаунти в Google ще работи само във версии на Play Store и GitHub, защото Android проверява цифровия подпис на приложението</string>
     <string name="title_setup_gmail_rationale">Дайте позволения за избиране на акаунт и прочетете името си</string>
-    <string name="title_setup_gmail_permissions">Google ще поиска разрешения за четене, съставяне, изпращане и изтриване за постоянно на целия ви имейл. FairEmail никога няма да изтрива съобщенията ви без изричното ви съгласие.</string>
     <string name="title_setup_gmail_login">Ако в Chrome е изпълнено влизане в акаунт, то нов акаунт може да се добави само през Android. Това може да се избегне, излизайки от акаунта в Chrome чрез настройките му за синхронизиране.</string>
     <string name="title_setup_gmail_max">В случай на съобщение за грешка \"Влезли сте в максималния брой акаунти\", то трябва да излезете от всичките си Google акаунти в браузъра.</string>
     <string name="title_setup_outlook_hint">В случай на псевдоним на имейл, вълшебникът на Office 365 вероятно трябва да се употребява.</string>
@@ -434,7 +432,6 @@
     <string name="title_advanced_quote_reply">Цитиране на отговорения текст</string>
     <string name="title_advanced_limit_reply">Ограничаване на броя на вложени цитирания</string>
     <string name="title_advanced_resize_reply">Преоразмеряване на образите в отговорения текст</string>
-    <string name="title_advanced_resize_paste">Преоразмеряване на поставените образи</string>
     <string name="title_advanced_signature_location">Положение на подписа</string>
     <string name="title_advanced_signature_new">Употреба на подпис за нови съобщения</string>
     <string name="title_advanced_signature_reply">Употреба на подпис при отговор</string>
@@ -534,7 +531,7 @@
     <string name="title_advanced_indentation">Ляв/десен отстъп на получени/изпратени съобщения в разговори</string>
     <string name="title_advanced_highlight_unread">Маркирай непрочетените съобщения</string>
     <string name="title_advanced_account_color">Показване на цветна ивица или точка</string>
-    <string name="title_advanced_color_stripe_wide">Употреба на широка гама цветове</string>
+    <string name="title_advanced_account_color_size">Ширина на цветната ивица</string>
     <string name="title_advanced_avatars">Показване на снимки на контакт</string>
     <string name="title_advanced_bimi">Показване на „Brand Indicators for Message Identification“ (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Изисква се действащо удостоверение на VMC</string>
@@ -682,6 +679,7 @@
     <string name="title_advanced_notify_suppress_in_call">Отлагане на известия по време на обаждане</string>
     <string name="title_advanced_notify_suppress_in_car">Отлагане на известия, докато Android Auto има свързване</string>
     <string name="title_advanced_notify_summary">Показване на обобщено известие</string>
+    <string name="title_advanced_notify_subject">Показване на тема в известията</string>
     <string name="title_advanced_notify_preview">Визуализация на съобщението в известията</string>
     <string name="title_advanced_notify_preview_all">Визуализирай целия текст</string>
     <string name="title_advanced_notify_preview_only">Показване на известия само с онагледен текст</string>
@@ -785,6 +783,7 @@
     <string name="title_advanced_class_min_difference">Минимум разлика на класа: %1$s %%</string>
     <string name="title_advanced_show_filtered">Иконата на филтъра на показ при приложени правила</string>
     <string name="title_advanced_haptic_feedback">Тактилна обратна връзка при важни действия</string>
+    <string name="title_advanced_haptic_feedback_swipe">Вибриране, прелиствайки наляво/надясно</string>
     <string name="title_advanced_language">Език</string>
     <string name="title_advanced_language_system">Система</string>
     <string name="title_advanced_integrations_hint">Облачните услуги долу не са част от приложението. Всякакви плащания ще отидат направо в облачната услуга, а не при разработчика на приложението.</string>
@@ -910,7 +909,6 @@
     <string name="title_advanced_default_folder_hint">        Android може да иска позволение за достъп до избраната папка, дори ако не е потребно на приложението.
         Може да отмените диалоговия прозорец за избор, за да въстановите подразбиращата се папка (обикновено е папка „Download“).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Възстановяване на последното състояние на приложението, когато се рестартира чрез натискане иконата за стартиране в рамките на %1$d минути</string>
     <string name="title_advanced_autoexpand_hint">Автоматично отваряне на съобщение, когато има само едно съобщение или само едно непрочетено съобщение в разговор</string>
     <string name="title_advanced_expandall_hint">Копчето за отговор няма да се показва, когато са разширени няколко отговора, защото става неясно към кое съобщение се отнася копчето</string>
     <string name="title_advanced_autoseen_hint">Автоматичното означаване на съобщенията като прочетени при разширяване може да се изключи в настройките за напреднали на акаунта за всеки акаунт</string>
@@ -932,7 +930,6 @@
     <string name="title_advanced_notify_remove_hint">Новите известия за съобщенията ще бъдат премахнати при изтриване и маркиране на прочетените съобщения</string>
     <string name="title_advanced_notify_manage_hint">Чукнете върху името на канала, за да зададете свойствата на канала</string>
     <string name="title_advanced_notify_samsung_hint">За управление на каналите известия може да е необходимо да включите тази настройка на Android: Известия, Разширени настройки, Управление на категориите с известия за всяко приложение</string>
-    <string name="title_advanced_notify_manage_default_hint">Задаване звука по подразбиране и т.н.</string>
     <string name="title_advanced_notify_manage_service_hint">За изключване на известието „наблюдение“</string>
     <string name="title_advanced_notify_separate_hint">Как да конфигурирам известията за акаунти, папки и податели?</string>
     <string name="title_advanced_notify_preview_all_hint">За преносими, които могат да показват целия текст (до 5000 знака)</string>
@@ -1170,6 +1167,7 @@
     <string name="title_hint_operations">Изтриването на операции може да доведе до изчезване на съобщения и проблеми със синхронизацията</string>
     <string name="title_op_title_headers">Изтегляне на заглавките</string>
     <string name="title_op_title_raw">Изтегляне на необработено съобщение</string>
+    <string name="title_op_title_add">Качване на съобщение</string>
     <string name="title_folder_name">Име на папка</string>
     <string name="title_display_name">Показвано име</string>
     <string name="title_show_folders">Показвана не скрити папки</string>
@@ -1690,6 +1688,8 @@
     <string name="title_sort_on_last_applied">Последно приложено</string>
     <string name="title_filter">Филтрирай по</string>
     <string name="title_filter_seen">Прочетени</string>
+    <string name="title_filter_unseen">Непрочетено</string>
+    <string name="title_filter_flagged">Със звезда</string>
     <string name="title_filter_unflagged">Без звезда</string>
     <string name="title_filter_unknown">Неизвестни податели</string>
     <string name="title_filter_hidden">Скрий</string>
@@ -2371,6 +2371,11 @@
         <item>Нищо</item>
         <item>Ивица</item>
         <item>Точка</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Стеснено</item>
+        <item>Среден</item>
+        <item>Широко</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Получател</item>

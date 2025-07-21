@@ -94,7 +94,7 @@ This app starts a foreground service with a low-priority status bar notification
 * Confirm opening links, images and attachments
 * No special permissions required
 * No advertisements
-* No analytics and no tracking ([error reporting](https://m66b.github.io/FairEmail/#faq104) via Bugsnag is opt-in)
+* No analytics and no tracking
 * Optional [Android backup](https://developer.android.com/guide/topics/data/backup)
 * No [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
 * FairEmail is an original work, not a fork or a clone
@@ -176,6 +176,8 @@ One line command to display certificate fingerprints:
 
 ```unzip -p fairemail.apk META-INF/CERT.RSA | keytool -printcert```
 
+Alternatively, you can use [this online tool](https://github.com/kkoiwai/ApkFingerprintReader).
+
 I do not hand over the signing keys of my apps to Google.
 Please see [this Google blog](https://android-developers.googleblog.com/2021/06/the-future-of-android-app-bundles-is.html)
 and [this article](https://commonsware.com/blog/2020/09/23/uncomfortable-questions-app-signing.html)
@@ -235,17 +237,9 @@ Online translations are supported by:
 
 [![Crowdin logo](/images/localization-at-white-rounded-bordered@1x.png)](https://crowdin.com/project/open-source-email)
 
-Error reporting is sponsored by:
-
-![Bugsnag logo](/images/bugsnag_logo.png)
-
-[Bugsnag](https://www.bugsnag.com/) monitors application stability
-and is used to [help improve FairEmail](https://m66b.github.io/FairEmail/#faq104).
-Error reporting is disabled by default, see also [the privacy policy](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md#fairemail).
-
 ## License
 
-Copyright &copy; 2018-2024 Marcel Bokhorst. All rights reserved.
+Copyright &copy; 2018-2025 Marcel Bokhorst. All rights reserved.
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.txt)
 

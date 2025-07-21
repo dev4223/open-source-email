@@ -120,6 +120,7 @@ import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.text.method.LinkMovementMethodCompat;
 import androidx.core.view.MenuCompat;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -989,6 +990,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                     tvBody.setBreakStrategy(LineBreaker.BREAK_STRATEGY_HIGH_QUALITY);
             }
+            ViewCompat.enableAccessibleClickableSpanSupport(tvBody);
             wvBody = vsBody.findViewById(R.id.wvBody);
             pbBody = vsBody.findViewById(R.id.pbBody);
             vwRipple = vsBody.findViewById(R.id.vwRipple);
@@ -2499,6 +2501,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean full = properties.getValue("full", message.id);
                     boolean dark = Helper.isDarkTheme(context);
                     boolean force_light = properties.getValue("force_light", message.id);
+                    boolean tts = properties.getValue("tts", message.id, false);
 
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean expand_all = prefs.getBoolean("expand_all", false);
@@ -2560,7 +2563,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibSearchText.setVisibility(tools && !outbox && button_search_text && message.content ? View.VISIBLE : View.GONE);
                     ibSearch.setVisibility(tools && !outbox && button_search && (froms > 0 || tos > 0) ? View.VISIBLE : View.GONE);
                     ibTranslate.setVisibility(tools && !outbox && button_translate && DeepL.isAvailable(context) && message.content ? View.VISIBLE : View.GONE);
-                    ibTts.setVisibility(tools && !outbox && button_tts && message.content ? View.VISIBLE : View.GONE);
+                    ibTts.setVisibility(tools && !outbox && button_tts && message.content && !Helper.isPlayStoreInstall() ? View.VISIBLE : View.GONE);
+                    ibTts.setImageResource(tts ? R.drawable.twotone_stop_24 : R.drawable.twotone_play_arrow_24);
                     ibSummarize.setVisibility(tools && !outbox && button_summarize && AI.isAvailable(context) && message.content ? View.VISIBLE : View.GONE);
                     ibFullScreen.setVisibility(tools && full && button_full_screen && message.content ? View.VISIBLE : View.GONE);
                     ibForceLight.setVisibility(tools && (full || experiments) && dark && button_force_light && message.content ? View.VISIBLE : View.GONE);
@@ -4250,7 +4254,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     CalendarHelper.insert(context, icalendar, event,
                                             CalendarContract.Events.STATUS_CONFIRMED, account, message);
                                 else if (action == R.id.btnCalendarDecline)
-                                    CalendarHelper.delete(context, event, message);
+                                    CalendarHelper.delete(context, icalendar, event, account, message);
                                 else if (action == R.id.btnCalendarMaybe)
                                     CalendarHelper.insert(context, icalendar, event,
                                             CalendarContract.Events.STATUS_TENTATIVE, account, message);
@@ -4887,7 +4891,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     card.setClickable(false);
                 }
 
-                if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1 &&
+                if (EntityFolder.DRAFTS.equals(message.folderType) && message.drafts == 1 &&
                         !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) &&
                         !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)) {
                     context.startActivity(
@@ -6640,7 +6644,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_force_light).setChecked(force_light);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
-            popupMenu.getMenu().findItem(R.id.menu_share_link).setVisible(BuildConfig.DEBUG);
+            popupMenu.getMenu().findItem(R.id.menu_share_link).setVisible(!BuildConfig.PLAY_STORE_RELEASE);
             popupMenu.getMenu().findItem(R.id.menu_pin).setVisible(pin);
             popupMenu.getMenu().findItem(R.id.menu_event).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(Helper.hasWebView(context) && message.content);
@@ -7660,10 +7664,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionTts(TupleMessageEx message) {
-            boolean tts = properties.getValue("tts", message.id, false);
-            properties.setValue("tts", message.id, !tts);
+            boolean tts = !properties.getValue("tts", message.id, false);
+            properties.setValue("tts", message.id, tts);
+            ibTts.setImageResource(tts ? R.drawable.twotone_stop_24 : R.drawable.twotone_play_arrow_24);
 
-            if (tts) {
+            if (!tts) {
                 Intent intent = new Intent(context, ServiceTTS.class)
                         .setAction("tts:" + message.id)
                         .putExtra(ServiceTTS.EXTRA_FLUSH, true)
@@ -7760,8 +7765,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onMenuCreateRule(TupleMessageEx message) {
             Intent rule = new Intent(ActivityView.ACTION_EDIT_RULE);
             rule.putExtra("account", message.account);
-            rule.putExtra("folder", message.folder);
             rule.putExtra("protocol", message.accountProtocol);
+            rule.putExtra("folder", message.folder);
+            rule.putExtra("type", message.folderType);
             if (message.from != null && message.from.length > 0)
                 rule.putExtra("sender", ((InternetAddress) message.from[0]).getAddress());
             if (message.to != null && message.to.length > 0)
@@ -8606,8 +8612,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.unmetered = state.isUnmetered();
 
         this.colorCardBackground = Helper.resolveColor(context, R.attr.colorCardBackground);
-        boolean color_stripe_wide = prefs.getBoolean("color_stripe_wide", false);
-        this.colorStripeWidth = Helper.dp2pixels(context, color_stripe_wide ? 12 : 6);
+        int account_color_size = prefs.getInt("account_color_size", 6);
+        this.colorStripeWidth = Helper.dp2pixels(context, account_color_size);
         this.colorAccent = Helper.resolveColor(context, androidx.appcompat.R.attr.colorAccent);
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorPrimaryInverse = Helper.resolveColor(context, android.R.attr.textColorPrimaryInverse);

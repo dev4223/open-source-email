@@ -217,7 +217,6 @@
     <string name="title_advanced_compose_font">ଡିଫଲ୍ଟ ଫଣ୍ଟ</string>
     <string name="title_advanced_prefix_count">ପ୍ରତ୍ୟୁତ୍ତର ଉପସର୍ଗ ରେ ଗଣନା ଯୋଡ଼ନ୍ତୁ</string>
     <string name="title_advanced_resize_reply">ପ୍ରତ୍ୟୁତ୍ତରର ପାଠ୍ୟରେ ପ୍ରତିଛଵିଗୁଡ଼ିକର ଆକାର ଠିକ୍ କରିବା</string>
-    <string name="title_advanced_resize_paste">ପେଷ୍ଟ ହୋଇଥିବା ପ୍ରତିଛଵିଗୁଡ଼ିକର ଆକାର ଠିକ୍ କରିବା</string>
     <string name="title_advanced_signature_reply_once">କେବଳ ପ୍ରଥମ ପ୍ରତ୍ୟୁତ୍ତର ପାଇଁ</string>
     <string name="title_advanced_discard_delete">ଡ୍ରାଫ୍ଟ କୁ ପରିତ୍ୟାଗ କଲେ ତାକୁ ସବୁଦିନ ପାଇଁ ଵିଲୋପ କରିଦେବା</string>
     <string name="title_advanced_reply_move">ଗୋଟେ ବାର୍ତ୍ତାର ପ୍ରତ୍ୟୁତ୍ତର ଦେବା ପରେ, ସେହି ଫୋଲ୍ଡରରେ ପ୍ରତ୍ୟୁତ୍ତରଟି ସଞ୍ଚୟ କରନ୍ତୁ</string>
@@ -249,7 +248,6 @@
     <string name="title_advanced_tabular_dividers">ଟାବୁଲାର୍ ଶୈଳୀ ଵ୍ୟଵହାର କଲାଵେଳେ ଵିଭାଜକ ରେଖା ଵ୍ୟଵହାର କରିବା</string>
     <string name="title_advanced_date_header">ତାରିଖ ଅନୁଯାୟୀ ଗୋଷ୍ଠୀ ପ୍ରସ୍ତୁତ କରନ୍ତୁ</string>
     <string name="title_advanced_date_time">ସର୍ଵଦା ଉଭୟ ତାରିଖ ଆଉ ସମୟ ଦର୍ଶାଇବା</string>
-    <string name="title_advanced_color_stripe_wide">ପ୍ରଶସ୍ତ ରଙ୍ଗ ଷ୍ଟ୍ରାଇପ୍ ବ୍ୟବହାର କରିବା</string>
     <string name="title_advanced_avatars">ସମ୍ପର୍କର ଫଟୋସବୁ ଦେଖାଇବା</string>
     <string name="title_advanced_gravatars">ଗ୍ରାଵତାରସବୁ ଦେଖାଇବା</string>
     <string name="title_advanced_libravatars">ଲିବ୍ରାଵତାରସବୁ ଦେଖାଇବା</string>
@@ -624,6 +622,8 @@
     <string name="title_sort_on_applied">ପ୍ରୟୋଗ ଗଣନା</string>
     <string name="title_sort_on_last_applied">ଗତ ପ୍ରୟୋଗ</string>
     <string name="title_filter_seen">ପଠିତ</string>
+    <string name="title_filter_unseen">ପଢ଼ି ନାହାଁନ୍ତି</string>
+    <string name="title_filter_flagged">ତାରାଙ୍କିତ</string>
     <string name="title_filter_unflagged">ଅଣତାରାଙ୍କିତ</string>
     <string name="title_filter_hidden">ଲୁକ୍କାୟିତ</string>
     <string name="title_filter_deleted">ବିଲୋପିତ</string>
@@ -954,6 +954,11 @@
         <item>କିଛି ନୁହେଁ</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>ମଧ୍ୟମ</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>ପ୍ରାପ୍ତେସୁ</item>

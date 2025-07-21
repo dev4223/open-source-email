@@ -162,7 +162,7 @@
     <string name="title_setup_intro">Konto seadistamine on vaid kolm sammu ja peale seda saad saata ja tõmmata e-kirju</string>
     <string name="title_setup_simple">Muid seadistusi pole vaja muuta</string>
     <string name="title_setup_issue">FairEmaili on arendatud, et kaitsta sinu privaatsust ja sellesse on pühendatud sõna otseses mõttes tuhandeid tunde tööd. Kui sul on probleeme, võta enne toe saamiseks minuga ühendust, enne kui jätad negatiivse arvustuse. Ma olen rõõmus aitama!</string>
-    <string name="title_setup_analytics">FairEmail ei näita reklaami ega jälgi sinu tegevust ega analüüsi seda. Vigadest teatamisel kasutatakse Bugsnag\'i ja see on vaikimisi välja lülitatud.</string>
+    <string name="title_setup_analytics">FairEmail ei näita reklaame ega jälgi ega analüüsi sinu tegevust.</string>
     <string name="title_setup_quick_accounts">Lisa või muuda kontosid</string>
     <string name="title_setup_quick_support">Mõni teenusepakkuja muudab konto lisamise keeruliseks. Palun ära süüdista selles FairEmaili, vaid küsi selle asemel tuge.</string>
     <string name="title_setup_quick_hint">Sisestatud e-postiaadressi kasutatakse päringu tegemiseks meiliserverisse ja autoconfig.thunderbird.net-st häälestusinfo saamiseks</string>
@@ -192,7 +192,7 @@
     <string name="title_setup_oauth_permission">E-posti teenusepakkuja on OAuth\'i heaks kiitnud vaid Play Store ja GitHub versiooni puhul</string>
     <string name="title_setup_gmail_support">Google konto autoriseerimine toimib vaid Play poe ja GitHubi versioonides, sest Android kontrollib rakenduse digitaalset allkirja</string>
     <string name="title_setup_gmail_rationale">Palun anna luba, et valida konto ja lugeda su nime</string>
-    <string name="title_setup_gmail_permissions">Google küsib lugemise, loomise, saatmise ja kõigi kirjade jäädava kustutamise luba. FairEmail ei kustuta kunagi su kirju ilma su otsese nõusolekuta.</string>
+    <string name="title_setup_gmail_permissions">Google küsib õigust lugeda (näidata sulle sõnumeid), luua (salvestada sõnumite mustandeid), saata ja püsivalt kustutada kõiki sinu kirju. FairEmail ei kustuta mitte kunagi sinu sõnumeid ilma sinu selge nõusolekuta. Ainult sina pääsed oma kirjadele ligi, mitte keegi teine.</string>
     <string name="title_setup_gmail_login">Kui Chromega on kontosse sisse logitud, saab uut kontot lisada vaid Androidi kaudu. Seda saab vältida, kui logida Chrome sünkroniseerimisseadetes Chromest välja.</string>
     <string name="title_setup_gmail_max">Veateate \"Oled sisse logitud maksimaalsele arvule kontodele\" korral pead veebilehitsejas välja logima kõikidest Google\'i kontodest.</string>
     <string name="title_setup_outlook_hint">Alias-aadressi korral tuleks tõenäoliselt kasutada Office 365 viisardit.</string>
@@ -347,6 +347,10 @@
     </string>
     <string name="title_advanced_hint_remark">        Valikud on rühmitatud vahekaartide kaupa, jaotatud jaotistesse, organiseeritud välimuse või kasutuse järgi ja otsitavad.
     </string>
+    <string name="title_advanced_hint_options">        Sa ei vaja suuremat osa seadetest ja kuna mõned seaded on väga spetsiifilised, on arusaadav, et kõikide seadete toimimine pole koheselt selge. 
+        Palun ära jäta halba arvustust vaid paljude seadete pärast või seepärast, et sa ei mõista koheselt kõikide seadete tähendust
+        Kõik seaded on kasulikud rohkem kui mõne inimese jaoks, kuid ehk mitte sinu jaoks (veel).
+    </string>
     <string name="title_advanced_hint_setup">Saad häälestada kontot toksates häälestamise peaekraanil olevat nuppu võlur.</string>
     <string name="title_advanced_section_main">Pea</string>
     <string name="title_advanced_section_synchronize">Hankimine</string>
@@ -435,7 +439,6 @@
     <string name="title_advanced_quote_reply">Vastatava teksti tsiteerimine</string>
     <string name="title_advanced_limit_reply">Piira pesastatud tsiteerimiste arvu</string>
     <string name="title_advanced_resize_reply">Muuda vastustekstis piltide suurust</string>
-    <string name="title_advanced_resize_paste">Kleebitud piltide suuruse muutmine</string>
     <string name="title_advanced_signature_location">Allkirja asukoht</string>
     <string name="title_advanced_signature_new">Kasuta uutes sõnumites allkirja</string>
     <string name="title_advanced_signature_reply">Kasuta vastamisel allkirja</string>
@@ -535,7 +538,7 @@
     <string name="title_advanced_indentation">Vastuvõetud/saadud sõnumite vasak/parempoolne taane vestlustes</string>
     <string name="title_advanced_highlight_unread">Tõsta lugemata sõnumid esile</string>
     <string name="title_advanced_account_color">Näita värvilist triipu või punkti</string>
-    <string name="title_advanced_color_stripe_wide">Kasuta laia värvivööti</string>
+    <string name="title_advanced_account_color_size">Värviriba laius</string>
     <string name="title_advanced_avatars">Näita kontakti fotot</string>
     <string name="title_advanced_bimi">Näita sõnumi tunnusena Brändi tunnuseid (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Nõua kehtivat VMC-sertifikaati</string>
@@ -683,6 +686,7 @@
     <string name="title_advanced_notify_suppress_in_call">Viivita kõne ajal teavitusi</string>
     <string name="title_advanced_notify_suppress_in_car">Viivita teavitusi kui Android Auto on ühendatud</string>
     <string name="title_advanced_notify_summary">Näita vaid kokkuvõtteteavitusi</string>
+    <string name="title_advanced_notify_subject">Näita teavituses teemat</string>
     <string name="title_advanced_notify_preview">Näita teavituses sõnumi eelvaadet</string>
     <string name="title_advanced_notify_preview_all">Kogu teksti eelvaade</string>
     <string name="title_advanced_notify_preview_only">Näita teavitusi vaid eelvaatetekstiga</string>
@@ -779,6 +783,7 @@
     <string name="title_advanced_sort_answers">Sordi vastamismalle kasutamissageduse alusel</string>
     <string name="title_advanced_shortcuts">Näita sagedasti kasutatud kontakte Androidi jagamismenüüs</string>
     <string name="title_advanced_ical_tentative">Salvesta saadud kutsed kui ebalevad</string>
+    <string name="title_advanced_ical_email">Salvesta osalejate e-postiaadressid</string>
     <string name="title_advanced_fts">Loo otsimisindeks</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d sõnumist indekseeritud (%3$s)</string>
     <string name="title_advanced_classification">Sõnumite klassifitseerimine</string>
@@ -786,6 +791,7 @@
     <string name="title_advanced_class_min_difference">Klassi miinimumerinevus: %1$s %%</string>
     <string name="title_advanced_show_filtered">Näita filtri ikooni, kui on rakendatud reegleid</string>
     <string name="title_advanced_haptic_feedback">Oluliste tegevuste puhul haptiline tagasiside</string>
+    <string name="title_advanced_haptic_feedback_swipe">Vasakule-paremale pühkimisel haptiline tagasiside</string>
     <string name="title_advanced_language">Keel</string>
     <string name="title_advanced_language_system">Süsteem</string>
     <string name="title_advanced_integrations_hint">Allpool olevad pilveteenused pole äpi osa. Mistahes maksed lähevad otse pilveteenusele, mitte äpi arendajale.</string>
@@ -911,7 +917,7 @@
     <string name="title_advanced_default_folder_hint">        Android võib küsida luba valitud kaustale ligi pääsemiseks, kuigi äpp ei vaja seda.
         Saad tühistada valimisdialoogi, et vaikekaust taastada (harilikult allalaadimiste kaust).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Taasta äpi viimane olek, kui taaskäivitatakse avaekraani ikoonist %1$d minuti jooksul</string>
+    <string name="title_advanced_restore_on_launch_hint">Kui võimalik taasta äpi eelmine olek, kui taaskäivitatakse avakuva ikooni kaudu</string>
     <string name="title_advanced_autoexpand_hint">Ava sõnum automaatselt, kui vestluses on ainult üks sõnum või ainult üks lugemata sõnum</string>
     <string name="title_advanced_expandall_hint">Kui laiendatud on mitu sõnumit, ei näidata vastamise nuppu, sest on ebaselge, millisele neist nupp rakenduks</string>
     <string name="title_advanced_autoseen_hint">Laiendamisel sõnumite automaatselt loetuks märkimise saab iga konto täpsemate seadete alt keelata</string>
@@ -933,7 +939,7 @@
     <string name="title_advanced_notify_remove_hint">Uute sõnumite teated eemaldatakse alati, kui neid libistatakse eemale või kui sõnumeid märgitakse loetuks</string>
     <string name="title_advanced_notify_manage_hint">Toksa kanali nimel, et määrata kanali omadusi</string>
     <string name="title_advanced_notify_samsung_hint">Teavituskanalite haldamiseks võib olla vajalik lubada see Androidi seadistus: Teavitused, Täpsemad seaded, Halda rakenduste kategooriaid</string>
-    <string name="title_advanced_notify_manage_default_hint">Et määrata vaikeheli jm.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Et määrata vaikeheli, häälestada MH (mitte häirida) jms.</string>
     <string name="title_advanced_notify_manage_service_hint">Monitoorimise teavituse keelamiseks</string>
     <string name="title_advanced_notify_separate_hint">Kuidas ma häälestan teavitusi kontode, kaustade ja saatjate jaoks?</string>
     <string name="title_advanced_notify_preview_all_hint">Kandeseadmete jaoks, mis suudavad näidata kogu teksti (kuni 5000 märki)</string>
@@ -1171,6 +1177,7 @@
     <string name="title_hint_operations">Tegevuste kustutamine võib põhjustada sõnumite kadumist ja sünkroonimisprobleeme</string>
     <string name="title_op_title_headers">Päiste allalaadimine</string>
     <string name="title_op_title_raw">Toorsõnumi alla laadimine</string>
+    <string name="title_op_title_add">Sõnumi üles laadimine</string>
     <string name="title_folder_name">Kausta nimi</string>
     <string name="title_display_name">Näidatav nimi</string>
     <string name="title_show_folders">Näita peidetud kaustu</string>
@@ -1502,6 +1509,7 @@
     <string name="title_add_image_inline">Lisa juurde</string>
     <string name="title_add_image_attach">Manusta</string>
     <string name="title_add_image_resize">Muuda suurust</string>
+    <string name="title_add_image_resize_width_only">Piira vaid laiust</string>
     <string name="title_add_image_privacy">Eemalda privaatsustundlik info</string>
     <string name="title_add_image_privacy_remark">Geograafilised asukohad, seerianumbrid, failinimed jne.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pikslit</string>
@@ -1693,6 +1701,8 @@
     <string name="title_sort_on_last_applied">Viimati rakendatud</string>
     <string name="title_filter">Filtreeri</string>
     <string name="title_filter_seen">Loetud</string>
+    <string name="title_filter_unseen">Lugemata</string>
+    <string name="title_filter_flagged">Starred</string>
     <string name="title_filter_unflagged">Tärnita</string>
     <string name="title_filter_unknown">Saatjad tundmatud</string>
     <string name="title_filter_hidden">Peidetud</string>
@@ -2059,6 +2069,7 @@
     <string name="title_via">%1$s kaudu</string>
     <string name="title_1hour">1 tund</string>
     <string name="title_1day">1 päev</string>
+    <string name="title_snooze_doze">Palun keela peamise häälestuse ekraanil 3 aku optimeerimine</string>
     <string name="title_more_overflow">Veel &#8230;</string>
     <string name="title_today_at">Täna kell %1$s</string>
     <string name="title_tomorrow_at">Homme kell %1$s</string>
@@ -2367,6 +2378,11 @@
         <item>Pole</item>
         <item>Triip</item>
         <item>Punkt</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Kitsas</item>
+        <item>Keskmine</item>
+        <item>Lai</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Saaja</item>

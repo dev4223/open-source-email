@@ -113,7 +113,6 @@
     <string name="title_setup_identities">Идентитети</string>
     <string name="title_setup_other">Остали провајдери</string>
     <string name="title_setup_gmail_rationale">Одобрите дозволе да се одабере налог и чита Ваше име</string>
-    <string name="title_setup_gmail_permissions">Гугл ће питати за дозволе за читање, састављае, слање и трајно брисање свих Ваших мејлова. FairEmail никад неће обрисати Ваше поруке без Вашег експлицитног одобрења.</string>
     <string name="title_setup_oauth_authorize">Ауторизуј</string>
     <string name="title_setup_select_account">Изабери налог</string>
     <string name="title_setup_instructions">Упутства за поставку</string>
@@ -319,7 +318,6 @@
     <string name="title_advanced_notify_action_hint">Биће приказане највише три акције</string>
     <string name="title_advanced_notify_remove_hint">Обавештење о новој поруци ће увек бити уклоњено на склањање превлачењем и на означавање поруке прочитаном</string>
     <string name="title_advanced_notify_manage_hint">Кликните на име канала да му поставите својства</string>
-    <string name="title_advanced_notify_manage_default_hint">За постављање подразумеваних звукова, итд.</string>
     <string name="title_advanced_wearable_hint">Обавештења се шаљу само на уређаје који се носе на телу пошто се текст поруке преузме</string>
     <string name="title_advanced_move_hint">Одредишна фасцикла се може подесити у поставкама налога</string>
     <string name="title_advanced_notify_no_grouping">Ова Андроид верзија не подржава груписање обавештења</string>
@@ -677,6 +675,8 @@
     <string name="title_sort_on_order">Редослед</string>
     <string name="title_filter">Филтрирај по</string>
     <string name="title_filter_seen">Прочитаним</string>
+    <string name="title_filter_unseen">Непрочитано</string>
+    <string name="title_filter_flagged">Озвездано</string>
     <string name="title_filter_unflagged">Без звездице</string>
     <string name="title_filter_unknown">Непознати пошиљаоци</string>
     <string name="title_filter_hidden">Сакривеним</string>
@@ -1112,6 +1112,11 @@
         <item>Ниједно</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Средња</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Прималац</item>

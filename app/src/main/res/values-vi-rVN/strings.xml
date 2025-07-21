@@ -133,7 +133,6 @@
     <string name="title_setup_intro">Việc thiết lập một tài khoản chỉ bao gồm ba bước và sau đó bạn có thể gửi và nhận email</string>
     <string name="title_setup_simple">Không cần thiết phải thay đổi bất kỳ tuỳ chọn nào khác</string>
     <string name="title_setup_issue">FairEmail được phát triển để giúp bạn bảo vệ sự riêng tư và đại diện cho hàng nghìn tiếng làm việc. Nếu bạn gặp vấn đề, vui lòng liên hệ với tôi trước tiên để được hỗ trợ trước khi để lại bài đánh giá xấu. Tôi rất vui khi được giúp đỡ!</string>
-    <string name="title_setup_analytics">FairEmail không hiển thị quảng cáo và không theo dõi hay phân tích hành vi của bạn. Bugsnag được sử dụng để báo cáo lỗi và được tắt theo mặc định.</string>
     <string name="title_setup_quick_accounts">Thêm hoặc đổi tài khoản</string>
     <string name="title_setup_quick_support">Một số nhà cung cấp làm cho việc thêm tài khoản khó khăn. Xin đừng đổ lỗi cho FairEmail vì việc này, mà hãy hỏi xin được hỗ trợ.</string>
     <string name="title_setup_quick_hint">Địa chỉ email đã nhập được dùng để truy vấn máy chủ email và autoconfig.thunderbird.net để biết thông tin thiết lập</string>
@@ -160,7 +159,6 @@
     <string name="title_setup_oauth_permission">Nhà cung cấp email đã chấp thuận OAuth chỉ với phiên bản trên CH Play và GitHub</string>
     <string name="title_setup_gmail_support">Việc uỷ quyền các tài khoản Gmail sẽ chỉ được trong phiên bản trên CH Play và GitHub vì Android kiểm tra chữ ký ứng dụng</string>
     <string name="title_setup_gmail_rationale">Hãy cấp quyền để chọn một tài khoản và đọc tên của bạn</string>
-    <string name="title_setup_gmail_permissions">Google sẽ hỏi xin quyền đọc, soạn thư, gửi và vĩnh viễn xoá tất cả email của bạn. FairEmail sẽ không bao giờ xoá các thư của bạn mà không có sự đồng ý cụ thể của bạn.</string>
     <string name="title_setup_gmail_login">Nếu Chrome được đăng nhập vào một tài khoản, bạn chỉ có thể thêm tài khoản mới qua Android. Bạn có thể tránh việc này bằng cách đăng xuất khỏi Chrome qua cài đặt đồng bộ hoá của Chrome.</string>
     <string name="title_setup_gmail_on_device">Tại sao tôi lại cần chọn tài khoản trên thiết bị?</string>
     <string name="title_setup_gmail_password">Tôi muốn uỷ quyền một tài khoản bằng mật khẩu thay vì tài khoản trên thiết bị</string>
@@ -420,7 +418,6 @@
     <string name="title_advanced_threading_unread">Hiện số thư chưa đọc trong các cuộc hội thoại</string>
     <string name="title_advanced_indentation">Lùi trái/phải các thư đã nhận/đã gửi trong cuộc hội thoại</string>
     <string name="title_advanced_highlight_unread">Đánh dấu các thư chưa đọc</string>
-    <string name="title_advanced_color_stripe_wide">Sử dụng dải màu rộng</string>
     <string name="title_advanced_avatars">Hiện ảnh liên hệ</string>
     <string name="title_advanced_bimi_unverified">Người gửi chưa được xác minh</string>
     <string name="title_advanced_bimi_verified">Người gửi đã được xác minh</string>
@@ -692,7 +689,6 @@
     <string name="title_advanced_inline_hint">Hình ảnh tích hợp là hình ảnh được bao gồm trong thư</string>
     <string name="compressed">Nội dung các tệp đã nén (%1$s) có nhiều hơn %2$s tệp hoặc có tệp lớn hơn %3$s sẽ không được hiện</string>
     <string name="title_advanced_parse_classes_hint">Cái này sẽ hiển thị thư chính xác hơn, nhưng có thể có độ trễ</string>
-    <string name="title_advanced_restore_on_launch_hint">Khôi phục trạng thái ứng dụng khi khởi động lại bằng biểu tượng trên launcher trong vòng %1$d phút</string>
     <string name="title_advanced_autoexpand_hint">Tự động mở thư khi chỉ cỏ một thư hoặc một thư chưa đọc trong một cuộc hội thoại</string>
     <string name="title_advanced_expandall_hint">Nút trả lời sẽ không được hiện khi nhiều thư được mở rộng vì không rõ là nút đó áp dụng cho thư nào</string>
     <string name="title_advanced_autoseen_hint">Việc tự động đánh dấu thư là đã đọc khi mở rộng có thể được tắt trong cài đặt tài khoản nâng cao của mỗi tài khoản</string>
@@ -711,7 +707,6 @@
     <string name="title_advanced_notify_car_hint">Kết nối nghĩa là có gì đó đang được chiếu như là bản đồ</string>
     <string name="title_advanced_notify_remove_hint">Các thông báo thư mới sẽ luôn được xoá khi được vuốt đi và khi đánh dấu thư là đã đọc</string>
     <string name="title_advanced_notify_manage_hint">Nhấn vào tên kênh để đặt thuộc tính kênh</string>
-    <string name="title_advanced_notify_manage_default_hint">Để đặt âm thanh mặc định, v.v.</string>
     <string name="title_advanced_notify_manage_service_hint">Để tắt thông báo \'đang giám sát\'</string>
     <string name="title_advanced_notify_separate_hint">Tôi thiết lập thông báo cho các tài khoản, thư mục và người gửi như thế nào?</string>
     <string name="title_advanced_notify_preview_all_hint">Dành cho các thiết bị đeo có thể hiện văn bản đầy đủ (nhiều nhất 5,000 kí tự)</string>
@@ -1341,6 +1336,8 @@
     <string name="title_sort_on_order">Thứ tự</string>
     <string name="title_filter">Lọc ra</string>
     <string name="title_filter_seen">Đã đọc</string>
+    <string name="title_filter_unseen">Chưa đọc</string>
+    <string name="title_filter_flagged">Được gắn sao</string>
     <string name="title_filter_unflagged">Chưa gắn sao</string>
     <string name="title_filter_unknown">Người gửi không xác định</string>
     <string name="title_filter_hidden">Ẩn</string>
@@ -1923,6 +1920,11 @@
         <item>Không có</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Vừa</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Người nhận</item>

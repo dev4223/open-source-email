@@ -162,7 +162,7 @@
     <string name="title_setup_intro">A configuração de uma conta consiste em três passos podendo, logo após isso, enviar e receber e-mails</string>
     <string name="title_setup_simple">Não é necessária a alteração doutras opções</string>
     <string name="title_setup_issue">O FairEmail foi desenvolvido para o ajudar a proteger a sua privacidade e representa, literalmente, milhares de horas de trabalho. Caso tenha algum problema, peço que me contacte primeiro para assistência antes de deixar uma avaliação negativa. Tenho todo o gosto em ajudar!</string>
-    <string name="title_setup_analytics">O FairEmail não exibe anúncios e não monitoriza ou analisa o seu comportamento. O Bugsnag é usado para comunicar erros e está desactivado por defeito.</string>
+    <string name="title_setup_analytics">FairEmail não exibe anúncios e não rastreia ou analisa o seu comportamento.</string>
     <string name="title_setup_quick_accounts">Adicionar ou alterar contas</string>
     <string name="title_setup_quick_support">Alguns provedores tornam difícil adicionar uma conta. Por favor, não culpe o FairEmail por isso, peça-lhes suporte.</string>
     <string name="title_setup_quick_hint">O endereço de e-mail inserido é usado para consultar o servidor de e-mail e autoconfig.thunderbird.net para informações de configuração</string>
@@ -192,7 +192,7 @@
     <string name="title_setup_oauth_permission">O fornecedor de e-mail aprovou OAuth apenas para a versão da Play Store e do GitHub</string>
     <string name="title_setup_gmail_support">Autorizar contas do Google funcionará na Play Store e na versão GitHub apenas porque o Android verifica a assinatura da aplicação digital</string>
     <string name="title_setup_gmail_rationale">Por favor, conceda permissões para selecionar uma conta e ler o seu nome</string>
-    <string name="title_setup_gmail_permissions">O Google pedirá permissões para ler, compor, enviar e eliminar permanentemente todos os seus e-mails. O FairEmail nunca apagará as suas mensagens sem o seu consentimento explícito.</string>
+    <string name="title_setup_gmail_permissions">O Google irá pedir permissões para ler (para lhe mostrar mensagens), redigir (para guardar rascunhos de mensagens), enviar e eliminar permanentemente todos os seus e-mails. O FairEmail nunca eliminará as suas mensagens sem o seu consentimento explícito. Só você e mais ninguém tem acesso às suas mensagens.</string>
     <string name="title_setup_gmail_login">Se o Chrome estiver ligado a uma conta, só é possível adicionar outra conta através do Android. Esta situação pode ser evitada, terminando a sessão nas definições de sincronização do Chrome.</string>
     <string name="title_setup_gmail_max">Caso receba a mensagem de erro \"Já atingiu o número máximo de contas permitido\", terá de terminar a sessão de todas as contas Google no navegador.</string>
     <string name="title_setup_outlook_hint">No caso de um endereço de pseudônimo, o assistente do Office 365 deve provavelmente ser usado.</string>
@@ -439,7 +439,6 @@
     <string name="title_advanced_quote_reply">Citar texto respondido</string>
     <string name="title_advanced_limit_reply">Limitar o número de citações encadeadas</string>
     <string name="title_advanced_resize_reply">Redimensionar imagens no texto da resposta</string>
-    <string name="title_advanced_resize_paste">Redimensionar imagens coladas</string>
     <string name="title_advanced_signature_location">Posição da assinatura</string>
     <string name="title_advanced_signature_new">Usar assinatura em novas mensagens</string>
     <string name="title_advanced_signature_reply">Usar assinatura quando responder</string>
@@ -539,7 +538,7 @@
     <string name="title_advanced_indentation">Indentação esquerda/direita para mensagens recebidas/enviadas em conversas</string>
     <string name="title_advanced_highlight_unread">Destacar mensagens não lidas</string>
     <string name="title_advanced_account_color">Mostrar uma faixa de cor ou ponto de cor</string>
-    <string name="title_advanced_color_stripe_wide">Usar ampla faixa de cores</string>
+    <string name="title_advanced_account_color_size">Largura da faixa colorida</string>
     <string name="title_advanced_avatars">Mostrar fotos de contactos</string>
     <string name="title_advanced_bimi">Mostrar indicadores de marca para identificação da mensagem (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Requer um certificado VMC válido</string>
@@ -687,7 +686,7 @@
     <string name="title_advanced_notify_suppress_in_call">Atrasar notificações enquanto está numa chamada</string>
     <string name="title_advanced_notify_suppress_in_car">Atrasar notificações enquanto o Android Auto está ligado</string>
     <string name="title_advanced_notify_summary">Mostrar apenas resumo na notificação</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Mostrar assunto nas notificações</string>
+    <string name="title_advanced_notify_subject">Mostrar assunto nas notificações</string>
     <string name="title_advanced_notify_preview">Mostrar pré-visualização de mensagem nas notificações</string>
     <string name="title_advanced_notify_preview_all">Pré-visualizar todo o texto</string>
     <string name="title_advanced_notify_preview_only">Mostrar notificações apenas com pré-visualização do texto</string>
@@ -784,6 +783,7 @@
     <string name="title_advanced_sort_answers">Ordenar modelos de respostas por frequência de utilização</string>
     <string name="title_advanced_shortcuts">Mostrar contactos usados com frequência no menu de partilha do Android</string>
     <string name="title_advanced_ical_tentative">Armazenar convites recebidos como tentativas</string>
+    <string name="title_advanced_ical_email">Guarde o endereço de e-mail dos participantes</string>
     <string name="title_advanced_fts">Construir índice de pesquisa</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mensagens indexadas (%3$s)</string>
     <string name="title_advanced_classification">Classificar mensagens</string>
@@ -917,7 +917,7 @@
     <string name="title_advanced_default_folder_hint">        O dispositivo Android pode solicitar permissão para aceder à pasta selecionada, mesmo que a aplicação não precise dela.
         Pode cancelar o diálogo de seleção para restaurar a pasta padrão (geralmente a pasta \"Transferir\").
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Restaurar o último estado da aplicação quando for reiniciada, através do ícone do launcher, no espaço de %1$d minuto(s)</string>
+    <string name="title_advanced_restore_on_launch_hint">Restaurar o último estado da aplicação, se possível, quando reiniciado através do ícone do iniciador</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensagem automaticamente quando houver apenas uma mensagem ou uma mensagem não lida numa conversa</string>
     <string name="title_advanced_expandall_hint">O botão de resposta não será mostrado quando várias mensagens são expandidas porque não está claro a qual mensagem o botão se aplica</string>
     <string name="title_advanced_autoseen_hint">Marcar mensagens automaticamente como lidas ao expandir pode ser desativado nas configurações avançadas de cada conta</string>
@@ -939,7 +939,7 @@
     <string name="title_advanced_notify_remove_hint">Novas notificações de mensagens serão sempre removidas ao serem arrastadas e ao serem marcadas como lidas</string>
     <string name="title_advanced_notify_manage_hint">Toque no nome do canal para definir as propriedades do canal</string>
     <string name="title_advanced_notify_samsung_hint">Para gerir os canais de notificação, você pode precisar ativar esta configuração do Android: Notificações, Configurações Avançadas, Gerir categorias de notificação para cada app</string>
-    <string name="title_advanced_notify_manage_default_hint">Para definir o som padrão, etc</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Para escolher o som predefinido, configure o DND (não incomodar), etc.</string>
     <string name="title_advanced_notify_manage_service_hint">Para desactivar a notificação \'a monitorizar\'</string>
     <string name="title_advanced_notify_separate_hint">Como faço para configurar notificações para contas, pastas e remetentes?</string>
     <string name="title_advanced_notify_preview_all_hint">Para dispositivos móveis (wearables) que consigam mostrar o texto completo (até 5.000 caracteres)</string>
@@ -1177,6 +1177,7 @@ Portanto, este problema só pode ser resolvido pelo seu provedor de e-mail - a i
     <string name="title_hint_operations">Eliminar operações pode resultar no desaparecimento de mensagens e problemas de sincronização</string>
     <string name="title_op_title_headers">A transferir cabeçalhos</string>
     <string name="title_op_title_raw">A transferir mensagem em bruto (raw)</string>
+    <string name="title_op_title_add">Enviando mensagem</string>
     <string name="title_folder_name">Nome da pasta</string>
     <string name="title_display_name">Nome a apresentar</string>
     <string name="title_show_folders">Mostrar pastas ocultas</string>
@@ -1508,6 +1509,7 @@ Portanto, este problema só pode ser resolvido pelo seu provedor de e-mail - a i
     <string name="title_add_image_inline">Inserir</string>
     <string name="title_add_image_attach">Anexar</string>
     <string name="title_add_image_resize">Redimensionar</string>
+    <string name="title_add_image_resize_width_only">Limite apenas a largura</string>
     <string name="title_add_image_privacy">Remover dados confidenciais da imagem</string>
     <string name="title_add_image_privacy_remark">Localização geográfica, números de série, nomes de ficheiro, etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixeis</string>
@@ -1699,6 +1701,8 @@ Portanto, este problema só pode ser resolvido pelo seu provedor de e-mail - a i
     <string name="title_sort_on_last_applied">Última aplicada</string>
     <string name="title_filter">Filtrar (excluir)</string>
     <string name="title_filter_seen">Lida</string>
+    <string name="title_filter_unseen">Não lidas</string>
+    <string name="title_filter_flagged">Com estrela</string>
     <string name="title_filter_unflagged">Sem estrela</string>
     <string name="title_filter_unknown">Remetentes desconhecidos</string>
     <string name="title_filter_hidden">Oculta</string>
@@ -2065,6 +2069,7 @@ Portanto, este problema só pode ser resolvido pelo seu provedor de e-mail - a i
     <string name="title_via">Através: %1$s</string>
     <string name="title_1hour">1 hora</string>
     <string name="title_1day">1 dia</string>
+    <string name="title_snooze_doze">Desative as otimizações da bateria no passo 3 do ecrã de definições principal</string>
     <string name="title_more_overflow">Mais &#8230;</string>
     <string name="title_today_at">Hoje às %1$s</string>
     <string name="title_tomorrow_at">Amanhã às %1$s</string>
@@ -2373,6 +2378,11 @@ Portanto, este problema só pode ser resolvido pelo seu provedor de e-mail - a i
         <item>Nenhuma</item>
         <item>Lista</item>
         <item>Ponto</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Estreito</item>
+        <item>Médio</item>
+        <item>Largo</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Destinatário</item>

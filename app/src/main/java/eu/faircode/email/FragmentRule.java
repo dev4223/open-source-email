@@ -221,6 +221,7 @@ public class FragmentRule extends FragmentBase {
     private long account = -1;
     private int protocol = -1;
     private long folder = -1;
+    private String type = null;
     private Uri sound = null;
 
     private DateFormat DF;
@@ -277,6 +278,7 @@ public class FragmentRule extends FragmentBase {
         account = args.getLong("account", -1);
         protocol = args.getInt("protocol", EntityAccount.TYPE_IMAP);
         folder = args.getLong("folder", -1);
+        type = args.getString("type");
 
         if (savedInstanceState != null)
             sound = savedInstanceState.getParcelable("fair:sound");
@@ -710,14 +712,16 @@ public class FragmentRule extends FragmentBase {
         actions.add(new Action(EntityRule.TYPE_IMPORTANCE, getString(R.string.title_rule_importance), R.drawable.twotone_north_24));
         actions.add(new Action(EntityRule.TYPE_KEYWORD, getString(R.string.title_rule_keyword), R.drawable.twotone_label_important_24));
         actions.add(new Action(EntityRule.TYPE_NOTES, getString(R.string.title_rule_notes), R.drawable.twotone_sticky_note_2_24));
-        actions.add(new Action(EntityRule.TYPE_MOVE, getString(R.string.title_rule_move), R.drawable.twotone_drive_file_move_24));
+        if (protocol == EntityAccount.TYPE_IMAP || EntityFolder.INBOX.equals(type))
+            actions.add(new Action(EntityRule.TYPE_MOVE, getString(R.string.title_rule_move), R.drawable.twotone_drive_file_move_24));
         if (protocol == EntityAccount.TYPE_IMAP)
             actions.add(new Action(EntityRule.TYPE_COPY, getString(R.string.title_rule_copy), R.drawable.twotone_file_copy_24));
         actions.add(new Action(EntityRule.TYPE_DELETE, getString(R.string.title_rule_delete), R.drawable.twotone_delete_forever_24));
         actions.add(new Action(EntityRule.TYPE_ANSWER, getString(R.string.title_rule_answer), R.drawable.twotone_reply_24));
         if (AI.isAvailable(getContext()))
             actions.add(new Action(EntityRule.TYPE_SUMMARIZE, getString(R.string.title_rule_summarize), R.drawable.twotone_smart_toy_24));
-        actions.add(new Action(EntityRule.TYPE_TTS, getString(R.string.title_rule_tts), R.drawable.twotone_record_voice_over_24));
+        if (!Helper.isPlayStoreInstall())
+            actions.add(new Action(EntityRule.TYPE_TTS, getString(R.string.title_rule_tts), R.drawable.twotone_record_voice_over_24));
         actions.add(new Action(EntityRule.TYPE_SOUND, getString(R.string.title_rule_sound), R.drawable.twotone_play_arrow_24));
         actions.add(new Action(EntityRule.TYPE_AUTOMATION, getString(R.string.title_rule_automation), R.drawable.twotone_auto_awesome_24));
         actions.add(new Action(EntityRule.TYPE_URL, getString(R.string.title_rule_url), R.drawable.twotone_insert_link_45_24));
@@ -1683,7 +1687,15 @@ public class FragmentRule extends FragmentBase {
                         }
                     }
 
-                    if (jsender == null &&
+                    int age = 0;
+                    if (daily) {
+                        JSONObject jgeneral = jcondition.optJSONObject("general");
+                        if (jgeneral != null)
+                            age = jgeneral.optInt("age");
+                    }
+
+                    if (age == 0 &&
+                            jsender == null &&
                             jrecipient == null &&
                             jsubject == null &&
                             !jcondition.optBoolean("attachments") &&

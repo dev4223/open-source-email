@@ -162,7 +162,6 @@
     <string name="title_setup_intro">Att lägga till ett konto tar bara tre steg och efter det kan du skicka och ta emot e-post</string>
     <string name="title_setup_simple">Det finns ingen anledning att ändra några andra inställningar</string>
     <string name="title_setup_issue">FairEmail har utvecklats för att hjälpa dig att skydda din integritet och representerar bokstavligen tusentals timmars arbete. Om du har några problem, vängligen kontakta mig först för support innan du lämnar en dålig recension. Jag hjälper gärna till!</string>
-    <string name="title_setup_analytics">FairEmail visar inte annonser och spårar inte eller analyserar ditt beteende. Bugsnag används för felrapportering och är inaktiverat som standard.</string>
     <string name="title_setup_quick_accounts">Lägg till eller byt konton</string>
     <string name="title_setup_quick_support">Vissa leverantörer gör det svårt att lägga till ett konto. Vänligen skyll inte på FairEmail för det, be om support istället.</string>
     <string name="title_setup_quick_hint">Den angivna e-postadressen används för att fråga e-postservern och autoconfig.thunderbird.net för konfigurationsinformation</string>
@@ -192,7 +191,6 @@
     <string name="title_setup_oauth_permission">E-postleverantören har godkänt OAuth endast för Play Store- och GitHub-versionen</string>
     <string name="title_setup_gmail_support">Auktorisera Google-konton kommer endast att fungera i Play Store- och GitHub-versionen eftersom Android kontrollerar den digitala app-signaturen</string>
     <string name="title_setup_gmail_rationale">Vänligen bevilja behörigheter för att välja ett konto och läsa ditt namn</string>
-    <string name="title_setup_gmail_permissions">Google kommer att be om behörighet att läsa, komponera, skicka och permanent ta bort all din e-post. FairEmail kommer aldrig att ta bort dina meddelanden utan ditt uttryckliga medgivande.</string>
     <string name="title_setup_gmail_login">Om Chrome är inloggad på ett konto kan ett nytt konto endast läggas till via Android. Detta kan undvikas genom att logga ut från Chrome via Chromes synkroniseringsinställningar.</string>
     <string name="title_setup_gmail_max">Vid felmeddelandet \"Du är inloggad på det maximala antalet konton\", så måste du logga ut webbläsaren från alla Google-konton.</string>
     <string name="title_setup_outlook_hint">När det gäller en alias-adress, bör förmodligen Office 365 guiden användas.</string>
@@ -431,7 +429,6 @@
     <string name="title_advanced_quote_reply">Citera svarstext</string>
     <string name="title_advanced_limit_reply">Begränsa antalet nästlade citat</string>
     <string name="title_advanced_resize_reply">Ändra storlek på bilder i svarande text</string>
-    <string name="title_advanced_resize_paste">Ändra storlek på inklistrade bilder</string>
     <string name="title_advanced_signature_location">Signaturens position</string>
     <string name="title_advanced_signature_new">Använd signatur för nya meddelanden</string>
     <string name="title_advanced_signature_reply">Använd signatur vid svar</string>
@@ -531,7 +528,7 @@
     <string name="title_advanced_indentation">Vänster/höger indrag mottaget/skickade meddelanden i konversationer</string>
     <string name="title_advanced_highlight_unread">Markera olästa meddelanden</string>
     <string name="title_advanced_account_color">Visa en färgrand eller färgpunkt</string>
-    <string name="title_advanced_color_stripe_wide">Använd bred färgrand</string>
+    <string name="title_advanced_account_color_size">Bredd på färgband</string>
     <string name="title_advanced_avatars">Visa kontaktfoton</string>
     <string name="title_advanced_bimi">Visa varumärkesindikatorer för meddelandeidentifiering (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Kräv ett giltigt VMC-certifikat</string>
@@ -771,6 +768,7 @@
     <string name="title_advanced_sort_answers">Sortera svarsmallar efter användningsfrekvens</string>
     <string name="title_advanced_shortcuts">Visa ofta använda kontakter i Android dela-menyn</string>
     <string name="title_advanced_ical_tentative">Lagra mottagna inbjudningar som preliminära</string>
+    <string name="title_advanced_ical_email">Lagra deltagares e-postadress</string>
     <string name="title_advanced_fts">Bygg sökindex</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d meddelanden indexerade (%3$s)</string>
     <string name="title_advanced_classification">Klassificera meddelanden</string>
@@ -902,7 +900,6 @@
     <string name="title_advanced_default_folder_hint">        Android kan be om behörighet att komma åt den valda mappen, även om appen inte behöver det.
         Du kan avbryta urvalsdialogen för att återställa standardmappen (vanligtvis mappen \'Nedladdningar\').
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Återställ senaste app-status när den startas om via ikonen för launcher inom %1$d minuter</string>
     <string name="title_advanced_autoexpand_hint">Öppna automatiskt meddelandet när det bara finns ett meddelande eller bara ett oläst meddelande i en konversation</string>
     <string name="title_advanced_expandall_hint">Svarsknappen kommer inte att visas när flera meddelanden visas i utökat läge eftersom det är oklart vilket meddelande knappen gäller</string>
     <string name="title_advanced_autoseen_hint">Automatiskt markering av meddelanden som lästa när du expanderar dem kan inaktiveras i avancerade kontoinställningar för varje konto</string>
@@ -924,7 +921,6 @@
     <string name="title_advanced_notify_remove_hint">Nya meddelandeaviseringar kommer alltid att tas bort när de sveps bort och när meddelanden markeras som lästa</string>
     <string name="title_advanced_notify_manage_hint">Tryck på kanalens namn för att ange kanalens egenskaper</string>
     <string name="title_advanced_notify_samsung_hint">För att hantera aviseringskanaler kan du behöva aktivera den här Android-inställningen: Avisering, Avancerade inställningar, Hantera aviseringskategorier för varje app</string>
-    <string name="title_advanced_notify_manage_default_hint">För att ställa in standardljudet, etc</string>
     <string name="title_advanced_notify_manage_service_hint">För att inaktivera meddelandet \"övervakning\"</string>
     <string name="title_advanced_notify_separate_hint">Hur konfigurerar jag aviseringar för konton, mappar och avsändare?</string>
     <string name="title_advanced_notify_preview_all_hint">För handburna enheter som kan visa fulltext (upp till 5000 tecken)</string>
@@ -1159,6 +1155,7 @@
     <string name="title_hint_operations">Att ta bort pågående åtgärder kan resultera i försvinnande meddelanden och synkroniseringsproblem</string>
     <string name="title_op_title_headers">Laddar ner rubriker</string>
     <string name="title_op_title_raw">Hämtar rådata för meddelande</string>
+    <string name="title_op_title_add">Laddar upp meddelande</string>
     <string name="title_folder_name">Mappnamn</string>
     <string name="title_display_name">Visningsnamn</string>
     <string name="title_show_folders">Visa dolda mappar</string>
@@ -1674,6 +1671,8 @@
     <string name="title_sort_on_last_applied">Senast tillämpad</string>
     <string name="title_filter">Filtrera bort</string>
     <string name="title_filter_seen">Läst</string>
+    <string name="title_filter_unseen">Olästa</string>
+    <string name="title_filter_flagged">Stjärnmärkta</string>
     <string name="title_filter_unflagged">Utan stjärnmärkning</string>
     <string name="title_filter_unknown">Okända avsändare</string>
     <string name="title_filter_hidden">Dold</string>
@@ -2036,6 +2035,7 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 timme</string>
     <string name="title_1day">1 dag</string>
+    <string name="title_snooze_doze">Vänligen inaktivera batterioptimeringar via steg 3 i huvudskärmen för inställningar</string>
     <string name="title_more_overflow">Mer &#8230;</string>
     <string name="title_today_at">Idag %1$s</string>
     <string name="title_tomorrow_at">Imorgon kl. %1$s</string>
@@ -2350,6 +2350,11 @@
         <item>Ingen</item>
         <item>Färgrand</item>
         <item>Punkt</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Smal</item>
+        <item>Medel</item>
+        <item>Bred</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Mottagare</item>

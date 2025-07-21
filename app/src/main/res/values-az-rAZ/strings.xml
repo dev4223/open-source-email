@@ -162,7 +162,7 @@
     <string name="title_setup_intro">Bir hesabın hazırlanması üç addımdan ibarətdir və bundan sonra e-poçtları göndərə və ala bilərsiniz</string>
     <string name="title_setup_simple">Başqa hər hansısa bir seçimi dəyişdirməyə ehtiyac yoxdur</string>
     <string name="title_setup_issue">FairEmail, gizliliyinizi qorumağa kömək etməsi üçün təkmilləşdirildi və sözün əsl mənasında minlərlə saatlıq çalışmanı təmsil edir. Əgər tətbiqlə bağlı hər hansısa probleminiz varsa, mənfi bir rəy bildirməzdən əvvəl zəhmət olmasa dəstək üçün mənimlə əlaqə saxlayın. Məmnuniyyətlə kömək edərəm!</string>
-    <string name="title_setup_analytics">FairEmail, reklam göstərmir, davranışınızı izləmir və ya təhlil etmir. Bugsnag, xəta hesabatı üçün istifadə olunur və ilkin olaraq görüntülənir.</string>
+    <string name="title_setup_analytics">FairEmail reklam göstərmir, davranışlarınızı izləmir və ya təhlil etmir.</string>
     <string name="title_setup_quick_accounts">Hesab əlavə et və ya dəyişdir</string>
     <string name="title_setup_quick_support">Bəzi provayderlər hesab əlavə etməyi çətinləşdirir. Xahiş edirik, buna görə \"FairEmail\"i günahlandırmayın, əvəzində dəstək istəyin.</string>
     <string name="title_setup_quick_hint">Daxil edilmiş e-poçt ünvanı, konfiqurasiya məlumatları üçün e-poçt serverini və autoconfig.thunderbird.net-i sorğulamaq üçün istifadə olunur</string>
@@ -192,7 +192,7 @@
     <string name="title_setup_oauth_permission">E-poçt provayderi, \"OAuth\"u yalnız Play Store və GitHub versiyaları üçün təsdiqlədi</string>
     <string name="title_setup_gmail_support">Google hesablarının səlahiyyətləndirilməsi, Android tətbiq imzalarını yoxladığı üçün yalnız Play Store və GitHub versiyalarında işləyəcək</string>
     <string name="title_setup_gmail_rationale">Zəhmət olmasa bir hesab seçmək və adınızı oxumaq üçün icazə verin</string>
-    <string name="title_setup_gmail_permissions">Google, bütün e-poçtları oxumaq, yaratmaq, göndərmək və birdəfəlik silmək üçün icazə istəyəcək. FairEmail, açıq-aşkar razılığınız olmadan heç vaxt mesajlarınızı silməyəcək.</string>
+    <string name="title_setup_gmail_permissions">Google, sizdən bütün e-poçtlarınızı oxumaq (sizə mesajları göstərmək üçün), tərtib etmək (qaralama mesajlarını saxlamaq üçün), göndərmək və daimi silmək üçün icazə istəyəcək. FairEmail, açıq icazəniz olmadan mesajlarınızı heç vaxt silməyəcək. Mesajlarınıza sizdən başqa heç kəs müraciət edə bilməz.</string>
     <string name="title_setup_gmail_login">Chrome bir hesabda giriş edibsə, yeni hesab yalnız Android üzərindən əlavə edilə bilər. Chrome sinxr. ayarları vasitəsilə Chrome-dan çıxış edilərək bunun qarşısı alına bilər.</string>
     <string name="title_setup_gmail_max">\"Maksimum sayda hesaba daxil olmusunuz\" xəta mesajını aldıqda, brauzerin bütün Google hesablarından çıxış etməlisiniz.</string>
     <string name="title_setup_outlook_hint">Ləqəb ünvanı halında, Office 365 sehrbazı istifadə edilməlidir.</string>
@@ -440,7 +440,6 @@
     <string name="title_advanced_quote_reply">Cavablanan mətndən sitat gətir</string>
     <string name="title_advanced_limit_reply">Gətirilən sitatların sayını məhdudlaşdır</string>
     <string name="title_advanced_resize_reply">Cavablanan mətndəki təsvirləri təkrar ölçüləndir</string>
-    <string name="title_advanced_resize_paste">Yapışdırılan təsvirlərin ölçüsünü dəyişdir</string>
     <string name="title_advanced_signature_location">İmza mövqeyi</string>
     <string name="title_advanced_signature_new">Yeni mesajlar üçün imza istifadə edin</string>
     <string name="title_advanced_signature_reply">Cavablayanda imza istifadə et</string>
@@ -540,7 +539,7 @@
     <string name="title_advanced_indentation">Danışıqlarda alınan/göndərilən mesajların sol/sağ boşluğu</string>
     <string name="title_advanced_highlight_unread">Oxunmamış mesajları vurğula</string>
     <string name="title_advanced_account_color">Rəngli bir zolaq və ya rəngli nöqtə göstər</string>
-    <string name="title_advanced_color_stripe_wide">Geniş rəng zolağı istifadə et</string>
+    <string name="title_advanced_account_color_size">Rəng zolağının eni</string>
     <string name="title_advanced_avatars">Əlaqə fotolarını göstər</string>
     <string name="title_advanced_bimi">Mesaj İdentifikasiyası üçün Marka İndikatorlarını (BIMI) göstər</string>
     <string name="title_advanced_bimi_vmc">Yararlı bir VMC sertifikatını tələb et</string>
@@ -688,7 +687,7 @@
     <string name="title_advanced_notify_suppress_in_call">Zəng əsnasında bildirişləri gecikdirmə</string>
     <string name="title_advanced_notify_suppress_in_car">Android Auto ilə bağlantı qurularkən bildirişləri gecikdir</string>
     <string name="title_advanced_notify_summary">Yalnız icmal bildirişini göstər</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Mövzunu bildirişlərdə göstər</string>
+    <string name="title_advanced_notify_subject">Mövzunu bildirişlərdə göstər</string>
     <string name="title_advanced_notify_preview">Bildirişlərdə mesaja önbaxışı göstər</string>
     <string name="title_advanced_notify_preview_all">Mətnin hamısına önbaxış</string>
     <string name="title_advanced_notify_preview_only">Bildirişləri yalnız önbaxış mətni ilə göstər</string>
@@ -785,6 +784,7 @@
     <string name="title_advanced_sort_answers">Cavab şablonlarını istifadə tezliyinə görə sırala</string>
     <string name="title_advanced_shortcuts">Tez-tez istifadə olunan əlaqələri Android paylaşma menyusunda göstər</string>
     <string name="title_advanced_ical_tentative">Mağaza, dəvətləri şərti olaraq aldı</string>
+    <string name="title_advanced_ical_email">İştirakçıların e-poçt ünvanlarını saxla</string>
     <string name="title_advanced_fts">Axtarış indeksini quraşdır</string>
     <string name="title_advanced_fts_indexed">%1$d/%2$d mesaj indeksləndi (%3$s)</string>
     <string name="title_advanced_classification">Mesajları sinifləşdir</string>
@@ -918,7 +918,7 @@
     <string name="title_advanced_default_folder_hint">        Android, tətbiqin buna ehtiyacı olmasa belə, seçilmiş qovluğa müraciət üçün icazə istəyə bilər.
         İlkin qovluğu (adətən \"Endirmə\" qovluğu olur) bərpa etmək üçün seçim dialoqunu ləğv edə bilərsiniz.
     </string>
-    <string name="title_advanced_restore_on_launch_hint">%1$d dəqiqə ərzində başladıcı nişanı vasitəsilə yenidən başladılanda son tətbiq vəziyyətini bərpa et</string>
+    <string name="title_advanced_restore_on_launch_hint">Başladıcı ikonu ilə yenidən başladıldığı zaman mümkün olduqda son tətbiq statusunu bərpa et</string>
     <string name="title_advanced_autoexpand_hint">Bir danışıqda sadəcə bir mesaj və ya sadəcə bir oxunmamış mesaj olanda mesajı avtomatik aç</string>
     <string name="title_advanced_expandall_hint">Düymənin hansı mesaja tətbiq ediləcəyi qeyri-müəyyən olduğuna görə, bir neçə mesaj genişləndiriləndə cavab düyməsi göstərilməyəcək</string>
     <string name="title_advanced_autoseen_hint">Genişləndirəndə mesajları avtomatik olaraq oxundu kimi işarələmə, hər hesabın qabaqcıl hesab ayarlarında sıradan çıxarıla bilər</string>
@@ -940,7 +940,7 @@
     <string name="title_advanced_notify_remove_hint">Yeni mesaj bildirişləri, sürüşdürüləndə və oxundu kimi işarələnəndə həmişə silənəcək</string>
     <string name="title_advanced_notify_manage_hint">Kanal xüsusiyyətlərini ayarlamaq üçün kanal adına toxunun</string>
     <string name="title_advanced_notify_samsung_hint">Bildiriş kanallarını idarə etmək üçün bu Android ayarını fəallaşdırmağınız lazım gələ bilər: Bildiriş, Qabaqcıl ayarlar, Hər tətbiq üçün bildiriş kateqoriyalarını idarə et</string>
-    <string name="title_advanced_notify_manage_default_hint">İlkin səsi ayarlamaq üçün və s.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">İlkin səsi ayarlamaq üçün DND (narahat etməyin) rejimini və sairə konfiqurasiya edin</string>
     <string name="title_advanced_notify_manage_service_hint">\"Müşahidə\" bildirişini sıradan çıxartmaq üçün</string>
     <string name="title_advanced_notify_separate_hint">Hesablar, qovluqlar və göndərənlər üçün bildirişləri necə konfiqurasiya edə bilərəm?</string>
     <string name="title_advanced_notify_preview_all_hint">Tam mətni göstərə bilən geyinilə bilən cihazlar üçün (5,000 simvola qədər)</string>
@@ -1178,6 +1178,7 @@
     <string name="title_hint_operations">Əməliyyatların silinməsi, mesajların görünməməsi və sinxronlaşdırma problemlərinin yaranması ilə nəticələnə bilər</string>
     <string name="title_op_title_headers">Başlıqlar endirilir</string>
     <string name="title_op_title_raw">Xam mesaj endirilir</string>
+    <string name="title_op_title_add">Mesaj yüklənir</string>
     <string name="title_folder_name">Qovluq adı</string>
     <string name="title_display_name">Ekran adı</string>
     <string name="title_show_folders">Gizli qovluqları göstər</string>
@@ -1509,6 +1510,7 @@
     <string name="title_add_image_inline">Daxil et</string>
     <string name="title_add_image_attach">Qoşma</string>
     <string name="title_add_image_resize">Yenidən ölçüləndir</string>
+    <string name="title_add_image_resize_width_only">Yalnız eni limitlə</string>
     <string name="title_add_image_privacy">Gizliliyiniz üçün həssas verilənləri silin</string>
     <string name="title_add_image_privacy_remark">Coğrafi yerləşmə, seriya nömrələri, fayl adları və s.</string>
     <string name="title_add_resize_pixels">&lt; %1$d piksel</string>
@@ -1700,6 +1702,8 @@
     <string name="title_sort_on_last_applied">Son tətbiq edilmə</string>
     <string name="title_filter">Filtrləmə</string>
     <string name="title_filter_seen">Oxunan</string>
+    <string name="title_filter_unseen">Oxunmadı</string>
+    <string name="title_filter_flagged">Ulduzlu</string>
     <string name="title_filter_unflagged">Ulduzlu olmayan</string>
     <string name="title_filter_unknown">Bilinməyən göndərənlər</string>
     <string name="title_filter_hidden">Gizli</string>
@@ -2066,6 +2070,7 @@
     <string name="title_via">%1$s ilə</string>
     <string name="title_1hour">1 saat</string>
     <string name="title_1day">1 gün</string>
+    <string name="title_snooze_doze">Lütfən əsas ayarlar ekranının 3-cü addımı ilə batareya optimallaşdırmalarını sıradan çıxardın</string>
     <string name="title_more_overflow">Daha çox &#8230;</string>
     <string name="title_today_at">Bu gün %1$s</string>
     <string name="title_tomorrow_at">Sabah %1$s</string>
@@ -2374,6 +2379,11 @@
         <item>Heç biri</item>
         <item>Zolaq</item>
         <item>Nöqtə</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Dar</item>
+        <item>Orta</item>
+        <item>Geniş</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Alıcı</item>

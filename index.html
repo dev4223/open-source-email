@@ -8,10 +8,19 @@
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="shortcut icon" href="https://raw.githubusercontent.com/M66B/FairEmail/master/app/src/main/ic_launcher-web.png">
   <meta name="theme-color" content="#006db3">
@@ -86,6 +95,7 @@
 <li>Free.fr, see <a href="#faq157">question 157</a></li>
 <li>Posteo: please check if <a href="https://posteo.de/en/help/activating-additional-email-account-protection">additional email account protection</a> (<a href="https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren">German</a>) isn’t enabled</li>
 <li>Posteo: not that there is <a href="https://posteo.de/en/help/how-does-the-posteo-spam-filter-work">no spam folder</a> (<a href="https://posteo.de/hilfe/wie-funktioniert-der-posteo-spamfilter">German</a>)</li>
+<li>Posteo: if you want to synchronize contacts, please <a href="https://posteo.de/en/help/how-do-i-set-up-synchronisation-of-contacts-with-an-android-address-book">see here</a></li>
 <li>Web.de: please check if <a href="https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html">IMAP is enabled</a></li>
 <li>Web.de: with two factor authentication you’ll need to use <a href="https://web.de/email/sicherheit/zwei-faktor-authentifizierung/">an app password</a></li>
 <li>Web.de: if you are missing the spam messages folder, you should enable spam filtering via the website of web.de again</li>
@@ -120,7 +130,7 @@
 <li>Load more messages: long press a folder in the folder list, select <em>Fetch more messages</em></li>
 <li>Delete a message, skipping trash: long press the trash icon</li>
 <li>Delete an account/identity: (Main) Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, tap the trash icon in the top right corner</li>
-<li>Delete a folder: long press the folder in the folder list, Edit properties, tap the trash icon in the top right corner</li>
+<li>Delete a folder: long press the folder in the folder list, Edit properties, tap the trash icon in the top right corner. Note that you can’t delete folders which still have sub folders.</li>
 <li>Undo send: Outbox, swipe the message in the list left or right</li>
 <li>Delete a contact: please <a href="#faq171">see this FAQ</a></li>
 <li>Store sent messages in the inbox: please <a href="#faq142">see this FAQ</a></li>
@@ -155,11 +165,11 @@
 <li><del><a href="https://techcommunity.microsoft.com/t5/outlook/outlook-office-365-imap-idle-is-broken/m-p/3616242">A bug</a> in the Outlook IMAP server causes delayed new message notifications.</del></li>
 <li>Updating the Material You colors sometimes require restarting the app / the device, which is caused by <a href="https://issuetracker.google.com/issues/386671298">a bug</a> in the Android WebView.</li>
 </ul>
-<p><a name="redmi"></a> <a name="realme"></a> <a name="oneplus"></a> <a name="oppo"></a></p>
+<p><a name="redmi"></a> <a name="realme"></a> <a name="oneplus"></a> <a name="oppo"></a> <a name="sony"></a> <a name="motorola"></a></p>
 <p><br /></p>
-<p><strong>Xiaomi Redmi / Realme / OnePlus / Oppo</strong></p>
+<p><strong>Xiaomi Redmi / Realme / OnePlus / Oppo / Sony / Motorola</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23redmi">Google Translate</a></p>
-<p>On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices, some Oppo devices, and some Samsung devices running Android 12, the database occasionally gets corrupted, especially after installing an update, resulting in total data loss (on the device only, unless you are using a POP3 account with the option <em>Leave messages on server</em> disabled).</p>
+<p>On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices, some Oppo devices, some Samsung devices, some Sony (Xperia) devices, some Motorola devices, and possibly other devices running Android 12, the database occasionally gets corrupted, especially after installing an update, resulting in total data loss (on the device only, unless you are using a POP3 account with the option <em>Leave messages on server</em> disabled).</p>
 <p>The cause of this problem are disk I/O errors due to an Android bug (more likely) or maybe a hardware issue (less likely), please <a href="https://www.sqlite.org/rescode.html#ioerr_write">see here</a>.</p>
 <p>“<em>This error might result from a hardware malfunction or because a filesystem came unmounted while the file was open.</em>”</p>
 <p>This can’t be fixed by the app and must be fixed by the device manufacturer with an Android update.</p>
@@ -322,7 +332,7 @@
 <li><a href="#faq101">(101) What does the blue/orange dot at the bottom of the conversations mean?</a></li>
 <li><a href="#faq102">(102) How can I enable auto rotation of images?</a></li>
 <li><a href="#faq158">(103) How can I record audio?</a></li>
-<li><a href="#faq104">(104) What do I need to know about error reporting?</a></li>
+<li><a href="#faq104"><del>(104) What do I need to know about error reporting?</del></a></li>
 <li><a href="#faq105">(105) How does the roam-like-at-home option work?</a></li>
 <li><a href="#faq106">(106) Which launchers can show a badge count with the number of unread messages?</a></li>
 <li><a href="#faq107">(107) How do I use colored stars?</a></li>
@@ -426,6 +436,8 @@
 <li><a href="#faq205">(205) How do I check the integrity of an APK file?</a></li>
 <li><a href="#faq206">(206) How can I move or copy messages from one account to another?</a></li>
 <li><a href="#faq207">(207) What does ‘Authentication failed’ mean?</a></li>
+<li><a href="#faq208">(208) What does ‘about:blank#blocked’ mean when I click on a link?</a></li>
+<li><a href="#faq209">(209) Why is using a VPN often problematic?</a></li>
 </ul>
 <p><a href="#get-support">I have another question.</a></p>
 <p><a name="faq1"></a> <strong>(1) Which permissions are needed and why?</strong></p>
@@ -540,6 +552,7 @@ Therefore, this issue can only be resolved by your email provider,
 or by installing the GitHub version of the app (as an update) and enabling insecure connections in the account/identity settings.** -->
 <p><em>… Untrusted … not in certificate …</em><br /> <em>… Invalid security certificate (Can’t verify identity of server) …</em><br /> <em>… Chain validation failed … timestamp check failed … Certificate expired at …</em><br /></p>
 <p>This can be caused by using an incorrect host name, so first double-check the host name in the advanced identity/account settings (tap <em>Manual setup and account options</em>). Please see the documentation of the email provider about the right host name. Sometimes the right host name is in the error message.</p>
+<p>Another possible cause is <a href="https://github.com/appmattus/certificatetransparency">Certificate transparency</a> failing, so try disabling it in the connection settings tab page.</p>
 <p>You should try to fix this by contacting your provider or by getting a valid security certificate because invalid security certificates are insecure and allow <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">man-in-the-middle attacks</a>. If money is an obstacle, you can get free security certificates from <a href="https://letsencrypt.org">Let’s Encrypt</a>.</p>
 <p>The quick, but unsafe solution (not advised), is to enable <em>Insecure connections</em> in the advanced identity settings (navigation menu, tap <em>Settings</em>, tap <em>Manual setup</em>, tap <em>Identities</em>, tap the identity, tap <em>Advanced</em>).</p>
 <p>Alternatively, you can accept the fingerprint of invalid server certificates like this:</p>
@@ -773,7 +786,8 @@ openssl pkcs12 -export -legacy -in certbag.pem &gt;legacy.p12</code></pre>
 <p>If you renewed a certificate, you should import the renewed certificate and reset the key. This can be done by long pressing an identity in the list of identities (Settings, tap Manual setup, tap Identities).</p>
 <p>Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with asymmetric algorithms only, which means in practice using RSA.</p>
 <p>The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You can long press on the send button to change the encryption method for an identity. If you use both PGP and S/MIME encryption for the same email address, it might be useful to copy the identity, so you can change the encryption method by selecting one of the two identities. You can long press an identity in the list of identities (via manual setup in the main setup screen) to copy an identity.</p>
-<p>To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.</p>
+<p>To allow different private keys for the same email address, for example, a key for signing and a key for encryption, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.</p>
+<p>From version 1.2278 the app can store a sign and an encryption key. To configure this properly, please reset the keys (see above for about how to), sign a message and select the signing key, and encrypt a message, and select the encryption key.</p>
 <p>Public keys are stored by FairEmail and can be imported when verifying a signature for the first time or via the encryption settings (PEM or DER format).</p>
 <p>FairEmail verifies both the signature and the complete certificate chain.</p>
 <p>Common errors:</p>
@@ -970,6 +984,7 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <p><strong>FairEmail ist grundsätzlich kostenlos</strong> und nur einige erweiterte Funktionen müssen gekauft werden.</p>
 <p><strong>FairEmail est au fond gratuit</strong> et seulement quelques fonctionnalités avancées doivent être achetés.</p>
 <p>Please see the Play store description of the app or <a href="https://email.faircode.eu/#pro">see here</a> for a complete list of pro features.</p>
+<p>Note that all current and future pro features can be purchased with a one-time payment, and that there is no subscription.</p>
 <p>The right question is “<em>why are there so many taxes and fees?</em>”:</p>
 <ul>
 <li>VAT: 25 % (depending on your country)</li>
@@ -978,8 +993,9 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <li><sub>Paypal fee: 5-10 % depending on the country/amount</sub></li>
 </ul>
 <p>So, what is left for the developer is just a fraction of what you pay.</p>
+<p>In addition, there are significant recurring costs associated with the project. For example, Google requires a rather expensive annual security assesment.</p>
 <p>Also note that most free apps will appear not to be sustainable in the end, whereas FairEmail is properly maintained and supported, and that free apps may have a catch, like sending privacy sensitive information to the internet. There are no privacy violating ads in the app either.</p>
-<p>I have been working on FairEmail almost every day for more than four years, so I think the price is more than reasonable. For this reason there won’t be discounts either.</p>
+<p>I have been working on FairEmail almost every day for more than five years, so I think the price is more than reasonable. For this reason there won’t be discounts either.</p>
 <p><br /></p>
 <p><a name="faq20"></a> <strong>(20) Can I get a refund?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq20">Google Translate</a></p>
@@ -1117,12 +1133,13 @@ Visit https://aka.ms/smtp_auth_disabled for more information.</code></pre>
 <p><a name="faq25"></a> <strong>(25) Why can’t I select/open/save an image, attachment or a file?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq25">Google Translate</a></p>
 <p>When a menu item to select/open/save a file is disabled (dimmed) or when you get the message <em>Storage access framework not available</em>, the <a href="https://developer.android.com/guide/topics/providers/document-provider">storage access framework</a>, a standard Android component, is probably not present. This might be because your custom ROM does not include it or because it was actively removed (debloated). Note that this will result in similar problems in other apps too.</p>
-<p>FairEmail does not request storage permissions, so this framework is required to select files and folders. No app, except maybe file managers, targeting Android 4.4 KitKat or later should ask for storage permissions because it would allow access to <em>all</em> files. Moreover, recent Android versions disallow access to all files for apps, except, under specific conditions, for file managers.</p>
+<p>Try restarting your device first as this often solves the problem after updates are installed (see also the next paragraph).</p>
 <p>To resolve this problem, the system component Google Play Services may need to be updated. Please <a href="https://support.google.com/googleplay/answer/9037938?hl=en">see here</a> on how. Please note that you will need to restart your device after the update!</p>
 <p>The storage access framework is provided by the package <em>com.android.documentsui</em>, which is visible as <em>Files</em> app on some Android versions (notably OxygenOS).</p>
 <p>You can enable the storage access framework (again) with this adb command:</p>
 <pre><code>pm install -k --user 0 com.android.documentsui</code></pre>
 <p>Alternatively, you might be able to enable the <em>Files</em> app again using the Android app settings.</p>
+<p>FairEmail does not request storage permissions, so this framework is required to select files and folders. No app, except maybe file managers, targeting Android 4.4 KitKat or later should ask for storage permissions because it would allow access to <em>all</em> files. Moreover, recent Android versions disallow access to all files for apps, except, under specific conditions, for file managers.</p>
 <p><br /></p>
 <p>In the case of the error <em>com.android.externalstorage has no access to content://…</em>, please enable this Android option for <em>com.android.externalstorage</em> and <em>com.android.sharedstorage</em>:</p>
 <p><em>Settings</em> &gt; <em>Privacy</em> &gt; <em>Permission management</em> &gt; <em>Files and media</em> &gt; <em>See more apps that can access all files</em></p>
@@ -1230,7 +1247,7 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <p>FairEmail formats messages again, causing messages to look different from the original, but also uncovering phishing links, etc.</p>
 <p>Note that reformatted messages are often easier to read than original messages because the margins are removed, and font colors and sizes are standardized.</p>
 <p>The Gmail app shows images by default by downloading the images through a Google proxy server. Since the images are downloaded from the source server <a href="https://blog.filippo.io/how-the-new-gmail-image-proxy-works-and-what-this-means-for-you/">in real-time</a>, this is even less secure, because Google is involved, too, without providing much benefit.</p>
-<p>You can show images and original messages by default for trusted senders on a case-by-case basis by checking <em>Do not ask this again for …</em>. You might need to reset the questions via a button in the miscellaneous-settings tab page.</p>
+<p>You can show images and original messages by default for trusted senders on a case-by-case basis by checking <em>Do not ask this again for …</em>. You might need to reset the questions via a button in the miscellaneous-settings tab page, as well as to disable <em>Remove tracking parameters by default</em>.</p>
 <p><br /></p>
 <p><a name="faq36"></a> <strong>(36) How are settings files encrypted?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq36">Google Translate</a></p>
@@ -1540,12 +1557,14 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <p><br /></p>
 <p><a name="faq70"></a> <strong>(70) When will messages be auto expanded?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq70">Google Translate</a></p>
-<p>When navigation to a conversation one message will be expanded if:</p>
+<p>When navigation to a conversation one message will be auto expanded when:</p>
 <ul>
+<li>All messages are read</li>
 <li>There is just one message in the conversation</li>
 <li>There is exactly one unread message in the conversation</li>
-<li>There is exactly one starred (favorite) message in the conversation (since version 1.1508)</li>
+<li>There is exactly one starred (favorite) message in the conversation and no unread messages (since version 1.1508)</li>
 </ul>
+<p>In general, the most recent message will be auto expanded, regardless of the folder where the message is stored, and no messages will be auto expanded if there are multiple unread messages, to avoid missing unread messages.</p>
 <p>There is one exception: the message was not downloaded yet and the message is too large to download automatically on a metered (mobile) connection. You can set or disable the maximum message size on the ‘connection’ settings tab.</p>
 <p>Duplicate (archived) messages, trashed messages and draft messages are not counted.</p>
 <p>Messages will automatically be marked read on expanding, unless this was disabled in the individual account settings.</p>
@@ -1614,11 +1633,12 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <li><em>blocklist()</em> (version 1.2176-1.2178; deprecated, use <em>onBlocklist()</em> instead)</li>
 <li><em>onBlocklist()</em> (returns a boolean indicating if the sender/server is on a DNS blocklist; since version 1.2179)</li>
 <li><em>hasMx()</em> (returns a boolean indicating if the from/reply-to address has an associated MX record; since version 1.2179)</li>
-<li><em>attachments(regex)</em> (returns an integer indicating number of attachments; since version 1.2179; optional regex since version 1.2194)</li>
+<li><em>attachments(regex)</em> (returns an integer indicating number of attachments; since version 1.2179; optional regex to select the names since version 1.2194)</li>
 <li><em>Jsoup()</em> (returns an array of selected strings; since version 1.2179)</li>
 <li><em>Size(array)</em> (returns the number of items in an array; since version 1.2179)</li>
 <li><em>knownContact()</em> (returns a boolean indicating that the from/reply-to address is in the Android address book or in the local contacts database)</li>
 <li><em>AI(prompt)</em> (perform interference with the configured AI model using the specified prompt, returning the result as a string; since version 1.2243)</li>
+<li><em>Is(flag)</em> (flag is one of seen, answered, flagged, deleted; to check if a message is read (seen), starred (flagged), etc.; since version 1.2277)</li>
 </ul>
 <p>Example conditions:</p>
 <p><code>header("X-Mailer") contains "Open-Xchange" &amp;&amp; from matches ".*service@.*"</code></p>
@@ -1645,7 +1665,7 @@ X-Google-Original-From: Somebody &lt;somebody+extra@example.org&gt;</code></pre>
 <li>Delete permanently (since version 1.1801)</li>
 <li>Play sound (since version 1.1803; experimental)</li>
 <li>Answer/forward (with template)</li>
-<li>Text-to-speech (sender and subject)</li>
+<li>Text-to-speech (sender and subject, not available in the Play Store version due to Play Store policies)</li>
 <li>Automation (Tasker, etc)</li>
 <li>Webhook (since version 1.2107)</li>
 </ul>
@@ -1665,8 +1685,8 @@ $user$ (since version 1.2265)
 $extra$ (since version 1.2265)
 $domain$
 $group$ (since version 1.2030)</code></pre>
-<p><span class="math inline"><em>u</em><em>s</em><em>e</em><em>r</em></span> is the domain name of the ‘from’ email address, and <span class="math inline"><em>d</em><em>o</em><em>m</em><em>a</em><em>i</em><em>n</em></span> is the domain name of the ‘from’ email address: <em>user@domain</em>.</p>
-<p><span class="math inline"><em>e</em><em>x</em><em>t</em><em>r</em><em>a</em></span> is the part after the plus sign if the username: <em>user+extra$example.org</em>.</p>
+<p><span class="math inline"><em>u</em><em>s</em><em>e</em><em>r</em></span> is the user name of the ‘from’ email address, and <span class="math inline"><em>d</em><em>o</em><em>m</em><em>a</em><em>i</em><em>n</em></span> is the domain name of the ‘from’ email address: <em>user@domain</em>.</p>
+<p><span class="math inline"><em>e</em><em>x</em><em>t</em><em>r</em><em>a</em></span> is the part after the plus sign if the username: <em>user+extra@example.org</em>.</p>
 <p><span class="math inline"><em>g</em><em>r</em><em>o</em><em>u</em><em>p</em></span> will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only. Note that the Android contact provider isn’t very fast, so using this placeholder can slow down fetching messages.</p>
 <p><br /></p>
 <p>Since version 1.2132 it is possible to use the following placeholders in keywords:</p>
@@ -1740,6 +1760,7 @@ $$aligned$ (since version 1.2049)</code></pre>
 <p><br /></p>
 <p>Since version 1.2061 it is possible to execute rules with an automation app, like for example Tasker.</p>
 <pre><code>(adb shell) am start-foreground-service -a eu.faircode.email.RULE --es account &lt;account name&gt; -es rule &lt;unique rule name&gt;</code></pre>
+<p><strong>Note</strong>: Due to Play Store policies, automation intents are not available in the Play Store version of the app.</p>
 <p><br /></p>
 <p>Since version 1.2107 it is possible to executed webhooks. The supported HTTP methods are GET, HEAD, OPTIONS, POST and POST. The query parameters will be sent as body in the case of POST and PUT. Note that execution of webhooks won’t be retried. So, don’t use this for anything critical.</p>
 <p>This website might be useful for testing webhooks:</p>
@@ -1838,6 +1859,7 @@ Target: Service</code></pre>
 <p>To enable/disable an account with the name <em>Gmail</em>:</p>
 <pre><code>Extras: account:Gmail</code></pre>
 <p>Account names are case sensitive.</p>
+<p><strong>Note</strong>: Due to Play Store policies, automation intents are not available in the Play Store version of the app.</p>
 <p>Scheduling is a pro feature.</p>
 <p><br /></p>
 <p><a name="faq79"></a> <strong>(79) How do I use synchronize on demand (manual)?</strong></p>
@@ -2031,8 +2053,9 @@ category:promotions</code></pre>
 <p>Images will automatically be rotated when automatic resizing of images is enabled in the settings (enabled by default). However, automatic rotating depends on the <a href="https://en.wikipedia.org/wiki/Exif">Exif</a> information to be present and to be correct, which is not always the case. Particularly not when taking a photo with a camara app from FairEmail.</p>
 <p>Note that only <a href="https://en.wikipedia.org/wiki/JPEG">JPEG</a> and <a href="https://en.wikipedia.org/wiki/Portable_Network_Graphics">PNG</a> images can contain Exif information.</p>
 <p><br /></p>
-<p><a name="faq104"></a> <strong>(104) What do I need to know about error reporting?</strong></p>
+<p><a name="faq104"></a> <strong><del>(104) What do I need to know about error reporting?</del></strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq104">Google Translate</a></p>
+<p>Error reporting with Bugsnag was removed in version 1.2273.</p>
 <ul>
 <li>Error reports will help improve FairEmail</li>
 <li>Error reporting is optional and opt-in</li>
@@ -2355,7 +2378,7 @@ $NotDisplayed</code></pre>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq138">Google Translate</a></p>
 <p>Calendar, contact, task and note management can better be done by a separate, specialized app. Note that FairEmail is a specialized email app, not an office suite.</p>
 <p>Also, I prefer to do a few things very well, instead of many things only half. Moreover, from a security perspective, it is not a good idea to grant many permissions to a single app.</p>
-<p>You are advised to use the excellent, open source <a href="https://f-droid.org/packages/at.bitfire.davdroid/">DAVx⁵</a> app to synchronize/manage your calendars/contacts.</p>
+<p>You are advised to use the excellent, open source <a href="https://f-droid.org/packages/at.bitfire.davdroid/">DAVx⁵</a> app to synchronize/manage your calendars/contacts. If you need a CalDAV/CardDAV server, take a look at <a href="https://sabre.io/baikal/">Baïkal</a>.</p>
 <p>If you want to synchronize Outlook contacts and you have access to Google Workspace, please <a href="https://support.google.com/a/users/answer/156595">see here</a> about how you can set up contact syncing.</p>
 <p>Most providers support exporting your contacts. Please <a href="https://support.google.com/contacts/answer/1069522">see here</a> about how you can import contacts if synchronizing is not possible.</p>
 <p>Note that FairEmail does support replying to calendar invites (a pro feature) and adding calendar invites to your personal calendar.</p>
@@ -2594,6 +2617,7 @@ https://favicon.yandex.net/favicon/{domain}</code></pre>
 <p>This command can be sent to FairEmail from an automation app to update the protection lists:</p>
 <pre><code>(adb shell) am start-foreground-service -a eu.faircode.email.DISCONNECT.ME</code></pre>
 <p>Updating once a week will probably be sufficient, please see <a href="https://github.com/disconnectme/disconnect-tracking-protection/commits/master">here</a> for recent lists changes.</p>
+<p><strong>Note</strong>: Due to Play Store policies, automation intents are not available in the Play Store version of the app.</p>
 <p><br /></p>
 <p><a name="faq160"></a> <strong>(160) Can you add permanent deletion of messages without confirmation?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq160">Google Translate</a></p>
@@ -2852,6 +2876,7 @@ _submission._tcp SRV 0 1 587 smtp.example.com.</code></pre>
 <p>Since version 1.2068 it is possible to send a template message with an intent:</p>
 <pre><code>(adb shell) am start-foreground-service -a eu.faircode.email.TEMPLATE --es template &lt;template name&gt; --es identity &lt;identity display name&gt; --es to &lt;email address&gt; --es cc &lt;email address&gt; --es subject &lt;subject&gt;</code></pre>
 <p><strong>Important</strong>: you need to configure a display name for the identity, and use this to identify the identity.</p>
+<p><strong>Note</strong>: Due to Play Store policies, automation intents are not available in the Play Store version of the app.</p>
 <p><br /></p>
 <p><a name="faq180"></a> <strong>(180) How do I use LanguageTool?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq180">Google Translate</a></p>
@@ -2876,6 +2901,7 @@ _submission._tcp SRV 0 1 587 smtp.example.com.</code></pre>
 <p>If you ticked <em>Do not ask this again for [domain name]</em>, you can undo this by using the <em>Reset questions</em> button in the miscellaneous settings tab page of the app.</p>
 <p>If you disabled confirming links, you can enable this (temporarily) again in the privacy settings tab page of the app (<em>Confirm opening links</em>: off).</p>
 <p>Note that you might need to enable confirming links and reset questions to show the link confirmation dialog again.</p>
+<p>You can also long press a link to show the link confirmation dialog.</p>
 <p>Please see <a href="#faq35">this FAQ</a> on why you should be careful when opening links.</p>
 <p><br /></p>
 <p><a name="faq183"></a> <strong>(183) How do I use Send?</strong></p>
@@ -3001,7 +3027,7 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p><br></p>
 <p><a name="faq191"></a> <strong>(191) How do I download and keep older messages on my device?</strong></p>
 <p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq191">Google Translate</a></p>
-<p>You can download and keep older messages in the unified inbox folders by using <em>Fetch more messages</em> in the three-dots overflow menu of the start screen. For other folders, you can long press the folder in the folder list of the account (tap on the account name in the navigation menu = left side menu). When you long press on a parent folder, there will be a subfolders option with a menu item to fetch more messages for all child folders. Please read the remark in the confirmation dialog box.</p>
+<p>You can download and keep older messages in the unified inbox folders by using <em>Fetch more messages</em> in the three-dots overflow menu of the start screen. For other folders, you can long press the folder in the folder list of the account (tap on the account name in the navigation menu = left side menu). When you long press on a parent folder, there will be a subfolders sub-menu with a fetch more messages option for all child folders. Please read the remark in the confirmation dialog box.</p>
 <p>Note that starred (favorite) messages will be kept on your device “forever”.</p>
 <p>Instead of downloading many messages to your device, consider <a href="#faq13">searching for messages on the email server</a>.</p>
 <p>Longer explanation: the app has a sync and a keep window per folder. The <em>Fetch more messages</em> menu item is, in fact, a mini wizard to change the keep window of one or more folders at the same time, and to initiate a corresponding synchronization operation. If you long press on a folder in the folder list and select <em>Edit properties</em>, you can change the sync and keep window of the folder. The sync window determines which messages will be checked with a standard sync operation (default 7 days), and the keep window determines how long messages will be kept on the device (default 30 days). If you sync another time within 30 seconds, all messages in the keep window will be checked, which is useful when you have been moving around messages with another email client, for example on your desktop computer. It is mostly pointless to check all messages all the time, especially considering that this will use battery power, which is why there is a separate sync and keep window, and why the app checks messages younger than a week only.</p>
@@ -3157,6 +3183,16 @@ adb install /path/to/FairEmail-xxx.apk</code></pre>
 <p>You can try to switch to Wi-Fi or mobile data because this will result in using another (local) network address. Turning flight mode on for a while and turning it back off will mostly result in another network address being assigned. So, this is worth trying as well.</p>
 <p>Email providers like Google, Microsoft, and Yahoo/AOL require <a href="https://en.wikipedia.org/wiki/OAuth">OAuth</a> for logging in, which means it is not possible to configure an account manually, and that you <em>must</em> use the quick setup wizard to configure an account.</p>
 <p>Some email providers use account-specific host (server) names. So, please take care you use the correct host name when manually configuring an account.</p>
+<p><br></p>
+<p><a name="faq208"></a> <strong>(208) What does ‘about:blank#blocked’ mean when I click on a link?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq208">Google Translate</a></p>
+<p>If you get ‘<em>about:blank#blocked</em>’ when you click on a link, for some reason the installed browser has blocked the link.</p>
+<p>Note that the original message view is displayed by the installed browser. It may look like it’s part of the app, but it’s not.</p>
+<p>You can probably workaround this by switching back to the reformatted message view via the ‘] [’ button just above the message text on the right.</p>
+<p><br></p>
+<p><a name="faq209"></a> <strong>(209) Why is using a VPN often problematic?</strong></p>
+<p>🌎 <a href="https://translate.google.com/translate?sl=en&amp;u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq209">Google Translate</a></p>
+<p>When you use a VPN, you share one network address with many people and not all those people will always behave nicely. Email servers often automatically block network addresses (IP addresses) when abuse is detected, for example when someone tries to send spam messages. The result is that logins are blocked for everyone using the same network address and the email server issues an error message such as “<em>Authentication failed</em>”. This is also why the app warns against using a VPN.</p>
 <p><br></p>
 <h2>
 <a name="get-support"></a>Get support

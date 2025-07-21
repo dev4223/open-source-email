@@ -149,7 +149,7 @@ public class FragmentOptions extends FragmentBase {
             "hide_toolbar", "edge_to_edge", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "show_unexposed",
             "indentation", "date", "date_week", "date_fixed", "date_bold", "date_time", "threading", "threading_unread",
             "show_filtered",
-            "highlight_unread", "highlight_color", "account_color", "color_stripe_wide",
+            "highlight_unread", "highlight_color", "account_color", "account_color_size",
             "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
             "circular", "saturation", "brightness", "threshold",
             "authentication", "authentication_indicator",
@@ -460,7 +460,7 @@ public class FragmentOptions extends FragmentBase {
                     } else if (view instanceof TextView) {
                         boolean extra = false;
                         if (tab == 0 && view.getId() == R.id.tvManual) {
-                            for (int e : new int[]{R.string.title_host, R.string.title_port}) {
+                            for (int e : new int[]{R.string.title_host, R.string.title_port, R.string.title_cc, R.string.title_bcc}) {
                                 String text = view.getContext().getString(e);
                                 if (text.toLowerCase().contains(query)) {
                                     extra = true;

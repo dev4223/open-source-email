@@ -134,7 +134,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_intro">Configurar un compte són únicament tres passes, després podràs enviar i rebre correus electrònics</string>
     <string name="title_setup_simple">No cal canviar cap altra opció</string>
     <string name="title_setup_issue">FairEmail va néixer per ajudar-nos a protegir la nostra privacitat y representa literalment milers d\'hores de treball. Si teniu qualsevol problema, si us plau, contacteu amb mi primer demanant suport abans de deixar un comentari negatiu. Sóc feliç ajudant!</string>
-    <string name="title_setup_analytics">FairEmail no mostra anuncis i no et rastreja o analitza el teu comportament. Bugsnag s\'utilitza per a reportar errors, i està deshabilitat per defecte.</string>
     <string name="title_setup_quick_accounts">Afegiu o canvieu comptes</string>
     <string name="title_setup_quick_support">Alguns proveïdors posen dificultats per a afegir un compte. Per favor, no culpes a FairEmail, demana ajuda.</string>
     <string name="title_setup_quick_hint">L\'adreça de correu introduïda s\'enviarà al servidor de correu, i autoconfig.thunderbir.net per a informació de configuració</string>
@@ -161,7 +160,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_setup_oauth_permission">El proveïdor de correu ha aprovat OAuth només per a les versions de Play Store i GitHub</string>
     <string name="title_setup_gmail_support">Autoritzar comptes de Google només funciona en la versió de Play Store i GitHub ja que Android comprova la signatura digital de l\'aplicació</string>
     <string name="title_setup_gmail_rationale">Doneu permís per seleccionar un compte i llegir el vostre nom</string>
-    <string name="title_setup_gmail_permissions">Google sol·licitarà permisos per llegir, compondre, enviar i suprimir tot el vostre correu electrònic. FairEmail mai suprimirà els vostres missatges sense el vostre consentiment explícit.</string>
     <string name="title_setup_gmail_login">Si Chrome ha iniciat sessió en un compte, només es poden afegir comptes nous a través d\'Android. Açò es pot canviar tancant la sessió a la configuració de sincronització de Chrome.</string>
     <string name="title_setup_gmail_max">Si es mostra l\'error \"Has iniciat sessió en el nombre màxim de comptes\", has de tancar la sessió de tots els comptes de Google.</string>
     <string name="title_setup_gmail_on_device">Per què necessite seleccionar un compte del dispositiu?</string>
@@ -378,7 +376,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_advanced_quote_reply">Text amb resposta a la cita</string>
     <string name="title_advanced_limit_reply">Limita el nombre de cometes imbricades</string>
     <string name="title_advanced_resize_reply">Redimensiona les imatges del text de resposta</string>
-    <string name="title_advanced_resize_paste">Realimensionar les imatges enganxades</string>
     <string name="title_advanced_signature_location">Posició de la signatura</string>
     <string name="title_advanced_signature_new">Fer servir la signatura per a missatges nous</string>
     <string name="title_advanced_signature_reply">Utilitzeu la signatura per respondre</string>
@@ -457,7 +454,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_advanced_threading_unread">Mostra el nombre de missatges sense llegir a les converses</string>
     <string name="title_advanced_indentation">Sagnat dret/esquerra als missatges enviats/rebuts en les converses</string>
     <string name="title_advanced_highlight_unread">Ressalteu els missatges sense llegir</string>
-    <string name="title_advanced_color_stripe_wide">Utilitzeu una franja de colors amples</string>
     <string name="title_advanced_avatars">Mostra les fotos dels contactes</string>
     <string name="title_advanced_bimi_unverified">Remitent no verificat</string>
     <string name="title_advanced_bimi_verified">Remitent no verificat</string>
@@ -640,7 +636,6 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_advanced_notify_action_hint">Com a màxim es mostraran tres accions</string>
     <string name="title_advanced_notify_remove_hint">Les notificacions de nous missatges sempre s\'esborraran quan es llisquin cap als costats o al marcar els missatges com a llegits</string>
     <string name="title_advanced_notify_manage_hint">Toqueu el nom del canal per configurar les propietats del canal</string>
-    <string name="title_advanced_notify_manage_default_hint">Per definir el so per defecte, etc</string>
     <string name="title_advanced_notify_preview_all_hint">Per a wearables que puguin mostrar el text complet (fins a 5.000 caràcters)</string>
     <string name="title_advanced_wearable_hint">Les notificacions només s’envien a un portable després de descarregar el text del missatge</string>
     <string name="title_advanced_move_hint">La carpeta de destí pot ser configurada a la configuració del compte</string>
@@ -1069,6 +1064,8 @@ Ambdues opcions es poden desactivar si es desitja.</string>
     <string name="title_sort_on_order">Ordre</string>
     <string name="title_filter">Filtrar per</string>
     <string name="title_filter_seen">Llegir</string>
+    <string name="title_filter_unseen">Sense llegir</string>
+    <string name="title_filter_flagged">Destacats</string>
     <string name="title_filter_unflagged">Sense destacat</string>
     <string name="title_filter_unknown">Remitents desconeguts</string>
     <string name="title_filter_hidden">Ocult</string>
@@ -1540,6 +1537,11 @@ Ambdues opcions es poden desactivar si es desitja.</string>
         <item>Cap</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Mitjà</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Destinatari</item>

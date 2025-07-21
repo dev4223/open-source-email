@@ -190,7 +190,7 @@
     <string name="title_setup_intro">Настройте учётную запись всего за три шага и сможете отправлять и получать письма</string>
     <string name="title_setup_simple">Нет необходимости менять другие параметры</string>
     <string name="title_setup_issue">FairEmail был разработан для того, чтобы помочь вам защитить вашу конфиденциальность и представляет буквально тысячи часов работы. Если у вас возникли проблемы, пожалуйста, свяжитесь со мной для поддержки перед тем, как оставлять плохие отзывы. Я рад помочь!</string>
-    <string name="title_setup_analytics">FairEmail не показывает рекламу, не отслеживает и не анализирует ваше поведение. Bugsnag используется для сообщений об ошибках и по умолчанию отключён.</string>
+    <string name="title_setup_analytics">FairEmail не показывает рекламу, не отслеживает и не анализирует ваше поведение.</string>
     <string name="title_setup_quick_accounts">Добавить или изменить учётные записи</string>
     <string name="title_setup_quick_support">Некоторые провайдеры затрудняют добавление учётной записи. Пожалуйста, не обвиняйте в этом FairEmail, а попросите поддержку.</string>
     <string name="title_setup_quick_hint">Введённый адрес электронной почты используется для запроса почтового сервера и autoconfig.thunderbird.net для получения сведений о конфигурации</string>
@@ -220,7 +220,7 @@
     <string name="title_setup_oauth_permission">Провайдер электронной почты одобрил OAuth только для официальных версий приложения из Play Store и GitHub</string>
     <string name="title_setup_gmail_support">Авторизация учётных записей Google будет работать только в официальных версиях из Play Store и GitHub, так как Android проверяет подпись приложения</string>
     <string name="title_setup_gmail_rationale">Пожалуйста, предоставьте разрешения для выбора учётной записи и чтения вашего имени</string>
-    <string name="title_setup_gmail_permissions">Google запросит разрешения на чтение, создание, отправку и безвозвратное удаление всех ваших сообщений. FairEmail никогда не будет удалять ваши сообщения без вашего явного согласия.</string>
+    <string name="title_setup_gmail_permissions">Google запросит разрешения на чтение (отображение ваших сообщений), создание (сохранение черновиков сообщений), отправку и безвозвратное удаление всей вашей электронной почты. FairEmail никогда не удалит ваши сообщения без вашего явного согласия. Доступ к вашим сообщениям имеете только вы и никто другой.</string>
     <string name="title_setup_gmail_login">Если в Chrome выполнен вход в учётную запись, новую учётную запись можно добавить только через Android. Этого можно избежать, выйдя из учётной записи в Chrome через его настройки синхронизации.</string>
     <string name="title_setup_gmail_max">В случае появления сообщения об ошибке \"Вы вошли в максимальное количество учётных записей\", необходимр выйти в браузере из всех учётных записей Google.</string>
     <string name="title_setup_outlook_hint">При использовании псевдонима адреса следует воспользоваться мастером Office 365.</string>
@@ -467,7 +467,6 @@
     <string name="title_advanced_quote_reply">Цитировать текст при ответе</string>
     <string name="title_advanced_limit_reply">Ограничивать количество вложенных кавычек</string>
     <string name="title_advanced_resize_reply">Изменять размер изображений в ответе</string>
-    <string name="title_advanced_resize_paste">Изменять размер вставляемых изображений</string>
     <string name="title_advanced_signature_location">Расположение подписи</string>
     <string name="title_advanced_signature_new">Использовать подпись для новых сообщений</string>
     <string name="title_advanced_signature_reply">Использовать подпись при ответе</string>
@@ -567,7 +566,7 @@
     <string name="title_advanced_indentation">Левый/правый отступ для полученных/отправленных сообщений в диалогах</string>
     <string name="title_advanced_highlight_unread">Выделять непрочитанные сообщения</string>
     <string name="title_advanced_account_color">Показывать цветные полоски или точки</string>
-    <string name="title_advanced_color_stripe_wide">Использовать широкий диапазон цветов</string>
+    <string name="title_advanced_account_color_size">Ширина цветной полосы</string>
     <string name="title_advanced_avatars">Показывать фотографии контакта</string>
     <string name="title_advanced_bimi">Показывать индикаторы бренда для идентификации сообщений (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Требовать действующий сертификат VMC</string>
@@ -715,7 +714,7 @@
     <string name="title_advanced_notify_suppress_in_call">Откладывать уведомления во время вызова</string>
     <string name="title_advanced_notify_suppress_in_car">Откладывать уведомления при подключении Android Auto</string>
     <string name="title_advanced_notify_summary">Показывать только сводное уведомление</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Показывать тему в уведомлениях</string>
+    <string name="title_advanced_notify_subject">Показывать тему в уведомлениях</string>
     <string name="title_advanced_notify_preview">Предпросмотр сообщений в уведомлениях</string>
     <string name="title_advanced_notify_preview_all">Предпросмотр всего текста</string>
     <string name="title_advanced_notify_preview_only">Показывать уведомления только с предпросмотром текста</string>
@@ -812,6 +811,7 @@
     <string name="title_advanced_sort_answers">Сортировать шаблоны ответов по частоте использования</string>
     <string name="title_advanced_shortcuts">Показывать часто используемые контакты в меню \"Поделиться\" Android</string>
     <string name="title_advanced_ical_tentative">Сохранять полученные приглашения как предварительные</string>
+    <string name="title_advanced_ical_email">Сохранять адреса электронной почты участников</string>
     <string name="title_advanced_fts">Создавать индекс поиска</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d сообщений проиндексировано (%3$s)</string>
     <string name="title_advanced_classification">Классифицировать сообщения</string>
@@ -946,7 +946,7 @@
     <string name="title_advanced_default_folder_hint">        Android может запросить разрешение на доступ к выбранной папке, даже если приложению это не нужно.
         Вы можете отменить выбор, чтобы восстановить папку по умолчанию (обычно это папка \"Download\").
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Восстановить последнее состояние приложения при перезапуске через значок на рабочем в течение %1$d мин.</string>
+    <string name="title_advanced_restore_on_launch_hint">По возможности восстанавливать последнее состояние приложения при перезапуске с помощью значка на рабочем столе</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
     <string name="title_advanced_expandall_hint">Кнопка ответа не будет отображаться, если развёрнуто несколько сообщений, поскольку будет неясно, к какому сообщению она относится</string>
     <string name="title_advanced_autoseen_hint">Автоматическая пометка сообщений прочитанными при развёртывании может быть отключена в настройках для каждой учётной записи</string>
@@ -968,7 +968,7 @@
     <string name="title_advanced_notify_remove_hint">Уведомления о новых о сообщениях всегда будут удаляться при смахивании сообщения и пометке о прочтении</string>
     <string name="title_advanced_notify_manage_hint">Нажмите на название канала, чтобы установить его свойства</string>
     <string name="title_advanced_notify_samsung_hint">Для управления каналами уведомлений может потребоваться включить данную настройку Android: Уведомления → Дополнительные настройки → Управление категориями уведомлений для каждого приложения</string>
-    <string name="title_advanced_notify_manage_default_hint">Для установки звука по умолчанию и т.д.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Чтобы установить звук по умолчанию, настройте DND (не беспокоить) и т.д.</string>
     <string name="title_advanced_notify_manage_service_hint">Для отключения контролирующего уведомления</string>
     <string name="title_advanced_notify_separate_hint">Как настроить уведомления для учётных записей, папок и отправителей?</string>
     <string name="title_advanced_notify_preview_all_hint">Для носимых устройств, которые могут показывать полный текст (до 5000 символов)</string>
@@ -1206,6 +1206,7 @@
     <string name="title_hint_operations">Удаление операций может привести к исчезновению сообщений и проблемам синхронизации.</string>
     <string name="title_op_title_headers">Загрузка заголовков</string>
     <string name="title_op_title_raw">Загрузка оригинала сообщения</string>
+    <string name="title_op_title_add">Отправка сообщения</string>
     <string name="title_folder_name">Название папки</string>
     <string name="title_display_name">Отображаемое имя</string>
     <string name="title_show_folders">Показывать скрытые папки</string>
@@ -1537,6 +1538,7 @@
     <string name="title_add_image_inline">Вставить</string>
     <string name="title_add_image_attach">Прикрепить</string>
     <string name="title_add_image_resize">Изменить размер</string>
+    <string name="title_add_image_resize_width_only">Ограничить только ширину</string>
     <string name="title_add_image_privacy">Удалить конфиденциальные данные</string>
     <string name="title_add_image_privacy_remark">Географическое положение, серийные номера, имена файлов и т.п.</string>
     <string name="title_add_resize_pixels">&lt; %1$d пикс.</string>
@@ -1728,10 +1730,12 @@
     <string name="title_sort_on_last_applied">Последнее применение</string>
     <string name="title_filter">Фильтр</string>
     <string name="title_filter_seen">Прочитанные</string>
+    <string name="title_filter_unseen">Не прочитанные</string>
+    <string name="title_filter_flagged">Избранные</string>
     <string name="title_filter_unflagged">Не избранные</string>
     <string name="title_filter_unknown">Неизвестные отправители</string>
     <string name="title_filter_hidden">Скрытые</string>
-    <string name="title_filter_deleted">Удалено</string>
+    <string name="title_filter_deleted">Удалённые</string>
     <string name="title_filter_duplicates">Дубликаты</string>
     <string name="title_filter_sent">Отправленные</string>
     <string name="title_filter_trash">Мусор</string>
@@ -2009,7 +2013,7 @@
     <string name="title_hint_folder_actions">Длительное нажатие на папку откроет другие действия, например, добавление папки в меню навигации для быстрого доступа.</string>
     <string name="title_hint_folder_sync">Для экономии заряда батареи и трафика по умолчанию синхронизируются не все папки и сообщения.</string>
     <string name="title_hint_airplane">Режим полета включён</string>
-    <string name="title_hint_vpn_active">VPN включён</string>
+    <string name="title_hint_vpn_active">Включён VPN</string>
     <string name="title_hint_notifications">Отсутствует разрешение на отображение уведомлений</string>
     <string name="title_hint_notifications_remark">Разрешения на уведомления также необходимы для предупреждений (учётной записи). Уведомления о новых сообщениях можно отключить в настройках.</string>
     <string name="title_hint_battery_optimizations">Оптимизация энергопотребления всё ещё включена</string>
@@ -2094,6 +2098,7 @@
     <string name="title_via">Через: %1$s</string>
     <string name="title_1hour">1 час</string>
     <string name="title_1day">1 день</string>
+    <string name="title_snooze_doze">Отключите оптимизацию энергопотребления на 3 шаге настроек на главном экране</string>
     <string name="title_more_overflow">Ещё&#8230;</string>
     <string name="title_today_at">Сегодня в %1$s</string>
     <string name="title_tomorrow_at">Завтра в %1$s</string>
@@ -2411,6 +2416,11 @@
         <item>Ничего</item>
         <item>Полоска</item>
         <item>Точка</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Узкая</item>
+        <item>Средняя</item>
+        <item>Широкая</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Получатель</item>

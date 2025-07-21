@@ -149,7 +149,6 @@
     <string name="title_setup_intro">Sett opp en konto på kun tre steg og begynn å send og motta eposter</string>
     <string name="title_setup_simple">Du trenger ikke å endre noen flere innstillinger</string>
     <string name="title_setup_issue">FairEmail ble utviklet for å hjelpe deg med å beskytte personvernet ditt, og representerer bokstavelig talt tusenvis av timer med jobb. Om du har noen problemer, vennligst ta kontakt med meg for hjelp før du legger igjen en dårlig anmeldelse. Jeg hjelper gjerne til!</string>
-    <string name="title_setup_analytics">FairEmail viser ikke annonser og hverken sporer eller analyserer bruksmønsteret ditt. Bugsnag brukes for feilrapportering og er slått av som standard.</string>
     <string name="title_setup_quick_accounts">Legg til eller endre kontoer</string>
     <string name="title_setup_quick_support">Noen tilbydere gjør det vanskelig å legge til en konto. Vennligst ikke gi FairEmail skylden for dette, men be om hjelp istedet.</string>
     <string name="title_setup_quick_hint">Den oppgitte epost-adressen brukes for å spørre epost-tjeneren og autoconfig.thunderbird.net etter konfigurasjonsinformasjon</string>
@@ -179,7 +178,6 @@
     <string name="title_setup_oauth_permission">Denne epost-leverandøren har godkjent OAuth kun for Play Store og GitHub-versjonen</string>
     <string name="title_setup_gmail_support">Autorisering av Google-kontoer fungerer bare i Play Store og GitHub versjonen fordi Android sjekker den digitale appens signatur</string>
     <string name="title_setup_gmail_rationale">Gi tillatelser til å velge en konto og lese navnet ditt</string>
-    <string name="title_setup_gmail_permissions">Google vil be om tillatelser til å lese, komponere, sende og slette all e-postmeldingen din permanent. FairEmail vil aldri slette meldingene dine uten ditt eksplisitte samtykke.</string>
     <string name="title_setup_gmail_on_device">Hvorfor må jeg velge en bruker på enheten?</string>
     <string name="title_setup_office_auth">Feilen \'AUTHENTICATE failed\' kan skyldes at IMAP/SMTP er deaktivert av systemadministratoren</string>
     <string name="title_setup_office_auth_5_7_3">Prøv \'Annen leverandør\' hurtigoppsettsveiviseren.</string>
@@ -537,7 +535,6 @@
     <string name="title_advanced_notify_action_hint">Høyst tre handlinger vil bli vist</string>
     <string name="title_advanced_notify_remove_hint">Varsler om nye meldinger vil alltid bli fjernet når de blir sveipet og når merking av meldinger er lest</string>
     <string name="title_advanced_notify_manage_hint">Trykk på kanalnavnet for å angi kanalegenskapene</string>
-    <string name="title_advanced_notify_manage_default_hint">Slik angir du standardlyden, osv</string>
     <string name="title_advanced_notify_manage_service_hint">For å deaktivere \'overvåking\' varsling</string>
     <string name="title_advanced_notify_preview_all_hint">For wearables som kan vise fulltekst (opptil 5000 tegn)</string>
     <string name="title_advanced_notify_preview_only_hint">Dette forsinker visning av varsler til meldingsteksten er lastet ned</string>
@@ -1018,6 +1015,8 @@
     <string name="title_sort_on_order">Rekkefølge</string>
     <string name="title_filter">Filtrere ut</string>
     <string name="title_filter_seen">Les</string>
+    <string name="title_filter_unseen">Ulest</string>
+    <string name="title_filter_flagged">Stjernemerkede</string>
     <string name="title_filter_unflagged">Ikke med stjerne</string>
     <string name="title_filter_unknown">Ukjente avsendere</string>
     <string name="title_filter_hidden">Skjult</string>
@@ -1531,6 +1530,11 @@
         <item>Ingen</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Middels</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Mottaker</item>

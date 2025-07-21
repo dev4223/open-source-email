@@ -176,7 +176,7 @@
     <string name="title_setup_intro">Configurarea unui cont are doar trei pași și după aceea puteți trimite și primi e-mailuri</string>
     <string name="title_setup_simple">Nu este nevoie să schimbați alte opțiuni</string>
     <string name="title_setup_issue">FairEmail a fost dezvoltat pentru a vă ajuta să vă protejați confidențialitatea și reprezintă literalmente mii de ore de muncă. Dacă aveți probleme, vă rog să mă contactați mai întâi pentru asistență înainte de a lăsa o recenzie proastă. Sunt bucuros să vă ajut!</string>
-    <string name="title_setup_analytics">FairEmail nu afișează reclame și nu urmărește sau analizează comportamentul dumneavoastră. Bugsnag este utilizat pentru raportarea erorilor și este dezactivat în mod implicit.</string>
+    <string name="title_setup_analytics">FairEmail nu afișează reclame și nu urmărește sau analizează comportamentul dvs.</string>
     <string name="title_setup_quick_accounts">Adăugați sau modificați conturi</string>
     <string name="title_setup_quick_support">Unii furnizori fac dificilă adăugarea unui cont. Vă rugăm să nu dați vina pe FairEmail pentru acest lucru, dar solicitați asistență în schimb.</string>
     <string name="title_setup_quick_hint">Adresa de e-mail introdusă este utilizată pentru a interoga serverul de e-mail și autoconfig.thunderbird.net pentru informații de configurare</string>
@@ -206,7 +206,7 @@
     <string name="title_setup_oauth_permission">Furnizorul de e-mail a aprobat OAuth doar pentru versiunea Play Store și GitHub</string>
     <string name="title_setup_gmail_support">Autorizarea conturilor Google va funcționa în versiunea Play Store și GitHub doar pentru că Android verifică semnătura digitală a aplicației</string>
     <string name="title_setup_gmail_rationale">Vă rugăm să acordați permisiunea de a selecta un cont și a vă citi numele</string>
-    <string name="title_setup_gmail_permissions">Google va cere permisiunea de a citi, compune, trimite și șterge în mod permanent mesajele dumneavoastră. de email. FairEmail nu vă va șterge niciodată mesajele fără consimțământul dumneavoastră explicit.</string>
+    <string name="title_setup_gmail_permissions">Google va solicita permisiuni de citire (pentru a vă afișa mesaje), de compunere (pentru a salva mesajele schițate), de trimitere și ștergere permanentă a tuturor e-mailurilor dvs. FairEmail nu va șterge niciodată mesajele tale fără consimțământul tău explicit. Doar tu și nimeni altcineva nu are acces la mesajele tale.</string>
     <string name="title_setup_gmail_login">Dacă Chrome este conectat la un cont, un nou cont poate fi adăugat doar prin Android. Acest lucru poate fi evitat prin deconectarea de la Chrome prin intermediul setărilor de sincronizare Chrome.</string>
     <string name="title_setup_gmail_max">În cazul în care apare mesajul de eroare \"V-ați conectat la numărul maxim de conturi\", trebuie să vă deconectați din browser de la toate conturile Google.</string>
     <string name="title_setup_outlook_hint">În cazul unei adrese alias, probabil ar trebui folosit expertul Office 365.</string>
@@ -453,7 +453,6 @@
     <string name="title_advanced_quote_reply">Citează textul la care răspunzi</string>
     <string name="title_advanced_limit_reply">Limitează numărul de citate imbricate</string>
     <string name="title_advanced_resize_reply">Redimensionează imaginile în textul cu răspuns</string>
-    <string name="title_advanced_resize_paste">Redimensionează imaginile inserate</string>
     <string name="title_advanced_signature_location">Poziție semnătură</string>
     <string name="title_advanced_signature_new">Utilizați semnătura pentru mesajele noi</string>
     <string name="title_advanced_signature_reply">Utilizați semnătura la răspuns</string>
@@ -553,7 +552,7 @@
     <string name="title_advanced_indentation">Aliniere mesaje primite/trimise în stânga/dreapta în conversații</string>
     <string name="title_advanced_highlight_unread">Evidențiază mesajele necitite</string>
     <string name="title_advanced_account_color">Arată o bandă de culoare sau un punct de culoare</string>
-    <string name="title_advanced_color_stripe_wide">Utilizați bandă largă de culoare</string>
+    <string name="title_advanced_account_color_size">Lățimea benzii de culoare</string>
     <string name="title_advanced_avatars">Arată pozele contactelor</string>
     <string name="title_advanced_bimi">Arată Brand Indicators for Message Identification (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Solicitați un certificat VMC valabil</string>
@@ -701,7 +700,7 @@
     <string name="title_advanced_notify_suppress_in_call">Amânare notificări în timpul unui apel</string>
     <string name="title_advanced_notify_suppress_in_car">Întârziere notificări în timp ce Android Auto este conectat</string>
     <string name="title_advanced_notify_summary">Arată doar sumarul în notificare</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Arată subiectul în notificări</string>
+    <string name="title_advanced_notify_subject">Arată subiectul în notificări</string>
     <string name="title_advanced_notify_preview">Arată previzualizare mesaj în notificare</string>
     <string name="title_advanced_notify_preview_all">Previzualizează tot textul</string>
     <string name="title_advanced_notify_preview_only">Arată notificări doar cu un text de previzualizare</string>
@@ -797,6 +796,7 @@
     <string name="title_advanced_sort_answers">Sortați șabloanele de răspuns în funcție de frecvența de utilizare</string>
     <string name="title_advanced_shortcuts">Arată contactele utilizate frecvent în meniul de partajare Android</string>
     <string name="title_advanced_ical_tentative">Păstrează invitațiile primite ca \"poate\"</string>
+    <string name="title_advanced_ical_email">Salvați adresa de e-mail a participanților</string>
     <string name="title_advanced_fts">Creează index de căutare</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mesaje indexate (%3$s)</string>
     <string name="title_advanced_classification">Clasifică mesajele</string>
@@ -931,7 +931,7 @@
     <string name="title_advanced_default_folder_hint">        Android poate solicita permisiunea de a accesa directorul selectat, chiar dacă aplicația nu are nevoie de ea.
         Puteți anula dialogul de selectare pentru a restaura directorul implicit (de obicei \'Descărcare\').
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Restaurează ultima stare a aplicației la repornirea prin pictograma lansator în %1$d minute</string>
+    <string name="title_advanced_restore_on_launch_hint">Restaurează ultima stare a aplicației dacă este posibilă la repornirea din pictograma lansator</string>
     <string name="title_advanced_autoexpand_hint">Atunci când este doar un mesaj sau doar un mesaj necitit într-o conversație</string>
     <string name="title_advanced_expandall_hint">Butonul de răspuns nu va fi afișat atunci când sunt extinse mai multe mesaje, deoarece nu este clar la ce mesaj se aplică butonul</string>
     <string name="title_advanced_autoseen_hint">Marcarea automată a mesajelor ca fiind citite la extindere poate fi dezactivată în setările avansate ale fiecărui cont</string>
@@ -953,7 +953,6 @@
     <string name="title_advanced_notify_remove_hint">Notificările de mesaj nou vor fi mereu eliminate dacă sunt glisate la o parte sau când mesajele sunt marcate drept citite</string>
     <string name="title_advanced_notify_manage_hint">Atingeți numele canalului pentru a-l configura</string>
     <string name="title_advanced_notify_samsung_hint">Pentru a gestiona canalele de notificare, ar putea fi necesar să activați această setare Android: Notificare, Setări avansate, Gestionare categorii de notificări pentru fiecare aplicație</string>
-    <string name="title_advanced_notify_manage_default_hint">Pentru a configura sunetul implicit etc</string>
     <string name="title_advanced_notify_manage_service_hint">Pentru a dezactiva notificarea de „monitorizare”</string>
     <string name="title_advanced_notify_separate_hint">Cum pot configura notificările pentru conturi, dosare și expeditori?</string>
     <string name="title_advanced_notify_preview_all_hint">Pentru accesoriile de purtat care pot arăta textul complet (până la 5000 caractere)</string>
@@ -1191,6 +1190,7 @@
     <string name="title_hint_operations">Ștergerea de operațiuni poate duce la dispariția mesajelor și la probleme de sincronizare</string>
     <string name="title_op_title_headers">Descărcarea antetelor</string>
     <string name="title_op_title_raw">Descărcarea mesajului original</string>
+    <string name="title_op_title_add">Se încarcă mesajul</string>
     <string name="title_folder_name">Nume dosar</string>
     <string name="title_display_name">Nume afișat</string>
     <string name="title_show_folders">Arată dosarele ascunse</string>
@@ -1520,6 +1520,7 @@
     <string name="title_add_image_inline">Inserare</string>
     <string name="title_add_image_attach">Atașare</string>
     <string name="title_add_image_resize">Redimensionare</string>
+    <string name="title_add_image_resize_width_only">Doar lățimea limitei</string>
     <string name="title_add_image_privacy">Elimină datele confidențiale</string>
     <string name="title_add_image_privacy_remark">Locație geografică, numere de serie, nume de fișiere etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixeli</string>
@@ -1711,6 +1712,8 @@
     <string name="title_sort_on_last_applied">Ultima aplicatie</string>
     <string name="title_filter">Exclude</string>
     <string name="title_filter_seen">Citit</string>
+    <string name="title_filter_unseen">Necitit</string>
+    <string name="title_filter_flagged">Cu stea</string>
     <string name="title_filter_unflagged">Fără stea</string>
     <string name="title_filter_unknown">Expeditori necunoscuți</string>
     <string name="title_filter_hidden">Ascuns</string>
@@ -2077,6 +2080,7 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">O oră</string>
     <string name="title_1day">O zi</string>
+    <string name="title_snooze_doze">Vă rugăm să dezactivați optimizările bateriei prin pasul 3 al ecranului principal de setări</string>
     <string name="title_more_overflow">Mai mult &#8230;</string>
     <string name="title_today_at">Astăzi la %1$s</string>
     <string name="title_tomorrow_at">Mâine la %1$s</string>
@@ -2392,6 +2396,11 @@
         <item>Fără</item>
         <item>Benzi</item>
         <item>Punct</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Îngustă</item>
+        <item>Medie</item>
+        <item>Lată</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Destinatar</item>

@@ -211,7 +211,7 @@
     <string name="title_setup_intro">Setting up an account is just three steps and after that you can send and receive emails</string>
     <string name="title_setup_simple">There is no need to change any other options</string>
     <string name="title_setup_issue">FairEmail was developed to help you protect your privacy and represents literally thousands of hours of work. If you have any problems, please contact me first for support before leaving a bad review. I am happy to help!</string>
-    <string name="title_setup_analytics">FairEmail does not display ads and does not track or analyze your behavior. Bugsnag is used for error reporting and is disabled by default.</string>
+    <string name="title_setup_analytics">FairEmail does not display ads and does not track or analyze your behavior.</string>
     <string name="title_setup_quick_accounts">Add or change accounts</string>
     <string name="title_setup_quick_support">Some providers make it difficult to add an account. Please do not blame FairEmail for this, but ask for support instead.</string>
     <string name="title_setup_quick_hint">The entered email address is used to query the email server and autoconfig.thunderbird.net for configuration information</string>
@@ -244,7 +244,7 @@
     <string name="title_setup_oauth_permission">The email provider has approved OAuth only for the Play Store and GitHub version</string>
     <string name="title_setup_gmail_support">Authorizing Google accounts will work in the Play Store and GitHub version only because Android checks the digital app signature</string>
     <string name="title_setup_gmail_rationale">Please grant permissions to select an account and read your name</string>
-    <string name="title_setup_gmail_permissions">Google will ask for permissions to read, compose, send and permanently delete all your email. FairEmail will never delete your messages without your explicit consent.</string>
+    <string name="title_setup_gmail_permissions">Google will ask for permissions to read (to show messages to you), compose (to save draft messages), send and permanently delete all your email. FairEmail will never delete your messages without your explicit consent. Only you and no one else has access to your messages.</string>
     <string name="title_setup_gmail_login">If Chrome is signed in to an account, a new account can only be added through Android. This can be avoided by logging out of Chrome via the Chrome sync settings.</string>
     <string name="title_setup_gmail_max">In case of the error message \"You\'re signed in to the maximum number of accounts\", you need to log out the browser from all Google accounts.</string>
     <string name="title_setup_outlook_hint">In the case of an alias address, the Office 365 wizard should probably be used.</string>
@@ -519,7 +519,6 @@
     <string name="title_advanced_quote_reply">Quote replied text</string>
     <string name="title_advanced_limit_reply">Limit the number of nested quotes</string>
     <string name="title_advanced_resize_reply">Resize images in replied text</string>
-    <string name="title_advanced_resize_paste">Resize pasted images</string>
     <string name="title_advanced_signature_location">Signature position</string>
     <string name="title_advanced_signature_new">Use signature for new messages</string>
     <string name="title_advanced_signature_reply">Use signature when replying</string>
@@ -629,7 +628,7 @@
     <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
     <string name="title_advanced_account_color">Show a color stripe or color dot</string>
-    <string name="title_advanced_color_stripe_wide">Use wide color stripe</string>
+    <string name="title_advanced_account_color_size">Color stripe width</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_bimi">Show Brand Indicators for Message Identification (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Require a valid VMC certificate</string>
@@ -861,7 +860,7 @@
         The encryption method can be selected before sending in the send options dialog box (long press the send button).
     </string>
     <string name="title_advanced_sign_default">Sign by default</string>
-    <string name="title_advanced_encrypt_default">Encrypt by default</string>
+    <string name="title_advanced_encrypt_default">Sign and encrypt by default</string>
     <string name="title_advanced_encrypt_auto">Automatically encrypt when all recipients\' keys are available</string>
     <string name="title_advanced_encrypt_reply">Automatically encrypt when replying to an encrypted message</string>
     <string name="title_advanced_auto_verify">Automatically verify signed messages</string>
@@ -900,6 +899,7 @@
     <string name="title_advanced_external_answer" translatable="false">Provide reply templates to other apps</string>
     <string name="title_advanced_shortcuts">Show frequently used contacts in Android share menu</string>
     <string name="title_advanced_ical_tentative">Store received invitations as tentative</string>
+    <string name="title_advanced_ical_email">Store email addresses of attendees</string>
     <string name="title_advanced_fts">Build search index</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexed (%3$s)</string>
     <string name="title_advanced_classification">Classify messages</string>
@@ -1149,7 +1149,7 @@
         Android may ask for permission to access the selected folder, even though the app doesn\'t need it.
         You can cancel the selection dialog to restore the default folder (usually the \'Download\' folder).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Restore last app state when restarted via the launcher icon within %1$d minutes</string>
+    <string name="title_advanced_restore_on_launch_hint">Restore last app state if possible when restarted via the launcher icon</string>
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
     <string name="title_advanced_expandall_hint">The answer button will not be shown when multiple messages are expanded because it is unclear which message the button applies to</string>
     <string name="title_advanced_autoseen_hint">Automatically marking messages as read on expanding can be disabled in the advanced account settings of each account</string>
@@ -1173,7 +1173,7 @@
     <string name="title_advanced_notify_remove_hint">New message notifications will always be removed on being swiped away and on marking messages read</string>
     <string name="title_advanced_notify_manage_hint">Tap on the channel name to set the channel properties</string>
     <string name="title_advanced_notify_samsung_hint">To manage notification channels, you may need to enable this Android setting: Notification, Advanced settings, Manage notification categories for each app</string>
-    <string name="title_advanced_notify_manage_default_hint">To set the default sound, etc.</string>
+    <string name="title_advanced_notify_manage_default_hint">To set the default sound, configure DND (do not disturb), etc.</string>
     <string name="title_advanced_notify_manage_service_hint">To disable the \'monitoring\' notification</string>
     <string name="title_advanced_notify_separate_hint">How do I configure notifications for accounts, folders and senders?</string>
     <string name="title_advanced_notify_preview_all_hint">For wearables that can show the full text (up to 5,000 characters)</string>
@@ -1468,6 +1468,7 @@
     <string name="title_hint_operations">Deleting operations can result in disappearing messages and synchronization problems</string>
     <string name="title_op_title_headers">Downloading headers</string>
     <string name="title_op_title_raw">Downloading raw message</string>
+    <string name="title_op_title_add">Uploading message</string>
 
     <string name="title_folder_name">Folder name</string>
     <string name="title_display_name">Display name</string>
@@ -1574,7 +1575,7 @@
     <string name="title_rename">Rename</string>
     <string name="title_share">Share</string>
     <string name="title_analyze">Analyze</string>
-    <string name="title_share_link" translatable="false">Share link</string>
+    <string name="title_share_link">Share link</string>
     <string name="title_share_link_open" translatable="false">Open message</string>
     <string name="title_zip" translatable="false">ZIP</string>
     <string name="title_event">Add to calendar</string>
@@ -1834,6 +1835,7 @@
     <string name="title_add_image_inline">Insert</string>
     <string name="title_add_image_attach">Attach</string>
     <string name="title_add_image_resize">Resize</string>
+    <string name="title_add_image_resize_width_only">Limit width only</string>
     <string name="title_add_image_privacy">Remove privacy sensitive data</string>
     <string name="title_add_image_privacy_remark">Geographic location, serial numbers, file names, etc.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
@@ -2043,6 +2045,8 @@
 
     <string name="title_filter">Filter out</string>
     <string name="title_filter_seen">Read</string>
+    <string name="title_filter_unseen">Unread</string>
+    <string name="title_filter_flagged">Starred</string>
     <string name="title_filter_unflagged">Unstarred</string>
     <string name="title_filter_unknown">Unknown senders</string>
     <string name="title_filter_hidden">Hidden</string>
@@ -2444,6 +2448,7 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 hour</string>
     <string name="title_1day">1 day</string>
+    <string name="title_snooze_doze">Please disable battery optimizations via step 3 of the main settings screen</string>
     <string name="title_more_overflow">More &#8230;</string>
     <string name="title_today_at">Today at %1$s</string>
     <string name="title_tomorrow_at">Tomorrow at %1$s</string>
@@ -2978,6 +2983,12 @@
         <item>None</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Medium</item>
+        <item>Wide</item>
     </string-array>
 
     <string-array name="answerValues" translatable="false">

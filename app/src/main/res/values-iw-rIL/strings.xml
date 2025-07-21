@@ -190,7 +190,7 @@
     <string name="title_setup_intro">הגדרת חשבון נמצאת במרחק שלושה צעדים ממך ולאחריה ניתן להתחיל לשלוח ולקבל הודעות דוא״ל</string>
     <string name="title_setup_simple">אין צורך לשנות אפשרויות אחרות כלשהן</string>
     <string name="title_setup_issue">‏FairEmail פותח כדי לסייע לך להגן על הפרטיות שלך והוא מגלם בתוכו אלפי שעות עבודה. אם נתקלת בבעיה, נא ליצור אתי קשר תחילה לקבל תמיכה בטרם פרסום סקירה שלילית. אני מאוד שמח לעזור - באנגלית!</string>
-    <string name="title_setup_analytics">‏FairEmail לא מציג פרסומות ולא עוקב אחריך או מנתח את ההתנהגות שלך. Bugsnag משמש לדיווח על שגיאות והוא מושבת כברירת מחדל.</string>
+    <string name="title_setup_analytics">FairEmail לא מציג פרסומות ואינו עוקב או מנתח את ההתנהגות שלך.</string>
     <string name="title_setup_quick_accounts">הוספה או עריכה של חשבונות</string>
     <string name="title_setup_quick_support">חלק מהספקים מקשים על הוספת חשבון. אין טעם להאשים את FailEmail בכך, אך בהחלט ניתן לבקש תמיכה.</string>
     <string name="title_setup_quick_hint">כתובת הדוא״ל שמולאה משמשת לתשאל את שרת הדוא״ל ואת autoconfig.thunderbird.net לקבלת פרטי הגדרה</string>
@@ -220,7 +220,7 @@
     <string name="title_setup_oauth_permission">ספק הדוא״ל אישר OAuth רק לגרסאות שבחנות Play וב־GitHub</string>
     <string name="title_setup_gmail_support">אימות חשבונות Google יעבוד רק עם גרסה מחנות Play או מ־GitHub כיוון ש־Android בודק את חתימת היישומון</string>
     <string name="title_setup_gmail_rationale">נא להרשות לבחור חשבון ולקרוא את שמך</string>
-    <string name="title_setup_gmail_permissions">Google יבקש לקרוא, לכתוב, לשלוח, ולמחוק את כל ההודעות שלך לצמיתות. Fairmail לעולם לא ימחק ללא הסכמתך המפורשת.</string>
+    <string name="title_setup_gmail_permissions">Google יבקש ממך הרשאות לקרוא (להציג לך הודעות), לכתוב (כדי לשמור הודעות טיוטה), לשלוח ולמחוק לצמיתות את כל הודעות הדוא״ל שלך. FairEmail אף פעם לא ימחק את ההודעות שלך ללא הסכמתך המפורשת. רק לך יש גישה להודעות שלך, לא לאף אחד אחר.</string>
     <string name="title_setup_gmail_login">אם נכנסת לחשבון ב־Chrome אפשר להוסיף חשבון חדש רק דרך Android. אפשר להימנע מזה על ידי יציאה מהחשבון ב־Chrome דרך הגדרות הסנכרון של Chrome.</string>
     <string name="title_setup_gmail_max">אם מופיעה הודעת השגיאה „נכנסת לכמות המרבית של חשבונות”, יש להוציא את הדפדפן מכל חשבונות Google.</string>
     <string name="title_setup_outlook_hint">אם זאת כתובת כינוי, עדיף להשתמש באשף Office 365.</string>
@@ -336,7 +336,7 @@
     <string name="title_setup_biometrics">אימות ביומטרי</string>
     <string name="title_setup_biometrics_enable">הפעלה</string>
     <string name="title_setup_biometrics_disable">השבתה</string>
-    <string name="title_setup_biometrics_unlock">שחרור</string>
+    <string name="title_setup_biometrics_unlock">ביטול נעילה</string>
     <string name="title_setup_theme">נא לבחור ערכת עיצוב</string>
     <string name="title_setup_theme_blue_orange">כחול/כתום</string>
     <string name="title_setup_theme_yellow_purple">צהוב/סגול</string>
@@ -468,7 +468,6 @@
     <string name="title_advanced_quote_reply">ציטוט הטקסט לתגובה</string>
     <string name="title_advanced_limit_reply">הגבלת מספר הציטוטים המקוננים</string>
     <string name="title_advanced_resize_reply">שינוי גודל התמונות בטקסט התגובה</string>
-    <string name="title_advanced_resize_paste">שינוי גודל תמונה מודבקת</string>
     <string name="title_advanced_signature_location">מיקום החתימה</string>
     <string name="title_advanced_signature_new">להשתמש בחתימה להודעות חדשות</string>
     <string name="title_advanced_signature_reply">להשתמש בחתימה לתגובות</string>
@@ -568,7 +567,7 @@
     <string name="title_advanced_indentation">הזחה שמאלית/ימנית להודעות שהתקבלו/נשלחו בדיונים</string>
     <string name="title_advanced_highlight_unread">הדגשת הודעות שלא נקראו</string>
     <string name="title_advanced_account_color">הצגת פס או נקודת צבע</string>
-    <string name="title_advanced_color_stripe_wide">להשתמש בפס צבע רחב</string>
+    <string name="title_advanced_account_color_size">עובי פס צבע</string>
     <string name="title_advanced_avatars">הצגת תמונות אנשי קשר</string>
     <string name="title_advanced_bimi">הצגת בוררי מיתוג לזיהוי הודעה (BIMI)</string>
     <string name="title_advanced_bimi_vmc">לדרוש אישור VMC תקין</string>
@@ -716,7 +715,7 @@
     <string name="title_advanced_notify_suppress_in_call">להשהות התראות בזמן שיחה</string>
     <string name="title_advanced_notify_suppress_in_car">השבתת ההתראות כאשר מחובר ל־Android Auto</string>
     <string name="title_advanced_notify_summary">הצגת התראות תקציר בלבד</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">הצגת נושא בהתראות</string>
+    <string name="title_advanced_notify_subject">הצגת נושא בהתראות</string>
     <string name="title_advanced_notify_preview">תצוגה מקדימה של ההודעות בהתראות</string>
     <string name="title_advanced_notify_preview_all">תצוגה מקדימה של כל הטקסט</string>
     <string name="title_advanced_notify_preview_only">הצגת התראות עם תמצית טקסט בלבד</string>
@@ -813,6 +812,7 @@
     <string name="title_advanced_sort_answers">סידור תבניות המענה לפי תדירות השימוש</string>
     <string name="title_advanced_shortcuts">הצגת אנשי קשר בשימוש תדיר בתפריט השיתוף של Android</string>
     <string name="title_advanced_ical_tentative">אחסון הזמנות שהתקבלו כטנטטיביות</string>
+    <string name="title_advanced_ical_email">אחסון כתובות הדוא״ל של המשתתפים</string>
     <string name="title_advanced_fts">בניית אינדקס חיפוש</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d תועדו באינדקס (%3$s)</string>
     <string name="title_advanced_classification">סיווג הודעות</string>
@@ -946,7 +946,7 @@
     <string name="title_advanced_default_folder_hint">        Android עשוי לבקש הרשאה לגשת לתיקייה הנבחרת, למרות שהיישומון לא זקוק לזה.
         אפשר לבטל את חלונית הבחירה כדי להחזיר את תיקיית ברירת המחדל (בדרך כלל זאת תיקיית ה‚הורדות’).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">שחזור המצב האחרון של היישומון כאשר הוא מופעל מחדש דרך הסמל במשגר תוך %1$d דקות</string>
+    <string name="title_advanced_restore_on_launch_hint">לשחזר את מצב היישומון האחרון דרך סמל המשגר</string>
     <string name="title_advanced_autoexpand_hint">לפתוח הודעות אוטומטית כשיש רק הודעה אחת או רק הודעה אחת שלא נקראה בדיון</string>
     <string name="title_advanced_expandall_hint">כפתור המענה לא יופיע כאשר מספר הודעות מורחבות כיוון שלא ברור לאיזו הודעה הכפתור מתייחס</string>
     <string name="title_advanced_autoseen_hint">אפשר להשבית את סימון ההודעות כנקראו אוטומטית בעת ההרחבה בהגדרות החשבון המתקדמות של כל חשבון בנפרד</string>
@@ -968,7 +968,7 @@
     <string name="title_advanced_notify_remove_hint">התראות על הודעות חשבות תמיד תוסרנה עם החלקה כלפי חוץ ועם סימון הודעות כנקראו</string>
     <string name="title_advanced_notify_manage_hint">יש לגעת בשם הערוץ כדי להגדיר את מאפייניו</string>
     <string name="title_advanced_notify_samsung_hint">כדי לנהל ערוצי התראות, כנראה שיהיה עליך להפעיל את הגדרת ה־Android הזאת: התראה, הגדרות מתקדמות, ניהול קטגוריות התראה לכל יישום</string>
-    <string name="title_advanced_notify_manage_default_hint">כדי להגדיר את צלילי ברירת המחדל וכו׳.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">כדי להגדיר את צליל ברירת המחדל, להגדיר מצב „לא להפריע”, וכו׳.</string>
     <string name="title_advanced_notify_manage_service_hint">כדי להשבית את התראת ה‚מעקב’</string>
     <string name="title_advanced_notify_separate_hint">איך אפשר להגדיר התראות לחשבונות, תיקיות ומוענים?</string>
     <string name="title_advanced_notify_preview_all_hint">להתקנים לבישים שיכולים להציג את התוכן במלואו (עד 5,000 תווים)</string>
@@ -1206,6 +1206,7 @@
     <string name="title_hint_operations">פעולות מחיקה יכולות לגרום להודעות שנעלמות ולתקלות סנכרון</string>
     <string name="title_op_title_headers">כותרות מתקבלות</string>
     <string name="title_op_title_raw">הודעה גולמית מתקבלת</string>
+    <string name="title_op_title_add">הודעת העלאה</string>
     <string name="title_folder_name">שם תיקייה</string>
     <string name="title_display_name">שם תצוגה</string>
     <string name="title_show_folders">הצגת תיקיות מוסתרות</string>
@@ -1537,6 +1538,7 @@
     <string name="title_add_image_inline">הוספה</string>
     <string name="title_add_image_attach">צירוף</string>
     <string name="title_add_image_resize">שינוי גודל</string>
+    <string name="title_add_image_resize_width_only">הגבלת רוחב בלבד</string>
     <string name="title_add_image_privacy">הסרת נתוני פרטיות רגישים</string>
     <string name="title_add_image_privacy_remark">מיקום גאוגרפי, מספרים סידוריים, שמות קבצים ועוד</string>
     <string name="title_add_resize_pixels">&lt; %1$d פיקסלים</string>
@@ -1728,6 +1730,8 @@
     <string name="title_sort_on_last_applied">החלה אחרונה</string>
     <string name="title_filter">סינון החוצה</string>
     <string name="title_filter_seen">נקראו</string>
+    <string name="title_filter_unseen">לא נקרא</string>
+    <string name="title_filter_flagged">בכוכב</string>
     <string name="title_filter_unflagged">ללא כוכב</string>
     <string name="title_filter_unknown">מוענים בלתי ידועים</string>
     <string name="title_filter_hidden">מוסתר</string>
@@ -2094,6 +2098,7 @@
     <string name="title_via">דרך: %1$s</string>
     <string name="title_1hour">שעה</string>
     <string name="title_1day">יום</string>
+    <string name="title_snooze_doze">נא להשבית מיטובי סוללה דרך של 3 של מסך ההגדרות הראשי</string>
     <string name="title_more_overflow">עוד &#8230;</string>
     <string name="title_today_at">היום ב־%1$s</string>
     <string name="title_tomorrow_at">מחר ב־%1$s</string>
@@ -2123,8 +2128,8 @@
     <string name="title_pro_purchase">רכישה</string>
     <string name="title_pro_one_time">%1$s (רכישה חד־פעמית)</string>
     <string name="title_pro_no_play">חנות Play לא נמצאה</string>
-    <string name="title_pro_info">        פיתוח FairEmail דרש אלפי שעות אדם ולמרות זאת, רוב היכולות חופשיות לשימוש.
-        FairEmail מתייחס לפרטיות שלך במלוא הרצינות ולא מציכ פרסומות או משתמש במעקב או ניתוח התנהגות כדי להרוויח כסף.
+    <string name="title_pro_info">פיתוח FairEmail דרש אלפי שעות עבודה ולמרות זאת, רוב היכולות חופשיות לשימוש.
+        FairEmail מתייחס לפרטיות שלך במלוא הרצינות ולא מציג פרסומות או משתמש במעקב או ניתוח התנהגות כדי להרוויח כסף.
         כדי לתחזק ולתמוך ב־FairEmail בטווח הארוך, חלק מהיכולות הנוחות והמתקדמות אינן חופשיות לשימוש.
         FairEmail מציג הודעה קטנה כדי להזכיר לך על כך, היא תוסר עם רכישת יכולות המקצוענים.
     </string>
@@ -2404,6 +2409,11 @@
         <item>בלי</item>
         <item>פס</item>
         <item>נקודה</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>צר</item>
+        <item>בינוני</item>
+        <item>רחב</item>
     </string-array>
     <string-array name="contactTypes">
         <item>נמען</item>

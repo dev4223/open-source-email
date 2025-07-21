@@ -873,14 +873,14 @@ public class FragmentAccount extends FragmentBase {
                             iservice.hasCapability("UTF8=ACCEPT") ||
                                     iservice.hasCapability("UTF8=ONLY");
 
-                    for (EntityFolder f : iservice.getFolders()) {
+                    for (EntityFolder f : iservice.getFolders(host)) {
                         EntityFolder folder = db.folder().getFolderByName(id, f.name);
                         if (folder == null)
                             folder = new EntityFolder(f.name, f.type);
                         result.folders.add(folder);
                     }
 
-                    EntityFolder.guessTypes(result.folders);
+                    EntityFolder.guessTypes(result.folders, host);
 
                     if (result.folders.size() > 0)
                         Collections.sort(result.folders, result.folders.get(0).getComparator(null));
@@ -1283,7 +1283,7 @@ public class FragmentAccount extends FragmentBase {
                                 user, password,
                                 certificate, fingerprint);
 
-                        for (EntityFolder f : iservice.getFolders())
+                        for (EntityFolder f : iservice.getFolders(host))
                             if (EntityFolder.INBOX.equals(f.type)) {
                                 inbox = new EntityFolder();
                                 inbox.name = f.name;
@@ -1461,14 +1461,26 @@ public class FragmentAccount extends FragmentBase {
                     }
 
                     Map<String, EntityFolder> current = new HashMap<>();
-                    for (EntityFolder folder : db.folder().getFolders(account.id, false, false))
+                    for (EntityFolder folder : db.folder().getFolders(account.id, false, false)) {
+                        Log.i("Got folder=" + folder.name);
                         current.put(folder.name, folder);
+                    }
 
                     db.folder().setFoldersUser(account.id);
 
                     for (EntityFolder folder : folders) {
                         Log.i("Checking folder=" + folder.name + ":" + folder.type);
                         EntityFolder existing = current.get(folder.name);
+                        EntityFolder indb = db.folder().getFolderByName(account.id, folder.name);
+                        if (existing == null && indb != null) {
+                            existing = indb;
+                            for (EntityFolder f : current.values())
+                                Log.breadcrumb("Debug", "From db", f.name + ":" + f.type);
+                            for (EntityFolder f : folders)
+                                Log.breadcrumb("Debug", "From config", f.name + ":" + f.type);
+                            Log.e("Exists in db folder=" + indb.name + ":" + indb.type +
+                                    " not exists folder=" + folder.name + ":" + folder.type);
+                        }
                         if (existing == null) {
                             folder.id = null;
                             folder.account = account.id;
@@ -2241,10 +2253,12 @@ public class FragmentAccount extends FragmentBase {
         importance.name = context.getString(R.string.title_set_importance);
         folders.add(importance);
 
-        EntityFolder tts = new EntityFolder();
-        tts.id = EntityMessage.SWIPE_ACTION_TTS;
-        tts.name = context.getString(R.string.title_rule_tts);
-        folders.add(tts);
+        if (!Helper.isPlayStoreInstall()) {
+            EntityFolder tts = new EntityFolder();
+            tts.id = EntityMessage.SWIPE_ACTION_TTS;
+            tts.name = context.getString(R.string.title_rule_tts);
+            folders.add(tts);
+        }
 
         if (AI.isAvailable(context)) {
             EntityFolder summarize = new EntityFolder();

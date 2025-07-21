@@ -176,7 +176,7 @@
     <string name="title_setup_intro">Postavljanje računa odvija se u samo tri koraka i nakon toga možete slati i primati e-poštu</string>
     <string name="title_setup_simple">Nije potrebno mijenjati druge opcije</string>
     <string name="title_setup_issue">FairEmail je razvijen kako bi zaštitio vašu privatnost i predstavlja djelo u koje je doslovno uloženo na hiljade sati. Ukoliko imate nekih problema, molim da me prvo kontaktirate za podršku, prije nego ostavite lošu recenziju. Rado ću Vam pomoći!</string>
-    <string name="title_setup_analytics">FairEmail ne prikazuje reklame i ne prati niti analizira Vaše ponašanje. Bugsnag se koristi za prijavljivanje grešaka i isključen je po zadanom.</string>
+    <string name="title_setup_analytics">FairEmail ne prikazuje reklame niti prati ili analizira vaše ponašanje.</string>
     <string name="title_setup_quick_accounts">Dodaj ili ukloni račune</string>
     <string name="title_setup_quick_support">Neki provajderi (poslužitelji) otežavaju način za dodavanje računa. Molimo da ne krivite FairEmail zbog toga, nego da zatražite podršku.</string>
     <string name="title_setup_quick_hint">Unesena adresa e-pošte koristi se za slanje upita e-mail serveru i za konfiguracijske informacije s autoconfig.thunderbird.net </string>
@@ -206,7 +206,7 @@
     <string name="title_setup_oauth_permission">E-mail provajder je odobrio OAuth provjeru saamo za verziju iz Play trgovine i GitHub-a</string>
     <string name="title_setup_gmail_support">Autorizacija Google računa radit će samo u verzijama Play trgovine i GitHub-a, jer Android provjerava digitalne potpise aplikacija</string>
     <string name="title_setup_gmail_rationale">Molimo da potvrdite dopuštenja za izbor računa i čitanje vašeg imena</string>
-    <string name="title_setup_gmail_permissions">Google će pitati za dopuštenja za čitanje, pisanje, slanje i trajno brisanje svih vaših poruka. FairEmail nikada neće brisati vaše poruke bez vaše saglasnosti.</string>
+    <string name="title_setup_gmail_permissions">Google će tražiti dozvole za čitanje (prikaz poruka za Vas), sastavljanje (snimanje nacrta poruka), slanje i trajno brisanje svih vaših mail-ova. FairEmail nikada neće brisati vaše poruke bez vašeg izričitog pristanka. Samo Vi i niko drugi može pristupiti vašim porukama.</string>
     <string name="title_setup_gmail_login">Ako je u Chrome-u prijavljen račun, novi račun (nalog) može se dodati samo u postavkama Androida. Da biste izbjegli ovu situaciju, odjavite se iz Chrome-a preko postavki za sinhronizaciju.</string>
     <string name="title_setup_gmail_max">U slučaju poruke o greški \"Prijavljeni ste s maksimalnim brojem računa\", trebate se odjaviti sa svih Google računa u pregledniku.</string>
     <string name="title_setup_outlook_hint">U slučaju korištenja aliasa adrese, treba koristiti čarobnjak paketa Office 365.</string>
@@ -454,7 +454,6 @@
     <string name="title_advanced_quote_reply">Citiraj tekst \"odgovorene poruke\"</string>
     <string name="title_advanced_limit_reply">Ograniči broj ugniježđenih citata</string>
     <string name="title_advanced_resize_reply">Promijeni veličinu slika u tekstu odgovora</string>
-    <string name="title_advanced_resize_paste">Promijeni veličinu zalijepljenih slika</string>
     <string name="title_advanced_signature_location">Mjesto potpisa</string>
     <string name="title_advanced_signature_new">Koristi potpis za nove poruke</string>
     <string name="title_advanced_signature_reply">Koristi potpis za odgovore</string>
@@ -554,7 +553,7 @@
     <string name="title_advanced_indentation">Lijevo/desno poravnanje primljenih/poslanih poruka u konverzacijama</string>
     <string name="title_advanced_highlight_unread">Markiraj nepročitane poruke</string>
     <string name="title_advanced_account_color">Prikaži obojenu traku ili tačku</string>
-    <string name="title_advanced_color_stripe_wide">Koristi široku traku s bojama</string>
+    <string name="title_advanced_account_color_size">Širina obojene trake</string>
     <string name="title_advanced_avatars">Prikaži fotografije kontakata</string>
     <string name="title_advanced_bimi">Brand Indicators for Message Identification (BIMI)</string>
     <string name="title_advanced_bimi_vmc">Zahtjevaj važeći VMC certifikat</string>
@@ -702,7 +701,7 @@
     <string name="title_advanced_notify_suppress_in_call">Odgodi obavještenja tokom poziva</string>
     <string name="title_advanced_notify_suppress_in_car">Odgodi obavještenja kada je spojen Android Auto</string>
     <string name="title_advanced_notify_summary">Prikaži samo obavještenja sa sažetkom</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Prikaži predmet u obavještenjima</string>
+    <string name="title_advanced_notify_subject">Prikaži predmet u obavještenjima</string>
     <string name="title_advanced_notify_preview">Prikaži pregled poruke u obavještenjima</string>
     <string name="title_advanced_notify_preview_all">Prikaz cijelog teksta</string>
     <string name="title_advanced_notify_preview_only">Prikaži obavještenja samo sa pregledom poruka</string>
@@ -799,6 +798,7 @@
     <string name="title_advanced_sort_answers">Sortiraj prijedloške za odgovore prema učestalosti korištenja</string>
     <string name="title_advanced_shortcuts">Prikaži često korištene kontakte u Android meniju za dijeljenje</string>
     <string name="title_advanced_ical_tentative">Čuvaj primljene pozivnice kao privremene</string>
+    <string name="title_advanced_ical_email">Sačuvaj e-mail adrese učesnika</string>
     <string name="title_advanced_fts">Kreiraj indeks pretraživanja</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d poruke/a indeksirano (%3$s)</string>
     <string name="title_advanced_classification">Klasifikacija poruka</string>
@@ -932,7 +932,7 @@
     <string name="title_advanced_default_folder_hint">        Android može tražiti dozvole za pristup izabranom folderu, iako to aplikacija ne traži.
         Možete otkazati dijaloški okvir selekcije za vraćanje zadanog foldera (obično je to folder preuzimanja tj. \'Download\' folder).
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Vrati posljednje stanje aplikacije kada se ona ponovo pokrene dodirom na ikonicu početnog ekrana unutar %1$d minute(a)</string>
+    <string name="title_advanced_restore_on_launch_hint">Po mogućnosti vrati posljednje stanje aplikacije, kada se restartuje putem ikonice u launcher-u</string>
     <string name="title_advanced_autoexpand_hint">Automatski otvori poruku kada se u konverzaciji nalazi samo jedna poruka ili samo jedna nepročitana poruka</string>
     <string name="title_advanced_expandall_hint">Dugme za odgovor neće se prikazivati kada se prošire višestruke poruke, jer nije jasno na koju od poruka se odnosi to dugme</string>
     <string name="title_advanced_autoseen_hint">Automatsko označavanje poruke kao pročitane pri proširivanju je opcija koja se može isključiti u naprednim postavkama svakog računa</string>
@@ -954,7 +954,7 @@
     <string name="title_advanced_notify_remove_hint">Obavještenja o novim porukama će se uvijek skloniti kada se prevuku preko ekrana ili označavanjem poruka kao \'pročitane\'</string>
     <string name="title_advanced_notify_manage_hint">Dodirnite naziv kanala za postavljanje svojstava kanala</string>
     <string name="title_advanced_notify_samsung_hint">Za upravljanje kanalima obavještenja, možda trebate uključiti ovu postavku Androida: Obavještenja, Napredne postavke, Upravljaj kategorijama obavještenja za svaku aplikaciju</string>
-    <string name="title_advanced_notify_manage_default_hint">Za postavljanje zadanog zvuka, itd.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Za postavljanje zadanog zvuka, podesite DND (ne uznemiravaj), itd.</string>
     <string name="title_advanced_notify_manage_service_hint">Za isključivanje obavještenja o \'nadzoru\'</string>
     <string name="title_advanced_notify_separate_hint">Kako da podesim obavještenja za račune, foldere i pošiljaoce?</string>
     <string name="title_advanced_notify_preview_all_hint">Za nosive uređaje koji prikazuju cijeli tekst (do 5000 znakova)</string>
@@ -1192,6 +1192,7 @@
     <string name="title_hint_operations">Brisanje operacija može prouzrokovati nestanak poruka i probleme sa sinhronizacijom</string>
     <string name="title_op_title_headers">Preuzimanje zaglavlja</string>
     <string name="title_op_title_raw">Preuziamanje raw poruke</string>
+    <string name="title_op_title_add">Prijenos poruke</string>
     <string name="title_folder_name">Naziv foldera</string>
     <string name="title_display_name">Prikazano ime</string>
     <string name="title_show_folders">Prikaži skrivene foldere</string>
@@ -1523,6 +1524,7 @@
     <string name="title_add_image_inline">Ubaci</string>
     <string name="title_add_image_attach">Priloži</string>
     <string name="title_add_image_resize">Promijeni veličinu</string>
+    <string name="title_add_image_resize_width_only">Ograniči samo širinu</string>
     <string name="title_add_image_privacy">Ukloni osjetljive podatke</string>
     <string name="title_add_image_privacy_remark">Geografska lokacija, serijski brojevi, nazivi datoteka, itd.</string>
     <string name="title_add_resize_pixels">&lt; %1$d piksela</string>
@@ -1714,6 +1716,8 @@
     <string name="title_sort_on_last_applied">Zadnje potvrđeno</string>
     <string name="title_filter">Izdvoji</string>
     <string name="title_filter_seen">Pročitano</string>
+    <string name="title_filter_unseen">Nepročitano</string>
+    <string name="title_filter_flagged">Favoritima</string>
     <string name="title_filter_unflagged">Bez zvjezdice</string>
     <string name="title_filter_unknown">Nepoznati pošiljaoci</string>
     <string name="title_filter_hidden">Skrivenom</string>
@@ -2080,6 +2084,7 @@
     <string name="title_via">Preko: %1$s</string>
     <string name="title_1hour">1 sat</string>
     <string name="title_1day">1 dan</string>
+    <string name="title_snooze_doze">Molimo da onemogućite optimizaciju baterije u 3. koraku na ekranu glavnih postavki</string>
     <string name="title_more_overflow">Više &#8230;</string>
     <string name="title_today_at">Danas u %1$s</string>
     <string name="title_tomorrow_at">Sutra u %1$s</string>
@@ -2389,6 +2394,11 @@
         <item>Nijedno</item>
         <item>Traka</item>
         <item>Tačka</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Uska</item>
+        <item>Srednji</item>
+        <item>Široka</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Primalac</item>

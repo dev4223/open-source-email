@@ -141,7 +141,6 @@
     <string name="title_setup_intro">Postavljanje računa je samo tri koraka i nakon toga možete slati i primati e-poštu</string>
     <string name="title_setup_simple">Nema potrebe mijenjati druge opcije</string>
     <string name="title_setup_issue">FairEmail je razvijen kako bi vam pomogao u zaštiti vaše privatnosti i predstavlja doslovno tisuće sati rada. Ako imate bilo kakvih problema, prvo me kontaktirajte za podršku prije nego što ostavite lošu recenziju. Drago mi je što mogu pomoći!</string>
-    <string name="title_setup_analytics">FairEmail ne prikazuje oglase i ne prati niti analizira vaše ponašanje. Bugsnag se koristi za izvještavanje o greškama i onemogućen je prema zadanim postavkama.</string>
     <string name="title_setup_quick_accounts">Dodaj ili izmijeni račune</string>
     <string name="title_setup_quick_support">Neki pružatelji usluga otežavaju dodavanje računa. Nemojte kriviti FairEmail za ovo, već umjesto toga zatražite podršku.</string>
     <string name="title_setup_quick_hint">Unesena adresa e-pošte koristi se za upit poslužitelja e-pošte i autoconfig.thunderbird.net za informacije o konfiguraciji</string>
@@ -166,7 +165,6 @@
     <string name="title_setup_oauth_permission">Davatelj usluge e-pošte odobrio je OAuth samo za verziju Play Store i GitHub</string>
     <string name="title_setup_gmail_support">Autorizacija Google računa funkcionirat će u Play Store i GitHub verziji samo zato što Android provjerava digitalni potpis programa</string>
     <string name="title_setup_gmail_rationale">Molimo dajte dopuštenje za izbor računa i čitanje vašeg imena</string>
-    <string name="title_setup_gmail_permissions">Google će tražiti dopuštenja za čitanje, sastavljanje, slanje i trajno brisanje sve vaše e-pošte. FairEmail nikada neće izbrisati vaše poruke bez vašeg izričitog pristanka.</string>
     <string name="title_setup_gmail_password">Želim autorizirati račun lozinkom umjesto računa na uređaju</string>
     <string name="title_setup_office_auth">Greška \'AUTHENTICATE failed\' se može pojaviti ako je IMAP/SMTP isključen od strane administratora</string>
     <string name="title_setup_oauth_rationale">Autorizirajte pristup vašem %1$s računu</string>
@@ -420,7 +418,6 @@
     <string name="title_advanced_threading_unread">Prikaži broj nepročitanih poruka u razgovorima</string>
     <string name="title_advanced_indentation">Uvlaka primljenih/poslanih poruka u razgovorima prema lijevo/desno</string>
     <string name="title_advanced_highlight_unread">Označiti nepročitane poruke</string>
-    <string name="title_advanced_color_stripe_wide">Koristi široku traku u boji</string>
     <string name="title_advanced_avatars">Prikaži fotografije kontakata</string>
     <string name="title_advanced_bimi_unverified">Nepotvrđeni pošiljatelj</string>
     <string name="title_advanced_bimi_verified">Potvrđeni pošiljatelj</string>
@@ -703,7 +700,6 @@
     <string name="title_advanced_notify_action_hint">Prikazat će se najviše tri akcije</string>
     <string name="title_advanced_notify_remove_hint">Obavijesti o novim porukama uvijek će se uklanjati nakon što ih povučete i označite kao pročitane poruke</string>
     <string name="title_advanced_notify_manage_hint">Dodirnite naziv kanala da biste postavili svojstva kanala</string>
-    <string name="title_advanced_notify_manage_default_hint">Postavljanje zadanog zvuka itd</string>
     <string name="title_advanced_notify_manage_service_hint">Za onemogućavanje obavijesti o \'nadzoru\'</string>
     <string name="title_advanced_notify_separate_hint">Kako da podesim obavijesti za račune, mape i pošiljatelje?</string>
     <string name="title_advanced_notify_preview_all_hint">Za nošnjive uređaje koji mogu prikazati cijeli tekst (do 5.000 znakova)</string>
@@ -1325,6 +1321,8 @@
     <string name="title_sort_on_order">Redoslijed</string>
     <string name="title_filter">Filtrirati</string>
     <string name="title_filter_seen">Pročitaj</string>
+    <string name="title_filter_unseen">Nepročitane</string>
+    <string name="title_filter_flagged">Označeno</string>
     <string name="title_filter_unflagged">Bez zvjezdice</string>
     <string name="title_filter_unknown">Nepoznati pošiljatelji</string>
     <string name="title_filter_hidden">Skriveno</string>
@@ -1913,6 +1911,11 @@
         <item>Nijedan</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Srednje</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Primatelj</item>

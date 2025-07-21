@@ -146,7 +146,7 @@
     <string name="title_setup_intro">تنظیم کردن حساب تنها سه مرحله دارد و پس از آن شما می‌توانید ایمیل بفرستید یا دریافت کنید</string>
     <string name="title_setup_simple">نیازی به تغییر هیچ یک از تنظیمات نیست</string>
     <string name="title_setup_issue">FairEmail به منظور حفاظت از حریم شخصی شما توسعه پیدا کرده و حاصل هزاران ساعت کار و تلاش است. در صورت مواجهه با هرگونه مشکلی، لطفا پیش از نوشتن نظرات منفی، با من تماس بگیرید. خوشحال می‌شوم که کمکتان کنم!</string>
-    <string name="title_setup_analytics">FairEmail تبلیغات نشان نمی‌دهد و رفتار شما را دنبال یا بررسی نمی‌کند. برای گزارش اشکالات از Bugsnag استفاده می‌شود که به طور پیش‌فرض غیرفعال است.</string>
+    <string name="title_setup_analytics">FairEmail تبلیغات نشان نمی‌دهد و رفتار شما را رهگیری و بررسی نمی‌کند.</string>
     <string name="title_setup_quick_accounts">افزودن یا تغییر حساب‌ها</string>
     <string name="title_setup_quick_support">برخی از ارائه‌دهندگان ایمیل، افزودن حساب را دشوار می‌کنند. لطفا تقصیر را گردن FairEmail نیاندازید و به جای آن خواستار پشتیبانی شوید.</string>
     <string name="title_setup_quick_hint">آدرس ایمیل وارد شده برای پرس و جوی سرور و autoconfig.thunderbird.net استفاده می‌شود تا اطلاعات پیکربندی شوند</string>
@@ -174,7 +174,6 @@
     <string name="title_setup_oauth_permission">سرویس دهنده ی ایمیل OAuth را فقط برای نسخه پلی استور و گیت هاب تایید کرده</string>
     <string name="title_setup_gmail_support">حساب های گوگل فقط در نسخه‌های پلی استور و گیت هاب مجاز می‌شوند چون اندروید امضای برنامه را بررسی می‌کند</string>
     <string name="title_setup_gmail_rationale">لطفا مجوز برای انتخاب حساب و خواندن نام شما را اعطا کنید</string>
-    <string name="title_setup_gmail_permissions">گوگل برای خواندن، نوشتن، فرستادن و حذف همیشگی همه ایمیل‌های شما درخواست دسترسی خواهد کرد. FairEmail هیچ‌وقت بدون رضایت آشکار شما پیام‌های شما را حذف نخواهد کرد.</string>
     <string name="title_setup_gmail_on_device">چرا لازم است که یک حساب روی دستگاه انتخاب کنم؟</string>
     <string name="title_setup_gmail_password">می‌خواهم به جای حسابی روی دستگاه، به یک حساب با رمز عبور اجازه بدهم</string>
     <string name="title_setup_office_auth">خطای \'AUTHENTICATE failed\' می‌تواند به‌دلیل غیرفعال بودن IMAP/SMTP به‌ دست مدیر سیستم باشد</string>
@@ -389,7 +388,6 @@
     <string name="title_advanced_quote_reply">متن پاسخ نقل قول شده</string>
     <string name="title_advanced_limit_reply">محدود کردن تعداد نقل‌قول‌های تودرتو</string>
     <string name="title_advanced_resize_reply">تغییر اندازه تصاویر در متن پاسخ داده شده</string>
-    <string name="title_advanced_resize_paste">تغییر اندازه تصاویر کپی شده</string>
     <string name="title_advanced_signature_location">موقعیت امضاء</string>
     <string name="title_advanced_signature_new">برای پیام‌های جدید از امضا استفاده کن</string>
     <string name="title_advanced_signature_reply">هنگام پاسخ از امضا استفاده کن</string>
@@ -468,7 +466,7 @@
     <string name="title_advanced_indentation">تورفتگی چپ/راست پیام‌های دریافت/فرستاده شده در مکالمات</string>
     <string name="title_advanced_highlight_unread">برجسته‌سازی پیام‌های خوانده نشده</string>
     <string name="title_advanced_account_color">نمایش یک نوار رنگی یا نقطه رنگی</string>
-    <string name="title_advanced_color_stripe_wide">استفاده از نوار رنگی پهن</string>
+    <string name="title_advanced_account_color_size">عرض نوار رنگی</string>
     <string name="title_advanced_avatars">نمایش تصویر مخاطبین</string>
     <string name="title_advanced_bimi">نمایش نشانگرهای برند برای شناسایی پیام (BIMI)</string>
     <string name="title_advanced_bimi_vmc">نیازمند گواهینامه VMC معتبر</string>
@@ -575,7 +573,7 @@
     <string name="title_advanced_notify_known">اعلان‌ها را تنها برای مخاطبین نمایش بده</string>
     <string name="title_advanced_notify_suppress_in_call">در صورت مکالمه تلفنی، اعلان‌های اطلاع‌رسانی را به عقب بیانداز</string>
     <string name="title_advanced_notify_summary">تنها چکیده اعلان را نمایش بده</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">نمایش موضوع در اعلان‌ها</string>
+    <string name="title_advanced_notify_subject">نمایش موضوع در اعلان‌ها</string>
     <string name="title_advanced_notify_preview">پیش‌نمایش پیام را در اعلان‌ها نمایش بده</string>
     <string name="title_advanced_notify_preview_all">پیش‌نمایش تمام متن</string>
     <string name="title_advanced_notify_transliterate">ترجمه به الفبای لاتین</string>
@@ -630,6 +628,7 @@
     <string name="title_advanced_sort_answers">قالب‌های پاسخ‌گویی را بر اساس تناوب استفاده از آنها مرتب کن</string>
     <string name="title_advanced_shortcuts">نمایش مخاطبین مکررا استفاده شده در فهرست اشتراک‌گذاری اندروید</string>
     <string name="title_advanced_ical_tentative">ثبت آزمایشی دعوت‌نامه‌های دریافتی</string>
+    <string name="title_advanced_ical_email">ذخیره نشانی ایمیل شرکت‌کنندگان</string>
     <string name="title_advanced_fts">ساخت شاخص جستجو</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d پیام ایندکس شد (%3$s)</string>
     <string name="title_advanced_show_filtered">آیکون فیلتر را زمانی که قاعده‌ای اعمال می‌شود نشان بده</string>
@@ -692,7 +691,7 @@
     <string name="title_advanced_user_agent_hint">بعضی از سرورها، یک رشته عامل کاربری ژنریک و عمومی را قبول نمی‌کنند</string>
     <string name="title_advanced_badge_hint">تنها روی راه‌اندازهای پشتیبانی‌شده در دسترس است</string>
     <string name="title_advanced_notify_action_hint">حداکثر سه کنش نشان داده خواهد شد</string>
-    <string name="title_advanced_notify_manage_default_hint">برای تنظیم صدای پیش‌فرض، وغیره</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">برای تعیین صدای پیش‌فرض، DND (مزاحم نشوید) و غیره را تنظیم کنید.</string>
     <string name="title_advanced_notify_sensitive_hint">نیازمند غیرفعال کردن اعلان‌های حساس در تنظیمات اندروید</string>
     <string name="title_advanced_notify_no_grouping">این نگارش اندروید گروه‌بندی اعلان را پشتیبانی نمی‌کند</string>
     <string name="title_advanced_notify_no_channels">این نگارش اندروید کانال‌های اعلان را پشتیبانی نمی‌کند</string>
@@ -823,6 +822,7 @@
     <string name="title_delete_contacts_remark">تمام مخاطبین نشان داده شده و نشده حذف خواهند شد، حتی اگر جستجو شوند!</string>
     <string name="title_no_operations">عملیاتی در انتظار وجود ندارد </string>
     <string name="title_hint_operations">عملیات‌های حذف می‌تواند موجب ناپدید شدن پیام‌ها و مشکلات همگام‌سازی شود</string>
+    <string name="title_op_title_add">در حال بارگذاری پیام</string>
     <string name="title_folder_name">نام پوشه</string>
     <string name="title_display_name">نامی که نمایش داده می شود</string>
     <string name="title_show_folders">نمایش پوشه‌های پنهان</string>
@@ -1061,6 +1061,7 @@
     <string name="title_add_image_inline">درج</string>
     <string name="title_add_image_attach">پیوست</string>
     <string name="title_add_image_resize">تغییر اندازه</string>
+    <string name="title_add_image_resize_width_only">فقط عرض را محدود کن</string>
     <string name="title_add_image_privacy">حذف کردن داده شخصی حساس</string>
     <string name="title_add_resize_pixels">&lt;%1$d پیکسل</string>
     <string name="title_add_image_resize_remark">پشتیبانی از تغییر اندازه برای: %1$s</string>
@@ -1195,6 +1196,8 @@
     <string name="title_sort_on_order">سفارش</string>
     <string name="title_filter">پالودن</string>
     <string name="title_filter_seen">خوانده شده</string>
+    <string name="title_filter_unseen">خوانده نشده</string>
+    <string name="title_filter_flagged">ستاره‌دار</string>
     <string name="title_filter_unflagged">بدون ستاره شده</string>
     <string name="title_filter_unknown">فرستندگان ناشناس</string>
     <string name="title_filter_hidden">پنهان</string>
@@ -1454,6 +1457,7 @@
     <string name="title_via">از طریق: %1$s</string>
     <string name="title_1hour">۱ ساعت</string>
     <string name="title_1day">۱ روز</string>
+    <string name="title_snooze_doze">لطفا بهینه‌سازی باتری را از طریق مرحله ۳ در صفحه تنظیمات اصلی غیرفعال کنید</string>
     <string name="title_now">هم اکنون</string>
     <string name="title_after">پس از %1$s</string>
     <string name="title_reset">بازنشانی</string>
@@ -1720,6 +1724,11 @@
         <item>هیچکدام</item>
         <item>نوار</item>
         <item>نقطه</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>باريک</item>
+        <item>متوسط</item>
+        <item>پهن</item>
     </string-array>
     <string-array name="contactTypes">
         <item>گیرنده</item>

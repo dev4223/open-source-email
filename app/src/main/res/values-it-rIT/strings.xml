@@ -162,7 +162,7 @@
     <string name="title_setup_intro">Configurare un account richiede solo tre passaggi per poter inviare e ricevere email</string>
     <string name="title_setup_simple">Non serve cambiare altre opzioni</string>
     <string name="title_setup_issue">FairEmail è stata sviluppata per aiutare a proteggere la propria privacy e sono state necessarie letteralmente migliaia di ore di lavoro. Se si riscontrano problemi, contattare lo sviluppatore per supporto prima di lasciare una brutta recensione. Sarà felice di dare una mano!</string>
-    <string name="title_setup_analytics">FairEmail non visualizza annunci e non monitora o analizza il proprio comportamento. Bugsnag è usato per la segnalazione degli errori ed è disabilitato per impostazione predefinita.</string>
+    <string name="title_setup_analytics">FairEmail non mostra pubblicità e non traccia né analizza il tuo comportamento.</string>
     <string name="title_setup_quick_accounts">Aggiungere o cambiare gli account</string>
     <string name="title_setup_quick_support">Alcuni provider rendono difficile aggiungere un account. Di questo non è responsabile FairEmail, semmai è necessario chiedere supporto.</string>
     <string name="title_setup_quick_hint">L\'indirizzo email inserito è usato per interrogare il server email e autoconfig.thunderbird.net per le informazioni di configurazione</string>
@@ -192,7 +192,7 @@
     <string name="title_setup_oauth_permission">Il provider dell\'email ha approvato OAuth solo per la versione del Play Store e di GitHub</string>
     <string name="title_setup_gmail_support">L\'autorizzazione degli account Google funzionerà solo nella versione dell\'app dal Play Store e da GitHub, perché Android controlla la firma digitale dell\'app</string>
     <string name="title_setup_gmail_rationale">Dare i permessi per selezionare un account e leggere il vostro nome</string>
-    <string name="title_setup_gmail_permissions">Google chiederà le autorizzazioni per leggere, scrivere, inviare ed eliminare definitivamente tutte le tue email. FairEmail non eliminerà mai i tuoi messaggi senza il tuo consenso esplicito.</string>
+    <string name="title_setup_gmail_permissions">Google chiederà l\'autorizzazione per leggere (per mostrare i messaggi), scrivere (per salvare bozze), inviare ed eliminare definitivamente tutte le email. FairEmail non eliminerà mai i messaggi senza un consenso esplicito. Solo l\'utente, e nessun altro, ha accesso ai suoi messaggi.</string>
     <string name="title_setup_gmail_login">Se Chrome è connesso a un account, si può aggiungere un nuovo account solo tramite Android. Ciò si può evitare disconnettendosi da Chrome tramite le impostazioni di sincronizzazione di Chrome.</string>
     <string name="title_setup_gmail_max">In caso di messaggio d\'errore «Sei connesso al numero massimo di account», è necessario disconnettere il browser da tutti gli account Google.</string>
     <string name="title_setup_outlook_hint">Nel caso di un indirizzo alias, si dovrebbe probabilmente usare la procedura guidata Office 365.</string>
@@ -440,7 +440,6 @@
     <string name="title_advanced_quote_reply">Cita il testo cui si risponde</string>
     <string name="title_advanced_limit_reply">Limita il numero di citazioni nidificate</string>
     <string name="title_advanced_resize_reply">Ridimensione le immagini nel testo di risposta</string>
-    <string name="title_advanced_resize_paste">Ridimensiona le immagini incollate</string>
     <string name="title_advanced_signature_location">Posizione della firma</string>
     <string name="title_advanced_signature_new">Usa la firma per i nuovi messaggi</string>
     <string name="title_advanced_signature_reply">Usa la firma quando si risponde</string>
@@ -540,7 +539,7 @@
     <string name="title_advanced_indentation">Messaggi ricevuti e inviati con rientro a sinistra e destra nelle conversazioni</string>
     <string name="title_advanced_highlight_unread">Evidenzia i messaggi da leggere</string>
     <string name="title_advanced_account_color">Mostra una striscia colorata o un punto colorato</string>
-    <string name="title_advanced_color_stripe_wide">Usa un\'ampia striscia di colore</string>
+    <string name="title_advanced_account_color_size">Spessore della striscia colorata</string>
     <string name="title_advanced_avatars">Mostra le foto di contatto</string>
     <string name="title_advanced_bimi">Mostra il logo del mittente (BIMI, Brand Indicators for Message Identification)</string>
     <string name="title_advanced_bimi_vmc">Richiedi un certificato VMC valido</string>
@@ -688,7 +687,7 @@
     <string name="title_advanced_notify_suppress_in_call">Posticipa le notifiche durante una chiamata</string>
     <string name="title_advanced_notify_suppress_in_car">Posticipa le notifiche mentre Android Auto è connesso</string>
     <string name="title_advanced_notify_summary">Mostra solo le notifiche del riepilogo</string>
-    <string name="title_advanced_notify_subject" comment="title_advanced_notify_subject&#10;Title for option switch in the notification settings tab page">Mostra l\'oggetto nelle notifiche</string>
+    <string name="title_advanced_notify_subject">Mostra l\'oggetto nelle notifiche</string>
     <string name="title_advanced_notify_preview">Mostra l\'anteprima del messaggio nelle notifiche</string>
     <string name="title_advanced_notify_preview_all">Visualizza tutto il testo</string>
     <string name="title_advanced_notify_preview_only">Mostra solo le notifiche con un testo d\'anteprima</string>
@@ -785,6 +784,7 @@
     <string name="title_advanced_sort_answers">Ordina i modelli di risposta per frequenza d\'uso</string>
     <string name="title_advanced_shortcuts">Mostra i contatti usati frequentemente nel menu di condivisione di Android</string>
     <string name="title_advanced_ical_tentative">Memorizza gli inviti ricevuti come provvisori</string>
+    <string name="title_advanced_ical_email">Salva l\'indirizzo email dei partecipanti</string>
     <string name="title_advanced_fts">Crea indice di ricerca</string>
     <string name="title_advanced_fts_indexed">%1$d su %2$d messaggi indicizzati (%3$s)</string>
     <string name="title_advanced_classification">Classifica i messaggi</string>
@@ -919,7 +919,7 @@
     <string name="title_advanced_default_folder_hint">        Android potrebbe richiedere l\'autorizzazione ad accedere alla cartella selezionata, anche se l\'app non la necessita.
         Puoi annullare la finestra di selezione per ripristinare la cartella predefinita (solitamente la cartella \'Download\').
     </string>
-    <string name="title_advanced_restore_on_launch_hint">Quando riavviato tramite l\'icona del launcher, ripristina l\'ultimo stato dell\'app entro %1$d minuti</string>
+    <string name="title_advanced_restore_on_launch_hint">Se possibile, riapri l\'app sull\'ultima schermata usata quando viene riavviata dall\'icona del launcher.</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando ce n\'è solo uno o c\'è solo un messaggio da leggere in una conversazione</string>
     <string name="title_advanced_expandall_hint">Il pulsante di risposta non sarà mostrato quando sono espansi più messaggi perché non è chiaro a quale messaggio si applichi il tasto</string>
     <string name="title_advanced_autoseen_hint">Dalle impostazioni avanzate di ogni account è possibile disabilitare la funzione che segna automaticamente i messaggi come letti alla loro apertura.</string>
@@ -941,7 +941,7 @@
     <string name="title_advanced_notify_remove_hint">Le notifiche dei nuovi messaggi saranno sempre rimosse scorrendo via e contrassegnando i messaggi come letti</string>
     <string name="title_advanced_notify_manage_hint">Toccare sul nome del canale per impostare le proprietà del canale</string>
     <string name="title_advanced_notify_samsung_hint">Per gestire i canali di notifica, potrebbe essere necessario abilitare questa impostazione Android: Notifiche, Impostazioni avanzate, Gestione delle categorie di notifiche per ogni app</string>
-    <string name="title_advanced_notify_manage_default_hint">Per impostare il suono predefinito, etc.</string>
+    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Per impostare la notifica sonora predefinita, configurare la modalità \'Non disturbare\' ecc.</string>
     <string name="title_advanced_notify_manage_service_hint">Per disabilitare la notifica di monitoraggio</string>
     <string name="title_advanced_notify_separate_hint">Come configurare le notifiche per gli account, le cartelle e i mittenti?</string>
     <string name="title_advanced_notify_preview_all_hint">Per gli indossabili che possono mostrare il testo completo (fino a 5.000 caratteri)</string>
@@ -1179,6 +1179,7 @@
     <string name="title_hint_operations">L\'eliminazione delle operazioni può causare la scomparsa dei messaggi e problemi di sincronizzazione</string>
     <string name="title_op_title_headers">Scaricamento delle intestazioni</string>
     <string name="title_op_title_raw">Scaricamento del messaggio grezzo</string>
+    <string name="title_op_title_add">Caricamento del messaggio</string>
     <string name="title_folder_name">Nome della cartella</string>
     <string name="title_display_name">Nome mostrato</string>
     <string name="title_show_folders">Mostra le cartelle nascoste</string>
@@ -1231,7 +1232,7 @@
     <string name="title_folder_drafts">Bozze</string>
     <string name="title_folder_trash">Cestino</string>
     <string name="title_folder_junk">Spam</string>
-    <string name="title_folder_sent">Inviata</string>
+    <string name="title_folder_sent">Posta inviata</string>
     <string name="title_folder_system">Sistema</string>
     <string name="title_folder_user">Utente</string>
     <string name="title_folder_user_only">Solo cartelle utente</string>
@@ -1510,6 +1511,7 @@
     <string name="title_add_image_inline">Inserisci</string>
     <string name="title_add_image_attach">Allega</string>
     <string name="title_add_image_resize">Ridimensiona</string>
+    <string name="title_add_image_resize_width_only">Ridimensiona in larghezza</string>
     <string name="title_add_image_privacy">Rimuovi i dati sensibili alla privacy</string>
     <string name="title_add_image_privacy_remark">Geolocalizzazione, numeri di serie, nomi dei file, etc.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixel</string>
@@ -1701,6 +1703,8 @@
     <string name="title_sort_on_last_applied">Ultima applicazione</string>
     <string name="title_filter">Filtra</string>
     <string name="title_filter_seen">Letti</string>
+    <string name="title_filter_unseen">Da leggere</string>
+    <string name="title_filter_flagged">Con stella</string>
     <string name="title_filter_unflagged">Senza stella</string>
     <string name="title_filter_unknown">Mittenti sconosciuti</string>
     <string name="title_filter_hidden">Nascosti</string>
@@ -1881,15 +1885,15 @@
     <string name="title_legend_closing">Chiusura connessione in corso</string>
     <string name="title_legend_unified">Posta in arrivo unificata / account principale</string>
     <string name="title_legend_inbox">Posta in arrivo</string>
-    <string name="title_legend_outbox">Posta In Uscita</string>
+    <string name="title_legend_outbox">Posta In uscita</string>
     <string name="title_legend_drafts">Bozze</string>
-    <string name="title_legend_sent">Inviato</string>
+    <string name="title_legend_sent">Posta inviata</string>
     <string name="title_legend_archive">Archivio</string>
     <string name="title_legend_trash">Cestino</string>
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_primary">Principale</string>
-    <string name="title_legend_subscribed">Iscritto a</string>
-    <string name="title_legend_rule">Ha regole</string>
+    <string name="title_legend_subscribed">Sottoscritta</string>
+    <string name="title_legend_rule">Contiene regole</string>
     <string name="title_legend_similar">Cerca messaggi simili</string>
     <string name="title_legend_notify">Notifica attiva per i nuovi messaggi</string>
     <string name="title_legend_sync_keep">Numero di giorni per sincronizzare e mantenere i messaggi</string>
@@ -1898,29 +1902,29 @@
     <string name="title_legend_thread">Conversazione</string>
     <string name="title_legend_bookmark">Ultima conversazione aperta</string>
     <string name="title_legend_zoom">Cambia dimensione del testo</string>
-    <string name="title_legend_draft">Ha bozza</string>
-    <string name="title_legend_priority">Ha priorità alta</string>
-    <string name="title_legend_priority_low">Ha priorità bassa</string>
-    <string name="title_legend_sensitivity_personal">È personale</string>
-    <string name="title_legend_sensitivity_private">È privata</string>
-    <string name="title_legend_sensitivity_confidential">È confidenziale</string>
-    <string name="title_legend_importance">È importante</string>
-    <string name="title_legend_importance_low">Non è importante</string>
-    <string name="title_legend_signed">È firmato</string>
-    <string name="title_legend_encrypted">È cifrato</string>
+    <string name="title_legend_draft">Bozza</string>
+    <string name="title_legend_priority">Priorità alta</string>
+    <string name="title_legend_priority_low">Priorità bassa</string>
+    <string name="title_legend_sensitivity_personal">Personale</string>
+    <string name="title_legend_sensitivity_private">Privato</string>
+    <string name="title_legend_sensitivity_confidential">Confidenziale</string>
+    <string name="title_legend_importance">Importante</string>
+    <string name="title_legend_importance_low">Non importante</string>
+    <string name="title_legend_signed">Firmato</string>
+    <string name="title_legend_encrypted">Cifrato</string>
     <string name="title_legend_auth">Autenticazione fallita</string>
     <string name="title_legend_found">È stato trovato</string>
     <string name="title_legend_classified">Classificato automaticamente</string>
-    <string name="title_legend_snoozed">È posticipato</string>
-    <string name="title_legend_browsed">È sfogliato o cercato</string>
+    <string name="title_legend_snoozed">Posticipato</string>
+    <string name="title_legend_browsed">Scaricato dopo uno scrolling o dopo una ricerca</string>
     <string name="title_legend_answered">Risposto</string>
     <string name="title_legend_forwarded">Inoltrato</string>
-    <string name="title_legend_plain_only">È solo testo semplice</string>
-    <string name="title_legend_receipt">La conferma è stata richiesta</string>
+    <string name="title_legend_plain_only">In formato solo testo semplice</string>
+    <string name="title_legend_receipt">Con richiesta di conferma di lettura</string>
     <string name="title_legend_auto_submitted">Inviato automaticamente</string>
     <string name="title_legend_by_list">Inviato da una mailing list</string>
-    <string name="title_legend_attachment">Ha allegato</string>
-    <string name="title_legend_flagged">È preferito</string>
+    <string name="title_legend_attachment">Con allegato</string>
+    <string name="title_legend_flagged">Con stella</string>
     <string name="title_legend_contacts">Gestione dei contatti</string>
     <string name="title_legend_search">Cerca mittente</string>
     <string name="title_legend_view">Mostra il contenuto</string>
@@ -1931,7 +1935,7 @@
     <string name="title_legend_external_image">Segnaposto immagine esterna</string>
     <string name="title_legend_embedded_image">Segnaposto immagine incorporata</string>
     <string name="title_legend_tracking_pixel">Immagine di monitoraggio</string>
-    <string name="title_legend_broken_image">Immagine corrotta</string>
+    <string name="title_legend_broken_image">Immagine danneggiata</string>
     <string name="title_legend_open_external">Apri fuori dall\'app</string>
     <string name="title_legend_pick">Seleziona il contatto</string>
     <string name="title_legend_cc">Mostra CC/CCN</string>
@@ -2067,6 +2071,7 @@
     <string name="title_via">Tramite: %1$s</string>
     <string name="title_1hour">1 ora</string>
     <string name="title_1day">1 giorno</string>
+    <string name="title_snooze_doze">Disabilitare le ottimizzazioni della batteria tramite il passaggio 3 della schermata delle impostazioni principali</string>
     <string name="title_more_overflow">Altro&#8230;</string>
     <string name="title_today_at">Oggi alle %1$s</string>
     <string name="title_tomorrow_at">Domani alle %1$s</string>
@@ -2382,6 +2387,11 @@
         <item>Niente</item>
         <item>Striscia</item>
         <item>Punto</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Sottile</item>
+        <item>Media</item>
+        <item>Spessa</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Destinatario</item>

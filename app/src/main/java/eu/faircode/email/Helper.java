@@ -1036,7 +1036,7 @@ public class Helper {
     }
 
     static Snackbar.SnackbarLayout findSnackbarLayout(View rootView) {
-        if (rootView instanceof Snackbar.SnackbarLayout)
+        if (rootView instanceof Snackbar.SnackbarLayout && rootView.getVisibility() == View.VISIBLE)
             return (Snackbar.SnackbarLayout) rootView;
 
         if (rootView instanceof ViewGroup) {
@@ -2962,13 +2962,13 @@ public class Helper {
     }
 
     @NonNull
-    static UriInfo getInfo(Uri uri, Context context) {
+    static UriInfo getInfo(UriType uri, Context context) {
         UriInfo result = new UriInfo();
 
         // https://stackoverflow.com/questions/76094229/android-13-photo-video-picker-file-name-from-the-uri-is-garbage
         DocumentFile dfile = null;
         try {
-            dfile = DocumentFile.fromSingleUri(context, uri);
+            dfile = DocumentFile.fromSingleUri(context, uri.getUri());
             if (dfile != null) {
                 result.name = dfile.getName();
                 result.type = dfile.getType();
@@ -2981,9 +2981,11 @@ public class Helper {
 
         // Check name
         if (TextUtils.isEmpty(result.name))
-            result.name = uri.getLastPathSegment();
+            result.name = uri.getUri().getLastPathSegment();
 
         // Check type
+        if (uri.getType() != null)
+            result.type = uri.getType();
         if (!TextUtils.isEmpty(result.type))
             try {
                 new ContentType(result.type);

@@ -20,13 +20,146 @@ Besides being time-consuming, this is no longer free as of this year.
 This is one of the reasons why the app cannot be completely free, meaning some features must be paid for in order to pay for an annual security audit.
 To be clear, nothing will be changed for now.
 
-The security audit revealed no problems, so Google accounts [can continue to be used](https://support.google.com/cloud/answer/13464325) as usual next year.
+The security audit revealed no problems, so Google accounts [can continue to be used](https://support.google.com/cloud/answer/13464325) as usual for a year.
 
 <br>
 
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
 
 ### [Ceratonykus](https://en.wikipedia.org/wiki/Ceratonykus)
+
+### Next version (Work in progress)
+
+### 1.2288 2025-07-21
+
+* Fixed status bar color in some cases
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2287 2025-07-17
+
+* Resolved all reported bugs
+* Small improvements and minor bug fixes
+* Updated [S/MIME root certificates](https://wiki.mozilla.org/CA/Included_Certificates)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2286 2025-07-04 *
+
+* Fixed workaround for multiple inboxes
+
+### 1.2285 2025-07-04
+
+* Fixed workaround for incorrectly shared files
+
+### 1.2284 2025-07-02
+
+* Added filtering out unread / starred messages
+* Added workaround for incorrectly shared files (Xiaomi gallery)
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2283 2025-06-21 *
+
+* Disabled Certficate Transparency because Google broke it. 'Thanks' for all the 1-star ratings :-(
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2282 2025-06-20
+
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2281 2025-06-18
+
+* Added dropping files/images into the message editor
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2280 2025-06-10
+
+* Fixed mime type of shared files
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2279 2025-06-09
+
+* Added auto-reset of PGP keys
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2278 2025-06-05
+
+* Added option to limit the width only when resizing images
+* Added support for separate S/MIME sign/encrypt certificates, see [the FAQ](https://m66b.github.io/FairEmail/#faq12) for details
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2277 2025-05-28
+
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2276 2025-05-07 *
+
+* Removed TTS from the Play Store version (only) due to Play Store policies
+* Removed external intents from the Play Store version (only) due to Play Store policies
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2275 2025-05-06
+
+* Added Mozilla CA S/MIME certificates
+* Fixed navigation bar color in some cases
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2274 2025-04-24 *
+
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2273 2025-04-23
+
+* Removed Bugsnag
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2272 2025-04-08 *
+
+* Fixed back gestures for Hyper OS
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2271 2025-04-08
+
+* Added option for narrow color stripes
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2270 2025-03-31
+
+* Fixed widgets for some Android variants
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
 
 ### 1.2269 2025-03-27
 
@@ -39,7 +172,7 @@ For support you can use [the contact form](https://contact.faircode.eu/?product=
 * Updated [Public Suffix List](https://github.com/publicsuffix/list)
 * Updated [translations](https://crowdin.com/project/open-source-email)
 
-### 1.2268 2025-03-14
+### 1.2268 2025-03-14 *
 
 * Fixed delayed marking read
 * Small improvements and minor bug fixes

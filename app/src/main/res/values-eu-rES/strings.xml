@@ -138,7 +138,6 @@
     <string name="title_setup_intro">Kontua hiru urratsetan ezarri dezakezu eta jarraian mezuak jaso eta bidali</string>
     <string name="title_setup_simple">Ez dago aukerak aldatzeko beharrik</string>
     <string name="title_setup_issue">Fair Email zure pribatutasuna babesten laguntzeko garatu da eta literaki milaka lan orduen emaitza da. Arazoak badituzu, jarri kontaktuan eta eskatu laguntza, ez utzi mesedez kritika txar bat. laguntzen saiaten ari naiz!</string>
-    <string name="title_setup_analytics">FairEmail-ek ez ditu iragarkiak erakusten, eta ez du zure jardueraren jarraipenik egiten edo hau aztertzen. Bugsnag akatsen berri jasotzeko erabiltzen da eta zuk besterik esan ezean desgaituta dago.</string>
     <string name="title_setup_quick_accounts">Gehitu edo aldatu kontuak</string>
     <string name="title_setup_quick_support">Hornitaile batzuek zaildu egiten dute kontua gehitzea. Ez haserretu FairEmail aplikazioarekin, eskatu gaitzazu laguntza.</string>
     <string name="title_setup_quick_hint">Sartutako e-mail helbidea e-mail zerbitzariari eta autoconfig.thunderbird.net helbideari informazioa eskatzeko erabiliko da</string>
@@ -161,7 +160,6 @@
     <string name="title_setup_pop3">POP3 kontua</string>
     <string name="title_setup_gmail_support">Google kontuak baimentzeak Play Store eta Github bertsioetan bakarrik funtzionatuko du, Androidek aplikazioaren sinadura digitala egiaztatzen duelako</string>
     <string name="title_setup_gmail_rationale">Eman baimena kontu bat aukeratu eta zure izena irakurtzeko</string>
-    <string name="title_setup_gmail_permissions">Google-k zure posta elektronikoa irakurri, konposatu, bidali eta ezabatzeko baimenak eskatuko ditu. FairEmail-ek ez ditu zure mezuak ezabatuko baimen espliziturik gabe.</string>
     <string name="title_setup_office_auth">\'AUTENTIFIKAZIOAK huts egin du\' errorea sistema administratzaileak IMAP/SMTP desgaitu duelako izan daiteke</string>
     <string name="title_setup_oauth_rationale">Baimendu zure %1$s kontura sarbidea</string>
     <string name="title_setup_oauth_update">Berriro baimendu lehendik dagoen kontu bat (bestela sortu kontu berri bat)</string>
@@ -601,7 +599,6 @@
     <string name="title_advanced_notify_action_hint">Gehienez hiru ekintza erakutsiko dira</string>
     <string name="title_advanced_notify_remove_hint">Mezu berrien jakinarazpenak kenduko dira hauek irakurtzean edo irakurritzat markatzean</string>
     <string name="title_advanced_notify_manage_hint">Sakatu kanalaren izenean kanalaren ezaugarriak ezartzeko</string>
-    <string name="title_advanced_notify_manage_default_hint">Soinu eta abar lehenetsiak ezartzeko</string>
     <string name="title_advanced_notify_preview_all_hint">Testu osoa erakutsi dezaketen gailu mugikorretarako (5.000 karaktere arte)</string>
     <string name="title_advanced_wearable_hint">Jakinarazpenak bakarrik bidaltzen dira mugikorrera mezuen testua deskargatu ondoren</string>
     <string name="title_advanced_move_hint">Helburuko karpeta kontuaren ezarpenetan konfigura daiteke</string>
@@ -1135,6 +1132,8 @@
     <string name="title_sort_on_order">Ordena</string>
     <string name="title_filter">Iragazi</string>
     <string name="title_filter_seen">Irakurrita</string>
+    <string name="title_filter_unseen">Irakurri gabea</string>
+    <string name="title_filter_flagged">Izarduna</string>
     <string name="title_filter_unflagged">Izarrik gabe</string>
     <string name="title_filter_unknown">Bidaltzaile ezezagunak</string>
     <string name="title_filter_hidden">Ezkutuan</string>
@@ -1690,6 +1689,11 @@
         <item>Bat ere ez</item>
         <item>Stripe</item>
         <item>Dot</item>
+    </string-array>
+    <string-array name="accountColorSizes">
+        <item>Narrow</item>
+        <item>Ertaina</item>
+        <item>Wide</item>
     </string-array>
     <string-array name="contactTypes">
         <item>Hartzailea</item>
