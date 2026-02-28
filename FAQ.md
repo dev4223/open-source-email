@@ -68,6 +68,7 @@ For authorizing:
 * Apple iCloud, see [question 148](#faq148) ([German](https://support.apple.com/de-de/HT204397))
 * Free.fr, see [question 157](#faq157)
 * Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
+* Posteo: in some cases you need to use [an app password](https://posteo.de/en/help/app-passwords) ([German](https://posteo.de/hilfe/anwendungs-passwoerter))
 * Posteo: not that there is [no spam folder](https://posteo.de/en/help/how-does-the-posteo-spam-filter-work) ([German](https://posteo.de/hilfe/wie-funktioniert-der-posteo-spamfilter))
 * Posteo: if you want to synchronize contacts, please [see here](https://posteo.de/en/help/how-do-i-set-up-synchronisation-of-contacts-with-an-android-address-book)
 * Web.de: please check if [IMAP is enabled](https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html)
@@ -76,9 +77,10 @@ For authorizing:
 * GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html)). Reportedly, you need to do this on a desktop computer.
 * GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html)). Not that enabling two-factor authentication does not automatically enable IMAP.
 * T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
-* Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/) (German) and not your account password
+* Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-ionos-aendern/) (German) and not your account password
 * Yandex: please check if [IMAP is enabled](https://yandex.com/support/mail/mail-clients/others.html)
 * Comcast/Xfinity: please check if [third party email access](https://www.xfinity.com/support/articles/third-party-email-access) is enabled
+* Mailbox.org: with two factor authentication you'll need to use [an app password](https://kb.mailbox.org/en/private/security-and-privacy/application-passwords-for-external-programs/) ([German](https://kb.mailbox.org/de/privat/sicherheit-und-privatsphaere/applikationspasswoerter-fuer-externe-programme/))
 
 Please see [this FAQ](#faq22) for common error messages and solutions,
 and please see [this FAQ](#faq207) in case of '*Authentication failed*' or similar.
@@ -417,7 +419,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(182) How can I select how a link should be opened?](#faq182)
 * [(183) How do I use Send?](#faq183)
 * [(184) How do I password protect content?](#faq184)
-* [(185) Can I install FairEmail on Windows?](#faq185)
+* [~~(185) Can I install FairEmail on Windows?~~](#faq185)
 * [(186) How can I let the app auto store iCalendar invitations?](#faq186)
 * [(187) Are colored stars synchronized across devices?](#faq187)
 * [~~(188) Why is Google backup disabled?~~](#faq188)
@@ -601,6 +603,7 @@ Therefore, this issue can only be resolved by your email provider,
 or by installing the GitHub version of the app (as an update) and enabling insecure connections in the account/identity settings.** -->
 
 *... Untrusted ... not in certificate ...*<br />
+*... Untrusted ... Unacceptable certificate ...*<br />
 *... Invalid security certificate (Can't verify identity of server) ...*<br />
 *... Chain validation failed ... timestamp check failed ... Certificate expired at ...*<br />
 
@@ -888,6 +891,7 @@ Please see [this FAQ](#faq111) about OAuth support.
 Identities represent email addresses you are sending *from* via an email (SMTP) server.
 
 Some providers allow you to have multiple aliases addresses.
+Unfortunately, an email app cannot automatically discover alias email addresses, which means you have to configure them yourself.
 
 The easiest way to create an alias address is to use the mini *Create alias* wizard.
 For this, please go to the settings via the navigation menu (left side menu),
@@ -1668,6 +1672,10 @@ This might be caused by a not updated Exchange server, see [here](https://blogs.
 The errors *... Read error ...* (sometimes combined with *BAD_DECRYPT* / *DECRYPTION_FAILED_OR_BAD_RECORD_MAC*),
 *... Write error ...*, *... Read timed out ...*, *... Broken pipe ...* mean that the email server is not responding anymore or that the internet connection is bad.
 
+The error *...ENETUNREACH (Network is unreachable) ...*" means that no route to the target network exists.
+The local network the email server (the target network) is using might be offline, for example, due to a power cut,
+or the local network your device is using (the source network) might have internet connectivity issues.
+
 <a name="connectiondropped"></a>
 The error *... Connection dropped by server? ...* means that the email server unexpectedly terminated the connection.
 This sometimes happen when there were too many (simultaneous) connections in a too short time or when a wrong password was used too often.
@@ -1693,6 +1701,9 @@ In this case the system administrator needs to update the server software.
 The error *... Invalid ID Token Issued at time is more than 10 minutes before or after the current time ...*
 means that the clock time of the device deviates too much from the clock time of the email server.
 Please make sure the clock time, including the time zone, of the device is correct.
+
+The error *... No close_notify alert received before connection closed ...* means that the email server or something between the email server and the app didn't proper close a secure connection.
+This is an error in the SSL/TLS protocol implementation. It is typically caused by a faulty VPN implementation. So, if there is a VPN app active, please try to disable it.
 
 Please [see here](#faq4) for the errors *... Untrusted ... not in certificate ...*, *... Invalid security certificate (Can't verify identity of server) ...* or *... Trust anchor for certification path not found ...*
 
@@ -2203,6 +2214,10 @@ so that the mechanism as described in [this FAQ](#faq123) is used faster.
 [On some devices](https://dontkillmyapp.com/) it is necessary to *disable* battery optimizations (setup step 3) to keep connections to email servers open.
 In fact, leaving battery optimizations enabled can result in extra battery usage for all devices, even though this sounds contradictory!
 
+The Adaptive Battery feature in recent Android versions stops apps running in the background, even when battery optimizations are disabled.
+When the app is stopped, it will no longer receive new messages.
+When the app is manually restarted, a full sync is forced, but Android will later stop the app again because Android AI deems this to be better for battery usage.
+
 Most of the battery usage, not considering viewing messages, is due to synchronization (receiving and sending) of messages.
 So, to reduce the battery usage, set the number of days to synchronize message for to a lower value,
 especially if there are a lot of recent messages in a folder.
@@ -2256,6 +2271,9 @@ an account will automatically be switched to periodically checking for new messa
 * Says '*Still here*' within 3 minutes
 * The email server does not support push messages
 * The keep-alive interval is lower than 12 minutes
+
+Some people are asking for [UnifiedPush](https://unifiedpush.org/) to be added to reduce battery consumption.
+However, the app can only receive push notifications if the email server sends them.
 
 <br />
 
@@ -2317,6 +2335,9 @@ can be caused by [this Android 7.0 bug](https://issuetracker.google.com/issues/3
 The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION or SSLV3_ALERT_HANDSHAKE_FAILURE ...*'
 might be caused by enabling **hardening connections** or **Bouncy Castle** in the connection settings tab page,
 or by Android not supporting older protocols anymore, like SSLv3 and TLSv1.
+
+The error '*Handshake failed ... UNSUPPORTED_PROTOCOL ...*' means that the email server and Android do not have a common SSL/TLS protocol or a common cipher.
+The cipher set the server offers might be limited or the server might support the old (and insecure) SSL protocols only.
 
 The error '*javax.net.ssl.SSLHandshakeException: Read error: ... CERT_LENGTH_MISMATCH*' means that there is something wrong with the email server setup.
 Try to switch to port 993 (IMAP) or 465 (SMTP) with SSL/TLS.
@@ -2966,20 +2987,20 @@ The following extra operators are available:
 
 The following extra functions are available:
 
-* *header(name)* (returns an array of header values for the named header)
+* *header("name")* (returns an array of header values for the named header)
 * *blocklist()* (version 1.2176-1.2178; deprecated, use *onBlocklist()* instead)
 * *onBlocklist()* (returns a boolean indicating if the sender/server is on a DNS blocklist; since version 1.2179)
 * *hasMx()* (returns a boolean indicating if the from/reply-to address has an associated MX record; since version 1.2179)
-* *attachments(regex)* (returns an integer indicating number of attachments; since version 1.2179; optional regex to select the names since version 1.2194)
+* *attachments("regex")* (returns an integer indicating number of attachments; since version 1.2179; optional regex to select the names since version 1.2194)
 * *Jsoup()* (returns an array of selected strings; since version 1.2179)
 * *Size(array)* (returns the number of items in an array; since version 1.2179)
 * *knownContact()* (returns a boolean indicating that the from/reply-to address is in the Android address book or in the local contacts database)
 * *AI(prompt)* (perform interference with the configured AI model using the specified prompt, returning the result as a string; since version 1.2243)
-* *Is(flag)* (flag is one of seen, answered, flagged, deleted; to check if a message is read (seen), starred (flagged), etc.; since version 1.2277)
+* *Is("flag")* (flag is one of seen, answered, flagged, deleted or an IMAP keyword; to check if a message is read (seen), starred (flagged), etc.; since version 1.2277)
 
 Example conditions:
 
-```header("X-Mailer") contains "Open-Xchange" && from matches ".*service@.*"```
+```header("X-Mailer") contains "Open-Xchange" && from matches ".*service@.*" && Is("seen")```
 
 ```!onBlocklist() && hasMx() && attachments() > 0```
 
@@ -3042,6 +3063,9 @@ $year$
 $user$ (since version 1.2265)
 $extra$ (since version 1.2265)
 $domain$
+$user:to$ (since version 1.2289)
+$extra:to$ (since version 1.2289)
+$domain:to$ (since version 1.2289)
 $group$ (since version 1.2030)
 ```
 
@@ -3049,6 +3073,7 @@ $user$ is the user name of the 'from' email address,
 and $domain$ is the domain name of the 'from' email address: *user@domain*.
 
 $extra$ is the part after the plus sign if the username: *user+extra@example.org*.
+The 'to' user, extra and domain placeholders apply to the 'to' email address and the other placeholders apply to 'from' email address.
 
 $group$ will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only.
 Note that the Android contact provider isn't very fast, so using this placeholder can slow down fetching messages.
@@ -4134,7 +4159,7 @@ So, basically, the only thing I can do, is suggest some things:
 * Open the Play store app and wait at least a minute to give it time to synchronize with the Google servers
 * Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases; sometimes it helps to tap the *buy* button
 
-You can also try to clear the cache of the Play store app via the Android apps settings.
+You can also try to clear the cache of the Play store app via the Android apps settings (Android Settings → Apps → Google Play Store → Storage → Clear Cache).
 Restarting the device might be necessary to let the Play store recognize the purchase correctly.
 
 Note that:
@@ -4636,6 +4661,13 @@ Note that FairEmail does support replying to calendar invites (a pro feature) an
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq139)
 
+<br>
+
+Firstly, please check if the *Tenant ID* field below the email address field is empty,
+and when you need to use it, please ensure the correct Tennant ID is entered.
+
+<br>
+
 The confusing Microsoft specific server error *User is authenticated but not connected* might occur if:
 
 **Consumer Outlook/Hotmail/Live account**
@@ -4775,7 +4807,7 @@ This requires a compatible audio recorder app to be installed.
 In particular [this common intent](https://developer.android.com/reference/android/provider/MediaStore.Audio.Media.html#RECORD_SOUND_ACTION)
 needs to be supported.
 
-For example [this audio recorder](https://f-droid.org/app/com.github.axet.audiorecorder) is compatible.
+For example [this audio recorder](https://f-droid.org/en/packages/io.github.leonidius20.recorder.lite/) is compatible.
 
 Voice notes will automatically be attached.
 
@@ -4785,6 +4817,9 @@ Voice notes will automatically be attached.
 **(145) How can I set a notification sound for an account, folder, sender or condition?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq145)
+
+**Note that Android 16 always groups notifications, which is a choice of Google and something the app can't change.**
+**Android 16 also [removed notification icon theming](https://www.reddit.com/r/android_beta/comments/1ks3nc5/android_16_qpr1_beta_1_removed_notification_icon/), which means account colors won't be shown anymore.**
 
 Account:
 
@@ -4952,6 +4987,8 @@ Since version 1.1556 it is possible to export all messages of a POP3 folder in m
 which might be useful to backup sent messages if the email server doesn't (which is risky because breaking or losing your device, means losing your sent messages!).
 For this, please long press on the folder in the folder list of an account (tap on the account name in the navigation menu).
 
+**Warning**: the app will export messages downloaded to the device only!
+
 Since version 1.2160 it is possible to import messages in an mbox file conforming to [RFC4155](https://www.ietf.org/rfc/rfc4155.txt) into a POP3 folder.
 Note that imported messages won't be uploaded to the email server because this is not possible with POP3.
 
@@ -5076,7 +5113,10 @@ Please [see here](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-i
 
 Veuillez [voir ici](https://free.fr/assistance/597.html) pour les instructions.
 
-**SMTP est désactivé par défaut**, veuillez [voir ici](https://free.fr/assistance/2406.html) comment il peut être activé.
+**SMTP est désactivé par défaut!** Pour activer l'authentification SMTP:
+
+* Rendez-vous sur l'interface de gestion de l'adresse eMail désirée, l'identifiant (login) étant ici ce qui précède @free.fr et non un numéro Freebox.
+* Cliquez sur Gestion du SMTP authentifié puis sur Activer.
 
 Veuillez [voir ici](http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/configurer-smtp-free-fr) pour un guide détaillé.
 
@@ -5092,7 +5132,10 @@ To take photos and to record audio a camera and an audio recorder app are needed
 The following apps are open source cameras and audio recorders:
 
 * [Open Camera](https://play.google.com/store/apps/details?id=net.sourceforge.opencamera) ([F-Droid](https://f-droid.org/en/packages/net.sourceforge.opencamera/))
-* [Audio Recorder version 3.3.24+](https://play.google.com/store/apps/details?id=com.github.axet.audiorecorder) ([F-Droid](https://f-droid.org/packages/com.github.axet.audiorecorder/))
+* [Recording Studio Lite](https://f-droid.org/en/packages/io.github.leonidius20.recorder.lite/)
+
+To take photos, the camera app needs to support [MediaStore.ACTION_IMAGE_CAPTURE](https://developer.android.com/media/camera/camera-intents#take_a_photo_with_a_camera_app).
+Not all camera apps support this, unfortunately.
 
 To record voice notes, etc, the audio recorder needs to support
 [MediaStore.Audio.Media.RECORD_SOUND_ACTION](https://developer.android.com/reference/android/provider/MediaStore.Audio.Media#RECORD_SOUND_ACTION).
@@ -5338,7 +5381,6 @@ Deleting messages from the server and restoring them later could result in losin
 
 DeepL offers free translation of 500,000 characters (~100,000 words; ~250 pages) every month.
 
-1. Make sure you have the latest version of the app installed
 1. Check if [DeepL](https://www.deepl.com/) supports your language
 1. Enable DeepL support in the integration settings
 1. [Sign up](https://www.deepl.com/en/signup) to use [DeepL API Free](https://www.deepl.com/en/pro-api) "*Get started for free*" (credit card required for verification; won't be charged)
@@ -5350,13 +5392,20 @@ Note that DeepL seems to be hiding the DeepL API Free plan. It is still there, t
 This feature requires an internet connection.
 
 Note that you can't use [the regular pro plans](https://www.deepl.com/pro).
-The error *403 forbidden* means that the key and/or plan in invalid.
+The error *403 forbidden* means that the key and/or plan is invalid.
 
 Note that when reading a message, you can use the horizontal three-dots menu to translate too.
 If you use this frequently, you can configure a button for this.
 
-Some people have asked to add Google Translate on the assumption that it is free to use, but that is not the case if it is integrated into an app.
+Some people have asked to add Google Translate on the assumption that it is free to use,
+but [that is not the case](https://cloud.google.com/translate/pricing) if it is integrated into an app.
 Apart from that, DeepL is much easier to configure and the translations are of better quality.
+
+All translation services, including Google Translate, require a credit card, which is to prevent abuse. So, that's something that can't be avoided.
+
+Note that the app is basically provided for free and therefore it isn't possible to offer free translation services.
+In fact, translation services for more than personal usage (in an app for many people) are rather expensive.
+It can't be financed with a one-time purchase by a fraction of a percent of the users of the app.
 
 <br />
 
@@ -5796,13 +5845,15 @@ Sending protected content is a pro feature, decrypting protected content is a fr
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq185)
 
-Yes, you can if you use Windows 11 or later and install the [Windows Subsystem for Android](https://learn.microsoft.com/en-us/windows/android/wsa/).
+**Starting March 5, 2025, Windows Subsystem for Android™ and the Amazon Appstore are no longer available in the Microsoft Store.**
 
-You'll need to [download the GitHub version](https://github.com/M66B/FairEmail/releases) of the app and sideload it,
-which means that you need to enable developer mode, please [see here](https://learn.microsoft.com/en-us/windows/android/wsa/#test-and-debug),
-and that you need to install adb (platform tools), [see here](https://developer.android.com/studio/command-line/adb).
+~~Yes, you can if you use Windows 11 or later and install the [Windows Subsystem for Android](https://learn.microsoft.com/en-us/windows/android/wsa/).~~
 
-You can install the app via the Windows command line like this:
+~~You'll need to [download the GitHub version](https://github.com/M66B/FairEmail/releases) of the app and sideload it,~~
+~~which means that you need to enable developer mode, please [see here](https://learn.microsoft.com/en-us/windows/android/wsa/#test-and-debug),~~
+~~and that you need to install adb (platform tools), [see here](https://developer.android.com/studio/command-line/adb).~~
+
+~~You can install the app via the Windows command line like this:~~
 
 ```
 cd /path/to/platform-tools
@@ -5810,7 +5861,7 @@ adb connect 127.0.0.1:58526
 adb install /path/to/FairEmail-xxx.apk
 ```
 
-It is also possible to install the Play Store, but this is more complicated.
+~~It is also possible to install the Play Store, but this is more complicated.~~
 
 The app isn't available in the Amazon store because Amazon rebuilds all Android apps, and unfortunately, the app doesn't work correctly after rebuilding anymore.
 Amazon never responded to an issue reported about this.
@@ -5903,7 +5954,7 @@ Existing accounts or identities will never be deleted
 Please note that accounts are only considered the same if they are cloud synced and never if the same account is configured on different devices.
 
 All data is [end-to-end encrypted](https://en.wikipedia.org/wiki/End-to-end_encryption),
-which means that the cloud server, currently powered by AWS, can't see the data contents.
+which means that the cloud server, currently powered by [AWS](https://aws.amazon.com/), can't see the data contents.
 The used encryption method is [AES-GCM-SIV](https://en.wikipedia.org/wiki/AES-GCM-SIV)
 using a 256 bit key derived from the username and password with [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) using SHA256 and 310,000 iterations.
 
@@ -5995,6 +6046,11 @@ It is possible to use **DeepInfra** too (since version 1.2132).
 
 * Create an account on the [DeepInfra website](https://deepinfra.com/) and deploy a model, for example, *meta-llama/Llama-2-13b-chat-hf*
 * In the integration settings enter the URI https://api.deepinfra.com/v1/openai, an API key and the model name
+
+You can also use **Mistral**:
+
+* Create an account [via here](https://console.mistral.ai)
+* In the integration settings enter the URI https://api.mistral.ai/v1/, an API key and the model name
 
 <br>
 
@@ -6218,7 +6274,7 @@ Alternatively, see [this Wikipedia article](https://en.wikipedia.org/wiki/DNS-ba
 
 You can use [this tool](https://ssl-tools.net/tlsa-generator) to generate TLSA DNS records for DANE (select either PKIX-EE or DANE-EE).
 
-You can enable enforcing DNSSEC and/or DANA in the (advanced) account and identity settings (since version 1.2149).
+You can enable enforcing DNSSEC and/or DANE in the (advanced) account and identity settings (since version 1.2149).
 
 Note that only some email providers support DANE and that only a limited number of DNS servers support DNSSEC (January 2024: ~30%), which is required for DANE.
 Most private DNS providers support DNSSEC, though. You can configure private DNS in the Android network settings (since Android 9).
@@ -6238,7 +6294,10 @@ This is not a complete and exhaustive list.
 
 Please see [this article](https://www.zivver.com/blog/why-cisos-and-security-professionals-can-no-longer-rely-on-regular-email-for-the-sharing-of-personal-information) about why DANE is important.
 
-Note that DNSSEC and DANE are available in the GitHub version only.
+Note that DNSSEC and DANE are available in the GitHub version only and require Android 8.0 or later.
+
+Android doesn't support DNSSEC and therefore the MiniDNS library is used for this.
+You can report issues [here](https://github.com/MiniDNS/minidns/issues).
 
 <br>
 

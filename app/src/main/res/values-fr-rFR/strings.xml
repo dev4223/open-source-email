@@ -14,6 +14,7 @@
     <string name="app_cake_required">Espace de stockage minimum requis : %1$s</string>
     <string name="app_updated">Dernière mise à jour : %1$s</string>
     <string name="app_download">Téléchargé depuis : %1$s</string>
+    <string name="app_error">La plupart des messages d\'erreur ont des causes externes (réseau, serveur, etc.) ou bien sont provoqués par une configuration incorrecte, souvent non standard. Une mauvaise évaluation ne résout pas de tels problèmes. Demander de l\'aide est presque toujours plus efficace.</string>
     <string name="app_motd">        Avec Android 14/15 beta, des notifications \"L\'application ne répond pas\" peuvent apparaître.
         Google travaille sur une correction.
         Veuillez ne pas blâmer l\'application à cause de ce problème lié à Android !
@@ -593,6 +594,7 @@
     <string name="title_advanced_message_text_zoom2">Zoom du texte du message par défaut : %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Zoomer le texte du message également dans l\'éditeur de message</string>
     <string name="title_advanced_overview_mode">Zoomer sur les messages originaux pour les adapter à l\'écran</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Interligne : %1$s %%</string>
     <string name="title_advanced_hyphenation">Utiliser la césure automatique</string>
     <string name="title_advanced_contrast">Utiliser un contraste élevé pour le texte du message</string>
     <string name="title_advanced_monospaced">Utiliser une police à espacement fixe pour le texte du message</string>
@@ -608,6 +610,7 @@
     <string name="title_advanced_image_placeholders">Afficher les espaces réservés aux images</string>
     <string name="title_advanced_images_inline">Afficher automatiquement les images incluses</string>
     <string name="title_advanced_button_extra">Afficher des boutons supplémentaires en bas du message</string>
+    <string name="title_advanced_spacing">Intervalle entre les messages et les conversations</string>
     <string name="title_advanced_seekbar">Indiquer la position relative de la conversation avec un point</string>
     <string name="title_advanced_actionbar">Afficher la barre d\'action de conversation</string>
     <string name="title_advanced_actionbar_swap">Inverser les boutons de la corbeille et des archives</string>
@@ -753,7 +756,7 @@
         La méthode de chiffrement peut être sélectionnée avant l\'envoi dans la boîte de dialogue des options d\'envoi (appui long sur le bouton d\'envoi).
     </string>
     <string name="title_advanced_sign_default">Signer par défaut</string>
-    <string name="title_advanced_encrypt_default">Chiffrer par défaut</string>
+    <string name="title_advanced_encrypt_default">Signer et chiffrer par défaut</string>
     <string name="title_advanced_encrypt_auto">Chiffrer automatiquement lorsque toutes les clés des destinataires sont disponibles</string>
     <string name="title_advanced_encrypt_reply">Chiffrer automatiquement lors de la réponse à un message chiffré</string>
     <string name="title_advanced_auto_verify">Vérifier automatiquement les messages signés</string>
@@ -941,7 +944,7 @@
     <string name="title_advanced_notify_remove_hint">Les notifications de nouveaux messages seront toujours supprimées lors de leur balayage et du marquage des messages comme lus</string>
     <string name="title_advanced_notify_manage_hint">Appuyez sur le nom d’un canal pour définir ses propriétés</string>
     <string name="title_advanced_notify_samsung_hint">Pour gérer les canaux de notification, vous devrez peut-être activer ce paramètre Android : Notifications, Paramètres avancés, Gérer les catégories de notifications pour chaque application</string>
-    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Pour régler le son par défaut, configurer DND (ne pas déranger), etc.</string>
+    <string name="title_advanced_notify_manage_default_hint">Pour régler le son par défaut, configurer DND (ne pas déranger), etc.</string>
     <string name="title_advanced_notify_manage_service_hint">Pour désactiver la notification « Surveillance »</string>
     <string name="title_advanced_notify_separate_hint">Comment configurer les notifications pour les comptes, dossiers et expéditeurs ?</string>
     <string name="title_advanced_notify_preview_all_hint">Pour les appareils connectés qui peuvent afficher le texte complet (jusqu\'à 5 000 caractères)</string>
@@ -1335,6 +1338,7 @@
     <string name="title_keywords_btn">Mots-clés</string>
     <string name="title_labels_btn">Libellés (Gmail uniquement)</string>
     <string name="title_unsubscribe">Se désabonner</string>
+    <string name="title_unsubscribe_error">Le lien de désinscription dans le message ne fonctionne pas. Erreur %1$s</string>
     <string name="title_message_rule">Créer une règle</string>
     <string name="title_no_junk">Non indésirable</string>
     <string name="title_edit_subject">Modifier l\'objet&#8230;</string>
@@ -2319,6 +2323,11 @@
         <item>Petite</item>
         <item>Moyenne</item>
         <item>Grande</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Compact</item>
+        <item>Moyen</item>
+        <item>Grand</item>
     </string-array>
     <string name="title_size_tiny">Très petite</string>
     <string-array name="receiptNames">

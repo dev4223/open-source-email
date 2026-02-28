@@ -14,6 +14,7 @@
     <string name="app_cake_required">Minimalna wymagana ilość miejsca na dysku: %1$s</string>
     <string name="app_updated">Ostatnia aktualizacja: %1$s</string>
     <string name="app_download">Pobrano z: %1$s</string>
+    <string name="app_error">Większość komunikatów o błędach ma przyczyny zewnętrzne (sieć, serwer itp.) lub wynika z nieprawidłowej, często niestandardowej konfiguracji. Negatywna recenzja nie rozwiązuje takich problemów. Skorzystanie z pomocy technicznej jest prawie zawsze skuteczniejsze.</string>
     <string name="app_motd">        Z Androidem 14/15 beta, powiadomienia \'Aplikacja nie odpowiada\' występują sporadycznie.
         Google pracuje nad poprawką.
         Proszę nie winić aplikacji za problem, który jest problemem systemu Android!
@@ -106,7 +107,7 @@
         <item quantity="other">Zgłosić %1$d wiadomości jako spam?</item>
     </plurals>
     <string name="title_ask_spam_who">Zgłosić wiadomość od %1$s jako spam?</string>
-    <string name="title_junk_hint">Twój dostawca poczty e-mail jest odpowiedzialny za filtrowanie spamu. Aplikacja poczty e-mail nie ma wystarczających danych, aby wykonać tę operację.</string>
+    <string name="title_junk_hint">Twój dostawca poczty elektronicznej jest odpowiedzialny za filtrowanie mielonki. Aplikacja poczty elektronicznej nie ma wszystkich wystarczających danych, aby robić to niezawodnie.</string>
     <string name="title_junk_pop_hint">        Wiadomości od zablokowanych nadawców nie zostaną pobrane.
         Jeśli opcja \"Zostaw wiadomości na serwerze\" nie jest włączona, te wiadomości zostaną trwale utracone!
     </string>
@@ -619,6 +620,7 @@
     <string name="title_advanced_message_text_zoom2">Domyślne powiększenie tekstu wiadomości: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Powiększ tekst wiadomości również w edytorze wiadomości</string>
     <string name="title_advanced_overview_mode">Powiększ oryginalne wiadomości, aby dopasować je do ekranu</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Odstęp linii: %1$s %%</string>
     <string name="title_advanced_hyphenation">Użyj automatycznego dzielenia wyrazów</string>
     <string name="title_advanced_contrast">Użyj wysokiego kontrastu dla tekstu wiadomości</string>
     <string name="title_advanced_monospaced">Domyślnie użyj czcionki o stałej szerokości dla tekstu wiadomości</string>
@@ -634,6 +636,7 @@
     <string name="title_advanced_image_placeholders">Pokaż symbole zastępcze obrazu</string>
     <string name="title_advanced_images_inline">Automatycznie pokazuj wstawione obrazy</string>
     <string name="title_advanced_button_extra">Pokaż dodatkowe przyciski na dole wiadomości</string>
+    <string name="title_advanced_spacing">Odstęp pomiędzy wiadomościami a rozmowami</string>
     <string name="title_advanced_seekbar">Pokaż względną pozycję konwersacji za pomocą kropki</string>
     <string name="title_advanced_actionbar">Pokaż pasek akcji konwersacji</string>
     <string name="title_advanced_actionbar_swap">Zamień miejscami przycisk kosza i archiwum</string>
@@ -779,7 +782,7 @@
         Metoda szyfrowania może być wybrana przed wysłaniem w oknie dialogowym opcji wysyłania (przytrzymując przycisk wyślij).
     </string>
     <string name="title_advanced_sign_default">Domyślnie podpisuj</string>
-    <string name="title_advanced_encrypt_default">Domyślnie szyfruj</string>
+    <string name="title_advanced_encrypt_default">Podpisuj i szyfruj domyślnie</string>
     <string name="title_advanced_encrypt_auto">Automatycznie zaszyfruj, gdy wszystkie klucze odbiorców są dostępne</string>
     <string name="title_advanced_encrypt_reply">Automatycznie zaszyfruj przy odpowiadaniu na zaszyfrowaną wiadomość</string>
     <string name="title_advanced_auto_verify">Automatycznie weryfikuj podpisane wiadomości</string>
@@ -966,7 +969,7 @@
     <string name="title_advanced_notify_remove_hint">Powiadomienia o nowych wiadomościach będą zawsze usuwane po przesunięciu i oznaczeniu wiadomości jako przeczytane</string>
     <string name="title_advanced_notify_manage_hint">Dotknij nazwę kanału, aby ustawić właściwości kanału</string>
     <string name="title_advanced_notify_samsung_hint">Aby zarządzać kanałami powiadomień, może być konieczne włączenie tego ustawienia w systemie Android: Powiadomienia, Zaawansowane ustawienia, Zarządzaj kategoriami powiadomień dla każdej aplikacji</string>
-    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Aby ustawić domyślny dźwięk, skonfiguruj funkcję DND (nie przeszkadzać) itp.</string>
+    <string name="title_advanced_notify_manage_default_hint">Aby ustawić domyślny dźwięk, skonfiguruj funkcję DND (nie przeszkadzać) itp.</string>
     <string name="title_advanced_notify_manage_service_hint">Aby wyłączyć powiadomienie \"monitorowanie\"</string>
     <string name="title_advanced_notify_separate_hint">Jak skonfigurować powiadomienia dla kont, folderów i nadawców?</string>
     <string name="title_advanced_notify_preview_all_hint">Dla urządzeń do noszenia, które mogą wyświetlać pełny tekst (do 5000 znaków)</string>
@@ -1359,6 +1362,7 @@
     <string name="title_keywords_btn">Słowa kluczowe</string>
     <string name="title_labels_btn">Etykiety (tylko Gmail)</string>
     <string name="title_unsubscribe">Anuluj subskrypcję</string>
+    <string name="title_unsubscribe_error">Link do rezygnacji z subskrypcji w wiadomości nie działa. Błąd %1$s</string>
     <string name="title_message_rule">Utwórz regułę</string>
     <string name="title_no_junk">To nie jest spam</string>
     <string name="title_edit_subject">Edytuj temat &#8230;</string>
@@ -2343,6 +2347,11 @@
         <item>Mała</item>
         <item>Średnia</item>
         <item>Duża</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Kompaktowy</item>
+        <item>Średni</item>
+        <item>Przestronny</item>
     </string-array>
     <string name="title_size_tiny">Drobna</string>
     <string-array name="receiptNames">

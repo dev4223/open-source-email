@@ -16,17 +16,20 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.Icon;
+import android.net.Uri;
 import android.os.Build;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -42,6 +45,11 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.preference.PreferenceManager;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,7 +94,7 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
     private boolean allColors;
     private List<TupleMessageWidget> messages = new ArrayList<>();
 
-    private static final int MAX_WIDGET_MESSAGES = 500;
+    private static final int MAX_WIDGET_MESSAGES = 100;
 
     WidgetUnifiedRemoteViewsFactory(final Context context, Intent intent) {
         this.context = context;
@@ -172,13 +180,39 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
             db.endTransaction();
         }
 
+        File dir = new File(Helper.getExternalFilesDir(context), "avatars");
+        dir.mkdirs();
+
         hasColor = false;
         allColors = (account_color > 0);
-        for (TupleMessageWidget message : messages)
+        for (TupleMessageWidget message : messages) {
             if (message.accountColor == null)
                 allColors = false;
             else
                 hasColor = true;
+
+            File file = new File(dir, message.id + ".png");
+            if (!file.exists()) {
+                ContactInfo[] info = ContactInfo.get(context,
+                        message.account, null,
+                        message.bimi_selector, Boolean.TRUE.equals(message.dmarc),
+                        message.isForwarder() ? message.submitter : message.from);
+                Bitmap bm = (info.length == 0 ? null : info[0].getPhotoBitmap());
+                if (bm != null) {
+                    int dp36 = Helper.dp2pixels(context, 36);
+                    bm = Bitmap.createScaledBitmap(bm, dp36, bm.getHeight() * dp36 / bm.getWidth(), true);
+                }
+
+                if (bm != null) {
+                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                        bm.compress(Bitmap.CompressFormat.PNG, ImageHelper.DEFAULT_PNG_COMPRESSION, os);
+                    } catch (IOException ex) {
+                        Log.e(ex);
+                    }
+                }
+            }
+
+        }
     }
 
     @Override
@@ -248,14 +282,18 @@ public class WidgetUnifiedRemoteViewsFactory implements RemoteViewsService.Remot
             views.setViewVisibility(R.id.stripe, hasColor && account_color == 1 ? View.VISIBLE : View.GONE);
 
             if (avatars) {
-                ContactInfo[] info = ContactInfo.get(context,
-                        message.account, null,
-                        message.bimi_selector, Boolean.TRUE.equals(message.dmarc),
-                        message.isForwarder() ? message.submitter : message.from);
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA)
-                    views.setImageViewBitmap(R.id.avatar, info.length == 0 ? null : info[0].getPhotoBitmap());
-                else
-                    views.setImageViewIcon(R.id.avatar, Icon.createWithBitmap(info[0].getPhotoBitmap()));
+                File dir = new File(Helper.getExternalFilesDir(context), "avatars");
+                File file = new File(dir, message.id + ".png");
+                if (file.exists()) {
+                    Uri uri = FileProviderEx.getUri(context, BuildConfig.APPLICATION_ID, file);
+                    Intent intent = new Intent(Intent.ACTION_MAIN);
+                    intent.addCategory(Intent.CATEGORY_HOME);
+                    List<ResolveInfo> resInfoList = context.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                    for (ResolveInfo resolveInfo : resInfoList)
+                        context.grantUriPermission(resolveInfo.activityInfo.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    views.setImageViewUri(R.id.avatar, uri);
+                } else
+                    views.setImageViewBitmap(R.id.avatar, null);
             }
             views.setViewVisibility(R.id.avatar, avatars ? View.VISIBLE : View.GONE);
 

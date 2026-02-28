@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED;
@@ -294,7 +294,7 @@ public class Helper {
 
     static ExecutorService getDownloadTaskExecutor() {
         if (sDownloadExecutor == null)
-            sDownloadExecutor = getBackgroundExecutor(0, "download");
+            sDownloadExecutor = getBackgroundExecutor(5, "download");
         return sDownloadExecutor;
     }
 
@@ -1830,6 +1830,16 @@ public class Helper {
         return (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
     }
 
+    static Boolean isLarge(Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            ApplicationInfo info = pm.getApplicationInfo(context.getPackageName(), 0);
+            return (info.flags & ApplicationInfo.FLAG_LARGE_HEAP) != 0;
+        } catch (Throwable ex) {
+            return null;
+        }
+    }
+
     static String getMIUIVersion() {
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
@@ -2984,8 +2994,8 @@ public class Helper {
             result.name = uri.getUri().getLastPathSegment();
 
         // Check type
-        if (uri.getType() != null)
-            result.type = uri.getType();
+        if (TextUtils.isEmpty(result.type) && uri.getType() != null)
+            result.type = uri.getType(); // Shared type when no document type
         if (!TextUtils.isEmpty(result.type))
             try {
                 new ContentType(result.type);
@@ -3671,7 +3681,34 @@ public class Helper {
                                         });
                                     }
                                 });
-                        prompt.authenticate(info.build());
+                        try {
+                            prompt.authenticate(info.build());
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                            try {
+                                prompt.cancelAuthentication();
+                            } catch (Throwable ignored) {
+                            }
+                            /*
+                                java.lang.SecurityException: eu.faircode.email from uid 10353 not allowed to perform USE_BIOMETRIC
+                                    at android.os.Parcel.createExceptionOrNull(Parcel.java:3354)
+                                    at android.os.Parcel.createException(Parcel.java:3338)
+                                    at android.os.Parcel.readException(Parcel.java:3321)
+                                    at android.os.Parcel.readException(Parcel.java:3263)
+                                    at android.hardware.biometrics.IAuthService$Stub$Proxy.authenticate(IAuthService.java:597)
+                                    at android.hardware.biometrics.BiometricPrompt.authenticateInternal(BiometricPrompt.java:1773)
+                                    at android.hardware.biometrics.BiometricPrompt.authenticateInternal(BiometricPrompt.java:1720)
+                                    at android.hardware.biometrics.BiometricPrompt.authenticate(BiometricPrompt.java:1698)
+                                    at androidx.biometric.BiometricFragment$Api28Impl.authenticate(SourceFile:1)
+                                    at androidx.biometric.BiometricFragment.authenticateWithBiometricPrompt(SourceFile:38)
+                                    at androidx.biometric.BiometricFragment.showBiometricPromptForAuthentication(SourceFile:119)
+                                    at androidx.biometric.BiometricFragment.showPromptForAuthentication(SourceFile:54)
+                                    at androidx.biometric.BiometricFragment.authenticate(SourceFile:98)
+                                    at androidx.biometric.BiometricPrompt.authenticateInternal(SourceFile:29)
+                                    at androidx.biometric.BiometricPrompt.authenticate(SourceFile:4)
+                                    at eu.faircode.email.Helper$12.onClick(SourceFile:120)
+                            */
+                        }
                     } else if (secure)
                         tilPassword.getEditText().setTransformationMethod(null);
                 }

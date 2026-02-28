@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -25,6 +25,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.core.net.MailTo;
+import androidx.core.util.PatternsCompat;
 import androidx.preference.PreferenceManager;
 
 import java.net.Inet4Address;
@@ -165,6 +166,8 @@ public class DnsBlockList {
         boolean numeric = host.startsWith("[") && host.endsWith("]");
         if (numeric)
             host = host.substring(1, host.length() - 1);
+        else if (!PatternsCompat.DOMAIN_NAME.matcher(host).matches())
+            return null;
 
         return isJunk(context, host, true, BLOCK_LISTS);
     }

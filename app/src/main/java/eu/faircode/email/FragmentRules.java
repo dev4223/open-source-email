@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -508,7 +508,7 @@ public class FragmentRules extends FragmentBase {
                             }
                             break;
                         case EntityRule.TYPE_ANSWER:
-                            long identity = jaction.getLong("identity");
+                            long identity = jaction.optLong("identity");
                             long answer = jaction.optLong("answer", -1L);
                             EntityIdentity i = db.identity().getIdentity(identity);
                             EntityAnswer t = db.answer().getAnswer(answer);

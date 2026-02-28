@@ -26,9 +26,175 @@ The security audit revealed no problems, so Google accounts [can continue to be 
 
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
 
-### [Ceratonykus](https://en.wikipedia.org/wiki/Ceratonykus)
+### [Diuqin](https://en.wikipedia.org/wiki/Diuqin)
 
 ### Next version (Work in progress)
+
+### 1.2312 2026-02-16
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2311 2026-02-07
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2310 2026-01-20
+
+* Fixed crash on older Android versions
+
+### 1.2309 2026-01-20
+
+* Added option for line spacing
+* Performance optimizations
+* Accessibility improvements
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2308 2025-12-24
+
+* Added undo to swipe to hide
+* Added Roboto monospace font for devices without monospace font
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2307 2025-12-15
+
+* Fixed message list widget flickering on some devices
+* Added option to select space between messages (display settings tab page)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2306 2025-12-02 *
+
+* Fixed scroll issues with the original message view
+
+### 1.2305 2025-12-01
+
+* Fixed deleting Gmail labels
+
+### 1.2304 2025-11-28
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2303 2025-11-25
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Added resizing of HEIC/HEIF encoded images (Android 9 or later only)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [Brave's debounce list](https://github.com/brave/brave-browser/wiki/Debouncing)
+
+### 1.2302 2025-10-30
+
+* Fixed all reported bugs
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2301 2025-10-23
+
+* Fixed all reported bugs
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### [Ceratonykus](https://en.wikipedia.org/wiki/Ceratonykus)
+
+### 1.2300 2025-10-06
+
+* Fixed all reported bugs
+* Added collapsible attachments for the message editor
+* Updated [S/MIME root certificates](https://wiki.mozilla.org/CA/Included_Certificates)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2299 2025-09-30 *
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2298 2025-09-22
+
+* Added support for Open Xchange flag colors
+* Improved scroll behavior of original message view for most devices
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2297 2025-09-18
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [BouncyCastle](https://www.bouncycastle.org/)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2296 2025-09-12
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2295 2025-09-01 *
+
+* Fixed scroll issues with delayed marking read
+* Fixed selecting messages when swiping a message
+
+### 1.2294 2025-08-30
+
+* One-click unsubscribe improvements
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2293 2025-08-25
+
+* One-click unsubscribe improvements
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2292 2025-08-18 *
+
+* Fixed unchanged external drafts being saved
+* Added support for "one-click" unsubscribe
+* Small improvements and minor bug fixes
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+
+### 1.2291 2025-08-13
+
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2290 2025-08-11
+
+* Fixed all reported bugs
+* A conversation will be important if any message is marked important
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2289 2025-08-02
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [Brave's debounce list](https://github.com/brave/brave-browser/wiki/Debouncing)
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
 
 ### 1.2288 2025-07-21
 

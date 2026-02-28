@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
@@ -171,6 +171,11 @@ public class DebugHelper {
             "networkaddress.cache.negative.ttl"
     ));
 
+    private static final List<String> SECURITY_PROPS = Collections.unmodifiableList(Arrays.asList(
+            "jdk.tls.disabledAlgorithms",
+            "jdk.tls.client.protocols"
+    ));
+
     static boolean isAvailable() {
         return true;
     }
@@ -264,12 +269,21 @@ public class DebugHelper {
 
         PackageManager pm = context.getPackageManager();
 
+        int vmajor = 0;
+        int vminor = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            vmajor = Build.getMajorSdkVersion(Build.VERSION.SDK_INT_FULL);
+            vminor = Build.getMinorSdkVersion(Build.VERSION.SDK_INT_FULL);
+        }
+
         // Get version info
         sb.append(String.format("%s %s\r\n", context.getString(R.string.app_name), getVersionInfo(context)));
         sb.append(String.format("Package: %s uid: %d\r\n",
                 BuildConfig.APPLICATION_ID, android.os.Process.myUid()));
-        sb.append(String.format("Android: %s (SDK device=%d target=%d)\r\n",
-                Build.VERSION.RELEASE, Build.VERSION.SDK_INT, Helper.getTargetSdk(context)));
+        sb.append(String.format("Android: %s (SDK device=%d target=%d full=%d.%d)\r\n",
+                Build.VERSION.RELEASE,
+                Build.VERSION.SDK_INT, Helper.getTargetSdk(context),
+                vmajor, vminor));
 
         String miui = Helper.getMIUIVersion();
         sb.append(String.format("MIUI: %s\r\n", miui == null ? "-" : miui));
@@ -437,13 +451,7 @@ public class DebugHelper {
                     Helper.formatDuration(running), Helper.formatDuration(cpu), util));
         }
 
-        Boolean largeHeap;
-        try {
-            ApplicationInfo info = pm.getApplicationInfo(context.getPackageName(), 0);
-            largeHeap = (info.flags & ApplicationInfo.FLAG_LARGE_HEAP) != 0;
-        } catch (Throwable ex) {
-            largeHeap = null;
-        }
+        Boolean largeHeap = Helper.isLarge(context);
 
         ActivityManager am = Helper.getSystemService(context, ActivityManager.class);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -1506,7 +1514,7 @@ public class DebugHelper {
                                 Notification.VISIBILITY_SECRET));
                 size += write(os, String.format("Interruption filter\r\n"));
                 size += write(os, String.format("- All: no notifications are suppressed.\r\n"));
-                size += write(os, String.format("- Priority: all notifications are suppressed except those that match the priority criteria. Some audio streams are muted.\r\n"));
+                size += write(os, String.format("- Priority: all notifications are suppressed except those that match the priority criteria (=do-not-disturb). Some audio streams are muted.\r\n"));
                 size += write(os, String.format("- None: all notifications are suppressed and all audio streams (except those used for phone calls) and vibrations are muted.\r\n"));
                 size += write(os, String.format("- Alarm: all notifications except those of category alarm are suppressed. Some audio streams are muted.\r\n"));
             }
@@ -1792,6 +1800,14 @@ public class DebugHelper {
                 for (String prop : NETWORK_PROPS)
                     size += write(os, prop + "=" + System.getProperty(prop) + "\r\n");
                 size += write(os, "\r\n");
+
+                try {
+                    for (String prop : SECURITY_PROPS)
+                        size += write(os, prop + "=" + Security.getProperty(prop) + "\r\n");
+                    size += write(os, "\r\n");
+                } catch (Throwable ex) {
+                    size += write(os, String.format("%s\r\n", ex));
+                }
 
                 ApplicationInfo ai = context.getApplicationInfo();
                 if (ai != null)

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.system.OsConstants.ECONNREFUSED;
@@ -1430,9 +1430,8 @@ public class EmailProvider implements Parcelable {
                         for (InetAddress iaddr : DnsHelper.getAllByName(context, host)) {
                             InetSocketAddress address = new InetSocketAddress(iaddr, Server.this.port);
 
-                            SocketFactory factory = (starttls
-                                    ? SocketFactory.getDefault()
-                                    : SSLSocketFactory.getDefault());
+                            SSLSocketFactory sslFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                            SocketFactory factory = (starttls ? SocketFactory.getDefault() : sslFactory);
                             try (Socket socket = factory.createSocket()) {
                                 EntityLog.log(context, "Connecting to " + address);
                                 socket.connect(address, SCAN_TIMEOUT);
@@ -1443,7 +1442,7 @@ public class EmailProvider implements Parcelable {
                                 SSLSocket sslSocket = null;
                                 try {
                                     if (starttls)
-                                        sslSocket = ConnectionHelper.starttls(socket, host, port, context);
+                                        sslSocket = ConnectionHelper.starttls(sslFactory, socket, host, port, context);
                                     else
                                         sslSocket = (SSLSocket) socket;
 

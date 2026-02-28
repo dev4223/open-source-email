@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -151,7 +151,7 @@ public class AI {
             return context.getString(R.string.title_summarize);
     }
 
-    static Spanned getSummaryText(Context context, EntityMessage message, long template) throws JSONException, IOException {
+    static Spanned getSummaryText(Context context, EntityMessage message, long template, String prompt) throws JSONException, IOException {
         File file = message.getFile(context);
         if (!file.exists())
             return null;
@@ -171,8 +171,8 @@ public class AI {
         if (TextUtils.isEmpty(body))
             return null;
 
-        String templatePrompt = null;
-        if (template > 0L) {
+        String templatePrompt = prompt;
+        if (templatePrompt == null && template > 0L) {
             DB db = DB.getInstance(context);
             EntityAnswer t = db.answer().getAnswer(template);
             if (t != null) {

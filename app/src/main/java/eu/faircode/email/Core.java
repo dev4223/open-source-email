@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -126,7 +126,7 @@ import javax.mail.search.SentDateTerm;
 
 class Core {
     static final int DEFAULT_RANGE_SIZE = 1000;
-    static final int DEFAULT_CHUNK_SIZE = 50;
+    static final int DEFAULT_CHUNK_SIZE = 20;
 
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
@@ -138,6 +138,7 @@ class Core {
     private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
     private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 5;
     private static final long EXISTS_RETRY_DELAY = 20 * 1000L; // milliseconds
+    private static final long EXISTS_RETRY_DELAY_OUTLOOK = 15 * 60 * 1000L; // milliseconds
     private static final int FIND_RETRY_COUNT = 3; // times
     private static final long FIND_RETRY_DELAY = 5 * 1000L; // milliseconds
     private static final int POP3_KEEP_EXTRA = 100; // messages
@@ -588,10 +589,11 @@ class Core {
                             op.error = Log.formatThrowable(ex, !EntityOperation.BODY.equals(op.name));
                             db.operation().setOperationError(op.id, op.error);
 
-                            if (message != null &&
+                            if (message != null && op.error != null &&
                                     !EntityOperation.FETCH.equals(op.name) &&
                                     !EntityOperation.ATTACHMENT.equals(op.name) &&
-                                    !(ex instanceof IllegalArgumentException))
+                                    !(ex instanceof IllegalArgumentException) &&
+                                    !(account.isGmail() && op.error.toLowerCase(Locale.ROOT).contains("system error")))
                                 db.message().setMessageError(message.id, op.error);
 
                             db.setTransactionSuccessful();
@@ -1865,6 +1867,7 @@ class Core {
         try {
             if (perform_expunge && account.isGmail() && gmail_delete_all) {
                 EntityFolder trash = db.folder().getFolderByType(account.id, EntityFolder.TRASH);
+                EntityFolder drafts = db.folder().getFolderByType(account.id, EntityFolder.DRAFTS);
                 if (trash != null) {
                     Map<String, Long> folders = new HashMap<>();
                     EntityFolder archive = db.folder().getFolderByType(account.id, EntityFolder.ARCHIVE);
@@ -1872,9 +1875,14 @@ class Core {
                         folders.put(archive.name, archive.id);
 
                     List<Long> uids = new ArrayList<>();
-                    for (EntityMessage message : messages)
-                        if (message.uid != null)
+                    List<EntityMessage> process = new ArrayList<>();
+                    for (EntityMessage message : new ArrayList<>(messages))
+                        if (message.uid != null &&
+                                (drafts == null || !Objects.equals(message.folder, drafts.id))) {
                             uids.add(message.uid);
+                            messages.remove(message);
+                            process.add(message);
+                        }
 
                     IMAPFolder itrash = (IMAPFolder) istore.getFolder(trash.name);
                     Message[] imessages = ifolder.getMessagesByUID(Helper.toLongArray(uids));
@@ -1901,11 +1909,12 @@ class Core {
                     itrash.open(READ_WRITE);
                     try {
                         List<Message> trashed = new ArrayList<>();
-                        for (EntityMessage message : messages) {
-                            Message[] itrashed = itrash.search(new MessageIDTerm(message.msgid));
-                            if (itrashed != null && itrashed.length == 1)
-                                trashed.add(itrashed[0]);
-                        }
+                        for (EntityMessage message : process)
+                            if (!TextUtils.isEmpty(message.msgid)) {
+                                Message[] itrashed = itrash.search(new MessageIDTerm(message.msgid));
+                                if (itrashed != null && itrashed.length == 1)
+                                    trashed.add(itrashed[0]);
+                            }
 
                         itrash.setFlags(trashed.toArray(new Message[0]), new Flags(Flags.Flag.DELETED), true);
                         if (perform_expunge)
@@ -1918,7 +1927,8 @@ class Core {
                     for (long fid : folders.values())
                         EntityOperation.sync(context, fid, false);
 
-                    return;
+                    if (messages.isEmpty())
+                        return;
                 }
             }
 
@@ -2468,7 +2478,7 @@ class Core {
                     " found=" + (imessages == null ? null : imessages.length) +
                     " host=" + account.host);
         else if (imessages == null || imessages.length == 0) {
-            long next = new Date().getTime() + EXISTS_RETRY_DELAY;
+            long next = new Date().getTime() + (account.isOutlook() ? EXISTS_RETRY_DELAY_OUTLOOK : EXISTS_RETRY_DELAY);
 
             Intent intent = new Intent(context, ServiceSynchronize.class);
             intent.setAction("exists:" + message.id);
@@ -3023,7 +3033,7 @@ class Core {
                         folder.setSpecials(account);
 
                         if (selectable) {
-                            folder.inheritFrom(parent);
+                            folder.inheritFrom(parent, context);
                             if (user && sync_added_folders && EntityFolder.USER.equals(type)) {
                                 folder.synchronize = true;
                                 folder.notify = true;
@@ -3348,7 +3358,6 @@ class Core {
         boolean sync_quick_pop = prefs.getBoolean("sync_quick_pop", true);
         boolean notify_known = prefs.getBoolean("notify_known", false);
         boolean native_dkim = prefs.getBoolean("native_dkim", false);
-        boolean strict_alignment = prefs.getBoolean("strict_alignment", false);
         boolean download_eml = prefs.getBoolean("download_eml", false);
         boolean download_plain = prefs.getBoolean("download_plain", false);
         boolean check_blocklist = prefs.getBoolean("check_blocklist", false);

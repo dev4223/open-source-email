@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -104,6 +104,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swThreading;
     private SwitchCompat swThreadingUnread;
     private SwitchCompat swIndentation;
+    private Spinner spSpacing;
     private SwitchCompat swSeekbar;
     private SwitchCompat swActionbar;
     private SwitchCompat swActionbarSwap;
@@ -175,6 +176,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SeekBar sbMessageZoom;
     private SwitchCompat swEditorZoom;
     private SwitchCompat swOverviewMode;
+    private TextView tvLineSpacing;
+    private SeekBar sbLineSpacing;
 
     private SwitchCompat swContrast;
     private SwitchCompat swHyphenation;
@@ -221,7 +224,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "cards", "beige", "tabular_card_bg", "shadow_unread", "shadow_border", "shadow_highlight", "dividers", "tabular_unread_bg",
             "portrait2", "portrait2c", "landscape", "close_pane", "column_width",
             "hide_toolbar", "edge_to_edge", "nav_options", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "show_unexposed",
-            "threading", "threading_unread", "indentation", "seekbar", "actionbar", "actionbar_swap", "actionbar_color",
+            "threading", "threading_unread", "indentation", "spacing", "seekbar", "actionbar", "actionbar_swap", "actionbar_color",
             "highlight_unread", "highlight_color", "account_color", "account_color_size",
             "avatars", "bimi", "bimi_vmc", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "ddg_icons", "favicons_dmarc", "generated_icons", "identicons",
             "circular", "saturation", "brightness", "threshold",
@@ -231,7 +234,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "keywords_header", "labels_header", "flags", "flags_background",
             "preview", "preview_italic", "preview_lines", "align_header",
             "addresses", "hide_attachments",
-            "message_zoom", "editor_zoom", "overview_mode",
+            "message_zoom", "editor_zoom", "overview_mode", "line_spacing",
             "hyphenation", "display_font", "contrast", "monospaced_pre",
             "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images", "button_extra",
@@ -289,6 +292,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swThreading = view.findViewById(R.id.swThreading);
         swThreadingUnread = view.findViewById(R.id.swThreadingUnread);
         swIndentation = view.findViewById(R.id.swIndentation);
+        spSpacing = view.findViewById(R.id.spSpacing);
         swSeekbar = view.findViewById(R.id.swSeekbar);
         swActionbar = view.findViewById(R.id.swActionbar);
         swActionbarSwap = view.findViewById(R.id.swActionbarSwap);
@@ -359,6 +363,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         sbMessageZoom = view.findViewById(R.id.sbMessageZoom);
         swEditorZoom = view.findViewById(R.id.swEditorZoom);
         swOverviewMode = view.findViewById(R.id.swOverviewMode);
+        tvLineSpacing = view.findViewById(R.id.tvLineSpacing);
+        sbLineSpacing = view.findViewById(R.id.sbLineSpacing);
         swContrast = view.findViewById(R.id.swContrast);
         swHyphenation = view.findViewById(R.id.swHyphenation);
         tvHyphenationHint = view.findViewById(R.id.tvHyphenationHint);
@@ -725,6 +731,18 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("indentation", checked).apply();
+            }
+        });
+
+        spSpacing.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                prefs.edit().putInt("spacing", position).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("spacing").apply();
             }
         });
 
@@ -1297,6 +1315,28 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        sbLineSpacing.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int line_spacing = progress + 50;
+                if (line_spacing == 100)
+                    prefs.edit().remove("line_spacing").apply();
+                else
+                    prefs.edit().putInt("line_spacing", line_spacing).apply();
+                tvLineSpacing.setText(getString(R.string.title_advanced_line_spacing, NF.format(line_spacing)));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+        });
+
         swContrast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1545,6 +1585,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
         if ("message_zoom".equals(key))
             return;
+        if ("line_spacing".equals(key))
+            return;
 
         getMainHandler().removeCallbacks(update);
         getMainHandler().postDelayed(update, FragmentOptions.DELAY_SETOPTIONS);
@@ -1642,6 +1684,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             swThreadingUnread.setEnabled(swThreading.isChecked());
             swIndentation.setChecked(prefs.getBoolean("indentation", false));
             swIndentation.setEnabled(swCards.isChecked() && swThreading.isChecked());
+            spSpacing.setSelection(prefs.getInt("spacing", 0));
             swSeekbar.setChecked(prefs.getBoolean("seekbar", false));
             swActionbar.setChecked(prefs.getBoolean("actionbar", true));
             swActionbarSwap.setChecked(prefs.getBoolean("actionbar_swap", false));
@@ -1765,6 +1808,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
             swEditorZoom.setChecked(prefs.getBoolean("editor_zoom", true));
             swOverviewMode.setChecked(prefs.getBoolean("overview_mode", false));
+
+            int line_spacing = prefs.getInt("line_spacing", 100);
+            tvLineSpacing.setText(getString(R.string.title_advanced_line_spacing, NF.format(line_spacing)));
+            if (line_spacing >= 50 && line_spacing <= 150)
+                sbLineSpacing.setProgress(line_spacing - 50);
 
             swContrast.setChecked(prefs.getBoolean("contrast", false));
             swHyphenation.setChecked(prefs.getBoolean("hyphenation", false));

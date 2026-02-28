@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_search">Пошук FairEmail</string>
+    <string name="app_search">Пошук у FairEmail</string>
     <string name="app_send_self">Адправіць сабе</string>
     <string name="app_changelog">Журнал змяненняў</string>
     <string name="app_welcome">FairEmail - гэта праграма электроннай пошты з адкрытым зыходным кодам, яркая арыентавана на прыватнасць і бяспеку. Па гэтай прычыне некаторыя функцыі могуць адрознівацца ад функцый, якія вы выкарыстоўваеце ў іншых падобных праграмах.</string>
@@ -14,6 +14,7 @@
     <string name="app_cake_required">Мінімальна патрэбны памер сховішча: %1$s</string>
     <string name="app_updated">Апошняе абнаўленне: %1$s</string>
     <string name="app_download">Спампавана з %1$s</string>
+    <string name="app_error">Большасць апавяшчэнняў пра памылкі маюць знешнія прычыны (сетка, сервер і г. д.) або выкліканыя няправільнай, часта нестандартнай канфігурацыяй. Дрэнны водгук не вырашае такіх праблем. Зварот у службу падтрымкі амаль заўсёды больш эфектыўны.</string>
     <string name="app_motd">        У бэта-версіі Android 14/15 перыядычна з\'яўляюцца апавяшчэнні «Праграма не адказвае».
          Google працуе над выпраўленнем памылкі.
          Калі ласка, не абвінавачвайце праграму ў гэтай праблеме Android!
@@ -622,6 +623,7 @@
     <string name="title_advanced_message_text_zoom2">Стандартны маштаб тэксту паведамлення: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Павялічваць тэкст паведамлення таксама ў рэдактары паведамленняў</string>
     <string name="title_advanced_overview_mode">Павялічваць маштаб арыгінальных паведамленняў пад памер экрана</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Міжрадковы інтэрвал: %1$s %%</string>
     <string name="title_advanced_hyphenation">Выкарыстоўваць аўтаматычны перанос</string>
     <string name="title_advanced_contrast">Ужываць высокі кантраст да тэксту паведамлення</string>
     <string name="title_advanced_monospaced">Выкарыстоўваць шрыфт аднолькавай шырыні для тэксту паведамлення па змаўчанні</string>
@@ -637,6 +639,7 @@
     <string name="title_advanced_image_placeholders">Паказваць запаўняльнікі выяў</string>
     <string name="title_advanced_images_inline">Аўтаматычна паказваць убудаваныя выявы</string>
     <string name="title_advanced_button_extra">Паказваць дадатковыя кнопкі пад паведамленнем</string>
+    <string name="title_advanced_spacing">Прамежак паміж паведамленнямі і размовамі</string>
     <string name="title_advanced_seekbar">Паказваць з дапамогай кропкі адносную пазіцыю размовы</string>
     <string name="title_advanced_actionbar">Паказваць панэль дзеянняў для размовы</string>
     <string name="title_advanced_actionbar_swap">Памяняць месцамі кнопкі выдалення і архівацыі</string>
@@ -782,7 +785,7 @@
          Метад шыфравання можна выбраць перад адпраўкай у дыялогавым акне параметраў адпраўкі (выклікаецца доўгім націсканнем на кнопку адпраўкі).
     </string>
     <string name="title_advanced_sign_default">Падпісваць па змаўчанні</string>
-    <string name="title_advanced_encrypt_default">Шыфраваць па змаўчанні</string>
+    <string name="title_advanced_encrypt_default">Падпісваць і шыфраваць па змаўчанні</string>
     <string name="title_advanced_encrypt_auto">Аўтаматычна шыфраваць, калі ключы ўсіх атрымальнікаў даступныя</string>
     <string name="title_advanced_encrypt_reply">Аўтаматычна шыфраваць пры адказе на зашыфраванае паведамленне</string>
     <string name="title_advanced_auto_verify">Аўтаматычна правяраць падпісаныя паведамленні</string>
@@ -970,6 +973,7 @@
     <string name="title_advanced_notify_remove_hint">Апавяшчэнні аб новых паведамленнях заўсёды будуць выдаляцца пры іх ссоўванні і адзначэнні паведамленняў прачытанымі</string>
     <string name="title_advanced_notify_manage_hint">Націсніце на назву канала, каб задаць яго ўласцівасці</string>
     <string name="title_advanced_notify_samsung_hint">Каб кіраваць каналамі апавяшчэнняў, вам можа спатрэбіцца ўключыць наступную опцыю у наладах Android: Апавяшчэнні - Дадатковыя налады - Кіраванне катэгорыямі апавяшчэнняў для кожнай праграмы</string>
+    <string name="title_advanced_notify_manage_default_hint">Каб прызначыць гук па змаўчанні, наладзьце рэжым DND (не турбаваць) і г. д.</string>
     <string name="title_advanced_notify_manage_service_hint">Дазваляе адключыць \'маніторынгавае\' апавяшчэнне</string>
     <string name="title_advanced_notify_separate_hint">Як мне наладзіць апавяшчэнні для ўліковых запісаў, папак і адпраўнікоў?</string>
     <string name="title_advanced_notify_preview_all_hint">Для партатыўных прылад, якія могуць паказваць поўны тэкст (да 5000 знакаў)</string>
@@ -1364,6 +1368,7 @@
     <string name="title_keywords_btn">Ключавыя словы</string>
     <string name="title_labels_btn">Ярлыкі (толькі Gmail)</string>
     <string name="title_unsubscribe">Адпісацца</string>
+    <string name="title_unsubscribe_error">Спасылка для адпіскі ад рассылкі ў паведамленні не працуе. Памылка %1$s</string>
     <string name="title_message_rule">Стварыць правіла</string>
     <string name="title_no_junk">Не спам</string>
     <string name="title_edit_subject">Рэдагаваць тэму &#8230;</string>
@@ -2343,6 +2348,11 @@
         <item>Дробны</item>
         <item>Сярэдні</item>
         <item>Вялікі</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Кампактны</item>
+        <item>Сярэдні</item>
+        <item>Шырокі</item>
     </string-array>
     <string name="title_size_tiny">Мінімальны</string>
     <string-array name="receiptNames">

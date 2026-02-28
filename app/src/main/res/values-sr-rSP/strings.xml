@@ -275,7 +275,6 @@
     <string name="title_advanced_pin">ПИН</string>
     <string name="title_advanced_biometrics_timeout">Време истека за биометријску проверу идентитета</string>
     <string name="title_advanced_sign_default">Подразумевани потписуј</string>
-    <string name="title_advanced_encrypt_default">Подразумевано шифруј</string>
     <string name="title_advanced_auto_decrypt">Аутоматски дешифруј поруке</string>
     <string name="title_advanced_openpgp">OpenPGP провајдер</string>
     <string name="title_advanced_manage_certificates">Управљање јавним кључевима</string>
@@ -1071,6 +1070,11 @@
         <item>Мала</item>
         <item>Средња</item>
         <item>Велика</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Compact</item>
+        <item>Средња</item>
+        <item>Roomy</item>
     </string-array>
     <string name="title_size_tiny">Сићушно</string>
     <string-array name="signatureNames">

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -184,7 +184,7 @@ public class EntityRule {
             try {
                 JSONObject jaction = new JSONObject(rule.action);
                 int type = jaction.getInt("type");
-                if (type == TYPE_SUMMARIZE)
+                if (type == TYPE_SUMMARIZE || type == TYPE_AUTOMATION)
                     return true;
 
                 JSONObject jcondition = new JSONObject(rule.condition);
@@ -680,7 +680,7 @@ public class EntityRule {
             case TYPE_TTS:
                 return onActionTts(context, message, browsed, jaction);
             case TYPE_AUTOMATION:
-                return onActionAutomation(context, message, jaction);
+                return onActionAutomation(context, message, jaction, html);
             case TYPE_DELETE:
                 return onActionDelete(context, message, jaction);
             case TYPE_SOUND:
@@ -865,24 +865,41 @@ public class EntityRule {
             create = create.replace("$week$", week);
             create = create.replace("$day$", day);
 
-            String user = null;
-            String extra = null;
-            String domain = null;
+            String fromUser = null;
+            String fromExtra = null;
+            String fromDomain = null;
             if (message.from != null &&
                     message.from.length > 0 &&
                     message.from[0] instanceof InternetAddress) {
                 InternetAddress from = (InternetAddress) message.from[0];
-                user = UriHelper.getEmailUser(from.getAddress());
-                domain = UriHelper.getEmailDomain(from.getAddress());
-                if (user != null) {
-                    int plus = user.indexOf('+');
-                    if (plus > 0)
-                        extra = user.substring(plus + 1);
-                }
+                fromUser = UriHelper.getEmailUser(from.getAddress());
+                fromExtra = UriHelper.getEmailExtra(from.getAddress());
+                fromDomain = UriHelper.getEmailDomain(from.getAddress());
             }
-            create = create.replace("$user$", user == null ? "" : user);
-            create = create.replace("$extra$", extra == null ? "" : extra);
-            create = create.replace("$domain$", domain == null ? "" : domain);
+
+            String toUser = null;
+            String toExtra = null;
+            String toDomain = null;
+            if (message.to != null &&
+                    message.to.length > 0 &&
+                    message.to[0] instanceof InternetAddress) {
+                InternetAddress to = (InternetAddress) message.to[0];
+                toUser = UriHelper.getEmailUser(to.getAddress());
+                toExtra = UriHelper.getEmailExtra(to.getAddress());
+                toDomain = UriHelper.getEmailDomain(to.getAddress());
+            }
+
+            create = create.replace("$user$", fromUser == null ? "" : fromUser);
+            create = create.replace("$extra$", fromExtra == null ? "" : fromExtra);
+            create = create.replace("$domain$", fromDomain == null ? "" : fromDomain);
+
+            create = create.replace("$user:from$", fromUser == null ? "" : fromUser);
+            create = create.replace("$extra:from$", fromExtra == null ? "" : fromExtra);
+            create = create.replace("$domain:from$", fromDomain == null ? "" : fromDomain);
+
+            create = create.replace("$user:to$", toUser == null ? "" : toUser);
+            create = create.replace("$extra:to$", toExtra == null ? "" : toExtra);
+            create = create.replace("$domain:to$", toDomain == null ? "" : toDomain);
 
             if (create.contains("$group$")) {
                 EntityContact local = null;
@@ -960,6 +977,11 @@ public class EntityRule {
             String name = folder.name + (folder.separator == null ? "" : folder.separator) + create;
             EntityFolder created = db.folder().getFolderByName(folder.account, name);
             if (created == null) {
+                EntityLog.log(context, "Creating folder=" + name +
+                        " parent=" + folder.name +
+                        " separator=" + folder.separator +
+                        " pattern=" + jargs.optString("create"));
+
                 created = new EntityFolder();
                 created.tbc = true;
                 created.account = folder.account;
@@ -1263,7 +1285,7 @@ public class EntityRule {
         ServiceSend.schedule(context, SEND_DELAY);
     }
 
-    private boolean onActionAutomation(Context context, EntityMessage message, JSONObject jargs) {
+    private boolean onActionAutomation(Context context, EntityMessage message, JSONObject jargs, String html) {
         InternetAddress iaddr =
                 (message.from == null || message.from.length == 0
                         ? null : ((InternetAddress) message.from[0]));
@@ -1272,13 +1294,16 @@ public class EntityRule {
         DateFormat DTF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         DTF.setTimeZone(java.util.TimeZone.getTimeZone("Zulu"));
 
+        String text = HtmlHelper.getFullText(context, html);
+        String preview = HtmlHelper.getPreview(text);
+
         Intent automation = new Intent(ACTION_AUTOMATION);
         automation.putExtra(EXTRA_RULE, name);
         automation.putExtra(EXTRA_RECEIVED, DTF.format(message.received));
         automation.putExtra(EXTRA_SENDER, iaddr == null ? null : iaddr.getAddress());
         automation.putExtra(EXTRA_NAME, iaddr == null ? null : iaddr.getPersonal());
         automation.putExtra(EXTRA_SUBJECT, message.subject);
-        automation.putExtra(EXTRA_PREVIEW, message.preview);
+        automation.putExtra(EXTRA_PREVIEW, preview);
 
         List<String> extras = Log.getExtras(automation.getExtras());
         EntityLog.log(context, EntityLog.Type.Rules, message,
@@ -1450,7 +1475,7 @@ public class EntityRule {
         boolean loop = jargs.optBoolean("loop");
         boolean alarm = jargs.optBoolean("alarm");
         int duration = jargs.optInt("duration", MediaPlayerHelper.DEFAULT_ALARM_DURATION);
-        Log.i("Sound uri=" + uri + " loop=" + loop + " alarm=" + alarm + " duration=" + duration);
+        Log.i("Sound uri=" + uri + " loop=" + loop + " alarm=" + alarm + " duration=" + duration + " browsed=" + browsed);
 
         if (browsed)
             return false;
@@ -1621,7 +1646,7 @@ public class EntityRule {
         }
 
         try {
-            Spanned summary = AI.getSummaryText(context, message, -1L);
+            Spanned summary = AI.getSummaryText(context, message, -1L, null);
             if (summary != null)
                 message.preview = summary.toString().trim();
         } catch (Throwable ex) {

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -405,7 +405,7 @@ public class FragmentOAuth extends FragmentBase {
             EmailProvider.OAuth oauth = (graph ? provider.graph : provider.oauth);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean oauth_tabs = prefs.getBoolean("oauth_tabs", true);
+            boolean oauth_tabs = prefs.getBoolean("oauth_tabs", false);
 
             AppAuthConfiguration.Builder appAuthConfig = new AppAuthConfiguration.Builder();
 

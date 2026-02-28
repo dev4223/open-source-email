@@ -14,6 +14,7 @@
     <string name="app_cake_required">Spațiu minim necesar de stocare: %1$s</string>
     <string name="app_updated">Ultima actualizare: %1$s</string>
     <string name="app_download">Descărcat de la: %1$s</string>
+    <string name="app_error">Majoritatea mesajelor de eroare au cauze externe (rețea, serverul, etc.) sau sunt cauzate de o configurare incorectă, adesea nestandardizată. O evaluare negativă nu rezolvă astfel de probleme. Solicitarea de sprijin este aproape întotdeauna mai eficientă.</string>
     <string name="app_motd">        Cu Android 14/15 beta, notificările \'Aplicația nu răspunde\' apar ocazional.
         Google lucrează la un remediu.
         Te rugăm să nu învinuiești aplicația pentru această problemă de Android!
@@ -606,6 +607,7 @@
     <string name="title_advanced_message_text_zoom2">Zoom implicit al textului mesajului: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Măriți și textul mesajului în editorul de mesaje</string>
     <string name="title_advanced_overview_mode">Măriți mesajele originale pentru a se potrivi cu ecranul</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Spațiere: %1$s %%</string>
     <string name="title_advanced_hyphenation">Folosește despărțirea în silabe automată</string>
     <string name="title_advanced_contrast">Folosește contrast ridicat pentru text</string>
     <string name="title_advanced_monospaced">Folosește implicit fontul proporțional pentru textul mesajului</string>
@@ -621,6 +623,7 @@
     <string name="title_advanced_image_placeholders">Afișați înlocuitorul imaginii</string>
     <string name="title_advanced_images_inline">Arată automat imaginile integrate</string>
     <string name="title_advanced_button_extra">Arată butoane suplimentare în partea de jos a mesajului</string>
+    <string name="title_advanced_spacing">Spațiu între mesaje și conversații</string>
     <string name="title_advanced_seekbar">Arată poziția relativă în conversație cu un punct</string>
     <string name="title_advanced_actionbar">Arată bara de acțiuni pentru conversație</string>
     <string name="title_advanced_actionbar_swap">Schimbă coșul de gunoi și butonul de arhivă</string>
@@ -766,7 +769,7 @@
         Metoda de criptare poate fi selectată înainte de a trimite în caseta de opțiuni de trimitere (apăsați lung butonul de trimitere).
     </string>
     <string name="title_advanced_sign_default">Semnare în mod implicit</string>
-    <string name="title_advanced_encrypt_default">Criptare în mod implicit</string>
+    <string name="title_advanced_encrypt_default">Semnare și criptare implicită</string>
     <string name="title_advanced_encrypt_auto">Criptează automat când sunt disponibile cheile tuturor destinatarilor</string>
     <string name="title_advanced_encrypt_reply">Criptează automat atunci când se răspunde la un mesaj criptat</string>
     <string name="title_advanced_auto_verify">Verifică automat mesajele semnate</string>
@@ -953,6 +956,7 @@
     <string name="title_advanced_notify_remove_hint">Notificările de mesaj nou vor fi mereu eliminate dacă sunt glisate la o parte sau când mesajele sunt marcate drept citite</string>
     <string name="title_advanced_notify_manage_hint">Atingeți numele canalului pentru a-l configura</string>
     <string name="title_advanced_notify_samsung_hint">Pentru a gestiona canalele de notificare, ar putea fi necesar să activați această setare Android: Notificare, Setări avansate, Gestionare categorii de notificări pentru fiecare aplicație</string>
+    <string name="title_advanced_notify_manage_default_hint">Pentru a seta sunetul implicit, configurați DND (nu deranjați), etc.</string>
     <string name="title_advanced_notify_manage_service_hint">Pentru a dezactiva notificarea de „monitorizare”</string>
     <string name="title_advanced_notify_separate_hint">Cum pot configura notificările pentru conturi, dosare și expeditori?</string>
     <string name="title_advanced_notify_preview_all_hint">Pentru accesoriile de purtat care pot arăta textul complet (până la 5000 caractere)</string>
@@ -1345,6 +1349,7 @@
     <string name="title_keywords_btn">Cuvinte cheie</string>
     <string name="title_labels_btn">Etichete (doar Gmail)</string>
     <string name="title_unsubscribe">Dezabonare</string>
+    <string name="title_unsubscribe_error">Link-ul de dezabonare din mesaj nu funcționează. Eroare %1$s</string>
     <string name="title_message_rule">Creare regulă</string>
     <string name="title_no_junk">Nu este spam</string>
     <string name="title_edit_subject">Editează subiectul &#8230;</string>
@@ -2328,6 +2333,11 @@
         <item>Mică</item>
         <item>Medie</item>
         <item>Mare</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Compact</item>
+        <item>Medie</item>
+        <item>Spațios</item>
     </string-array>
     <string name="title_size_tiny">Mic</string>
     <string-array name="receiptNames">

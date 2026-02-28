@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -804,9 +804,9 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swUnseenIgnored.setVisibility(Helper.isXiaomi() ? View.GONE : View.VISIBLE);
         swAlertOnce.setVisibility(Helper.isXiaomi() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
 
-        int notity_rate_limit = prefs.getInt("notity_rate_limit", 0);
+        int notify_rate_limit = prefs.getInt("notify_rate_limit", 0);
         for (int pos = 0; pos < undoValues.length; pos++)
-            if (undoValues[pos] == notity_rate_limit) {
+            if (undoValues[pos] == notify_rate_limit) {
                 spRateLimit.setSelection(pos);
                 break;
             }
@@ -917,7 +917,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             swLight.setChecked(prefs.getBoolean("light", false));
             swNotifyScreenOn.setChecked(prefs.getBoolean("notify_screen_on", false));
 
-            swBadge.setChecked(prefs.getBoolean("badge", true));
+            swBadge.setChecked(prefs.getBoolean("badge", Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM));
             swUnseenIgnored.setChecked(prefs.getBoolean("unseen_ignored", false));
             swNotifyGrouping.setChecked(prefs.getBoolean("notify_grouping", true));
             swNotifyPrivate.setChecked(prefs.getBoolean("notify_private", true));

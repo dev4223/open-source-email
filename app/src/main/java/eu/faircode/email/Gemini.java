@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -42,7 +42,7 @@ import java.util.Objects;
 
 public class Gemini {
     // https://ai.google.dev/models/gemini
-    static final String DEFAULT_MODEL = "gemini-pro";
+    static final String DEFAULT_MODEL = "gemini-2.5-pro";
     static final float DEFAULT_TEMPERATURE = 0.9f;
     static final String DEFAULT_SUMMARY_PROMPT = "Summarize the following text:";
     static final String DEFAULT_ANSWER_PROMPT = "Answer this message:";

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.system.OsConstants.ENOSPC;
@@ -254,6 +254,18 @@ public class MessageHelper {
     static final String FLAG_HIGH_IMPORTANCE = "$HighImportance";
     static final String FLAG_PHISHING = "$Phishing"; // Gmail
     static final String CATEGORY_PREFIX = "$category:";
+
+    // https://documentation.open-xchange.com/7.10.6/middleware/mail/mail_flagging.html
+    static final String FLAG_OPENX_RED = "$cl_1";
+    static final String FLAG_OPENX_BLUE = "$cl_2";
+    static final String FLAG_OPENX_GREEN = "$cl_3";
+    static final String FLAG_OPENX_GRAY = "$cl_4";
+    static final String FLAG_OPENX_PURPLE = "$cl_5"; // Violet
+    static final String FLAG_OPENX_LIGHT_GREEN = "$cl_6";
+    static final String FLAG_OPENX_ORANGE = "$cl_7";
+    static final String FLAG_OPENX_PINK = "$cl_8";
+    static final String FLAG_OPENX_LIGHT_BLUE = "$cl_9"; // Cyan
+    static final String FLAG_OPENX_YELLOW = "$cl_10";
 
     // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
     // Not black listed: Gmail $Phishing
@@ -542,7 +554,10 @@ public class MessageHelper {
 
             // Delivery/read request
             if (message.receipt_request != null && message.receipt_request) {
-                String to = (identity.replyto == null ? identity.email : identity.replyto);
+                String email = identity.email;
+                if (ourFrom instanceof InternetAddress)
+                    email = ((InternetAddress) ourFrom).getAddress();
+                String to = (identity.replyto == null ? email : identity.replyto);
 
                 // 0=Read receipt
                 // 1=Delivery receipt
@@ -1476,6 +1491,10 @@ public class MessageHelper {
                     if (attachment.cid != null)
                         attachmentPart.setHeader("Content-ID", attachment.cid);
 
+                    // Prevent transformation of newlines
+                    if ("text/plain".equals(attachment.type))
+                        attachmentPart.setHeader("Content-Transfer-Encoding", "base64");
+
                     if (attachment.isInline())
                         relatedMultiPart.addBodyPart(attachmentPart);
                     else
@@ -1649,15 +1668,15 @@ public class MessageHelper {
     String getDeliveredTo() throws MessagingException {
         ensureHeaders();
 
-        String header = imessage.getHeader("Delivered-To", null);
-        if (header == null)
-            header = imessage.getHeader("X-Delivered-To", null);
-        if (header == null)
-            header = imessage.getHeader("Envelope-To", null);
+        String header = imessage.getHeader("Envelope-To", null);
         if (header == null)
             header = imessage.getHeader("X-Envelope-To", null);
         if (header == null)
             header = imessage.getHeader("X-Original-To", null);
+        if (header == null)
+            header = imessage.getHeader("Delivered-To", null);
+        if (header == null)
+            header = imessage.getHeader("X-Delivered-To", null);
 
         return (header == null ? null : MimeUtility.unfold(header));
     }
@@ -2225,37 +2244,28 @@ public class MessageHelper {
         if (headers == null || headers.length == 0)
             return null;
 
-        String signer = null;
         for (String header : headers) {
             String v = getKeyValues(header).get(type);
             if (v == null)
                 continue;
-
-            if (signer == null)
-                signer = getSigner(header);
-            else {
-                String signer2 = getSigner(header);
-                if (!signer.equals(signer2)) {
-                    Log.i("Different signer=" + signer + "/" + signer2);
-                    break;
-                }
-            }
 
             String[] val = v.split("[^A-za-z]+");
             if (val.length == 0)
                 continue;
 
             String value = val[0].toLowerCase(Locale.ROOT);
+            if (!"pass".equals(value))
+                Log.i("Authentication " + type + "=" + value + " header=" + header);
             switch (value) {
                 case "none":
-                    return null;
+                    break;
                 case "pass":
                     return true;
                 case "fail":
                 case "policy":
                     return false;
                 case "neutral":
-                    return null;
+                    break;
                 case "temperror":
                     return null;
                 case "permerror":
@@ -2973,6 +2983,7 @@ public class MessageHelper {
 
             list = MimeUtility.unfold(list);
             list = decodeMime(list);
+            list = list.replaceAll("\\s+", "");
 
             if (list == null || list.startsWith("NO"))
                 return null;
@@ -2983,6 +2994,7 @@ public class MessageHelper {
             if (post != null) {
                 post = MimeUtility.unfold(post);
                 post = decodeMime(post);
+                post = post.replaceAll("\\s+", "");
                 oneclick = "List-Unsubscribe=One-Click".equalsIgnoreCase(post.trim());
             }
 
@@ -3028,7 +3040,7 @@ public class MessageHelper {
                 e = list.indexOf('>', s + 1);
             }
 
-            if (true || link != null && !link.startsWith("https://"))
+            if (link != null && !link.startsWith("https://"))
                 oneclick = false;
 
             if (link != null)
@@ -3969,7 +3981,9 @@ public class MessageHelper {
                     }
             }
 
-            parts.addAll(extra);
+            for (PartHolder part : extra)
+                if (!part.isMarkdown() || text.isEmpty())
+                    parts.add(part);
 
             boolean first = true;
             for (PartHolder h : parts) {
@@ -5069,7 +5083,7 @@ public class MessageHelper {
                     if (content instanceof String)
                         content = tryParseMultipart((String) content, part.getContentType());
                     else if (content instanceof com.sun.mail.imap.IMAPInputStream)
-                        content = tryParseMultipart(Helper.readStream((com.sun.mail.imap.IMAPInputStream) content), part.getContentType());
+                        content = tryParseMultipart((com.sun.mail.imap.IMAPInputStream) content, part.getContentType());
 
                     if (content instanceof Multipart) {
                         Multipart mp = (Multipart) content;
@@ -5117,7 +5131,7 @@ public class MessageHelper {
                         if (content instanceof String)
                             content = tryParseMultipart((String) content, part.getContentType());
                         else if (content instanceof com.sun.mail.imap.IMAPInputStream)
-                            content = tryParseMultipart(Helper.readStream((com.sun.mail.imap.IMAPInputStream) content), part.getContentType());
+                            content = tryParseMultipart((com.sun.mail.imap.IMAPInputStream) content, part.getContentType());
 
                         if (content instanceof Multipart) {
                             Multipart multipart = (Multipart) content;
@@ -5169,7 +5183,7 @@ public class MessageHelper {
                         if (content instanceof String)
                             content = tryParseMultipart((String) content, part.getContentType());
                         else if (content instanceof com.sun.mail.imap.IMAPInputStream)
-                            content = tryParseMultipart(Helper.readStream((com.sun.mail.imap.IMAPInputStream) content), part.getContentType());
+                            content = tryParseMultipart((com.sun.mail.imap.IMAPInputStream) content, part.getContentType());
 
                         if (content instanceof Multipart) {
                             Multipart multipart = (Multipart) content;
@@ -5206,13 +5220,31 @@ public class MessageHelper {
                         // https://datatracker.ietf.org/doc/html/rfc2634#section-2
                     } else {
                         if (TextUtils.isEmpty(smimeType)) {
-                            String name = ct.getParameter("name");
-                            if ("smime.p7m".equalsIgnoreCase(name)) {
-                                getMessageParts(null, part, parts, EntityAttachment.SMIME_MESSAGE);
-                                return parts;
-                            } else if ("smime.p7s".equalsIgnoreCase(name)) {
-                                getMessageParts(null, part, parts, EntityAttachment.SMIME_SIGNED_DATA);
-                                return parts;
+                            String xmailer = imessage.getHeader("X-Mailer", null);
+                            if (xmailer != null && xmailer.contains("Kerio Outlook Connector")) {
+                                Object content = tryParseMultipart(part.getInputStream(), part.getContentType());
+                                if (content instanceof Multipart) {
+                                    Multipart multipart = (Multipart) content;
+                                    int count = multipart.getCount();
+                                    for (int i = 0; i < count; i++)
+                                        try {
+                                            BodyPart child = multipart.getBodyPart(i);
+                                            getMessageParts(part, child, parts, null);
+                                        } catch (ParseException ex) {
+                                            Log.w(ex);
+                                            parts.warnings.add(Log.formatThrowable(ex, false));
+                                        }
+                                    return parts;
+                                }
+                            } else {
+                                String name = ct.getParameter("name");
+                                if ("smime.p7m".equalsIgnoreCase(name)) {
+                                    getMessageParts(null, part, parts, EntityAttachment.SMIME_MESSAGE);
+                                    return parts;
+                                } else if ("smime.p7s".equalsIgnoreCase(name)) {
+                                    getMessageParts(null, part, parts, EntityAttachment.SMIME_SIGNED_DATA);
+                                    return parts;
+                                }
                             }
                         }
                         StringBuilder sb = new StringBuilder();
@@ -5291,7 +5323,7 @@ public class MessageHelper {
                 if (content instanceof String)
                     content = tryParseMultipart((String) content, part.getContentType());
                 else if (content instanceof com.sun.mail.imap.IMAPInputStream)
-                    content = tryParseMultipart(Helper.readStream((com.sun.mail.imap.IMAPInputStream) content), part.getContentType());
+                    content = tryParseMultipart((com.sun.mail.imap.IMAPInputStream) content, part.getContentType());
 
                 if (content instanceof Multipart) {
                     multipart = (Multipart) content;
@@ -5390,13 +5422,18 @@ public class MessageHelper {
                 contentType = new ContentType(Helper.guessMimeType(filename));
             }
 
+            boolean attach = false;
             String ct = contentType.getBaseType();
             if (("text/plain".equalsIgnoreCase(ct) || "text/html".equalsIgnoreCase(ct)) &&
-                    TextUtils.isEmpty(filename) &&
                     !Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
                     (size <= MAX_MESSAGE_SIZE || size == Integer.MAX_VALUE)) {
                 parts.text.add(new PartHolder(part, contentType));
-            } else {
+                if ("text/plain".equalsIgnoreCase(ct) && !TextUtils.isEmpty(filename))
+                    attach = true;
+            } else
+                attach = true;
+
+            if (attach) {
                 // Workaround for NIL message content type
                 if ("application/octet-stream".equals(ct) && part instanceof MimeMessage) {
                     ContentType plain = new ContentType("text/plain");
@@ -5510,11 +5547,15 @@ public class MessageHelper {
     }
 
     private Object tryParseMultipart(String text, String contentType) {
+        return tryParseMultipart(new ByteArrayInputStream(text.getBytes(StandardCharsets.ISO_8859_1)), contentType);
+    }
+
+    private Object tryParseMultipart(InputStream is, String contentType) {
         try {
             return new MimeMultipart(new DataSource() {
                 @Override
                 public InputStream getInputStream() throws IOException {
-                    return new ByteArrayInputStream(text.getBytes(StandardCharsets.ISO_8859_1));
+                    return is;
                 }
 
                 @Override
@@ -5534,7 +5575,7 @@ public class MessageHelper {
             });
         } catch (MessagingException ex) {
             Log.e(ex);
-            return text;
+            return ex;
         }
     }
 

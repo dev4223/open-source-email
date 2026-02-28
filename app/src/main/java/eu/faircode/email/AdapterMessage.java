@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -311,6 +311,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean align_header;
     private boolean large_buttons;
     private int message_zoom;
+    private int line_spacing;
     private boolean attachments_alt;
     private boolean thumbnails;
     private boolean pdf_preview;
@@ -2076,7 +2077,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbCalendarWait.setVisibility(View.GONE);
         }
 
-        private void bindSeen(TupleMessageEx message) {
+        void bindSeen(TupleMessageEx message) {
             if (cards && shadow_unread && shadow_border) {
                 boolean shadow = (message.unseen > 0);
                 int color = (shadow
@@ -3727,6 +3728,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 public void run() {
                                     try {
                                         tvBody.setText((Spanned) result);
+                                        if (line_spacing != 100)
+                                            tvBody.setLineSpacing(0, line_spacing / 100.0f);
                                         vwRipple.setVisibility(View.VISIBLE);
 
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -3853,7 +3856,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         onCopy();
                                         break;
                                     default:
-                                        raction.getActionIntent().send(); // PendingIntentCompat.send()
+                                        raction.getActionIntent().send(Helper.getBackgroundActivityOptions());
                                 }
                             } catch (Throwable ex) {
                                 Log.e(ex);
@@ -4823,7 +4826,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 } else if (id == R.id.ibTts) {
                     onActionTts(message);
                 } else if (id == R.id.ibSummarize) {
-                    onActionSummarize(message, ibSummarize);
+                    onActionSummarize(message, ibSummarize, null);
                 } else if (id == R.id.ibFullScreen)
                     onActionOpenFull(message);
                 else if (id == R.id.ibForceLight) {
@@ -5028,9 +5031,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 onMenuShareHtml(message);
                 return true;
             } else if (id == R.id.ibSummarize) {
-                context.startActivity(new Intent(context, ActivitySetup.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        .putExtra("tab", "integrations"));
+                Bundle args = new Bundle();
+                args.putLong("id", message.id);
+                FragmentDialogBase fragment = new FragmentDialogPrompt();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_PROMPT);
+                fragment.show(parentFragment.getParentFragmentManager(), "prompt");
                 return true;
             } else if (id == R.id.ibFull) {
                 boolean full = properties.getValue("full", message.id);
@@ -6750,7 +6756,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onActionTranslate(message);
                         return true;
                     } else if (itemId == R.id.menu_summarize) {
-                        onActionSummarize(message, null);
+                        onActionSummarize(message, null, null);
                         return true;
                     } else if (itemId == R.id.menu_force_light) {
                         onActionForceLight(message);
@@ -6917,9 +6923,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }.execute(context, owner, args, "message:external");
 
                         return true;
-                    }
-
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                    } else if ("mailto".equals(scheme)) {
+                        TupleMessageEx message = getMessage();
+                        if (message != null) {
+                            String mailto = uri.toString();
+                            if (mailto.indexOf('?') < 0)
+                                mailto += "?aid=" + message.account;
+                            else
+                                mailto += "&aid=" + message.account;
+                            uri = Uri.parse(mailto);
+                        }
+                    } else if ("cid".equals(scheme) || "data".equals(uri.getScheme()))
                         return false;
 
                     boolean confirm_links = prefs.getBoolean("confirm_links", true);
@@ -7722,8 +7736,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.execute(context, owner, args, "tts");
         }
 
-        private void onActionSummarize(TupleMessageEx message, View anchor) {
-            FragmentDialogSummarize.summarize(message, parentFragment.getParentFragmentManager(), anchor, owner);
+        private void onActionSummarize(TupleMessageEx message, View anchor, String prompt) {
+            FragmentDialogSummarize.summarize(message, parentFragment.getParentFragmentManager(), anchor, owner, prompt);
         }
 
         private void onActionForceLight(TupleMessageEx message) {
@@ -8705,6 +8719,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.preview_lines = prefs.getInt("preview_lines", 1);
         this.align_header = prefs.getBoolean("align_header", false);
         this.message_zoom = prefs.getInt("message_zoom", 100);
+        this.line_spacing = prefs.getInt("line_spacing", 100);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.thumbnails = prefs.getBoolean("thumbnails", true);
         this.pdf_preview = prefs.getBoolean("pdf_preview", true);
@@ -9305,12 +9320,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 keyPosition.put(message.id, i);
                 positionKey.put(i, message.id);
 
-                addExtra(message.from, message.extra);
-
                 if (threading) {
                     message.senders = merge(message.from, message.senders);
                     message.recipients = merge(message.to, message.recipients);
-                    addExtra(message.senders, message.extra);
                 } else {
                     message.senders = message.from;
                     message.recipients = message.to;
@@ -9357,29 +9369,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 result.add(a);
             }
         return result.toArray(new Address[0]);
-    }
-
-    static void addExtra(Address[] addresses, String extra) {
-        if (addresses == null || addresses.length == 0)
-            return;
-        if (extra == null)
-            return;
-
-        String email = ((InternetAddress) addresses[0]).getAddress();
-        if (email == null)
-            return;
-
-        Pair<String, String> p = MessageHelper.getExtra(email, extra);
-
-        if (p.first != null)
-            try {
-                ((InternetAddress) addresses[0]).setPersonal(p.first);
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-
-        if (p.second != null)
-            ((InternetAddress) addresses[0]).setAddress(p.second);
     }
 
     PagedList<TupleMessageEx> getCurrentList() {

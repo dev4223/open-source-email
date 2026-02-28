@@ -14,6 +14,7 @@
     <string name="app_cake_required">Minimalno zahtijevani skladišni prostor: %1$s</string>
     <string name="app_updated">Posljednje ažuriranje: %1$s</string>
     <string name="app_download">Preuzeto sa: %1$s</string>
+    <string name="app_error">Najviše poruka o greškama izazivaju vanjski uzroci (mreža, server itd.) ili su uzrokovane netačnim, često nestandardnim podešavanjem. Loša ocjena ne može pomoći u rješavanju takvih problema. Stoga je traženje podrške gotovo uvijek učinkovitije.</string>
     <string name="app_motd">        U Androidu 14/15 beta, obavještenja \'Aplikacija ne reaguje\' mogu se povremeno javiti.
         Google radi na ovoj ispravci.
         Nemojte kriviti aplikaciju zbog problema s Androidom!
@@ -607,6 +608,7 @@
     <string name="title_advanced_message_text_zoom2">Zadani nivo zumiranja teksta: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Zumiraj tekst poruke i u uređivaču poruka</string>
     <string name="title_advanced_overview_mode">Zumiraj originalne poruke da popune ekran</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Linijski razmak: %1$s %%</string>
     <string name="title_advanced_hyphenation">Koristi automatsko umetanje crtica</string>
     <string name="title_advanced_contrast">Koristi visoki kontrast za tekst poruke</string>
     <string name="title_advanced_monospaced">Koristi po zadanom font jednake širine (monospace) za tekst poruke</string>
@@ -622,6 +624,7 @@
     <string name="title_advanced_image_placeholders">Prikaži mjesta za prikaz slika</string>
     <string name="title_advanced_images_inline">Automatski prikaži poravnate slike</string>
     <string name="title_advanced_button_extra">Prikaži dodatna dugmad na dnu poruke</string>
+    <string name="title_advanced_spacing">Razmak između poruka i konverzacija</string>
     <string name="title_advanced_seekbar">Tačkom prikaži relativnu poziciju konverzacije</string>
     <string name="title_advanced_actionbar">Prikaži radnu traku za konverzaciju</string>
     <string name="title_advanced_actionbar_swap">Zamijeni dugmad za otpad i arhiviranje</string>
@@ -767,7 +770,7 @@
         Metoda šifriranja može se izabrati prije slanja u dijaloškom okviru opcije za slanje (držite prst dugo na dugme \'pošalji\').
     </string>
     <string name="title_advanced_sign_default">Potpiši po zadanom</string>
-    <string name="title_advanced_encrypt_default">Šifriraj po zadanom</string>
+    <string name="title_advanced_encrypt_default">Potpiši i šifriraj po defaultu</string>
     <string name="title_advanced_encrypt_auto">Automatski šifriraj kada svi ključevi primalaca budu dostupni</string>
     <string name="title_advanced_encrypt_reply">Automatsko šifriranje tokom odgovora na šifriranu poruku</string>
     <string name="title_advanced_auto_verify">Automatski provjeri potpisane poruke</string>
@@ -954,7 +957,7 @@
     <string name="title_advanced_notify_remove_hint">Obavještenja o novim porukama će se uvijek skloniti kada se prevuku preko ekrana ili označavanjem poruka kao \'pročitane\'</string>
     <string name="title_advanced_notify_manage_hint">Dodirnite naziv kanala za postavljanje svojstava kanala</string>
     <string name="title_advanced_notify_samsung_hint">Za upravljanje kanalima obavještenja, možda trebate uključiti ovu postavku Androida: Obavještenja, Napredne postavke, Upravljaj kategorijama obavještenja za svaku aplikaciju</string>
-    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Za postavljanje zadanog zvuka, podesite DND (ne uznemiravaj), itd.</string>
+    <string name="title_advanced_notify_manage_default_hint">Za postavljanje zadanog zvuka, podesite DND (ne uznemiravaj), itd.</string>
     <string name="title_advanced_notify_manage_service_hint">Za isključivanje obavještenja o \'nadzoru\'</string>
     <string name="title_advanced_notify_separate_hint">Kako da podesim obavještenja za račune, foldere i pošiljaoce?</string>
     <string name="title_advanced_notify_preview_all_hint">Za nosive uređaje koji prikazuju cijeli tekst (do 5000 znakova)</string>
@@ -1348,6 +1351,7 @@
     <string name="title_keywords_btn">Ključne riječi</string>
     <string name="title_labels_btn">Oznake (samo za Gmail)</string>
     <string name="title_unsubscribe">Otkaži pretplatu</string>
+    <string name="title_unsubscribe_error">Veza za otkazivanje pretplate ne radi unutar poruke. Greška %1$s</string>
     <string name="title_message_rule">Kreiraj pravilo</string>
     <string name="title_no_junk">Nije spam</string>
     <string name="title_edit_subject">Uredi predmet &#8230;</string>
@@ -2326,6 +2330,11 @@
         <item>Mali</item>
         <item>Srednji</item>
         <item>Veliki</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Kompaktan</item>
+        <item>Srednji</item>
+        <item>Prostran</item>
     </string-array>
     <string name="title_size_tiny">Mali</string>
     <string-array name="receiptNames">

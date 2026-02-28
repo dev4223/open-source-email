@@ -16,10 +16,9 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
-import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
 import static androidx.core.app.NotificationCompat.DEFAULT_SOUND;
 
 import android.Manifest;
@@ -91,6 +90,8 @@ class NotificationHelper {
     private static final int MAX_PREVIEW = 5000; // characters
     private static final long NOTIFY_DELAY = 1250L / DEFAULT_MAX_NOTIFICATION_ENQUEUE_RATE; // milliseconds
 
+    private static final long WHEN_PERIOD = 7 * 24 * 3600 * 1000L; // milliseconds
+
     private static final List<String> PERSISTENT_IDS = Collections.unmodifiableList(Arrays.asList(
             "service",
             "send",
@@ -140,7 +141,7 @@ class NotificationHelper {
                 NotificationManager.IMPORTANCE_HIGH);
         notification.setDescription(context.getString(R.string.channel_notification_description));
         notification.enableLights(true);
-        notification.setLightColor(Color.YELLOW);
+        notification.setLightColor(Color.GREEN);
         notification.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         //notification.setBypassDnd(true);
         createNotificationChannel(nm, notification);
@@ -380,7 +381,7 @@ class NotificationHelper {
         DB db = DB.getInstance(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean badge = prefs.getBoolean("badge", true);
+        boolean badge = prefs.getBoolean("badge", Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM);
         boolean notify_background_only = prefs.getBoolean("notify_background_only", false);
         boolean notify_summary = prefs.getBoolean("notify_summary", false);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
@@ -696,6 +697,7 @@ class NotificationHelper {
         if (messages == null || messages.size() == 0 || nm == null)
             return notifications;
 
+        long now = new Date().getTime();
         boolean pro = ActivityBilling.isPro(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -819,9 +821,11 @@ class NotificationHelper {
             if (notify_summary) {
                 builder.setOnlyAlertOnce(new_messages <= 0);
 
+                if (light)
+                    setLight(builder);
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                     if (new_messages > 0)
-                        setLightAndSound(builder, light, sound);
+                        setSound(builder, sound);
                     else
                         builder.setSound(null);
             } else {
@@ -953,8 +957,6 @@ class NotificationHelper {
                             .addExtras(args)
                             .setSmallIcon(R.drawable.baseline_mail_white_24)
                             .setContentIntent(piContent)
-                            .setWhen(message.received)
-                            .setShowWhen(true)
                             .setSortKey(sortKey)
                             .setDeleteIntent(piIgnore)
                             .setPriority(EntityMessage.PRIORITIY_HIGH.equals(message.importance)
@@ -966,6 +968,9 @@ class NotificationHelper {
                                     : NotificationCompat.VISIBILITY_PUBLIC)
                             .setOnlyAlertOnce(alert_once)
                             .setAllowSystemGeneratedContextualActions(false);
+
+            if (message.received > now - WHEN_PERIOD && !Boolean.TRUE.equals(message.ui_unsnoozed))
+                mbuilder.setWhen(message.received).setShowWhen(true);
 
             if (message.ui_silent) {
                 mbuilder.setSilent(true);
@@ -1015,8 +1020,10 @@ class NotificationHelper {
                         .setGroupSummary(false)
                         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
+            if (light)
+                setLight(mbuilder);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                setLightAndSound(mbuilder, light, sound);
+                setSound(mbuilder, sound);
 
             Address[] afrom = messageFrom.get(message.id);
             String from = MessageHelper.formatAddresses(afrom, email_format, false);
@@ -1380,13 +1387,13 @@ class NotificationHelper {
         return message.accountColor;
     }
 
-    private static void setLightAndSound(NotificationCompat.Builder builder, boolean light, String sound) {
-        int def = 0;
+    private static void setLight(NotificationCompat.Builder builder) {
+        builder.setLights(Color.GREEN, 500, 500);
+        Log.i("Notify light enabled");
+    }
 
-        if (light) {
-            def |= DEFAULT_LIGHTS;
-            Log.i("Notify light enabled");
-        }
+    private static void setSound(NotificationCompat.Builder builder, String sound) {
+        int def = 0;
 
         if (!"".equals(sound)) {
             // Not silent sound

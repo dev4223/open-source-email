@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
@@ -52,6 +52,8 @@ import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
+import android.text.style.SubscriptSpan;
+import android.text.style.SuperscriptSpan;
 import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
@@ -727,8 +729,10 @@ public class HtmlHelper {
                             if (us >= 0 && ue > us) {
                                 url = url.substring(us + 4, ue);
                                 if ((url.startsWith("'") && url.endsWith("'")) ||
-                                        (url.startsWith("\"") && url.endsWith("\"")))
-                                    url = url.substring(1, url.length() - 1);
+                                        (url.startsWith("\"") && url.endsWith("\""))) {
+                                    if (url.length() > 1)
+                                        url = url.substring(1, url.length() - 1);
+                                }
                                 Element img = document.createElement("img")
                                         .attr("src", url);
                                 element.prependElement("br");
@@ -1077,9 +1081,7 @@ public class HtmlHelper {
 
                         case "white-space":
                             // https://developer.mozilla.org/en-US/docs/Web/CSS/white-space
-                            if ("pre".equals(value) ||
-                                    "pre-wrap".equals(value) ||
-                                    "break-spaces".equals(value))
+                            if ("pre".equals(value) || "pre-wrap".equals(value))
                                 element.attr("x-plain", "true");
                             break;
                     }
@@ -2453,6 +2455,22 @@ public class HtmlHelper {
 
         String width = img.attr("width").replace("px", "").trim();
         String height = img.attr("height").replace("px", "").trim();
+        String style = img.attr("style"); // style="max-width: 1px; width: 100%;"
+
+        if (!TextUtils.isEmpty(style))
+            for (String param : style.split(";")) {
+                int colon = param.indexOf(':');
+                if (colon < 0)
+                    continue;
+
+                String key = param.substring(0, colon).trim().toLowerCase(Locale.ROOT);
+                String value = param.substring(colon + 1).trim().toLowerCase(Locale.ROOT);
+                if (value.endsWith("px") && ("max-width".equals(key) || "max-height".equals(key))) {
+                    Integer w = Helper.parseInt(value.replace("px", ""));
+                    if (w != null && w <= 1)
+                        return true;
+                }
+            }
 
         if (TextUtils.isEmpty(width) || TextUtils.isEmpty(height))
             return false;
@@ -3246,8 +3264,10 @@ public class HtmlHelper {
 
             StringBuilder sb = new StringBuilder();
             for (String word : query.trim().split("\\s+")) {
-                if (word.startsWith("+") || word.startsWith("-"))
+                if (word.startsWith("-"))
                     continue;
+                if (word.startsWith("+"))
+                    word = word.substring(1);
                 for (String w : Fts4DbHelper.breakText(word).split("\\s+")) {
                     if (sb.length() > 0)
                         sb.append("\\s*");
@@ -4055,10 +4075,58 @@ public class HtmlHelper {
                 if (start == end)
                     return;
                 int len = ssb.length();
-                if (start >= 0 && start < len && end <= len)
+                if (start >= 0 && start < len && end <= len) {
+                    Object[] spans = ssb.getSpans(start, ssb.length(), Object.class);
+                    if (spans != null)
+                        for (Object s : spans)
+                            if (equal(s, span)) {
+                                int sstart = ssb.getSpanStart(s);
+                                int send = ssb.getSpanEnd(s);
+                                int sflags = ssb.getSpanFlags(s);
+                                if (sstart == start && send == ssb.length() && sflags == flags) {
+                                    Log.i("Duplicate span " + s.getClass() + " " + sstart + "..." + send);
+                                    ssb.removeSpan(s);
+                                }
+                            }
+
                     ssb.setSpan(span, start, end, flags);
-                else
+                } else
                     Log.e("Invalid span " + start + "..." + end + " len=" + len + " type=" + span.getClass().getName());
+            }
+
+            private boolean equal(Object span, Object existing) {
+                if (!span.getClass().equals(existing.getClass()))
+                    return false;
+
+                if (span instanceof StyleSpan) {
+                    if (((StyleSpan) span).getStyle() == ((StyleSpan) existing).getStyle())
+                        return true;
+                } else if (span instanceof UnderlineSpan)
+                    return true;
+                else if (span instanceof RelativeSizeSpan)
+                    return false;
+                else if (span instanceof BackgroundColorSpan || span instanceof ForegroundColorSpan)
+                    return true;
+                else if (span instanceof AlignmentSpan || span instanceof AlignmentSpan.Standard)
+                    return true;
+                else if (span instanceof BulletSpan || span instanceof NumberSpan)
+                    return false;
+                else if (span instanceof QuoteSpan || span instanceof IndentSpan)
+                    return false;
+                else if (span instanceof SubscriptSpan || span instanceof SuperscriptSpan)
+                    return false;
+                else if (span instanceof StrikethroughSpan)
+                    return true;
+                else if (span instanceof URLSpan)
+                    return false;
+                else if (span instanceof TypefaceSpan)
+                    return true;
+                else if (span instanceof StyleHelper.MarkSpan)
+                    return true;
+                else if (span instanceof StyleHelper.InsertedSpan)
+                    return false;
+
+                return false;
             }
         }, document.body());
 
@@ -4267,6 +4335,9 @@ public class HtmlHelper {
                 switch (key) {
                     case "text-align":
                         sb.append(" display:block;");
+                        Element next = span.nextElementSibling();
+                        if (next != null && next.tagName().equals("br"))
+                            next.remove();
                         // fall through
                     default:
                         sb.append(param).append(';');

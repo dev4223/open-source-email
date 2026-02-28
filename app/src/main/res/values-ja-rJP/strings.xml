@@ -14,6 +14,7 @@
     <string name="app_cake_required">最低限必要な空き容量: %1$s</string>
     <string name="app_updated">最終更新: %1$s</string>
     <string name="app_download">ダウンロード元: %1$s</string>
+    <string name="app_error">ほとんどのエラーメッセージは、外的要因 (ネットワーク、サーバー) または非標準などの誤った設定によるものです。低評価のレビューをつけてもこのような問題は解決しません。まずはサポートに問い合わせてみてください。</string>
     <string name="app_motd">        Android 14/15 beta では「アプリが応答しません」という通知がときどき表示されます。
         Google が修正に取り組んでいます。
         Android 側の問題のため、アプリを非難しないでください！
@@ -594,6 +595,7 @@
     <string name="title_advanced_image_placeholders">画像のプレースホルダーを表示する</string>
     <string name="title_advanced_images_inline">インライン画像を自動で表示する</string>
     <string name="title_advanced_button_extra">メッセージの下部に追加ボタンを表示する</string>
+    <string name="title_advanced_spacing">メッセージ間のスペース</string>
     <string name="title_advanced_seekbar">ドットで相対的な会話スレッドの位置を表示する</string>
     <string name="title_advanced_actionbar">会話スレッド アクションバーを表示する</string>
     <string name="title_advanced_actionbar_swap">ごみ箱とアーカイブのボタンを入れ替える</string>
@@ -725,7 +727,7 @@
     <string name="title_advanced_biometrics_timeout">生体認証のタイムアウト</string>
     <string name="title_advanced_autolock">画面をオフにしたときにアプリもロックする</string>
     <string name="title_advanced_autolock_nav">アプリ終了時にロックする</string>
-    <string name="title_advanced_generic_user_agent">一般的なブラウザーのユーザーエージェントを使用する</string>
+    <string name="title_advanced_generic_user_agent">一般的なブラウザーのユーザーエージェント文字列を使用する</string>
     <string name="title_advanced_load_emoji">Google Play 開発者サービスから更新された絵文字を読み込む</string>
     <string name="title_advanced_disconnect_auto_update">リストを自動で毎週更新する</string>
     <string name="title_advanced_disconnect_links">リストを使用してトラッキングリンクについて警告する</string>
@@ -739,7 +741,7 @@
         暗号化方法は、(送信ボタンを長押しすると表示される) 送信ダイアログボックスで送信前に選択できます。
     </string>
     <string name="title_advanced_sign_default">デフォルトでデジタル署名する</string>
-    <string name="title_advanced_encrypt_default">デフォルトで暗号化する</string>
+    <string name="title_advanced_encrypt_default">デフォルトでデジタル署名し暗号化する</string>
     <string name="title_advanced_encrypt_auto">すべての宛先の鍵が有効なときは自動で暗号化する</string>
     <string name="title_advanced_encrypt_reply">暗号化されたメッセージには暗号化して返信する</string>
     <string name="title_advanced_auto_verify">デジタル署名されたメッセージを自動で検証する</string>
@@ -926,6 +928,7 @@
     <string name="title_advanced_notify_remove_hint">新着メッセージ通知はこの設定に関係なく、スワイプしたり、メッセージを既読にすると削除されます</string>
     <string name="title_advanced_notify_manage_hint">チャンネル名をタップして、チャンネルのプロパティを設定します</string>
     <string name="title_advanced_notify_samsung_hint">通知チャンネルを管理するには、Android の設定で: 通知 > 詳細設定 > 各アプリの[通知カテゴリ]を管理 を有効にする必要がある場合があります</string>
+    <string name="title_advanced_notify_manage_default_hint">デフォルトの音、サイレントモード (Do not disturb) などを設定します。</string>
     <string name="title_advanced_notify_manage_service_hint">「モニター」通知を無効にします</string>
     <string name="title_advanced_notify_separate_hint">アカウント、フォルダ、差出人の通知を設定するにはどうすればよいですか？</string>
     <string name="title_advanced_notify_preview_all_hint">全文を表示できるウェアラブル (最大 5,000 文字) 向け</string>
@@ -1319,6 +1322,7 @@
     <string name="title_keywords_btn">キーワード</string>
     <string name="title_labels_btn">ラベル (Gmail のみ)</string>
     <string name="title_unsubscribe">購読解除</string>
+    <string name="title_unsubscribe_error">メッセージの購読解除リンクが動作しません。エラー: %1$s</string>
     <string name="title_message_rule">ルールを作成</string>
     <string name="title_no_junk">迷惑メールでないと報告</string>
     <string name="title_edit_subject">件名を編集&#8230;</string>
@@ -2302,6 +2306,11 @@
         <item>小</item>
         <item>標準</item>
         <item>大</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>コンパクト</item>
+        <item>標準</item>
+        <item>ワイド</item>
     </string-array>
     <string name="title_size_tiny">極小</string>
     <string-array name="receiptNames">

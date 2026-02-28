@@ -14,6 +14,7 @@
     <string name="app_cake_required">Минимально необходимое место: %1$s</string>
     <string name="app_updated">Последнее обновление: %1$s</string>
     <string name="app_download">Загружено из: %1$s</string>
+    <string name="app_error">Большинство сообщений об ошибках имеют внешние причины (сеть, сервер и т.д.) или вызваны неправильной, часто нестандартной конфигурацией. Плохой отзыв не решает такие проблемы. Обращение в службу поддержки почти всегда более эффективно.</string>
     <string name="app_motd">        На Android 14/15 beta иногда появляется уведомление \"Приложение не отвечает\".
         Google работает над исправлением данной ошибки.
         Пожалуйста, не вините приложение из-за проблемы в Android!
@@ -620,6 +621,7 @@
     <string name="title_advanced_message_text_zoom2">Масштаб текста сообщения по умолчанию: %1$s%%</string>
     <string name="title_advanced_editor_text_zoom">Масштабировать текст сообщения в редакторе</string>
     <string name="title_advanced_overview_mode">Изменять масштаб исходных сообщений к размеру экрана</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Межстрочный интервал: %1$s %%</string>
     <string name="title_advanced_hyphenation">Автоматическая расстановка переносов</string>
     <string name="title_advanced_contrast">Использовать высокий контраст для текста сообщений</string>
     <string name="title_advanced_monospaced">Использовать моноширинный шрифт для текста сообщения по умолчанию</string>
@@ -635,6 +637,7 @@
     <string name="title_advanced_image_placeholders">Показывать места расположения изображений</string>
     <string name="title_advanced_images_inline">Автоматически показывать встроенные изображения</string>
     <string name="title_advanced_button_extra">Показывать дополнительные кнопки внизу сообщения</string>
+    <string name="title_advanced_spacing">Промежуток между сообщениями и диалогами</string>
     <string name="title_advanced_seekbar">Показывать относительное положение диалога точкой</string>
     <string name="title_advanced_actionbar">Показывать панель управления диалогами</string>
     <string name="title_advanced_actionbar_swap">Поменять местами кнопки \"Корзина\" и \"Архив\"</string>
@@ -780,7 +783,7 @@
         Можно выбрать метод шифрования непосредственно перед отправкой в диалоговом окне \"Параметры отправки\", вызываемом долгим нажатием кнопки \"Отправить\".
     </string>
     <string name="title_advanced_sign_default">Подписывать по умолчанию</string>
-    <string name="title_advanced_encrypt_default">Шифровать по умолчанию</string>
+    <string name="title_advanced_encrypt_default">Подписывать и шифровать по умолчанию</string>
     <string name="title_advanced_encrypt_auto">Автоматически шифровать, если доступны ключи всех получателей</string>
     <string name="title_advanced_encrypt_reply">Автоматически шифровать при ответе на зашифрованное сообщение</string>
     <string name="title_advanced_auto_verify">Автоматически проверять подписанные сообщения</string>
@@ -968,7 +971,7 @@
     <string name="title_advanced_notify_remove_hint">Уведомления о новых о сообщениях всегда будут удаляться при смахивании сообщения и пометке о прочтении</string>
     <string name="title_advanced_notify_manage_hint">Нажмите на название канала, чтобы установить его свойства</string>
     <string name="title_advanced_notify_samsung_hint">Для управления каналами уведомлений может потребоваться включить данную настройку Android: Уведомления → Дополнительные настройки → Управление категориями уведомлений для каждого приложения</string>
-    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Чтобы установить звук по умолчанию, настройте DND (не беспокоить) и т.д.</string>
+    <string name="title_advanced_notify_manage_default_hint">Чтобы установить звук по умолчанию, настройте DND (не беспокоить) и т.д.</string>
     <string name="title_advanced_notify_manage_service_hint">Для отключения контролирующего уведомления</string>
     <string name="title_advanced_notify_separate_hint">Как настроить уведомления для учётных записей, папок и отправителей?</string>
     <string name="title_advanced_notify_preview_all_hint">Для носимых устройств, которые могут показывать полный текст (до 5000 символов)</string>
@@ -1362,6 +1365,7 @@
     <string name="title_keywords_btn">Ключевые слова</string>
     <string name="title_labels_btn">Метки (только Gmail)</string>
     <string name="title_unsubscribe">Отписаться</string>
+    <string name="title_unsubscribe_error">Ссылка отказа от подписки в сообщении не работает. Ошибка %1$s</string>
     <string name="title_message_rule">Создать правило</string>
     <string name="title_no_junk">Не спам</string>
     <string name="title_edit_subject">Изменить тему&#8230;</string>
@@ -2348,6 +2352,11 @@
         <item>Мелкий</item>
         <item>Средний</item>
         <item>Крупный</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Компактный</item>
+        <item>Средний</item>
+        <item>Просторный</item>
     </string-array>
     <string name="title_size_tiny">Минимальный</string>
     <string-array name="receiptNames">

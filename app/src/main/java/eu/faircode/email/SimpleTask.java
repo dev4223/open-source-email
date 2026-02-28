@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -364,6 +364,15 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
 
     public boolean isAlive() {
         return !this.destroyed;
+    }
+
+    void sync() {
+        try {
+            if (future != null)
+                future.get();
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     void cancel(Context context) {

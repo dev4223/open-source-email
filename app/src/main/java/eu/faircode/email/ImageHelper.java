@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -248,7 +248,7 @@ class ImageHelper {
         Canvas canvas = new Canvas(round);
 
         Paint paint = new Paint();
-        paint.setAntiAlias(false);
+        paint.setAntiAlias(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU); // August 15, 2022
         canvas.drawARGB(0, 0, 0, 0);
         paint.setColor(Color.GRAY);
         if (radius == null)
@@ -655,7 +655,7 @@ class ImageHelper {
     }
 
     static ByteArrayInputStream getDataUriStream(String source) {
-        // "<img src=\"data:image/png;base64,iVBORw0KGgoAAA" +
+        // "<img src=\"data:image/png;filename=dot.png;base64,iVBORw0KGgoAAA" +
         // "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
         // "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
         // "5ErkJggg==\" alt=\"Red dot\" />";
@@ -667,19 +667,21 @@ class ImageHelper {
         try {
             // data:[<mediatype>][;base64],<data>
             int comma = source.indexOf(',');
-            int colon = source.indexOf(':');
-            int semi = source.indexOf(';');
-
             if (comma < 0)
                 throw new IllegalArgumentException("Comma missing");
 
+            String header = source.substring(0, comma);
+            int colon = header.indexOf(':');
+            int fsemi = header.indexOf(';');
+            int lsemi = header.lastIndexOf(';');
+
             String type = null;
-            if (colon > 0 && semi > colon)
-                type = source.substring(colon + 1, semi).trim();
-            else if (colon > 0 && comma > colon)
+            if (colon > 0 && fsemi > colon)
+                type = source.substring(colon + 1, fsemi).trim();
+            else if (colon > 0)
                 type = source.substring(colon + 1, comma).trim();
 
-            String enc = (semi > 0 && comma > semi ? source.substring(semi + 1, comma).trim() : null);
+            String enc = (lsemi > 0 ? source.substring(lsemi + 1, comma).trim() : null);
 
             if ("image/svg".equalsIgnoreCase(type) &&
                     (TextUtils.isEmpty(enc) /* ASCII */ || "utf8".equalsIgnoreCase(enc))) {
@@ -923,7 +925,7 @@ class ImageHelper {
         }
 
         if (bm != null) {
-            Matrix rotation = getImageRotation(file);
+            Matrix rotation = getImageRotation(mimeType, file);
             if (rotation != null) {
                 Bitmap rotated = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), rotation, true);
                 bm.recycle();
@@ -951,10 +953,11 @@ class ImageHelper {
         return drawable;
     }
 
-    static Matrix getImageRotation(File file) {
+    static Matrix getImageRotation(String mimeType, File file) {
         try {
             ExifInterface exif = new ExifInterface(file);
             int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+            Log.i("Image Exif orientation=" + orientation + " type=" + mimeType);
 
             Matrix matrix = new Matrix();
             switch (orientation) {

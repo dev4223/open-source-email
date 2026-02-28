@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_GRAPH;
@@ -892,7 +892,8 @@ public class ServiceSend extends ServiceBase implements SharedPreferences.OnShar
                 Address[] rcptto = MessageHelper.removeGroups(recipients.toArray(new Address[0]));
 
                 String via = "via " + ident.host + "/" + ident.user +
-                        " rcptto=" + TextUtils.join(", ", recipients);
+                        " rcptto=" + TextUtils.join(", ", recipients) +
+                        " from=" + MessageHelper.formatAddresses(imessage.getFrom());
 
                 iservice.setReporter(new TraceOutputStream.IReport() {
                     private int progress = -1;

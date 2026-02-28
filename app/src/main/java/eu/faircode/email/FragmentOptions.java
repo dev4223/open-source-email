@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Notification;
@@ -147,7 +147,7 @@ public class FragmentOptions extends FragmentBase {
             "portrait2", "portrait2c", "portrait_min_size", "landscape", "landscape_min_size",
             "column_width",
             "hide_toolbar", "edge_to_edge", "nav_categories", "nav_last_sync", "nav_count", "nav_unseen_drafts", "nav_count_pinned", "show_unexposed",
-            "indentation", "date", "date_week", "date_fixed", "date_bold", "date_time", "threading", "threading_unread",
+            "spacing", "indentation", "date", "date_week", "date_fixed", "date_bold", "date_time", "threading", "threading_unread",
             "show_filtered",
             "highlight_unread", "highlight_color", "account_color", "account_color_size",
             "avatars", "bimi", "gravatars", "libravatars", "favicons", "favicons_partial", "favicons_manifest", "generated_icons", "identicons",
@@ -157,7 +157,7 @@ public class FragmentOptions extends FragmentBase {
             "font_size_sender", "sender_ellipsize",
             "subject_top", "subject_italic", "highlight_subject", "font_size_subject", "subject_ellipsize",
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines", "align_header",
-            "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt",
+            "message_zoom", "overview_mode", "line_spacing", "addresses", "button_extra", "attachments_alt",
             "thumbnails", "pdf_preview", "video_preview", "audio_preview", "barcode_preview",
             "contrast", "hyphenation", "display_font", "monospaced_pre",
             "list_count", "bundled_fonts", "narrow_fonts", "parse_classes",

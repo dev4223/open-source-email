@@ -14,6 +14,7 @@
     <string name="app_cake_required">Op syn minst fereaske ûnthâld: %1$s</string>
     <string name="app_updated">Lêst bywurke: %1$s</string>
     <string name="app_download">Download fan: %1$s</string>
+    <string name="app_error">De measte flatermeldingen hawwe eksterne oarsaken (netwurk, server, ensfh.) of wurde feroarsake troch in net krekte, faak net-standert konfiguraasje. In slimme beoardieling lost soksoarte problemen net op. Stipe oanfreegje is hast altyd effektiver.</string>
     <string name="app_motd">        Under Android 14/15 beta, kin somtiden de melding ‘App reageert niet’ ferskine.
         Google wurket oan in oplossing.
         Jou asjebleaft net de skuld oan de app foar dit Android-probleem!
@@ -588,6 +589,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_message_text_zoom2">Standert zoom berjochttekst: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Berjochttekst ek yn de berjochtbewurker zoome</string>
     <string name="title_advanced_overview_mode">Zoom orizjinele berjochten om op it skerm te passen</string>
+    <string name="title_advanced_line_spacing" comment="title_advanced_line_spacing Title with value (a percentage) for line spacing of the message text">Regelôfstân: %1$s %%</string>
     <string name="title_advanced_hyphenation">Automatyske keppeltekens brûke</string>
     <string name="title_advanced_contrast">Heech kontrast foar berjochttekst brûke</string>
     <string name="title_advanced_monospaced">Standert monospaced lettertype foar berjochttekst brûke</string>
@@ -603,6 +605,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_advanced_image_placeholders">Ofbyldingplakhâlders toane</string>
     <string name="title_advanced_images_inline">Inline ôfbyldingen automatysk toane</string>
     <string name="title_advanced_button_extra">Ekstra knoppen ûnderoan in berjocht toane</string>
+    <string name="title_advanced_spacing">Romte tusken berjochten en petearen</string>
     <string name="title_advanced_seekbar">Relative posysje fan petear mei in punt toane</string>
     <string name="title_advanced_actionbar">Petearaksjebalke toane</string>
     <string name="title_advanced_actionbar_swap">Jiskefet- en argivearknop wikselje</string>
@@ -749,7 +752,7 @@ https://en.wikipedia.org/wiki/ASCII</string>
     <string name="title_advanced_default_encryption">De standert fersiferingsmetoade (PGP of S/MIME) wurdt per identiteit bewarre nei it ferstjoeren fan in ûndertekene of fersifere berjocht.
          De fersiferingsmetoade kin foar ferstjoering selektearre wurde yn it dialoochfinster mei ferstjoeropsjes (hâld de knop Fertsjoere lang yndrukt).    </string>
     <string name="title_advanced_sign_default">Standert ûndertekenje</string>
-    <string name="title_advanced_encrypt_default">Standert fersiferje</string>
+    <string name="title_advanced_encrypt_default">Standert ûndertekenje en fersiferje</string>
     <string name="title_advanced_encrypt_auto">Automatysk fersiferje wannear’t alle kaaien fan de ûntfanger beskikber binne</string>
     <string name="title_advanced_encrypt_reply">Automatysk fersiferje by antwurdzjen op in fersifere berjocht</string>
     <string name="title_advanced_auto_verify">Undertekene berjochten automatysk ferifiearje</string>
@@ -935,7 +938,7 @@ https://en.wikipedia.org/wiki/ASCII</string>
     <string name="title_advanced_notify_remove_hint">Notifikaasjes oer nije berjochten sille altyd fuortsmiten as se fuortfeie wurde en as berjochten as lêzen markearre wurde</string>
     <string name="title_advanced_notify_manage_hint">Tikje op de kanaalnamme om de kanaaleigenskippen yn te stellen</string>
     <string name="title_advanced_notify_samsung_hint">Om meldingskanalen te behearen, moatte jo mooglik dizze Android-ynstelling ynskeakelje: Melding, Geavanceerde instellingen, Beheer meldingscategorieën voor elke app</string>
-    <string name="title_advanced_notify_manage_default_hint" comment="title_advanced_notify_manage_default_hint&#10;Remark for the default notification channel settings button">Om it standert lûd yn te stellen, DND (net steure) konfigurearje, ensfh.</string>
+    <string name="title_advanced_notify_manage_default_hint">Om it standert lûd yn te stellen, DND (net steure) konfigurearje, ensfh.</string>
     <string name="title_advanced_notify_manage_service_hint">Om de bewakingsnotifikaasje út te skeakeljen</string>
     <string name="title_advanced_notify_separate_hint">Hoe stel ik meldingen yn foar accounts, mappen en ôfstjoerders?</string>
     <string name="title_advanced_notify_preview_all_hint">Foar wearables dy’t de folsleine tekst toane kinne (oant 5.000 tekens)</string>
@@ -1326,6 +1329,7 @@ https://en.wikipedia.org/wiki/ASCII</string>
     <string name="title_keywords_btn">Kaaiwurden</string>
     <string name="title_labels_btn">Labels (allinnich foar Gmail)</string>
     <string name="title_unsubscribe">Ofmelde</string>
+    <string name="title_unsubscribe_error">De ôfmeldkeppeling yn it berjocht wurket net. Flater %1$s</string>
     <string name="title_message_rule">Regel meitsje</string>
     <string name="title_no_junk">Net net-winske</string>
     <string name="title_edit_subject">Underwerp &#8230; bewurkje</string>
@@ -2306,6 +2310,11 @@ https://en.wikipedia.org/wiki/ASCII</string>
         <item>Lyts</item>
         <item>Gemiddeld</item>
         <item>Grut</item>
+    </string-array>
+    <string-array name="spacingNames">
+        <item>Kompakt</item>
+        <item>Gemiddeld</item>
+        <item>Rom</item>
     </string-array>
     <string name="title_size_tiny">Tin</string>
     <string-array name="receiptNames">

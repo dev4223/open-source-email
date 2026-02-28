@@ -7,13 +7,15 @@ buildscript {
 
     dependencies {
         // https://developer.android.com/studio/releases/gradle-plugin
-        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.android.tools.build:gradle:8.13.2'
+        //classpath 'com.android.tools.build:gradle:8.2.2'
         //classpath 'com.android.tools.build:gradle:8.7.1'
         //classpath 'com.android.tools.build:gradle:8.9.1'
         //classpath 'com.android.tools.build:gradle:8.11.1'
         // https://github.com/bugsnag/bugsnag-android-gradle-plugin
         // https://mvnrepository.com/artifact/com.bugsnag/bugsnag-android-gradle-plugin
         classpath "com.bugsnag:bugsnag-android-gradle-plugin:8.2.0"
+        classpath 'com.android.tools.build:gradle:8.13.2'
         // https://kotlinlang.org/docs/releases.html#release-details
         // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-gradle-plugin
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.21"

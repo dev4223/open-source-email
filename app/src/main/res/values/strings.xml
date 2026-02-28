@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">FairEmail</string>
-    <string name="app_copyright" translatable="false">Copyright &#x24B8; 2018–2025 by M. Bokhorst</string>
+    <string name="app_copyright" translatable="false">Copyright &#x24B8; 2018–2026 by M. Bokhorst</string>
     <string name="app_search">FairEmail search</string>
     <string name="app_send_self">Send to self</string>
     <string name="app_answer" translatable="false">FairEmail template</string>
@@ -18,6 +18,7 @@
     <string name="app_updated">Last update: %1$s</string>
     <string name="app_download">Downloaded from: %1$s</string>
     <string name="app_dmarc" translatable="false">DMARC</string>
+    <string name="app_error">Most error messages have external causes (network, server, etc.) or are caused by an incorrect, often non-standard, configuration. A bad review does not solve such problems. Requesting support is almost always more effective.</string>
 
     <string name="app_motd">
         With Android 14/15 beta, \'App not responding\' notifications occasionally occur.
@@ -686,6 +687,7 @@
     <string name="title_advanced_message_text_zoom2">Default message text zoom: %1$s %%</string>
     <string name="title_advanced_editor_text_zoom">Zoom message text also in the message editor</string>
     <string name="title_advanced_overview_mode">Zoom original messages to fit the screen</string>
+    <string name="title_advanced_line_spacing">Line spacing: %1$s %%</string>
     <string name="title_advanced_hyphenation">Use automatic hyphenation</string>
     <string name="title_advanced_contrast">Use high contrast for message text</string>
     <string name="title_advanced_monospaced">Use monospaced font for message text by default</string>
@@ -701,6 +703,7 @@
     <string name="title_advanced_image_placeholders">Show image placeholders</string>
     <string name="title_advanced_images_inline">Automatically show inline images</string>
     <string name="title_advanced_button_extra">Show extra buttons at the bottom of a message</string>
+    <string name="title_advanced_spacing">Space between messages and conversations</string>
     <string name="title_advanced_seekbar">Show relative conversation position with a dot</string>
     <string name="title_advanced_actionbar">Show conversation action bar</string>
     <string name="title_advanced_actionbar_swap">Swap trash and archive button</string>
@@ -997,6 +1000,7 @@
     <string name="title_advanced_expunge" translatable="false">AUTO EXPUNGE</string>
     <string name="title_advanced_uid_expunge" translatable="false">UID EXPUNGE</string>
     <string name="title_advanced_hide_deleted" translatable="false">Hide deleted messages</string>
+    <string name="title_advanced_imap_compress" translatable="false">COMPRESS</string>
     <string name="title_advanced_auth_plain" translatable="false">PLAIN</string>
     <string name="title_advanced_auth_login" translatable="false">LOGIN</string>
     <string name="title_advanced_auth_ntlm" translatable="false">NTLM</string>
@@ -1012,6 +1016,7 @@
     <string name="title_advanced_keep_alive_poll" translatable="false">Poll on keep-alive</string>
     <string name="title_advanced_empty_pool" translatable="false">Empty connection pool</string>
     <string name="title_advanced_exact_alarms" translatable="false">Use exact timers</string>
+    <string name="title_advanced_server_alerts" translatable="false">Server alerts</string>
     <string name="title_advanced_native_dkim" translatable="false">Native DKIM verification</string>
     <string name="title_advanced_native_arc" translatable="false">Native ARC verification</string>
     <string name="title_advanced_strict_alignment" translatable="false">Strict alignment</string>
@@ -1044,6 +1049,7 @@
     <string name="title_advanced_delete_confirmation" translatable="false">Permanent deletion confirmation</string>
     <string name="title_advanced_delete_notification" translatable="false">Delete permanently from notifications</string>
     <string name="title_advanced_deletion_confirmation_hint" translatable="false">If you change this setting, please do not complain if you accidentally deleted messages irreversibly</string>
+    <string name="title_auto_folder_nav" translatable="false">Add new folders automatically to the navigation menu</string>
     <string name="title_advanced_dmarc_viewer" translatable="false">DMARC viewer</string>
     <string name="title_advanced_global_keywords" translatable="false">Global keywords</string>
     <string name="title_advanced_test_iab" translatable="false">Test IAB</string>
@@ -1638,6 +1644,7 @@
     <string name="title_keywords_btn">Keywords</string>
     <string name="title_labels_btn">Labels (Gmail only)</string>
     <string name="title_unsubscribe">Unsubscribe</string>
+    <string name="title_unsubscribe_error">The unsubscribe link in the message does not work. Error %1$s</string>
     <string name="title_message_rule">Create rule</string>
     <string name="title_no_junk">Not spam</string>
     <string name="title_edit_subject">Edit subject &#8230;</string>
@@ -2835,6 +2842,12 @@
         <item>Small</item>
         <item>Medium</item>
         <item>Large</item>
+    </string-array>
+
+    <string-array name="spacingNames">
+        <item>Compact</item>
+        <item>Medium</item>
+        <item>Roomy</item>
     </string-array>
 
     <string name="title_size_tiny">Tiny</string>

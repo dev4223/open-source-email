@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -187,6 +187,21 @@ public class UriHelper {
         return null;
     }
 
+    static String getEmailExtra(String email) {
+        if (TextUtils.isEmpty(email))
+            return null;
+
+        int plus = email.indexOf('+');
+        if (plus < 0)
+            return null;
+
+        int at = email.indexOf('@', plus + 1);
+        if (at < 0)
+            return null;
+
+        return email.substring(plus + 1, at);
+    }
+
     static String getEmailDomain(String address) {
         if (address == null)
             return null;
@@ -333,9 +348,20 @@ public class UriHelper {
             url = (changed ? result : uri);
         } else if (uri.getHost() != null && uri.getHost().endsWith(".awstrack.me")) {
             // https://docs.aws.amazon.com/ses/latest/dg/configure-custom-open-click-domains.html
-            String path = uri.getPath();
+            String path = uri.getEncodedPath();
             int s = (path == null ? -1 : path.indexOf('/', 1));
-            Uri result = (s > 0 ? Uri.parse(path.substring(s + 1)) : null);
+            int e = (path == null ? -1 : path.indexOf('/', s + 1));
+            if (e < 0 && path != null)
+                e = path.length();
+            Uri result = (s > 0 && e > s ? Uri.parse(Uri.decode(path.substring(s + 1, e))) : null);
+            changed = (result != null && isHyperLink(result));
+            url = (changed ? result : uri);
+        } else if (uri.getHost() != null && uri.getHost().equalsIgnoreCase("urldefense.com")) {
+            // https://urldefense.com/v3/__<url>__;!!
+            String path = uri.toString();
+            int s = path.indexOf("/v3/__");
+            int e = path.indexOf("__;", s + 6);
+            Uri result = (s >= 0 && e > s ? Uri.parse(Uri.decode(path.substring(s + 6, e))) : null);
             changed = (result != null && isHyperLink(result));
             url = (changed ? result : uri);
         } else {

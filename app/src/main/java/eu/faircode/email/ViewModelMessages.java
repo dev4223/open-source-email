@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -488,12 +488,12 @@ public class ViewModelMessages extends ViewModel {
                             plist.loadAround(pos);
 
                         List<TupleMessageEx> lprev = null;
-                        if (pos - 1 >= 0)
-                            lprev = ds.loadRange(pos - 1, 1);
+                        if (pos + 1 < count)
+                            lprev = ds.loadRange(pos + 1, 1);
 
                         List<TupleMessageEx> lnext = null;
-                        if (pos + 1 < count)
-                            lnext = ds.loadRange(pos + 1, 1);
+                        if (pos - 1 >= 0)
+                            lnext = ds.loadRange(pos - 1, 1);
 
                         TupleMessageEx prev = (lprev != null && lprev.size() > 0 ? lprev.get(0) : null);
                         TupleMessageEx next = (lnext != null && lnext.size() > 0 ? lnext.get(0) : null);

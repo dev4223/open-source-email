@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -185,6 +185,8 @@ public class ApplicationEx extends Application
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(@NonNull Thread thread, @NonNull Throwable ex) {
+                WebViewEx.checkLayer(ApplicationEx.this, ex);
+
                 if (!crash_reports && Log.isOwnFault(ex)) {
                     Log.e(ex);
 
@@ -1111,8 +1113,18 @@ public class ApplicationEx extends Application
         if (version < 2283)
             editor.remove("cert_transparency");
 
+        if (version < 2296) {
+            if (!prefs.contains("badge"))
+                editor.putBoolean("badge", true);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)
             editor.remove("background_service");
+
+        if (version < 2298) {
+            if (prefs.contains("viewport_height"))
+                editor.putInt("viewport_height", 0);
+        }
 
         if (version < BuildConfig.VERSION_CODE)
             editor.putInt("previous_version", version);

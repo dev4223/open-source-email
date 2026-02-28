@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -182,7 +182,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "ssl_harden", "ssl_harden_strict", "cert_strict", "cert_transparency", "check_names", "bouncy_castle", "bc_fips", // force reconnect
             "experiments", "debug", "protocol", // force reconnect
             //"restart_interval", // force reconnect
-            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", // force reconnect
+            "imap_compress", "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", // force reconnect
             "keep_alive_poll", "empty_pool", "idle_done", // force reconnect
             "exact_alarms" // force schedule
     ));
@@ -985,7 +985,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                 Widget.update(ServiceSynchronize.this);
 
-                boolean badge = prefs.getBoolean("badge", true);
+                boolean badge = prefs.getBoolean("badge", Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM);
                 boolean unseen_ignored = prefs.getBoolean("unseen_ignored", false);
 
                 int count = 0;
@@ -1717,7 +1717,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 EntityLog.log(ServiceSynchronize.this, EntityLog.Type.Account, account,
                                         account.name + " alert: " + message);
 
-                                if (!ConnectionHelper.isMaxConnections(message))
+                                if (!ConnectionHelper.isMaxConnections(message) &&
+                                        prefs.getBoolean("server_alerts", !Helper.isPlayStoreInstall()))
                                     try {
                                         NotificationManager nm =
                                                 Helper.getSystemService(ServiceSynchronize.this, NotificationManager.class);
@@ -2034,7 +2035,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     long start = new Date().getTime();
                                     try {
                                         wlMessage.acquire(Helper.WAKELOCK_MAX);
-                                        fetch(folder, ifolder, e.getMessages(), false, false, "added");
+                                        fetch(state, folder, ifolder, e.getMessages(), false, false, "added");
                                         Thread.sleep(FETCH_YIELD_DURATION);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
@@ -2054,7 +2055,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     long start = new Date().getTime();
                                     try {
                                         wlMessage.acquire(Helper.WAKELOCK_MAX);
-                                        fetch(folder, ifolder, e.getMessages(), false, true, "removed");
+                                        fetch(state, folder, ifolder, e.getMessages(), false, true, "removed");
                                         Thread.sleep(FETCH_YIELD_DURATION);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
@@ -2080,7 +2081,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     try {
                                         wlMessage.acquire(Helper.WAKELOCK_MAX);
                                         Message imessage = e.getMessage();
-                                        fetch(folder, ifolder, new Message[]{imessage}, true, false, "changed");
+                                        fetch(state, folder, ifolder, new Message[]{imessage}, true, false, "changed");
                                         Thread.sleep(FETCH_YIELD_DURATION);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
@@ -2349,7 +2350,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                                                                 try {
                                                                     ifolder = iservice.getStore().getFolder(folder.name);
-                                                                } catch (IllegalStateException | MessagingException ex) {
+                                                                } catch (IllegalStateException |
+                                                                         MessagingException ex) {
                                                                     if ("Not connected".equals(ex.getMessage())) {
                                                                         Log.i(ex);
                                                                         return; // Store closed
@@ -2938,7 +2940,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         }
     }
 
-    private void fetch(EntityFolder folder, IMAPFolder ifolder, Message[] messages, boolean invalidate, boolean deleted, String reason) throws MessagingException {
+    private void fetch(Core.State state, EntityFolder folder, IMAPFolder ifolder, Message[] messages, boolean invalidate, boolean deleted, String reason) throws MessagingException {
         Log.i(folder.name + " " + messages.length + " messages " + reason);
 
         List<Long> uids = new ArrayList<>();
@@ -2948,6 +2950,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 uids.add(uid);
             } catch (MessageRemovedException ex) {
                 Log.w(ex);
+            } catch (Throwable ex) {
+                Log.w(ex);
+                if (ex instanceof FolderClosedException) {
+                    state.error(ex);
+                    return;
+                } else
+                    throw ex;
             }
 
         Log.i(folder.name + " messages " + reason + " uids=" + TextUtils.join(",", uids));
@@ -3497,7 +3506,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         if (!found) {
             if (BuildConfig.DEBUG)
                 Log.i("@@@ not found");
-            return null;
+            return new long[]{0, 0}; // no day found
         }
 
         long start = calStart.getTimeInMillis();

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -225,6 +225,7 @@ public class WorkerCleanup extends Worker {
             cleanupMessageFiles(db, manual, Helper.ensureExists(context, "encryption").listFiles());
             cleanupMessageFiles(db, manual, Helper.ensureExists(context, "photo").listFiles());
             cleanupMessageFiles(db, manual, Helper.ensureExists(context, "calendar").listFiles());
+            cleanupMessageFiles(db, manual, new File(Helper.getExternalFilesDir(context), "avatars").listFiles());
 
             // Cleanup raw message files
             if (!download_eml) {

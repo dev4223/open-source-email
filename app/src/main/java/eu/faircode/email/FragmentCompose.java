@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_FIRST_USER;
@@ -135,6 +135,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.heifwriter.HeifWriter;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
@@ -259,6 +260,8 @@ public class FragmentCompose extends FragmentBase {
     private EditText etSubject;
     private ImageButton ibCcBcc;
     private ImageButton ibRemoveAttachments;
+    private ImageButton ibExpanderAttachments;
+    private TextView tvAttachments;
     private RecyclerView rvAttachment;
     private TextView tvNoInternetAttachments;
     private TextView tvDsn;
@@ -293,6 +296,7 @@ public class FragmentCompose extends FragmentBase {
     private Group grpReferenceHint;
 
     private ContentResolver resolver;
+    private TwoStateOwner ownerAttachment;
     private AdapterAttachment adapter;
     private MarkwonEditorTextWatcher markwonWatcher;
 
@@ -420,6 +424,8 @@ public class FragmentCompose extends FragmentBase {
         etSubject = view.findViewById(R.id.etSubject);
         ibCcBcc = view.findViewById(R.id.ibCcBcc);
         ibRemoveAttachments = view.findViewById(R.id.ibRemoveAttachments);
+        ibExpanderAttachments = view.findViewById(R.id.ibExpanderAttachments);
+        tvAttachments = view.findViewById(R.id.tvAttachments);
         rvAttachment = view.findViewById(R.id.rvAttachment);
         tvNoInternetAttachments = view.findViewById(R.id.tvNoInternetAttachments);
         tvDsn = view.findViewById(R.id.tvDsn);
@@ -1394,10 +1400,13 @@ public class FragmentCompose extends FragmentBase {
                                 item.avatar = cursor.getString(2);
                                 item.times_contacted = (cursor.getInt(3) == 0 ? 0 : Integer.MAX_VALUE);
                                 item.last_contacted = 0L;
-                                EntityContact existing = map.get(item.email);
-                                if (existing == null ||
-                                        (existing.avatar == null && item.avatar != null))
-                                    map.put(item.email, item);
+                                if (!TextUtils.isEmpty(item.email)) {
+                                    String key = item.email.toLowerCase(Locale.ROOT);
+                                    EntityContact existing = map.get(key);
+                                    if (existing == null ||
+                                            (existing.avatar == null && item.avatar != null))
+                                        map.put(key, item);
+                                }
                             }
                         }
                     }
@@ -1411,15 +1420,17 @@ public class FragmentCompose extends FragmentBase {
                                 suggest_account ? FragmentCompose.this.account : null, EntityContact.TYPE_FROM, wildcard))
                             if (!MessageHelper.isNoReply(item.email))
                                 items.add(item);
-                    for (EntityContact item : items) {
-                        EntityContact existing = map.get(item.email);
-                        if (existing == null)
-                            map.put(item.email, item);
-                        else {
-                            existing.times_contacted = Math.max(existing.times_contacted, item.times_contacted);
-                            existing.last_contacted = Math.max(existing.last_contacted, item.last_contacted);
+                    for (EntityContact item : items)
+                        if (!TextUtils.isEmpty(item.email)) {
+                            String key = item.email.toLowerCase(Locale.ROOT);
+                            EntityContact existing = map.get(key);
+                            if (existing == null)
+                                map.put(key, item);
+                            else {
+                                existing.times_contacted = Math.max(existing.times_contacted, item.times_contacted);
+                                existing.last_contacted = Math.max(existing.last_contacted, item.last_contacted);
+                            }
                         }
-                    }
 
                     items = new ArrayList<>(map.values());
 
@@ -1517,6 +1528,35 @@ public class FragmentCompose extends FragmentBase {
                 fragment.show(getParentFragmentManager(), "compose:discard");
             }
         });
+
+        ownerAttachment = new TwoStateOwner(getViewLifecycleOwner(), "attachments");
+        ownerAttachment.start();
+        ibExpanderAttachments.setTag(prefs.getBoolean("compose_hide_attachments", false));
+        ibExpanderAttachments.setVisibility(View.GONE);
+        ibExpanderAttachments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean hide_attachments = !Boolean.TRUE.equals(ibExpanderAttachments.getTag());
+                ibExpanderAttachments.setTag(hide_attachments);
+                ibExpanderAttachments.setImageLevel(hide_attachments ? 1 /* more */ : 0 /* less */);
+                ownerAttachment.restart();
+                if (!hide_attachments)
+                    prefs.edit().remove("compose_hide_attachments").apply();
+            }
+        });
+        ibExpanderAttachments.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                boolean hide_attachments = !Boolean.TRUE.equals(ibExpanderAttachments.getTag());
+                ibExpanderAttachments.setTag(hide_attachments);
+                ibExpanderAttachments.setImageLevel(hide_attachments ? 1 /* more */ : 0 /* less */);
+                ownerAttachment.restart();
+                prefs.edit().putBoolean("compose_hide_attachments", hide_attachments).apply();
+                return true;
+            }
+        });
+
+        tvAttachments.setVisibility(View.GONE);
 
         rvAttachment.setHasFixedSize(false);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
@@ -1841,6 +1881,8 @@ public class FragmentCompose extends FragmentBase {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        draftLoader.sync();
+
         outState.putLong("fair:working", working);
         outState.putBoolean("fair:show_images", show_images);
         outState.putParcelable("fair:photo", photoURI);
@@ -2706,11 +2748,11 @@ public class FragmentCompose extends FragmentBase {
                                         etBody.getText().append(spanned);
                                     } else
                                         etBody.getText().insert(start, spanned);
-
-                                    int pos = getAutoPos(start, spanned.length());
-                                    if (pos >= 0)
-                                        etBody.setSelection(pos);
                                 }
+
+                                int pos = getAutoPos(start, spanned.length());
+                                if (pos >= 0)
+                                    etBody.setSelection(pos);
 
                                 StyleHelper.markAsInserted(etBody.getText(), start, start + spanned.length());
                             }
@@ -3740,8 +3782,12 @@ public class FragmentCompose extends FragmentBase {
             if (photo_picker && Helper.hasPhotoPicker())
                 try {
                     Log.i("Using photo picker");
-                    pickImages.launch(new PickVisualMediaRequest.Builder()
-                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    int colorAccent = Helper.resolveColor(context, androidx.appcompat.R.attr.colorAccent);
+                    pickImages.launch(new PickVisualMediaRequest
+                            .Builder()
+                            .setAccentColor(colorAccent)
+                            .setOrderedSelection(true)
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo.INSTANCE)
                             .build());
                     return;
                 } catch (Throwable ex) {
@@ -4723,7 +4769,8 @@ public class FragmentCompose extends FragmentBase {
                             chain[0].getPublicKey(),
                             CMSAlgorithm.AES128_WRAP);
                     for (X509Certificate cert : certs)
-                        gen.addRecipient(cert);
+                        if (SmimeHelper.match(privkey, cert))
+                            gen.addRecipient(cert);
                     cmsEnvelopedDataGenerator.addRecipientInfoGenerator(gen);
                     // https://security.stackexchange.com/a/53960
                     // https://stackoverflow.com/questions/7073319/
@@ -4759,6 +4806,7 @@ public class FragmentCompose extends FragmentBase {
                 Log.i("S/MIME selected encryption algo=" + encryptAlgorithm + " OID=" + encryptionOID);
 
                 OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(encryptionOID)
+                        //.setEnableSha256HKdf(true)
                         .build();
                 CMSEnvelopedData cmsEnvelopedData = cmsEnvelopedDataGenerator
                         .generate(msg, encryptor);
@@ -5615,7 +5663,10 @@ public class FragmentCompose extends FragmentBase {
         if (!"image/jpg".equals(attachment.type) &&
                 !"image/jpeg".equals(attachment.type) &&
                 !"image/png".equals(attachment.type) &&
-                !"image/webp".equals(attachment.type)) {
+                !"image/webp".equals(attachment.type) &&
+                !(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                        ("image/heic".equals(attachment.type) ||
+                                "image/heif".equals(attachment.type)))) {
             Log.i("Skipping resize of type=" + attachment.type);
             return;
         }
@@ -5637,8 +5688,8 @@ public class FragmentCompose extends FragmentBase {
                 (!resize_width_only && options.outHeight / factor > resize))
             factor *= 2;
 
-        Matrix rotation = ("image/jpeg".equals(attachment.type) ? ImageHelper.getImageRotation(file) : null);
-        Log.i("Image type=" + attachment.type + " rotation=" + rotation);
+        Matrix rotation = ImageHelper.getImageRotation(attachment.type, file);
+        Log.i("Image type=" + attachment.type + " factor=" + factor + " rotation=" + rotation);
         if (factor > 1 || rotation != null) {
             options.inJustDecodeBounds = false;
             options.inSampleSize = factor;
@@ -5654,26 +5705,47 @@ public class FragmentCompose extends FragmentBase {
                     resized = rotated;
                 }
 
-                Bitmap.CompressFormat format;
-                if ("image/jpg".equals(attachment.type) ||
-                        "image/jpeg".equals(attachment.type))
-                    format = Bitmap.CompressFormat.JPEG;
-                else if ("image/png".equals(attachment.type))
-                    format = Bitmap.CompressFormat.PNG;
-                else if ("image/webp".equals(attachment.type))
-                    format = Bitmap.CompressFormat.WEBP;
-                else
-                    throw new IllegalArgumentException("Invalid format type=" + attachment.type);
-
                 File tmp = new File(file.getAbsolutePath() + ".tmp");
-                try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
-                    if (!resized.compress(format, ImageHelper.DEFAULT_PNG_COMPRESSION, out))
-                        throw new IOException("compress");
-                } catch (Throwable ex) {
-                    Log.w(ex);
-                    Helper.secureDelete(tmp);
-                } finally {
-                    resized.recycle();
+
+                if ("image/heic".equals(attachment.type) ||
+                        "image/heif".equals(attachment.type)) {
+                    // https://developer.android.com/reference/androidx/heifwriter/HeifWriter
+                    Log.i("Image heif writer");
+                    try (HeifWriter writer = new HeifWriter.Builder(tmp.getAbsolutePath(),
+                            resized.getWidth(), resized.getHeight(), HeifWriter.INPUT_MODE_BITMAP)
+                            .setMaxImages(1)
+                            .build()) {
+                        writer.start();
+                        writer.addBitmap(resized);
+                        writer.stop(5000L);
+                        Log.i("Image heif writer done");
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                        Helper.secureDelete(tmp);
+                    } finally {
+                        resized.recycle();
+                    }
+                } else {
+                    Bitmap.CompressFormat format;
+                    if ("image/jpg".equals(attachment.type) ||
+                            "image/jpeg".equals(attachment.type))
+                        format = Bitmap.CompressFormat.JPEG;
+                    else if ("image/png".equals(attachment.type))
+                        format = Bitmap.CompressFormat.PNG;
+                    else if ("image/webp".equals(attachment.type))
+                        format = Bitmap.CompressFormat.WEBP;
+                    else
+                        throw new IllegalArgumentException("Invalid format type=" + attachment.type);
+
+                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
+                        if (!resized.compress(format, ImageHelper.DEFAULT_PNG_COMPRESSION, out))
+                            throw new IOException("compress");
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                        Helper.secureDelete(tmp);
+                    } finally {
+                        resized.recycle();
+                    }
                 }
 
                 if (tmp.exists() && tmp.length() > 0) {
@@ -5994,16 +6066,16 @@ public class FragmentCompose extends FragmentBase {
                                             similar = from;
                                     }
 
-                                    //if (ref.deliveredto != null)
-                                    //    try {
-                                    //        Address deliveredto = new InternetAddress(ref.deliveredto);
-                                    //        if (same == null && recognized.sameAddress(deliveredto))
-                                    //            same = deliveredto;
-                                    //        if (similar == null && recognized.similarAddress(deliveredto))
-                                    //            similar = deliveredto;
-                                    //    } catch (AddressException ex) {
-                                    //        Log.w(ex);
-                                    //    }
+                                    if (same == null && similar == null && ref.deliveredto != null)
+                                        try {
+                                            Address deliveredto = new InternetAddress(ref.deliveredto);
+                                            if (same == null && recognized.sameAddress(deliveredto))
+                                                same = deliveredto;
+                                            if (similar == null && recognized.similarAddress(deliveredto))
+                                                similar = deliveredto;
+                                        } catch (AddressException ex) {
+                                            Log.w(ex);
+                                        }
 
                                     EntityLog.log(context, "From=" + MessageHelper.formatAddresses(data.draft.from) +
                                             " delivered-to=" + ref.deliveredto +
@@ -6506,7 +6578,9 @@ public class FragmentCompose extends FragmentBase {
                         EntityIdentity selected = getIdentity(context, aid, data.identities, data.draft.from, data.draft.to);
                         if (selected != null) {
                             data.draft.identity = selected.id;
+                            data.draft.from = new InternetAddress[]{new InternetAddress(selected.email, selected.name, StandardCharsets.UTF_8.name())};
                             db.message().setMessageIdentity(data.draft.id, data.draft.identity);
+                            db.message().setMessageFrom(data.draft.id, DB.Converters.encodeAddresses(data.draft.from));
                             EntityLog.log(context, "Selected external identity=" + selected.email);
                         }
                     }
@@ -6581,6 +6655,7 @@ public class FragmentCompose extends FragmentBase {
 
             ServiceSynchronize.eval(context, "compose/draft");
 
+            working = data.draft.id;
             return data;
         }
 
@@ -6673,14 +6748,22 @@ public class FragmentCompose extends FragmentBase {
                 for (EntityAttachment attachment : last_attachments)
                     map.put(attachment.id, attachment);
 
-            db.attachment().liveAttachments(data.draft.id).observe(getViewLifecycleOwner(),
+            db.attachment().liveAttachments(data.draft.id).observe(ownerAttachment,
                     new Observer<List<EntityAttachment>>() {
+                        private Integer lastAttachments = null;
+
                         @Override
                         public void onChanged(@Nullable List<EntityAttachment> attachments) {
                             if (attachments == null)
                                 attachments = new ArrayList<>();
 
-                            List<EntityAttachment> a = new ArrayList<>(attachments);
+                            if (lastAttachments != null && attachments.size() > lastAttachments)
+                                ibExpanderAttachments.setTag(false);
+                            lastAttachments = attachments.size();
+
+                            boolean hide_attachments = Boolean.TRUE.equals(ibExpanderAttachments.getTag());
+
+                            List<EntityAttachment> a = (hide_attachments ? new ArrayList<>() : new ArrayList<>(attachments));
                             rvAttachment.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -6711,7 +6794,12 @@ public class FragmentCompose extends FragmentBase {
                                 }
                             });
 
-                            ibRemoveAttachments.setVisibility(attachments.size() > 2 ? View.VISIBLE : View.GONE);
+                            ibRemoveAttachments.setVisibility(attachments.size() > 2 && !hide_attachments ? View.VISIBLE : View.GONE);
+                            ibExpanderAttachments.setVisibility(attachments.size() > 1 ? View.VISIBLE : View.GONE);
+                            ibExpanderAttachments.setImageLevel(hide_attachments ? 1 /* more */ : 0 /* less */);
+                            tvAttachments.setText(getResources()
+                                    .getQuantityString(R.plurals.title_attachments, attachments.size(), attachments.size()));
+                            tvAttachments.setVisibility(attachments.size() > 0 && hide_attachments ? View.VISIBLE : View.GONE);
                             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
                             boolean downloading = false;
@@ -6819,6 +6907,7 @@ public class FragmentCompose extends FragmentBase {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             final boolean plain_only = prefs.getBoolean("plain_only", false);
+            final Typeface monospace = StyleHelper.getTypeface("monospace", getContext());
 
             db.message().liveMessage(data.draft.id).observe(getViewLifecycleOwner(), new Observer<EntityMessage>() {
                 @Override
@@ -6879,10 +6968,10 @@ public class FragmentCompose extends FragmentBase {
 
                         if (compose_monospaced) {
                             if (draft.isPlainOnly())
-                                etBody.setTypeface(Typeface.MONOSPACE);
+                                etBody.setTypeface(monospace);
                             else {
                                 Typeface tf = etBody.getTypeface();
-                                if (tf == Typeface.MONOSPACE)
+                                if (tf == monospace)
                                     etBody.setTypeface(StyleHelper.getTypeface(compose_font, etBody.getContext()));
                             }
                         }
@@ -7358,7 +7447,7 @@ public class FragmentCompose extends FragmentBase {
                     if (dirty) {
                         // Update draft
                         draft.identity = ident;
-                        draft.extra = extra;
+                        draft.extra = (identity.sender_extra ? extra : null);
                         draft.from = afrom;
                         draft.to = ato;
                         draft.cc = acc;
@@ -7838,12 +7927,14 @@ public class FragmentCompose extends FragmentBase {
                         });
 
                         if (extras.getBoolean("archive")) {
+                            EntityFolder drafts = db.folder().getFolderByType(draft.account, EntityFolder.DRAFTS);
                             EntityFolder archive = db.folder().getFolderByType(draft.account, EntityFolder.ARCHIVE);
                             if (archive != null) {
                                 List<EntityMessage> messages = db.message().getMessagesByMsgId(draft.account, draft.inreplyto);
                                 if (messages != null)
                                     for (EntityMessage message : messages)
-                                        EntityOperation.queue(context, message, EntityOperation.MOVE, archive.id);
+                                        if (drafts == null || !Objects.equals(message.folder, drafts.id))
+                                            EntityOperation.queue(context, message, EntityOperation.MOVE, archive.id);
                             }
                         }
                     }

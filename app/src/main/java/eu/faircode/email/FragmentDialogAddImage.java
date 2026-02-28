@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_OK;
@@ -78,6 +78,7 @@ public class FragmentDialogAddImage extends FragmentDialogBase {
         rgAction.check(add_inline ? R.id.rbInline : R.id.rbAttach);
         cbResize.setChecked(resize_images);
         spResize.setEnabled(resize_images);
+        cbResizeWidthOnly.setEnabled(resize_images);
         cbResizeWidthOnly.setChecked(resize_width_only);
         tvResizeRemark.setText(getString(R.string.title_add_image_resize_remark, "JPEG, PNG, WebP"));
         cbPrivacy.setChecked(privacy_images);
@@ -113,6 +114,7 @@ public class FragmentDialogAddImage extends FragmentDialogBase {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 prefs.edit().putBoolean("resize_images", isChecked).apply();
                 spResize.setEnabled(isChecked);
+                cbResizeWidthOnly.setEnabled(isChecked);
             }
         });
 

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -345,6 +345,9 @@ public class EntityAttachment {
             return "application/vnd.oasis.opendocument.presentation";
 
         // Audio
+
+        if ("m4a".equals(extension))
+            return "audio/mp4";
 
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Configuring_servers_for_Ogg_media
 

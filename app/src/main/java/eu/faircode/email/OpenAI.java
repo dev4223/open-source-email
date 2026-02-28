@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class OpenAI {
-    static final String DEFAULT_MODEL = "gpt-4o";
+    static final String DEFAULT_MODEL = "gpt-5.2";
     static final float DEFAULT_TEMPERATURE = 0.5f;
     static final String DEFAULT_SUMMARY_PROMPT = "Summarize the following text:";
     static final String DEFAULT_ANSWER_PROMPT = "Answer this message:";

@@ -283,6 +283,8 @@
     <!-- needs subscription -->
     <provider
         name="mailbox.org"
+        appPassword="true"
+        documentation="When two-factor authentication is enabled, you must use &lt;a href=&quot;https://kb.mailbox.org/en/private/security-and-privacy/application-passwords-for-external-programs/&quot;&gt;an app password&lt;/a&gt; instead of your account password."
         domain="mailbox\\.org"
         link="https://kb.mailbox.org/display/BMBOKB/E-Mail-Einrichtung+mit+Mozilla+Thunderbird">
         <imap
@@ -486,6 +488,8 @@
     </provider>
     <provider
         name="Infomaniak"
+        appPassword="true"
+        documentation="The &lt;u&gt;generated&lt;/u&gt; password on the Infomaniak dashboard must be used, not the account password!"
         link="https://www.infomaniak.com/fr/support/faq/search?q=imap">
         <imap
             host="mail.infomaniak.com"
@@ -558,7 +562,7 @@
             starttls="true" />
     </provider>
     <provider
-        name="Mail.de/fr"
+        name="Mail.de"
         domain="mail\\.de"
         link="https://mail.de/hilfe/pop3-imap-einstellungen">
         <imap
@@ -567,6 +571,19 @@
             starttls="false" />
         <smtp
             host="smtp.mail.de"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Mail.fr"
+        domain="mail\\.fr"
+        link="https://mail.fr/en/help/messages/external_e-mail_clients/pop3-imap_settings">
+        <imap
+            host="imap.mail.fr"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mail.fr"
             port="465"
             starttls="false" />
     </provider>
@@ -656,7 +673,7 @@
     <provider
         name="Ionos (1und1)"
         appPassword="true"
-        documentation="Für Ionos müssen Sie ein E-Mail-Passwort anstelle Ihres normalen Kontopassworts verwenden, &lt;a href=&quot;https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-11-ionos-aendern/&quot;&gt;siehe hier&lt;/a&gt;."
+        documentation="Für Ionos müssen Sie ein E-Mail-Passwort anstelle Ihres normalen Kontopassworts verwenden, &lt;a href=&quot;https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-ionos-aendern/&quot;&gt;siehe hier&lt;/a&gt;."
         domain="ionos\\.de,ionos\\.com,online\\.de"
         keepalive="12"
         link="https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop-und-smtp/">
@@ -1568,8 +1585,9 @@
     </provider>
     <provider
         name="Libero Aiuto"
+        documentation="Quando l'autenticazione a due fattori è abilitata, è necessario utilizzare una password speciale per l'app/e-mail, &lt;a href=&quot;https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/&quot;&gt;vedere qui&lt;/a&gt;&lt;/b&gt;"
         domain="libero\\.it,iol\\.it"
-        link="https://aiuto.libero.it/articolo/mail/parametri-di-configurazione-per-il-client-di-posta/">
+        link="https://aiuto.libero.it/articolo/mail/configurare-libero-mail-con-client-di-posta-imap-e-smtp/">
         <imap
             host="imapmail.libero.it"
             port="993"
@@ -1633,8 +1651,8 @@
     </provider>
     <provider
         name="Mail.com"
-        domain="mail\\.com,email\\.com,usa\\.com,myself\\.com,consultant\\.com,post\\.com,europe\\.com,asia\\.com,iname\\.com,writeme\\.com,dr\\.com,cheerful\\.com,accountant\\.com,techie\\.com,engineer\\.com,linuxmail\\.org,musician\\.org,contractor\\.net,workmail\\.com,financier\\.com"
         documentation="Using third-party email clients requires a premium mail.com subscription. This is not a limitation of FairEmail."
+        domain="mail\\.com,email\\.com,usa\\.com,myself\\.com,consultant\\.com,post\\.com,europe\\.com,asia\\.com,iname\\.com,writeme\\.com,dr\\.com,cheerful\\.com,accountant\\.com,techie\\.com,engineer\\.com,linuxmail\\.org,musician\\.org,contractor\\.net,workmail\\.com,financier\\.com"
         link="https://support.mail.com/premium/imap/server.html#indexlink_help_premium_imap">
         <imap
             host="imap.mail.com"
@@ -1737,6 +1755,7 @@
     <provider
         name="StartMail"
         appPassword="true"
+        documentation="You must use &lt;a href=&quot;https://support.startmail.com/hc/en-us/articles/360006536217-Configure-a-trusted-device-IMAP-password&quot;&gt;the IMAP password&lt;/a&gt; instead of your account password."
         domain="startmail\\.com"
         link="https://support.startmail.com/hc/en-us/articles/360006596718-Server-addresses">
         <imap
@@ -2453,6 +2472,20 @@
             starttls="false" />
         <smtp
             host="smtp.suddenlink.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Yourhosting.nl"
+        domain="yourhosting\\.nl"
+        link="https://www.yourhosting.nl/kennisbank/e-mail/gegevens-om-mail-in-te-stellen/"
+        mx=".*\\.yourfilter\\.nl">
+        <imap
+            host="mail.yourhosting.nl"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.yourhosting.nl"
             port="465"
             starttls="false" />
     </provider>

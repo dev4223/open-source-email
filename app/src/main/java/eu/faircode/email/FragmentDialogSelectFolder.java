@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2025 by Marcel Bokhorst (M66B)
+    Copyright 2018-2026 by Marcel Bokhorst (M66B)
 */
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -554,7 +554,7 @@ public class FragmentDialogSelectFolder extends FragmentDialogBase {
                         folder.type = EntityFolder.USER;
                         folder.parent = (parent == null ? null : parent.id);
                         folder.setProperties();
-                        folder.inheritFrom(parent);
+                        folder.inheritFrom(parent, context);
                         folder.id = db.folder().insertFolder(folder);
                     }
 
