@@ -654,7 +654,7 @@ public class EntityRule {
 
         switch (type) {
             case TYPE_NOOP:
-                return true;
+                return false;
             case TYPE_SEEN:
                 return onActionSeen(context, message, true);
             case TYPE_UNSEEN:
@@ -1012,6 +1012,8 @@ public class EntityRule {
             target = created.id;
         }
 
+        EntityOperation.subscribe(context, target, true);
+
         List<EntityMessage> messages = db.message().getMessagesByThread(
                 message.account, message.thread, thread ? null : message.id, message.folder);
         for (EntityMessage threaded : messages)
@@ -1234,7 +1236,9 @@ public class EntityRule {
                 if (quote) {
                     String style = e.attr("style");
                     style = HtmlHelper.mergeStyles(style, HtmlHelper.getQuoteStyle(e));
-                    e.tagName("blockquote").attr("style", style);
+                    e.tagName("blockquote")
+                            .attr("style", style)
+                            .attr("type", HtmlHelper.getQuoteType());
                 } else
                     e.tagName("p");
                 div.appendChild(e);

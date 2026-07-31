@@ -44,14 +44,10 @@ crowdin.properties
 .idea/deploymentTargetSelector.xml
 .idea/other.xml
 .idea/runConfigurations.xml
+.idea/deviceManager.xml
+.idea/studiobot.xml
 .kotlin
 app/.cxx/
 build
 captures
-android/
-kotlin-profile/
-caches/
-wrapper/
-daemon/
-native/
-jdks/
+gradle

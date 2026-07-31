@@ -45,6 +45,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -194,6 +195,8 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         FragmentDialogTheme.setBackground(this, holder, this instanceof ActivityCompose);
 
         View cf = view.findViewById(R.id.content_frame);
+        if (cf != null && cf.getParent() instanceof LinearLayout) // Two rows or two columns
+            cf = (ViewGroup) cf.getParent();
         View content = (cf == null ? view : cf);
         int cpad = content.getPaddingBottom();
 
@@ -832,6 +835,8 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
 
             if (TextUtils.isEmpty(fname))
                 return uri;
+
+            fname = Helper.sanitizeFilename(fname);
 
             File dir = Helper.ensureExists(this, "shared");
             File file = new File(dir, fname);

@@ -190,8 +190,7 @@ public class ApplicationEx extends Application
                 if (!crash_reports && Log.isOwnFault(ex)) {
                     Log.e(ex);
 
-                    if (BuildConfig.BETA_RELEASE ||
-                            !Helper.isPlayStoreInstall())
+                    if (Helper.hasValidFingerprint(ApplicationEx.this))
                         DebugHelper.writeCrashLog(ApplicationEx.this, ex);
 
                     if (prev != null)
@@ -209,6 +208,8 @@ public class ApplicationEx extends Application
             UriHelper.test(this);
 
         CoalMine.install(this);
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -1126,6 +1127,17 @@ public class ApplicationEx extends Application
                 editor.putInt("viewport_height", 0);
         }
 
+        if (version < 2317 && "a".equals(BuildConfig.REVISION)) {
+            boolean compact = prefs.getBoolean("compact", false);
+            if (!compact) {
+                editor.remove("sender_ellipsize");
+                editor.remove("subject_ellipsize");
+            }
+        }
+
+        if (version < 2327 && !prefs.contains("sort_sync"))
+            editor.putBoolean("sort_sync", true);
+
         if (version < BuildConfig.VERSION_CODE)
             editor.putInt("previous_version", version);
         editor.putInt("version", BuildConfig.VERSION_CODE);
@@ -1134,6 +1146,10 @@ public class ApplicationEx extends Application
         if (Helper.isAndroid15() && last_sdk <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             editor.remove("setup_reminder");
         editor.putInt("last_sdk", Build.VERSION.SDK_INT);
+
+        String onclose = prefs.getString("onclose", null);
+        if ("none".equals(onclose))
+            editor.remove("onclose");
 
         editor.apply();
     }

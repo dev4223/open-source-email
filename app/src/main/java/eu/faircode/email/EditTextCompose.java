@@ -409,7 +409,8 @@ public class EditTextCompose extends FixedEditText {
                         h = "<div>" + HtmlHelper.formatPlainText(t.toString(), false) + "</div>";
                     }
                     String style = HtmlHelper.getQuoteStyle("", 0, 0);
-                    String html = "<blockquote style=\"" + style + "\">" + h + "</blockquote>";
+                    String type = HtmlHelper.getQuoteType();
+                    String html = "<blockquote style=\"" + style + "\" type=\"" + type + "\">" + h + "</blockquote>";
 
                     Helper.getUIExecutor().submit(new RunnableEx("pasteq") {
                         @Override
@@ -622,10 +623,13 @@ public class EditTextCompose extends FixedEditText {
                 ClipData.Item item = cbm.getPrimaryClip().getItemAt(0);
 
                 Uri uri = item.getUri();
-                if (inputContentListener != null && uri != null) {
-                    String type = Helper.guessMimeType(uri.getLastPathSegment());
-                    inputContentListener.onInputContent(uri, type);
-                    return true;
+                if (inputContentListener != null && uri != null && "content".equals(uri.getScheme())) {
+                    if (item.getText() == null && item.getHtmlText() == null) {
+                        String type = Helper.guessMimeType(uri.getLastPathSegment());
+                        Log.i("Primary clip uri=" + uri + " type=" + type);
+                        inputContentListener.onInputContent(uri, type);
+                        return true;
+                    }
                 }
 
                 final String html;
@@ -839,6 +843,9 @@ public class EditTextCompose extends FixedEditText {
                 try {
                     if (inputContentListener == null)
                         throw new IllegalArgumentException("InputContent listener not set");
+
+                    if (!"content".equals(info.getContentUri().getScheme()))
+                        throw new IllegalArgumentException("Invalid uri=" + info.getContentUri());
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 &&
                             (flags & InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0)

@@ -26,7 +26,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -1361,8 +1360,7 @@ public class StyleHelper {
 
         Editable edit = etBody.getText();
         if (image) {
-            Uri uri = Uri.parse(url);
-            if (!UriHelper.isHyperLink(uri))
+            if (!UriHelper.isHyperLink(url))
                 return false;
 
             SpannableStringBuilder ssb = new SpannableStringBuilderEx(edit);

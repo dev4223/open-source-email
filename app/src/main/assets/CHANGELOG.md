@@ -20,17 +20,140 @@ Besides being time-consuming, this is no longer free as of this year.
 This is one of the reasons why the app cannot be completely free, meaning some features must be paid for in order to pay for an annual security audit.
 To be clear, nothing will be changed for now.
 
-The security audit revealed no problems, so Google accounts [can continue to be used](https://support.google.com/cloud/answer/13464325) as usual for a year.
+The security audit (2026) revealed no problems, so Google accounts [can continue to be used](https://support.google.com/cloud/answer/13464325) as usual for a year.
 
 <br>
 
 For support you can use [the contact form](https://contact.faircode.eu/?product=fairemailsupport).
 
-### [Diuqin](https://en.wikipedia.org/wiki/Diuqin)
+### [Elopteryx](https://en.wikipedia.org/wiki/Elopteryx)
 
 ### Next version (Work in progress)
 
-### 1.2312 2026-02-16
+### 1.2327 2026-07-31
+
+* Fixed all reported bugs
+* Collapsed inline attachments in the message editor
+* Small improvements and minor bug fixes
+* Updated build tools
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2326 2026-07-21
+
+* Added helpers to grant [local network permission](https://m66b.github.io/FairEmail/#faq210)
+* Added [type="cite"](https://bugzilla.mozilla.org/show_bug.cgi?id=183219#c50) to blockquotes
+* Added placeholders to reply-to, and default CC and BCC addresses, see [the FAQ](https://m66b.github.io/FairEmail/#faq9)
+* Enabled [Certificate Transparency](https://en.wikipedia.org/wiki/Certificate_Transparency) for non Play Store builds
+* Fixed character set for sending text files in some cases
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [S/MIME root certificates](https://wiki.mozilla.org/CA/Included_Certificates)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2325 2026-07-04
+
+* Fixed a [security issue](https://github.com/M66B/FairEmail/security/advisories/GHSA-w92m-2v27-mvg9)
+* Added workaround for Migadu IMAP server bug
+* Allowed batch importing of S/MIME public keys
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2324 2026-06-30
+
+* Fixed regression in reformatted message view
+* Small improvements and minor bug fixes
+
+### 1.2323 2026-06-29
+
+* Fixed insets of two row/column mode and undo bar
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [S/MIME root certificates](https://wiki.mozilla.org/CA/Included_Certificates)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2322 2026-06-15
+
+* Updated [IPAddress library](https://seancfoley.github.io/IPAddress/) to fix an issue
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2321 2026-06-11
+
+* Fixed search dialog crashing on Android 12 and before
+
+### 1.2320 2026-06-10
+
+* Disabled Certificate Transparency because of [unsupported library](https://github.com/appmattus/certificatetransparency) causing errors
+* Option to modify a search query (tap on the title in the top action bar)
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2319 2026-06-06
+
+* Fixed [XSS](https://github.com/M66B/FairEmail/security/advisories/GHSA-r8ff-qr7g-pvw6) for [AMP Email](https://amp.dev/about/email)
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2318 2026-05-30
+
+* Fixed Italian translation
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2317 2026-05-27
+
+* Fixed all reported issues
+* Added button to request local network permission (Android 17 and later)
+* Compiling with Java 21
+* Small improvements and minor bug fixes
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2316 2026-05-13
+
+* Adapted for [Android 17](https://developer.android.com/about/versions/17)
+* Dropped support for Android 5 Lollipop (the Android support libraries do not support this anymore either)
+* Added searching for important messages
+* Small improvements and minor bug fixes
+* Updated [NDK](https://developer.android.com/ndk/downloads)
+* Updated [BouncyCastle](https://www.bouncycastle.org/)
+* Updated [AndroidX](https://developer.android.com/jetpack/androidx/versions/all-channel)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### [Diuqin](https://en.wikipedia.org/wiki/Diuqin)
+
+### 1.2315 2026-04-27 *
+
+* Fixed all reported bugs
+* Limit the width of images to the screen width on the receiver side
+* Small improvements and minor bug fixes
+* Updated [CommonMark](https://github.com/commonmark/commonmark-java)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [S/MIME root certificates](https://wiki.mozilla.org/CA/Included_Certificates)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+
+### 1.2314 2026-03-28
+
+* Fixed all reported bugs
+* Added [EXTERNAL](https://datatracker.ietf.org/doc/html/rfc4959) authentication method
+* Small improvements and minor bug fixes
+* Updated [BouncyCastle](https://www.bouncycastle.org/)
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+* Updated [Brave's debounce list](https://github.com/brave/brave-browser/wiki/Debouncing)
+
+### 1.2313 2026-03-08
+
+* Fixed all reported bugs
+* Small improvements and minor bug fixes
+* Updated [translations](https://crowdin.com/project/open-source-email)
+* Updated [Public Suffix List](https://github.com/publicsuffix/list)
+
+### 1.2312 2026-02-16 #
 
 * Fixed all reported bugs
 * Small improvements and minor bug fixes

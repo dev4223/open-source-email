@@ -169,6 +169,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -651,6 +652,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         @Override
                         public void onLongPress(@NonNull MotionEvent event) {
+                            Spannable buffer = (Spannable) tvBody.getText();
+                            int off = Helper.getOffset(tvBody, buffer, event);
+                            URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
+                            if (link.length > 0) {
+                                ClipboardManager cbm = Helper.getSystemService(context, ClipboardManager.class);
+                                cbm.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), link[0].getURL()));
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+                                    ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+                            }
+
                             boolean confirm_links = prefs.getBoolean("confirm_links", true);
                             if (!confirm_links)
                                 onClick(event, true);
@@ -794,37 +805,33 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 vwColor.getLayoutParams().width = colorStripeWidth;
 
             if (tvFrom != null) {
-                if (compact) {
-                    boolean full = "full".equals(sender_ellipsize);
-                    tvFrom.setSingleLine(!full);
+                boolean full = "full".equals(sender_ellipsize);
+                tvFrom.setSingleLine(!full);
 
-                    if ("start".equals(sender_ellipsize))
-                        tvFrom.setEllipsize(TextUtils.TruncateAt.START);
-                    else if ("end".equals(sender_ellipsize))
-                        tvFrom.setEllipsize(TextUtils.TruncateAt.END);
-                    else if ("middle".equals(sender_ellipsize))
-                        tvFrom.setEllipsize(TextUtils.TruncateAt.MIDDLE);
-                    else
-                        tvFrom.setEllipsize(null);
-                }
+                if ("start".equals(sender_ellipsize))
+                    tvFrom.setEllipsize(TextUtils.TruncateAt.START);
+                else if ("end".equals(sender_ellipsize))
+                    tvFrom.setEllipsize(TextUtils.TruncateAt.END);
+                else if ("middle".equals(sender_ellipsize))
+                    tvFrom.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+                else
+                    tvFrom.setEllipsize(null);
             }
 
             if (tvSubject != null) {
                 tvSubject.setTextColor(colorSubject);
 
-                if (compact) {
-                    boolean full = "full".equals(subject_ellipsize);
-                    tvSubject.setSingleLine(!full);
+                boolean full = "full".equals(subject_ellipsize);
+                tvSubject.setSingleLine(!full);
 
-                    if ("start".equals(subject_ellipsize))
-                        tvSubject.setEllipsize(TextUtils.TruncateAt.START);
-                    else if ("end".equals(subject_ellipsize))
-                        tvSubject.setEllipsize(TextUtils.TruncateAt.END);
-                    else if ("middle".equals(subject_ellipsize))
-                        tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
-                    else
-                        tvSubject.setEllipsize(null);
-                }
+                if ("start".equals(subject_ellipsize))
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.START);
+                else if ("end".equals(subject_ellipsize))
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.END);
+                else if ("middle".equals(subject_ellipsize))
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+                else
+                    tvSubject.setEllipsize(null);
             }
 
             if (tvKeywords != null) {
@@ -3925,7 +3932,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             properties.setAttachments(message.id, attachments);
 
             boolean hide_attachments = properties.getValue("hide_attachments", message.id, hide_attachments_default);
-            boolean show_inline = properties.getValue("inline", message.id);
+            boolean show_inline = properties.getValue("inline", message.id, prefs.getBoolean("view_show_inline", false));
             boolean svg = prefs.getBoolean("svg", true);
             boolean webp = prefs.getBoolean("webp", true);
 
@@ -5130,6 +5137,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             int id = compoundButton.getId();
             if (id == R.id.cbInline) {
+                if (isChecked)
+                    prefs.edit().putBoolean("view_show_inline", true).apply();
+                else
+                    prefs.edit().remove("view_show_inline").apply();
                 onShowInlineAttachments(message, isChecked);
             }
         }
@@ -6836,7 +6847,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             try {
                 uri = Uri.parse(uri.toString().trim().replaceAll("[\r\n]", ""));
                 if (UriHelper.isHyperLink(uri))
-                    uri = Uri.parse(uri.toString().replaceAll("\\s+", "+"));
+                    uri = Uri.parse(uri.toString().replaceAll("\\s+", "%20"));
 
                 if (ProtectedContent.isProtectedContent(uri)) {
                     Bundle args = new Bundle();
@@ -7871,6 +7882,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             intent.putExtra(CalendarContract.Events.TITLE, (String) data.get("subject"));
                         if (data.containsKey("text"))
                             intent.putExtra(CalendarContract.Events.DESCRIPTION, (String) data.get("text"));
+                        Calendar cal = Calendar.getInstance();
+                        cal.set(Calendar.MILLISECOND, 0);
+                        cal.set(Calendar.SECOND, 0);
+                        cal.set(Calendar.MINUTE, 0);
+                        cal.add(Calendar.HOUR_OF_DAY, 1);
+                        intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, cal.getTimeInMillis());
+                        cal.add(Calendar.HOUR_OF_DAY, 1);
+                        intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, cal.getTimeInMillis());
                     } else {
                         intent.setAction(Intent.ACTION_SEND);
                         intent.setType("text/plain");
@@ -8314,6 +8333,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibTrash,
                             context.getString(R.string.title_trash)));
 
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibTrashBottom,
+                            context.getString(R.string.title_trash_conversation)));
+
                     if (properties.getSelectionCount() > 0)
                         info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibDelete,
                                 context.getString(R.string.title_trash_selection)));
@@ -8386,6 +8408,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return true;
                 } else if (action == R.id.ibTrash) {
                     onActionTrash(message, false);
+                    return true;
+                } else if (action == R.id.ibTrashBottom) {
+                    properties.select(message.id, true);
+                    properties.moveSelection(EntityFolder.TRASH, false);
                     return true;
                 } else if (action == R.id.ibDelete) {
                     properties.moveSelection(EntityFolder.TRASH, false);
@@ -8707,7 +8733,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             font_size_subject = Helper.getTextSize(context, fz_subject);
 
         this.subject_italic = prefs.getBoolean("subject_italic", true);
-        this.sender_ellipsize = prefs.getString("sender_ellipsize", "end");
+        this.sender_ellipsize = prefs.getString("sender_ellipsize", compact ? "end" : "full");
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "full");
         this.show_filtered = prefs.getBoolean("show_filtered", false);
         this.keywords_header = prefs.getBoolean("keywords_header", false);
@@ -9172,17 +9198,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             private void log(String msg, long id) {
                 Log.i(msg + " id=" + id);
-                if (BuildConfig.DEBUG || debug)
-                    parentFragment.getView().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (properties.getValue("expanded", id)) {
-                                Context context = parentFragment.getContext();
-                                if (context != null)
-                                    ToastEx.makeText(context, msg + " id=" + id, Toast.LENGTH_SHORT).show();
+                if (BuildConfig.DEBUG || debug) {
+                    View view = parentFragment.getView();
+                    if (view != null) {
+                        view.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (properties.getValue("expanded", id)) {
+                                    Context context = parentFragment.getContext();
+                                    if (context != null)
+                                        ToastEx.makeText(context, msg + " id=" + id, Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                }
             }
         };
 
@@ -9376,8 +9406,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void setCompact(boolean compact) {
-        if (this.compact != compact) {
+        String sender_ellipsize = prefs.getString("sender_ellipsize", compact ? "end" : "full");
+        String subject_ellipsize = prefs.getString("subject_ellipsize", "full");
+
+        if (this.compact != compact ||
+                !Objects.equals(this.sender_ellipsize, sender_ellipsize) ||
+                !Objects.equals(this.subject_ellipsize, subject_ellipsize)) {
             this.compact = compact;
+            this.sender_ellipsize = sender_ellipsize;
+            this.subject_ellipsize = subject_ellipsize;
             properties.refresh();
         }
     }
@@ -9730,6 +9767,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void move(long id, String type);
 
         int getSelectionCount();
+
+        boolean select(long id, boolean unselect);
 
         void moveSelection(String type, boolean block);
 

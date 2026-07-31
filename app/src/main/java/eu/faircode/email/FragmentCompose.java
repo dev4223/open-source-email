@@ -268,7 +268,7 @@ public class FragmentCompose extends FragmentBase {
     private TextView tvResend;
     private TextView tvPlainTextOnly;
     private EditTextCompose etBody;
-    private ImageView ivMarkdown;
+    private ImageView ibMarkdown;
     private TextView tvNoInternet;
     private TextView tvSignature;
     private CheckBox cbSignature;
@@ -432,7 +432,7 @@ public class FragmentCompose extends FragmentBase {
         tvResend = view.findViewById(R.id.tvResend);
         tvPlainTextOnly = view.findViewById(R.id.tvPlainTextOnly);
         etBody = view.findViewById(R.id.etBody);
-        ivMarkdown = view.findViewById(R.id.ivMarkdown);
+        ibMarkdown = view.findViewById(R.id.ibMarkdown);
         tvNoInternet = view.findViewById(R.id.tvNoInternet);
         tvSignature = view.findViewById(R.id.tvSignature);
         cbSignature = view.findViewById(R.id.cbSignature);
@@ -613,6 +613,7 @@ public class FragmentCompose extends FragmentBase {
                 }
 
                 // https://developer.android.com/guide/topics/providers/contacts-provider#Intents
+                // https://android-developers.googleblog.com/2026/03/contact-picker-privacy-first-contact.html
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
                 pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(Helper.getChooser(getContext(), pick), request);
@@ -659,7 +660,7 @@ public class FragmentCompose extends FragmentBase {
         etBody.setInputContentListener(new EditTextCompose.IInputContentListener() {
             @Override
             public void onInputContent(Uri uri, String type) {
-                Log.i("Received input uri=" + uri);
+                Log.i("Received input uri=" + uri + " type=" + type);
                 UriType uriType = new UriType(uri, type, null);
                 onSharedAttachments(new ArrayList<>(Arrays.asList(uriType)));
             }
@@ -921,6 +922,13 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return gestureDetector.onTouchEvent(event);
+            }
+        });
+
+        ibMarkdown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.viewFAQ(v.getContext(), 99);
             }
         });
 
@@ -1224,7 +1232,7 @@ public class FragmentCompose extends FragmentBase {
         tvPlainTextOnly.setVisibility(View.GONE);
         etBody.setText(null);
         etBody.setHint(null);
-        ivMarkdown.setVisibility(View.GONE);
+        ibMarkdown.setVisibility(View.GONE);
 
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
@@ -1735,12 +1743,19 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onReferenceEdit() {
-        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), ibReferenceEdit);
+        Context context = getContext();
+        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), ibReferenceEdit);
 
-        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_plain_text, 1, R.string.title_edit_plain_text);
-        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_formatted_text, 2, R.string.title_edit_formatted_text);
-        popupMenu.getMenu().add(Menu.NONE, R.string.title_clipboard_copy, 3, R.string.title_clipboard_copy);
-        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, 4, R.string.title_delete);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_plain_text, 1, R.string.title_edit_plain_text)
+                .setIcon(R.drawable.twotone_image_not_supported_24);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_formatted_text, 2, R.string.title_edit_formatted_text)
+                .setIcon(R.drawable.twotone_image_24);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_clipboard_copy, 3, R.string.title_clipboard_copy)
+                .setIcon(R.drawable.twotone_file_copy_24);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, 4, R.string.title_delete)
+                .setIcon(R.drawable.twotone_delete_forever_24);
+
+        PopupMenuLifecycle.insertIcons(context, popupMenu.getMenu(), false);
 
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
@@ -1890,6 +1905,12 @@ public class FragmentCompose extends FragmentBase {
         outState.putInt("fair:pickRequest", pickRequest);
         outState.putParcelable("fair:pickUri", pickUri);
 
+        if (pgpUserIds != null)
+            outState.putStringArray("fair:pgpUserIds", pgpUserIds);
+        if (pgpKeyIds != null)
+            outState.putLongArray("fair:pgpKeyIds", pgpKeyIds);
+        outState.putLong("fair:pgpSignKeyId", pgpSignKeyId);
+
         // Focus was lost at this point
         outState.putInt("fair:selection", etBody == null ? 0 : etBody.getSelectionStart());
 
@@ -1954,6 +1975,10 @@ public class FragmentCompose extends FragmentBase {
 
                 pickRequest = savedInstanceState.getInt("fair:pickRequest");
                 pickUri = savedInstanceState.getParcelable("fair:pickUri");
+
+                pgpUserIds = savedInstanceState.getStringArray("fair:pgpUserIds");
+                pgpKeyIds = savedInstanceState.getLongArray("fair:pgpKeyIds");
+                pgpSignKeyId = savedInstanceState.getLong("fair:pgpSignKeyId");
 
                 Bundle args = new Bundle();
                 args.putString("action", working < 0 ? "new" : "edit");
@@ -6363,7 +6388,9 @@ public class FragmentCompose extends FragmentBase {
                             if (quote) {
                                 String style = e.attr("style");
                                 style = HtmlHelper.mergeStyles(style, HtmlHelper.getQuoteStyle(e));
-                                e.tagName("blockquote").attr("style", style);
+                                e.tagName("blockquote")
+                                        .attr("style", style)
+                                        .attr("type", HtmlHelper.getQuoteType());
                             } else
                                 e.tagName("p");
                             reply.appendChild(e);
@@ -6507,15 +6534,15 @@ public class FragmentCompose extends FragmentBase {
                         for (EntityAttachment attachment : attachments)
                             if (attachment.subsequence == null
                                     ? !attachment.isEncryption() &&
-                                    (cid.contains(attachment.cid) ||
-                                            !("reply".equals(action) || "reply_all".equals(action)))
+                                      (cid.contains(attachment.cid) ||
+                                       !("reply".equals(action) || "reply_all".equals(action)))
                                     : "forward".equals(action) &&
-                                    tnef.size() == 1 &&
+                                      tnef.size() == 1 &&
                                     attachment.sequence.equals(tnef.get(0).sequence) &&
-                                    !"subject.txt".equals(attachment.name) &&
-                                    !"body.html".equals(attachment.name) &&
-                                    !"body.rtf".equals(attachment.name) &&
-                                    !"attributes.txt".equals(attachment.name)) {
+                                      !"subject.txt".equals(attachment.name) &&
+                                      !"body.html".equals(attachment.name) &&
+                                      !"body.rtf".equals(attachment.name) &&
+                                      !"attributes.txt".equals(attachment.name)) {
                                 if (attachment.available) {
                                     File source = attachment.getFile(context);
 
@@ -6757,11 +6784,21 @@ public class FragmentCompose extends FragmentBase {
                             if (attachments == null)
                                 attachments = new ArrayList<>();
 
+                            boolean inline = (attachments.size() > 0);
+                            for (EntityAttachment attachment : attachments)
+                                if (!attachment.isInline()) {
+                                    inline = false;
+                                    break;
+                                }
+
+                            if (inline && (lastAttachments == null || lastAttachments == 0))
+                                ibExpanderAttachments.setTag(true); // Default hide all inline images
                             if (lastAttachments != null && attachments.size() > lastAttachments)
-                                ibExpanderAttachments.setTag(false);
+                                ibExpanderAttachments.setTag(inline && !Boolean.FALSE.equals(ibExpanderAttachments.getTag()));
+
                             lastAttachments = attachments.size();
 
-                            boolean hide_attachments = Boolean.TRUE.equals(ibExpanderAttachments.getTag());
+                            boolean hide_attachments = (attachments.size() > 0 && Boolean.TRUE.equals(ibExpanderAttachments.getTag()));
 
                             List<EntityAttachment> a = (hide_attachments ? new ArrayList<>() : new ArrayList<>(attachments));
                             rvAttachment.post(new Runnable() {
@@ -6795,11 +6832,11 @@ public class FragmentCompose extends FragmentBase {
                             });
 
                             ibRemoveAttachments.setVisibility(attachments.size() > 2 && !hide_attachments ? View.VISIBLE : View.GONE);
-                            ibExpanderAttachments.setVisibility(attachments.size() > 1 ? View.VISIBLE : View.GONE);
+                            ibExpanderAttachments.setVisibility(attachments.size() > 1 || inline || hide_attachments ? View.VISIBLE : View.GONE);
                             ibExpanderAttachments.setImageLevel(hide_attachments ? 1 /* more */ : 0 /* less */);
                             tvAttachments.setText(getResources()
                                     .getQuantityString(R.plurals.title_attachments, attachments.size(), attachments.size()));
-                            tvAttachments.setVisibility(attachments.size() > 0 && hide_attachments ? View.VISIBLE : View.GONE);
+                            tvAttachments.setVisibility(hide_attachments ? View.VISIBLE : View.GONE);
                             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
                             boolean downloading = false;
@@ -7276,13 +7313,13 @@ public class FragmentCompose extends FragmentBase {
             if (markdown) {
                 String html = (convertMarkdown
                         ? HtmlHelper.toHtml(spanned, context)
-                        : Markdown.toHtml(spanned.toString()));
+                        : Markdown.toHtml(spanned.toString(), context));
                 Document doc = JsoupEx.parse(html);
                 doc.body().attr("markdown", Boolean.toString(markdown));
                 body = doc.html();
             } else
                 body = (convertMarkdown
-                        ? Markdown.toHtml(spanned.toString())
+                        ? Markdown.toHtml(spanned.toString(), context)
                         : HtmlHelper.toHtml(spanned, context));
             if (convertMarkdown)
                 dirty = true;
@@ -8268,7 +8305,7 @@ public class FragmentCompose extends FragmentBase {
 
                 Spanned spannedBody;
                 if (markdown) {
-                    String md = Markdown.fromHtml(doc.body().html());
+                    String md = Markdown.fromHtml(doc.body().html(), context);
                     spannedBody = new SpannableStringBuilder(md);
                 } else {
                     HtmlHelper.clearAnnotations(doc); // Legacy left-overs
@@ -8358,7 +8395,7 @@ public class FragmentCompose extends FragmentBase {
                 etBody.setHint(hint);
 
                 grpBody.setVisibility(View.VISIBLE);
-                ivMarkdown.setVisibility(markdown ? View.VISIBLE : View.GONE);
+                ibMarkdown.setVisibility(markdown ? View.VISIBLE : View.GONE);
 
                 cbSignature.setChecked(draft.signature);
                 ibSignature.setEnabled(draft.signature);

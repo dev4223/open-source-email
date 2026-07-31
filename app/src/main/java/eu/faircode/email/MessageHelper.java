@@ -210,6 +210,7 @@ public class MessageHelper {
     private static final String GOOGLE_DKIM_SIGNATURE = "X-Google-DKIM-Signature";
     private static final String ARC_SEAL = "ARC-Seal";
     private static final String AUTHENTICATION_RESULTS = "Authentication-Results";
+    private static final String ANON_AUTHENTICATION_RESULTS = "X-AnonAddy-Authentication-Results";
     private static final String ARC_AUTHENTICATION_RESULTS = "ARC-Authentication-Results";
     private static final String ARC_MESSAGE_SIGNATURE = "ARC-Message-Signature";
 
@@ -299,6 +300,13 @@ public class MessageHelper {
             "$X-ME-Annot-2", // Fastmail
             "$purchases", // mailbox.org
             "$social" // mailbox.org
+    ));
+
+    private static final List<String> FLAG_USER = Collections.unmodifiableList(Arrays.asList(
+            FLAG_CLASSIFIED,
+            FLAG_FILTERED,
+            FLAG_LOW_IMPORTANCE,
+            FLAG_HIGH_IMPORTANCE
     ));
 
     // https://tools.ietf.org/html/rfc4021
@@ -541,15 +549,15 @@ public class MessageHelper {
                     (message.dsn == null || EntityMessage.DSN_NONE.equals(message.dsn))) {
                 // Add reply to
                 if (identity.replyto != null)
-                    imessage.setReplyTo(convertAddress(InternetAddress.parse(identity.replyto), identity));
+                    imessage.setReplyTo(convertAddress(InternetAddress.parse(replacePlaceholders(identity.replyto, message, identity)), identity));
 
                 // Add extra cc
                 if (identity.cc != null)
-                    addAddress(identity.cc, Message.RecipientType.CC, imessage, identity);
+                    addAddress(replacePlaceholders(identity.cc, message, identity), Message.RecipientType.CC, imessage, identity);
 
                 // Add extra bcc
                 if (identity.bcc != null)
-                    addAddress(identity.bcc, Message.RecipientType.BCC, imessage, identity);
+                    addAddress(replacePlaceholders(identity.bcc, message, identity), Message.RecipientType.BCC, imessage, identity);
             }
 
             // Delivery/read request
@@ -850,6 +858,28 @@ public class MessageHelper {
         return new InternetAddress(email, name, StandardCharsets.UTF_8.name());
     }
 
+    public static boolean hasPlaceholder(String address) {
+        return (!TextUtils.isEmpty(address) &&
+                (address.contains("$from$")) || address.contains("$user$") || address.contains("$domain$") || address.contains("$extra$"));
+    }
+
+    static String replacePlaceholders(String address, EntityMessage message, EntityIdentity identity) throws UnsupportedEncodingException {
+        if (hasPlaceholder(address)) {
+            Address from = getFrom(message, identity);
+            if (from instanceof InternetAddress) {
+                String email = ((InternetAddress) from).getAddress();
+                String user = UriHelper.getEmailUser(email);
+                String domain = UriHelper.getEmailDomain(email);
+                address = address
+                        .replace("$from$", email)
+                        .replace("$user$", user)
+                        .replace("$domain$", domain)
+                        .replace("$extra$", message.extra == null ? "" : message.extra);
+            }
+        }
+        return address;
+    }
+
     static String limitReferences(String ref) {
         final int maxlen = MAX_HEADER_LENGTH - "References: ".length();
 
@@ -924,7 +954,7 @@ public class MessageHelper {
         // https://en.wikipedia.org/wiki/International_email
         for (Address address : addresses) {
             String email = ((InternetAddress) address).getAddress();
-            email = toPunyCode(email, false);
+            email = toPunyCode(email, false, identity != null && identity.unicode);
             ((InternetAddress) address).setAddress(email);
         }
         return addresses;
@@ -1465,13 +1495,14 @@ public class MessageHelper {
                     BodyPart attachmentPart = new MimeBodyPart();
 
                     File file = attachment.getFile(context);
+                    boolean isUtf8 = (attachment.type != null && attachment.type.startsWith("text/") && CharsetHelper.isUTF8(file));
 
                     FileDataSource dataSource = new FileDataSource(file);
                     dataSource.setFileTypeMap(new FileTypeMap() {
                         @Override
                         public String getContentType(File file) {
                             // https://tools.ietf.org/html/rfc6047
-                            if ("text/calendar".equals(attachment.type))
+                            if ("text/calendar".equals(attachment.type) || isUtf8)
                                 return attachment.type + "; charset=UTF-8;";
 
                             return attachment.type;
@@ -1588,6 +1619,22 @@ public class MessageHelper {
                 return false;
 
         return true;
+    }
+
+    static boolean hasUserKeywords(String[] keywords) {
+        if (keywords == null)
+            return false;
+        for (String keyword : keywords) {
+            if (TextUtils.isEmpty(keyword))
+                continue;
+            if (FLAG_USER.contains(keyword))
+                return true;
+            if (FLAG_BLACKLIST.contains(keyword))
+                continue;
+            if (!keyword.startsWith("$"))
+                return true;
+        }
+        return false;
     }
 
     String getMessageID() throws MessagingException {
@@ -2224,6 +2271,10 @@ public class MessageHelper {
         if (results != null)
             all.addAll(Arrays.asList(results));
 
+        String[] anonresults = imessage.getHeader(ANON_AUTHENTICATION_RESULTS);
+        if (anonresults != null)
+            all.addAll(Arrays.asList(anonresults));
+
         String[] aresults = imessage.getHeader(ARC_AUTHENTICATION_RESULTS);
         if (aresults != null)
             all.addAll(Arrays.asList(aresults));
@@ -2849,7 +2900,7 @@ public class MessageHelper {
             if (email != null) {
                 email = decodeMime(email);
                 email = fromPunyCode(email);
-                email = toPunyCode(email, true);
+                email = toPunyCode(email, true, false);
 
                 iaddress.setAddress(email);
             }
@@ -2895,6 +2946,9 @@ public class MessageHelper {
         if (sender == null)
             sender = getAddressHeader("X-SimpleLogin-Original-From");
         if (sender == null)
+            // X-AnonAddy-Original-Sender: <email>
+            // X-AnonAddy-Original-Envelope-From: <email>
+            // X-AnonAddy-Original-From-Header: <name>
             sender = getAddressHeader("X-AnonAddy-Original-From-Header");
         if (sender == null)
             sender = getAddressHeader("Sender");
@@ -3020,8 +3074,7 @@ public class MessageHelper {
                     mailto = "mailto:" + unsubscribe;
                 else {
                     if (link == null) {
-                        Uri uri = Uri.parse(unsubscribe);
-                        if (UriHelper.isHyperLink(uri))
+                        if (UriHelper.isHyperLink(unsubscribe))
                             link = unsubscribe;
                         else {
                             Pattern p =
@@ -3256,6 +3309,10 @@ public class MessageHelper {
                 Log.i("--- local by sendmail");
                 return true;
             }
+            if (by.toLowerCase(Locale.ROOT).contains("postfix")) {
+                Log.i("--- local by Postfix");
+                return true;
+            }
             if (by.startsWith("filterdrecv-")) {
                 Log.i("--- local by filterdrecv");
                 return true;
@@ -3356,14 +3413,14 @@ public class MessageHelper {
             if (ip.toLowerCase(Locale.ROOT).startsWith("ipv6:"))
                 ip = ip.substring(5);
             if (ConnectionHelper.isNumericAddress(ip) &&
-                    ConnectionHelper.isLocalAddress(ip))
+                    ConnectionHelper.isLocalAddress(ip, true))
                 return true;
         }
 
         int f = value.indexOf(' ');
         String host = (f < 0 ? value : value.substring(0, f));
         if (ConnectionHelper.isNumericAddress(host)) {
-            if (ConnectionHelper.isLocalAddress(host))
+            if (ConnectionHelper.isLocalAddress(host, true))
                 return true;
         }
 
@@ -3575,7 +3632,9 @@ public class MessageHelper {
                 String email = address.getAddress();
                 String personal = address.getPersonal();
 
-                if (TextUtils.isEmpty(personal) || format == AddressFormat.EMAIL_ONLY)
+                if (format == AddressFormat.EMAIL_ONLY ||
+                        TextUtils.isEmpty(personal) ||
+                        PatternsCompat.AUTOLINK_EMAIL_ADDRESS.matcher(personal).find())
                     formatted.add(TextUtils.isEmpty(email) ? "<>" : email);
                 else {
                     if (compose) {
@@ -3634,7 +3693,7 @@ public class MessageHelper {
         return email;
     }
 
-    static String toPunyCode(String email, boolean single) {
+    static String toPunyCode(String email, boolean single, boolean unicode) {
         int at = email.indexOf('@');
         if (at > 0) {
             String user = email.substring(0, at);
@@ -3645,11 +3704,12 @@ public class MessageHelper {
                     TextHelper.isSingleScript(domain))
                 return email;
 
-            try {
-                user = IDN.toASCII(user, IDN.ALLOW_UNASSIGNED);
-            } catch (Throwable ex) {
-                Log.i(ex);
-            }
+            if (!unicode)
+                try {
+                    user = IDN.toASCII(user, IDN.ALLOW_UNASSIGNED);
+                } catch (Throwable ex) {
+                    Log.i(ex);
+                }
 
             String[] parts = domain.split("\\.");
             for (int p = 0; p < parts.length; p++)
@@ -4269,7 +4329,7 @@ public class MessageHelper {
                                 StandardCharsets.US_ASCII.equals(cs) ||
                                 StandardCharsets.ISO_8859_1.equals(cs))
                             result = new String(result.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-                        result = (first ? "" : "<br><hr>") + Markdown.toHtml(result);
+                        result = (first ? "" : "<br><hr>") + Markdown.toHtml(result, context);
                     } catch (Throwable ex) {
                         Log.e(ex);
                         result = HtmlHelper.formatPlainText(result);

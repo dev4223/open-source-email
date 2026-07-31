@@ -536,7 +536,7 @@
     </select-->
     <provider
         name="gmx.de"
-        documentation="Ist &lt;a href=&quot;https://hilfe.gmx.net/pop-imap/einschalten.html&quot;&gt;IMAP aktiviert&lt;/a&gt;? Die Zwei-Faktor-Authentifizierung erfordert &lt;a href=&quot;https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html&quot;&gt;ein App-Passwort&lt;/a&gt;!"
+        documentation="Ist &lt;a href=&quot;https://hilfe.gmx.net/pop-imap/einschalten.html&quot;&gt;IMAP aktiviert&lt;/a&gt;? In vielen Fällen ist nun &lt;a href=&quot;https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html&quot;&gt;ein App-Passwort&lt;/a&gt; erforderlich!"
         domain="gmx\\.de,gmx\\.net,mein\\.gmx,gmx\\.at,gmx\\.ch,mail\\.gmx,email\\.gmx,gmx\\.eu,gmx\\.org,gmx\\.info,gmx\\.biz"
         keepalive="12"
         link="https://hilfe.gmx.net/pop-imap/imap/imap-serverdaten.html#indexlink_help_pop-imap_imap">
@@ -676,7 +676,7 @@
         documentation="Für Ionos müssen Sie ein E-Mail-Passwort anstelle Ihres normalen Kontopassworts verwenden, &lt;a href=&quot;https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-ionos-aendern/&quot;&gt;siehe hier&lt;/a&gt;."
         domain="ionos\\.de,ionos\\.com,online\\.de"
         keepalive="12"
-        link="https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop-und-smtp/">
+        link="https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop3-und-smtp/">
         <imap
             host="imap.ionos.de"
             port="993"
@@ -848,7 +848,8 @@
         domain="mail\\.ru,inbox\\.ru,list\\.ru,bk\\.ru"
         id="mailru"
         link="https://help.mail.ru/mail-help/mailer/popsmtp"
-        maxtls="1.2">
+        maxtls="1.2"
+        raw="true">
         <imap
             host="imap.mail.ru"
             port="993"
@@ -1296,7 +1297,7 @@
     <provider
         name="Vodafone.de/Arcor"
         appPassword="true"
-        domain="arcor\\.de,vodafone\\.de,vodafonemail\\.de,nexgo\\.de"
+        domain="arcor\\.de,vodafone\\.de,vodafonemail\\.de,unity-mail\\.de,nexgo\\.de"
         link="https://www.vodafone.de/hilfe/vodafone-e-mail-cloud.html?tab=servereinstellungen&amp;icmp=hilfe:email:tab2:abrufen:servereinstellungen"
         partial="true">
         <imap
@@ -1651,7 +1652,8 @@
     </provider>
     <provider
         name="Mail.com"
-        documentation="Using third-party email clients requires a premium mail.com subscription. This is not a limitation of FairEmail."
+        appPassword="true"
+        documentation="Using third-party email clients requires a premium mail.com subscription. This is not a limitation of FairEmail. You might need to use an &lt;a href='https://support.mail.com/security/2fa/application-specific-passwords.html'&gt;app-specific password&lt;/a&gt;"
         domain="mail\\.com,email\\.com,usa\\.com,myself\\.com,consultant\\.com,post\\.com,europe\\.com,asia\\.com,iname\\.com,writeme\\.com,dr\\.com,cheerful\\.com,accountant\\.com,techie\\.com,engineer\\.com,linuxmail\\.org,musician\\.org,contractor\\.net,workmail\\.com,financier\\.com"
         link="https://support.mail.com/premium/imap/server.html#indexlink_help_premium_imap">
         <imap
@@ -2486,6 +2488,60 @@
             starttls="false" />
         <smtp
             host="mail.yourhosting.nl"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="GDWG"
+        domain="gwdg\\.de"
+        link="https://docs.gwdg.de/doku.php?id=en:services:email_collaboration:email_service:pop3_und_imap"
+        user="local">
+        <imap
+            host="email.gwdg.de"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="email.gwdg.de"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Soverin"
+        link="https://soverin.nl/help/setup"
+        mx=".*\\.soverin\\.net">
+        <imap
+            host="imap.soverin.net"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.soverin.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Hosteurope"
+        documentation="Sie müssen dieses Konto manuell einrichten (über „Manuelle Einrichtung und Kontooptionen“ direkt unter der Schaltfläche „Assistent“), da die Serveradressen kontospezifisch sind!"
+        link="https://www.hosteurope.de/faq/e-mail/mailprogramme/welchemailserver"
+        specific="True">
+        <imap
+            host="wp-xxxxxxx.mail.server-he.de"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="wp-xxxxxxx.mailout.server-he.de"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Hostinger"
+        link="https://www.hostinger.com/support/4768584-how-to-set-up-hostinger-email-on-mozilla-thunderbird-desktop-windows/"
+        mx=".*\\.hostinger\\.com">
+        <imap
+            host="imap.hostinger.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.hostinger.com"
             port="465"
             starttls="false" />
     </provider>

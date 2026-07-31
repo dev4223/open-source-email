@@ -417,6 +417,10 @@
         You are navigating to the more advanced options.
         All options have commonly used standard values, which you do not need to change unless you have a different preference.
     </string>
+    <string name="title_advanced_hint_configure">
+        You don\'t need to be here to configure an account. Please use the quick setup wizard button for this.
+        The quick setup wizard almost always works, but if it doesn\'t, you can use the classic manual setup a little below the wizard button.
+    </string>
     <string name="title_advanced_hint_remark">
         The options are categorized by tab, divided into sections, organized by appearance or use, and searchable.
     </string>
@@ -574,6 +578,7 @@
     <string name="title_advanced_http_redirect">Allow connection redirection</string>
     <string name="title_advanced_bouncy_castle">Use Bouncy Castle\'s secure socket provider (JSSE)</string>
     <string name="title_advanced_fips_mode" translatable="false">FIPS mode</string>
+    <string name="title_advanced_local_network">Local network permissions</string>
     <string name="title_advanced_manage_connectivity">Manage connectivity</string>
 
     <string name="title_advanced_caption_general">General</string>
@@ -1297,6 +1302,7 @@
     <string name="title_imap" translatable="false">IMAP</string>
     <string name="title_pop3" translatable="false">POP3</string>
     <string name="title_smtp" translatable="false">SMTP</string>
+    <string name="title_lan_required">Local network permissions required</string>
     <string name="title_aliases">Aliases</string>
     <string name="title_provider">Provider</string>
     <string name="title_custom">Custom</string>
@@ -1314,6 +1320,7 @@
     <string name="title_notify_remark">You can enable this for account specific notifications</string>
     <string name="title_port">Port number</string>
     <string name="title_user">User name</string>
+    <string name="title_user_hint">Usually the primary email address</string>
     <string name="title_password">Password</string>
     <string name="title_password_storage">How are passwords stored?</string>
     <string name="title_case_sensitive">Usernames and passwords are usually case sensitive</string>
@@ -1482,6 +1489,7 @@
     <string name="title_show_flagged">Show starred message count</string>
     <string name="title_subscribed_only">Subscribed only</string>
     <string name="title_sort_unread_atop">Sort unread on top</string>
+    <string name="title_sort_sync">Sort on synchronized</string>
     <string name="title_search_folder">Search for folder</string>
     <string name="title_apply_to_all">Apply to all</string>
     <string name="title_edit_account_name">Edit account name</string>
@@ -1630,6 +1638,7 @@
     <string name="title_quick_actions_clear">Clear selection after action</string>
 
     <string name="title_trash">Trash</string>
+    <string name="title_trash_conversation">Trash conversation</string>
     <string name="title_trash_selection">Trash selection</string>
     <string name="title_copy">Copy &#8230;</string>
     <string name="title_copy_to">Copy to &#8230;</string>
@@ -1998,6 +2007,7 @@
     <string name="title_search_with_unseen">Unread</string>
     <string name="title_search_with_flagged">Starred</string>
     <string name="title_search_with_hidden">Hidden (on device only)</string>
+    <string name="title_search_with_importance">Importance (on device only)</string>
     <string name="title_search_with_encrypted">Encrypted (on device only)</string>
     <string name="title_search_with_attachments">With attachments (on device only)</string>
     <string name="title_search_with_size">Message size larger than</string>
@@ -2748,7 +2758,7 @@
     </string-array>
 
     <string-array name="onCloseValues" translatable="false">
-        <item></item>
+        <item>none</item>
         <item>previous</item>
         <item>next</item>
     </string-array>
@@ -2910,6 +2920,7 @@
 
     <string-array name="undoNames">
         <item>Off</item>
+        <item>1.25 s</item>
         <item>2.5 s</item>
         <item>5 s</item>
         <item>7.5 s</item>
@@ -2921,6 +2932,7 @@
 
     <integer-array name="undoValues" translatable="false">
         <item>0</item>
+        <item>1500</item>
         <item>2500</item>
         <item>5000</item>
         <item>7500</item>

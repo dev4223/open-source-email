@@ -58,6 +58,9 @@ Searching for *IMAP* and the name of the provider is mostly sufficient to find t
 In some cases, you'll need to enable external access to your account and/or to use a special (app) password,
 for instance when two-factor authentication is enabled.
 
+When you copy and paste a password, make sure you do not copy any whitespace (spaces, etc.).
+Please also keep in mind that a password manager may fill in an old password and overwrite what you have pasted or typed, without this being visible.
+
 For authorizing:
 
 * Gmail / G suite, see [question 6](#faq6)
@@ -69,18 +72,26 @@ For authorizing:
 * Free.fr, see [question 157](#faq157)
 * Posteo: please check if [additional email account protection](https://posteo.de/en/help/activating-additional-email-account-protection) ([German](https://posteo.de/hilfe/zusaetzlichen-postfachschutz-deaktivieren)) isn't enabled
 * Posteo: in some cases you need to use [an app password](https://posteo.de/en/help/app-passwords) ([German](https://posteo.de/hilfe/anwendungs-passwoerter))
-* Posteo: not that there is [no spam folder](https://posteo.de/en/help/how-does-the-posteo-spam-filter-work) ([German](https://posteo.de/hilfe/wie-funktioniert-der-posteo-spamfilter))
+* Posteo: note that there is [no spam folder](https://posteo.de/en/help/how-does-the-posteo-spam-filter-work) ([German](https://posteo.de/hilfe/wie-funktioniert-der-posteo-spamfilter))
 * Posteo: if you want to synchronize contacts, please [see here](https://posteo.de/en/help/how-do-i-set-up-synchronisation-of-contacts-with-an-android-address-book)
 * Web.de: please check if [IMAP is enabled](https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html)
-* Web.de: with two factor authentication you'll need to use [an app password](https://web.de/email/sicherheit/zwei-faktor-authentifizierung/)
+* Web.de: with two factor authentication you must use [an app password](https://web.de/email/sicherheit/zwei-faktor-authentifizierung/)
 * Web.de: if you are missing the spam messages folder, you should enable spam filtering via the website of web.de again
 * GMX: please check if [IMAP is enabled](https://support.gmx.com/pop-imap/toggle.html) ([German](https://hilfe.gmx.net/pop-imap/einschalten.html)). Reportedly, you need to do this on a desktop computer.
-* GMX: with two factor authentication you'll need to use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html)). Not that enabling two-factor authentication does not automatically enable IMAP.
+* GMX: with two-factor authentication, and sometimes in other cases as well, for example when traveling or using a VPN, you must use [an app password](https://support.gmx.com/security/2fa/application-specific-passwords.html) ([German](https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html)). Not that enabling two-factor authentication does not automatically enable IMAP.
 * T-online.de: please make sure you use [an email password](https://www.telekom.de/hilfe/festnetz-internet-tv/e-mail/e-mail-adresse-passwoerter-und-sicherheit/passwort-fuer-e-mail-programme-einrichten) (German) and not your account password
 * Ionos (1und1): please make sure you use [an email password](https://www.ionos.de/hilfe/e-mail/problemloesungen-mail-basicmail-business/passwort-fuer-e-mail-konto-bei-ionos-aendern/) (German) and not your account password
 * Yandex: please check if [IMAP is enabled](https://yandex.com/support/mail/mail-clients/others.html)
 * Comcast/Xfinity: please check if [third party email access](https://www.xfinity.com/support/articles/third-party-email-access) is enabled
 * Mailbox.org: with two factor authentication you'll need to use [an app password](https://kb.mailbox.org/en/private/security-and-privacy/application-passwords-for-external-programs/) ([German](https://kb.mailbox.org/de/privat/sicherheit-und-privatsphaere/applikationspasswoerter-fuer-externe-programme/))
+
+**Important:**
+
+*There is a good reason why the app warns against using a VPN:*
+With a VPN, you share a single network address with many people, and not all of those people will behave properly all the time.
+Most email servers automatically block network addresses when abuse is detected, for example, when someone tries to send spam.
+That is why a VPN is often problematic for email. Someone else's misconduct can affect you.
+So if there are authentication problems while using a VPN, either when configuring or using an account, try turning off the VPN, or create an exception for FairEmail in the VPN app.
 
 Please see [this FAQ](#faq22) for common error messages and solutions,
 and please see [this FAQ](#faq207) in case of '*Authentication failed*' or similar.
@@ -142,7 +153,7 @@ Related questions:
 * A [bug in Android 6.0](https://issuetracker.google.com/issues/37068143) causes a crash with *... Invalid offset: ... Valid range is ...* when text is selected and tapping outside of the selected text. This bug has been fixed in Android 6.0.1.
 * Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.
 * Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
-* A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.
+* ~~A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.~~
 * Search suggestions causes the keyboard losing focus on Android 12L.
 * ~~[A bug](https://techcommunity.microsoft.com/t5/outlook/outlook-office-365-imap-idle-is-broken/m-p/3616242) in the Outlook IMAP server causes delayed new message notifications.~~
 * Updating the Material You colors sometimes require restarting the app / the device, which is caused by [a bug](https://issuetracker.google.com/issues/386671298) in the Android WebView.
@@ -160,7 +171,7 @@ Related questions:
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23redmi)
 
-On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices, some Oppo devices, some Samsung devices, some Sony (Xperia) devices, some Motorola devices, and possibly other devices running Android 12,
+On some Xiaomi Redmi (Note) devices, some Realme devices, some OnePlus devices, some Oppo devices, some Samsung devices, some Sony (Xperia) devices, some Motorola devices, and possibly other devices running Android 12 or 13,
 the database occasionally gets corrupted, especially after installing an update,
 resulting in total data loss (on the device only, unless you are using a POP3 account with the option *Leave messages on server* disabled).
 
@@ -228,6 +239,9 @@ Most apps store their data in the cloud instead of on the device, which is why t
 * &#x2714; ~~Search for settings~~
 * &#x274C; ~~POP3 folders~~
 * &#x2714; ~~Bottom action bar~~
+* [SMTP Require TLS Option](https://datatracker.ietf.org/doc/html/rfc8689)
+* [Unobtrusive End-to-End Email Signatures](https://datatracker.ietf.org/doc/draft-ietf-mailmaint-unobtrusive-signatures/)
+* [OAuth for Thundermail](https://github.com/thunderbird/thunderbird-accounts/issues/1124)
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -333,7 +347,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(96) Where can I find the IMAP and SMTP settings?](#faq96)
 * [(97) What is 'cleanup'?](#faq97)
 * [(98) Why can I still pick contacts after revoking contacts permissions?](#faq98)
-* [(99) Can you add a rich text or markdown editor?](#faq99)
+* [(99) What should I know about Markdown?](#faq99)
 * [(100) How can I synchronize Gmail categories?](#faq100)
 * [(101) What does the blue/orange dot at the bottom of the conversations mean?](#faq101)
 * [(102) How can I enable auto rotation of images?](#faq102)
@@ -444,6 +458,7 @@ Anything on this list is in random order and *might* be added in the near future
 * [(207) What does 'Authentication failed' mean?](#faq207)
 * [(208) What does 'about:blank#blocked' mean when I click on a link?](#faq208)
 * [(209) Why is using a VPN often problematic?](#faq209)
+* [(210) Why is local network permission needed?](#faq210)
 
 [I have another question.](#get-support)
 
@@ -465,6 +480,7 @@ The following Android permissions are **required**:
 * *ask to ignore battery optimizations* (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): to disable battery optimizations, please see [this FAQ](#faq175) for more information
 * *allow the app to show notifications* (POST_NOTIFICATIONS): to show new message notifications and (account) warnings and errors (Android 13 and later only)
 * *Google Play (in-app) billing service* (BILLING): for in-app purchases
+* *Nearby devices* (ACCESS_LOCAL_NETWORK): to access email servers via local network addresses (Android 17 and later only; not available in the Play Store release)
 
 <br />
 
@@ -757,9 +773,9 @@ To use a password, you can use the quick setup wizard and select *Other provider
 
 **Important**: sometimes Google issues this alert:
 
-*[ALERT] Please log in via your web browser: https://support.google.com/mail/accounts/answer/78754 (Failure)*
+*[ALERT] Please log in via your web browser*
 
-This Google security check is triggered more often with *less secure apps* enabled, even less with an app password, and hardly ever when using an on-device account (OAuth).
+~~This Google security check is triggered more often with *less secure apps* enabled, even less with an app password, and hardly ever when using an on-device account (OAuth).~~
 You might see the error *OAUTH2 asked for more*, which basically says the connection is temporarily blocked, until you confirm it is you.
 
 Note that an app specific password is required when two factor authentication is enabled.
@@ -769,7 +785,7 @@ After enabling two factor authentication there will be this error message:
 
 The error message "*Authentication failed - Invalid credentials*" or *Token refresh required* means that the Android account manager was not able to refresh the access token,
 or that getting an access token was not allowed,
-for example when the account is a [Family Link](https://support.google.com/families/answer/7101025) account, in which case you can use the Gmail app only.
+for example when the account is a [Family Link](https://support.google.com/families/answer/7101025) account or any other delegated account, in which case you can use the Gmail app only.
 A common cause for this problem is using a VPN, a firewall app or an ad blocker which blocks internet access for the Android account manager.
 Please make sure permissions were granted to the app via setup step 2.
 You can try to work around this issue by using the quick setup wizard *Gmail (Oauth)* or by using an app password.
@@ -902,7 +918,8 @@ You should not change the username!
 
 Note that you can select the default sending address via the three-dots overflow menu at the top right of the message editor (not the start screen!).
 
-**Important**: In the case of an Outlook account, you should first authenticate the account again with the "Office 365" wizard. You don't need to remove the account for this.
+**Important**: In the case of an Outlook (consumer) account, you should first authenticate the account again with the "Outlook/Office" wizard,
+else there will probably the error '... *NoPrimarySmtpAddress* ...'.
 
 **In many cases, an alias address must first be verified via the website of the mail provider**
 
@@ -914,6 +931,12 @@ if your provider allows this. Considering the email address test@example.org you
 * "*Some name, username*" will result in the email address "*Some name, &lt;username@example.org&gt;*" (since version 1.2032)
 
 You can configure a default CC, BCC and/or reply-to address in the advanced identity settings.
+Since version 1.2326 you can use the following placeholders in these default addressess:
+
+* `$from$`: the full 'from' address
+* `$user$`: the username of the 'from' address
+* `$domain$`: the domain name of the 'from' address
+* `$extra$`: the extra as explained above
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
@@ -1009,6 +1032,8 @@ If you want to undo decryption, you can tap on the "close" padlock icon.
 You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/) first.
 FairEmail was tested with OpenKeychain version 5.4. Later versions will most likely be compatible, but earlier versions might not be.
 
+[PGPony for Android](https://github.com/norsehorse-dev/PGPonyAndroid) is reported to work too. You can select the PGP provider on the encryption settings tab page.
+
 **Important**: the OpenKeychain app is known to (silently) crash when the calling app (FairEmail) is not authorized yet and is getting an existing public key.
 You can workaround this by trying to send a signed/encrypted message to a sender with an unknown public key.
 
@@ -1061,6 +1086,7 @@ Common errors:
 * *Message signature valid but not confirmed*: the signature is okay, but the public key still needs to be confirmed in the OpenKeychain app.
 * *OpenPgp error 0: null* / *OpenPgp error 0: General error*: please check the key in the OpenKeychain app and make sure there are no conflicting identities for the key and make sure the email address exactly matches the key, including lower/upper case. Also, make sure the key can be used to sign/encrypt and isn't for encrypting/signing only.
 * *OpenPgp error 0: Encountered an error reading input data!*: your public key has the [AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption) flag set, but the message was encrypted in the older MDC (Modification Detection Code) mode by the sender. For example the Posteo email server does this erroneously. Workaround: [remove the AEAD flag](https://github.com/keybase/keybase-issues/issues/4025#issuecomment-853933127) from the key.
+* *OpenPGP error 0: An OpenPGP exception occurred during an operation."*: an imported private key is probably incompatible with the OpenKeychain app.
 
 **Important**: if *Don't keep activities* is enabled in the Android developer options,
 FairEmail and the OpenKeychain app cannot run at the same time, causing PGP operations to fail.
@@ -1280,6 +1306,8 @@ This will result in searching in the subject or text (only) like this:
 ("apple" AND "banana" AND NOT "cherry") OR "nuts"
 ```
 
+<br>
+
 Since version 1.1980 it is possible to use these prefixes as a search expression:
 
 ```
@@ -1291,6 +1319,10 @@ keyword:<keyword>
 ```
 
 There should be <ins>no space</ins> between the prefix and the search term, which will be applied as an AND-condition.
+
+This will **only** work for searching on the server!
+
+<br>
 
 Only AND conditions (+) and NOT conditions (-) can be used for on-device searching (since version 1.1981).
 If you try to use other search expressions, you get the error *Select a folder for a complex search*,
@@ -1315,6 +1347,9 @@ Using the search index is a pro feature.
 <br />
 
 In the case of the error '*User is authenticated but not connected*', please see [this FAQ](#faq139).
+
+In the case of the error '... *The user could not be authenticated as the grant is expired. The user must sign in again.* ...',
+please go to the settings via the navigation menu (left side menu), tap on the wizard button, select *Outlook/Office* and follow the steps to authenticate the account again.
 
 <br>
 
@@ -1399,6 +1434,10 @@ In the case of the error '*User is authenticated but not connected*', please see
 <br />
 
 An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting "*Outlook/Office 365 (OAuth)*".
+
+To use third-party email apps for consumer Outlook accounts, IMAP must be enabled.
+For this, please go to the Outlook website, tap on the settings wheel at the top right,
+select 'Mail', select 'Forwarding and IMAP', and in the section 'POP and IMAP' enable 'Let devices and apps use IMAP'.
 
 **Important**: a personal and a business account can have the same email address, but have different mailboxes (folders). So, please make sure you select the right option.
 
@@ -1715,6 +1754,7 @@ See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTU
 
 The error *... connect failed: EACCES (Permission denied) ...* means that  *Restrict data usage* was disabled in the Android MIUI app settings for FairEmail.
 On Samsung, and possible other devices, also check: Android settings > Battery > Battery manager / Unmonitored apps.
+Another possible cause is using a VPN with the Android VPN option "*Block connections without VPN*" enabled.
 
 Possible causes are:
 
@@ -2255,7 +2295,7 @@ Note that battery optimizations need to be disabled in setup step 3 to reliably 
 Some providers send every two minutes something like '*Still here*' resulting in network traffic and your device to wake up and causing unnecessary extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if your provider is doing this.
 If your provider is using [Dovecot](https://www.dovecot.org/) as IMAP server,
-you could ask your provider to change the [imap_idle_notify_interval](https://wiki.dovecot.org/Timeouts) setting to a higher value or better yet, to disable this.
+you could ask your provider to change the [imap_idle_notify_interval](https://doc.dovecot.org/2.3/admin_manual/timeouts/) setting to a higher value or better yet, to disable this.
 If your provider is not able or willing to change/disable this, you should consider switching to periodically instead of continuous synchronization.
 You can change this in the receive settings tab page.
 
@@ -2577,7 +2617,7 @@ Then use the three dot action button to execute the desired action.
 There are almost no providers offering the [JMAP](https://jmap.io/) protocol,
 so it is not worth a lot of effort to add support for this to FairEmail.
 
-Moreover, the only available [Java JMAP library](https://github.com/iNPUTmice/jmap) seems not to be maintained anymore.
+Moreover, the only available [Java JMAP library](https://codeberg.org/iNPUTmice/jmap) seems not to be maintained anymore.
 
 <br />
 
@@ -3002,6 +3042,8 @@ Example conditions:
 
 ```header("X-Mailer") contains "Open-Xchange" && from matches ".*service@.*" && Is("seen")```
 
+```!subject contains "Test" && !(subject contains "Example")```
+
 ```!onBlocklist() && hasMx() && attachments() > 0```
 
 ```(received + 7*24*60*60*1000) < DT_DATE_TO_EPOCH(DT_NOW())```
@@ -3069,13 +3111,13 @@ $domain:to$ (since version 1.2289)
 $group$ (since version 1.2030)
 ```
 
-$user$ is the user name of the 'from' email address,
+`$user$` is the user name of the 'from' email address,
 and $domain$ is the domain name of the 'from' email address: *user@domain*.
 
-$extra$ is the part after the plus sign if the username: *user+extra@example.org*.
+`$extra$` is the part after the plus sign if the username: *user+extra@example.org*.
 The 'to' user, extra and domain placeholders apply to the 'to' email address and the other placeholders apply to 'from' email address.
 
-$group$ will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only.
+`$group$` will be replaced with the contact group name of the sender, provided that the related contact is assigned to one contact group only.
 Note that the Android contact provider isn't very fast, so using this placeholder can slow down fetching messages.
 
 <br />
@@ -3144,13 +3186,13 @@ Note that *regex* should be disabled and that there should be no white space.
 
 Please be aware that a difference in the *from* and *reply-to* domain, and no or multi *from* addresses isn't a good indication of spam.
 
-Since the app sets the keyword *$Filtered$* after the rules have been executed for a message,
+Since the app sets the keyword `$Filtered$` after the rules have been executed for a message,
 you can create a rule to prevent the rules from being executed again (which is sometimes desirable):
 
 * Name: anything you like
 * Order: lower than all other rules, for example 0
 * Stop processing rules after executing this rule: enabled
-* Header contains: *$$Filtered$* (no spaces)
+* Header contains: `$$Filtered$` (no spaces)
 * Action: No action
 
 Note that not all email servers support IMAP keywords.
@@ -3562,28 +3604,41 @@ So, try to disable all VPN based apps or allow this address.
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq88)
 
-The preferred way to set up a Yahoo account is by using the quick setup wizard,
-which will use OAuth instead of a password and is therefore safer (and easier as well).
+A Yahoo account can only be configured using the quick setup wizard (=OAuth).
+Yahoo no longer allows users to log in using just an (app) password to access email.
 
-To authorize a Yahoo/AT&T, AOL, or Sky account you need to use an app password instead of your normal account password.
-For instructions about how to create an app password, please see here:
+~~The preferred way to set up a Yahoo account is by using the quick setup wizard,~~
+~~which will use OAuth instead of a password and is therefore safer (and easier as well).~~
 
-* [for Yahoo/AT&T](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)
-* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password) ~~**Important**: app password generation is broken, [frustrating many people](https://aol.uservoice.com/forums/912886-aol-mail/suggestions/45235399-i-wanted-to-generate-a-third-party-app-password-bu) because this means you can use the AOL app and the browser only.~~
-* [for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)
+~~To authorize a Yahoo/AT&T, AOL, or Sky account you need to use an app password instead of your normal account password.~~
+~~For instructions about how to create an app password, please see here:~~
+
+* ~~[for Yahoo/AT&T](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)~~
+* ~~[for AOL](https://help.aol.com/articles/Create-and-manage-app-password)~~ ~~**Important**: app password generation is broken, [frustrating many people](https://aol.uservoice.com/forums/912886-aol-mail/suggestions/45235399-i-wanted-to-generate-a-third-party-app-password-bu) because this means you can use the AOL app and the browser only.~~
+* ~~[for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)~~
 
 Please see [this FAQ](#faq111) about OAuth support.
 
-Note that Yahoo, AOL, and Sky do not support standard push messages.
-The Yahoo email app uses a proprietary, undocumented protocol for push messages.
+~~Note that Yahoo, AOL, and Sky do not support standard push messages.~~
+~~The Yahoo email app uses a proprietary, undocumented protocol for push messages.~~
 
-Push messages require [IMAP IDLE](https://en.wikipedia.org/wiki/IMAP_IDLE) and the Yahoo email server does not report IDLE as capability:
+~~Push messages require [IMAP IDLE](https://en.wikipedia.org/wiki/IMAP_IDLE) and the Yahoo email server does not report IDLE as capability:~~
 
 ```
 Y1 CAPABILITY
 * CAPABILITY IMAP4rev1 ID MOVE NAMESPACE XYMHIGHESTMODSEQ UIDPLUS LITERAL+ CHILDREN X-MSG-EXT UNSELECT OBJECTID
 Y1 OK CAPABILITY completed
 ```
+
+Retrieving new email when there are **more than 10,000 messages** in the inbox does not work properly.
+This is due to a limitation of the Yahoo mail server that is unique to Yahoo.
+In this case, changing the IMAP server address may help.
+
+Please see [this Yahoo help article](https://help.yahoo.com/kb/download-email-yahoo-mail-third-party-sln28681.html) for details.
+
+In short:
+
+Navigation menu (left side menu) ⟶ "Settings" ⟶ "Manual setup and account options" ⟶ "Accounts" ⟶ tap the account ⟶ tap "Advanced"  ⟶ change the host name to *export.imap.mail.yahoo.com*
 
 <br />
 
@@ -3690,6 +3745,9 @@ If the email server doesn't add an *Authentication-Results* header, which is opt
 you can enable native DKIM in the debug panel, which appears when you enable debug mode in the miscellaneous settings tab page (last option).
 In this case, the shield will be green only when DKIM passes and the signer domain matches that of the sender (=alignment).
 Please be aware that this option will increase both data and battery usage.
+
+Note that a service like [mail tester](https://mail-tester.com/) basically performs the same checks as an email server can but not must do to populate the *Authentication-Results* header.
+This means that such a service can say 'all okay' while the app reports 'inconclusive' because the email server didn't perform the checks.
 
 FairEmail can show a warning flag too if the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server.
 This can be enabled in the receive settings. Be aware that this will slow down synchronization of messages significantly.
@@ -3807,16 +3865,18 @@ However, picking contacts is delegated to and done by Android and not by FairEma
 <br />
 
 <a name="faq99"></a>
-**(99) Can you add a rich text or markdown editor?**
+**(99) What should I know about Markdown?**
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq99)
 
-FairEmail provides common text formatting (bold, italic, underline, text size and color) via a toolbar that appears after selecting some text.
+FairEmail provides common text formatting (bold, italic, underline, text size and color, etc.) via a toolbar that appears after selecting some text.
 
-A [Rich text](https://en.wikipedia.org/wiki/Formatted_text) or [Markdown](https://en.wikipedia.org/wiki/Markdown) editor
-would not be used by many people on a small mobile device and, more important,
-Android doesn't support a rich text editor and most rich text editor open source projects are abandoned.
-See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details about this.
+Alternatively, you can use [Markdown](https://en.wikipedia.org/wiki/Markdown).
+You can enable Markdown support via the three-dot overflow menu at the top right of the message editor.
+
+Please be aware that **normal styling will be ignored** when using Markdown, or, in other words, you can mix.
+
+Markdown is an experimental feature.
 
 <br />
 
@@ -4066,7 +4126,7 @@ Please see these websites for lists of privacy oriented email providers with adv
 
 * [Restore privacy](https://restoreprivacy.com/secure-email/)
 * [Privacy Guides](https://www.privacyguides.org/en/email/)
-* [Privacy Tools](https://www.privacytools.io/providers/email/)
+* [Privacy Tools](https://privacytools.io/privacy-email)
 
 **Important**: Some providers, like ProtonMail and Tutanota, use proprietary email protocols, which make it impossible to use third party email apps.
 Please see [this FAQ](#faq129) for more information.
@@ -4375,6 +4435,7 @@ The subject of a received message can be edited, also on the email server, via t
 *Markdown (1.2061+)*
 
 Composing messages using [Markdown](https://en.wikipedia.org/wiki/Markdown) can be enabled via the three-dots overflow menu of the message editor.
+Please see [this FAQ](#faq99).
 
 <br />
 
@@ -4464,17 +4525,19 @@ You can reset asked questions via the three dots overflow menu in the miscellane
 **ProtonMail** uses a proprietary email protocol
 and [does not directly support IMAP](https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/),
 so you cannot use FairEmail or any other Android email client to access ProtonMail.
-Unfortunately, Proton has no plans to add [a mail bridge for Android](https://github.com/ProtonMail/proton-bridge/issues/427).
+Unfortunately, Proton has no plans to add a mail bridge for Android.
 
 **Tutanota** uses a proprietary email protocol
-and [does not support IMAP](https://tutanota.com/faq/#imap),
+and [does not support IMAP](https://tuta.com/support#imap),
 so you cannot use FairEmail or any other email client to access Tutanota.
 
 **Cyberfear** does not support IMAP, so you'll need to manually configure a POP3 account.
 
 **Skiff** uses a proprietary email protocol
-and [does not support IMAP](https://www.skiff.com/blog/tutanota-alternatives-comparison)
+and [does not support IMAP](https://www.skiff.com/)
 so you cannot use FairEmail or any other email client to access Skiff.
+
+Update: Skiff was shut down after the Notion acquisition (2024).
 
 **Tildamail** uses a proprietary email protocol and does not support IMAP,
 so you cannot use FairEmail or any other email client to access Tildamail.
@@ -4486,6 +4549,8 @@ so you cannot use FairEmail or any other email email client to access Criptext.
 **OnMail** uses a proprietary email protocol
 and [does not support IMAP](https://support.onmail.com/hc/en-us/articles/360048879012-How-do-I-connect-my-OnMail-address-to-a-third-party-email-app-),
 so you cannot use FairEmail or any other email client to access OnMail, except for one (but please read the privacy policy carefully).
+
+Update: OnMail is gone.
 
 <br />
 
@@ -4672,9 +4737,13 @@ The confusing Microsoft specific server error *User is authenticated but not con
 
 **Consumer Outlook/Hotmail/Live account**
 
+* A VPN is being used. Try turning off the VPN.
+* The Outlook account is registered in another country than the current country.
+* The same account is configured in multiple email clients, also on other devices.
+* Multiple Outlook accounts are being used at the same time.
 * IMAP is disabled, which is the default for new Outlook accounts now
 
-To fix this:
+To fix the latter:
 
 * Go to the [Outlook website](https://outlook.live.com/)
 * Tap on the settings wheel at the top right
@@ -4686,6 +4755,7 @@ To fix this:
 
 **Corporate, education, etc. account**
 
+* A VPN is being used. Try turning off the VPN.
 * External access is administratively disabled, please see [this article](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/client-access-rules/client-access-rules) about how an administrator can enable it again
 * Access by third-party apps is administratively disabled or allowed for specific apps only
 * IMAP is administratively disabled, please see [this article](https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/pop3-and-imap4/enable-or-disable-pop3-or-imap4-access) about how an administrator can enable it again
@@ -4880,25 +4950,24 @@ To solve this, long press the folder(s) in the folder list and select *Delete lo
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq147)
 
-You likely came here because you are using a third party build of FairEmail.
+You likely came here because you are using a third-party build of FairEmail.
 
-There is **only support** on the latest Play store version, the latest GitHub release and
-the F-Droid build, but **only if** the version number of the F-Droid build is the same as the version number of the latest GitHub release.
+There is **only support** for the latest Play Store version and the latest GitHub release because those are the releases that can be built and released at any time.
 
 F-Droid builds irregularly, which can be problematic if there is an important update.
-Therefore you are advised to switch to the GitHub release.
+Therefore, you are advised to switch to the GitHub release.
 F-Droid isn't as secure as you might think anyway, [see here](https://privsec.dev/posts/android/f-droid-security-issues/).
 
 Note that developers have no control over F-Droid builds and the F-Droid infrastructure (apps, forums, etc.).
 
-OAuth access is available only for Play Store and Github releases
+OAuth access is available only for Play Store and GitHub releases
 because email providers permitted the use of OAuth for these releases only.
-The responsible for a release, for the F-Droid build this is the F-Droid organization, needs to ask for OAuth permissions,
+The responsible for a release, for the F-Droid build, this is the F-Droid organization, needs to ask for OAuth permissions,
 which mostly involves signing a contract with binding terms and conditions,
 often with the clause that the use of OAuth is exclusive.
 
 Note that you'll need to uninstall the F-Droid build first before you can install a GitHub release
-because Android refuses to install ("*App was not installed*") the same app with a different signature for security reasons.
+because Android refuses to install ("*App was not installed*", etc.) the same app with a different signature for security reasons.
 
 At the start of 2024, the Play Store app started to update all apps, including apps not installed via the Play Store.
 Since the F-Droid build is signed by the F-Droid organization, which basically means the F-Droid build is another app, updating the F-Droid build will fail.
@@ -4907,16 +4976,16 @@ Unfortunately, there is no way to resolve this.
 Note that the GitHub version will automatically check for updates.
 When desired, this can be turned off in the miscellaneous settings.
 
-Please [see here](https://github.com/M66B/FairEmail/blob/master/README.md#downloads) for all download option
+Please [see here](https://github.com/M66B/FairEmail/blob/master/README.md#downloads) for all download options
 and [see here](#faq173) for the differences between the different release types.
 
 If you have a problem with the F-Droid build, please check if there is a newer GitHub version first.
 
 You can see the source of the app in *About* of the navigation menu (left side menu),
-either *Play store*, *GitHub*, *F-Droid*, or *?* (for example in the case of a custom build).
+either *Play Store*, *GitHub*, *F-Droid*, or *?* (for example, in the case of a custom build).
 
 [IzzyOnDroid](https://apt.izzysoft.de/fdroid/) hosts the GitHub release of the app.
-[Aurora Store](https://f-droid.org/packages/com.aurora.store/) hosts the Play store version of the app,
+[Aurora Store](https://f-droid.org/packages/com.aurora.store/) hosts the Play Store version of the app,
 even though the Aurora Store app was downloaded from F-Droid.
 
 Please [see here](https://forum.f-droid.org/t/help-wanted-how-to-create-a-reproducible-build-fairemail/8860) why reproducible F-Droid builds are not an option.
@@ -5576,6 +5645,9 @@ The GitHub version will automatically check for updates and notify you when ther
 Since apps can't update themselves, updates can't be automatically installed.
 However, you can easily install an update via a button in the update available notification.
 You could use the [IzzyOnDroid F-Droid Repository](https://apt.izzysoft.de/fdroid/) to manage GitHub updates.
+
+The GitHub "[large](https://developer.android.com/guide/topics/manifest/application-element#largeHeap)" version will request more working memory from Android,
+which may be necessary when more than 10-20 accounts are configured.
 
 <br />
 
@@ -6250,6 +6322,9 @@ visible as a short delay between tapping on a link and the link confirmation dia
 
 &#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq201)
 
+**Since version 1.2326 Certificate Transparency [as provided by Android 16 and later](https://developer.android.com/privacy-and-security/security-config#CertificateTransparencySummary) is always enabled in non Play Store builds**
+
+**Unfortunately, the Certificate Transparency library isn't maintained anymore, and therefore Certificate Transparency has been disabled in version 1.2320 for Android 15 and before and for Play Store builds.**
 
 Please see [this article](https://certificate.transparency.dev/howctworks/) about what certificate transparency is.
 Alternatively, see [this Wikipedia article](https://en.wikipedia.org/wiki/Certificate_Transparency).
@@ -6451,6 +6526,30 @@ The result is that logins are blocked for everyone using the same network addres
 This is also why the app warns against using a VPN.
 
 <br>
+
+<a name="faq210"></a>
+**(210) Why is local network permission needed?**
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https%3A%2F%2Fm66b.github.io%2FFairEmail%2F%23faq210)
+
+Since Android 17, [local network permission](https://developer.android.com/privacy-and-security/local-network-permission) is required for local network access (LAN access):
+
+* 10.0.0.0/8
+* 172.16.0.0/12
+* 192.168.0.0/16
+* fd00::/8
+
+This permission can be granted via a button on the connection settings page, or inline via the account/identity settings screen after entering a local network address.
+
+Very few people will need local network access, and to avoid questions regarding a new permission, this permission is available only in the [GitHub version](https://github.com/M66B/FairEmail/releases).
+
+If the app navigated to this FAQ after you clicked the button to grant local network permission, then the GitHub version is not (or is no longer) installed.
+If you are using the Play Store version of the app, you can install the GitHub version as an update.
+
+Added in version 1.2325.
+
+<br>
+
 
 <h2><a name="get-support"></a>Get support</h2>
 

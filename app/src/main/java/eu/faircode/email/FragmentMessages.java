@@ -591,8 +591,21 @@ public class FragmentMessages extends FragmentBase
             @Override
             public void onClick(View v) {
                 try {
-                    FragmentDialogSelectUnifiedFolder fragment = new FragmentDialogSelectUnifiedFolder();
-                    fragment.show(getParentFragmentManager(), "unified:select");
+                    if (viewType == AdapterMessage.ViewType.SEARCH) {
+                        Bundle args = new Bundle();
+                        args.putLong("account", account);
+                        args.putLong("folder", folder);
+                        args.putString("type", type);
+                        args.putSerializable("criteria", criteria);
+                        args.putBoolean("server", server);
+
+                        FragmentDialogSearch fragment = new FragmentDialogSearch();
+                        fragment.setArguments(args);
+                        fragment.show(getParentFragmentManager(), "search");
+                    } else {
+                        FragmentDialogSelectUnifiedFolder fragment = new FragmentDialogSelectUnifiedFolder();
+                        fragment.show(getParentFragmentManager(), "unified:select");
+                    }
                 } catch (Throwable ex) {
                     /*
                         Exception java.lang.IllegalStateException:
@@ -2093,6 +2106,7 @@ public class FragmentMessages extends FragmentBase
         if (viewType != AdapterMessage.ViewType.SEARCH ||
                 criteria == null ||
                 criteria.with_hidden ||
+                criteria.with_importance != null ||
                 criteria.with_encrypted ||
                 criteria.with_attachments ||
                 criteria.with_notes ||
@@ -2923,6 +2937,15 @@ public class FragmentMessages extends FragmentBase
         }
 
         @Override
+        public boolean select(long id, boolean unselect) {
+            if (selectionTracker == null)
+                return false;
+            if (unselect)
+                selectionTracker.clearSelection();
+            return selectionTracker.select(id);
+        }
+
+        @Override
         public void moveSelection(String type, boolean block) {
             onActionMoveSelection(type, block);
         }
@@ -3234,7 +3257,7 @@ public class FragmentMessages extends FragmentBase
             else if (EntityMessage.SWIPE_ACTION_HIDE.equals(action))
                 icon = (message.ui_snoozed == null ? R.drawable.twotone_visibility_off_24 :
                         (message.ui_snoozed == Long.MAX_VALUE
-                                ? R.drawable.twotone_visibility_24 : R.drawable.twotone_timer_off_24));
+                         ? R.drawable.twotone_visibility_24 : R.drawable.twotone_timer_off_24));
             else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action))
                 icon = R.drawable.twotone_folder_24;
             else if (EntityMessage.SWIPE_ACTION_TTS.equals(action))
@@ -5882,7 +5905,8 @@ public class FragmentMessages extends FragmentBase
                         if (!checkFingerprint())
                             if (!checkGmail())
                                 if (!checkOutlook())
-                                    ;
+                                    if (!checkLan())
+                                        ;
 
         prefs.registerOnSharedPreferenceChangeListener(this);
         onSharedPreferenceChanged(prefs, "notifications_reminder");
@@ -6378,6 +6402,68 @@ public class FragmentMessages extends FragmentBase
             }
         }.execute(this, new Bundle(), "outlook:check");
 
+        return false;
+    }
+
+    private boolean checkLan() {
+        new SimpleTask<Boolean>() {
+            @Override
+            protected Boolean onExecute(Context context, Bundle args) throws Throwable {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.CINNAMON_BUN)
+                    return false;
+                if (Helper.hasPermission(context, Manifest.permission.ACCESS_LOCAL_NETWORK))
+                    return false;
+
+                DB db = DB.getInstance(context);
+                List<EntityAccount> accounts = db.account().getSynchronizingAccounts(null);
+                if (accounts != null)
+                    for (EntityAccount account : accounts)
+                        try {
+                            if (ConnectionHelper.isLocalAddress(account.host, false))
+                                return true;
+
+                            List<EntityIdentity> identities = db.identity().getSynchronizingIdentities(account.id);
+                            if (identities != null)
+                                for (EntityIdentity identity : identities)
+                                    try {
+                                        if (ConnectionHelper.isLocalAddress(identity.host, false))
+                                            return true;
+                                    } catch (Throwable ignored) {
+                                    }
+                        } catch (Throwable ignored) {
+                        }
+
+                return false;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Boolean lan) {
+                if (!Boolean.TRUE.equals(lan))
+                    return;
+
+                final Snackbar snackbar = Helper.setSnackbarOptions(Snackbar.make(view, R.string.title_lan_required, Snackbar.LENGTH_INDEFINITE));
+                Helper.setSnackbarLines(snackbar, 5);
+                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        snackbar.dismiss();
+                        if (BuildConfig.PLAY_STORE_RELEASE)
+                            Helper.viewFAQ(v.getContext(), 210);
+                        else
+                            v.getContext().startActivity(new Intent(v.getContext(), ActivitySetup.class)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    .putExtra("tab", "connection"));
+                    }
+                });
+                snackbar.show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, new Bundle(), "checklan");
+
         return true;
     }
 
@@ -6455,6 +6541,8 @@ public class FragmentMessages extends FragmentBase
             int padding = prefs.getInt("view_padding", compact || !cards ? 0 : 1);
             boolean quick_filter = prefs.getBoolean("quick_filter", false);
             boolean all_read_asked = prefs.getBoolean("all_read_asked", false);
+
+            boolean selection = (getSelection().length > 0);
 
             boolean folder =
                     (viewType == AdapterMessage.ViewType.UNIFIED ||
@@ -6597,7 +6685,7 @@ public class FragmentMessages extends FragmentBase
             menu.findItem(R.id.menu_select_all).setVisible(folder);
             menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
             menu.findItem(R.id.menu_mark_all_read)
-                    .setVisible(folder)
+                    .setVisible(folder && !selection)
                     .setShowAsAction(all_read_asked ? MenuItem.SHOW_AS_ACTION_NEVER : MenuItem.SHOW_AS_ACTION_IF_ROOM);
 
             menu.findItem(R.id.menu_view_thread).setVisible(viewType == AdapterMessage.ViewType.THREAD && !threading);
@@ -7100,7 +7188,11 @@ public class FragmentMessages extends FragmentBase
     private void onMenuCompact() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean compact = !prefs.getBoolean("compact", false);
-        prefs.edit().putBoolean("compact", compact).apply();
+        prefs.edit()
+                .putBoolean("compact", compact)
+                .putString("sender_ellipsize", compact ? "end" : "full")
+                .putString("subject_ellipsize", "full")
+                .apply();
 
         int zoom = (compact ? 0 : 1);
         int padding = (compact || !cards ? 0 : 1);
@@ -9218,6 +9310,10 @@ public class FragmentMessages extends FragmentBase
                     if (viewType == AdapterMessage.ViewType.THREAD)
                         return (down && onScroll(context, false, 0.125f));
                     break;
+                case KeyEvent.KEYCODE_FORWARD_DEL:
+                    if (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
+                        return (up && onTrashSelection(context));
+                    break;
             }
 
             if (!up)
@@ -9302,6 +9398,14 @@ public class FragmentMessages extends FragmentBase
         private boolean onScroll(Context context, boolean up, float percent) {
             int h = context.getResources().getDisplayMetrics().heightPixels;
             rvMessage.scrollBy(0, Math.round((up ? -1 : 1) * h * percent));
+            return true;
+        }
+
+        private boolean onTrashSelection(Context context) {
+            long[] selected = getSelection();
+            if (selected.length == 0)
+                return false;
+            onActionMoveSelection(EntityFolder.TRASH, false);
             return true;
         }
     };
