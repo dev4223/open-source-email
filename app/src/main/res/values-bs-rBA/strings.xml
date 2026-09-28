@@ -213,6 +213,7 @@
     <string name="title_setup_gmail_login">Ako je u Chrome-u prijavljen račun, novi račun (nalog) može se dodati samo u postavkama Androida. Da biste izbjegli ovu situaciju, odjavite se iz Chrome-a preko postavki za sinhronizaciju.</string>
     <string name="title_setup_gmail_max">U slučaju poruke o greški \"Prijavljeni ste s maksimalnim brojem računa\", trebate se odjaviti sa svih Google računa u pregledniku.</string>
     <string name="title_setup_outlook_hint">U slučaju korištenja aliasa adrese, treba koristiti čarobnjak paketa Office 365.</string>
+    <string name="title_setup_outlook_passkey_hint">Microsoft može tražiti da postavite Passkey tj. pristupni ključ. Na mobilnom uređaju ovo je manje jednostavno, pa razmislite o preskakanju ili otkazivanju ovog dodatnog koraka.</string>
     <string name="title_setup_outlook_modern">Zbog promjena sigurnosne politike Microsofta, od 16. septembra 2024. jedino čarobnjak za Outlook/Hotmail/Live račune će raditi.</string>
     <string name="title_setup_gmail_on_device">Zašto trebam izabrati račun na lokalnom uređaju?</string>
     <string name="title_setup_gmail_password">Želim autorizovati račun sa lozinkom umjesto lokalnog računa na uređaju</string>
@@ -359,6 +360,7 @@
     <string name="title_check_gmail_password">Neki od vaših Gmail računa prestat će raditi nakon 30. maja 2022.</string>
     <string name="title_check_outlook_oauth">Vaši Outlook računi će nastaviti raditi nakon 16. septembra 2024.</string>
     <string name="title_check_outlook_password">Neki od vaših Outlook/Hotmail/Live računa će prestati raditi nakon 16. septembra 2024.</string>
+    <string name="title_check_gmx">Morate ažurirati svoj GMX račun s lozinkom za aplikaciju prije 24. septembra 2026.</string>
     <string name="title_advanced_hint_title">Više naprednih opcija</string>
     <string name="title_advanced_hint_message">        Prebacujete se na više naprednih opcija.
         Sve opcije imaju postavljene uobičajene standardne vrijednosti, koje ne trebate mijenjati osim ako ne preferirate drugačije.
@@ -836,6 +838,7 @@
     <string name="title_advanced_send">\'Send\' integracija</string>
     <string name="title_advanced_openai">OpenAI (ChatGPT) integracija</string>
     <string name="title_advanced_openai_model">Model</string>
+    <string name="title_advanced_openai_max_tokens">Maksimum tokena (prazno za neograničeno)</string>
     <string name="title_advanced_openai_temperature">Temperatura: %1$s</string>
     <string name="title_advanced_openai_moderation">Moderacija sadržaja</string>
     <string name="title_advanced_gemini">Integracija s Geminijem</string>
@@ -1041,6 +1044,7 @@
     <string name="title_account_gmail">Za pouzdanu sinhronizaciju Gmail računa, koristite Gmail-ov čarobnjak za brzo postavljanje kad god je moguće</string>
     <string name="title_domain">Naziv domene</string>
     <string name="title_autoconfig">Dohvati postavke</string>
+    <string name="title_lan_required">Potrebne su dozvole lokalne mreže</string>
     <string name="title_aliases">Pseudonimi</string>
     <string name="title_provider">Provajder</string>
     <string name="title_custom">Prilagođen</string>
@@ -1056,6 +1060,7 @@
     <string name="title_notify_remark">Možete omogućiti ovo za obavještenja specifična za račune</string>
     <string name="title_port">Broj porta</string>
     <string name="title_user">Korisničko ime</string>
+    <string name="title_user_hint">Obično primarna e-mail adresa</string>
     <string name="title_password">Lozinka</string>
     <string name="title_password_storage">Kako se čuvaju lozinke?</string>
     <string name="title_case_sensitive">Korisnička imena i lozinke su obično precizne veličine slova</string>
@@ -1216,6 +1221,7 @@
     <string name="title_show_flagged">Prikaži broj poruka sa zvjezdicom</string>
     <string name="title_subscribed_only">Samo pretplata</string>
     <string name="title_sort_unread_atop">Sortiraj nepročitane na vrh</string>
+    <string name="title_sort_sync">Sortiraj po sinhronizovanom</string>
     <string name="title_search_folder">Traži folder</string>
     <string name="title_apply_to_all">Primijeni za sve</string>
     <string name="title_edit_account_name">Uredi ime računa</string>
@@ -1638,9 +1644,9 @@
     <string name="title_charset_auto">Automatski</string>
     <string name="title_alternative_text">Učitaj obični tekst</string>
     <string name="title_alternative_html">Učitaj HTML</string>
-    <string name="title_no_openpgp">OpenKeychan nije pronađen</string>
+    <string name="title_no_openpgp">Nije pronađen OpenPGP provajder</string>
     <string name="title_no_openpgp_remark">Potrebno je prvo podesiti PGP end-to-end šifriranje</string>
-    <string name="title_user_interaction">Prebacivanje na OpenKeychain</string>
+    <string name="title_user_interaction">Prebacivanje na OpenPGP provajdera</string>
     <string name="title_padlock">Koristi lokot za dešifriranje poruke</string>
     <string name="title_signed_data">Potvrdi potpis za prikazivanje teksta poruke</string>
     <string name="title_not_encrypted">Poruka nije potpisana niti šifrirana</string>
@@ -2023,6 +2029,7 @@
     <string name="title_hint_folder_sync">Da bi ograničili potrošnju baterije i podataka, po zadanom neće biti sinhronizirani svi folderi i poruke</string>
     <string name="title_hint_airplane">Način rada u avionu je uključen</string>
     <string name="title_hint_vpn_active">VPN aktivan</string>
+    <string name="title_hint_vpn_settings">Spisak VPN-ova</string>
     <string name="title_hint_notifications">Nema dozvola za notifikacije</string>
     <string name="title_hint_notifications_remark">Dozvole za obavještenja su neophodne i za upozorenja računa. Obavještenja za nove poruke mogu se isključiti u postavkama.</string>
     <string name="title_hint_battery_optimizations">Optimizacije baterije su još uključene</string>

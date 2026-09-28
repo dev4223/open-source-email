@@ -197,6 +197,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_setup_gmail_login">As Chrome oanmeld is by in account, kin in nij account allinnich fia Android tafoege wurde. Dit kin foarkommen wurde troch ôf te melden út Chrome fia de Chrome-syngronisaasjeynstellingen.</string>
     <string name="title_setup_gmail_max">Yn it gefal fan de flatermelding \"Jo binne oanmeld by it maksimale oantal accounts\", moat de browser ôfmeld wurde fan alle Google-accounts.</string>
     <string name="title_setup_outlook_hint">Yn it gefal fan in aliasadres moat wierskynlik de Office 365-wizard brûkt wurde.</string>
+    <string name="title_setup_outlook_passkey_hint">Microsoft freget jo mooglik om in ​tagongskaai (Passkey) yn te stellen. Dit is op in mobyl apparaat minder ienfâldich, dus oerweagje om dizze opsjonele stap oer te slaan of te annulearjen.</string>
     <string name="title_setup_outlook_modern">Troch wizigingen yn it befeiligingsbelied fan Microsoft wurket fan 16 septimber 2024 ôf allinnich noch de wizard Outlook/Hotmail/Live.</string>
     <string name="title_setup_gmail_on_device">Wêrom moat ik in account op it apparaat selektearje?</string>
     <string name="title_setup_gmail_password">Ik wol in account autorisearje mei in wachtwurd yn stee fan in account op it apparaat</string>
@@ -342,6 +343,7 @@ De flatermelding ‘User is authenticated but not connected’ betsjut meastenti
     <string name="title_check_gmail_password">Guon fan jo Gmail-accounts wurkje mooglik net mear nei 30 maaie 2022</string>
     <string name="title_check_outlook_oauth">Jo Outlook-accounts sille nei 16 septmber 2024 wurkje bliuwe</string>
     <string name="title_check_outlook_password">Guon fan jo Outlook-/Hotmail-/Live-accounts sille nei 16 septimber 2024 net mear wurkje</string>
+    <string name="title_check_gmx">Jo moatte jo GMX-account foar 24 septimber 2026 bywurkje mei in app-wachtwurd.</string>
     <string name="title_advanced_hint_title">Mear avansearre opsjes</string>
     <string name="title_advanced_hint_message">
         Jo navigearje nei de mear avansearre opsjes.
@@ -411,7 +413,7 @@ Jo sille de measte opsjes net nedich hawwe en omdat guon opsjes frij spesifyk bi
     <string name="title_advanced_suggest_local">Lokaal bewarre kontakten foarstelle</string>
     <string name="title_advanced_suggest_sent">Adressen fûn yn ferstjoerde berjochten foarstelle</string>
     <string name="title_advanced_suggest_received">Adressen fûn yn ûntfangen berjochten foarstelle</string>
-    <string name="title_advanced_suggest_frequently">Sortearje foarstelle adressen op gebrûksfrekwinsje</string>
+    <string name="title_advanced_suggest_frequently">Foarstelde adressen op gebrûksfrekwinsje sortearje</string>
     <string name="title_advanced_suggest_account">Suggestjes beheine ta aktuele account</string>
     <string name="title_advanced_auto_delete_local">Automatysk lokale kontakten fuortsmite âlder as en minder brûkt as:</string>
     <string name="title_advanced_alt_re_fwd">Alternatyf antwurd/trochstjoere foarfoechsel</string>
@@ -818,6 +820,7 @@ De standert fersiferingsmetoade (PGP of S/MIME) wurdt per identiteit bewarre nei
     <string name="title_advanced_send">Send-yntegraasje</string>
     <string name="title_advanced_openai">OpenAI (ChatGPT)-yntegraasje</string>
     <string name="title_advanced_openai_model">Model</string>
+    <string name="title_advanced_openai_max_tokens">Maksimum oantal tokens (leech litte foar ûnbeheind)</string>
     <string name="title_advanced_openai_temperature">Temperatuer: %1$s</string>
     <string name="title_advanced_openai_moderation">Ynhâldsbehear</string>
     <string name="title_advanced_gemini">Gemini-yntegraasje</string>
@@ -1039,7 +1042,7 @@ De standert fersiferingsmetoade (PGP of S/MIME) wurdt per identiteit bewarre nei
     <string name="title_notify_remark">Jo kinne dit ynskeakelje foar accountspesifike meldingen</string>
     <string name="title_port">Poartenûmer</string>
     <string name="title_user">Brûkersnamme</string>
-    <string name="title_user_hint" comment="title_user_hint Hint text for account/identity username field. Please keep it short!">Meastentiids it primêre e-mailadres</string>
+    <string name="title_user_hint">Meastentiids it primêre e-mailadres</string>
     <string name="title_password">Wachtwurd</string>
     <string name="title_password_storage">Hoe wurde wachtwurden bewarre?</string>
     <string name="title_case_sensitive">Brûkersnammen en wachtwurden binne meastal haadlettergefoelich</string>
@@ -1198,6 +1201,7 @@ Berjochten wurde ophelle sa gau as de e-mailserver se ôfleverje kin en bewarje 
     <string name="title_show_flagged">Oantal berjochten mei stjer toane</string>
     <string name="title_subscribed_only">Allinnich abonnearre</string>
     <string name="title_sort_unread_atop">Net-lêzen boppe-oan sortearje</string>
+    <string name="title_sort_sync">Op syngronisearre sortearje</string>
     <string name="title_search_folder">Sykje nei map</string>
     <string name="title_apply_to_all">Op alle tapasse</string>
     <string name="title_edit_account_name">Accountnamme bewurkje</string>
@@ -1618,9 +1622,9 @@ Berjochten wurde ophelle sa gau as de e-mailserver se ôfleverje kin en bewarje 
     <string name="title_charset_auto">Automatysk</string>
     <string name="title_alternative_text">Platte tekst lade</string>
     <string name="title_alternative_html">HTML lade</string>
-    <string name="title_no_openpgp">OpenKeychain net fûn</string>
+    <string name="title_no_openpgp">OpenPGP-provider net fûn</string>
     <string name="title_no_openpgp_remark">PGP-end-to-end-fersifering moat earst konfigurearre wurde</string>
-    <string name="title_user_interaction">Oerdrage nei OpenKeychain</string>
+    <string name="title_user_interaction">Nei OpenPGP-provider oerdrage</string>
     <string name="title_padlock">Brûk it hingslot om it berjocht te ûntsiferjen</string>
     <string name="title_signed_data">Ferifiearje de hantekening om de berjochttekst te toanen</string>
     <string name="title_not_encrypted">Berjocht is net ûndertekene of fersifere</string>
@@ -2003,6 +2007,7 @@ By it ferstjoeren fan in berjocht wurdt de ôfbylding fan de selektearre lokaasj
     <string name="title_hint_folder_sync">Om batterij- en netwurkgebrûk te beheinen sille net alle mappen en net alle berjochten standert syngronisearre wurde</string>
     <string name="title_hint_airplane">Fleantúchmodus is ynskeakele</string>
     <string name="title_hint_vpn_active">VPN aktyf</string>
+    <string name="title_hint_vpn_settings">VPN-list</string>
     <string name="title_hint_notifications">Gjin meldingsrjochten</string>
     <string name="title_hint_notifications_remark">Meldingsrjochten binne fereaske foar (account)meldingen. Meldingen foar nije berjochten kinne útskeakele wurde yn de ynstellingen.</string>
     <string name="title_hint_battery_optimizations">Batterij-optimalisaasjes noch hieltyd ynskeakele</string>

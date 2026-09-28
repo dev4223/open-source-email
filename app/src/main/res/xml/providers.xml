@@ -627,7 +627,7 @@
     </provider>
     <provider
         name="web.de"
-        documentation="Ist &lt;a href=&quot;https://hilfe.web.de/email/einstellungen/pop3-imap-einschalten.html&quot;&gt;IMAP aktiviert&lt;/a&gt;? Die Zwei-Faktor-Authentifizierung erfordert &lt;a href=&quot;https://web.de/email/sicherheit/zwei-faktor-authentifizierung/&quot;&gt;ein Anwendungsspezifische Passwort&lt;/a&gt;!"
+        documentation="Ist &lt;a href=&quot;https://hilfe.web.de/email/einstellungen/pop3-imap-einschalten.html&quot;&gt;IMAP aktiviert&lt;/a&gt;? Die Zwei-Faktor-Authentifizierung erfordert &lt;a href=&quot;https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html&quot;&gt;ein Anwendungsspezifische Passwort&lt;/a&gt;!"
         domain="web\\.de"
         keepalive="12"
         link="https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
@@ -864,7 +864,7 @@
             starttls="false" /-->
         <!-- No OAuth/POP3 support -->
         <oauth
-            askAccount="false"
+            askAccount="true"
             authorizationEndpoint="https://oauth.mail.ru/login"
             clientId="ce54d27dc1574b3a8b50e6789cd1a44a"
             clientSecret="5f1525783e1d4defb3bc9c2c4b7d0c54"
@@ -2410,9 +2410,10 @@
             starttls="false" />
     </provider>
     <provider
-        name="Reagan.com"
+        name="Rackspace"
         domain="reagan\\.com"
-        link="https://www.reagan.com/support-outlook-express">
+        link="https://www.reagan.com/support-outlook-express"
+        txt=".*include\:emailsrvr\.com.*">
         <imap
             host="secure.emailsrvr.com"
             port="993"
@@ -2544,5 +2545,29 @@
             host="smtp.hostinger.com"
             port="465"
             starttls="false" />
+    </provider>
+    <provider
+        name="Thundermail"
+        appPassword="true"
+        domain="thundermail\\.com,tb\\.pro"
+        id="thundermail">
+        <imap
+            host="mail.thundermail.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="mail.thundermail.com"
+            port="465"
+            starttls="false" />
+        <oauth
+            askAccount="true"
+            authorizationEndpoint="https://auth.tb.pro/realms/tbpro/protocol/openid-connect/auth"
+            clientId="ext-fairemail"
+            clientSecret=""
+            enabled="true"
+            privacy="https://tb.pro/privacy/"
+            redirectUri="https://oauth.faircode.eu/"
+            scopes="openid,profile,email,offline_access"
+            tokenEndpoint="https://auth.tb.pro/realms/tbpro/protocol/openid-connect/token" />
     </provider>
 </providers>

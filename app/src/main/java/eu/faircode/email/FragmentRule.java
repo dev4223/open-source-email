@@ -25,6 +25,7 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -64,6 +65,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Lifecycle;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -84,6 +86,7 @@ public class FragmentRule extends FragmentBase {
     private ScrollView scroll;
     private ConstraintLayout content;
 
+    private TextView tvPro;
     private TextView tvFolder;
     private EditText etName;
     private AutoCompleteTextView etGroup;
@@ -179,6 +182,8 @@ public class FragmentRule extends FragmentBase {
     private EditText etAlarmDuration;
 
     private TextView tvAutomation;
+
+    private CheckBox cbGadgetBridge;
 
     private EditText etNotes;
     private ViewButtonColor btnColorNotes;
@@ -298,6 +303,7 @@ public class FragmentRule extends FragmentBase {
         scroll = view.findViewById(R.id.scroll);
         content = view.findViewById(R.id.content);
 
+        tvPro = view.findViewById(R.id.tvPro);
         tvFolder = view.findViewById(R.id.tvFolder);
         etName = view.findViewById(R.id.etName);
         etGroup = view.findViewById(R.id.etGroup);
@@ -394,6 +400,8 @@ public class FragmentRule extends FragmentBase {
 
         tvAutomation = view.findViewById(R.id.tvAutomation);
 
+        cbGadgetBridge = view.findViewById(R.id.cbGadgetBridge);
+
         etNotes = view.findViewById(R.id.etNotes);
         btnColorNotes = view.findViewById(R.id.btnColorNotes);
 
@@ -424,6 +432,11 @@ public class FragmentRule extends FragmentBase {
         grpNotes = view.findViewById(R.id.grpNotes);
         grpUrl = view.findViewById(R.id.grpUrl);
         grpSummarize = view.findViewById(R.id.grpSummarize);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean pro = prefs.getBoolean("pro", false);
+
+        tvPro.setVisibility(pro && !BuildConfig.DEBUG ? View.GONE : View.VISIBLE);
 
         adapterGroup = new ArrayAdapter<>(getContext(), R.layout.spinner_item1_dropdown, android.R.id.text1);
         etGroup.setThreshold(1);
@@ -972,6 +985,7 @@ public class FragmentRule extends FragmentBase {
         grpTts.setVisibility(View.GONE);
         grpSound.setVisibility(View.GONE);
         grpAutomation.setVisibility(View.GONE);
+        cbGadgetBridge.setVisibility(View.GONE);
         grpDelete.setVisibility(View.GONE);
         grpLocalOnly.setVisibility(View.GONE);
         grpNotes.setVisibility(View.GONE);
@@ -1180,7 +1194,7 @@ public class FragmentRule extends FragmentBase {
                         ContactsContract.CommonDataKinds.Email.ADDRESS
                 },
                 null, null, null)) {
-            if (cursor != null && cursor.moveToFirst())
+            if (cursor != null && cursor.moveToFirst() && cursor.getColumnCount() > 0)
                 et.setText(cursor.getString(0));
         } catch (Throwable ex) {
             Log.e(ex);
@@ -1518,6 +1532,10 @@ public class FragmentRule extends FragmentBase {
                                     etAlarmDuration.setText(duration == 0 ? null : Integer.toString(duration));
                                     break;
 
+                                case EntityRule.TYPE_AUTOMATION:
+                                    cbGadgetBridge.setChecked(jaction.optBoolean("gadgetbridge"));
+                                    break;
+
                                 case EntityRule.TYPE_NOTES:
                                     etNotes.setText(jaction.getString("notes"));
                                     btnColorNotes.setColor(
@@ -1591,6 +1609,7 @@ public class FragmentRule extends FragmentBase {
         grpTts.setVisibility(type == EntityRule.TYPE_TTS ? View.VISIBLE : View.GONE);
         grpSound.setVisibility(type == EntityRule.TYPE_SOUND ? View.VISIBLE : View.GONE);
         grpAutomation.setVisibility(type == EntityRule.TYPE_AUTOMATION ? View.VISIBLE : View.GONE);
+        cbGadgetBridge.setVisibility(type == EntityRule.TYPE_AUTOMATION && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
         grpDelete.setVisibility(type == EntityRule.TYPE_DELETE ? View.VISIBLE : View.GONE);
         grpLocalOnly.setVisibility(type == EntityRule.TYPE_LOCAL_ONLY ? View.VISIBLE : View.GONE);
         grpNotes.setVisibility(type == EntityRule.TYPE_NOTES ? View.VISIBLE : View.GONE);
@@ -1962,6 +1981,10 @@ public class FragmentRule extends FragmentBase {
                         } catch (NumberFormatException ex) {
                             Log.e(ex);
                         }
+                    break;
+
+                case EntityRule.TYPE_AUTOMATION:
+                    jaction.put("gadgetbridge", cbGadgetBridge.isChecked());
                     break;
 
                 case EntityRule.TYPE_NOTES:

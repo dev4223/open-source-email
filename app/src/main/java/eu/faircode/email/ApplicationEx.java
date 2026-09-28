@@ -1138,9 +1138,30 @@ public class ApplicationEx extends Application
         if (version < 2327 && !prefs.contains("sort_sync"))
             editor.putBoolean("sort_sync", true);
 
+        if (version < 2328 && !prefs.contains("spacing"))
+            editor.putInt("spacing", 0);
+
         if (version < BuildConfig.VERSION_CODE)
             editor.putInt("previous_version", version);
         editor.putInt("version", BuildConfig.VERSION_CODE);
+
+        if (prefs.getBoolean("gemini_enabled", false) &&
+                TextUtils.isEmpty(prefs.getString("openai_apikey", null))) {
+            // https://ai.google.dev/gemini-api/docs/openai
+            editor.putBoolean("openai_enabled", true)
+                    .putString("openai_apikey", prefs.getString("gemini_apikey", null))
+                    .putString("openai_uri", "https://generativelanguage.googleapis.com/v1beta/openai/")
+                    .putString("openai_model", prefs.getString("gemini_model", Gemini.DEFAULT_MODEL).replace("models/", ""))
+                    .remove("openai_max_tokens")
+                    .putBoolean("openai_multimodal", false)
+                    .putFloat("openai_temperature", prefs.getFloat("gemini_temperature", Gemini.DEFAULT_TEMPERATURE))
+                    .putString("openai_summarize", prefs.getString("gemini_summarize", Gemini.DEFAULT_SUMMARY_PROMPT))
+                    .putString("openai_answer", prefs.getString("gemini_answer", Gemini.DEFAULT_ANSWER_PROMPT))
+                    .remove("openai_system")
+
+                    .putBoolean("gemini_enabled", false)
+                    .remove("gemini_apikey");
+        }
 
         int last_sdk = prefs.getInt("last_sdk", Build.VERSION.SDK_INT);
         if (Helper.isAndroid15() && last_sdk <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
