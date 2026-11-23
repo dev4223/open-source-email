@@ -348,9 +348,10 @@ public class Helper {
                     if (runnable instanceof PriorityRunnable)
                         return new PriorityFuture<T>(task,
                                 ((PriorityRunnable) runnable).getPriority(),
-                                ((PriorityRunnable) runnable).getOrder());
+                                ((PriorityRunnable) runnable).getOrder(),
+                                ((PriorityRunnable) runnable).getGroup());
                     else
-                        return new PriorityFuture<>(task, 0, sequenceId.getAndIncrement());
+                        return new PriorityFuture<>(task, 0, sequenceId.getAndIncrement(), null);
                 }
             };
         else
@@ -388,15 +389,17 @@ public class Helper {
         }
     }
 
-    private static class PriorityFuture<T> implements RunnableFuture<T> {
+    static class PriorityFuture<T> implements RunnableFuture<T> {
         private int priority;
         private long order;
+        private Long group; // Null when the task has no group
         private RunnableFuture<T> wrapped;
 
-        PriorityFuture(RunnableFuture<T> wrapped, int priority, long order) {
+        PriorityFuture(RunnableFuture<T> wrapped, int priority, long order, Long group) {
             this.wrapped = wrapped;
             this.priority = priority;
             this.order = order;
+            this.group = group;
         }
 
         public int getPriority() {
@@ -405,6 +408,10 @@ public class Helper {
 
         public long getOrder() {
             return this.order;
+        }
+
+        public boolean isGroup(long group) {
+            return (this.group != null && this.group == group);
         }
 
         @Override
@@ -2271,9 +2278,23 @@ public class Helper {
 
     static boolean isDarkTheme(Context context) {
         // R.attr.isLightTheme
-        TypedValue tv = new TypedValue();
-        context.getTheme().resolveAttribute(R.attr.themeName, tv, true);
-        return (tv.string != null && !"light".contentEquals(tv.string));
+        try {
+            TypedValue tv = new TypedValue();
+            context.getTheme().resolveAttribute(R.attr.themeName, tv, true);
+            return (tv.string != null && !"light".contentEquals(tv.string));
+        } catch (Throwable ex) {
+            /*
+                java.lang.IndexOutOfBoundsException
+                    at android.content.res.StringBlock.nativeGetString(Native Method)
+                    at android.content.res.StringBlock.get(StringBlock.java:82)
+                    at android.content.res.AssetManager.getThemeValue(AssetManager.java:269)
+                    at android.content.res.ResourcesImpl$ThemeImpl.resolveAttribute(ResourcesImpl.java:1295)
+                    at android.content.res.Resources$Theme.resolveAttribute(Resources.java:1538)
+                    at eu.faircode.email.Helper.isDarkTheme(SourceFile:13)
+             */
+            Log.e(ex);
+            return false;
+        }
     }
 
     static void showKeyboard(final View view) {
@@ -3154,6 +3175,13 @@ public class Helper {
         } catch (IOException ex) {
             Log.e(ex);
         }
+    }
+
+    static File getDataDir(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+            return new File(context.getApplicationInfo().dataDir);
+        else
+            return context.getDataDir();
     }
 
     static long getAvailableStorageSpace() {

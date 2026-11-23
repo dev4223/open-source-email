@@ -171,7 +171,6 @@
     <string name="title_setup_documentation">Silakan pelajari dokumentasi penyedia layanan surel Anda untuk mengkonfigurasi server surel Anda secara tepat</string>
     <string name="title_setup_account_remark">Email penerima</string>
     <string name="title_setup_identity_remark">Mengirim email</string>
-    <string name="title_setup_account_identity_hint">Anda dapat mengkonfigurasi nama, warna dan tindakan mengusap di pengaturan akun, dan mengkonfigurasi tanda tangan di pengaturan identitas</string>
     <string name="title_setup_accounts">Akun</string>
     <string name="title_setup_identities">Identitas</string>
     <string name="title_setup_google_sign_in">Masuk dengan Google</string>
@@ -1754,6 +1753,7 @@ Saat mengirim pesan, gambar disalin ke dalam pesan dari lokasi yang dipilih.
     <string name="title_rule_ignore">Sembunyikan notifikasi</string>
     <string name="title_rule_snooze">Tunda</string>
     <string name="title_rule_flag">Tambahkan bintang</string>
+    <string name="title_rule_unflag">Hapus bintang</string>
     <string name="title_rule_importance">Atur sebagai penting</string>
     <string name="title_rule_keyword">Kata kunci</string>
     <string name="title_rule_keyword_add">Tambah</string>

@@ -182,7 +182,6 @@ Viestejä estetyiltä lähettäjiltä ei ladata.
     <string name="title_setup_documentation">Ole hyvä ja katso sähköpostipalveluntarjoajan dokumentaatiosta palvelinasetukset</string>
     <string name="title_setup_account_remark">Vastaanota sähköpostia</string>
     <string name="title_setup_identity_remark">Lähetä sähköpostia</string>
-    <string name="title_setup_account_identity_hint">Voit määrittää nimen, värin ja pyyhkäisytoiminnot tilin asetuksissa ja allekirjoituksen identiteettiasetuksissa</string>
     <string name="title_setup_accounts">Tilit</string>
     <string name="title_setup_identities">Identiteetit</string>
     <string name="title_setup_google_sign_in">Kirjaudu Google-tunnuksella</string>
@@ -1746,6 +1745,7 @@ Tämä voi epäonnistua, minkä takia vanha viesti siirretään roskakoriin talt
     <string name="title_rule_ignore">Vaimenna ilmoitus</string>
     <string name="title_rule_snooze">Torkuta</string>
     <string name="title_rule_flag">Lisää tähti</string>
+    <string name="title_rule_unflag">Poista tähti</string>
     <string name="title_rule_importance">Aseta oma tärkeysjärjestys</string>
     <string name="title_rule_keyword">Avainsana</string>
     <string name="title_rule_keyword_add">Lisää</string>

@@ -182,7 +182,7 @@ It blokkearjen fan in ôfstjoerderdomein makket gebrûk fan filterregels, wat in
     <string name="title_setup_documentation">Besjoch de dokumintaasje fan jo e-mailprovider foar de krekte e-mailserverkonfiguraasje.</string>
     <string name="title_setup_account_remark">E-mailberjochten ûntfange</string>
     <string name="title_setup_identity_remark">E-mailberjochten ferstjoere</string>
-    <string name="title_setup_account_identity_hint">Jo kinne de namme, kleur en fei-aksjes ynstelle yn de accountynstellingen en in hantekening ynstelle yn de identiteitsynstellingen.</string>
+    <string name="title_setup_account_identity_hint">Jo kinne in namme, kleur en fei-aksjes yn de accountynstellingen konfigurearje en in hantekening en standert Cc- of Bcc-adressen yn de identiteitsynstellingen konfigurearje.</string>
     <string name="title_setup_accounts">Accounts</string>
     <string name="title_setup_identities">Identiteiten</string>
     <string name="title_setup_google_sign_in">Oanmelde mei Google</string>
@@ -572,6 +572,7 @@ Jo sille de measte opsjes net nedich hawwe en omdat guon opsjes frij spesifyk bi
     <string name="title_advanced_distinguish_contacts">Understreekje de ôfstjoerder wannear de ôfstjoerder bekend is as lokaal ‘oan’-kontakt</string>
     <string name="title_advanced_show_recipients">Untfangers yn berjochtkop toane</string>
     <string name="title_advanced_reverse_addresses">Untfanger foar ferstjoerde berjochten toane</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">Yn alle mappen</string>
     <string name="title_advanced_font_size_sender">Tekstgrutte ôfstjoerder</string>
     <string name="title_advanced_sender_ellipsize">Wannear nedich, de ôfstjoerder ynkoartsje</string>
     <string name="title_advanced_subject_top">Underwerp boppe ôfstjoerder toane</string>
@@ -1093,6 +1094,7 @@ De standert fersiferingsmetoade (PGP of S/MIME) wurdt per identiteit bewarre nei
     <string name="title_no_inbox">Postfek YN net fûn</string>
     <string name="title_no_drafts">Gjin konseptmap</string>
     <string name="title_no_junk_folder">Der is gjin spam-map selektearre foar dizze account</string>
+    <string name="title_no_message">Berjocht net fûn</string>
     <string name="title_default_composable">It e-mailadres fan jo haadidentiteit fan jo haadaccount wurdt brûkt as standertadres</string>
     <string name="title_no_composable">Om berjochten te ferstjoeren, hawwe jo in identiteit en in konseptmap nedich yn jo accountynstellingsen</string>
     <string name="title_no_standard">Dizze oanbieder brûkt in eigen e-mailprotokol en dêrom is it net mooglik e-mailclients fan tredden te brûken</string>
@@ -1782,6 +1784,7 @@ By it ferstjoeren fan in berjocht wurdt de ôfbylding fan de selektearre lokaasj
     <string name="title_rule_ignore">Melding ûnderdrukke</string>
     <string name="title_rule_snooze">Slommerje</string>
     <string name="title_rule_flag">Stjer tafoegje</string>
+    <string name="title_rule_unflag">Stjer fuortsmite</string>
     <string name="title_rule_importance">Belang ynstelle</string>
     <string name="title_rule_keyword">Kaaiwurd</string>
     <string name="title_rule_keyword_add">Tafoegje</string>

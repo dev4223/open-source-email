@@ -182,7 +182,6 @@
     <string name="title_setup_documentation">Se din e-postleverantörs dokumentation för rätt e-postserver konfiguration</string>
     <string name="title_setup_account_remark">Ta emot e-post</string>
     <string name="title_setup_identity_remark">Skicka epost</string>
-    <string name="title_setup_account_identity_hint">Du kan konfigurera namn, färg och svepåtgärder i kontoinställningarna, samt konfigurera din signatur i identitetsinställningarna</string>
     <string name="title_setup_accounts">Konton</string>
     <string name="title_setup_identities">Identiteter</string>
     <string name="title_setup_google_sign_in">Logga in med Google</string>
@@ -1737,6 +1736,7 @@
     <string name="title_rule_ignore">Dämpa avisering</string>
     <string name="title_rule_snooze">Slumra</string>
     <string name="title_rule_flag">Lägg till stjärna</string>
+    <string name="title_rule_unflag">Ta bort stjärna</string>
     <string name="title_rule_importance">Sätt betydelsen</string>
     <string name="title_rule_keyword">Nyckelord</string>
     <string name="title_rule_keyword_add">Lägg till</string>

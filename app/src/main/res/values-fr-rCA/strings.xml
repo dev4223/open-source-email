@@ -185,7 +185,7 @@
     <string name="title_setup_documentation">Veuillez consulter la documentation de votre fournisseur de messagerie pour la configuration correcte du serveur de messagerie</string>
     <string name="title_setup_account_remark">Recevoir des courriels</string>
     <string name="title_setup_identity_remark">Envoyer des courriels</string>
-    <string name="title_setup_account_identity_hint">Vous pouvez configurer le nom, la couleur et les actions de balayage dans les paramètres du compte et configurer une signature dans les paramètres d\'identité</string>
+    <string name="title_setup_account_identity_hint">Vous pouvez configurer un nom, une couleur et des actions de balayage dans les paramètres du compte, et créer une signature ainsi que des adresses de copie et copie cachée par défaut dans les paramètres d\'identité.</string>
     <string name="title_setup_accounts">Comptes</string>
     <string name="title_setup_identities">Identités</string>
     <string name="title_setup_google_sign_in">Se connecter avec Google</string>
@@ -580,6 +580,7 @@
     <string name="title_advanced_distinguish_contacts">Souligner l’expéditeur quand il est connu comme contact local</string>
     <string name="title_advanced_show_recipients">Afficher les destinataires dans l’en-tête du message</string>
     <string name="title_advanced_reverse_addresses">Afficher le destinataire pour les messages envoyés</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">Dans tous les dossiers</string>
     <string name="title_advanced_font_size_sender">Taille de police du champ « Expéditeur »</string>
     <string name="title_advanced_sender_ellipsize">Raccourcir l\'expéditeur si nécessaire</string>
     <string name="title_advanced_subject_top">Afficher l’objet au dessus de l’expéditeur</string>
@@ -1104,6 +1105,7 @@
     <string name="title_no_inbox">Boîte de réception introuvable</string>
     <string name="title_no_drafts">Aucun dossier Brouillons</string>
     <string name="title_no_junk_folder">Il n\'y a aucun dossier pourriel sélectionné pour ce compte</string>
+    <string name="title_no_message">Message introuvable</string>
     <string name="title_default_composable">L\'adresse courriel par défaut est déterminée à partir de l\'identité principale du compte principal</string>
     <string name="title_no_composable">L\'envoi de courriels nécessite la configuration d\'une identité et la sélection d\'un dossier Brouillons dans les paramètres du compte</string>
     <string name="title_no_standard">Ce fournisseur utilise un protocole de messagerie propriétaire, il n’est donc pas possible d’utiliser des clients de messagerie tiers</string>
@@ -1800,6 +1802,7 @@
     <string name="title_rule_ignore">Supprimer la notification</string>
     <string name="title_rule_snooze">Reporter</string>
     <string name="title_rule_flag">Marquer comme suivi</string>
+    <string name="title_rule_unflag">Ne plus marquer comme suivi</string>
     <string name="title_rule_importance">Définir l’importance</string>
     <string name="title_rule_keyword">Mot-clé</string>
     <string name="title_rule_keyword_add">Ajouter</string>

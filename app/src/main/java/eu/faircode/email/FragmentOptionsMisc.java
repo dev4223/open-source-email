@@ -224,6 +224,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swLogarithmicBackoff;
     private SwitchCompat swExactAlarms;
     private SwitchCompat swServerAlerts;
+    private SwitchCompat swAutoLink;
     private SwitchCompat swNativeDkim;
     private SwitchCompat swNativeArc;
     private EditText etNativeArcWhitelist;
@@ -313,7 +314,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "imap_compress", "auth_plain", "auth_login", "auth_ntlm", "auth_sasl", "auth_apop", "use_top", "forget_top",
             "keep_alive_poll", "empty_pool", "idle_done", "fast_fetch",
             "max_backoff_power", "logarithmic_backoff",
-            "exact_alarms", "server_alerts",
+            "exact_alarms", "server_alerts", "auto_link_rx",
             "native_dkim", "native_arc", "native_arc_whitelist", "strict_alignment",
             "svg", "webp", "animate_images",
             "preview_hidden", "preview_quotes",
@@ -501,6 +502,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swLogarithmicBackoff = view.findViewById(R.id.swLogarithmicBackoff);
         swExactAlarms = view.findViewById(R.id.swExactAlarms);
         swServerAlerts = view.findViewById(R.id.swServerAlerts);
+        swAutoLink = view.findViewById(R.id.swAutoLink);
         swNativeDkim = view.findViewById(R.id.swNativeDkim);
         swNativeArc = view.findViewById(R.id.swNativeArc);
         etNativeArcWhitelist = view.findViewById(R.id.etNativeArcWhitelist);
@@ -1662,6 +1664,14 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        swAutoLink.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("auto_link_rx", checked).apply();
+            }
+        });
+
+
         swNativeDkim.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -2078,7 +2088,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         files.addAll(Helper.listFiles(context.getFilesDir(), MIN_FILE_SIZE));
                         files.addAll(Helper.listFiles(context.getCacheDir(), MIN_FILE_SIZE));
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                            files.addAll(Helper.listFiles(context.getDataDir(), MIN_FILE_SIZE));
+                            files.addAll(Helper.listFiles(Helper.getDataDir(context), MIN_FILE_SIZE));
 
                         Collections.sort(files, new Comparator<File>() {
                             @Override
@@ -2095,8 +2105,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         SpannableStringBuilder ssb = new SpannableStringBuilderEx();
 
                         final Context context = getContext();
-                        File dataDir = (Build.VERSION.SDK_INT < Build.VERSION_CODES.N
-                                ? null : context.getDataDir());
+                        File dataDir = Helper.getDataDir(context);
                         File filesDir = context.getFilesDir();
                         File cacheDir = context.getCacheDir();
 
@@ -2663,6 +2672,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             swLogarithmicBackoff.setChecked(prefs.getBoolean("logarithmic_backoff", true));
             swExactAlarms.setChecked(prefs.getBoolean("exact_alarms", true));
             swServerAlerts.setChecked(prefs.getBoolean("server_alerts", !Helper.isPlayStoreInstall()));
+            swAutoLink.setChecked(prefs.getBoolean("auto_link_rx", true));
             swNativeDkim.setEnabled(!BuildConfig.PLAY_STORE_RELEASE || true);
             swNativeDkim.setChecked(prefs.getBoolean("native_dkim", false));
             swNativeArc.setEnabled(swNativeDkim.isEnabled() && swNativeDkim.isChecked());

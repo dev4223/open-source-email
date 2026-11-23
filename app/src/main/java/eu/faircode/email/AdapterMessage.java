@@ -294,6 +294,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean distinguish_contacts;
     private boolean show_recipients;
     private boolean reverse_addresses;
+    private boolean reverse_always;
     private Float font_size_sender;
     private Float font_size_subject;
     private boolean subject_top;
@@ -1371,7 +1372,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean outgoing = isOutgoing(message);
             boolean reverse = reverse_addresses &&
                     ((outgoing && viewType != ViewType.THREAD &&
-                            (EntityFolder.isOutgoing(type) || viewType == ViewType.SEARCH)) ||
+                            (EntityFolder.isOutgoing(type) || viewType == ViewType.SEARCH || reverse_always)) ||
                             (viewType == ViewType.UNIFIED && type == null &&
                                     message.folderUnified && outgoing) ||
                             (viewType == ViewType.FOLDER &&
@@ -3533,7 +3534,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }
 
                         HtmlHelper.guessSchemes(document);
-                        HtmlHelper.autoLink(document);
+                        HtmlHelper.autoLink(document, context);
 
                         if (message.ui_found && found && !TextUtils.isEmpty(searched))
                             HtmlHelper.highlightSearched(context, document, searched, searchedPartial);
@@ -3565,7 +3566,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Context tcontext = (force_light ? ApplicationEx.getThemedContext(context, R.style.AppThemeBaseLight) : context);
                         int colorAccent = Helper.resolveColor(tcontext, androidx.appcompat.R.attr.colorAccent);
 
-                        HtmlHelper.autoLink(document);
+                        HtmlHelper.autoLink(document, context);
 
                         if (message.ui_found && found && !TextUtils.isEmpty(searched))
                             HtmlHelper.highlightSearched(tcontext, document, searched, searchedPartial);
@@ -6293,7 +6294,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (message.isPlainOnly() && monospaced_pre)
                         HtmlHelper.restorePre(document);
                     HtmlHelper.guessSchemes(document);
-                    HtmlHelper.autoLink(document);
+                    HtmlHelper.autoLink(document, context);
                     HtmlHelper.embedInlineImages(context, message.id, document, true);
                     HtmlHelper.markText(document);
                     if (disable_tracking)
@@ -6687,8 +6688,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_show_html).setVisible(Helper.hasWebView(context) && message.content);
 
-            boolean popReload = (message.accountProtocol == EntityAccount.TYPE_POP &&
-                    message.accountLeaveOnServer &&
+            boolean popReload = ((Boolean.TRUE.equals(message.raw) ||
+                    (message.accountProtocol == EntityAccount.TYPE_POP && message.accountLeaveOnServer)) &&
                     EntityFolder.INBOX.equals(message.folderType));
 
             popupMenu.getMenu().findItem(R.id.menu_raw_save).setEnabled(message.uid != null || popReload);
@@ -8735,6 +8736,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
         this.show_recipients = prefs.getBoolean("show_recipients", false);
         this.reverse_addresses = prefs.getBoolean("reverse_addresses", true);
+        this.reverse_always = prefs.getBoolean("reverse_always", false);
 
         this.subject_top = prefs.getBoolean("subject_top", false);
 
@@ -9755,6 +9757,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         boolean getValue(String name, long id, boolean def);
 
         void setExpanded(TupleMessageEx message, boolean expanded, boolean scroll);
+
+        boolean canScrollHorizontally();
 
         void setSize(long id, Float size);
 

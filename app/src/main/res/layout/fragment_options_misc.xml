@@ -662,6 +662,18 @@
                     app:switchPadding="12dp" />
 
                 <TextView
+                    android:id="@+id/tvGoogleBackup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    android:text="@string/title_advanced_google_backup_remark"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swGoogleBackup" />
+
+                <TextView
                     android:id="@+id/tvGoogleBackupPrivacy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -674,7 +686,7 @@
                     android:textColor="?android:attr/textColorLink"
                     app:drawableTint="?android:attr/textColorLink"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swGoogleBackup" />
+                    app:layout_constraintTop_toBottomOf="@id/tvGoogleBackup" />
 
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/grpUpdates"
@@ -1692,6 +1704,17 @@
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAutoLink"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_auto_link"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swServerAlerts"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swNativeDkim"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -1699,7 +1722,7 @@
                     android:text="@string/title_advanced_native_dkim"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swServerAlerts"
+                    app:layout_constraintTop_toBottomOf="@id/swAutoLink"
                     app:switchPadding="12dp" />
 
                 <TextView

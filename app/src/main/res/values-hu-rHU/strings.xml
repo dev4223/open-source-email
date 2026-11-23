@@ -184,7 +184,7 @@
     <string name="title_setup_documentation">Kérjük keresse fel az e-mail szolgáltatójának leírását a korrekt e-mail szerver konfigurációval kapcsolatban</string>
     <string name="title_setup_account_remark">E-mailek fogadása</string>
     <string name="title_setup_identity_remark">E-mailek küldése</string>
-    <string name="title_setup_account_identity_hint">Beállíthatod a nevet, színt és csúsztatási műveleteket a fiókbeállításokban, és konfigurálhatsz egy aláírást az identitási beállításokban</string>
+    <string name="title_setup_account_identity_hint">A nevét, színt, csúsztatási műveleteket a fiók beállításoknal állíthatja be, az aláírást, az alapértelmezett másolatot és titkos másolatot az identitás beállításainál.</string>
     <string name="title_setup_accounts">Fiókok</string>
     <string name="title_setup_identities">Identitások</string>
     <string name="title_setup_google_sign_in">Bejelentkezés Google fiókkal</string>
@@ -572,6 +572,7 @@
     <string name="title_advanced_distinguish_contacts">Húzza alá a küldőt, ha az egy ismert, korábban megcímzett helyi névjegy</string>
     <string name="title_advanced_show_recipients">Címzettek mutatása az üzenet fejlécében</string>
     <string name="title_advanced_reverse_addresses">Címzett mutatása az elküldött üzenetekben</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">Összes mappában</string>
     <string name="title_advanced_font_size_sender">Feladó nevének betűmérete</string>
     <string name="title_advanced_sender_ellipsize">A küldő rövidítése, ha szükséges</string>
     <string name="title_advanced_subject_top">Tárgy megjelenítése a küldő fölött</string>
@@ -1092,6 +1093,7 @@
     <string name="title_no_inbox">Bejövő mappa nem található</string>
     <string name="title_no_drafts">Nem található a piszkozatok mappája</string>
     <string name="title_no_junk_folder">Ehhez a fiókhoz nincs Spam mappa kijelölve</string>
+    <string name="title_no_message">Üzenet nem található</string>
     <string name="title_default_composable">Az alapértelmezett e-mail cím az elsődleges fiók elsődleges identitása alapján kerül meghatározásra</string>
     <string name="title_no_composable">Email-ek küldéséhez konfigurálni kell egy identitást, és kiválasztani egy piszkozatok mappát a fiókbeállításokban</string>
     <string name="title_no_standard">Ez a szolgáltató zárt email protokollt használ, ezért nem lehetséges harmadik féltől származó email kliens használata</string>
@@ -1782,6 +1784,7 @@
     <string name="title_rule_ignore">Értesítések felfüggesztése</string>
     <string name="title_rule_snooze">Szundi</string>
     <string name="title_rule_flag">Csillagozás</string>
+    <string name="title_rule_unflag">Csillag törlése</string>
     <string name="title_rule_importance">Fontosság beállítása</string>
     <string name="title_rule_keyword">Kulcsszó</string>
     <string name="title_rule_keyword_add">Hozzáadás</string>

@@ -1559,11 +1559,11 @@ public class HtmlHelper {
         }
     }
 
-    static void autoLink(Document document) {
-        autoLink(document, false);
+    static void autoLink(Document document, Context context) {
+        autoLink(document, false, context);
     }
 
-    static void autoLink(Document document, boolean outbound) {
+    static void autoLink(Document document, boolean outbound, Context context) {
         // https://en.wikipedia.org/wiki/List_of_URI_schemes
         // https://en.wikipedia.org/wiki/Geo_URI_scheme
         // https://developers.google.com/maps/documentation/urls/android-intents
@@ -1586,6 +1586,11 @@ public class HtmlHelper {
                         "|" +
                         "(?i:tel:" + Patterns.PHONE.pattern() + ")" +
                         (BuildConfig.DEBUG ? "|(" + GPA_PATTERN + ")" : ""));
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean autolink = prefs.getBoolean("auto_link_rx", true);
+        if (!outbound && !autolink)
+            return;
 
         NodeTraversor.traverse(new NodeVisitor() {
             private int links = 0;
@@ -1655,10 +1660,12 @@ public class HtmlHelper {
                                 }
 
                                 boolean email = group.contains("@") && !group.contains(":");
+                                boolean blacklist = group.toLowerCase().endsWith(".zip") &&
+                                        !(group.toLowerCase().startsWith("https://") || group.toLowerCase().startsWith("http://"));
                                 Log.i("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
-                                        " linked=" + linked + " email=" + email + " count=" + links);
+                                        " linked=" + linked + " email=" + email + " blacklist=" + blacklist + " count=" + links);
 
-                                if (linked)
+                                if (linked || blacklist)
                                     span.appendText(text.substring(pos, end));
                                 else {
                                     span.appendText(text.substring(pos, start));
@@ -3017,11 +3024,16 @@ public class HtmlHelper {
         return preview + "…";
     }
 
-    @NonNull
     static String getText(Context context, String html) {
+        return getText(context, html, false);
+    }
+
+    @NonNull
+    static String getText(Context context, String html, boolean plain_only) {
         Document d = sanitizeCompose(context, html, false);
 
-        truncate(d, getMaxFormatTextSize(context));
+        if (!plain_only)
+            truncate(d, getMaxFormatTextSize(context));
 
         SpannableStringBuilder ssb = fromDocument(context, d, null, null);
 

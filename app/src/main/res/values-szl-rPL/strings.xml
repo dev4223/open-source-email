@@ -212,7 +212,7 @@
     <string name="title_setup_documentation">Sprawdź dokumentację dostawcy poczty e-mail w celu uzyskania poprawnej konfiguracji serwera e-mail</string>
     <string name="title_setup_account_remark">Odbieranie wiadomości e-mail</string>
     <string name="title_setup_identity_remark">Wysyłanie wiadomości e-mail</string>
-    <string name="title_setup_account_identity_hint">Możesz skonfigurować nazwę, kolor i akcje przesuwania w ustawieniach konta oraz skonfigurować podpis w ustawieniach tożsamości</string>
+    <string name="title_setup_account_identity_hint">W ustawieniach konta można skonfigurować nazwę, kolor oraz gesty przesuwania, a w ustawieniach tożsamości – podpis oraz domyślne adresy w polu „DW” lub „UDW”.</string>
     <string name="title_setup_accounts">Konta</string>
     <string name="title_setup_identities">Tożsamości</string>
     <string name="title_setup_google_sign_in">Zaloguj się poprzez Google</string>
@@ -602,6 +602,7 @@ Nie musisz być tutaj, aby skonfigurować konto. W tym celu skorzystaj z przycis
     <string name="title_advanced_distinguish_contacts">Podkreśl nadawcę, gdy znany jest jako lokalny kontakt „do”</string>
     <string name="title_advanced_show_recipients">Pokaż odbiorców w nagłówku wiadomości</string>
     <string name="title_advanced_reverse_addresses">Pokaż odbiorcę wysłanych wiadomości</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">We wszystkich folderach</string>
     <string name="title_advanced_font_size_sender">Rozmiar tekstu nadawcy</string>
     <string name="title_advanced_sender_ellipsize">W razie potrzeby skróć nadawcę</string>
     <string name="title_advanced_subject_top">Pokaż temat nad nadawcą</string>
@@ -1123,6 +1124,7 @@ Nie musisz być tutaj, aby skonfigurować konto. W tym celu skorzystaj z przycis
     <string name="title_no_inbox">Nie znaleziono skrzynki odbiorczej</string>
     <string name="title_no_drafts">Brak folderu szkiców</string>
     <string name="title_no_junk_folder">Dla tego konta nie wybrano folderu spam</string>
+    <string name="title_no_message">Nie znaleziono wiadomości</string>
     <string name="title_default_composable">Domyślny adres e-mail jest określony przez podstawową tożsamość konta głównego</string>
     <string name="title_no_composable">Wysyłanie wiadomości e-mail wymaga skonfigurowania tożsamości i wybrania folderu szkiców w ustawieniach konta</string>
     <string name="title_no_standard">Ten dostawca korzysta z zastrzeżonego protokołu e-mail i dlatego nie jest możliwe korzystanie z klientów e-mail firm trzecich</string>
@@ -1695,7 +1697,7 @@ Jest to bezpieczny, sformatowany widok wiadomości.
     <string name="title_search_more">Więcej opcji</string>
     <string name="title_search_use_index">Użyj indeksu wyszukiwania</string>
     <string name="title_search_in_senders">W nadawcach (od)</string>
-    <string name="title_search_in_recipients">W odbiorcach (do, cc)</string>
+    <string name="title_search_in_recipients">W odbiorcach (Do, DW)</string>
     <string name="title_search_in_subject">W temacie</string>
     <string name="title_search_in_keywords">W słowach kluczowych (jeśli obsługiwane)</string>
     <string name="title_search_in_message">W tekście wiadomości</string>
@@ -1815,6 +1817,7 @@ Jest to bezpieczny, sformatowany widok wiadomości.
     <string name="title_rule_ignore">Wycisz powiadomienie</string>
     <string name="title_rule_snooze">Odłóż</string>
     <string name="title_rule_flag">Dodaj gwiazdkę</string>
+    <string name="title_rule_unflag">Usuń gwiazdkę</string>
     <string name="title_rule_importance">Ustaw ważność</string>
     <string name="title_rule_keyword">Słowo kluczowe</string>
     <string name="title_rule_keyword_add">Dodaj</string>
@@ -1872,7 +1875,7 @@ Jest to bezpieczny, sformatowany widok wiadomości.
     <string name="title_rule_forward_to">Przekaż do</string>
     <string name="title_rule_resend">Wyślij ponownie</string>
     <string name="title_rule_attached">Dołącz nieprzetworzony plik wiadomości</string>
-    <string name="title_rule_cc">Odpowiedz na adresy CC</string>
+    <string name="title_rule_cc">Odpowiedz na adresy Dw</string>
     <string name="title_rule_checks">Sprawdzaj automatycznie wysyłane wiadomości, adresy bez odpowiedzi itp.</string>
     <string name="title_rule_with_attachments">Z załącznikami</string>
     <string name="title_rule_answer_remark">Dla każdej konwersacji zostanie wysłana tylko jedna odpowiedź, aby uniknąć zapętlenia odpowiedzi</string>

@@ -183,7 +183,7 @@ Het blokkeren van een afzenderdomein maakt gebruik van filterregels, wat een pro
     <string name="title_setup_documentation">Raadpleeg a.u.b. de documentatie van uw e-mailprovider voor de juiste mailserverconfiguratie</string>
     <string name="title_setup_account_remark">E-mail ontvangen</string>
     <string name="title_setup_identity_remark">E-mail verzenden</string>
-    <string name="title_setup_account_identity_hint">U kunt de naam, kleur en veegacties configureren in de accountinstellingen en een handtekening configureren in de identiteitsinstellingen</string>
+    <string name="title_setup_account_identity_hint">U kunt een naam, kleur en veegacties in de accountinstellingen configureren en een handtekening en standaard Cc- of Bcc-adressen in de identiteitsinstellingen configureren.</string>
     <string name="title_setup_accounts">Accounts</string>
     <string name="title_setup_identities">Identiteiten</string>
     <string name="title_setup_google_sign_in">Log in met Google</string>
@@ -571,6 +571,7 @@ U zult de meeste opties niet nodig hebben en aangezien sommige opties vrij speci
     <string name="title_advanced_distinguish_contacts">Onderstreep de afzender wanneer de afzender bekend staat als lokaal \'aan\'-contact</string>
     <string name="title_advanced_show_recipients">Geadresseerden in berichtkop tonen</string>
     <string name="title_advanced_reverse_addresses">Toon ontvanger voor verzonden berichten</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">In alle mappen</string>
     <string name="title_advanced_font_size_sender">Tekengrootte afzender</string>
     <string name="title_advanced_sender_ellipsize">Indien nodig, verkort de afzender</string>
     <string name="title_advanced_subject_top">Toon onderwerp boven afzender</string>
@@ -1091,6 +1092,7 @@ De standaard versleutelingsmethode (PGP of S/MIME) wordt per identiteit opgeslag
     <string name="title_no_inbox">Postvak in niet gevonden</string>
     <string name="title_no_drafts">Geen map voor concepten</string>
     <string name="title_no_junk_folder">Er is geen spammap geselecteerd voor dit account</string>
+    <string name="title_no_message">Bericht niet gevonden</string>
     <string name="title_default_composable">Het standaard e-mailadres wordt bepaald door de primaire identiteit van het primaire account</string>
     <string name="title_no_composable">E-mails versturen vereist dat een identiteit wordt geconfigureerd, en een conceptmap wordt geselecteerd in de accountinstellingen</string>
     <string name="title_no_standard">Deze provider gebruikt een eigen e-mailprotocol en daarom is het niet mogelijk om e-mailclients van derden te gebruiken</string>
@@ -1775,6 +1777,7 @@ Bij het verzenden van een bericht wordt de afbeelding vanaf de geselecteerde loc
     <string name="title_rule_ignore">Onderdruk melding</string>
     <string name="title_rule_snooze">Sluimeren</string>
     <string name="title_rule_flag">Ster toevoegen</string>
+    <string name="title_rule_unflag">Ster verwijderen</string>
     <string name="title_rule_importance">Stel belang in</string>
     <string name="title_rule_keyword">Sleutelwoord</string>
     <string name="title_rule_keyword_add">Voeg toe</string>

@@ -158,7 +158,6 @@
     <string name="title_setup_documentation">Molimo pogledajte dokumentaciju Vašeg davatelja e-pošte za ispravnu konfiguraciju poslužitelja e-pošte</string>
     <string name="title_setup_account_remark">Primi e-poštu</string>
     <string name="title_setup_identity_remark">Pošalji e-poštu</string>
-    <string name="title_setup_account_identity_hint">Možete podesiti naziv, boju i radnje povlačenja u postavkama računa te podesiti potpis u postavkama identiteta</string>
     <string name="title_setup_accounts">Korisnički Računi</string>
     <string name="title_setup_identities">Identiteti</string>
     <string name="title_setup_other">Drugi davatelj usluga</string>
@@ -1380,6 +1379,7 @@
     <string name="title_rule_ignore">Potisni obavijest</string>
     <string name="title_rule_snooze">Utišaj</string>
     <string name="title_rule_flag">Dodaj zvjezdicu</string>
+    <string name="title_rule_unflag">Ukloni zvjezdicu</string>
     <string name="title_rule_importance">Postavi važnost</string>
     <string name="title_rule_keyword_add">Dodaj</string>
     <string name="title_rule_keyword_delete">Izbriši</string>

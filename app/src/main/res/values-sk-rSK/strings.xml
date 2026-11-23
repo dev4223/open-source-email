@@ -210,7 +210,6 @@
     <string name="title_setup_documentation">Správne nastavenia servera získate v dokumentácii poskytovateľa služieb elektronickej pošty</string>
     <string name="title_setup_account_remark">Obdržať email</string>
     <string name="title_setup_identity_remark">Odosielanie správ</string>
-    <string name="title_setup_account_identity_hint">Môžete nastaviť meno, farbu a akcie pre potiahnutie v nastaveniach konta, a nastaviť podpis v nastaveniach totožnosti</string>
     <string name="title_setup_accounts">Účty</string>
     <string name="title_setup_identities">Totožnosti</string>
     <string name="title_setup_google_sign_in">Prihlásiť sa s účtom Google</string>
@@ -1748,6 +1747,7 @@ Systém Android môže požiadať o povolenie prístupu k vybranému priečinku,
     <string name="title_rule_ignore">Potlačiť upozornenie</string>
     <string name="title_rule_snooze">Odložiť</string>
     <string name="title_rule_flag">Pridať hviezdičku</string>
+    <string name="title_rule_unflag">Odstrániť z obľúbených</string>
     <string name="title_rule_importance">Nastaviť dôležitosť</string>
     <string name="title_rule_keyword">Kľúčové slovo</string>
     <string name="title_rule_keyword_add">Pridať</string>

@@ -185,7 +185,7 @@
     <string name="title_setup_documentation">Consultare la documentazione del provider email per la corretta configurazione del server di posta</string>
     <string name="title_setup_account_remark">Ricevi email</string>
     <string name="title_setup_identity_remark">Invia email</string>
-    <string name="title_setup_account_identity_hint">È possibile configurare il nome, il colore e le azioni di scorrimento nelle impostazioni dell\'account e una firma nelle impostazioni dell\'identità</string>
+    <string name="title_setup_account_identity_hint">Nelle impostazioni dell\'account è possibile configurare un nome, un colore e le azioni di scorrimento, mentre nelle impostazioni di identità è possibile configurare una firma e gli indirizzi CC o CCN predefiniti.</string>
     <string name="title_setup_accounts">Account</string>
     <string name="title_setup_identities">Identità</string>
     <string name="title_setup_google_sign_in">Accedi con Google</string>
@@ -579,6 +579,7 @@
     <string name="title_advanced_distinguish_contacts">Sottolinea il mittente quando è in rubrica</string>
     <string name="title_advanced_show_recipients">Mostra i destinatari nell\'intestazione del messaggio</string>
     <string name="title_advanced_reverse_addresses">Mostra il destinatario nei messaggi inviati</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">In tutte le cartelle</string>
     <string name="title_advanced_font_size_sender">Dimensione del testo del mittente</string>
     <string name="title_advanced_sender_ellipsize">Se necessario, abbrevia il mittente</string>
     <string name="title_advanced_subject_top">Mostra l\'oggetto sopra il mittente</string>
@@ -1103,6 +1104,7 @@
     <string name="title_no_inbox">Posta in arrivo non trovata</string>
     <string name="title_no_drafts">Nessuna cartella delle bozze</string>
     <string name="title_no_junk_folder">Non è stata selezionata nessuna cartella di spam per questo account</string>
+    <string name="title_no_message">Messaggio non trovato</string>
     <string name="title_default_composable">L\'indirizzo email predefinito è determinato dall\'identità principale dell\'account principale</string>
     <string name="title_no_composable">L\'invio di email richiede che un\'identità sia configurata e una cartella delle bozze sia selezionata nelle impostazioni dell\'account</string>
     <string name="title_no_standard">Questo provider usa un protocollo email proprietario ed è dunque impossibile usare client email di terze parti</string>
@@ -1799,6 +1801,7 @@
     <string name="title_rule_ignore">Sopprimi notifica</string>
     <string name="title_rule_snooze">Posticipa</string>
     <string name="title_rule_flag">Aggiungi stella</string>
+    <string name="title_rule_unflag">Rimuovi stella</string>
     <string name="title_rule_importance">Imposta l\'importanza</string>
     <string name="title_rule_keyword">Parola chiave</string>
     <string name="title_rule_keyword_add">Aggiungi</string>

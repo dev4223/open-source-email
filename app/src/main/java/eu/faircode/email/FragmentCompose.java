@@ -4089,6 +4089,8 @@ public class FragmentCompose extends FragmentBase {
                 // Get arguments
                 Intent data = args.getParcelable("data");
                 Bundle largs = data.getBundleExtra(BuildConfig.APPLICATION_ID);
+                if (largs == null)
+                    throw new IllegalArgumentException("Meta data not returned by PGP provider");
                 long id = largs.getLong("id", -1);
                 String session = largs.getString("session");
 
@@ -6483,7 +6485,9 @@ public class FragmentCompose extends FragmentBase {
 
                         File file = attachment.getFile(context);
                         Helper.copy(ics, file);
-                        Helper.secureDelete(ics);
+                        File calendarDir = Helper.ensureExists(context, "calendar");
+                        if (ics.getCanonicalPath().startsWith(calendarDir.getCanonicalPath() + File.separator))
+                            Helper.secureDelete(ics);
 
                         ICalendar icalendar = CalendarHelper.parse(context, file);
                         VEvent event = icalendar.getEvents().get(0);
@@ -8346,7 +8350,7 @@ public class FragmentCompose extends FragmentBase {
                 Spanned spannedRef = null;
                 if (!ref.isEmpty()) {
                     Document dref = JsoupEx.parse(ref.outerHtml());
-                    HtmlHelper.autoLink(dref);
+                    HtmlHelper.autoLink(dref, context);
                     Document quote = HtmlHelper.sanitizeView(context, dref, show_images);
                     spannedRef = HtmlHelper.fromDocument(context, quote,
                             new HtmlHelper.ImageGetterEx() {

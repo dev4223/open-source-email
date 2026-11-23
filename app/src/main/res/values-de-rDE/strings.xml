@@ -186,7 +186,7 @@
     <string name="title_setup_documentation">Bitte lesen Sie die Dokumentation Ihres E-Mail-Anbieters für die korrekte Konfiguration des E-Mail-Servers</string>
     <string name="title_setup_account_remark">E-Mail empfangen</string>
     <string name="title_setup_identity_remark">E-Mail senden</string>
-    <string name="title_setup_account_identity_hint">Sie können den Namen, die Farbe und Wischgesten in den Kontoeinstellungen und eine Signatur in den Identitätseinstellungen konfigurieren</string>
+    <string name="title_setup_account_identity_hint">In den Kontoeinstellungen können Sie einen Namen, eine Farbe und Wischgesten festlegen, und in den Identitäts-Einstellungen können Sie eine Signatur sowie Standardadressen für „CC“ oder „BCC“ festlegen.</string>
     <string name="title_setup_accounts">Konten</string>
     <string name="title_setup_identities">Identitäten</string>
     <string name="title_setup_google_sign_in">Mit Google anmelden</string>
@@ -581,6 +581,7 @@
     <string name="title_advanced_distinguish_contacts">Den Sender unterstrichen darstellen, wenn er ein bekannter lokaler An-Kontakt ist</string>
     <string name="title_advanced_show_recipients">Empfänger im Nachrichtenkopf anzeigen</string>
     <string name="title_advanced_reverse_addresses">Empfänger für gesendete Nachrichten anzeigen</string>
+    <string name="title_advanced_reverse_always" comment="title_advanced_reverse_always Title for sub option &quot;(Show recipient for sent messages) In all folders&quot;">In allen Ordnern</string>
     <string name="title_advanced_font_size_sender">Schriftgröße für den Absender</string>
     <string name="title_advanced_sender_ellipsize">Falls erforderlich, Absendernamen kürzen</string>
     <string name="title_advanced_subject_top">Betreff oberhalb des Absenders anzeigen</string>
@@ -757,7 +758,7 @@
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
     <string name="title_advanced_autolock">Sperren bei ausgeschaltetem Bildschirm</string>
-    <string name="title_advanced_autolock_nav">Beim Verlassen der App sperren</string>
+    <string name="title_advanced_autolock_nav">Sperren beim Verlassen der App</string>
     <string name="title_advanced_generic_user_agent">Allgemeinen User Agent verwenden</string>
     <string name="title_advanced_load_emoji">Aktualisierte Emoji von Google-Play-Diensten laden</string>
     <string name="title_advanced_disconnect_auto_update">Listen wöchentlich automatisch aktualisieren</string>
@@ -1105,6 +1106,7 @@
     <string name="title_no_inbox">Posteingang nicht gefunden</string>
     <string name="title_no_drafts">Kein Entwürfe-Ordner festgelegt</string>
     <string name="title_no_junk_folder">Es ist kein Spam-Ordner für dieses Konto ausgewählt</string>
+    <string name="title_no_message">Nachricht nicht gefunden</string>
     <string name="title_default_composable">Die Standard-E-Mail-Adresse wird durch die Hauptidentität des Hauptkontos bestimmt</string>
     <string name="title_no_composable">Das Versenden von E-Mails erfordert die Konfiguration einer Identität und in den Kontoeinstellungen die Auswahl eines Entwürfe-Ordners</string>
     <string name="title_no_standard">Dieser Anbieter verwendet ein proprietäres E-Mail-Protokoll, sodass es nicht möglich ist, E-Mail-Programme von Dritten zu verwenden</string>
@@ -1801,6 +1803,7 @@
     <string name="title_rule_ignore">Benachrichtigungen unterdrücken</string>
     <string name="title_rule_snooze">Zurückstellen</string>
     <string name="title_rule_flag">Stern hinzufügen</string>
+    <string name="title_rule_unflag">Stern entfernen</string>
     <string name="title_rule_importance">Wichtigkeit festlegen</string>
     <string name="title_rule_keyword">Schlagwort</string>
     <string name="title_rule_keyword_add">Hinzufügen</string>
